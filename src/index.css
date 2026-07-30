@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;450;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Montserrat', sans-serif;
+  --font-display: 'Playfair Display', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Redefine primary colors to clean, elegant slate, zinc and amber accents */
+  --color-indigo-50: #f8fafc;
+  --color-indigo-100: #f1f5f9;
+  --color-indigo-150: #e2e8f0;
+  --color-indigo-200: #e2e8f0;
+  --color-indigo-300: #cbd5e1;
+  --color-indigo-400: #94a3b8;
+  --color-indigo-505: #475569;
+  --color-indigo-500: #64748b;
+  --color-indigo-600: #475569;
+  --color-indigo-620: #334155;
+  --color-indigo-650: #1e293b;
+  --color-indigo-700: #334155;
+  --color-indigo-720: #1e293b;
+  --color-indigo-750: #0f172a;
+  --color-indigo-800: #1e293b;
+  --color-indigo-900: #0f172a;
+  --color-indigo-950: #020617;
+
+  --color-blue-50: #f8fafc;
+  --color-blue-100: #f1f5f9;
+  --color-blue-200: #e2e8f0;
+  --color-blue-300: #cbd5e1;
+  --color-blue-450: #94a3b8;
+  --color-blue-500: #64748b;
+  --color-blue-600: #475569;
+  --color-blue-700: #334155;
+  --color-blue-800: #1e293b;
+  --color-blue-900: #0f172a;
+
+  --color-violet-50: #f8fafc;
+  --color-violet-100: #f1f5f9;
+  --color-violet-200: #e2e8f0;
+  --color-violet-300: #cbd5e1;
+  --color-violet-450: #94a3b8;
+  --color-violet-500: #64748b;
+  --color-violet-600: #475569;
+  --color-violet-700: #334155;
+  --color-violet-800: #1e293b;
+  --color-violet-900: #0f172a;
+
+  --color-purple-50: #f8fafc;
+  --color-purple-100: #f1f5f9;
+  --color-purple-200: #e2e8f0;
+  --color-purple-500: #64748b;
+  --color-purple-600: #475569;
+  --color-purple-700: #334155;
+  --color-purple-800: #1e293b;
+  --color-purple-900: #0f172a;
+
+  /* Clean and elegant slate colors with true gray scale and pure white base */
+  --color-slate-50: #ffffff;
+  --color-slate-100: #f8fafc;
+  --color-slate-200: #f1f5f9;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-850: #0f172a;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  /* Softer generic black */
+  --color-black: #0f172a;
+}
+
+/* Global button styling matching clean design (white background, slate border, dark text) */
+button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):not(.tab-trigger) {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #0f172a !important; /* Soft dark text */
+  border: 1.5px solid #e2e8f0 !important; /* Soft gray border */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):not(.tab-trigger):hover {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-0.5px) !important;
+}
+
+button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):not(.tab-trigger):active {
+  transform: translateY(0px) !important;
+  filter: brightness(0.98) !important;
+}
+
+/* Global replacement of heavy red/rose backgrounds with modern clean styles */
+.bg-rose-500,
+.bg-rose-600,
+.bg-rose-700,
+.bg-red-500,
+.bg-red-600,
+.bg-red-700,
+.bg-pink-600,
+.bg-pink-700 {
+  background-image: none !important;
+  background-color: #0f172a !important; /* Dark slate */
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+}
+
+/* Ensure any text inside those overridden background spans/tags gets clean text */
+.bg-rose-600 *,
+.bg-rose-500 *,
+.bg-red-650 * {
+  color: #ffffff !important;
+}
+
+@keyframes live-floating {
+  0% {
+    transform: translateY(10px) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.1);
+  }
+  85% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-260px) scale(0.85);
+    opacity: 0;
+  }
+}
+
+.animate-live-floating {
+  animation: live-floating 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom clean stripes pattern */
+.vs-stripes {
+  background-color: #ffffff;
+  background-image: linear-gradient(90deg, #ffffff 50%, #f8fafc 50%);
+  background-size: 40px 100%;
+}
+
+.vs-text-shadow {
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* Hide scrollbars but preserve scroll functionality globally */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+}
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden !important;
+}
+
+#root {
+  max-width: 100%;
+  overflow-x: hidden !important;
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+* {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}

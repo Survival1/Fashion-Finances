@@ -1,0 +1,6 @@
+{
+  "name": "Fashion Finances",
+  "description": "Plataforma innovadora de financiamiento colectivo y afiliación estratégica que fusiona el financiamiento de proyectos y la industria del modelaje.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
