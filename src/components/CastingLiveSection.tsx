@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SessionResultsPodium from './SessionResultsPodium';
-import { BALMAIN_LOGO_DATA_URL } from '../utils/brandLogos';
+import ParticipantsGatheringModal from './ParticipantsGatheringModal';
+import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
+import { saveLuxuryWatchGift, playLuxuryWatchSoundEffect } from './LuxuryWatchAnimation';
+import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { 
   Sparkles, 
   Home, 
@@ -80,7 +83,16 @@ import {
   Zap,
   LayoutGrid,
   Grid,
-  Columns
+  Columns,
+  Pin,
+  PinOff,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  Star,
+  Award,
+  AlertCircle,
+  Square
 } from 'lucide-react';
 import { ModelProfile, UserSessionProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
@@ -117,7 +129,7 @@ interface CastingLiveVideo {
   isFollower?: boolean;
   music: string;
   category: 'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live';
-  videoCategory?: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk';
+  videoCategory?: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer';
   uploaderId?: string; // ID of the user who uploaded the video
   pinnedProduct?: any;
   trimStart?: number;
@@ -766,7 +778,7 @@ const customZxsStores = [
         id: 'ch-p1',
         name: "Vestido de Noche 'Good Girl'",
         price: 499.00,
-        image: 'https://images.unsplash.com/photo-1518049360964-f9847209617f?auto=format&fit=crop&q=80&w=400',
+        image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=800',
         category: 'Alta Costura',
         description: 'Impresionante vestido de gala en rojo imperial Carolina Herrera.',
         rating: 5.0,
@@ -866,6 +878,354 @@ const customZxsStores = [
                  tiktokClicksSim: 3200
                }
              ]
+           },
+           {
+             id: 'gucci',
+             name: 'Gucci Boutique Pasarela',
+             username: 'gucci_official',
+             avatar: 'https://logo.clearbit.com/gucci.com',
+             bannerUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1200',
+             direccion: "Via de' Tornabuoni 73R, Florencia, Italia",
+             style: 'Sponsor Oficial Alta Costura Italiana 🇮🇹',
+             description: 'Sponsor oficial de marroquinería de lujo, prêt-à-porter y calzado icónico para las modelos del ranking estelar de Casting Live.',
+             rating: '5.0',
+             products: [
+               {
+                 id: 'gc-p1',
+                 name: "Bolso 'Jackie 1961' en Piel",
+                 price: 2400.00,
+                 image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=400',
+                 category: 'Bolsos & Piel',
+                 description: 'Bolso de mano estructurado con cierre de pistón dorado e interior en microfibra aterciopelada.',
+                 rating: 5.0,
+                 salesSim: 140,
+                 likesSim: 2300,
+                 stockSim: 6,
+                 comisionSim: 25,
+                 tiktokViewsSim: 32000,
+                 tiktokClicksSim: 4100
+               },
+               {
+                 id: 'gc-p2',
+                 name: "Mocasines 'Horsebit 1953'",
+                 price: 790.00,
+                 image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=400',
+                 category: 'Calzado',
+                 description: 'Mocasines icónicos de piel negra con el clásico bocado de caballo dorado en el empeine.',
+                 rating: 4.9,
+                 salesSim: 210,
+                 likesSim: 1750,
+                 stockSim: 12,
+                 comisionSim: 20,
+                 tiktokViewsSim: 18500,
+                 tiktokClicksSim: 2400
+               },
+               {
+                 id: 'gc-p3',
+                 name: "Cinturón Doble G con Hebilla",
+                 price: 420.00,
+                 image: 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&q=80&w=400',
+                 category: 'Accesorios',
+                 description: 'Cinturón en piel lisa tratada con hebilla emblemática GG en latón envejecido.',
+                 rating: 4.8,
+                 salesSim: 480,
+                 likesSim: 3100,
+                 stockSim: 20,
+                 comisionSim: 15,
+                 tiktokViewsSim: 22000,
+                 tiktokClicksSim: 3300
+               }
+             ]
+           },
+           {
+             id: 'versace',
+             name: 'Versace Milano Haute Couture',
+             username: 'versace_official',
+             avatar: 'https://logo.clearbit.com/versace.com',
+             bannerUrl: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=1200',
+             direccion: 'Via Montenapoleone 11, Milán, Italia',
+             style: 'Sponsor Oficial Pasarela Medusa & Glamour 👑',
+             description: 'Sponsor de estética glamurosa, vestidos de fiesta barrocos y prendas icónicas de la maison de Milán para Fashion Finances.',
+             rating: '5.0',
+             products: [
+               {
+                 id: 'ver-p1',
+                 name: "Vestido de Pasarela 'Safety Pin Medusa'",
+                 price: 3200.00,
+                 image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=400',
+                 category: 'Alta Costura',
+                 description: 'Vestido negro entallado de seda con aberturas laterales unidas por imperdibles dorados Medusa.',
+                 rating: 5.0,
+                 salesSim: 75,
+                 likesSim: 4100,
+                 stockSim: 4,
+                 comisionSim: 30,
+                 tiktokViewsSim: 45000,
+                 tiktokClicksSim: 5900
+               },
+               {
+                 id: 'ver-p2',
+                 name: "Zapatos Plataforma 'Aevitas Medusa'",
+                 price: 1190.00,
+                 image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=400',
+                 category: 'Calzado',
+                 description: 'Zapatos de salón de doble plataforma en satén de seda brillante con correa adornada con strass.',
+                 rating: 4.9,
+                 salesSim: 190,
+                 likesSim: 2800,
+                 stockSim: 8,
+                 comisionSim: 22,
+                 tiktokViewsSim: 27000,
+                 tiktokClicksSim: 3600
+               },
+               {
+                 id: 'ver-p3',
+                 name: "Perfume 'Dylan Blue Pour Femme' 100ml",
+                 price: 135.00,
+                 image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=400',
+                 category: 'Fragancias',
+                 description: 'Fragancia floral, amaderada y afrutada inspirada en la fuerza y sensualidad mediterránea.',
+                 rating: 4.8,
+                 salesSim: 510,
+                 likesSim: 2200,
+                 stockSim: 35,
+                 comisionSim: 15,
+                 tiktokViewsSim: 16000,
+                 tiktokClicksSim: 2100
+               }
+             ]
+           },
+           {
+             id: 'balenciaga',
+             name: 'Balenciaga Runway Exclusive',
+             username: 'balenciaga_official',
+             avatar: 'https://logo.clearbit.com/balenciaga.com',
+             bannerUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200',
+             direccion: 'Rue du Faubourg Saint-Honoré 336, París, Francia',
+             style: 'Sponsor Vanguardia & Moda Urbana de Lujo 🖤',
+             description: 'Sponsor oficial de siluetas vanguardistas, zapatillas de diseño futurista y prendas de pasarela para Casting Live.',
+             rating: '4.9',
+             products: [
+               {
+                 id: 'balen-p1',
+                 name: "Bolso 'Hourglass' en Piel Box",
+                 price: 2150.00,
+                 image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=400',
+                 category: 'Bolsos & Piel',
+                 description: 'Icónica silueta curvilínea con cierre magnético en forma de B metálica en tono plateado.',
+                 rating: 4.9,
+                 salesSim: 160,
+                 likesSim: 3400,
+                 stockSim: 7,
+                 comisionSim: 25,
+                 tiktokViewsSim: 38000,
+                 tiktokClicksSim: 4800
+               },
+               {
+                 id: 'balen-p2',
+                 name: "Zapatillas 'Triple S' Runway Edition",
+                 price: 895.00,
+                 image: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=400',
+                 category: 'Calzado',
+                 description: 'Zapatillas de tres suelas superpuestas con bordado numérico en la puntera y logo lateral.',
+                 rating: 4.8,
+                 salesSim: 320,
+                 likesSim: 2900,
+                 stockSim: 14,
+                 comisionSim: 20,
+                 tiktokViewsSim: 29000,
+                 tiktokClicksSim: 3700
+               },
+               {
+                 id: 'balen-p3',
+                 name: "Gafas de Sol 'Skin Cat' Wrap",
+                 price: 390.00,
+                 image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&q=80&w=400',
+                 category: 'Accesorios',
+                 description: 'Gafas envolventes ultraligeras con cristales espejados y montura futurista de acetato negro.',
+                 rating: 4.7,
+                 salesSim: 270,
+                 likesSim: 1900,
+                 stockSim: 18,
+                 comisionSim: 18,
+                 tiktokViewsSim: 19500,
+                 tiktokClicksSim: 2500
+               }
+             ]
+           },
+           {
+             id: 'louis_vuitton',
+             name: 'Louis Vuitton Maison Paris',
+             username: 'louisvuitton_es',
+             avatar: 'https://logo.clearbit.com/louisvuitton.com',
+             bannerUrl: 'https://images.unsplash.com/photo-1513094735237-8f2714d57c13?auto=format&fit=crop&q=80&w=1200',
+             direccion: 'Avenue des Champs-Élysées 101, París, Francia',
+             style: 'Sponsor Oficial Marroquinería y Monograma 🇫🇷',
+             description: 'Sponsor oficial de baúles de viaje, bolsos icónicos Monogram y accesorios de alta marroquinería para los desfiles estelares.',
+             rating: '5.0',
+             products: [
+               {
+                 id: 'lv-p1',
+                 name: "Bolso 'Speedy Bandoulière 25' Monogram",
+                 price: 1550.00,
+                 image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=400',
+                 category: 'Marroquinería',
+                 description: 'Lona Monogram clásica con ribetes de piel de vaca natural y candado dorado grabado con firma LV.',
+                 rating: 5.0,
+                 salesSim: 290,
+                 likesSim: 5200,
+                 stockSim: 9,
+                 comisionSim: 25,
+                 tiktokViewsSim: 54000,
+                 tiktokClicksSim: 6700
+               },
+               {
+                 id: 'lv-p2',
+                 name: "Billetera 'Zippy' Monogram Empreinte",
+                 price: 790.00,
+                 image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&q=80&w=400',
+                 category: 'Accesorios',
+                 description: 'Piel granulada flexible con motivo Monogram en relieve y múltiples compartimentos para tarjetas.',
+                 rating: 4.9,
+                 salesSim: 380,
+                 likesSim: 2400,
+                 stockSim: 15,
+                 comisionSim: 18,
+                 tiktokViewsSim: 23000,
+                 tiktokClicksSim: 3100
+               },
+               {
+                 id: 'lv-p3',
+                 name: "Gafas de Sol 'Millionaires' Runway",
+                 price: 690.00,
+                 image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&q=80&w=400',
+                 category: 'Gafas & Accesorios',
+                 description: 'Montura biselada profunda con inserciones doradas grabadas con el patrón Monogram en la parte superior.',
+                 rating: 5.0,
+                 salesSim: 195,
+                 likesSim: 3800,
+                 stockSim: 6,
+                 comisionSim: 22,
+                 tiktokViewsSim: 41000,
+                 tiktokClicksSim: 5300
+               }
+             ]
+           },
+           {
+             id: 'ysl',
+             name: 'Yves Saint Laurent Haute Couture',
+             username: 'ysl_official',
+             avatar: 'https://logo.clearbit.com/ysl.com',
+             bannerUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+             direccion: 'Rue Saint-Honoré 374, París, Francia',
+             style: 'Sponsor Oficial Elegancia Nocturna y Fragancias 🖤',
+             description: 'Sponsor oficial de sastrería femenina de gala, "Le Smoking" y fragancias emblemáticas para las supermodelos de Casting Live.',
+             rating: '5.0',
+             products: [
+               {
+                 id: 'ysl-p1',
+                 name: "Chaqueta Smoking 'Le Smoking' de Gala",
+                 price: 2890.00,
+                 image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=400',
+                 category: 'Alta Costura',
+                 description: 'Sastrería clásica en grano de pólvora de lana con solapas en satén de seda brillante.',
+                 rating: 5.0,
+                 salesSim: 85,
+                 likesSim: 4300,
+                 stockSim: 5,
+                 comisionSim: 30,
+                 tiktokViewsSim: 48000,
+                 tiktokClicksSim: 6100
+               },
+               {
+                 id: 'ysl-p2',
+                 name: "Bolso 'Kate' Monogram con Borla",
+                 price: 1850.00,
+                 image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=400',
+                 category: 'Bolsos & Piel',
+                 description: 'Bolso bandolera en piel lisa negra con iniciales YSL entrelazadas y borla metálica dorada.',
+                 rating: 4.9,
+                 salesSim: 240,
+                 likesSim: 3600,
+                 stockSim: 10,
+                 comisionSim: 24,
+                 tiktokViewsSim: 35000,
+                 tiktokClicksSim: 4600
+               },
+               {
+                 id: 'ysl-p3',
+                 name: "Perfume 'Libre Eau de Parfum' 90ml",
+                 price: 140.00,
+                 image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=400',
+                 category: 'Fragancias',
+                 description: 'La fragancia de la libertad floral con flor de azahar de Marruecos y lavanda de Francia.',
+                 rating: 5.0,
+                 salesSim: 620,
+                 likesSim: 4900,
+                 stockSim: 40,
+                 comisionSim: 15,
+                 tiktokViewsSim: 31000,
+                 tiktokClicksSim: 4200
+               }
+             ]
+           },
+           {
+             id: 'hermes',
+             name: 'Hermès Paris Luxury',
+             username: 'hermes_official',
+             avatar: 'https://logo.clearbit.com/hermes.com',
+             bannerUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200',
+             direccion: 'Rue du Faubourg Saint-Honoré 24, París, Francia',
+             style: 'Sponsor Oficial Cuero Artesanal & Carrés de Seda 🐎',
+             description: 'Sponsor de la más refinada artesanía en cuero, pañuelos de seda pura y joyería ecuestre para las modelos de honor de Fashion Finances.',
+             rating: '5.0',
+             products: [
+               {
+                 id: 'her-p1',
+                 name: "Pañuelo 'Carré 90' Seda Pura Estampada",
+                 price: 495.00,
+                 image: 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&q=80&w=400',
+                 category: 'Seda & Accesorios',
+                 description: 'Seda 100% hilada y estampada a mano por los artesanos de Lyon con motivos ecuestres icónicos.',
+                 rating: 5.0,
+                 salesSim: 310,
+                 likesSim: 3900,
+                 stockSim: 16,
+                 comisionSim: 20,
+                 tiktokViewsSim: 28000,
+                 tiktokClicksSim: 3900
+               },
+               {
+                 id: 'her-p2',
+                 name: "Pulsera 'Clic H' Esmaltada en Oro",
+                 price: 660.00,
+                 image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=400',
+                 category: 'Joyería',
+                 description: 'Brazalete esmaltado con cierre giratorio en forma de H bañado en oro pulido.',
+                 rating: 4.9,
+                 salesSim: 220,
+                 likesSim: 2600,
+                 stockSim: 11,
+                 comisionSim: 22,
+                 tiktokViewsSim: 21000,
+                 tiktokClicksSim: 2900
+               },
+               {
+                 id: 'her-p3',
+                 name: "Sandalias 'Oran' en Piel de Becerro",
+                 price: 610.00,
+                 image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=400',
+                 category: 'Calzado',
+                 description: 'Sandalia plana de piel Box con corte emblemático en H, costuras artesanales y suela de cuero natural.',
+                 rating: 5.0,
+                 salesSim: 340,
+                 likesSim: 3100,
+                 stockSim: 12,
+                 comisionSim: 18,
+                 tiktokViewsSim: 34000,
+                 tiktokClicksSim: 4500
+               }
+             ]
            }
          ];
 
@@ -897,7 +1257,15 @@ const getFashionBrandLogo = (storeId: string, storeName: string) => {
     );
   }
   
-  if (nameLower.includes("carolina herrera") || storeId === 'carolina_herrera_spain' || nameLower.includes("couture elite bo") || nameLower.includes("valentinarossi_w1")) {
+  if (nameLower.includes("couture elite")) {
+    return (
+      <div className="w-full h-full rounded-full bg-slate-900 border border-amber-500/40 flex items-center justify-center shadow-md select-none p-0.5 overflow-hidden">
+        <img src={COUTURE_ELITE_LOGO_DATA_URL} alt="Couture Elite Boutique" className="w-full h-full object-cover rounded-full" />
+      </div>
+    );
+  }
+
+  if (nameLower.includes("carolina herrera") || storeId === 'carolina_herrera_spain' || nameLower.includes("valentinarossi_w1")) {
     return (
       <div className="w-full h-full rounded-full bg-[#faf9f6] flex items-center justify-center text-neutral-900 font-serif font-black shadow-sm select-none text-[13px] tracking-widest">
         <div className="w-full h-full rounded-full flex items-center justify-center">
@@ -966,7 +1334,7 @@ const getFashionBrandLogo = (storeId: string, storeName: string) => {
     );
   }
 
-  if (nameLower.includes("hermès") || nameLower.includes("hermes")) {
+  if (nameLower.includes("hermès") || nameLower.includes("hermes") || storeId === 'hermes') {
     return (
       <div className="w-full h-full rounded-full bg-[#f37021] flex items-center justify-center text-white font-serif font-black shadow-md select-none text-[14px] border border-orange-400/30">
         <span>H</span>
@@ -974,9 +1342,17 @@ const getFashionBrandLogo = (storeId: string, storeName: string) => {
     );
   }
 
-  if (nameLower.includes("saint laurent")) {
+  if (nameLower.includes("balenciaga") || storeId === 'balenciaga') {
     return (
-      <div className="w-full h-full rounded-full bg-neutral-950 flex items-center justify-center text-white font-serif font-black shadow-md select-none text-[11px] tracking-tighter">
+      <div className="w-full h-full rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center text-white font-mono font-black shadow-md select-none text-[11px] tracking-wider">
+        <span>BB</span>
+      </div>
+    );
+  }
+
+  if (nameLower.includes("saint laurent") || nameLower.includes("ysl") || storeId === 'ysl') {
+    return (
+      <div className="w-full h-full rounded-full bg-neutral-950 border border-amber-400/30 flex items-center justify-center text-[#d5af66] font-serif font-black shadow-md select-none text-[11px] tracking-tighter">
         <span>YSL</span>
       </div>
     );
@@ -1092,7 +1468,7 @@ const PRESET_SONGS = [
 ];
 
 const FINANZAS_USERS = [
-  { id: 'f-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Modelo Directora' },
+  { id: 'f-1', name: 'Alessia Vance', username: 'alessia_vance_w1', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', role: 'Modelo Directora' },
   { id: 'f-2', name: 'Gisele Bündchen', username: 'gisele_invest', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Inversora Principal' },
   { id: 'f-3', name: 'Marcus Vance', username: 'marcus_v_capital', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Asesor Fintech' },
   { id: 'f-4', name: 'Sienna Cole', username: 'sienna_cole', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Modelo Patrocinada' },
@@ -1103,6 +1479,210 @@ const FINANZAS_USERS = [
   { id: 'f-9', name: 'Yasmin Santos', username: 'yasmin_model_ff', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Líder de Colectiva' },
   { id: 'f-10', name: 'Carlos Slim', username: 'carlos_slim_jr', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=650', role: 'Presidente de Honor' }
 ];
+
+export const TRABAJADORES_USERS = [
+  { id: 'trab-1', name: 'Lucas Torres', username: 'lucas_torres_design', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Diseñador Gráfico' },
+  { id: 'trab-2', name: 'Clara Vega', username: 'clara_patronaje', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Patronista Textil' },
+  { id: 'trab-3', name: 'Mateo Ruiz', username: 'mateo_fotografo', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Fotógrafo de Moda' },
+  { id: 'trab-4', name: 'Paula Gómez', username: 'paula_estilista', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Estilista Senior' },
+  { id: 'trab-5', name: 'Hugo Silva', username: 'hugo_luces', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Técnico Iluminación' },
+  { id: 'trab-6', name: 'Natalia Cruz', username: 'natalia_costura', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Costurera Alta Costura' },
+  { id: 'trab-7', name: 'Álvaro Díaz', username: 'alvaro_makeup', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional' },
+  { id: 'trab-8', name: 'Lucía Navarro', username: 'lucia_produccion', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción' },
+  { id: 'trab-9', name: 'Daniel Morales', username: 'daniel_3d_moda', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital' },
+  { id: 'trab-10', name: 'Marina Soler', username: 'marina_social', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=650', role: 'Community Manager' }
+];
+
+export const EMPRESARIOS_USERS = [
+  { id: 'emp-1', name: 'Alexander Wright', username: 'alex_wright_ceo', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'CEO Haute Couture' },
+  { id: 'emp-2', name: 'Victoria Sterling', username: 'victoria_sterling', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Dir. Expansión Global' },
+  { id: 'emp-3', name: 'Bruno Rossi', username: 'bruno_rossi_milan', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Presidente Textil Milano' },
+  { id: 'emp-4', name: 'Isabella Fontana', username: 'isabella_creative', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Directora Creativa' },
+  { id: 'emp-5', name: 'Maximilian Weber', username: 'max_weber_ops', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Dir. Operaciones' },
+  { id: 'emp-6', name: 'Claudia Mendez', username: 'claudia_tech', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Fundadora FashionTech' },
+  { id: 'emp-7', name: 'Roberto Conti', username: 'roberto_consejero', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Consejero Delegado' },
+  { id: 'emp-8', name: 'Valerie Dupont', username: 'valerie_dupont_paris', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Dir. Franquicias' },
+  { id: 'emp-9', name: 'Fernando Alarcón', username: 'fernando_corp', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=650', role: 'Inversor Corporativo' },
+  { id: 'emp-10', name: 'Olivia Bennett', username: 'olivia_strategy', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Consultora Estratégica' }
+];
+
+export const TOPMODELS_USERS = [
+  { id: 'tm-1', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' },
+  { id: 'tm-2', name: 'Gigi Hadid', username: 'gigi_hadid_official', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Embajadora Global' },
+  { id: 'tm-3', name: 'Bella Hadid', username: 'bella_hadid_runway', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Icono Pasarela' },
+  { id: 'tm-4', name: 'Naomi Campbell', username: 'naomi_campbell_mentor', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Supermodelo & Mentora' },
+  { id: 'tm-5', name: 'Cara Delevingne', username: 'cara_delevingne_live', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Actriz & Top Model' },
+  { id: 'tm-6', name: 'Irina Shayk', username: 'irina_shayk_couture', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Alta Costura Model' },
+  { id: 'tm-7', name: 'Candice Swanepoel', username: 'candice_swim', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=650', role: 'Directora de Marca' },
+  { id: 'tm-8', name: 'Karlie Kloss', username: 'karlie_kloss_tech', avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=650', role: 'Empresaria & Modelo' },
+  { id: 'tm-9', name: 'Joan Smalls', username: 'joan_smalls_runway', avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=650', role: 'Líder de Pasarelas' },
+  { id: 'tm-10', name: 'Alessandra Ambrosio', username: 'alessandra_ambrosio', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Ejecutiva' }
+];
+
+export const INVERSORES_USERS = [
+  { id: 'inv-1', name: 'Warren Buffett', username: 'warren_berkshire', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Pres. Fondo Berkshire' },
+  { id: 'inv-2', name: 'Bernard Arnault', username: 'bernard_lvmh_group', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Presidente LVMH' },
+  { id: 'inv-3', name: 'François Pinault', username: 'francois_kering', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=650', role: 'Grupo Kering Inversión' },
+  { id: 'inv-4', name: 'Amancio Ortega', username: 'amancio_inditex_cap', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Fundador Inditex Capital' },
+  { id: 'inv-5', name: 'Alice Walton', username: 'alice_walton_vc', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Venture Capital Global' },
+  { id: 'inv-6', name: 'Ray Dalio', username: 'ray_dalio_bridgewater', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Macro Hedge Fund' },
+  { id: 'inv-7', name: 'Abigail Johnson', username: 'abigail_fidelity', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Presidenta Fidelity' },
+  { id: 'inv-8', name: 'Tadashi Yanai', username: 'tadashi_fast_retailing', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Presidente Fast Retailing' },
+  { id: 'inv-9', name: 'Alain Wertheimer', username: 'alain_chanel_owner', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Propietario Chanel' },
+  { id: 'inv-10', name: 'Gérard Wertheimer', username: 'gerard_chanel_cfo', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Dir. Financiero Chanel' }
+];
+
+export const MILLONARIOS_USERS = [
+  { id: 'mil-1', name: 'Carlos Slim', username: 'carlos_slim_jr', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=650', role: 'Presidente de Honor' },
+  { id: 'mil-2', name: 'Elon Musk', username: 'elon_x_angels', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Director Tecnológico & Angel' },
+  { id: 'mil-3', name: 'Jeff Bezos', username: 'jeff_bezos_exp', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Fondo Expansión Global' },
+  { id: 'mil-4', name: 'Mark Zuckerberg', username: 'mark_zuck_meta', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=650', role: 'Meta Inversiones XR' },
+  { id: 'mil-5', name: 'Larry Ellison', username: 'larry_oracle_cap', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Consejero Estratégico' },
+  { id: 'mil-6', name: 'Bill Gates', username: 'bill_gates_venture', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Filantropía & Semilla' },
+  { id: 'mil-7', name: 'Steve Ballmer', username: 'steve_ballmer_invest', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Inversor Privado' },
+  { id: 'mil-8', name: 'Mukesh Ambani', username: 'mukesh_reliance_luxe', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Comercial de Lujo' },
+  { id: 'mil-9', name: 'Françoise Bettencourt', username: 'francoise_loreal_luxe', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Heredera L\'Oréal Luxe' },
+  { id: 'mil-10', name: 'Gautam Adani', username: 'adani_infra_fashion', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Grupo Infraestructura' }
+];
+
+const EXTRA_CHANNEL_GIFTS = [
+  { name: 'Rosa de Bienvenida', icon: '🌹', cost: 1, desc: 'Envía un saludo floral al canal' },
+  { name: 'Beso de Fánat@', icon: '💋', cost: 1, desc: 'Beso virtual a l@s presentadores' },
+  { name: 'Corazón Dulce', icon: '💖', cost: 5, desc: 'Muestra tu amor al directo' },
+  { name: 'Caja Sorpresa VIP', icon: '🎁', cost: 20, desc: 'Caja con premios sorpresa' },
+  { name: 'Rosquilla Glaseada', icon: '🍩', cost: 30, desc: 'Un snack dulce para la sala' },
+  { name: 'Lluvia de Billetes', icon: '💸', cost: 50, desc: 'Lluvia de billetes en pantalla' },
+  { name: 'Champagne Celebra', icon: '🍾', cost: 100, desc: 'Brindis exclusivo de gala' },
+  { name: 'Cohete de Impulso', icon: '🚀', cost: 250, desc: 'Lanza el stream al espacio' },
+  { name: 'Trofeo Inversor', icon: '🏆', cost: 300, desc: 'Reconocimiento a gran mecenas' },
+  { name: 'Corona de Canal VIP', icon: '👑', cost: 500, desc: 'Insignia dorada de líder' },
+  { name: 'Superdeportivo GT', icon: '🏎️', cost: 800, desc: 'Entrada triunfal con bólido' },
+  { name: 'León Dorado Imperial', icon: '🦁', cost: 1000, desc: 'El regalo definitivo del canal' },
+  { name: 'Diamante Imperial', icon: '💎', cost: 1000, desc: 'Gema brillante para la estrella' },
+  { name: 'Pintalabios Glam', icon: '💄', cost: 15, desc: 'Toque de elegancia pasarela' },
+  { name: 'Copa de Gala', icon: '🥂', cost: 40, desc: 'Brindis de alta sociedad' },
+  { name: 'Anillo de Brillantes', icon: '💍', cost: 600, desc: 'Regalo de lujo supremo' }
+];
+
+const CHANNEL_DESCRIPTIONS: Record<string, { icon: string; title: string; desc: string; bg: string; border: string; text: string }> = {
+  Fashion: {
+    icon: '👗',
+    title: 'Fashion',
+    desc: 'En este canal, los modelos deberán publicar vídeos relacionados con la moda, mostrando prendas, estilismos, colecciones, tendencias y cualquier contenido donde la vestimenta sea el elemento principal.',
+    bg: 'bg-pink-50/90',
+    border: 'border-pink-200/90',
+    text: 'text-pink-900'
+  },
+  Finanzas: {
+    icon: '💰',
+    title: 'Finanzas',
+    desc: 'En este canal se retransmitirán en directo las sesiones de crowdfunding de la plataforma, donde los usuarios podrán seguir las presentaciones de proyectos, las votaciones y los resultados en tiempo real.',
+    bg: 'bg-emerald-50/90',
+    border: 'border-emerald-200/90',
+    text: 'text-emerald-900'
+  },
+  Runway: {
+    icon: '👑',
+    title: 'Runway',
+    desc: 'En este canal Runway, los modelos y profesionales de pasarela publican vídeos exclusivos de desfiles, looks de pasarela, editoriales, sesiones de alta moda y momentos estelares de su carrera.',
+    bg: 'bg-amber-50/90',
+    border: 'border-amber-200/90',
+    text: 'text-amber-900'
+  },
+  Modelos: {
+    icon: '👑',
+    title: 'Runway',
+    desc: 'En este canal Runway, los modelos y profesionales de pasarela publican vídeos exclusivos de desfiles, looks de pasarela, editoriales, sesiones de alta moda y momentos estelares de su carrera.',
+    bg: 'bg-amber-50/90',
+    border: 'border-amber-200/90',
+    text: 'text-amber-900'
+  },
+  Backstage: {
+    icon: '🎬',
+    title: 'Backstage',
+    desc: 'En este canal se compartirán vídeos exclusivos del detrás de cámaras, mostrando la preparación de sesiones fotográficas, desfiles, producciones audiovisuales, maquillaje, peluquería, ensayos y momentos previos a los eventos.',
+    bg: 'bg-cyan-50/90',
+    border: 'border-cyan-200/90',
+    text: 'text-cyan-900'
+  },
+  BackStage: {
+    icon: '🎬',
+    title: 'Backstage',
+    desc: 'En este canal se compartirán vídeos exclusivos del detrás de cámaras, mostrando la preparación de sesiones fotográficas, desfiles, producciones audiovisuales, maquillaje, peluquería, ensayos y momentos previos a los eventos.',
+    bg: 'bg-cyan-50/90',
+    border: 'border-cyan-200/90',
+    text: 'text-cyan-900'
+  },
+  Jewellery: {
+    icon: '💎',
+    title: 'Jewellery',
+    desc: 'En este canal Jewellery se publican vídeos sobre alta joyería, piezas de autor, accesorios de lujo, gemas exclusivas y oportunidades de patrocinio e inversión en joyería selecta.',
+    bg: 'bg-purple-50/90',
+    border: 'border-purple-200/90',
+    text: 'text-purple-900'
+  },
+  Investors: {
+    icon: '💎',
+    title: 'Jewellery',
+    desc: 'En este canal Jewellery se publican vídeos sobre alta joyería, piezas de autor, accesorios de lujo, gemas exclusivas y oportunidades de patrocinio e inversión en joyería selecta.',
+    bg: 'bg-purple-50/90',
+    border: 'border-purple-200/90',
+    text: 'text-purple-900'
+  },
+  Tiendas: {
+    icon: '🛍️',
+    title: 'Tiendas',
+    desc: 'En este canal, los usuarios podrán presentar mediante vídeos sus productos, servicios o marcas con el objetivo de promocionarlos y captar el interés de potenciales clientes e inversores.',
+    bg: 'bg-sky-50/90',
+    border: 'border-sky-200/90',
+    text: 'text-sky-900'
+  },
+  Catwalk: {
+    icon: '🚶',
+    title: 'Catwalk',
+    desc: 'En este canal se publicarán vídeos de desfiles de moda, pasarelas y eventos en los que participen los modelos, mostrando su trabajo sobre la pasarela y sus colaboraciones con diferentes marcas y diseñadores.',
+    bg: 'bg-violet-50/90',
+    border: 'border-violet-200/90',
+    text: 'text-violet-900'
+  },
+  Fitnes: {
+    icon: '💪',
+    title: 'Fitnes',
+    desc: 'En este canal se publicarán vídeos de entrenamientos, rutinas fitness, vida activa, bienestar, preparación física para modelos y estilo de vida saludable.',
+    bg: 'bg-emerald-50/90',
+    border: 'border-emerald-200/90',
+    text: 'text-emerald-900'
+  },
+  Beauty: {
+    icon: '💄',
+    title: 'Beauty',
+    desc: 'En este canal se publicarán vídeos de belleza, tutoriales de maquillaje, cuidado de la piel, peinados, estética profesional y consejos de imagen personal.',
+    bg: 'bg-rose-50/90',
+    border: 'border-rose-200/90',
+    text: 'text-rose-900'
+  },
+  Influencer: {
+    icon: '📱',
+    title: 'Influencer',
+    desc: 'En este canal se publicarán vídeos de creadores de contenido, colaboraciones con marcas, vlogs, tendencias virales y lifestyle de influencers digitales.',
+    bg: 'bg-amber-50/90',
+    border: 'border-amber-200/90',
+    text: 'text-amber-900'
+  }
+};
+
+const CANONICAL_CHANNELS = [
+  'Fashion',
+  'Finanzas',
+  'Runway',
+  'Backstage',
+  'Jewellery',
+  'Tiendas',
+  'Catwalk',
+  'Fitnes',
+  'Beauty',
+  'Influencer'
+] as const;
 
 export default function CastingLiveSection({ 
   models, 
@@ -1243,7 +1823,7 @@ export default function CastingLiveSection({
       username: 'sofia_martinezz',
       name: 'Elena Rostova',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-smiling-woman-model-posing-in-the-street-40499-large.mp4',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
       likes: 1980,
       comments: [
         { id: 'c-6', user: 'silvia_m', text: 'El outfit urbano es de otra categoría 😍 ¿De dónde es el abrigo?', date: 'Hace 8 horas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=85&w=100' }
@@ -1305,7 +1885,7 @@ export default function CastingLiveSection({
       username: 'sofia_martinezz',
       name: 'Elena Rostova',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-smiling-woman-model-posing-in-the-street-40499-large.mp4',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
       likes: 1530,
       comments: [
         { id: 'c-tienda-1', user: 'fashion_lover', text: '¡Qué bonita tienda! Me encanta el vestido de seda 🛍️❤️', date: 'Hace 4 horas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=85&w=100' }
@@ -1489,26 +2069,125 @@ export default function CastingLiveSection({
       music: 'Runway Runway (Club Mix) - Fashion DJ',
       category: 'explorar',
       videoCategory: 'Catwalk'
+    },
+    {
+      id: 'vid-9',
+      modelId: 'model-2',
+      username: 'clara_fit_pro',
+      name: 'Clara Fitness',
+      avatar: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-warm-up-exercises-in-a-gym-42999-large.mp4',
+      likes: 3820,
+      comments: [
+        { id: 'c-fit-1', user: 'gym_lover', text: '¡Rutina brutal para definir antes de sesión! 💪🔥', date: 'Hace 1 hora', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 112,
+      favorites: 490,
+      description: 'Rutina matutina de cardio y tonificación para mantener resistencia en pasarela y sesiones fotográficas de larga duración. 💪🧘‍♀️ #fitness #training #workout #wellness',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'High Energy Beat - Fitness DJ',
+      category: 'explorar',
+      videoCategory: 'Fitnes'
+    },
+    {
+      id: 'vid-10',
+      modelId: 'model-3',
+      username: 'camila_beauty_glow',
+      name: 'Camila Glow',
+      avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-applying-lip-gloss-with-glitter-makeup-40480-large.mp4',
+      likes: 4190,
+      comments: [
+        { id: 'c-beauty-1', user: 'makeup_fan', text: 'Ese iluminador y el acabado de labios son perfectos 💄✨', date: 'Hace 3 horas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 145,
+      favorites: 620,
+      description: 'Tutorial rápido: acabado editorial "Glass Skin" con labios glossy y destellos de purpurina fina para fotografía de estudio. 💄✨ #beauty #skincare #makeup #glow',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Glow & Velvet Dreams - Beauty Lounge',
+      category: 'explorar',
+      videoCategory: 'Beauty'
+    },
+    {
+      id: 'vid-11',
+      modelId: 'model-4',
+      username: 'leo_lifestyle_infl',
+      name: 'Leo Valenti',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stylish-young-man-walking-in-a-urban-setting-41712-large.mp4',
+      likes: 5310,
+      comments: [
+        { id: 'c-infl-1', user: 'trend_spotter', text: 'Top contenido, la producción es cine puro 📱⭐', date: 'Hace 30 minutos', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 280,
+      favorites: 730,
+      description: 'Un día de colaboración y creación de contenido en Milán. Descubriendo los spots más icónicos para marcas de lujo. 📱✨ #influencer #creator #lifestyle #collabs',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'City Lights & Viral Vibes - Influencer Mix',
+      category: 'explorar',
+      videoCategory: 'Influencer'
     }
   ];
 
-  // --- States ---
+  // --- Touch & Mobile Interactive States ---
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const touchStartTimeRef = useRef<number>(0);
+  const touchStartXRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
+  const isTouchScrollingRef = useRef<boolean>(false);
   const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null);
   const lastScrollTime = useRef<number>(0);
 
+  // Automatic touch device detection & mobile options overlay toggles
+  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+    }
+    return false;
+  });
+  const [mobileChannelControlsVisible, setMobileChannelControlsVisible] = useState<boolean>(false);
+  const [showTouchTableOverlay, setShowTouchTableOverlay] = useState<boolean>(false);
+  const [showTouchRightSidebar, setShowTouchRightSidebar] = useState<boolean>(false);
+
+  useEffect(() => {
+    const detectTouch = () => {
+      const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+      if (hasTouch) setIsTouchDevice(true);
+    };
+    detectTouch();
+    window.addEventListener('touchstart', detectTouch, { passive: true, once: true });
+    return () => {
+      window.removeEventListener('touchstart', detectTouch);
+    };
+  }, []);
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.targetTouches[0] || e.touches[0];
+    if (!touch) return;
     setTouchEnd(null);
-    const y = e.targetTouches[0]?.clientY ?? e.touches[0]?.clientY ?? 0;
-    setTouchStart(y);
+    setTouchStart(touch.clientY);
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+    isTouchScrollingRef.current = false;
     touchStartTimeRef.current = Date.now();
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.targetTouches[0]) {
-      setTouchEnd(e.targetTouches[0].clientY);
+    const touch = e.targetTouches[0] || e.touches[0];
+    if (!touch) return;
+    setTouchEnd(touch.clientY);
+    const deltaX = Math.abs(touch.clientX - touchStartXRef.current);
+    const deltaY = Math.abs(touch.clientY - touchStartYRef.current);
+    // If movement is greater than 10px in X or Y, it's a scroll/swipe, not an intentional tap
+    if (deltaX > 10 || deltaY > 10) {
+      isTouchScrollingRef.current = true;
     }
   };
   const [videosList, setVideosList] = useState<CastingLiveVideo[]>(() => {
@@ -1649,13 +2328,14 @@ export default function CastingLiveSection({
     };
   }, []);
 
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk'>(() => {
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>(() => {
     const cached = localStorage.getItem('casting_live_default_category_filter');
-    if (cached && ['Todos', 'Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk'].includes(cached)) {
+    if (cached && ['Todos', 'Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cached)) {
       localStorage.removeItem('casting_live_default_category_filter');
       return cached as any;
     }
-    return 'Finanzas';
+    const isPaid = typeof window !== 'undefined' && localStorage.getItem('user_paid_finanzas_session') === 'true';
+    return isPaid ? 'Finanzas' : 'Todos';
   });
 
   useEffect(() => {
@@ -1663,7 +2343,54 @@ export default function CastingLiveSection({
       const cached = localStorage.getItem('casting_live_default_category_filter');
       if (cached) {
         setSelectedCategoryFilter(cached as any);
+        setSelectedLiveCategory(cached as any);
+        setShowTikTokShop(false);
+        setSelectedInvestorStore(null);
+        setActiveVideoIndex(0);
+        setSearchTerm('');
+        setActiveSubTab('para-ti');
+        setShowProjectDetailsInPopup(false);
+        setDetailProjectUser(null);
+        setFullscreenFinanzasUser(null);
+        setActiveFinanzasPopupUser(null);
+        setShowFinanzasPayModal(false);
+        setShowFinanzasResults(false);
+        setShowFinanzasRecount(false);
+        setShowVotingProjectsModal(false);
+        const targetSessionId = localStorage.getItem('finanzas_target_session_id');
+        const targetFeeStr = localStorage.getItem('finanzas_active_session_fee');
+        const targetFee = targetFeeStr ? Number(targetFeeStr) : null;
+
+        const savedSessions = localStorage.getItem('open_finanzas_sessions_list_v37') || localStorage.getItem('open_finanzas_sessions_list_v3');
+        if (savedSessions) {
+          try {
+            const parsed = JSON.parse(savedSessions);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setOpenFinanzasSessions(prev => {
+                const merged = [...parsed, ...prev.filter(p => !parsed.some(ps => ps.id === p.id || ps.entryFee === p.entryFee))];
+                return merged;
+              });
+              const targetIdx = targetSessionId 
+                ? parsed.findIndex(s => s.id === targetSessionId)
+                : (targetFee !== null ? parsed.findIndex(s => s.entryFee === targetFee) : 0);
+              setActiveFinanzasSessionIndex(targetIdx !== -1 ? targetIdx : 0);
+            }
+          } catch (e) {}
+        } else if (targetSessionId || targetFee !== null) {
+          setOpenFinanzasSessions(prev => {
+            const idx = prev.findIndex(s => (targetSessionId && s.id === targetSessionId) || (targetFee !== null && s.entryFee === targetFee));
+            if (idx !== -1) {
+              setActiveFinanzasSessionIndex(idx);
+            }
+            return prev;
+          });
+        }
+        // If transitioning to live session, show spotlight presentation matching z.png
+        setIsSpeakingPresenterIntro(true);
+        setFirstPresenterRevealed(false);
         localStorage.removeItem('casting_live_default_category_filter');
+        localStorage.removeItem('finanzas_target_session_id');
+        localStorage.removeItem('finanzas_active_session_fee');
       }
     };
     checkCategory();
@@ -1674,7 +2401,7 @@ export default function CastingLiveSection({
       clearInterval(timer);
     };
   }, []);
-  const [modalVideoCategoryFilter, setModalVideoCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk'>('Todos');
+  const [modalVideoCategoryFilter, setModalVideoCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>('Todos');
   const [isActivityDrawerOpen, setIsActivityDrawerOpen] = useState(false);
 
   // States for the Finanzas Category Live interactive streaming simulation
@@ -1682,6 +2409,7 @@ export default function CastingLiveSection({
   const [activeFinanzasPopupUser, setActiveFinanzasPopupUser] = useState<{ id: string; name: string; username: string; avatar: string; role: string } | null>(null);
   const [showQueueInPopup, setShowQueueInPopup] = useState(false);
   const [showProjectDetailsInPopup, setShowProjectDetailsInPopup] = useState(false);
+  const [showVotingProjectsModal, setShowVotingProjectsModal] = useState<boolean>(false);
   const [finanzasMuted, setFinanzasMuted] = useState(false);
   const [finanzasVolume, setFinanzasVolume] = useState<number>(80);
   const [finanzasCamOff, setFinanzasCamOff] = useState(false);
@@ -1696,27 +2424,137 @@ export default function CastingLiveSection({
       try {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-          const normalized: Record<string, number> = {};
-          for (const key in parsed) {
-            // Ensure pre-vote starting value is normalized to 9
-            normalized[key] = (parsed[key] >= 11 || parsed[key] === 10) ? 9 : parsed[key];
+          const totalVotes: number = (Object.values(parsed) as any[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+          if (totalVotes >= 1 && totalVotes <= 12) {
+            return parsed;
           }
-          return normalized;
         }
       } catch (e) {
         // fallback
       }
     }
     return {
-      'f-1': 9, 'f-2': 9, 'f-3': 9, 'f-4': 9, 'f-5': 9,
-      'f-6': 9, 'f-7': 9, 'f-8': 9, 'f-9': 9, 'f-10': 9, 'user': 9
+      'f-1': 3, // Adriana Lima
+      'f-2': 2, // Gisele Bündchen
+      'f-3': 1, // Marcus Vance
+      'f-4': 1, // Sienna Cole
+      'f-5': 1, // Liam Cooper
+      'f-6': 0, // Elena Rostova
+      'f-7': 0, // David K.
+      'f-8': 0, // Sofia Martinez
+      'f-9': 0, // Yasmin Santos
+      'f-10': 1, // Carlos Slim / User
+      'user': 1
     };
+  });
+
+  // Track the participants who have voted (all 10 must vote to terminate session)
+  const [finanzasVotedVoterIds, setFinanzasVotedVoterIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('finanzas_voted_voter_ids_v2');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return ['user']; // 1 vote initially by default
   });
 
   // States for vote recount and final results podium overlay inside this channel
   const [showFinanzasResults, setShowFinanzasResults] = useState<boolean>(false);
+  const [showFinanzasRecount, setShowFinanzasRecount] = useState<boolean>(false);
+  const [showFinanzasPayModal, setShowFinanzasPayModal] = useState<boolean>(false);
+  const [showFinanzasInscriptionInChannel, setShowFinanzasInscriptionInChannel] = useState<boolean>(false);
+  const [showParticipantsGatheringModal, setShowParticipantsGatheringModal] = useState<boolean>(false);
+  const [gatheringSessionTitle, setGatheringSessionTitle] = useState<string>('MESA DE EMPRESARIOS #1');
+  const [gatheringSessionFee, setGatheringSessionFee] = useState<number>(100);
+  const [selectedInscriptionProjectId, setSelectedInscriptionProjectId] = useState<string>('proj-eco-fashion');
   const [completedSessionToDisplay, setCompletedSessionToDisplay] = useState<any | null>(null);
   const [isCastingPublished, setIsCastingPublished] = useState<boolean>(true);
+  const [scrutinySeconds, setScrutinySeconds] = useState<number>(3000);
+  const [scrutinyVotesCount, setScrutinyVotesCount] = useState<number>(1);
+
+  // Default user projects for proposal inscription page (matching captura z.png)
+  const defaultInscriptionProposals = [
+    {
+      id: 'proj-eco-fashion',
+      title: 'Eco-Fashion Runway',
+      category: 'Sostenibilidad o impacto ambiental',
+      budget: 1000,
+      objective: 'Crear un impacto positivo en el medio ambiente a través de la alta costura sostenible.',
+      fundUsage: '80% materiales y diseño de vestuario, 15% booking de local climatizado verde, 5% staff técnico.'
+    },
+    {
+      id: 'proj-pasarela-3d',
+      title: 'Pasarela Digital 3D & Metaverso',
+      category: 'Innovación Tecnológica',
+      budget: 2500,
+      objective: 'Desarrollar showrooms virtuales inmersivos para diseñadores independientes de moda.',
+      fundUsage: '70% modelado 3D y renderizado en tiempo real, 20% marketing digital, 10% servidores.'
+    },
+    {
+      id: 'proj-moda-circular',
+      title: 'Moda Circular & Upcycling',
+      category: 'Alta Costura Circular',
+      budget: 1500,
+      objective: 'Transformar excedentes textiles en colecciones exclusivas de lujo artesanal.',
+      fundUsage: '75% confección y patronaje artesanal, 15% logística de recolección, 10% embalaje ecológico.'
+    },
+    {
+      id: 'proj-casting-ia',
+      title: 'Casting Inteligente con IA',
+      category: 'Diseño y Producción',
+      budget: 5000,
+      objective: 'Conectar modelos y marcas de moda mediante algoritmos predictivos de compatibilidad.',
+      fundUsage: '60% desarrollo de software y red neuronal, 25% pruebas de usuario con agencias, 15% infraestructura cloud.'
+    }
+  ];
+
+  // Helper to format total seconds into MM:SS (e.g. 3000 -> 50:00)
+  const formatMMSS = (totalSecs: number) => {
+    const m = Math.floor(Math.max(0, totalSecs) / 60);
+    const s = Math.max(0, totalSecs) % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Auto-redirect from vote count/scrutiny page (zxcv.png) to final results page (zas.png) when countdown hits 0 / last vote in
+  useEffect(() => {
+    if (showFinanzasRecount && selectedCategoryFilter === 'Finanzas') {
+      const initialCount = scrutinyVotesCount > 1 ? scrutinyVotesCount : 9;
+      setScrutinyVotesCount(initialCount);
+      setScrutinySeconds(initialCount >= 10 ? 0 : Math.round(3000 * ((10 - initialCount) / 9)));
+
+      const interval = setInterval(() => {
+        setScrutinyVotesCount((prevVotes) => {
+          const nextVotes = prevVotes + 1;
+          
+          if (nextVotes >= 10) {
+            clearInterval(interval);
+            setScrutinySeconds(0); // 00:00
+            if (!completedSessionToDisplay) {
+              const sessionData = buildFinanzasCompletedSession(finanzasVotes);
+              setCompletedSessionToDisplay(sessionData);
+            }
+            setTimeout(() => {
+              setShowFinanzasRecount(false);
+              setShowFinanzasResults(true); // Final results page (zas.png)
+              handleFinishCurrentSessionAndNext();
+            }, 1200);
+            return 10;
+          }
+
+          // Scale remaining seconds proportionally down from 3000s (50:00) to 0s (00:00) as votes progress to 10
+          const remainingFraction = (10 - nextVotes) / 9;
+          const newSeconds = Math.max(0, Math.round(3000 * remainingFraction));
+          setScrutinySeconds(newSeconds);
+
+          return nextVotes;
+        });
+      }, 1200);
+
+      return () => clearInterval(interval);
+    }
+  }, [showFinanzasRecount, selectedCategoryFilter]);
 
   // States for individual 5-minute (300 seconds) countdown timers for the 10 Finanzas presenters
   const [finanzasTimers, setFinanzasTimers] = useState<Record<string, number>>(() => {
@@ -1725,6 +2563,18 @@ export default function CastingLiveSection({
   });
 
   const [finanzasTimerActive, setFinanzasTimerActive] = useState<Record<string, boolean>>({});
+
+  // 10-minute final voting & decision phase states (Minute 50:00 to 60:00)
+  const [isVotingPhaseActive, setIsVotingPhaseActive] = useState<boolean>(() => {
+    const saved = localStorage.getItem('finanzas_is_voting_phase_active');
+    return saved === 'true';
+  });
+  const [votingPhaseTimer, setVotingPhaseTimer] = useState<number>(() => {
+    const saved = localStorage.getItem('finanzas_voting_phase_timer');
+    return saved ? parseInt(saved, 10) : 600;
+  });
+  const lastAnnouncedPresenterIndexRef = useRef<number>(-1);
+  const hasAnnouncedVotingPhaseRef = useRef<boolean>(false);
 
   // Simulation Scenarios State:
   // 'not_present' = Only 5 participants (blocked/paused exhibition)
@@ -1737,15 +2587,787 @@ export default function CastingLiveSection({
 
   // States for presenters joined (online in session) vs empty slots
   const [joinedPresenterIds, setJoinedPresenterIds] = useState<string[]>(() => {
-    const saved = localStorage.getItem('finanzas_joined_presenter_ids');
-    return saved ? JSON.parse(saved) : ['f-1', 'f-2', 'f-3', 'f-4', 'f-5'];
+    return ['f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9', 'f-10'];
   });
 
   // Custom states for the system audio announcement & banner
   const [systemVoiceNotification, setSystemVoiceNotification] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
   const [isVoiceIntroPlaying, setIsVoiceIntroPlaying] = useState(false);
+  const [isSpeakingPresenterIntro, setIsSpeakingPresenterIntro] = useState(false);
+  const [firstPresenterRevealed, setFirstPresenterRevealed] = useState(true);
+  const [simulatedUserVote, setSimulatedUserVote] = useState<'favor' | 'contra' | null>(null);
   const [showFinanzasBlockedBanner, setShowFinanzasBlockedBanner] = useState(false);
   const [showProject5MinNotice, setShowProject5MinNotice] = useState(false);
+  const [showRondaNotice, setShowRondaNotice] = useState(true);
+  const [cannotJoinMultipleSessionsModal, setCannotJoinMultipleSessionsModal] = useState<{
+    show: boolean;
+    activeSessionTitle: string;
+    activeSessionCategory: string;
+    activeSessionFee: number;
+    activeSessionId: string;
+    attemptedSessionTitle: string;
+    attemptedSessionFee: number;
+  } | null>(null);
+  const spokenSessionIdsRef = useRef<Set<string>>(new Set());
+
+  // Stop all voices and audio speech immediately when final results page is open
+  useEffect(() => {
+    if (showFinanzasResults) {
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (err) {}
+      }
+      setIsSpeakingPresenterIntro(false);
+      setIsVoiceIntroPlaying(false);
+      setSystemVoiceNotification({ show: false, message: "" });
+
+      // Keep synthesis cancelled to prevent any queued speech from other sessions
+      const cancelInterval = setInterval(() => {
+        if ('speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel();
+          } catch (e) {}
+        }
+      }, 300);
+
+      // Smoothly scroll down so the results header and podium are fully visible
+      setTimeout(() => {
+        const el = document.getElementById('finanzas-results-overlay') || document.getElementById('casting-live-main-card');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+
+      return () => {
+        clearInterval(cancelInterval);
+      };
+    }
+  }, [showFinanzasResults]);
+
+  // Open Investment Sessions in this channel where users participate
+  const getFinanzasCategoryFee = (title: string, category: string, currentFee?: number): number => {
+    const text = `${title} ${category}`.toLowerCase();
+    if (text.includes('millonari')) return 1000000;
+    if (text.includes('invers')) return 100000;
+    if (text.includes('model') || text.includes('top')) return 10000;
+    if (text.includes('empresar')) return 1000;
+    if (text.includes('emprend')) return 100;
+    if (text.includes('trabajad')) return 10;
+    return currentFee || 10;
+  };
+
+  const DEFAULT_USER_PARTICIPANT = {
+    id: userProfile?.id && userProfile.id !== 'f-1' ? userProfile.id : 'user-adriana',
+    name: userProfile?.name || 'Adriana Lima',
+    username: userProfile?.username || 'adrianalima',
+    avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+    role: 'Usuario Inversor / 10º Participante',
+    projectId: 'proj-1',
+    projectTitle: 'Eco-Fashion Runway'
+  };
+
+  const DEFAULT_FINANZAS_TABLE_SESSIONS = [
+    {
+      id: 'sess-trabajadores-1',
+      title: 'Round STREETWEAR & URBAN',
+      brand: 'Estilo moderno, sneakers, denim y cultura street.',
+      category: 'Round STREETWEAR & URBAN',
+      entryFee: 10,
+      presenter: TRABAJADORES_USERS[0],
+      participants: [
+        ...TRABAJADORES_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    },
+    {
+      id: 'sess-emprendedores-1',
+      title: 'Round CASUAL & LIFESTYLE',
+      brand: 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.',
+      category: 'Round CASUAL & LIFESTYLE',
+      entryFee: 100,
+      presenter: FINANZAS_USERS[0],
+      participants: [
+        ...FINANZAS_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    },
+    {
+      id: 'sess-empresarios-1',
+      title: 'Ronda Glamour ✨',
+      brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
+      category: 'Ronda Glamour ✨',
+      entryFee: 1000,
+      presenter: EMPRESARIOS_USERS[0],
+      participants: [
+        ...EMPRESARIOS_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    },
+    {
+      id: 'sess-topmodels-1',
+      title: 'Ronda Elegant & Classic 🤍',
+      brand: 'sofisticado, clásico, atemporal y refinado.',
+      category: 'Ronda Elegant & Classic 🤍',
+      entryFee: 10000,
+      presenter: TOPMODELS_USERS[0],
+      participants: [
+        ...TOPMODELS_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    },
+    {
+      id: 'sess-inversores-1',
+      title: 'Ronda High Fashion 👠',
+      brand: 'alta moda, diseñadores, pasarela y tendencias.',
+      category: 'Ronda High Fashion 👠',
+      entryFee: 100000,
+      presenter: INVERSORES_USERS[0],
+      participants: [
+        ...INVERSORES_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    },
+    {
+      id: 'sess-millonarios-1',
+      title: 'Ronda High Fashion 👠',
+      brand: 'alta moda, diseñadores, pasarela y tendencias.',
+      category: 'Ronda High Fashion 👠',
+      entryFee: 1000000,
+      presenter: MILLONARIOS_USERS[0],
+      participants: [
+        ...MILLONARIOS_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    }
+  ];
+
+  const [openFinanzasSessions, setOpenFinanzasSessions] = useState<Array<{
+    id: string;
+    title: string;
+    brand: string;
+    category: string;
+    entryFee: number;
+    presenter: { id: string; name: string; avatar: string; role: string };
+    participants: Array<{ id: string; name: string; username: string; avatar: string; role: string }>;
+    status: 'active' | 'completed';
+  }>>(() => {
+    const saved = localStorage.getItem('open_finanzas_sessions_list_v37');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 6) {
+          return parsed;
+        }
+      } catch (e) {}
+    }
+    return DEFAULT_FINANZAS_TABLE_SESSIONS;
+  });
+
+  const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(() => {
+    const savedTarget = localStorage.getItem('finanzas_target_session_id');
+    if (savedTarget) {
+      const idx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.id === savedTarget);
+      if (idx !== -1) return idx;
+    }
+    // Default to Mesa de Emprendedores #1 or Empresarios #1 where user is participating
+    const empIdx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.id === 'sess-emprendedores-1');
+    return empIdx !== -1 ? empIdx : 1;
+  });
+  const [simulateEmptyFinanzasChannel, setSimulateEmptyFinanzasChannel] = useState<boolean>(false);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const sessionScrollLockRef = useRef<boolean>(false);
+
+  // Persist open sessions
+  useEffect(() => {
+    localStorage.setItem('open_finanzas_sessions_list_v37', JSON.stringify(openFinanzasSessions));
+  }, [openFinanzasSessions]);
+
+  // Active open sessions only
+  const activeSessionsOnly = openFinanzasSessions.filter(s => s.status === 'active');
+  const currentFinanzasSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0] || openFinanzasSessions[0];
+
+  // Helper function to handle scrolling and switching sessions (TikTok style)
+  const handleScrollSession = (direction: 'up' | 'down') => {
+    if (showFinanzasResults || showFinanzasRecount) return;
+    if (showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+    if (activeSessionsOnly.length <= 1) return;
+    if (direction === 'down') {
+      setSlideDirection('up');
+      setActiveFinanzasSessionIndex(prev => (prev + 1) % activeSessionsOnly.length);
+    } else {
+      setSlideDirection('down');
+      setActiveFinanzasSessionIndex(prev => (prev - 1 + activeSessionsOnly.length) % activeSessionsOnly.length);
+    }
+    setSelectedFinanzasUser(null);
+    setActiveFinanzasPopupUser(null);
+    setFullscreenFinanzasUser(null);
+    setShowProjectDetailsInPopup(false);
+    setDetailProjectUser(null);
+    setShowRondaNotice(true);
+  };
+
+  // Keyboard navigation for TikTok-like experience (ArrowUp, ArrowDown, PageUp, PageDown)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if (selectedCategoryFilter === 'Finanzas') {
+        if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+          e.preventDefault();
+          handleScrollSession('down');
+        } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+          e.preventDefault();
+          handleScrollSession('up');
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCategoryFilter, activeSessionsOnly.length, showFinanzasResults, showFinanzasRecount, showProjectDetailsInPopup, detailProjectUser, showVotingProjectsModal]);
+
+  // Effect for audio opening of the session and presenting the 1st participant
+  useEffect(() => {
+    if (showFinanzasResults || showFinanzasRecount) {
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+      }
+      return;
+    }
+    if (selectedCategoryFilter === 'Finanzas') {
+      const sessionId = currentFinanzasSession?.id || 'sess-emprendedores-1';
+      const sessionTitle = currentFinanzasSession?.title || 'Mesa de Emprendedores #1';
+      
+      const firstPart = currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
+      const firstPartName = firstPart.name || 'Adriana Lima';
+      
+      // Ensure first participant is selected
+      setSelectedFinanzasUser(firstPart);
+
+      // Check if this session's intro speech has already been delivered to prevent repeating
+      if (spokenSessionIdsRef.current.has(sessionId)) {
+        setIsSpeakingPresenterIntro(false);
+        setIsVoiceIntroPlaying(false);
+        setFirstPresenterRevealed(true);
+        setFinanzasTimerActive(prev => ({ ...prev, [firstPart.id]: true }));
+        return;
+      }
+
+      // Mark this session as spoken
+      spokenSessionIdsRef.current.add(sessionId);
+
+      const sessionParticipantsList = currentFinanzasSession?.participants || FINANZAS_USERS;
+      const userSlotIndex = sessionParticipantsList.findIndex(p => p.id === 'user-ernesto' || p.id === 'user-adriana' || p.id === 'user' || (userProfile && p.id === userProfile.id));
+      const namesList = sessionParticipantsList.slice(0, 10).map((p, idx) => {
+        const isSelf = (userSlotIndex !== -1 && idx === userSlotIndex) || (userSlotIndex === -1 && idx === 9 && (p.id?.startsWith('user') || p.role?.includes('Inversor')));
+        const displayName = isSelf ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : p.name;
+        return `${idx === 9 ? 'y número 10' : `número ${idx + 1}`}: ${displayName}`;
+      }).join(', ');
+
+      const pendingSpeech = localStorage.getItem('pending_session_welcome_speech');
+      const speechOpeningText = pendingSpeech || `¡Atención a todos los miembros de la sala! Damos la bienvenida a los diez participantes de la ${sessionTitle}. Los diez participantes inscritos en esta sesión de inversión de emprendedores son: ${namesList}. Damos comienzo a los turnos de exposición. Turno número 1 de 10: En exposición ${firstPartName}, disponiendo de cinco minutos de tiempo en directo para exponer y defender su proyecto. ¡Adelante ${firstPartName}, tu tiempo comienza ahora!`;
+      localStorage.removeItem('pending_session_welcome_speech');
+
+      // Set first participant active and lock timer at 5m (300s) until voice finishes
+      setFinanzasTimers(prev => ({ ...prev, [firstPart.id]: 300 }));
+      setFirstPresenterRevealed(false);
+      setIsSpeakingPresenterIntro(true);
+      setIsVoiceIntroPlaying(true);
+      setFinanzasTimerActive({ [firstPart.id]: false });
+
+      setSystemVoiceNotification({
+        show: true,
+        message: `🎙️ Presentando a la 1ª participante: ${firstPartName} (${sessionTitle})`
+      });
+
+      let speechFinished = false;
+      const handleSpeechComplete = () => {
+        if (speechFinished) return;
+        speechFinished = true;
+        setIsSpeakingPresenterIntro(false);
+        setIsVoiceIntroPlaying(false);
+        setFirstPresenterRevealed(true);
+        setFinanzasTimerActive({ [firstPart.id]: true });
+        
+        setSystemVoiceNotification({
+          show: true,
+          message: `⏱️ ¡Cuenta atrás iniciada (5:00) para ${firstPartName}!`
+        });
+
+        setTimeout(() => {
+          setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+        }, 7000);
+      };
+
+      const timer = setTimeout(() => {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+          const playChime = (freq: number, duration: number, delay: number) => {
+            setTimeout(() => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+              osc.start();
+              osc.stop(audioCtx.currentTime + duration);
+            }, delay);
+          };
+          playChime(523.25, 0.4, 0);   // C5
+          playChime(659.25, 0.5, 140); // E5
+          playChime(783.99, 0.6, 280); // G5
+          playChime(1046.50, 0.7, 420); // C6
+        } catch (e) {
+          console.log("AudioContext chime error:", e);
+        }
+
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(speechOpeningText);
+          utterance.lang = 'es-ES';
+          utterance.volume = 1;
+          utterance.rate = 0.95;
+          
+          utterance.onend = () => {
+            handleSpeechComplete();
+          };
+          utterance.onerror = () => {
+            handleSpeechComplete();
+          };
+
+          const voices = window.speechSynthesis.getVoices();
+          const esVoice = voices.find(v => v.lang.includes('es'));
+          if (esVoice) utterance.voice = esVoice;
+          window.speechSynthesis.speak(utterance);
+        } else {
+          handleSpeechComplete();
+        }
+      }, 500);
+
+      // Fallback safety in case synthesis fails or takes longer
+      const fallbackTimer = setTimeout(() => {
+        handleSpeechComplete();
+      }, 16000);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(fallbackTimer);
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      };
+    }
+  }, [selectedCategoryFilter, currentFinanzasSession?.id]);
+
+  // Helper function for user participation in current open session
+  const handleUserJoinCurrentSession = () => {
+    if (!currentFinanzasSession) return;
+    const myId = userProfile?.id || 'user-ernesto';
+    const myUsername = userProfile?.username || 'ernestovs';
+    const myName = userProfile?.name || 'Adriana Lima';
+
+    const isAlreadyParticipatingInCurrent = (currentFinanzasSession.participants || []).some(
+      p => p.id === myId || p.username === myUsername || p.name === myName || p.name === 'Ernesto vs' || p.id === 'user-ernesto' || p.username === 'ernestovs'
+    );
+
+    if (isAlreadyParticipatingInCurrent) {
+      alert(`✅ Ya estás participando activamente en la "${currentFinanzasSession.title}".`);
+      return;
+    }
+
+    // Check if user is already participating in ANOTHER active session
+    const activeParticipatingSession = openFinanzasSessions.find(s => 
+      s.id !== currentFinanzasSession.id &&
+      (s.participants || []).some(
+        p => p.id === myId || p.username === myUsername || p.name === myName || p.name === 'Ernesto vs' || p.id === 'user-ernesto' || p.username === 'ernestovs'
+      )
+    );
+
+    if (activeParticipatingSession) {
+      // Play a soft attention audio tone
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(330, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch (e) {}
+
+      // Trigger informative modal notification
+      setCannotJoinMultipleSessionsModal({
+        show: true,
+        activeSessionTitle: activeParticipatingSession.title,
+        activeSessionCategory: activeParticipatingSession.category || 'Ronda de Emprendimiento',
+        activeSessionFee: activeParticipatingSession.entryFee || 100,
+        activeSessionId: activeParticipatingSession.id,
+        attemptedSessionTitle: currentFinanzasSession.title,
+        attemptedSessionFee: currentFinanzasSession.entryFee || 1000
+      });
+      return;
+    }
+
+    // Open inscription & payment page inside the channel (captura z.png)
+    setShowFinanzasInscriptionInChannel(true);
+  };
+
+  const handleGatheringComplete = () => {
+    setShowParticipantsGatheringModal(false);
+    setShowFinanzasInscriptionInChannel(false);
+    setShowVotingProjectsModal(false);
+    setShowFinanzasRecount(false);
+    setShowFinanzasResults(false);
+    setShowProjectDetailsInPopup(false);
+    setDetailProjectUser(null);
+    setActiveFinanzasPopupUser(null);
+    setFullscreenFinanzasUser(null);
+    setSelectedCategoryFilter('Finanzas');
+
+    // Activate voting phase and show live channel matching z.png
+    setIsVotingPhaseActive(true);
+    setVotingPhaseTimer(0);
+    setFinanzasScenario('scenario_c');
+    localStorage.setItem('finanzas_scenario', 'scenario_c');
+    localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+    localStorage.setItem('finanzas_voting_phase_timer', '0');
+    localStorage.setItem('finanzas_user_participating', 'true');
+
+    // Set first presenter in spotlight
+    const activeSess = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession || openFinanzasSessions[0];
+    const firstPresenter = activeSess?.participants?.[0] || TRABAJADORES_USERS[0];
+    setSelectedFinanzasUser(firstPresenter);
+    setFirstPresenterRevealed(false);
+    setIsSpeakingPresenterIntro(true);
+    setIsVoiceIntroPlaying(true);
+
+    const sessionTitle = activeSess?.title || 'Round STREETWEAR & URBAN';
+    const totalRecaudado = (activeSess?.entryFee || 10) * 10;
+    const announceText = `¡${sessionTitle} completada con ${totalRecaudado} euros recaudados! Damos la palabra a ${firstPresenter.name} para su exposición de 5 minutos en directo.`;
+
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(announceText);
+        utterance.lang = 'es-ES';
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {}
+    }
+  };
+
+  // Handler to speak out loud the full list of 10 participants and active turn
+  const handleReadSessionParticipantsAndTurn = () => {
+    const sessionTitle = currentFinanzasSession?.title || 'Sesión de Inversión de Emprendedores';
+    const sessionParticipants = currentFinanzasSession?.participants || FINANZAS_USERS;
+    const activePresenter = selectedFinanzasUser || sessionParticipants[0];
+    const presentingIndex = finanzasPresentationQueue.findIndex(item => item.id === activePresenter.id || item.name === activePresenter.name);
+    const currentTurn = presentingIndex !== -1 ? presentingIndex + 1 : 1;
+    const isSelfPresenter = activePresenter.id === 'user-adriana' || activePresenter.id === 'user-ernesto' || activePresenter.name === 'Adriana Lima' || activePresenter.name === 'Ernesto vs' || (userProfile && activePresenter.id === userProfile.id);
+    const activeName = isSelfPresenter ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : activePresenter.name;
+
+    const userSlotIndex = sessionParticipants.findIndex(p => p.id === 'user-ernesto' || p.id === 'user-adriana' || p.id === 'user' || (userProfile && p.id === userProfile.id));
+    const namesList = sessionParticipants.slice(0, 10).map((p, idx) => {
+      const isSelf = (userSlotIndex !== -1 && idx === userSlotIndex) || (userSlotIndex === -1 && idx === 9 && (p.id?.startsWith('user') || p.role?.includes('Inversor')));
+      const dName = isSelf ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : p.name;
+      return `${idx === 9 ? 'y número 10' : `número ${idx + 1}`}: ${dName}`;
+    }).join(', ');
+
+    const fullSpeech = `Sesión de Inversión de Emprendedores: ${sessionTitle}. Los diez participantes inscritos son: ${namesList}. Actualmente en el Turno número ${currentTurn} de 10: En exposición ${activeName}, disponiendo de cinco minutos de tiempo en directo para defender su proyecto.`;
+
+    setSystemVoiceNotification({
+      show: true,
+      message: `🎙️ Leyendo nombres y turnos: ${sessionTitle}`
+    });
+
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch (e) {}
+
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(fullSpeech);
+        utterance.lang = 'es-ES';
+        utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+        utterance.rate = 0.95;
+        const voices = window.speechSynthesis.getVoices();
+        const spanishVoice = voices.find((v) => v.lang.includes('es'));
+        if (spanishVoice) utterance.voice = spanishVoice;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {}
+    }
+  };
+
+  // Handler to process inscription fee payment & join table (matching captura z.png & image.png)
+  const handleExecutePaymentAndJoinSession = (projectId?: string) => {
+    if (!currentFinanzasSession && openFinanzasSessions.length === 0) return;
+    const myId = userProfile?.id || "user-adriana";
+    const myName = userProfile?.name || "Adriana Lima";
+    const myUsername = userProfile?.username || "adrianalima";
+    const myAvatar = userProfile?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650";
+
+    const targetSession = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession || openFinanzasSessions[0];
+
+    const fee = targetSession.entryFee || 100;
+    const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
+    const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
+
+    // Deduct user balance if profile is available
+    if (userProfile && onUpdateUserProfile) {
+      const nextBalance = Math.max(0, (userProfile.balance || 150000) - fee);
+      onUpdateUserProfile({
+        ...userProfile,
+        balance: nextBalance
+      });
+    }
+
+    const fallbackOthers = targetSession.id.includes("empresarios") 
+      ? EMPRESARIOS_USERS 
+      : (targetSession.id.includes("trabajadores") 
+          ? TRABAJADORES_USERS 
+          : (targetSession.id.includes("topmodels") 
+              ? TOPMODELS_USERS 
+              : (targetSession.id.includes("inversores") 
+                  ? INVERSORES_USERS 
+                  : (targetSession.id.includes("millonarios") 
+                      ? MILLONARIOS_USERS 
+                      : FINANZAS_USERS))));
+
+    const userParticipant = {
+      id: myId,
+      name: myName,
+      username: myUsername,
+      avatar: myAvatar,
+      role: "Usuario Inversor (10º Participante)",
+      projectId: selectedProj.id,
+      projectTitle: selectedProj.title
+    };
+
+    // Ensure target session has exactly 10 members (the 9 peers + user as 10th)
+    const updatedSessions = openFinanzasSessions.map(s => {
+      if (s.id === targetSession.id) {
+        const isUserMatch = (p: any) => p.id === myId || p.username === myUsername || p.name === myName || (myName && p.name?.toLowerCase() === myName.toLowerCase()) || p.id === "user-adriana" || p.id === "user-ernesto" || p.id === "user" || p.name === "Ernesto vs";
+        const otherParticipants = (s.participants || []).filter(p => !isUserMatch(p));
+        
+        const finalNine = otherParticipants.length >= 9 
+          ? otherParticipants.slice(0, 9)
+          : [...otherParticipants, ...fallbackOthers.filter(fu => !isUserMatch(fu) && !otherParticipants.some(op => op.id === fu.id))].slice(0, 9);
+
+        return {
+          ...s,
+          participants: [...finalNine, userParticipant]
+        };
+      }
+      return s;
+    });
+
+    setOpenFinanzasSessions(updatedSessions);
+    localStorage.setItem("open_finanzas_sessions_list_v37", JSON.stringify(updatedSessions));
+    localStorage.setItem("finanzas_target_session_id", targetSession.id);
+    localStorage.setItem("finanzas_user_participating", "true");
+
+    const activeList = updatedSessions.filter(s => s.status === "active");
+    const targetIdx = activeList.findIndex(s => s.id === targetSession.id);
+    if (targetIdx !== -1) {
+      setActiveFinanzasSessionIndex(targetIdx);
+    }
+
+    // Show 10 participants gathering modal in real time
+    setGatheringSessionTitle(targetSession.title || "MESA DE EMPRESARIOS #1");
+    setGatheringSessionFee(fee || 100);
+    setShowParticipantsGatheringModal(true);
+    return;
+
+    // Unmute sound and configure audio volume
+    setFinanzasMuted(false);
+    setFinanzasVolume(100);
+    setIsFinanzasLiveConnected(true);
+    setIsSpeakingPresenterIntro(false);
+    setFirstPresenterRevealed(true);
+
+    // Set first presenter in the spotlight
+    const sessionTitle = targetSession.title || "Mesa de Inversión";
+    const firstPresenter = targetSession.presenter?.name 
+      ? (FINANZAS_USERS.find(u => u.name === targetSession.presenter.name) || targetSession.presenter) 
+      : (targetSession.participants?.[0] || FINANZAS_USERS[0]);
+    const presenterName = firstPresenter?.name || "Adriana Lima";
+
+    setSelectedFinanzasUser(firstPresenter);
+    setActiveFinanzasPopupUser(null);
+    setShowQueueInPopup(false);
+
+    // Reset everyone's timer to 300s (5 minutes)
+    setFinanzasTimers(prev => {
+      const next = { ...prev };
+      FINANZAS_USERS.forEach(u => {
+        next[u.id] = 300;
+      });
+      next["user"] = 300;
+      next[myId] = 300;
+      return next;
+    });
+
+    setFinanzasPresentationQueue(prev => {
+      if (prev.length === 0) return prev;
+      return prev.map((item, idx) => ({
+        ...item,
+        status: idx === 0 ? ("presenting" as const) : ("waiting" as const)
+      }));
+    });
+
+    setFinanzasTimerActive({
+      [firstPresenter.id || "f-1"]: true
+    });
+
+    setIsVoiceIntroPlaying(true);
+
+    // Play start chimes via Web Audio API
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      const playNote = (freq: number, duration: number, delay: number) => {
+        setTimeout(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        }, delay);
+      };
+
+      playNote(523.25, 0.4, 0);   // C5
+      playNote(659.25, 0.5, 140); // E5
+      playNote(783.99, 0.6, 280); // G5
+      playNote(1046.50, 0.7, 420); // C6
+    } catch (e) {
+      console.log("AudioContext chime not supported or blocked:", e);
+    }
+
+    const fullSpeechMessage = `¡Pago de ${feeFormatted} confirmado! Bienvenidos a la ${sessionTitle}. Contamos con los 10 participantes completos en la sala. Damos inicio a la ronda de exposición y votaciones en directo. El primer participante en presentar su propuesta es ${presenterName}. ¡Mucha suerte a todos!`;
+
+    // Show system banner notification
+    setSystemVoiceNotification({
+      show: true,
+      message: `🎙️ ¡10/10 Participantes Conectados! Iniciando ${sessionTitle} con audio en directo...`
+    });
+
+    setTimeout(() => {
+      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+    }, 12000);
+
+    // Synthesize and speak audio via Web Speech API
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(fullSpeechMessage);
+      utterance.lang = 'es-ES';
+      utterance.volume = 1;
+      utterance.rate = 0.95;
+
+      const voices = window.speechSynthesis.getVoices();
+      const spanishVoice = voices.find(v => v.lang.includes('es'));
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+      }
+
+      utterance.onend = () => {
+        setIsVoiceIntroPlaying(false);
+      };
+      utterance.onerror = () => {
+        setIsVoiceIntroPlaying(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Helper function to terminate current session on results page trigger and move to next open session
+  const handleFinishCurrentSessionAndNext = () => {
+    if (!currentFinanzasSession) return;
+    const myId = userProfile?.id || 'user-current-session';
+    const myUsername = userProfile?.username || 'mi_usuario_activo';
+
+    // Mark current session as completed and reset user participation for upcoming active sessions
+    setOpenFinanzasSessions(prev => {
+      const updated = prev.map(s => {
+        if (s.id === currentFinanzasSession.id) {
+          return { ...s, status: 'completed' as const };
+        }
+        return {
+          ...s,
+          participants: s.participants.filter(p => p.id !== myId && p.username !== myUsername)
+        };
+      });
+
+      // Check if any active session remains
+      const remainingActive = updated.filter(s => s.status === 'active');
+      if (remainingActive.length === 0) {
+        // Create a new active open session automatically so sessions are always open
+        const brandsList = ['Balmain Paris', 'Gucci High Fashion', 'Prada Directo', 'Saint Laurent', 'Versace Runway', 'Dior Fashion'];
+        const randomBrand = brandsList[Math.floor(Math.random() * brandsList.length)];
+        const categoriesList = ['Ronda de Plata', 'Ronda de Oro', 'Ronda Diamante', 'Ronda Élite'];
+        const randomCat = categoriesList[Math.floor(Math.random() * categoriesList.length)];
+        const fees = [10, 20, 50, 100];
+        const randomFee = fees[Math.floor(Math.random() * fees.length)];
+
+        const freshSession = {
+          id: `sess-open-${Date.now()}`,
+          title: `Mesa de Inversión • ${randomBrand}`,
+          brand: randomBrand,
+          category: randomCat,
+          entryFee: randomFee,
+          presenter: FINANZAS_USERS[Math.floor(Math.random() * FINANZAS_USERS.length)],
+          participants: [...FINANZAS_USERS].filter(p => p.id !== myId && p.username !== myUsername),
+          status: 'active' as const
+        };
+        return [...updated, freshSession];
+      }
+
+      return updated;
+    });
+
+    setActiveFinanzasSessionIndex(0);
+  };
+
+  useEffect(() => {
+    setShowRondaNotice(true);
+    const timer = setTimeout(() => {
+      setShowRondaNotice(false);
+    }, 5000); // Display for 5 seconds on channel active/change
+    return () => clearTimeout(timer);
+  }, [selectedCategoryFilter]);
 
   useEffect(() => {
     if (isVoiceIntroPlaying) {
@@ -1807,6 +3429,9 @@ export default function CastingLiveSection({
   const [showSplitScreenMenu, setShowSplitScreenMenu] = useState<boolean>(false);
   const [showScreenShareMenu, setShowScreenShareMenu] = useState<boolean>(false);
   const [showDuoMenu, setShowDuoMenu] = useState<boolean>(false);
+  const [isAudioOnlyDuo, setIsAudioOnlyDuo] = useState<boolean>(false);
+  const [isDuoMutedMap, setIsDuoMutedMap] = useState<Record<string, boolean>>({});
+  const [isDuoCamOffMap, setIsDuoCamOffMap] = useState<Record<string, boolean>>({});
   const [finanzasDuoSubTool, setFinanzasDuoSubTool] = useState<'menu' | 'invitar' | 'solicitudes' | 'duo1a1' | 'multiples' | 'audio' | 'pantalla' | 'controles'>('menu');
   const [invitedUsersMap, setInvitedUsersMap] = useState<Record<string, boolean>>({});
   const [financeRequestsList, setFinanceRequestsList] = useState([
@@ -1831,6 +3456,8 @@ export default function CastingLiveSection({
     { id: 'f-10', name: 'Doutzen Kroes', role: 'Analista Macro', micOn: true, camOn: true, screenAllowed: false },
   ]);
   const [duoSearchQuery, setDuoSearchQuery] = useState<string>('');
+  const [isFinanzasDuoDropdownOpen, setIsFinanzasDuoDropdownOpen] = useState<boolean>(false);
+  const [duoCategoryFilter, setDuoCategoryFilter] = useState<'all' | 'analistas' | 'inversores' | 'traders'>('all');
   const [screenShareMode, setScreenShareMode] = useState<'full' | 'window' | 'tab' | 'presentation'>('full');
   const [activeScreenSharer, setActiveScreenSharer] = useState<string>('host');
   const [allowCompanionScreenShare, setAllowCompanionScreenShare] = useState<boolean>(true);
@@ -1905,7 +3532,7 @@ export default function CastingLiveSection({
       setShowFinanzasBlockedBanner(false);
     }
   }, [selectedCategoryFilter, joinedPresenterIds.length]);
-  const [isFinanzasLiveConnected, setIsFinanzasLiveConnected] = useState(false);
+  const [isFinanzasLiveConnected, setIsFinanzasLiveConnected] = useState(true);
 
   // Track live broadcast connection for categories (Catwalk, Investors, Backstage, Modelos, Fashion, Reels, Todos, etc.)
   const [categoryLiveConnectedMap, setCategoryLiveConnectedMap] = useState<Record<string, boolean>>(() => {
@@ -1913,22 +3540,30 @@ export default function CastingLiveSection({
       const saved = localStorage.getItem('category_live_connected_map');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return {
+        const mapObj: Record<string, boolean> = {
           Catwalk: false,
+          Fitnes: false,
+          Beauty: false,
+          Influencer: false,
           Investors: false,
           BackStage: false,
           Modelos: false,
           Fashion: false,
           Reels: false,
           Todos: true,
-          Finanzas: false,
+          Finanzas: true,
+          Tiendas: true,
           ...parsed,
-          Tiendas: true
         };
+        mapObj.Reels = false;
+        return mapObj;
       }
     } catch (e) {}
     return {
       Catwalk: false,
+      Fitnes: false,
+      Beauty: false,
+      Influencer: false,
       Investors: false,
       BackStage: false,
       Modelos: false,
@@ -1936,30 +3571,137 @@ export default function CastingLiveSection({
       Reels: false,
       Todos: true,
       Tiendas: true,
-      Finanzas: false,
+      Finanzas: true,
     };
   });
+
+  // 📱 USER LIVE MOBILE CAMERA BROADCASTING (RETRANSMISIÓN EN VIVO)
+  const [isUserLiveStreamingWithCamera, setIsUserLiveStreamingWithCamera] = useState<boolean>(false);
+  const [userLiveMediaStream, setUserLiveMediaStream] = useState<MediaStream | null>(null);
+  const [liveCameraFacingMode, setLiveCameraFacingMode] = useState<'user' | 'environment'>('user');
+  const [liveStreamTimerSeconds, setLiveStreamTimerSeconds] = useState<number>(0);
+  const [isLiveStreamAudioMuted, setIsLiveStreamAudioMuted] = useState<boolean>(false);
+  const [liveViewerCount, setLiveViewerCount] = useState<number>(1420);
+  const userLiveVideoElementRef = useRef<HTMLVideoElement | null>(null);
+  const userLiveFeedVideoElementRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    let interval: any;
+    if (isUserLiveStreamingWithCamera) {
+      interval = setInterval(() => {
+        setLiveStreamTimerSeconds(prev => prev + 1);
+        if (Math.random() > 0.6) {
+          setLiveViewerCount(v => Math.max(10, v + (Math.random() > 0.4 ? Math.floor(Math.random() * 5 + 1) : -Math.floor(Math.random() * 3))));
+        }
+      }, 1000);
+    } else {
+      setLiveStreamTimerSeconds(0);
+    }
+    return () => clearInterval(interval);
+  }, [isUserLiveStreamingWithCamera]);
+
+  useEffect(() => {
+    if (userLiveMediaStream) {
+      if (userLiveVideoElementRef.current) {
+        userLiveVideoElementRef.current.srcObject = userLiveMediaStream;
+        userLiveVideoElementRef.current.play().catch(() => {});
+      }
+      if (userLiveFeedVideoElementRef.current) {
+        userLiveFeedVideoElementRef.current.srcObject = userLiveMediaStream;
+        userLiveFeedVideoElementRef.current.play().catch(() => {});
+      }
+    }
+  }, [userLiveMediaStream, isUserLiveStreamingWithCamera]);
+
+  const formatLiveStreamDuration = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleToggleUserCameraLiveBroadcast = async () => {
+    if (isUserLiveStreamingWithCamera) {
+      if (userLiveMediaStream) {
+        userLiveMediaStream.getTracks().forEach(track => track.stop());
+        setUserLiveMediaStream(null);
+      }
+      setIsUserLiveStreamingWithCamera(false);
+      alert('🛑 Retransmisión en vivo finalizada con éxito.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: liveCameraFacingMode,
+          width: { ideal: 1080 },
+          height: { ideal: 1920 }
+        },
+        audio: true
+      });
+      setUserLiveMediaStream(stream);
+      setIsUserLiveStreamingWithCamera(true);
+      setIsLiveStreamAudioMuted(false);
+      alert('🔴 ¡Estás EN VIVO! Retransmitiendo ahora mismo con tu cámara.');
+    } catch (err) {
+      console.warn('Could not start ideal constraints, trying basic constraints:', err);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setUserLiveMediaStream(stream);
+        setIsUserLiveStreamingWithCamera(true);
+        setIsLiveStreamAudioMuted(false);
+        alert('🔴 ¡Estás EN VIVO! Retransmitiendo ahora mismo con tu cámara.');
+      } catch (err2) {
+        console.error('Camera access failed:', err2);
+        alert('⚠️ No se pudo acceder a la cámara o micrófono. Por favor permite los permisos en tu navegador para retransmitir con tu cámara.');
+      }
+    }
+  };
+
+  const handleFlipLiveCamera = async () => {
+    const nextMode = liveCameraFacingMode === 'user' ? 'environment' : 'user';
+    setLiveCameraFacingMode(nextMode);
+    if (isUserLiveStreamingWithCamera) {
+      if (userLiveMediaStream) {
+        userLiveMediaStream.getTracks().forEach(track => track.stop());
+      }
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: nextMode,
+            width: { ideal: 1080 },
+            height: { ideal: 1920 }
+          },
+          audio: !isLiveStreamAudioMuted
+        });
+        setUserLiveMediaStream(newStream);
+      } catch (e) {
+        console.warn('Could not switch camera:', e);
+      }
+    }
+  };
+
+  const handleToggleLiveStreamAudio = () => {
+    if (userLiveMediaStream) {
+      const audioTracks = userLiveMediaStream.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = isLiveStreamAudioMuted;
+      });
+      setIsLiveStreamAudioMuted(!isLiveStreamAudioMuted);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('is_finanzas_live_connected', String(isFinanzasLiveConnected));
   }, [isFinanzasLiveConnected]);
 
   useEffect(() => {
-    if (isVoiceIntroPlaying || joinedPresenterIds.length < 10) {
-      setIsFinanzasLiveConnected(false);
-    }
-  }, [isVoiceIntroPlaying, joinedPresenterIds.length]);
-
-  // Handle scenario updates programmatically
-  useEffect(() => {
-    if (selectedCategoryFilter !== 'Finanzas') return;
-    if (finanzasScenario === 'not_present') {
-      setJoinedPresenterIds(['f-1', 'f-2', 'f-3', 'f-4', 'f-5']);
-      localStorage.setItem('finanzas_session_speech_played', 'false');
-    } else {
+    if (selectedCategoryFilter === 'Finanzas') {
+      setIsFinanzasLiveConnected(true);
+      setFinanzasMuted(false);
       setJoinedPresenterIds(['f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9', 'f-10']);
     }
-  }, [finanzasScenario, selectedCategoryFilter]);
+  }, [selectedCategoryFilter]);
 
   // Simulation: Connect remaining offline participants sequentially if user paid for Finanzas session AND scenario is not 'not_present'
   useEffect(() => {
@@ -2161,20 +3903,38 @@ export default function CastingLiveSection({
 
   // States for the 5-minute presentation queue
   const [finanzasPresentationQueue, setFinanzasPresentationQueue] = useState<{ id: string; name: string; avatar: string; role: string; requestTime: string; status: 'waiting' | 'presenting' | 'finished' }[]>(() => {
-    const saved = localStorage.getItem('finanzas_presentation_queue');
-    if (saved) return JSON.parse(saved);
+    const defaultUserPart = {
+      id: userProfile?.id || 'user-adriana',
+      name: userProfile?.name || 'Adriana Lima',
+      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      role: 'Usuario Inversor (10º y Último en Entrar)',
+      requestTime: '11:15:00',
+      status: 'waiting' as const
+    };
+    const saved = localStorage.getItem('finanzas_presentation_queue_v8');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 10) return parsed;
+      } catch (e) {}
+    }
     return [
-      { id: 'f-1', name: 'Adriana Lima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', role: 'Modelo Directora', requestTime: '10:31:15', status: 'presenting' as const },
-      { id: 'f-2', name: 'Gisele Bündchen', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', role: 'Inversora Principal', requestTime: '10:36:00', status: 'waiting' as const },
-      { id: 'f-3', name: 'Marcus Vance', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Asesor Fintech', requestTime: '10:38:45', status: 'waiting' as const },
-      { id: 'f-4', name: 'Sienna Cole', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Modelo Patrocinada', requestTime: '10:40:02', status: 'waiting' as const },
-      { id: 'f-5', name: 'Liam Cooper', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Socio Inversor', requestTime: '10:41:00', status: 'waiting' as const }
+      { id: 'f-1', name: 'Adriana Lima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', role: 'Modelo Directora', requestTime: '10:30:00', status: 'presenting' as const },
+      { id: 'f-2', name: 'Gisele Bündchen', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', role: 'Inversora Principal', requestTime: '10:35:00', status: 'waiting' as const },
+      { id: 'f-3', name: 'Marcus Vance', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Asesor Fintech', requestTime: '10:40:00', status: 'waiting' as const },
+      { id: 'f-4', name: 'Sienna Cole', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Modelo Patrocinada', requestTime: '10:45:00', status: 'waiting' as const },
+      { id: 'f-5', name: 'Liam Cooper', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Socio Inversor', requestTime: '10:50:00', status: 'waiting' as const },
+      { id: 'f-6', name: 'Elena Rostova', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Gestora de Cuentas', requestTime: '10:55:00', status: 'waiting' as const },
+      { id: 'f-7', name: 'David K.', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Patrocinador Premium', requestTime: '11:00:00', status: 'waiting' as const },
+      { id: 'f-8', name: 'Sofia Martinez', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=650', role: 'Planificadora Financiera', requestTime: '11:05:00', status: 'waiting' as const },
+      { id: 'f-9', name: 'Yasmin Santos', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Líder de Colectiva', requestTime: '11:10:00', status: 'waiting' as const },
+      defaultUserPart
     ];
   });
 
   // Persist queue
   useEffect(() => {
-    localStorage.setItem('finanzas_presentation_queue', JSON.stringify(finanzasPresentationQueue));
+    localStorage.setItem('finanzas_presentation_queue_v8', JSON.stringify(finanzasPresentationQueue));
   }, [finanzasPresentationQueue]);
 
   // Connect offline presenter simulation
@@ -2261,199 +4021,180 @@ export default function CastingLiveSection({
     localStorage.setItem('finanzas_presentation_timers', JSON.stringify(finanzasTimers));
   }, [finanzasTimers]);
 
-  // Interval timer effect
+  // Persist voting phase states to localStorage
   useEffect(() => {
-    const interval = setInterval(() => {
-      setFinanzasTimers((prev) => {
-        const next = { ...prev };
-        let changed = false;
-        Object.keys(finanzasTimerActive).forEach((id) => {
-          if (finanzasTimerActive[id]) {
-            const currentVal = next[id] !== undefined ? next[id] : 300;
-            if (currentVal > 0) {
-              next[id] = currentVal - 1;
-              changed = true;
-            } else {
-              // Timer finished
-              finanzasTimerActive[id] = false;
-            }
-          }
-        });
-        return changed ? next : prev;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [finanzasTimerActive]);
+    localStorage.setItem('finanzas_is_voting_phase_active', String(isVotingPhaseActive));
+    localStorage.setItem('finanzas_voting_phase_timer', String(votingPhaseTimer));
+  }, [isVotingPhaseActive, votingPhaseTimer]);
 
-  // Automatically initialize and start the 5-minute presentation countdown
-  // when a user opens their project details / begins to explain their project.
+  // Robust, continuous wall-clock session timeline engine:
+  // - 10 participants x 5 minutes (300s) = 50 minutes (3000s) of uninterrupted project expositions.
+  // - 10 final minutes (600s, from 50:00 to 60:00) for deciding and voting on projects.
+  // - Runs continuously in the background even if navigating through other tabs or buttons.
   useEffect(() => {
-    if (selectedCategoryFilter === 'Finanzas' && joinedPresenterIds.length < 10) return;
-    if (isVoiceIntroPlaying) return;
-    const activeUser = activeFinanzasPopupUser || fullscreenFinanzasUser || selectedFinanzasUser;
-    if (activeUser) {
-      const id = activeUser.id;
-      const queueItem = finanzasPresentationQueue.find(item => item.id === id);
-      if (queueItem && queueItem.status === 'finished') return;
+    if (showFinanzasResults || showFinanzasRecount) return;
 
-      setFinanzasTimers((prev) => {
-        if (prev[id] === undefined || prev[id] === 0) {
-          return { ...prev, [id]: 300 };
-        }
-        return prev;
-      });
-      setFinanzasTimerActive((prev) => {
-        if (!prev[id] && (finanzasTimers[id] === undefined || finanzasTimers[id] > 0)) {
-          return { ...prev, [id]: true };
-        }
-        return prev;
-      });
-    }
-  }, [activeFinanzasPopupUser?.id, fullscreenFinanzasUser?.id, selectedFinanzasUser?.id, joinedPresenterIds.length, selectedCategoryFilter, isVoiceIntroPlaying, finanzasPresentationQueue]);
+    const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
+    const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
 
-  // Auto-advance presentation queue and trigger voice announcements when timer reaches 0
-  useEffect(() => {
-    if (selectedCategoryFilter !== 'Finanzas') return;
-    if (joinedPresenterIds.length < 10) return;
-    if (isVoiceIntroPlaying) return;
+    const updateSessionTimeline = () => {
+      const now = Date.now();
+      let startStr = localStorage.getItem(sessionStartKey);
+      let startTime = startStr ? parseInt(startStr, 10) : 0;
+      if (!startTime || isNaN(startTime) || startTime <= 0) {
+        startTime = now;
+        localStorage.setItem(sessionStartKey, String(startTime));
+      }
 
-    // Find the current presenter
-    const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
-    if (!presentingItem) return;
+      const totalElapsed = Math.max(0, Math.floor((now - startTime) / 1000));
+      const sessionParticipants = currentFinanzasSession?.participants || EMPRESARIOS_USERS;
 
-    const currentTimerVal = finanzasTimers[presentingItem.id];
-    // Trigger transition when the active timer reaches 0
-    if (currentTimerVal === 0) {
-      // Find index in queue
-      const currentIndex = finanzasPresentationQueue.findIndex(item => item.id === presentingItem.id);
-      const nextIndex = currentIndex + 1;
-      const nextPresenterItem = nextIndex < finanzasPresentationQueue.length ? finanzasPresentationQueue[nextIndex] : null;
+      if (totalElapsed < 3000) {
+        // --- PHASE 1: 50 MINUTES OF EXPOSITIONS (10 participants x 5 minutes = 300 seconds each) ---
+        const presenterIdx = Math.min(9, Math.floor(totalElapsed / 300));
+        const remainingForPresenter = 300 - (totalElapsed % 300);
+        const activePresenter = sessionParticipants[presenterIdx] || sessionParticipants[0];
 
-      // 1. Deactivate current presenter's timer, activate next presenter's timer if exists
-      setFinanzasTimerActive(prev => ({
-        ...prev,
-        [presentingItem.id]: false,
-        ...(nextPresenterItem ? { [nextPresenterItem.id]: true } : {})
-      }));
-
-      // 2. Update queue statuses: current to finished, next to presenting
-      setFinanzasPresentationQueue(prev => {
-        return prev.map(item => {
-          if (item.id === presentingItem.id) {
-            return { ...item, status: 'finished' as const };
-          } else if (nextPresenterItem && item.id === nextPresenterItem.id) {
-            return { ...item, status: 'presenting' as const };
-          }
-          return item;
-        });
-      });
-
-      // 3. Move spotlight / active state to the next presenter
-      if (nextPresenterItem) {
-        const nextUserObj = FINANZAS_USERS.find(u => u.id === nextPresenterItem.id) || 
-          (nextPresenterItem.id === 'user' ? {
-            id: 'user',
-            name: userProfile?.name || 'TÚ (Inversor)',
-            username: userProfile?.username || 'usuario_colaborador',
-            avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150',
-            role: 'TÚ (Inversor)'
-          } : null);
-
-        if (nextUserObj) {
-          setActiveFinanzasPopupUser(nextUserObj);
-          setSelectedFinanzasUser(nextUserObj);
-          if (fullscreenFinanzasUser) {
-            setFullscreenFinanzasUser(nextUserObj);
-          }
-        }
-
-        // Determine correct gender-based greeting
-        const femaleNames = ['Adriana', 'Gisele', 'Sienna', 'Elena', 'Sofia', 'Yasmin'];
-        const isFemale = femaleNames.some(fn => nextPresenterItem.name.includes(fn));
-        const welcomeWord = isFemale ? 'Bienvenida' : 'Bienvenido';
-
-        const speechMessageText = `El siguiente participante en explicarnos su proyecto es ${nextPresenterItem.name}, ${welcomeWord} y suerte`;
-
-        // Play warning/transition chimes if possible
-        try {
-          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const playNote = (freq: number, duration: number, delay: number) => {
-            setTimeout(() => {
-              const osc = audioCtx.createOscillator();
-              const gain = audioCtx.createGain();
-              osc.connect(gain);
-              gain.connect(audioCtx.destination);
-              osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-              gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-              osc.start();
-              osc.stop(audioCtx.currentTime + duration);
-            }, delay);
-          };
-          playNote(587.33, 0.4, 0);   // D5
-          playNote(659.25, 0.5, 150); // E5
-        } catch (e) {
-          console.log("AudioContext chime not supported or blocked:", e);
-        }
-
-        // Speak
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel(); // cancel any ongoing speech first
-          const utterance = new SpeechSynthesisUtterance(speechMessageText);
-          utterance.lang = 'es-ES';
-          utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
-          utterance.rate = 0.95;
-          const voices = window.speechSynthesis.getVoices();
-          const spanishVoice = voices.find(v => v.lang.includes('es'));
-          if (spanishVoice) {
-            utterance.voice = spanishVoice;
-          }
-          window.speechSynthesis.speak(utterance);
-        }
-
-        // Display banner
-        setSystemVoiceNotification({
-          show: true,
-          message: speechMessageText
-        });
-
-        // Hide notification banner after 8 seconds
-        setTimeout(() => {
-          setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-        }, 8000);
-
-        // Pre-initialize next timer to 300 seconds and set it active
-        setFinanzasTimers(prev => ({
+        // Update timer dictionary
+        setFinanzasTimers((prev) => ({
           ...prev,
-          [nextPresenterItem.id]: 300
+          [activePresenter.id]: remainingForPresenter
         }));
 
-      } else {
-        // No more presenters!
-        const endSpeechText = "La ronda de exposición de proyectos ha finalizado. Muchas gracias a todos los patrocinadores e inversores.";
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(endSpeechText);
-          utterance.lang = 'es-ES';
-          utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
-          utterance.rate = 0.95;
-          const voices = window.speechSynthesis.getVoices();
-          const spanishVoice = voices.find(v => v.lang.includes('es'));
-          if (spanishVoice) {
-            utterance.voice = spanishVoice;
-          }
-          window.speechSynthesis.speak(utterance);
-        }
-        setSystemVoiceNotification({
-          show: true,
-          message: endSpeechText
+        // Update presentation queue
+        setFinanzasPresentationQueue((prev) => {
+          return prev.map((item, idx) => {
+            if (idx < presenterIdx) return { ...item, status: 'finished' as const };
+            if (idx === presenterIdx) return { ...item, status: 'presenting' as const };
+            return { ...item, status: 'waiting' as const };
+          });
         });
-        setTimeout(() => {
-          setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-        }, 8000);
+
+        // Set spotlight user if needed
+        setSelectedFinanzasUser((prev) => (prev?.id === activePresenter.id ? prev : activePresenter));
+
+        // Check if we transitioned to a new presenter turn
+        if (lastAnnouncedPresenterIndexRef.current !== presenterIdx) {
+          lastAnnouncedPresenterIndexRef.current = presenterIdx;
+
+          const femaleNames = ['Adriana', 'Gisele', 'Sienna', 'Elena', 'Sofia', 'Yasmin', 'Victoria', 'Isabella', 'Claudia', 'Valerie', 'Olivia', 'Candice'];
+          const isFemale = femaleNames.some((fn) => activePresenter.name.includes(fn));
+          const welcomeWord = isFemale ? 'Bienvenida' : 'Bienvenido';
+          const turnNumber = presenterIdx + 1;
+          const isErnesto = activePresenter.id === 'user-ernesto' || activePresenter.name === 'Ernesto vs' || (userProfile && activePresenter.id === userProfile.id);
+          const displayName = isErnesto ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : activePresenter.name;
+          const speechMessageText = isErnesto
+            ? `Turno número 10 de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo en directo para presentar su proyecto ante la mesa de inversores.`
+            : `Turno número ${turnNumber} de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo de exposición en directo. ${welcomeWord} y suerte.`;
+
+          // Play transition chime
+          try {
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.35);
+          } catch (e) {}
+
+          // Vocal announcement
+          if ('speechSynthesis' in window) {
+            try {
+              window.speechSynthesis.cancel();
+              const utterance = new SpeechSynthesisUtterance(speechMessageText);
+              utterance.lang = 'es-ES';
+              utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+              utterance.rate = 0.95;
+              const voices = window.speechSynthesis.getVoices();
+              const spanishVoice = voices.find((v) => v.lang.includes('es'));
+              if (spanishVoice) utterance.voice = spanishVoice;
+              window.speechSynthesis.speak(utterance);
+            } catch (e) {}
+          }
+
+          // Visual notification banner
+          setSystemVoiceNotification({
+            show: true,
+            message: `🎙️ ${speechMessageText}`
+          });
+          setTimeout(() => {
+            setSystemVoiceNotification((prev) => ({ ...prev, show: false }));
+          }, 8000);
+        }
+
+        setIsVotingPhaseActive(false);
+        setVotingPhaseTimer(600);
+
+      } else if (totalElapsed < 3600) {
+        // --- PHASE 2: FINAL 10 MINUTES VOTING & DECISION (Minute 50:00 to 60:00) ---
+        const remainingVoting = 3600 - totalElapsed;
+        setIsVotingPhaseActive(true);
+        setVotingPhaseTimer(remainingVoting);
+
+        // Mark all 10 participants as finished in queue
+        setFinanzasPresentationQueue((prev) =>
+          prev.map((item) => ({ ...item, status: 'finished' as const }))
+        );
+
+        if (!hasAnnouncedVotingPhaseRef.current) {
+          hasAnnouncedVotingPhaseRef.current = true;
+          const votingSpeechText = "Han finalizado las 10 exposiciones de 5 minutos, cumpliendo los 50 minutos de ronda. Comienza ahora la fase final de 10 minutos para deliberar y votar por el proyecto de usuario ganador.";
+
+          try {
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+          } catch (e) {}
+
+          if ('speechSynthesis' in window) {
+            try {
+              window.speechSynthesis.cancel();
+              const utterance = new SpeechSynthesisUtterance(votingSpeechText);
+              utterance.lang = 'es-ES';
+              utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+              utterance.rate = 0.95;
+              const voices = window.speechSynthesis.getVoices();
+              const spanishVoice = voices.find((v) => v.lang.includes('es'));
+              if (spanishVoice) utterance.voice = spanishVoice;
+              window.speechSynthesis.speak(utterance);
+            } catch (e) {}
+          }
+
+          setSystemVoiceNotification({
+            show: true,
+            message: `🗳️ ${votingSpeechText}`
+          });
+          setTimeout(() => {
+            setSystemVoiceNotification((prev) => ({ ...prev, show: false }));
+          }, 9000);
+        }
+
+      } else {
+        // --- PHASE 3: 60 MINUTES COMPLETED ---
+        setIsVotingPhaseActive(true);
+        setVotingPhaseTimer(0);
       }
-    }
-  }, [finanzasTimers, selectedCategoryFilter, joinedPresenterIds.length, isVoiceIntroPlaying, finanzasPresentationQueue, userProfile, fullscreenFinanzasUser]);
+    };
+
+    // Run immediately then every second
+    updateSessionTimeline();
+    const interval = setInterval(updateSessionTimeline, 1000);
+    return () => clearInterval(interval);
+  }, [currentFinanzasSession?.id, showFinanzasResults, showFinanzasRecount, finanzasMuted, finanzasVolume]);
 
 
   const buildFinanzasCompletedSession = (votesMap: Record<string, number>) => {
@@ -2463,10 +4204,10 @@ export default function CastingLiveSection({
       'f-3': 1, // Marcus Vance
       'f-4': 1, // Sienna Cole
       'f-5': 1, // Liam Cooper
-      'f-6': 1, // Elena Rostova
-      'f-7': 1, // David K.
-      'f-8': 1, // Sofia Martinez
-      'f-9': 1, // Yasmin Santos
+      'f-6': 0, // Elena Rostova
+      'f-7': 0, // David K.
+      'f-8': 0, // Sofia Martinez
+      'f-9': 0, // Yasmin Santos
       'f-10': 2, // Carlos Slim / User
       'user': 2
     };
@@ -2476,7 +4217,7 @@ export default function CastingLiveSection({
       const isUser = fu.id === 'user' || fu.id === 'f-10';
       const name = isUser && userProfile?.name ? userProfile.name : fu.name;
       const avatar = isUser && userProfile?.avatar ? userProfile.avatar : fu.avatar;
-      const votesReceived = mergedVotes[fu.id] ?? mergedVotes[fu.id === 'f-10' ? 'user' : fu.id] ?? 1;
+      const votesReceived = mergedVotes[fu.id] ?? mergedVotes[fu.id === 'f-10' ? 'user' : fu.id] ?? 0;
       return {
         userId: fu.id,
         name: name,
@@ -2512,57 +4253,242 @@ export default function CastingLiveSection({
   };
 
   const handleVoteForProject = (user: { id: string; name: string; username: string; avatar: string; role: string }) => {
-    const currentVal = finanzasVotes[user.id] ?? 9;
+    const initialDefault = user.id === 'f-1' ? 3 : user.id === 'f-2' ? 2 : (user.id === 'f-3' || user.id === 'f-4' || user.id === 'f-5' || user.id === 'f-10' || user.id === 'user') ? 1 : 0;
+    const currentVal = finanzasVotes[user.id] ?? initialDefault;
     const updatedVotes = { ...finanzasVotes, [user.id]: currentVal + 1 };
     setFinanzasVotes(updatedVotes);
     localStorage.setItem('finanzas_project_votes', JSON.stringify(updatedVotes));
 
-    const sessionData = buildFinanzasCompletedSession(updatedVotes);
-    setCompletedSessionToDisplay(sessionData);
-    setShowFinanzasResults(true);
+    // Update voters tracking list
+    const currentVoters = Array.isArray(finanzasVotedVoterIds) ? finanzasVotedVoterIds : [];
+    const all10ParticipantIds = ['user', 'f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9'];
+    let updatedVoters = [...currentVoters];
+
+    const nextPendingVoterId = all10ParticipantIds.find(id => !updatedVoters.includes(id));
+    if (nextPendingVoterId) {
+      updatedVoters.push(nextPendingVoterId);
+    } else if (updatedVoters.length < 10) {
+      updatedVoters.push(`voter-${updatedVoters.length + 1}`);
+    }
+    setFinanzasVotedVoterIds(updatedVoters);
+    localStorage.setItem('finanzas_voted_voter_ids_v2', JSON.stringify(updatedVoters));
+
+    const totalVotersCount = updatedVoters.length;
 
     setActiveFinanzasPopupUser(null);
     setFullscreenFinanzasUser(null);
     setDetailProjectUser(null);
+    setShowVotingProjectsModal(false);
 
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance("¡Voto registrado! Se han contabilizado todas las votaciones de la sesión. Abriendo recuento de votos y resultados finales en este canal.");
-      utterance.lang = 'es-ES';
-      utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
-      utterance.rate = 0.95;
-      window.speechSynthesis.speak(utterance);
+    if (totalVotersCount < 10) {
+      // ONLY WHEN ALL 10 VOTE CAN THE SESSION TERMINATE!
+      const speechMsg = `Voto registrado para ${user.name}. Han votado ${totalVotersCount} de 10 participantes. La sesión solo concluirá cuando voten los 10.`;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(speechMsg);
+        utterance.lang = 'es-ES';
+        utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      setSystemVoiceNotification({
+        show: true,
+        message: `🗳️ ¡Voto por ${user.name} registrado! (${totalVotersCount}/10 votos emitidos). Solo cuando voten los 10 se podrá terminar la sesión.`
+      });
+
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 5000);
+    } else {
+      // 10/10 PARTICIPANTS HAVE VOTED -> CONCLUDE SESSION & OPEN RECOUNT / RESULTS
+      const sessionData = buildFinanzasCompletedSession(updatedVotes);
+      setCompletedSessionToDisplay(sessionData);
+
+      setSelectedCategoryFilter('Finanzas');
+      setShowFinanzasRecount(true);
+      setShowFinanzasResults(false);
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance("¡Los 10 participantes han emitido su voto! Finalizando la sesión y abriendo el escrutinio oficial de votos.");
+        utterance.lang = 'es-ES';
+        utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      setSystemVoiceNotification({
+        show: true,
+        message: `🏆 ¡10 de 10 votos registrados! Concluyendo sesión y abriendo Resultados Finales...`
+      });
+
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 4000);
     }
+  };
 
-    setSystemVoiceNotification({
-      show: true,
-      message: `✅ ¡Tu voto por ${user.name} ha completado la ronda! Abriendo la página de recuento de votaciones y resultados finales en este canal...`
-    });
-    setTimeout(() => {
-      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-    }, 7000);
+  const handleFinishRetransmissionAndPassToNextParticipant = () => {
+    if (selectedCategoryFilter !== 'Finanzas') return;
+
+    const participantsList = currentFinanzasSession?.participants || FINANZAS_USERS;
+    const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
+    const currentActiveId = presentingItem?.id || selectedFinanzasUser?.id || activeFinanzasPopupUser?.id || 'user-ernesto';
+
+    // Find current index
+    let currentIndex = finanzasPresentationQueue.findIndex(item => item.id === currentActiveId);
+    if (currentIndex === -1) {
+      currentIndex = participantsList.findIndex(p => p.id === currentActiveId);
+    }
+    if (currentIndex === -1) currentIndex = 0;
+
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < finanzasPresentationQueue.length) {
+      const nextQueueItem = finanzasPresentationQueue[nextIndex];
+      const nextUserObj = FINANZAS_USERS.find(u => u.id === nextQueueItem.id) || 
+        (participantsList.find(p => p.id === nextQueueItem.id)) || 
+        FINANZAS_USERS[0];
+
+      // Deactivate previous timer and activate next presenter timer with 300s (5 min)
+      setFinanzasTimers(prev => ({
+        ...prev,
+        [currentActiveId]: 0,
+        [nextQueueItem.id]: 300
+      }));
+      setFinanzasTimerActive({
+        [nextQueueItem.id]: true
+      });
+
+      // Update queue statuses
+      setFinanzasPresentationQueue(prev => {
+        return prev.map((item, idx) => {
+          if (item.id === currentActiveId) {
+            return { ...item, status: 'finished' as const };
+          } else if (item.id === nextQueueItem.id || idx === nextIndex) {
+            return { ...item, status: 'presenting' as const };
+          }
+          return item;
+        });
+      });
+
+      // Move spotlight to next presenter
+      setSelectedFinanzasUser(nextUserObj);
+      setActiveFinanzasPopupUser(nextUserObj);
+      if (fullscreenFinanzasUser) {
+        setFullscreenFinanzasUser(nextUserObj);
+      }
+      setFirstPresenterRevealed(true);
+      setIsSpeakingPresenterIntro(false);
+
+      // Speak announcement
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const femaleNames = ['Adriana', 'Gisele', 'Sienna', 'Elena', 'Sofia', 'Yasmin', 'Candice', 'Victoria', 'Isabella', 'Claudia', 'Valerie', 'Olivia'];
+        const isFemale = femaleNames.some(fn => nextUserObj.name.includes(fn));
+        const welcomeWord = isFemale ? 'Bienvenida' : 'Bienvenido';
+        const turnNumber = nextIndex + 1;
+        const isErnesto = nextUserObj.id === 'user-ernesto' || nextUserObj.name === 'Ernesto vs' || (userProfile && nextUserObj.id === userProfile.id);
+        const displayName = isErnesto ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : nextUserObj.name;
+        const speechText = isErnesto
+          ? `Turno número 10 de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo en directo para presentar y defender su proyecto ante la mesa de inversores.`
+          : `Turno número ${turnNumber} de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo de exposición en directo. ${welcomeWord} y suerte.`;
+
+        const utterance = new SpeechSynthesisUtterance(speechText);
+        utterance.lang = 'es-ES';
+        utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      setSystemVoiceNotification({
+        show: true,
+        message: `🎙️ Dando paso al ${nextIndex + 1}º participante: ${nextUserObj.name} (5 min de exposición)`
+      });
+
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 6000);
+    } else {
+      // All 10 finished their exposures
+      setFinanzasPresentationQueue(prev => prev.map(item => ({ ...item, status: 'finished' as const })));
+      const endText = "Han finalizado las 10 exposiciones de proyectos en directo. Ahora todos los 10 participantes deben emitir su voto. Solo cuando voten los 10 participantes se podrá concluir la sesión.";
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(endText);
+        utterance.lang = 'es-ES';
+        utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+      setSystemVoiceNotification({
+        show: true,
+        message: `🎙️ ${endText}`
+      });
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 8000);
+    }
   };
 
   const getFinanzasProjectDetails = (userId: string) => {
     switch (userId) {
+      case 'user':
+      case 'user-ernesto':
+      case 'user-investor':
+      case 'ernestovs':
+      case 'proj-eco-fashion':
+      case 'proj-1':
+        return {
+          title: "Eco-Fashion Runway",
+          category: "Sostenibilidad o impacto ambiental",
+          description: "Crear un impacto positivo en el medio ambiente a través de la alta costura sostenible. Fusión de materiales orgánicos reciclados y alta costura en un desfile interactivo de residuo cero.",
+          metrics: "Presupuesto: 1.000€ • Patrocinador: Ernesto vs • Categoría: Sostenibilidad o impacto ambiental",
+          roi: "Retorno Estimado: 12% anual + acceso prioritario y dividendos de recaudación en pasarela.",
+          tagline: "Fusión de materiales orgánicos reciclados y alta costura en un desfile interactivo.",
+          contactEmail: "vs.ernesto@gmail.com",
+          contactPhone: "+34 600 112 233",
+          fundingGoal: "1.000 €",
+          fundUsage: "80% materiales y diseño de vestuario, 15% booking de local climatizado verde, 5% staff técnico.",
+          timeline: "3 meses (Desfile Sostenible Temporada Primavera/Verano)",
+          documentation: "Dossier-Eco-Fashion-Runway-2026.pdf"
+        };
       case 'f-1':
+      default:
         return {
           title: "Micro-patrocinio de Moda Sostenible",
-          category: "Indumentaria y Moda Sostenible",
-          description: "Una plataforma revolucionaria de micro-mecenazgo mediante contratos inteligentes para financiar colecciones de diseñadores jóvenes sin intermediarios bancarios.",
+          category: "MODAS CIRCULARES",
+          description: "Este proyecto estratégico busca mitigar la generación de desechos textiles mediante metodologías de confección de residuo cero con siluetas versátiles y minimalistas.",
           metrics: "Meta: 50,000€ • Recaudado: 34,200€ • Patrocinadores: 420",
           roi: "Retorno Estimado: 12% anual + acceso prioritario a prendas físicas exclusivas de pasarela.",
-          tagline: "Uniendo capital ético con costura de vanguardia.",
-          contactEmail: "contacto@micropatrocinio.com",
-          contactPhone: "+34 612 345 678",
+          tagline: "Fórmula de diseño ecológico, optimización textil y proyección cruzada de marca.",
+          contactEmail: "adriana.lima@fashionfinances.net",
+          contactPhone: "+34 600 555 123",
           fundingGoal: "50.000 €",
-          fundUsage: "60% Telas Orgánicas • 25% Patronaje y Taller • 15% Campaña de Moda",
-          timeline: "6 meses (Q3-Q4 2026)",
-          documentation: "Plan-de-Viabilidad-Sostenible.pdf"
+          fundUsage: "60% Producción Textil Sostenible • 25% Marketing & Runway • 15% Certificaciones",
+          timeline: "6 meses (Fase 1 y 2)",
+          documentation: "Plan-Viabilidad-Sostenible.pdf"
         };
       case 'f-2':
         return {
           title: "Fondo de Capital Verde Circular",
           category: "Capital de Riesgo & Sostenibilidad",
+          description: "Fondo de coinversión especializado en startups de economía circular aplicadas al sector del lujo y del prêt-à-porter.",
+          metrics: "Meta: 150,000€ • Recaudado: 98,000€ • Patrocinadores: 112",
+          roi: "Retorno Estimado: 18% trienal con dividendos por regalías.",
+          tagline: "Acelerando la transición hacia el lujo neutro en carbono.",
+          contactEmail: "inversores@capitalverde.io",
+          contactPhone: "+34 910 223 344",
+          fundingGoal: "150.000 €",
+          fundUsage: "50% Coinversión • 30% Incubación • 20% Garantías Lógicas",
+          timeline: "12 meses (2026-2027)",
+          documentation: "Dossier-Fondo-Capital-Verde.pdf"
+        };
+      case 'f-2.5':
+        return {
+          title: "Fondo de Impacto Textil Sostenible",
+          category: "Fondo de Capital Semilla",
           description: "Fondo de inversión de capital de riesgo dedicado exclusivamente a empresas textiles que utilicen un 100% de materiales regenerativos y cero emisiones de carbono.",
           metrics: "Fondo Activo: 2.5M€ • Proyectos Financiados: 8 • Impacto: -450 toneladas CO2",
           roi: "Retorno Estimado: 8.5% anual + dividendos de impacto certificado.",
@@ -2694,7 +4620,7 @@ export default function CastingLiveSection({
           timeline: "10 meses",
           documentation: "FinTech-Retail-Gateway-Specs.pdf"
         };
-      default:
+      case 'f-extra':
         return {
           title: "Inversión y Retransmisión de Finanzas",
           category: "Moda y Finanzas Interactivas",
@@ -2750,7 +4676,7 @@ export default function CastingLiveSection({
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
 
   const [activeSubTab, setActiveSubTab] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live'>('para-ti');
-  const [selectedLiveCategory, setSelectedLiveCategory] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk'>('Todos');
+  const [selectedLiveCategory, setSelectedLiveCategory] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>('Todos');
   const [localLiveModelId, setLocalLiveModelId] = useState<string | null>(null);
   const [viewingTikTokProfileUsername, setViewingTikTokProfileUsername] = useState<string | null>(null);
   const [isProfileFollowing, setIsProfileFollowing] = useState<Record<string, boolean>>({});
@@ -2773,7 +4699,7 @@ export default function CastingLiveSection({
     return null;
   });
 
-  const getModelCategory = (m: any): 'Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' => {
+  const getModelCategory = (m: any): 'Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer' => {
     const name = m.name?.toLowerCase() || '';
     const bio = m.bio?.toLowerCase() || '';
     if (name.includes('reel') || name.includes('short') || name.includes('clip') || bio.includes('reels') || bio.includes('cortos')) return 'Reels';
@@ -2784,10 +4710,13 @@ export default function CastingLiveSection({
     if (name.includes('marcus') || name.includes('sterling') || name.includes('diego') || bio.includes('private') || bio.includes('estratégico') || bio.includes('incubadora') || bio.includes('ceo')) return 'Investors';
     if (name.includes('charlotte') || name.includes('tienda') || name.includes('luxe') || bio.includes('kylie') || bio.includes('cosmetics') || bio.includes('brand')) return 'Tiendas';
     if (name.includes('yuki') || name.includes('tanaka') || name.includes('valentina') || name.includes('rossi') || bio.includes('pasarela') || bio.includes('urbana') || name.includes('catwalk') || bio.includes('desfile')) return 'Catwalk';
+    if (name.includes('fit') || bio.includes('fitness') || bio.includes('gym') || bio.includes('entreno') || bio.includes('saludable')) return 'Fitnes';
+    if (name.includes('beauty') || bio.includes('belleza') || bio.includes('maquillaje') || bio.includes('skincare') || bio.includes('estética')) return 'Beauty';
+    if (name.includes('influencer') || bio.includes('influencer') || bio.includes('creador') || bio.includes('tiktok') || bio.includes('viral')) return 'Influencer';
     
     // Default distribution by index
-    const categories: ('Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk')[] = [
-      'Fashion', 'Reels', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk'
+    const categories: ('Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer')[] = [
+      'Fashion', 'Reels', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'
     ];
     const hash = (m.name || m.username || '').length % categories.length;
     return categories[hash];
@@ -3043,6 +4972,16 @@ export default function CastingLiveSection({
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showGeneralSettingsAccordion, setShowGeneralSettingsAccordion] = useState(false);
+
+  // --- Creation Choice Modal & Reel Configuration States ---
+  const [showCreationTypeModal, setShowCreationTypeModal] = useState<boolean>(false);
+  const [votingProjectSlideIndex, setVotingProjectSlideIndex] = useState<number>(0);
+  const [projectTouchStartX, setProjectTouchStartX] = useState<number | null>(null);
+  const [reelPrivacy, setReelPrivacy] = useState<'publico' | 'seguidores' | 'solo_yo' | 'personalizado'>('publico');
+  const [allowLikes, setAllowLikes] = useState<boolean>(true);
+  const [allowShares, setAllowShares] = useState<boolean>(true);
+  const [allowDownloads, setAllowDownloads] = useState<boolean>(true);
+  const [musicStartTime, setMusicStartTime] = useState<number>(0);
 
   // --- Active 24h Story States & Syncer ---
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
@@ -3413,10 +5352,52 @@ export default function CastingLiveSection({
   // Infinite Scroll & Snapping States/Refs for TikTok & Instagram style feeds
   const [videoForceUpdateTrigger, setVideoForceUpdateTrigger] = useState(0);
   const feedContainerRef = useRef<HTMLDivElement>(null);
+  const videoCardRef = useRef<HTMLDivElement>(null);
   const categoriesSliderRef = useRef<HTMLDivElement>(null);
   const storiesSliderRef = useRef<HTMLDivElement>(null);
   const academyHeaderScrollRef = useRef<HTMLDivElement>(null);
   const [showSwipeTutorial, setShowSwipeTutorial] = useState(false);
+
+  // 📱 Auto-centering & Scroll Snap on Mobile (iPhone & Responsive Devices)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkAndObserve = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (!isMobile || !videoCardRef.current) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && entry.intersectionRatio < 0.98) {
+              entry.target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+              });
+            }
+          });
+        },
+        {
+          root: feedContainerRef.current || null,
+          threshold: [0.5, 0.75, 0.95]
+        }
+      );
+
+      const target = videoCardRef.current;
+      observer.observe(target);
+
+      return () => {
+        observer.unobserve(target);
+        observer.disconnect();
+      };
+    };
+
+    const cleanup = checkAndObserve();
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, []);
 
   // Dynamic portfolio of Isabella Dubois loaded/saved in local storage
   const [isabellaPortfolio, setIsabellaPortfolio] = useState<number>(() => {
@@ -3426,11 +5407,16 @@ export default function CastingLiveSection({
 
   // TikTok Shop Seller & Strategy Dashboard states
   const [showTikTokShop, setShowTikTokShop] = useState(() => {
+    if (initialSelectedStoreId) return true;
     const isShopTiendasOnly = localStorage.getItem('selectedLiveModel_shopTiendasOnly') === 'true';
     const activeModelId = localStorage.getItem('selectedLiveModelId');
     return isShopTiendasOnly || !!activeModelId;
   });
   const [shopTab, setShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>(() => {
+    if (initialSelectedStoreId === 'mi_escaparate' || initialSelectedStoreId === 'articulos' || initialSelectedStoreId === 'tienda' || initialSelectedStoreId === 'own_store_articulos') {
+      return 'articulos';
+    }
+    if (initialSelectedStoreId) return 'mi_tienda';
     const isShopTiendasOnly = localStorage.getItem('selectedLiveModel_shopTiendasOnly') === 'true';
     const activeModelId = localStorage.getItem('selectedLiveModelId');
     const isShopDirect = localStorage.getItem('selectedLiveModel_shopDirect') === 'true';
@@ -3454,7 +5440,21 @@ export default function CastingLiveSection({
   }, [shopTab]);
 
   useEffect(() => {
-    if (initialSelectedStoreId) {
+    const storeToOpen = initialSelectedStoreId || localStorage.getItem('initial_selected_store_id');
+    if (storeToOpen) {
+      localStorage.removeItem('initial_selected_store_id');
+      if (storeToOpen === 'mi_escaparate' || storeToOpen === 'articulos' || storeToOpen === 'tienda' || storeToOpen === 'own_store_articulos') {
+        setShowTikTokShop(true);
+        setSelectedInvestorStore(null);
+        setShopTab('articulos');
+        setViewingTikTokProfileUsername(null);
+        setShowFinanzasResults(false);
+        setCompletedSessionToDisplay(null);
+        if (onClearSelectedStoreId) {
+          onClearSelectedStoreId();
+        }
+        return;
+      }
       const allStores = [
         ...customZxsStores,
         ...models.map((model, idx) => ({
@@ -3470,7 +5470,7 @@ export default function CastingLiveSection({
           products: []
         }))
       ];
-      const foundStore = allStores.find(st => st.id === initialSelectedStoreId || (st.id && st.id.toLowerCase().includes(initialSelectedStoreId.toLowerCase())) || (st.name && st.name.toLowerCase().includes(initialSelectedStoreId.toLowerCase())));
+      const foundStore = allStores.find(st => st.id === storeToOpen || (st.id && st.id.toLowerCase().includes(storeToOpen.toLowerCase())) || (st.name && st.name.toLowerCase().includes(storeToOpen.toLowerCase())));
       if (foundStore) {
         setShowTikTokShop(true);
         setShopTab('mi_tienda');
@@ -3501,9 +5501,40 @@ export default function CastingLiveSection({
 
   // Investor purchase & shop searching states
   const [investorSearchTerm, setInvestorSearchTerm] = useState('');
-  const [selectedInvestorStore, setSelectedInvestorStore] = useState<any>(null);
+  const [selectedInvestorStore, setSelectedInvestorStore] = useState<any>(() => {
+    if (initialSelectedStoreId) {
+      const allStores = [
+        ...customZxsStores,
+        ...models.map((model, idx) => ({
+          id: model.id,
+          name: model.name || `Atelier ${model.username}`,
+          username: model.username || 'unknown',
+          avatar: model.avatar,
+          bannerUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200',
+          direccion: 'Calle de la Moda 123, Madrid, España',
+          style: 'Boutique de Alta Costura 👗',
+          description: `Exclusiva boutique de alta costura de @${model.username} para socios VIP.`,
+          rating: '4.9',
+          products: []
+        }))
+      ];
+      return allStores.find(st => st.id === initialSelectedStoreId || (st.id && st.id.toLowerCase().includes(initialSelectedStoreId.toLowerCase())) || (st.name && st.name.toLowerCase().includes(initialSelectedStoreId.toLowerCase()))) || customZxsStores.find(s => s.id === 'victorias_secret_spain') || null;
+    }
+    return null;
+  });
 
   const handleReturnFromStore = () => {
+    if (localStorage.getItem('came_from_profile_sponsor') === 'true') {
+      localStorage.removeItem('came_from_profile_sponsor');
+      setSelectedInvestorStore(null);
+      setShowTikTokShop(false);
+      const prevTab = localStorage.getItem('previous_tab_before_sponsor') || 'profile';
+      localStorage.removeItem('previous_tab_before_sponsor');
+      if (onNavigateToTab) {
+        onNavigateToTab(prevTab as any);
+      }
+      return true;
+    }
     if (cameFromAccountsQueSigues) {
       setCameFromAccountsQueSigues(false);
       setSelectedInvestorStore(null);
@@ -3528,6 +5559,18 @@ export default function CastingLiveSection({
       }
       setCompletedSessionToDisplay(sessionData);
       setShowFinanzasResults(true);
+      return true;
+    }
+    if (localStorage.getItem('came_from_finanzas') === 'true') {
+      localStorage.removeItem('came_from_finanzas');
+      setSelectedInvestorStore(null);
+      setShowTikTokShop(false);
+      setShowFinanzasResults(true);
+      return true;
+    }
+    if (showTikTokShop) {
+      setShowTikTokShop(false);
+      setSelectedInvestorStore(null);
       return true;
     }
     return false;
@@ -4171,10 +6214,10 @@ export default function CastingLiveSection({
 
     return {
       id: model.id,
-      name: isCurrentUser ? (customShopName || `${selectedBrandName} ${model.name}`) : (isAlex ? (customShopName || `${selectedBrandName} ${model.name}`) : `${selectedBrandName} ${model.name}`),
+      name: isCurrentUser ? (customShopName || selectedBrandName) : (isAlex ? (customShopName || selectedBrandName) : selectedBrandName),
       username: model.username,
       avatar: isCurrentUser ? (customShopLogo || model.avatar || selectedLogo) : (isAlex ? (customShopLogo || model.avatar || selectedLogo) : selectedLogo),
-      bannerUrl: isCurrentUser ? (customShopBanner || selectedBanner) : (isAlex ? (customShopBanner || selectedBanner) : selectedBanner),
+      bannerUrl: isCurrentUser ? (customShopBanner || selectedBanner) : (isAlex ? (customShopBanner || selectedBanner) : (localStorage.getItem(`coll_shop_banner_${model.id}`) || selectedBanner)),
       direccion: isCurrentUser ? (customShopAddress || selectedAddress) : (isAlex ? (customShopAddress || selectedAddress) : selectedAddress),
       style: storeStyle,
       description: isAlex 
@@ -4550,7 +6593,11 @@ export default function CastingLiveSection({
     return localStorage.getItem('coll_shop_custom_name') || 'Couture Elite Boutique';
   });
   const [customShopLogo, setCustomShopLogo] = useState(() => {
-    return localStorage.getItem('coll_shop_custom_logo') || 'https://logo.clearbit.com/victoriassecret.com';
+    const saved = localStorage.getItem('coll_shop_custom_logo');
+    if (saved && !saved.includes('clearbit.com')) {
+      return saved;
+    }
+    return COUTURE_ELITE_LOGO_DATA_URL;
   });
   const [customShopBanner, setCustomShopBanner] = useState(() => {
     return localStorage.getItem('coll_shop_custom_banner') || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200';
@@ -4623,11 +6670,11 @@ export default function CastingLiveSection({
     badges?: string[];
     roleBadge?: string;
   }>>([
-    { id: 'c-1', user: 'Mica Argañaraz', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=150' },
+    { id: 'c-1', user: 'diegohoraciocuello2', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
     { id: 'c-2', user: 'Gemma Ward', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' },
-    { id: 'c-3', user: 'Karlie Kloss', text: 'envió un(a) Te adoro 💖', type: 'gift', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150' },
-    { id: 'c-4', user: 'Jon Kortajarena', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' },
-    { id: 'c-5', user: 'Gemma Ward', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' }
+    { id: 'c-3', user: 'Vittoria Ceretti', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150' },
+    { id: 'c-4', user: 'Karlie Kloss', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150' },
+    { id: 'c-5', user: 'Liu Wen', text: 'se ha unido', type: 'joined', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=150' }
   ]);
   const [liveCommentInput, setLiveCommentInput] = useState('');
   const [liveUserCoins, setLiveUserCoins] = useState(() => {
@@ -4676,6 +6723,8 @@ export default function CastingLiveSection({
   const [isMobileLayout] = useState(true);
   const [showSmilePopover, setShowSmilePopover] = useState(false);
   const [showMobileEmojiPopover, setShowMobileEmojiPopover] = useState(false);
+  const [showExtraChannelGiftsPopover, setShowExtraChannelGiftsPopover] = useState(false);
+  const [isRightMarginHovered, setIsRightMarginHovered] = useState(false);
 
   // TikTok Desktop Live float actions panel counts (image.png)
   const [liveLikesCount, setLiveLikesCount] = useState(3100);
@@ -4728,6 +6777,22 @@ export default function CastingLiveSection({
 
   // States for short videos virtual gifts (similar to TikTok)
   const [isShortVideoGiftPanelOpen, setIsShortVideoGiftPanelOpen] = useState(false);
+  const [isMobileChannelPinned, setIsMobileChannelPinned] = useState(false);
+  const [channelLikesCount, setChannelLikesCount] = useState(1762);
+  const [isChannelLiked, setIsChannelLiked] = useState(false);
+  const [isChannelFollowed, setIsChannelFollowed] = useState(false);
+  const [channelCommentsCount, setChannelCommentsCount] = useState(5065);
+  const [channelSharesCount, setChannelSharesCount] = useState(81);
+
+  const handleShareChannel = () => {
+    setChannelSharesCount(prev => prev + 1);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      alert('🔗 ¡Enlace del Canal en Directo copiado al portapapeles!');
+    } else {
+      alert('🔗 ¡Compartiendo el Canal en Directo!');
+    }
+  };
   const [selectedGiftIndex, setSelectedGiftIndex] = useState<number | null>(2);
   const [shortVideoFloatingGifts, setShortVideoFloatingGifts] = useState<Array<{
     id: string;
@@ -4746,6 +6811,82 @@ export default function CastingLiveSection({
     animationType: string;
     gradient: string;
   } | null>(null);
+
+  // Full channel rain particles state & recipient notice banner
+  const [fullChannelGiftRain, setFullChannelGiftRain] = useState<Array<{
+    id: string;
+    icon: string;
+    xPercentage: number;
+    size: number;
+    duration: number;
+    delay: number;
+    rotation: number;
+  }>>([]);
+
+  const [activeChannelGiftNotice, setActiveChannelGiftNotice] = useState<{
+    id: string;
+    senderName: string;
+    senderAvatar: string;
+    recipientName: string;
+    recipientAvatar: string;
+    giftName: string;
+    giftIcon: string;
+    giftCost: number;
+  } | null>(null);
+
+  const triggerFullChannelGiftRain = (giftIcon: string) => {
+    const rainCount = 50;
+    const newRain = [];
+    const baseId = `rain-${Date.now()}-${Math.random()}`;
+
+    for (let i = 0; i < rainCount; i++) {
+      newRain.push({
+        id: `${baseId}-${i}`,
+        icon: giftIcon,
+        xPercentage: Math.random() * 96 + 2, // 2% to 98%
+        size: Math.floor(Math.random() * 28) + 26, // 26px to 54px
+        duration: Math.random() * 2.0 + 2.5, // 2.5s to 4.5s
+        delay: Math.random() * 1.8, // 0 to 1.8s stagger
+        rotation: Math.random() * 90 - 45 // -45deg to +45deg
+      });
+    }
+
+    setFullChannelGiftRain(prev => [...prev, ...newRain]);
+
+    setTimeout(() => {
+      setFullChannelGiftRain(prev => prev.filter(p => !p.id.startsWith(baseId)));
+    }, 6200);
+  };
+
+  const triggerChannelGiftNotice = (
+    giftName: string, 
+    giftIcon: string, 
+    giftCost: number, 
+    recipientName?: string, 
+    recipientAvatar?: string
+  ) => {
+    const recipient = recipientName || currentFinanzasSession?.presenter?.name || activeVideo?.name || selectedCastingLiveStory?.name || 'Adriana Lima';
+    const recAvatar = recipientAvatar || currentFinanzasSession?.presenter?.avatar || activeVideo?.avatar || selectedCastingLiveStory?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+    const sender = userProfile?.name || 'Adriana Lima';
+    const sendAvatar = userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200';
+
+    const newNotice = {
+      id: `gift-notice-${Date.now()}-${Math.random()}`,
+      senderName: sender,
+      senderAvatar: sendAvatar,
+      recipientName: recipient,
+      recipientAvatar: recAvatar,
+      giftName,
+      giftIcon,
+      giftCost
+    };
+
+    setActiveChannelGiftNotice(newNotice);
+
+    setTimeout(() => {
+      setActiveChannelGiftNotice(prev => prev?.id === newNotice.id ? null : prev);
+    }, 5000);
+  };
 
   // Sound generator using pure web audio context
   const playGiftSoundClass = (cost: number) => {
@@ -4798,15 +6939,26 @@ export default function CastingLiveSection({
     } catch (_) {}
   };
 
-  const handleSendShortVideoGift = (gift: { name: string; icon: string; cost: number; animationType: string; colorClass: string }) => {
+  const handleSendChannelFreeEmojiReaction = (emoji: string) => {
+    triggerFullChannelGiftRain(emoji);
+    triggerTikTokGiftBurst(emoji);
+  };
+
+  const handleSendFreeEmojiReaction = (emoji: string) => {
+    handleSendChannelFreeEmojiReaction(emoji);
+  };
+
+  const handleSendShortVideoGift = (gift: { name: string; icon: string; cost: number; animationType?: string; colorClass?: string }) => {
     if (liveUserCoins < gift.cost) {
-      if (confirm(`⚠️ No tienes suficientes monedas para enviar ${gift.name} (${gift.cost} 🪙).\n\n¿Quieres abrir la ventana de recarga estilo Casting Live ahora?`)) {
+      if (confirm(`⚠️ No tienes suficientes monedas para enviar ${gift.name} (${gift.cost} 🪙, tienes ${liveUserCoins} 🪙).\n\n¿Quieres abrir la ventana de recarga estilo Casting Live ahora?`)) {
         setShowTikTokRechargeModal(true);
       }
       return;
     }
 
-    setLiveUserCoins(prev => prev - gift.cost);
+    const nextCoins = liveUserCoins - gift.cost;
+    setLiveUserCoins(nextCoins);
+    localStorage.setItem('casting_live_coins_qty', nextCoins.toString());
     playGiftSoundClass(gift.cost);
 
     if (onGiftTransaction && activeVideo) {
@@ -4817,6 +6969,18 @@ export default function CastingLiveSection({
       );
     }
     
+    // 🌧️ 1. Lluvia de ese mismo regalo en todo el canal
+    triggerFullChannelGiftRain(gift.icon);
+
+    // 🔔 2. Aviso animado del regalo recibido en el canal del otro usuario
+    triggerChannelGiftNotice(
+      gift.name,
+      gift.icon,
+      gift.cost,
+      activeVideo?.name || 'Adriana Lima',
+      activeVideo?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+    );
+
     // Trigger TikTok style visual explosion of gifts & confetti
     triggerTikTokGiftBurst(gift.icon);
 
@@ -4825,8 +6989,8 @@ export default function CastingLiveSection({
       icon: gift.icon,
       name: gift.name,
       cost: gift.cost,
-      animationType: gift.animationType,
-      colorClass: gift.colorClass,
+      animationType: gift.animationType || 'scale',
+      colorClass: gift.colorClass || 'text-rose-400',
       sender: 'Tú'
     };
 
@@ -5168,7 +7332,8 @@ export default function CastingLiveSection({
   const [uploadDescription, setUploadDescription] = useState('Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25');
   const [uploadMusic, setUploadMusic] = useState('');
   const [uploadCategory, setUploadCategory] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos'>('para-ti');
-  const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | ''>('');
+  const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer' | ''>('');
+  const [showAllChannelGuide, setShowAllChannelGuide] = useState(false);
   const [uploadModelId, setUploadModelId] = useState('');
   const [uploadModalStage, setUploadModalStage] = useState<'review' | 'details'>('review');
   const [simplifiedReview, setSimplifiedReview] = useState(true);
@@ -5394,17 +7559,74 @@ export default function CastingLiveSection({
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const categoryUploadScrollRef = useRef<HTMLDivElement>(null);
+  const lastSavedVideosJsonRef = useRef<string>('');
 
-  // Persist videos list on changes
+  // Persist videos list on changes safely without redundant writes
   useEffect(() => {
-    localStorage.setItem('coll_casting_live_videos', JSON.stringify(videosList));
+    try {
+      if (!videosList || videosList.length === 0) return;
+      const str = JSON.stringify(videosList);
+      if (lastSavedVideosJsonRef.current === str) return;
+      lastSavedVideosJsonRef.current = str;
+      localStorage.setItem('coll_casting_live_videos', str);
+    } catch (e) {
+      // Silently handled by SafeStorage memory fallback
+    }
   }, [videosList]);
+
+  // Calculate if the current logged in user is registered as participant in current Finanzas table and actively presenting in their 5-minute turn
+  const myFinanzasId = userProfile?.id || 'user-ernesto';
+  const myFinanzasUsername = userProfile?.username || 'ernestovs';
+  const myFinanzasName = userProfile?.name || 'Ernesto vs';
+
+  const isCurrentUserInFinanzasParticipants = Boolean(
+    currentFinanzasSession?.participants?.some(
+      p => p.id === myFinanzasId ||
+           p.id === 'user-ernesto' ||
+           p.id === 'user' ||
+           (userProfile && p.id === userProfile.id) ||
+           p.username === myFinanzasUsername ||
+           p.username === 'ernestovs' ||
+           p.name === myFinanzasName ||
+           p.name === 'Ernesto vs' ||
+           p.name === 'Ernesto VS' ||
+           (userProfile && (p.name === userProfile.name || p.username === userProfile.username))
+    )
+  );
+
+  const activePresenterInQueue = finanzasPresentationQueue.find(item => item.status === 'presenting');
+  const currentSpotlightUser = activeFinanzasPopupUser || fullscreenFinanzasUser || selectedFinanzasUser;
+
+  const isCurrentUserTurnPresenting = Boolean(
+    selectedCategoryFilter === 'Finanzas' &&
+    isCurrentUserInFinanzasParticipants &&
+    (
+      (activePresenterInQueue && (
+        activePresenterInQueue.id === myFinanzasId ||
+        activePresenterInQueue.id === 'user-ernesto' ||
+        activePresenterInQueue.id === 'user' ||
+        activePresenterInQueue.name === myFinanzasName ||
+        activePresenterInQueue.name === 'Ernesto vs' ||
+        activePresenterInQueue.name === 'Ernesto VS' ||
+        (userProfile && (activePresenterInQueue.id === userProfile.id || activePresenterInQueue.name === userProfile.name))
+      )) ||
+      (!activePresenterInQueue && currentSpotlightUser && (
+        currentSpotlightUser.id === myFinanzasId ||
+        currentSpotlightUser.id === 'user-ernesto' ||
+        currentSpotlightUser.id === 'user' ||
+        currentSpotlightUser.name === myFinanzasName ||
+        currentSpotlightUser.name === 'Ernesto vs' ||
+        currentSpotlightUser.name === 'Ernesto VS' ||
+        (userProfile && (currentSpotlightUser.id === userProfile.id || currentSpotlightUser.name === userProfile.name))
+      ))
+    )
+  );
 
   // Clean / Filter videos depending on subtab and search term
   const rawFilteredVideos = videosList.filter(vid => {
     // Stage 0: Interest category filter (Finanzas, Fashion, Models, Backstage)
     if (selectedCategoryFilter === 'Todos') {
-      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk'];
+      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'];
       const vidCat = vid.videoCategory || vid.category;
       if (vidCat && !allowedCategoriesForTodos.includes(vidCat)) {
         return false;
@@ -5633,7 +7855,7 @@ export default function CastingLiveSection({
     const exists = videosList.some(v => v.username.toLowerCase().trim() === formattedUsername);
     
     if (!exists) {
-      let videoCategory: 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' = 'Fashion';
+      let videoCategory: 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer' = 'Fashion';
       let description = `¡Bienvenidos a mi canal oficial en Fashion Finances! ✨ Descubre mis looks diarios, patrocina mis desfiles y adquiere productos exclusivos en el live shop.`;
       let videoUrl = 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4';
       let titleMusic = 'Sonido original - ' + fullName;
@@ -5684,7 +7906,7 @@ export default function CastingLiveSection({
     }
   };
 
-  const handleCategoryFilterChange = (cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk') => {
+  const handleCategoryFilterChange = (cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer') => {
     setShowTikTokShop(false);
     setSelectedInvestorStore(null);
     setSelectedCategoryFilter(cat);
@@ -5693,11 +7915,23 @@ export default function CastingLiveSection({
     setSearchTerm('');
     setActiveSubTab('para-ti');
     if (cat === 'Finanzas') {
+      const isPaid = typeof window !== 'undefined' && localStorage.getItem('user_paid_finanzas_session') === 'true';
+      if (!isPaid) {
+        setShowFinanzasPayModal(true);
+      }
+    } else {
       setActiveFinanzasPopupUser(null);
       setIsFinanzasLiveConnected(false);
     }
+    if (['Reels', 'Fashion', 'Modelos', 'BackStage', 'Investors', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cat)) {
+      setCategoryLiveConnectedMap((prev) => {
+        const next = { ...prev, [cat]: false };
+        localStorage.setItem('category_live_connected_map', JSON.stringify(next));
+        return next;
+      });
+    }
     const matchingModel = cat === 'Todos'
-      ? models.find(m => ['Reels', 'Modelos', 'BackStage', 'Catwalk'].includes(getModelCategory(m)))
+      ? models.find(m => ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(getModelCategory(m)))
       : models.find(m => getModelCategory(m) === cat);
     if (matchingModel) {
       setLocalLiveModelId(matchingModel.id);
@@ -5716,6 +7950,9 @@ export default function CastingLiveSection({
   };
 
   const handleNextVideo = () => {
+    if (selectedCategoryFilter === 'Finanzas') {
+      return;
+    }
     if (filteredVideos.length > 0) {
       if (selectedCategoryFilter === 'Modelos') {
         const currentKey = getVideoUserKey(filteredVideos[activeVideoIndex]);
@@ -5754,6 +7991,9 @@ export default function CastingLiveSection({
   };
 
   const handlePrevVideo = () => {
+    if (selectedCategoryFilter === 'Finanzas') {
+      return;
+    }
     if (filteredVideos.length > 0) {
       if (selectedCategoryFilter === 'Modelos') {
         const currentKey = getVideoUserKey(filteredVideos[activeVideoIndex]);
@@ -6589,7 +8829,9 @@ export default function CastingLiveSection({
         return;
       }
 
-      setLiveUserCoins(prev => prev - cost);
+      const nextCoins = liveUserCoins - cost;
+      setLiveUserCoins(nextCoins);
+      localStorage.setItem('casting_live_coins_qty', nextCoins.toString());
 
       if (onGiftTransaction) {
         onGiftTransaction(
@@ -6601,6 +8843,18 @@ export default function CastingLiveSection({
       
       // Sound effects!
       playGiftSoundClass(cost);
+
+      // 🌧️ 1. Lluvia de ese mismo regalo en todo el canal
+      triggerFullChannelGiftRain(giftIcon);
+
+      // 🔔 2. Aviso animado del regalo recibido en el canal del otro usuario
+      triggerChannelGiftNotice(
+        giftName,
+        giftIcon,
+        cost,
+        selectedCastingLiveStory?.name || 'Adriana Lima',
+        selectedCastingLiveStory?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+      );
 
       // Trigger TikTok style visual explosion of gifts & confetti
       triggerTikTokGiftBurst(giftIcon);
@@ -6638,6 +8892,26 @@ export default function CastingLiveSection({
         setTimeout(() => {
           setActiveBigGift(prev => prev && prev.id === newGiftAnim.id ? null : prev);
         }, 3500);
+      }
+
+      // Check if this gift is a Luxury Watch
+      if (giftName.toLowerCase().includes('reloj') || giftIcon === '⌚' || giftIcon === '⏰') {
+        playLuxuryWatchSoundEffect(true);
+        saveLuxuryWatchGift({
+          id: `watch-${Date.now()}`,
+          senderId: userProfile?.id || 'user-ernesto',
+          senderName: userProfile?.name || 'Adriana Lima',
+          senderAvatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300',
+          receiverId: selectedCastingLiveStory?.id || 'topf-1',
+          receiverName: selectedCastingLiveStory?.name || 'Adriana Lima',
+          receiverAvatar: selectedCastingLiveStory?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+          giftName: giftName,
+          giftIcon: giftIcon,
+          cost: cost,
+          euroCost: cost,
+          message: `Regalado en la sesión de casting en directo`,
+          timestamp: Date.now()
+        });
       }
 
       // Scroll chat and auto clear animation after 2.5 seconds
@@ -6728,6 +9002,7 @@ export default function CastingLiveSection({
       setLiveCommentInput(prev => (prev ? `${prev} ${emoji}` : emoji));
     };
 
+
     return (
       <div className="bg-[#111319] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden min-h-[780px] flex flex-col md:flex-row text-slate-200 font-sans" id="casting_live-live-container">
         
@@ -6744,19 +9019,27 @@ export default function CastingLiveSection({
 
             {/* Back to feed button matching exact Atrás row */}
             <button
-              onClick={() => setActiveSubTab('para-ti')}
+              onClick={() => {
+                setSelectedCategoryFilter('Todos');
+                setActiveSubTab('para-ti');
+                setShowSplitScreenMenu(false);
+                setShowCreateBroadcastModal(false);
+                setShowLiveToolsModal(false);
+                setScreenSplitLayout('single');
+                setIsDuoShoppingActive(false);
+              }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors text-left cursor-pointer border border-slate-700"
-              title="Volver a la página anterior"
+              title="Volver"
             >
               <ArrowLeft className="w-4 h-4 text-rose-400 stroke-[2.5]" />
-              <span className="text-xs font-black">Volver a la página anterior</span>
+              <span className="text-xs font-black">Volver</span>
             </button>
 
             {/* Menu options exactly matching screenshot */}
             <div className="space-y-1">
               <button 
                 type="button"
-                onClick={() => setShowCreateBroadcastModal(true)}
+                onClick={() => setShowCreationTypeModal(true)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#fe2c55] to-rose-600 hover:from-rose-600 hover:to-[#fe2c55] text-left transition-all shadow-md cursor-pointer border-0 uppercase tracking-wider animate-pulse"
               >
                 <Video className="w-4 h-4 text-white" />
@@ -6850,18 +9133,32 @@ export default function CastingLiveSection({
           </div>
         </aside>
 
-        {/* 2. CENTER PANEL: Large Live Stream stage styled with crisp pure White background */}
-        <main className="flex-1 bg-white p-3 sm:p-4 flex flex-col justify-start items-center relative min-h-[680px] min-w-0 border-r border-[#e2e8f0]" id="casting_live-center-panel">
+        {/* 2. CENTER PANEL: Live Stream stage with exact TikTok mobile proportions */}
+        <main className={`flex-1 bg-white flex flex-col justify-center items-center relative min-w-0 border-r border-[#e2e8f0] w-full max-w-full box-border mobile-snap-container ${
+          isMobileChannelPinned ? 'p-0 min-h-0' : 'p-2 sm:p-4 md:p-6 min-h-[680px]'
+        }`} id="casting_live-center-panel">
 
-          {/* Combined vertical smartphone mockup grouping screen + gift panel to remove white space */}
-          <div className="flex flex-col items-center w-full max-w-[380px] sm:max-w-[400px] md:max-w-[420px] gap-0 my-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-800 bg-[#161a1e]" id="casting_live-combined-device">
+          {/* Combined vertical smartphone mockup matching TikTok mobile screen dimensions */}
+          <div className={`flex flex-col items-center justify-center w-full gap-0 my-auto shadow-2xl overflow-hidden border-slate-800 bg-[#161a1e] transition-all duration-300 box-border mx-auto mobile-snap-card ${
+            isMobileChannelPinned 
+              ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex items-center justify-center p-2 xs:p-3 sm:p-4 m-0'
+              : 'w-full max-w-[402px] h-[874px] max-h-[90vh] rounded-[48px] border-[4px] border-slate-900 ring-1 ring-white/10 shadow-2xl'
+          }`} id="casting_live-combined-device">
 
-            {/* Main Streaming Smartphone simulation frame - border-b-0 and rounded bottom removed to touch the gifts panel seamlessly */}
-            <div className="w-full aspect-[9/16] bg-[#161a1e] overflow-hidden relative flex flex-col group/video-container">
+            {/* Main Streaming Smartphone simulation frame */}
+            <div className={`w-full bg-[#161a1e] overflow-hidden relative flex flex-col group/video-container box-border transition-all duration-300 ${
+              isMobileChannelPinned 
+                ? 'w-full max-w-[390px] h-full max-h-[100dvh] sm:max-h-[92dvh] rounded-2xl border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] mx-auto' 
+                : 'w-full max-w-full h-full rounded-[44px]'
+            }`}>
             
               {/* 🎛️ TOP HOVER ZONE & EMBEDDED CONTROL OVERLAY INSIDE CHANNEL (image.png options) */}
               <div 
-                className="absolute top-0 inset-x-0 h-32 sm:h-36 z-50 group/top-hover-zone pointer-events-auto flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2" 
+                className={`absolute top-0 inset-x-0 h-32 sm:h-36 z-50 group/top-hover-zone flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-opacity duration-200 ${
+                  (showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
+                    ? 'pointer-events-none opacity-0 hidden'
+                    : 'pointer-events-auto'
+                }`} 
                 id="video-channel-top-hover-zone"
               >
                 {/* Subtle top indicator bar when not hovered */}
@@ -6872,49 +9169,95 @@ export default function CastingLiveSection({
                   className="w-full bg-[#0e1019]/95 backdrop-blur-md text-white p-2 sm:p-2.5 rounded-2xl border border-slate-700/80 shadow-2xl flex flex-col gap-1.5 transition-all duration-300 select-none opacity-0 -translate-y-4 pointer-events-none group-hover/top-hover-zone:opacity-100 group-hover/top-hover-zone:translate-y-0 group-hover/top-hover-zone:pointer-events-auto hover:opacity-100 hover:translate-y-0 hover:pointer-events-auto" 
                   id="channel-embedded-broadcast-control-overlay"
                 >
-                  {/* Top Row: Volver a la página anterior & CREAR RETRANSMISION */}
+                  {/* Top Row: Volver, Fijar canal & CREAR RETRANSMISION */}
                   <div className="flex items-center justify-between gap-1.5">
-                    {/* BOTÓN VOLVER */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowSplitScreenMenu(false);
-                        setShowCreateBroadcastModal(false);
-                        setShowLiveToolsModal(false);
-                        setScreenSplitLayout('single');
-                        setIsDuoShoppingActive(false);
-                        if (selectedCategoryFilter === 'Tiendas') {
-                          setShopTab('escaparate');
-                        } else {
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* BOTÓN VOLVER */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSplitScreenMenu(false);
+                          setShowCreateBroadcastModal(false);
+                          setShowLiveToolsModal(false);
+                          setScreenSplitLayout('single');
+                          setIsDuoShoppingActive(false);
+                          setSelectedCategoryFilter('Todos');
                           setActiveSubTab('para-ti');
-                        }
-                      }}
-                      className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#1b2030] hover:bg-[#262c42] text-white text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-xs shrink-0"
-                      title="Volver a la página anterior"
-                      id="btn-back-inside-channel-video-overlay"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5 text-rose-500 stroke-[3]" />
-                      <span className="truncate font-black">Volver a la página anterior</span>
-                    </button>
+                          if (selectedCategoryFilter === 'Tiendas') {
+                            setShopTab('escaparate');
+                          }
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#1b2030] hover:bg-[#262c42] text-white text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-xs shrink-0"
+                        title="Volver"
+                        id="btn-back-inside-channel-video-overlay"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5 text-rose-500 stroke-[3]" />
+                        <span className="truncate font-black">Volver</span>
+                      </button>
 
-                    {/* CREAR RETRANSMISION */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCreateBroadcastModal(true);
-                        setBroadcastModalTab('camera');
-                      }}
-                      className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-[#fe2c55] to-rose-600 hover:from-rose-600 hover:to-[#fe2c55] text-white text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer active:scale-95 shadow-xs shrink-0 border border-rose-500/40 uppercase tracking-wider"
-                      title="Crear Retransmisión"
-                      id="btn-create-broadcast-top"
-                    >
-                      <Video className="w-3.5 h-3.5 text-white" />
-                      <span className="truncate font-black">Crear Retransmisión</span>
-                    </button>
+                      {/* BOTÓN FIJAR CANAL (PANTALLA COMPLETA) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextState = !isMobileChannelPinned;
+                          setIsMobileChannelPinned(nextState);
+                        }}
+                        className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink-0 ${
+                          isMobileChannelPinned
+                            ? 'bg-cyan-600 text-white border-cyan-300 shadow-[0_0_14px_rgba(6,182,212,0.6)] animate-pulse'
+                            : 'bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border-slate-700/60'
+                        }`}
+                        title={isMobileChannelPinned ? "Salir de pantalla completa" : "Fijar canal en pantalla completa en el móvil"}
+                        id="btn-pin-channel-mobile-1"
+                      >
+                        {isMobileChannelPinned ? (
+                          <Minimize2 className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                        ) : (
+                          <Pin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-cyan-400 rotate-45" />
+                        )}
+                        <span className="truncate font-black whitespace-nowrap">
+                          {isMobileChannelPinned ? 'Salir Completa' : 'Fijar canal'}
+                        </span>
+                      </button>
+
+                      {/* BOTÓN FINALIZAR RETRANSMISIÓN Y DAR PASO (Canal Finanzas - Solo cuando el usuario está participando y en su turno de exposición de 5 minutos) */}
+                      {selectedCategoryFilter === 'Finanzas' && isCurrentUserTurnPresenting && (
+                        <button
+                          type="button"
+                          onClick={handleFinishRetransmissionAndPassToNextParticipant}
+                          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink-0 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-400/80 shadow-[0_0_12px_rgba(225,29,72,0.45)]"
+                          title="Finalizar tu exposición de 5 minutos y dar paso al siguiente participante"
+                          id="btn-finish-broadcast-pass-next-1"
+                        >
+                          <Square className="w-3 sm:w-3.5 h-3 sm:h-3.5 fill-white text-white shrink-0" />
+                          <span className="truncate font-black">Finalizar</span>
+                        </button>
+                      )}
+
+                      {/* BOTÓN RETRANSMITIR CON CÁMARA (Solo en canal Tiendas) */}
+                      {selectedCategoryFilter === 'Tiendas' && (
+                        <button
+                          type="button"
+                          onClick={handleToggleUserCameraLiveBroadcast}
+                          className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink-0 ${
+                            isUserLiveStreamingWithCamera
+                              ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.7)] animate-pulse'
+                              : 'bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border-slate-700/60'
+                          }`}
+                          title={isUserLiveStreamingWithCamera ? "Detener retransmisión en vivo" : "Retransmitir en vivo grabándote con tu propia cámara del móvil"}
+                          id="btn-retransmit-live-top-1"
+                        >
+                          <Radio className={`w-3 sm:w-3.5 h-3 sm:h-3.5 ${isUserLiveStreamingWithCamera ? 'text-white' : 'text-rose-500'}`} />
+                          <span className="truncate font-black">
+                            {isUserLiveStreamingWithCamera ? `En Vivo (${formatLiveStreamDuration(liveStreamTimerSeconds)})` : 'Retransmitir'}
+                          </span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Middle Row: 5 Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3), Retransmitir) */}
-                  <div className="grid grid-cols-5 gap-1 pt-1.5 border-t border-slate-700/60 text-[9px] sm:text-[10px] font-extrabold text-center">
+                  {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3), [Retransmitir en Tiendas]) */}
+                  <div className={`grid ${selectedCategoryFilter === 'Tiendas' ? 'grid-cols-5' : 'grid-cols-4'} gap-0.5 sm:gap-1 pt-1.5 border-t border-slate-700/60 text-[9px] sm:text-[10px] font-extrabold text-center w-full max-w-full min-w-0`}>
                     {/* 🎥 Cámara ON */}
                     <button
                       type="button"
@@ -6922,15 +9265,15 @@ export default function CastingLiveSection({
                         setIsBroadcastCamOn(!isBroadcastCamOn);
                         alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
                       }}
-                      className={`p-1 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                      className={`p-0.5 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer min-w-0 w-full overflow-hidden ${
                         isBroadcastCamOn
                           ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-extrabold shadow-xs'
                           : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
                       }`}
                       title="Configurar Cámara"
                     >
-                      <Camera className="w-3.5 h-3.5 text-[#10b981]" />
-                      <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
+                      <Camera className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-[#10b981] shrink-0" />
+                      <span className="truncate w-full text-[7.5px] sm:text-[8.5px] font-black">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
                     </button>
 
                     {/* 🎙️ Mic ON */}
@@ -6941,64 +9284,72 @@ export default function CastingLiveSection({
                         setIsBroadcastMicOn(isMuted);
                         alert(isMuted ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.');
                       }}
-                      className={`p-1 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                      className={`p-0.5 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer min-w-0 w-full overflow-hidden ${
                         !isMuted && isBroadcastMicOn
                           ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-extrabold shadow-xs'
                           : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
                       }`}
                       title="Configurar Micrófono"
                     >
-                      <Mic className="w-3.5 h-3.5 text-[#10b981]" />
-                      <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">{!isMuted ? 'Mic ON' : 'Mute'}</span>
+                      <Mic className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-[#10b981] shrink-0" />
+                      <span className="truncate w-full text-[7.5px] sm:text-[8.5px] font-black">{!isMuted ? 'Mic ON' : 'Mute'}</span>
                     </button>
 
                     {/* 🖥️ Pantalla */}
                     <button
                       type="button"
                       onClick={handleToggleScreenShare}
-                      className={`p-1 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                      className={`p-0.5 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer min-w-0 w-full overflow-hidden ${
                         isScreenSharingActive
                           ? 'bg-indigo-950/60 text-indigo-300 border-indigo-500 font-extrabold shadow-xs animate-pulse'
                           : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
                       }`}
                       title="Compartir Pantalla"
                     >
-                      <Monitor className="w-3.5 h-3.5 text-slate-200" />
-                      <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
+                      <Monitor className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-slate-200 shrink-0" />
+                      <span className="truncate w-full text-[7.5px] sm:text-[8.5px] font-black">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
                     </button>
 
                     {/* 👥 Invitados (3) */}
                     <button
                       type="button"
                       onClick={() => {
+                        setActiveFinanzasPopupUser(null);
+                        setShowProjectDetailsInPopup(false);
                         setShowCreateBroadcastModal(true);
                         setBroadcastModalTab('guests');
+                        if (selectedCategoryFilter === 'Finanzas') {
+                          setShowDuoMenu(true);
+                          setFinanzasDuoSubTool('invitar');
+                        }
                       }}
-                      className="p-1 sm:p-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-0.5 transition cursor-pointer font-bold"
+                      className="p-0.5 sm:p-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-0.5 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden"
                       title="Invitar Invitados"
                     >
-                      <Users className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">Invitados ({broadcastGuests.length || 3})</span>
+                      <Users className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate w-full text-[7.5px] sm:text-[8.5px] font-black">Invitados ({broadcastGuests.length || 3})</span>
                     </button>
 
-                    {/* 🌐 Retransmitir */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCreateBroadcastModal(true);
-                        setBroadcastModalTab('multistream');
-                      }}
-                      className="p-1 sm:p-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-0.5 transition cursor-pointer font-bold"
-                      title="Retransmitir en otras plataformas"
-                    >
-                      <Globe className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">Retransmitir</span>
-                    </button>
+                    {/* 🌐 Retransmitir (Solo en canal Tiendas) */}
+                    {selectedCategoryFilter === 'Tiendas' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCreateBroadcastModal(true);
+                          setBroadcastModalTab('multistream');
+                        }}
+                        className="p-0.5 sm:p-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-0.5 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden"
+                        title="Retransmitir en otras plataformas"
+                      >
+                        <Globe className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-rose-400 shrink-0" />
+                        <span className="truncate w-full text-[7.5px] sm:text-[8.5px] font-black">Retransmitir</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Bottom Row: Categories Bar */}
-                  <div className="pt-1.5 border-t border-slate-700/60">
-                    <div className="flex items-center gap-1 sm:gap-1.5 w-full justify-between bg-[#0e1019] text-white p-1 rounded-[16px] border border-slate-700/70 shadow-md">
+                  <div className="pt-1.5 border-t border-slate-700/60 w-full max-w-full min-w-0">
+                    <div className="flex items-center gap-1 sm:gap-1.5 w-full max-w-full min-w-0 justify-between bg-[#0e1019] text-white p-1 rounded-[16px] border border-slate-700/70 shadow-md">
                       {/* Left Scroll Arrow */}
                       <button
                         type="button"
@@ -7009,7 +9360,7 @@ export default function CastingLiveSection({
                             categoriesSliderRef.current.scrollBy({ left: -140, behavior: 'smooth' });
                           }
                         }}
-                        className="w-5.5 h-5.5 sm:w-6 sm:h-6 bg-[#1b1f2e] hover:bg-black text-rose-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition border border-slate-700/50 active:scale-90"
+                        className="w-5.5 h-5.5 sm:w-6 sm:h-6 bg-[#1b1f2e] hover:bg-black text-rose-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition border border-slate-700/50 active:scale-90 relative overflow-visible"
                         title="Anterior"
                       >
                         <ChevronLeft className="w-3.5 h-3.5 stroke-[3]" />
@@ -7018,18 +9369,20 @@ export default function CastingLiveSection({
                       {/* Scrollable Categories Track */}
                       <div
                         ref={categoriesSliderRef}
-                        className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap flex items-center gap-1 scroll-smooth py-0.5 px-0.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                        className="flex-1 min-w-0 max-w-full overflow-x-auto whitespace-nowrap flex items-center gap-1 scroll-smooth py-0.5 px-0.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                       >
                         {[
                           { id: 'Todos', label: 'Todos 🌍' },
-                          { id: 'Reels', label: 'Reels 🎥' },
                           { id: 'Fashion', label: 'Fashion ✨' },
                           { id: 'Finanzas', label: 'Finanzas 📈' },
-                          { id: 'Modelos', label: 'Modelos 👑' },
+                          { id: 'Modelos', label: 'Runway 👑' },
                           { id: 'BackStage', label: 'BackStage 🎬' },
-                          { id: 'Investors', label: 'Investors 💼' },
+                          { id: 'Investors', label: 'Jewellery 💎' },
                           { id: 'Tiendas', label: 'Tiendas 🛍️' },
-                          { id: 'Catwalk', label: 'Catwalk 👠' }
+                          { id: 'Catwalk', label: 'Catwalk 👠' },
+                          { id: 'Fitnes', label: 'Fitnes 💪' },
+                          { id: 'Beauty', label: 'Beauty 💄' },
+                          { id: 'Influencer', label: 'Influencer 📱' }
                         ].map(cat => {
                           const isActive = selectedCategoryFilter === cat.id;
                           return (
@@ -7224,6 +9577,71 @@ export default function CastingLiveSection({
                 {/* Dynamic WebRTC burst element */}
                 <div id="webrtc-burst" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-20 w-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-full z-20 pointer-events-none hidden" />
               </div>
+            ) : isUserLiveStreamingWithCamera && userLiveMediaStream ? (
+              // 🔴 REAL USER MOBILE CAMERA LIVE BROADCAST STAGE
+              <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center select-none" id="user-live-camera-stage">
+                <video
+                  ref={userLiveVideoElementRef}
+                  autoPlay
+                  playsInline
+                  muted={true}
+                  className={`w-full h-full object-cover transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                />
+
+                {/* Live Floating Camera Tools (Girar Cámara, Silenciar, Finalizar) */}
+                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/15">
+                  <button
+                    type="button"
+                    onClick={handleFlipLiveCamera}
+                    className="p-1.5 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
+                    title="Girar cámara (Frontal / Trasera)"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-cyan-300" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToggleLiveStreamAudio}
+                    className="p-1.5 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
+                    title={isLiveStreamAudioMuted ? "Activar micrófono" : "Silenciar micrófono"}
+                  >
+                    {isLiveStreamAudioMuted ? (
+                      <MicOff className="w-3.5 h-3.5 text-rose-400" />
+                    ) : (
+                      <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToggleUserCameraLiveBroadcast}
+                    className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider"
+                    title="Finalizar retransmisión"
+                  >
+                    Finalizar
+                  </button>
+                </div>
+
+                {/* Top Live Badge & Spectator counter */}
+                <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
+                  <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-xl border border-red-400/50 animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-white"></span>
+                    <span>EN DIRECTO • {formatLiveStreamDuration(liveStreamTimerSeconds)}</span>
+                  </div>
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-extrabold px-2 py-1 rounded-full border border-white/20 flex items-center gap-1">
+                    <span>👁️</span>
+                    <span>{liveViewerCount.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Bottom Host Badge */}
+                <div className="absolute bottom-3 left-3 z-20 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
+                  <img
+                    src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'}
+                    alt="Tú"
+                    className="w-5 h-5 rounded-full object-cover border border-rose-400"
+                  />
+                  <span className="text-[10px] font-black text-white">TÚ (Grabando y Retransmitiendo en Vivo)</span>
+                </div>
+              </div>
             ) : !showLiveTradingChart ? (
               // 1. FULL HEIGHT PRISTINE WEBCAM FEED matching the pure screen snapshot
               <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
@@ -7241,14 +9659,21 @@ export default function CastingLiveSection({
                     </div>
                   </div>
                 ) : (
-                  <video 
-                    src="https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-makeup-posing-under-neon-light-40478-large.mp4" 
-                    autoPlay 
-                    loop 
-                    muted={isMuted} 
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="relative w-full h-full">
+                    <video 
+                      src="https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-makeup-posing-under-neon-light-40478-large.mp4" 
+                      autoPlay 
+                      loop 
+                      muted={isMuted} 
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    {/* EN VIVO Badge matching image.png */}
+                    <div className="absolute top-4 right-4 bg-[#fe2c55] text-white text-[9.5px] font-black tracking-wider uppercase px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-lg border border-red-500/40 z-20">
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                      <span>EN VIVO</span>
+                    </div>
+                  </div>
                 )}
                 
                 {/* Immersive Watermark Overlay */}
@@ -7416,27 +9841,29 @@ export default function CastingLiveSection({
               </div>
             )}
 
-            {/* 🎁 VIRTUAL GIFTS POP-UP MODAL PANEL (MORE DROPDOWN DIRECTLY IN STREAM COMPONENT SCREEN TO MATCH PICTURE!) */}
+            {/* 🎁 VIRTUAL GIFTS POP-UP MODAL PANEL (REGALOS EXTRA DEL CANAL - image.png) */}
             {showLiveGiftsPopover && (
               <div 
-                onMouseEnter={handleMouseEnterPopover}
-                onMouseLeave={handleMouseLeavePopover}
-                className="absolute bottom-[60px] left-1/2 -translate-x-1/2 w-[360px] max-w-[95%] bg-[#2A261F]/95 backdrop-blur-md border border-[#423C33] rounded-2xl shadow-2xl z-30 p-4 flex flex-col font-sans text-white text-left animate-bounce-in"
+                className="absolute inset-0 w-full h-full bg-[#121316]/98 backdrop-blur-xl z-50 p-4 sm:p-5 flex flex-col font-sans text-white text-left animate-fade-in rounded-[36px] select-none border border-slate-800 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between pb-2 border-b border-white/5 mb-2">
-                  <span className="text-xs font-black text-[#FFD700] flex items-center gap-1.5 select-none font-sans uppercase tracking-wider">
-                    🎁 Regalos Extra del Canal
+                {/* Header matching image.png */}
+                <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3 shrink-0">
+                  <span className="text-xs sm:text-sm font-black text-[#facc15] flex items-center gap-2 select-none uppercase tracking-wide">
+                    <span>🎁</span> REGALOS EXTRA DEL CANAL
                   </span>
                   <button 
+                    type="button"
                     onClick={() => setShowLiveGiftsPopover(false)}
-                    className="text-white/60 hover:text-white text-[10px] bg-slate-800 hover:bg-slate-700 border-0 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer transition-colors"
+                    className="text-white/70 hover:text-white text-xs bg-white/10 hover:bg-white/20 border-0 rounded-full w-7 h-7 flex items-center justify-center cursor-pointer transition-colors"
+                    title="Cerrar regalos"
                   >
                     ✕
                   </button>
                 </div>
 
-                {/* Grid of beautiful interactive virtual gifts - ENLARGED HEIGHT TO SECURE MORE GIFTS VISIBLE */}
-                <div className="grid grid-cols-3 gap-2 overflow-y-auto max-h-[440px] pr-0.5 scrollbar-thin">
+                {/* 3-column Grid of gifts matching image.png */}
+                <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-amber-500/40">
                   {[
                     { name: 'Certificado prof.', icon: '📜', cost: 500 },
                     { name: 'Una estrella', icon: '⭐', cost: 50 },
@@ -7446,7 +9873,7 @@ export default function CastingLiveSection({
                     { name: 'Pulsera', icon: '📿', cost: 800 },
                     { name: 'Token', icon: '🪙', cost: 1000 },
                     { name: 'Rosa roja', icon: '🌹', cost: 10 },
-                    { name: 'Beso', icon: '💋', cost: 5 },
+                    { name: 'Beso', icon: '👄', cost: 5 },
                     { name: 'Besos', icon: '😘', cost: 15 },
                     { name: 'Te adoro', icon: '🥰', cost: 5 },
                     { name: 'Osito', icon: '🧸', cost: 1 },
@@ -7481,8 +9908,7 @@ export default function CastingLiveSection({
                     { name: 'Varias monedas de oro', icon: '💰', cost: 5 },
                     { name: 'Tesoro de monedas', icon: '🪙', cost: 10 },
                     { name: 'Cena de lujo', icon: '🍽️', cost: 250 },
-                    { name: 'Manos juntas', icon: '🙏', cost: 1 },
-                    { name: 'Café', icon: '☕', cost: 2 }
+                    { name: 'Manos juntas', icon: '🙏', cost: 1 }
                   ].map((pGift, pIdx) => (
                     <button
                       key={pIdx}
@@ -7490,21 +9916,22 @@ export default function CastingLiveSection({
                       onClick={() => {
                         handleSendGift(pGift.name, pGift.icon, pGift.cost);
                       }}
-                      className="flex flex-col items-center justify-center p-1.5 rounded-xl hover:bg-white/10 transition active:scale-95 cursor-pointer border border-transparent hover:border-white/5 text-center bg-black/20"
+                      title={`${pGift.name} (${pGift.cost} 🪙)`}
+                      className="bg-gradient-to-b from-[#FFFFFF] via-[#FFF4F7] to-[#FCE6EE] hover:from-[#FFFFFF] hover:to-[#FBCFE8] p-3 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-between text-center transition-all duration-200 cursor-pointer active:scale-95 border border-pink-100/90 shadow-md min-h-[96px] sm:min-h-[105px] group"
                     >
-                      <span className="text-2xl select-none">{pGift.icon}</span>
-                      <span className="text-[7.5px] text-slate-200 mt-1 truncate w-full font-black leading-tight" title={pGift.name}>
-                        {pGift.name}
+                      <span className="text-3xl sm:text-4xl select-none block drop-shadow-sm group-hover:scale-110 transition-transform duration-200 my-auto">
+                        {pGift.icon}
                       </span>
-                      <span className="text-[8px] text-[#FFD700] font-black font-mono mt-0.5 whitespace-nowrap leading-none">
+                      <span className="text-[11.5px] sm:text-xs text-amber-500 font-black font-mono mt-1 flex items-center justify-center gap-1 leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.1)]">
                         🪙 {pGift.cost}
                       </span>
                     </button>
                   ))}
                 </div>
 
-                <div className="text-[7.5px] text-slate-400 mt-2 text-center border-t border-white/5 pt-1.5 leading-none">
-                  Presiona para enviar instantáneamente · Tu saldo: <span className="font-mono text-amber-400 font-bold">🪙 {liveUserCoins}</span>
+                {/* Footer matching image.png */}
+                <div className="text-[9.5px] sm:text-[10px] text-slate-300 mt-2.5 text-center border-t border-white/10 pt-2 shrink-0 select-none">
+                  Presiona para enviar instantáneamente · Tu saldo: <span className="font-mono text-[#facc15] font-black">🪙 {liveUserCoins}</span>
                 </div>
               </div>
             )}
@@ -7609,10 +10036,8 @@ export default function CastingLiveSection({
               </div>
             )}
 
-            {/* 💬 MOBILE CHAT OVERLAY (Displays ONLY on mobile screens or if isMobileLayout is active to resemble xx.png) */}
-            <div className={`absolute inset-x-0 bottom-0 z-20 p-3 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col gap-2.5 pointer-events-auto font-sans text-left ${
-              isMobileLayout ? 'flex' : 'flex md:hidden'
-            }`}>
+            {/* 💬 LIVE STREAM CHAT & INPUT OVERLAY (Matches image.png) */}
+            <div className="absolute inset-x-0 bottom-0 z-20 p-3 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col gap-2.5 pointer-events-auto font-sans text-left">
               
               {/* Floating Scrolling Comments Panel */}
               {showLiveComments && (
@@ -7620,10 +10045,10 @@ export default function CastingLiveSection({
                   {liveComments.slice(-6).map((comment) => {
                     if (comment.type === 'joined') {
                       return (
-                        <div key={comment.id} className="inline-flex items-center gap-1.5 bg-black/30 backdrop-blur-md px-2.5 py-1 rounded-full text-[10.5px] text-white/95 max-w-max border border-white/5 shadow-xs animate-fade-in">
-                          <span className="text-white/75 select-none">👋</span>
+                        <div key={comment.id} className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] text-white/95 max-w-max border border-white/10 shadow-xs animate-fade-in">
+                          <span className="text-amber-400 select-none text-xs">👏</span>
                           <span className="font-extrabold text-[#FE2C55]">@{comment.user}</span>
-                          <span className="text-white/80">se ha unido</span>
+                          <span className="text-white/90 font-medium">se ha unido</span>
                         </div>
                       );
                     }
@@ -7687,66 +10112,77 @@ export default function CastingLiveSection({
                     // sound classes
                     playGiftSoundClass(0.5);
                   }}
-                  className="flex items-center gap-1.5 select-none w-full pointer-events-auto animate-fade-in"
+                  className="flex items-center gap-1.5 select-none w-full pointer-events-auto animate-fade-in relative"
                 >
-                  <div className="relative flex-1">
+                  <div className="relative flex-1 flex items-center">
                     <input 
                       type="text"
-                      placeholder="Type..."
+                      placeholder="Escribe algo..."
                       value={liveCommentInput}
                       onChange={(e) => setLiveCommentInput(e.target.value)}
                       maxLength={80}
-                      className="w-full bg-black/40 backdrop-blur-md placeholder-white/50 border border-white/10 focus:bg-black/70 focus:border-[#fe2c55] rounded-full py-1.5 px-3 text-xs text-white focus:outline-none transition-all shadow-inner border-0"
+                      className="w-full bg-black/50 backdrop-blur-md placeholder-white/60 border border-white/20 focus:bg-black/80 focus:border-[#fe2c55] rounded-full py-1.5 pl-3.5 pr-14 text-xs text-white focus:outline-none transition-all shadow-inner border-0"
                     />
-                  </div>
 
-                  {/* Heart button container with hover floating horizontal emoji menu */}
-                  <div className="relative group/heart-hover-zone flex items-center">
-                    {/* Floating horizontal menu with free emojis */}
-                    <div className="absolute bottom-full right-0 mb-2 z-50 hidden group-hover/heart-hover-zone:flex items-center gap-1.5 bg-black/90 backdrop-blur-md border border-white/20 py-1.5 px-3 rounded-full shadow-2xl animate-fade-in whitespace-nowrap overflow-x-auto max-w-[280px] sm:max-w-[340px] scrollbar-none after:content-[''] after:absolute after:-bottom-4 after:inset-x-0 after:h-5">
-                      {['❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '💯', '⚡', '🎁', '🥳', '🥰', '👑', '🚀', '✨'].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSendFreeEmojiReaction(emoji);
-                          }}
-                          className="text-base sm:text-lg hover:scale-135 active:scale-90 transition-transform cursor-pointer p-0.5 bg-transparent border-0 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
-                          title={`Enviar ${emoji}`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => handleSendHeart(e)}
-                      className="p-2 bg-[#fe2c55] hover:bg-[#ff3b61] rounded-full text-white active:scale-90 transition-transform cursor-pointer shadow-md flex items-center justify-center border-0 shrink-0"
+                    {/* Emoji Button inside input */}
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowMobileEmojiPopover(!showMobileEmojiPopover);
+                        setShowExtraChannelGiftsPopover(false);
+                      }}
+                      className="absolute right-8 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition cursor-pointer border-0 bg-transparent p-0.5 z-10"
+                      title="Emojis"
                     >
-                      <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                      <Smile className="w-3.5 h-3.5 text-white/80 hover:text-white" />
+                    </button>
+
+                    {/* Regalos Extras Button inside input */}
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowExtraChannelGiftsPopover(!showExtraChannelGiftsPopover);
+                        setShowMobileEmojiPopover(false);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-300 transition cursor-pointer border-0 bg-transparent p-0.5 z-10"
+                      title="Regalos extras del canal"
+                    >
+                      <Gift className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
                     </button>
                   </div>
+
+                  {/* Pink Send Button matching image.png */}
+                  <button
+                    type="submit"
+                    className="w-8 h-8 bg-[#fe2c55] hover:bg-[#e02247] active:scale-90 text-white rounded-full flex items-center justify-center shrink-0 shadow-md transition-all cursor-pointer border-0"
+                    title="Enviar mensaje"
+                    id="btn-send-live-comment-overlay"
+                  >
+                    <Send className="w-3.5 h-3.5 text-white ml-0.5 stroke-[2.5]" />
+                  </button>
                 </form>
               )}
 
             </div>
 
-            {/* 🔴 TIKTOK STYLE RIGHT VERTICAL FLOATING ACTIONS PANEL (Matches image.png exactly) */}
-            <div className="absolute right-3.5 bottom-24 z-35 flex flex-col items-center gap-4 select-none font-sans" id="live-tiktok-right-actions">
+            {/* 🔴 TIKTOK STYLE RIGHT VERTICAL FLOATING ACTIONS PANEL (image.png) - Vertically centered in the Live channel */}
+            <div 
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 select-none font-sans pointer-events-auto bg-[#0a0e1a]/85 backdrop-blur-md px-1.5 py-2 rounded-full border border-slate-700/50 shadow-xl" 
+              id="live-tiktok-right-actions"
+            >
               
               {/* 1. Creator Avatar Profile with Overlapping Pink/Red '+' Follow Badge */}
               <div 
-                className="relative cursor-pointer transition transform hover:scale-105 active:scale-95 flex flex-col items-center" 
+                className="relative cursor-pointer transition transform hover:scale-105 active:scale-95 flex flex-col items-center mb-0.5" 
                 onClick={() => setLiveIsFollowing(!liveIsFollowing)}
                 title={liveIsFollowing ? "Siguiendo" : "Seguir a creadora"}
               >
-                <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#fe2c55] to-amber-500 rounded-full shadow-md">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full p-0.5 bg-gradient-to-tr from-[#fe2c55] to-amber-500 shadow-md">
                   <img 
                     src={currentLiveModel.avatar} 
                     alt={currentLiveModel.name}
                     className="w-full h-full rounded-full object-cover border border-[#161a1e]"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
                 {!liveIsFollowing && !(userProfile && (
@@ -7757,18 +10193,27 @@ export default function CastingLiveSection({
                 )) && (
                   <button
                     type="button"
-                    className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-[#fe2c55] hover:bg-[#ff3b61] rounded-full flex items-center justify-center text-white border border-[#161a1e] text-[12px] font-black shadow-lg cursor-pointer transition p-0 leading-none"
+                    className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3.5 h-3.5 bg-[#fe2c55] hover:bg-[#ff3b61] rounded-full flex items-center justify-center text-white border border-[#161a1e] text-[9px] font-black shadow-lg cursor-pointer transition p-0 leading-none"
                   >
                     <span>+</span>
                   </button>
                 )}
               </div>
 
-              {/* 2. Heart (Likes) Button with dynamic count & hover floating emojis */}
-              <div className="flex flex-col items-center relative group/right-heart-zone">
-                {/* Floating horizontal menu on hover */}
-                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 z-50 hidden group-hover/right-heart-zone:flex items-center gap-1.5 bg-black/90 backdrop-blur-md border border-white/20 py-1.5 px-3 rounded-full shadow-2xl animate-fade-in whitespace-nowrap overflow-x-auto max-w-[280px] sm:max-w-[340px] scrollbar-none after:content-[''] after:absolute after:-right-4 after:top-0 after:bottom-0 after:w-5">
-                  {['❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '💯', '⚡', '🎁', '🥳', '🥰', '👑', '🚀', '✨'].map((emoji) => (
+              {/* 2. Heart (Likes) Button with dynamic count (e.g. 1762) & hover floating emojis */}
+              <div className="flex flex-col items-center relative group/right-heart-zone shrink-0">
+                {/* Floating vertical menu with expanded emojis on hover */}
+                <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/right-heart-zone:flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200/90 py-2 px-1.5 rounded-full shadow-2xl shadow-black/40 ring-1 ring-black/10 animate-fade-in max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-none after:content-[''] after:absolute after:-right-3 after:inset-y-0 after:w-5 select-none">
+                  {[
+                    '❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '😘',
+                    '💕', '💘', '💗', '💓', '💞', '💯', '⚡', '🎁', '🥳', '👑',
+                    '🚀', '✨', '🌟', '🌹', '🌸', '🌺', '🌷', '💋', '👄', '💎',
+                    '🤍', '🤎', '💜', '💙', '💚', '💛', '🧡', '🤩', '😎', '😜',
+                    '🎀', '💃', '🕺', '🥂', '🍿', '🛍️', '👠', '🎵', '🎶', '🙌',
+                    '💫', '🎯', '💥', '🏆', '🥇', '🎈', '🪄', '🧸', '🌈', '🍦',
+                    '🍰', '🍫', '🍓', '🍒', '🌻', '🌼', '🦋', '🦄', '🕊️', '💸',
+                    '💰', '🤑', '🤝', '💪', '🙏', '👀', '🤤', '🤯', '🥵', '😻'
+                  ].map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
@@ -7776,7 +10221,7 @@ export default function CastingLiveSection({
                         e.stopPropagation();
                         handleSendFreeEmojiReaction(emoji);
                       }}
-                      className="text-base sm:text-lg hover:scale-135 active:scale-90 transition-transform cursor-pointer p-0.5 bg-transparent border-0 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                      className="text-lg hover:scale-140 active:scale-90 hover:bg-slate-100/80 rounded-full p-0.5 transition-all cursor-pointer bg-transparent border-0 shrink-0"
                       title={`Enviar ${emoji}`}
                     >
                       {emoji}
@@ -7795,101 +10240,22 @@ export default function CastingLiveSection({
                     const fakeE = { clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 } as any;
                     handleSendHeart(fakeE);
                   }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer border-0 active:scale-90 ${
+                  className={`w-8.5 h-8.5 rounded-full flex items-center justify-center shadow-md transition cursor-pointer border-0 active:scale-90 ${
                     isLiveLiked 
-                      ? 'bg-rose-500/90 text-white scale-110 shadow-lg shadow-rose-500/20' 
-                      : 'bg-black/55 hover:bg-black/75 text-white'
+                      ? 'bg-rose-500 text-white shadow-rose-500/40' 
+                      : 'bg-[#fff0f3] hover:bg-rose-100 text-[#fe2c55]'
                   }`}
+                  title="Me gusta"
                 >
-                  <Heart className={`w-5.5 h-5.5 ${isLiveLiked ? 'fill-white text-white' : 'text-white'}`} />
+                  <Heart className={`w-4 h-4 ${isLiveLiked ? 'fill-white text-white' : 'fill-[#fe2c55] text-[#fe2c55]'}`} />
                 </button>
-                <span className="text-[10px] text-white font-extrabold tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none md:text-[10.5px]">
-                  {liveLikesCount >= 1000 ? `${(liveLikesCount / 1000).toFixed(1)}K` : liveLikesCount}
+                <span className="text-[9.5px] text-white font-black tracking-tight drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none font-sans">
+                  {liveLikesCount >= 1000 ? (liveLikesCount >= 10000 ? `${(liveLikesCount / 1000).toFixed(1)}K` : liveLikesCount) : liveLikesCount}
                 </span>
               </div>
 
-              {/* 3. Messages / Comments Button with dynamic count */}
-              <div className="flex flex-col items-center">
-                <button
-                  type="button"
-                  id="live-channel-comment-button"
-                  onClick={() => {
-                    const nextShow = !showLiveComments;
-                    setShowLiveComments(nextShow);
-                    setLiveCommentsCount(prev => prev + 1);
-                    
-                    // Add an immediate interactive comment from active viewers
-                    const activeUsers = ['Mica Argañaraz', 'Gemma Ward', 'Karlie Kloss', 'Jon Kortajarena', 'Paloma Elsesser', 'Vittoria Ceretti'];
-                    const userAvatarsMap: Record<string, string> = {
-                      'Mica Argañaraz': 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=150',
-                      'Gemma Ward': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
-                      'Karlie Kloss': 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150',
-                      'Jon Kortajarena': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-                      'Paloma Elsesser': 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=150',
-                      'Vittoria Ceretti': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150'
-                    };
-                    const randomUser = activeUsers[Math.floor(Math.random() * activeUsers.length)];
-                    const sampleComments = [
-                      '¡Impresionante colección en el live shop! 🛍️',
-                      '¿Cuándo presentan el próximo look? 👠',
-                      '¡Excelente transmisión en directo! 🔥',
-                      'Me encantan los detalles de esta prenda ✨',
-                      '¡Saludos desde España! 👏'
-                    ];
-                    const newComm = {
-                      id: `live-click-${Date.now()}-${Math.random()}`,
-                      user: randomUser,
-                      text: sampleComments[Math.floor(Math.random() * sampleComments.length)],
-                      type: 'user' as const,
-                      avatar: userAvatarsMap[randomUser]
-                    };
-                    setLiveComments(prev => [...prev.slice(-35), newComm]);
-
-                    const inputEl = document.querySelector('input[placeholder="Type..."]') as HTMLInputElement;
-                    if (inputEl) {
-                      inputEl.focus();
-                    }
-                  }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition cursor-pointer border-0 active:scale-90 ${
-                    showLiveComments 
-                      ? 'bg-rose-500/90 text-white scale-105 shadow-lg shadow-rose-500/30' 
-                      : 'bg-black/55 hover:bg-black/75 text-white'
-                  }`}
-                  title={showLiveComments ? "Comentarios activados en pantalla" : "Activar comentarios en pantalla"}
-                >
-                  <MessageCircle className="w-5.5 h-5.5 text-white fill-white" />
-                </button>
-                <span className="text-[10px] text-white font-extrabold tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none md:text-[10.5px]">
-                  {liveCommentsCount}
-                </span>
-              </div>
-
-              {/* 4. Yellow/Gold Bookmark Ribbon Button with dynamic count */}
-              {selectedCategoryFilter !== 'Finanzas' && (
-                <div className="flex flex-col items-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextBookmarked = !isLiveBookmarked;
-                      setIsLiveBookmarked(nextBookmarked);
-                      setLiveBookmarksCount(prev => nextBookmarked ? prev + 1 : prev - 1);
-                    }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer border-0 active:scale-95 ${
-                      isLiveBookmarked 
-                        ? 'bg-amber-500/90 text-white scale-110 shadow-lg shadow-amber-500/20' 
-                        : 'bg-black/55 hover:bg-black/75 text-white'
-                    }`}
-                  >
-                    <Bookmark className={`w-5.5 h-5.5 ${isLiveBookmarked ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
-                  </button>
-                  <span className="text-[10px] text-white font-extrabold tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none md:text-[10.5px]">
-                    {liveBookmarksCount}
-                  </span>
-                </div>
-              )}
-
-              {/* 5. Curved Share loop Button with dynamic count */}
-              <div className="flex flex-col items-center">
+              {/* 3. Share Button with dynamic count (e.g. 81) */}
+              <div className="flex flex-col items-center shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -7897,27 +10263,33 @@ export default function CastingLiveSection({
                     navigator.clipboard.writeText(window.location.href);
                     alert(`🔗 ¡Copiado enlace directo al canal de ${currentLiveModel.name}!`);
                   }}
-                  className="w-10 h-10 rounded-full bg-black/55 hover:bg-black/75 flex items-center justify-center text-white transition cursor-pointer border-0 active:scale-95"
+                  className="w-8.5 h-8.5 rounded-full bg-[#fff0f3] hover:bg-rose-100 flex items-center justify-center text-slate-800 transition cursor-pointer border-0 shadow-md active:scale-90"
+                  title="Compartir canal"
                 >
-                  {/* Share Loop SVG representing image.png icon accurately */}
-                  <svg className="w-5.5 h-5.5 text-white fill-none stroke-current" strokeWidth="2.8" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                    <polyline points="16 6 12 2 8 6" />
-                    <line x1="12" y1="2" x2="12" y2="15" />
+                  <svg className="w-4 h-4 text-slate-800 fill-current" viewBox="0 0 24 24">
+                    <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" />
                   </svg>
                 </button>
-                <span className="text-[10px] text-white font-extrabold tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none md:text-[10.5px]">
+                <span className="text-[9.5px] text-white font-black tracking-tight drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none font-sans">
                   {liveSharesCount}
                 </span>
               </div>
 
-              {/* 6. Rotating compact vinyl record disc icon with custom red center element matching image.png */}
-              <div className="relative w-10 h-10 rounded-full bg-neutral-900 border-2 border-zinc-700/80 shadow-lg flex items-center justify-center overflow-hidden animate-spin [animation-duration:4.5s] mt-1 shrink-0">
-                <div className="absolute inset-0.5 rounded-full border border-zinc-800/40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800 via-neutral-900 to-zinc-950 flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-[#fe2c55] border border-black flex items-center justify-center shrink-0">
-                    <div className="w-1.5 h-1.5 rounded-full bg-pink-100 shrink-0" />
-                  </div>
-                </div>
+              {/* 4. Gift (Regalo) Button */}
+              <div className="flex flex-col items-center shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLiveGiftsPopover(!showLiveGiftsPopover);
+                  }}
+                  className="w-8.5 h-8.5 rounded-full bg-[#fff8eb] hover:bg-amber-100 text-amber-500 flex items-center justify-center shadow-md transition cursor-pointer border-0 active:scale-90"
+                  title="Enviar Regalo"
+                >
+                  <Gift className="w-4 h-4 text-amber-500" />
+                </button>
+                <span className="text-[9px] text-white font-black tracking-tight drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] mt-0.5 select-none font-sans">
+                  Regalo
+                </span>
               </div>
 
             </div>
@@ -8121,35 +10493,53 @@ export default function CastingLiveSection({
               e.preventDefault();
               handleSendLiveComment();
             }}
-            className="p-3 border-t border-slate-100 flex items-center gap-2 bg-[#f9f9fa]"
+            className="p-3 border-t border-slate-100 flex items-center gap-2 bg-[#f9f9fa] relative"
           >
-            <div className="relative flex-1">
+            <div className="relative flex-1 flex items-center">
               <input 
                 type="text"
                 placeholder="Escribe algo..."
                 value={liveCommentInput}
                 onChange={(e) => setLiveCommentInput(e.target.value)}
                 maxLength={80}
-                className="w-full bg-[#f1f1f2] border border-slate-200 hover:border-slate-300 focus:bg-white focus:border-[#fe2c55] rounded-full py-2 pl-3.5 pr-10 text-xs text-slate-800 focus:outline-none transition-all placeholder-slate-400"
+                className="w-full bg-[#f1f1f2] border border-slate-200 hover:border-slate-300 focus:bg-white focus:border-[#fe2c55] rounded-full py-2 pl-3.5 pr-16 text-xs text-slate-800 focus:outline-none transition-all placeholder-slate-400 font-sans"
               />
+
+              {/* Emojis trigger icon inside input */}
               <button 
                 type="button" 
-                onClick={() => setShowSmilePopover(!showSmilePopover)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 transition cursor-pointer border-0 bg-transparent p-0 z-10"
+                onClick={() => {
+                  setShowSmilePopover(!showSmilePopover);
+                  setShowExtraChannelGiftsPopover(false);
+                }}
+                className="absolute right-9 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#fe2c55] transition cursor-pointer border-0 bg-transparent p-1 z-10 hover:scale-110 active:scale-95"
                 title="Añadir emojis"
               >
-                <Smile className="w-4 h-4 text-slate-400" />
+                <Smile className="w-4 h-4 text-slate-400 hover:text-[#fe2c55] transition" />
               </button>
 
-              {/* Desktop Emoji Popover (options zxx.png) */}
+              {/* Regalos Extras del Canal trigger inside input */}
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowExtraChannelGiftsPopover(!showExtraChannelGiftsPopover);
+                  setShowSmilePopover(false);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-500 hover:text-amber-600 transition cursor-pointer border-0 bg-transparent p-1 z-10 hover:scale-110 active:scale-95"
+                title="Regalos extras del canal"
+              >
+                <Gift className="w-4.5 h-4.5 text-amber-500 animate-bounce" />
+              </button>
+
+              {/* Desktop Emoji Popover */}
               {showSmilePopover && (
-                <div className="absolute bottom-[calc(100%+8px)] right-0 z-50 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 w-[260px] animate-fade-in text-left">
-                  <div className="text-[10px] uppercase font-bold text-slate-450 mb-2 border-b pb-1 select-none flex justify-between items-center">
-                    <span>Reacciones en vivo</span>
-                    <button type="button" onClick={() => setShowSmilePopover(false)} className="text-slate-405 hover:text-slate-600 bg-transparent border-0 cursor-pointer font-bold text-xs">✕</button>
+                <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 w-[290px] animate-fade-in text-left">
+                  <div className="text-[11px] font-black text-slate-800 mb-2 border-b pb-1 select-none flex justify-between items-center uppercase tracking-wider">
+                    <span className="flex items-center gap-1">😊 Emojis y Reacciones</span>
+                    <button type="button" onClick={() => setShowSmilePopover(false)} className="text-slate-400 hover:text-slate-600 bg-transparent border-0 cursor-pointer font-bold text-xs">✕</button>
                   </div>
-                  <div className="grid grid-cols-6 gap-1.5">
-                    {['😊', '😂', '🔥', '👏', '❤️', '🚀', '📈', '🙌', '😮', '😍', '⭐', '🎉', '👍', '😜', '😭', '🎂', '🍭', '🍕'].map((em) => (
+                  <div className="grid grid-cols-6 gap-1.5 max-h-[180px] overflow-y-auto p-0.5">
+                    {['😊', '😂', '🔥', '👏', '❤️', '🚀', '📈', '🙌', '😮', '😍', '⭐', '🎉', '👍', '😜', '😭', '🎂', '🍭', '🍕', '👑', '💎', '💸', '💯', '✨', '🌹', '💋', '🏆', '🥂', '🍿', '💃', '🤩', '💖', '🎯', '💥', '🌟', '⚡', '🥳', '😎', '🌺', '🌸', '🎁'].map((em) => (
                       <button
                         key={em}
                         type="button"
@@ -8157,11 +10547,74 @@ export default function CastingLiveSection({
                           setLiveCommentInput(prev => prev + em);
                           setShowSmilePopover(false);
                         }}
-                        className="w-8 h-8 text-lg flex items-center justify-center hover:bg-slate-100 rounded-xl active:scale-95 transition cursor-pointer bg-transparent border-0"
+                        className="w-8 h-8 text-lg flex items-center justify-center hover:bg-rose-50 hover:scale-125 rounded-xl active:scale-95 transition cursor-pointer bg-transparent border-0"
                       >
                         {em}
                       </button>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Regalos Extras del Canal Popover */}
+              {showExtraChannelGiftsPopover && (
+                <div className="absolute bottom-[calc(100%+8px)] right-0 z-50 bg-slate-900 border border-slate-700 shadow-2xl rounded-2xl p-3.5 w-[310px] sm:w-[340px] animate-fade-in text-left text-white">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">🎁</span>
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-amber-400">Regalos Extras del Canal</h4>
+                        <p className="text-[9.5px] text-slate-400 font-medium">Envía apoyo exclusivo al stream</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-slate-800 text-amber-300 font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
+                        🪙 {liveUserCoins}
+                      </span>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowExtraChannelGiftsPopover(false)} 
+                        className="text-slate-400 hover:text-white bg-transparent border-0 cursor-pointer font-bold text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 max-h-[220px] overflow-y-auto p-1 scrollbar-thin">
+                    {EXTRA_CHANNEL_GIFTS.map((gift, gIdx) => (
+                      <button
+                        key={gIdx}
+                        type="button"
+                        onClick={() => {
+                          handleSendGift(gift.name, gift.icon, gift.cost);
+                          setShowExtraChannelGiftsPopover(false);
+                        }}
+                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 hover:scale-105 active:scale-95 transition cursor-pointer border border-slate-700/60 hover:border-amber-400/50 text-center group"
+                        title={gift.desc}
+                      >
+                        <span className="text-2xl group-hover:scale-125 transition-transform select-none">{gift.icon}</span>
+                        <span className="text-[9px] font-bold text-slate-200 mt-1 truncate w-full leading-tight">{gift.name}</span>
+                        <span className="text-[8.5px] font-mono text-amber-400 font-extrabold mt-0.5">
+                          🪙 {gift.cost}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">¿Sin saldo suficiente?</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExtraChannelGiftsPopover(false);
+                        setShowTikTokRechargeModal(true);
+                      }}
+                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg transition border-0 cursor-pointer uppercase tracking-wider text-[9px]"
+                    >
+                      ⚡ Recargar Monedas
+                    </button>
                   </div>
                 </div>
               )}
@@ -8171,10 +10624,20 @@ export default function CastingLiveSection({
             <button
               type="button"
               onClick={(e) => handleSendHeart(e)}
-              className="bg-rose-50 hover:bg-rose-100 border border-rose-100 p-2 rounded-full text-rose-500 transform hover:scale-[1.1] active:scale-90 transition-transform cursor-pointer"
+              className="bg-rose-50 hover:bg-rose-100 border border-rose-100 p-2 rounded-full text-rose-500 transform hover:scale-110 active:scale-90 transition-transform cursor-pointer shrink-0"
               title="Dar Likes al live!"
             >
-              <Heart className="w-5 h-5 fill-rose-500 text-rose-500 animate-pulse" />
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500 animate-pulse" />
+            </button>
+
+            {/* Send Button matching image.png (round bright pink button with paper plane icon) */}
+            <button
+              type="submit"
+              className="w-9 h-9 bg-[#fe2c55] hover:bg-[#e02247] active:scale-90 text-white rounded-full flex items-center justify-center shrink-0 shadow-md transition-all cursor-pointer border-0"
+              title="Enviar comentario"
+              id="btn-send-live-comment-main"
+            >
+              <Send className="w-4 h-4 text-white ml-0.5 stroke-[2.5]" />
             </button>
           </form>
 
@@ -8383,6 +10846,390 @@ export default function CastingLiveSection({
     );
   }
 
+  // --- Creation Choice Modal (Subir Historia vs Grabar/Subir Reel max 3 min) ---
+  const renderCreationTypeModal = () => {
+    return (
+      <div 
+        className="fixed inset-0 bg-slate-950/25 backdrop-blur-[1px] z-[3500] flex items-center justify-center p-4 animate-fade-in cursor-pointer" 
+        id="creation-type-modal-backdrop"
+        onClick={() => setShowCreationTypeModal(false)}
+      >
+        <div 
+          className="bg-white/95 backdrop-blur-md rounded-3xl w-full max-w-md border border-slate-200/80 p-6 sm:p-7 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans text-left cursor-default"
+          onClick={(e) => e.stopPropagation()}
+        >
+          
+          {/* Top Actions: Ver fondo & Close */}
+          <div className="absolute top-4 right-4 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setShowCreationTypeModal(false)}
+              className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1 border-0 cursor-pointer shadow-xs"
+              title="Cerrar para ver el fondo"
+            >
+              <span>👁️</span>
+              <span className="hidden sm:inline">Ver fondo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreationTypeModal(false)}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer border-0"
+              title="Cerrar"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Modal Header */}
+          <div className="space-y-1.5 pr-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-[#fe2c55] text-[10px] font-black uppercase tracking-wider font-mono">
+              <span>✨ NUEVO CONTENIDO</span>
+            </div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">
+              ¿Qué deseas crear?
+            </h3>
+            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              Selecciona el tipo de publicación para tu audiencia en la plataforma.
+            </p>
+          </div>
+
+          {/* Options */}
+          <div className="space-y-3">
+            {/* Option 1: Subir una Historia */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowCreationTypeModal(false);
+                setShowCreateStoryModal(true);
+              }}
+              className="w-full p-4 rounded-2xl border-2 border-slate-200 hover:border-[#fe2c55] bg-slate-50/80 hover:bg-rose-50/30 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-purple-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-md group-hover:scale-105 transition duration-200">
+                📸
+              </div>
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-extrabold text-slate-900 text-sm group-hover:text-[#fe2c55] transition truncate">
+                    Subir una Historia
+                  </span>
+                  <span className="text-[9px] bg-amber-100 text-amber-800 font-black px-2 py-0.5 rounded-full uppercase shrink-0">
+                    ⏱️ 24h
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug font-medium m-0">
+                  Foto o vídeo efímero visible en la barra superior durante 24 horas.
+                </p>
+              </div>
+            </button>
+
+            {/* Option 2: Grabar o subir un Reel (máx. 3 minutos) */}
+            <button
+              type="button"
+              onClick={() => {
+                setUploadVideoCategory('Modelos');
+                setShowCreationTypeModal(false);
+                setUploadModalStage('details');
+                setShowUploadModal(true);
+              }}
+              className="w-full p-4 rounded-2xl border-2 border-rose-300 hover:border-[#fe2c55] bg-rose-50/50 hover:bg-rose-100/60 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md ring-2 ring-rose-400/20"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-[#fe2c55] text-white flex items-center justify-center text-2xl shrink-0 shadow-md group-hover:scale-105 transition duration-200">
+                🎥
+              </div>
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-extrabold text-slate-900 text-sm group-hover:text-[#fe2c55] transition truncate">
+                    Grabar / Subir un Reel
+                  </span>
+                  <span className="text-[9px] bg-amber-500 text-white font-black px-2 py-0.5 rounded-full uppercase shrink-0 tracking-wider">
+                    👑 Exclusivo Runway
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-snug font-medium m-0">
+                  Vídeo HD de máx. 3 minutos con música, recorte y permisos. <strong>Se verá únicamente en el canal de Runway.</strong>
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* Footer note */}
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+            <span>👑 Canal automático: Runway</span>
+            <span>⏱️ Máximo 3 min por Reel</span>
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
+  // --- Single Project Slider & Voting Projects View ---
+  const renderSingleProjectSlider = () => {
+    const rawParticipants = currentFinanzasSession?.participants || [];
+    const activeUserObj = {
+      id: userProfile?.id || 'user-ernesto',
+      name: userProfile?.name || 'Adriana Lima',
+      username: userProfile?.username || 'ernestovs',
+    };
+    const isUserParticipating = rawParticipants.some(
+      p => p.id === activeUserObj.id || p.username === activeUserObj.username || p.name === 'Ernesto vs' || p.name === activeUserObj.name
+    );
+
+    const currentUser = FINANZAS_USERS[votingProjectSlideIndex] || FINANZAS_USERS[0];
+    const proj = getFinanzasProjectDetails(currentUser.id);
+    const initialDefault = currentUser.id === 'f-1' ? 3 : currentUser.id === 'f-2' ? 2 : (currentUser.id === 'f-3' || currentUser.id === 'f-4' || currentUser.id === 'f-5' || currentUser.id === 'f-10' || currentUser.id === 'user') ? 1 : 0;
+    const votesCount = finanzasVotes[currentUser.id] ?? initialDefault;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+      setProjectTouchStartX(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      if (projectTouchStartX === null) return;
+      const diffX = projectTouchStartX - e.changedTouches[0].clientX;
+      if (diffX > 40) {
+        // Swipe Left -> Next Project
+        setVotingProjectSlideIndex(prev => Math.min(prev + 1, FINANZAS_USERS.length - 1));
+      } else if (diffX < -40) {
+        // Swipe Right -> Previous Project
+        setVotingProjectSlideIndex(prev => Math.max(prev - 1, 0));
+      }
+      setProjectTouchStartX(null);
+    };
+
+    return (
+      <div className="w-full h-full bg-white flex flex-col justify-between overflow-hidden text-slate-800 font-sans text-left select-none relative z-30">
+        {/* Header */}
+        <div className="p-3 sm:p-4 border-b border-slate-200 bg-white text-slate-900 flex items-center justify-between gap-2 shrink-0">
+          <div className="space-y-0.5 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[#fe2c55] text-[10px] font-black uppercase tracking-wider font-mono">
+                <span>🗳️ MESA DE VOTACIÓN FINANCIERA</span>
+              </div>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded-full text-[9.5px] font-black font-mono">
+                {finanzasVotedVoterIds.length}/10 votos emitidos
+              </span>
+            </div>
+            <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-2 m-0 truncate">
+              Proyectos de los Participantes
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowVotingProjectsModal(false)}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 text-xs font-bold"
+            title="Volver al Directo"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Horizontal Participant Selector Bar */}
+        <div className="bg-slate-50 border-b border-slate-200/80 px-2 py-2 shrink-0 overflow-x-auto flex items-center gap-1.5 scrollbar-none">
+          {FINANZAS_USERS.map((user, idx) => {
+            const isSelected = idx === votingProjectSlideIndex;
+            return (
+              <button
+                key={user.id}
+                type="button"
+                onClick={() => setVotingProjectSlideIndex(idx)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition shrink-0 cursor-pointer ${
+                  isSelected
+                    ? 'bg-white border-[#fe2c55] text-[#fe2c55] shadow-xs scale-105 font-black ring-2 ring-rose-200'
+                    : 'bg-white/80 border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300'
+                }`}
+              >
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="truncate max-w-[85px] text-[10.5px]">{user.name.split(' ')[0]}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Slide Navigation Indicator Banner */}
+        <div className="bg-rose-50/80 border-b border-rose-100 px-3 py-1.5 text-center flex items-center justify-between text-[10.5px] sm:text-[11px] font-extrabold text-[#fe2c55] shrink-0">
+          <span className="opacity-80">👈 Desliza para cambiar</span>
+          <span className="bg-white px-2.5 py-0.5 rounded-full border border-rose-200 shadow-2xs font-mono text-[10px] text-slate-900">
+            {votingProjectSlideIndex + 1} / {FINANZAS_USERS.length}
+          </span>
+          <span className="opacity-80">Siguiente 👉</span>
+        </div>
+
+        {/* Active Project Slide (Full Detail Card) */}
+        <div 
+          className="flex-1 p-3.5 sm:p-5 overflow-y-auto space-y-3.5 bg-slate-50/50 touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Presenter / Author Info */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-3.5 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#fe2c55] shrink-0 shadow-xs"
+                referrerPolicy="no-referrer"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate m-0">
+                    {currentUser.name}
+                  </h4>
+                  <span className="text-[8.5px] sm:text-[9px] bg-slate-100 border border-slate-200 text-slate-700 font-extrabold px-2 py-0.5 rounded-full uppercase shrink-0">
+                    {currentUser.role}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500 font-semibold truncate block">
+                  @{currentUser.username}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Project Core Details */}
+          <div className="bg-white rounded-2xl border-2 border-slate-200/90 hover:border-[#fe2c55]/60 p-3.5 sm:p-4 shadow-xs space-y-3">
+            <div className="space-y-1">
+              <span className="text-[9px] font-black uppercase tracking-wider text-[#fe2c55] bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-100 inline-block">
+                {proj.category}
+              </span>
+              <h4 className="text-sm sm:text-base font-black text-slate-900 leading-tight m-0">
+                {proj.title}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed font-medium m-0 pt-1">
+                {proj.description}
+              </p>
+            </div>
+
+            {/* Financial Metrics */}
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <span className="text-[8.5px] font-extrabold text-slate-400 block uppercase">Meta</span>
+                <span className="text-[11px] sm:text-xs font-black text-slate-900 truncate block">
+                  {proj.fundingGoal || '50.000 €'}
+                </span>
+              </div>
+
+              <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+                <span className="text-[8.5px] font-extrabold text-emerald-600 block uppercase">ROI Est.</span>
+                <span className="text-[11px] sm:text-xs font-black text-emerald-700 truncate block">
+                  {proj.roi?.split('+')[0] || '12%'}
+                </span>
+              </div>
+
+              <div className="bg-rose-50 p-2 rounded-xl border border-rose-200">
+                <span className="text-[8.5px] font-extrabold text-rose-500 block uppercase">Votos</span>
+                <span className="text-[11px] sm:text-xs font-black text-rose-600 truncate block">
+                  🗳️ {votesCount}
+                </span>
+              </div>
+            </div>
+
+            {/* Fund Usage & Objectives */}
+            <div className="space-y-2 pt-1 border-t border-slate-100 text-xs">
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-0.5">
+                <span className="text-[8.5px] font-black text-slate-400 uppercase block">Desglose de Fondos y Uso</span>
+                <p className="font-semibold text-slate-700 leading-snug m-0 text-[11px]">
+                  {proj.fundUsage || '60% Producción Textil • 25% Marketing & Runway • 15% Certificaciones'}
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons: View Full Project & Vote (Vote button only exists if user participates) */}
+            <div className="pt-1 flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDetailProjectUser(currentUser);
+                  setShowProjectDetailsInPopup(true);
+                  setShowVotingProjectsModal(false);
+                }}
+                className="flex-1 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black py-3 px-3 rounded-xl shadow-sm transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-slate-800 text-xs uppercase tracking-wider"
+              >
+                <span>🔍</span>
+                <span>VER PROYECTO COMPLETO</span>
+              </button>
+
+              {isUserParticipating && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleVoteForProject(currentUser);
+                    setShowVotingProjectsModal(false);
+                  }}
+                  className="flex-1 bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3 px-3 rounded-xl shadow-md transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs uppercase tracking-wider"
+                >
+                  <span>🗳️</span>
+                  <span>VOTAR POR ESTE PROYECTO</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Controls: Prev / Next Buttons */}
+        <div className="p-3 border-t border-slate-200 bg-white flex items-center justify-between gap-2 shrink-0">
+          <button
+            type="button"
+            disabled={votingProjectSlideIndex === 0}
+            onClick={() => setVotingProjectSlideIndex(prev => Math.max(prev - 1, 0))}
+            className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-800 font-extrabold text-[11px] uppercase transition flex items-center justify-center gap-1 border border-slate-200 cursor-pointer"
+          >
+            <span>◀</span>
+            <span>Anterior</span>
+          </button>
+
+          {/* Dots */}
+          <div className="flex items-center justify-center gap-1 px-1">
+            {FINANZAS_USERS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setVotingProjectSlideIndex(i)}
+                className={`h-2 rounded-full transition-all cursor-pointer ${
+                  i === votingProjectSlideIndex ? 'w-4 bg-[#fe2c55]' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            disabled={votingProjectSlideIndex === FINANZAS_USERS.length - 1}
+            onClick={() => setVotingProjectSlideIndex(prev => Math.min(prev + 1, FINANZAS_USERS.length - 1))}
+            className="flex-1 py-2 px-3 rounded-xl bg-[#fe2c55] hover:bg-[#df2046] disabled:opacity-30 disabled:cursor-not-allowed text-white font-extrabold text-[11px] uppercase transition flex items-center justify-center gap-1 border border-rose-600 cursor-pointer shadow-xs"
+          >
+            <span>Siguiente</span>
+            <span>▶</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // --- Voting Projects Modal (Votar por el mejor proyecto) ---
+  const renderVotingProjectsModal = () => {
+    return (
+      <div 
+        className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] z-[3600] flex items-center justify-center p-2 sm:p-4 animate-fade-in font-sans cursor-pointer"
+        id="voting-projects-modal-backdrop"
+        onClick={() => setShowVotingProjectsModal(false)}
+      >
+        <div 
+          className="bg-white rounded-3xl w-full max-w-2xl h-[92vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden relative animate-scale-up text-slate-800 cursor-default"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {renderSingleProjectSlider()}
+        </div>
+      </div>
+    );
+  };
+
   // --- TikTok-style Casting Live Creator Studio/Center ---
   const renderUploadModal = () => {
     const LOCATION_SUGGESTIONS = [
@@ -8404,14 +11251,16 @@ export default function CastingLiveSection({
 
     const modalCategories = [
       { id: 'Todos', label: 'TODOS 🪐' },
-      { id: 'Reels', label: 'REELS 🎥' },
       { id: 'Fashion', label: 'FASHION ✨' },
       { id: 'Finanzas', label: 'FINANZAS 📈' },
-      { id: 'Modelos', label: 'MODELOS 👑' },
+      { id: 'Modelos', label: 'RUNWAY 👑' },
       { id: 'BackStage', label: 'BACKSTAGE 🎬' },
-      { id: 'Investors', label: 'INVESTORS 💼' },
+      { id: 'Investors', label: 'JEWELLERY 💎' },
       { id: 'Tiendas', label: 'TIENDAS 🛍️' },
-      { id: 'Catwalk', label: 'CATWALKS 👠' }
+      { id: 'Catwalk', label: 'CATWALK 👠' },
+      { id: 'Fitnes', label: 'FITNES 💪' },
+      { id: 'Beauty', label: 'BEAUTY 💄' },
+      { id: 'Influencer', label: 'INFLUENCER 📱' }
     ];
 
     const filteredModalVideos = videosList.filter((vid) => {
@@ -8432,8 +11281,8 @@ export default function CastingLiveSection({
     // Render Stage 1: Captura y.png (Automatic Content Review Confirmation Modal)
     if (uploadModalStage === 'review') {
       return (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-[3000] flex items-center justify-center p-4" id="automatic-review-modal-backdrop">
-          <div className="bg-white rounded-[24px] w-full max-w-lg border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans" id="automatic-review-modal">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-[3000] flex items-center justify-center p-4 overflow-y-auto no-scrollbar scrollbar-none" id="automatic-review-modal-backdrop">
+          <div className="bg-white rounded-[24px] w-full max-w-lg border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans max-h-[92vh] overflow-y-auto no-scrollbar scrollbar-none" id="automatic-review-modal">
             
             <button
               onClick={() => {
@@ -8488,7 +11337,7 @@ export default function CastingLiveSection({
                   setUploadModalStage('details');
                 }}
                 className="px-6 py-2.5 text-xs sm:text-xs font-black bg-[#f1f3f5] hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer border-0"
-              >
+           >
                 Cancelar
               </button>
               <button
@@ -8510,20 +11359,20 @@ export default function CastingLiveSection({
 
     // Render Stage 2: Captura yy.png (TikTok Studio Full Upload & Control Suite Workspace)
     return (
-      <div className="fixed inset-0 bg-slate-50/90 backdrop-blur-md z-[2000] flex flex-col overflow-y-auto" id="tiktok-studio-upload-manager">
-        <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 text-slate-800 font-sans min-h-screen relative animate-fade-in">
+      <div className="fixed inset-0 bg-white z-[2000] overflow-y-auto overscroll-contain no-scrollbar scrollbar-none border-x border-slate-200" id="tiktok-studio-upload-manager">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-6 text-slate-800 font-sans min-h-full relative animate-fade-in pb-28 sm:pb-36 no-scrollbar scrollbar-none">
           
           {/* Main Top Header: Close Option */}
           <button
             onClick={() => setShowUploadModal(false)}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-705 cursor-pointer p-1.5 rounded-full hover:bg-slate-100 transition z-10 border-0 bg-transparent"
+            className="fixed top-4 right-4 text-slate-600 hover:text-slate-900 bg-white/95 hover:bg-white cursor-pointer p-2.5 rounded-full shadow-md border border-slate-200 backdrop-blur-sm transition-all active:scale-95 z-50"
             title="Cerrar estudio de carga"
           >
-            <X className="w-5 h-5 text-slate-500" />
+            <X className="w-5 h-5" />
           </button>
 
           {/* 💎 2. SEPARATE GENERAL CASTING LIVE SECTION CARD */}
-          <div className="border border-slate-200/80 rounded-3xl bg-white shadow-xl shadow-rose-950/5 my-8 overflow-hidden">
+          <div className="border border-slate-200 rounded-3xl bg-white shadow-sm my-4 overflow-hidden">
             {/* Ambient top neon line matching TikTok/CastingLive branding */}
             <div className="h-1.5 bg-gradient-to-r from-[#fe2c55] via-[#ff5b7f] to-[#ff8500]" />
             <div className="p-6 sm:p-8 text-left space-y-6">
@@ -8668,9 +11517,9 @@ export default function CastingLiveSection({
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-white border border-slate-250/80 rounded-2xl p-4 flex items-center justify-between gap-4 animate-scale-up shadow-sm">
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className="w-16 h-20 bg-slate-950 rounded-lg overflow-hidden relative flex items-center justify-center shrink-0 border border-slate-200 shadow-xs">
+                        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-scale-up shadow-sm w-full box-border">
+                          <div className="flex items-center gap-3.5 min-w-0 flex-1 w-full">
+                            <div className="w-16 h-20 bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center shrink-0 border border-slate-200 shadow-xs">
                               <video
                                 src={uploadVideoUrl || undefined}
                                 poster={COVER_FRAMES[selectedCoverIndex] || undefined}
@@ -8684,14 +11533,18 @@ export default function CastingLiveSection({
                                 <span className="text-[10px] text-white">▶</span>
                               </div>
                             </div>
-                            <div className="min-w-0 space-y-1">
-                              <p className="text-xs font-black text-slate-850 truncate">{uploadVideoFileName || 'Video Cargado'}</p>
-                              <div className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider font-mono">Listo para publicar</span>
+                            <div className="min-w-0 flex-1 space-y-1 w-full">
+                              <div className="flex items-center justify-between gap-2 w-full">
+                                <p className="text-xs font-black text-slate-900 truncate">{uploadVideoFileName || 'Video Cargado'}</p>
                               </div>
-                              <p className="text-[9px] text-slate-400 font-bold leading-relaxed">
-                                {pastedVideoUrl ? 'Enlace vinculado. El vídeo se transmitirá de inmediato en Casting Live.' : 'Este video se publicará en tu perfil y estará en la pasarela global.'}
+                              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                <span className="text-[10.5px] text-emerald-600 font-bold uppercase tracking-wider font-mono whitespace-nowrap">
+                                  Listo para publicar
+                                </span>
+                              </div>
+                              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-normal w-full">
+                                {pastedVideoUrl ? 'Enlace vinculado. El vídeo se transmitirá de inmediato en Casting Live.' : 'Este vídeo se publicará en tu perfil y estará en la pasarela global.'}
                               </p>
                             </div>
                           </div>
@@ -8704,7 +11557,7 @@ export default function CastingLiveSection({
                               setPastedVideoUrl('');
                               setPastedUrlError('');
                             }}
-                            className="px-3 py-1.5 text-[9px] font-extrabold text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-500 rounded-xl transition cursor-pointer border-0 uppercase tracking-wide shrink-0"
+                            className="self-end sm:self-center px-4 py-2 text-[10px] font-black text-slate-700 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200/90 rounded-xl transition cursor-pointer uppercase tracking-wider shrink-0 shadow-2xs"
                           >
                             Cambiar
                           </button>
@@ -8723,7 +11576,7 @@ export default function CastingLiveSection({
                 >
                   <div className="flex items-center justify-between px-1 select-none">
                     <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest flex items-center gap-1.5 font-mono">
-                      <span>🏷️</span> Categoría del vídeo <span className="text-rose-600 font-extrabold">(Selección obligatoria *)</span>
+                      <span>🏷️</span> Categoría del vídeo
                     </span>
                     {(!uploadVideoCategory || uploadVideoCategory === 'Todos') ? (
                       <span className="text-[9px] text-[#fe2c55] font-black uppercase tracking-wider bg-rose-100/80 border border-rose-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -8743,8 +11596,10 @@ export default function CastingLiveSection({
                       type="button"
                       className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
                       onClick={() => {
-                        const order: ('Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk')[] = ['Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk'];
-                        const currentIdx = order.indexOf(uploadVideoCategory as any);
+                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
+                        const currentIdx = order.indexOf(
+                          (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory === 'BackStage' ? 'Backstage' : uploadVideoCategory === 'Investors' ? 'Jewellery' : uploadVideoCategory) as any
+                        );
                         const nextIdx = currentIdx === -1 ? 0 : (currentIdx - 1 + order.length) % order.length;
                         const nextCat = order[nextIdx];
                         setUploadVideoCategory(nextCat);
@@ -8771,16 +11626,21 @@ export default function CastingLiveSection({
                       className="flex-1 overflow-x-auto no-scrollbar scroll-smooth flex justify-start items-center gap-2.5 px-1 py-1"
                     >
                       {[
-                        { id: 'Reels', label: 'Reels 🎥', bg: 'bg-rose-50 text-rose-700 border-rose-100', activeBg: 'bg-rose-500 text-white border-rose-500 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
                         { id: 'Fashion', label: 'Fashion ✨', bg: 'bg-[#fff0f3] text-[#be185d] border-[#fbcfe8]/40', activeBg: 'bg-gradient-to-r from-pink-500 to-rose-600 text-white border-rose-600 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
                         { id: 'Finanzas', label: 'Finanzas 📈', bg: 'bg-[#ecfdf5] text-[#047857] border-[#d1fae5]/50', activeBg: 'bg-emerald-500 text-white border-emerald-500 shadow-[0_4px_12px_rgba(16,185,129,0.35)]' },
-                        { id: 'Modelos', label: 'Modelos 👑', bg: 'bg-[#fffbeb] text-[#b45309] border-[#fef3c7]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
-                        { id: 'BackStage', label: 'BackStage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2] border-[#cffafe]/50', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-[0_4px_12px_rgba(6,182,212,0.35)]' },
-                        { id: 'Investors', label: 'Investors 💼', bg: 'bg-[#fdf4ff] text-[#a21caf] border-[#f3e8ff]/50', activeBg: 'bg-purple-500 text-white border-purple-500 shadow-[0_4px_12px_rgba(168,85,247,0.35)]' },
+                        { id: 'Runway', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309] border-[#fef3c7]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
+                        { id: 'Backstage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2] border-[#cffafe]/50', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-[0_4px_12px_rgba(6,182,212,0.35)]' },
+                        { id: 'Jewellery', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf] border-[#f3e8ff]/50', activeBg: 'bg-purple-500 text-white border-purple-500 shadow-[0_4px_12px_rgba(168,85,247,0.35)]' },
                         { id: 'Tiendas', label: 'Tiendas 🛍️', bg: 'bg-[#f0f9ff] text-[#0369a1] border-[#e0f2fe]/50', activeBg: 'bg-sky-500 text-white border-sky-500 shadow-[0_4px_12px_rgba(14,165,233,0.35)]' },
-                        { id: 'Catwalk', label: 'Catwalk 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]/50', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-[0_4px_12px_rgba(124,58,237,0.35)]' }
+                        { id: 'Catwalk', label: 'Catwalk 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]/50', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-[0_4px_12px_rgba(124,58,237,0.35)]' },
+                        { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]/50', activeBg: 'bg-emerald-600 text-white border-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.35)]' },
+                        { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48] border-[#fecdd3]/50', activeBg: 'bg-rose-500 text-white border-rose-500 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
+                        { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04] border-[#fef08a]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' }
                       ].map((cat, idx) => {
-                        const isActive = uploadVideoCategory === cat.id;
+                        const isNormalizedActive = uploadVideoCategory === cat.id ||
+                          (cat.id === 'Runway' && uploadVideoCategory === 'Modelos') ||
+                          (cat.id === 'Backstage' && uploadVideoCategory === 'BackStage') ||
+                          (cat.id === 'Jewellery' && uploadVideoCategory === 'Investors');
                         return (
                           <button
                             key={cat.id}
@@ -8798,7 +11658,7 @@ export default function CastingLiveSection({
                               }
                             }}
                             className={`px-4.5 py-2 border rounded-full text-[11px] font-black tracking-wide transition-all duration-300 cursor-pointer text-center flex items-center gap-1 shrink-0 transform ${
-                              isActive 
+                              isNormalizedActive 
                                 ? cat.activeBg + " scale-105" 
                                 : cat.bg + " hover:scale-[1.03] hover:border-rose-200/50 hover:bg-rose-50/20 opacity-90 hover:opacity-100"
                             }`}
@@ -8814,8 +11674,10 @@ export default function CastingLiveSection({
                       type="button"
                       className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
                       onClick={() => {
-                        const order: ('Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk')[] = ['Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk'];
-                        const currentIdx = order.indexOf(uploadVideoCategory as any);
+                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
+                        const currentIdx = order.indexOf(
+                          (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory === 'BackStage' ? 'Backstage' : uploadVideoCategory === 'Investors' ? 'Jewellery' : uploadVideoCategory) as any
+                        );
                         const nextIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % order.length;
                         const nextCat = order[nextIdx];
                         setUploadVideoCategory(nextCat);
@@ -8836,6 +11698,94 @@ export default function CastingLiveSection({
                       </svg>
                     </button>
                   </div>
+
+                  {/* Active Channel Description Card */}
+                  {(() => {
+                    const rawKey = uploadVideoCategory && uploadVideoCategory !== 'Todos' ? uploadVideoCategory : 'Runway';
+                    const activeKey = rawKey === 'Modelos' ? 'Runway' : rawKey === 'BackStage' ? 'Backstage' : rawKey === 'Investors' ? 'Jewellery' : rawKey;
+                    const activeInfo = CHANNEL_DESCRIPTIONS[activeKey] || CHANNEL_DESCRIPTIONS['Runway'];
+                    
+                    return (
+                      <div className="space-y-2 mt-1">
+                        {/* Active channel info banner */}
+                        <div className={`p-3.5 rounded-2xl border transition-all duration-300 text-left ${activeInfo.bg} ${activeInfo.border} shadow-2xs space-y-1.5`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base sm:text-lg">{activeInfo.icon}</span>
+                              <span className={`text-xs font-black uppercase tracking-wider ${activeInfo.text}`}>
+                                Canal {activeInfo.title}
+                              </span>
+                              <span className="text-[9.5px] bg-white/90 border border-slate-200/80 px-2 py-0.5 rounded-full text-slate-700 font-bold shadow-2xs">
+                                Descripción de contenido
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowAllChannelGuide(!showAllChannelGuide)}
+                              className="text-[10px] text-rose-600 hover:text-rose-800 font-extrabold underline bg-transparent border-0 cursor-pointer flex items-center gap-1 shrink-0"
+                            >
+                              <span>{showAllChannelGuide ? 'Ocultar guía' : 'Ver todos los canales 📋'}</span>
+                            </button>
+                          </div>
+                          <p className="text-[11.5px] text-slate-700 leading-relaxed font-semibold m-0">
+                            {activeInfo.desc}
+                          </p>
+                        </div>
+
+                        {/* Expandable guide showing all 10 non-repeated channel descriptions */}
+                        {showAllChannelGuide && (
+                          <div className="bg-white border border-rose-200/90 rounded-2xl p-3.5 space-y-3 animate-fade-in text-left shadow-md">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <span className="text-[10.5px] font-black uppercase text-rose-600 tracking-wider font-mono flex items-center gap-1.5">
+                                <span>📋</span> Guía completa de publicación por canal ({CANONICAL_CHANNELS.length} canales)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowAllChannelGuide(false)}
+                                className="text-[10px] text-slate-400 hover:text-slate-600 font-bold bg-transparent border-0 cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-2 max-h-[320px] overflow-y-auto pr-1 text-xs font-sans">
+                              {CANONICAL_CHANNELS.map((chKey) => {
+                                const info = CHANNEL_DESCRIPTIONS[chKey];
+                                if (!info) return null;
+                                const isCurrent = activeKey === chKey;
+                                return (
+                                  <div
+                                    key={chKey}
+                                    onClick={() => setUploadVideoCategory(chKey as any)}
+                                    className={`p-3 rounded-xl border transition cursor-pointer flex flex-col gap-1 text-left ${
+                                      isCurrent
+                                        ? `${info.bg} ${info.border} ring-2 ring-rose-400/50 shadow-2xs`
+                                        : 'bg-slate-50/70 border-slate-200/80 hover:bg-slate-100/90'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-black text-slate-900 flex items-center gap-1.5 text-xs">
+                                        <span>{info.icon}</span>
+                                        <span>Canal {info.title}</span>
+                                      </span>
+                                      {isCurrent && (
+                                        <span className="text-[9px] bg-[#fe2c55] text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                          Seleccionado
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium m-0">
+                                      {info.desc}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Detalles</h4>
@@ -9561,14 +12511,21 @@ export default function CastingLiveSection({
                 </div>
               </div>
 
-              {/* Form Bottom Operations (Publicar, Guardar, Descartar) */}
-              <div className="flex flex-wrap items-center gap-3 pt-6 border-t border-slate-100 justify-center w-full">
+
+
+            </form>
+
+            {/* RIGHT COLUMN: Mobile Smartphone Preview (takes 5 cols) */}
+            <div className="lg:col-span-5 flex flex-col items-center space-y-4">
+              
+              {/* Top Action Buttons matching capture-z.png and capture-image.png */}
+              <div className="flex flex-wrap items-center gap-2.5 justify-center w-full">
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
-                  className="px-6 py-2.5 border-2 border-pink-500 text-pink-600 hover:bg-pink-50 text-xs font-black rounded-xl uppercase tracking-wider transition cursor-pointer bg-white"
+                  className="px-5 py-2 border border-slate-200 hover:border-slate-300 text-slate-850 text-[11px] font-extrabold rounded-2xl uppercase tracking-wider transition cursor-pointer bg-white shadow-2xs hover:bg-slate-50"
                 >
-                  Descargar / Descartar
+                  DESCARGAR / DESCARTAR
                 </button>
                 <button
                   type="button"
@@ -9576,99 +12533,103 @@ export default function CastingLiveSection({
                     setShowUploadModal(false);
                     alert('💼 Borrador guardado exitosamente en tu Studio Creador local.');
                   }}
-                  className="px-6 py-2.5 border-2 border-pink-500 text-pink-600 hover:bg-pink-50 text-xs font-black rounded-xl uppercase tracking-wider transition cursor-pointer bg-white"
+                  className="px-5 py-2 border border-slate-200 hover:border-slate-300 text-slate-850 text-[11px] font-extrabold rounded-2xl uppercase tracking-wider transition cursor-pointer bg-white shadow-2xs hover:bg-slate-50"
                 >
-                  Guardar borrador
+                  GUARDAR BORRADOR
                 </button>
                 <button
-                  type="submit"
-                  className="px-8 py-2.5 bg-gradient-to-r from-pink-500 via-rose-500 to-[#fe2c55] text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer border-0 uppercase tracking-wider hover:brightness-[1.04]"
+                  type="button"
+                  onClick={handleCreateVideo}
+                  className="px-6 py-2 border border-slate-200 hover:border-slate-300 text-slate-850 text-[11px] font-extrabold rounded-2xl uppercase tracking-wider transition cursor-pointer bg-white shadow-2xs hover:bg-slate-50"
                 >
-                  Publicar
+                  PUBLICAR
                 </button>
               </div>
 
-            </form>
-
-            {/* RIGHT COLUMN: Mobile Smartphone Preview (takes 5 cols) */}
-            <div className="lg:col-span-5 flex flex-col items-center space-y-5">
-              
-              {/* iPhone / Android Mock Frame */}
+              {/* iPhone / Android Mock Frame with video content from image.png */}
               <div 
-                className="w-full max-w-[250px] sm:max-w-[270px] aspect-[9/16] bg-black rounded-[32px] border border-slate-900 shadow-2xl relative overflow-hidden flex flex-col group select-none"
+                className="w-full max-w-[250px] sm:max-w-[270px] aspect-[9/16] bg-[#070709] rounded-[32px] border border-slate-900 shadow-2xl relative overflow-hidden flex flex-col group select-none"
                 id="preview-phone-mockup"
               >
-                {/* 1. Phone Top Status Bar */}
-                <div className="absolute top-0 inset-x-0 h-6 bg-transparent z-40 px-4 flex justify-between items-center text-white text-[9px] font-black">
-                  <span>8:00</span>
-                  <div className="flex items-center gap-1">
-                    {/* Wi-Fi Icon representation */}
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 21l-12-12c5.522-5.522 14.478-5.522 20 0l-8 12z" />
-                    </svg>
-                    {/* Battery Icon representation */}
-                    <div className="w-4 h-2 border border-white rounded-xs p-0.2 relative flex items-center">
-                      <div className="w-2.5 h-full bg-white rounded-2xs" />
+                {/* 1. Video Editorial Content matching capture image.png: "45 SECONDS with DICE SWANEF" + credits */}
+                {(!uploadVideoUrl || uploadVideoUrl === PRESET_VIDEOS[0]?.url) && (
+                  <div className="absolute inset-0 z-10 bg-[#070709] flex flex-col items-center justify-center pointer-events-none select-none px-4 pt-6 pb-20 text-center">
+                    <div className="space-y-1.5 w-full flex flex-col items-center justify-center my-auto">
+                      {/* 45 SECONDS */}
+                      <h2 className="text-[11px] sm:text-xs font-black tracking-[0.25em] text-white uppercase font-sans">
+                        45 SECONDS
+                      </h2>
+                      
+                      {/* with */}
+                      <p className="font-serif italic text-sm text-slate-300 -my-0.5 tracking-wider">
+                        with
+                      </p>
+                      
+                      {/* DICE SWANEF */}
+                      <h1 className="text-xl sm:text-2xl font-black tracking-[0.14em] text-white uppercase drop-shadow-xl font-sans">
+                        DICE SWANEF
+                      </h1>
+
+                      {/* Progress timeline bar with scrubber tick */}
+                      <div className="w-4/5 h-[1.5px] bg-white/25 my-3 relative flex items-center justify-center">
+                        <div className="w-4 h-[3.5px] bg-white rounded-xs" />
+                      </div>
+
+                      {/* Editorial Credits */}
+                      <div className="space-y-1 text-center font-sans tracking-wide pt-1">
+                        <div className="text-[9.5px] leading-tight">
+                          <span className="text-slate-400 font-medium mr-1.5">DP</span>
+                          <span className="font-bold text-white">Robb Dipple</span>
+                        </div>
+                        <div className="text-[9.5px] leading-tight">
+                          <span className="text-slate-400 font-medium mr-1.5">Editor</span>
+                          <span className="font-bold text-white">Benny Baruch</span>
+                        </div>
+                        <div className="text-[9.5px] leading-tight">
+                          <span className="text-slate-400 font-medium mr-1.5">Graphics</span>
+                          <span className="font-bold text-white">Andrea Nasca</span>
+                        </div>
+                        <div className="text-[9.5px] leading-tight">
+                          <span className="text-slate-400 font-medium mr-1.5">Executive Producer</span>
+                          <span className="font-bold text-white">Ken Shadford</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* 2. Over-video Simulated TikTok UI (Only for Feed layout) */}
                 {activePreviewTab === 'feed' && (
                   <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none p-3.5 text-white bg-gradient-to-t from-black/50 via-transparent to-black/15">
                     
                     {/* Feed Top Navigation */}
-                    <div className="flex justify-between items-center pt-3 text-[11px] font-black">
-                      {/* Left-top active Tv Stream sign */}
-                      <svg className="w-4 h-4 text-white opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 002-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-
+                    <div className="flex justify-center items-center pt-2 text-[11px] font-black">
                       {/* Segments */}
                       <div className="flex items-center gap-2">
                         <span className="opacity-60 text-[9.5px]">Siguiendo</span>
                         <span className="border-b-2 border-white pb-0.5 text-[9.5px]">Para ti</span>
                       </div>
-
-                      {/* Right top Search */}
-                      <svg className="w-4 h-4 text-white opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
                     </div>
 
-                    {/* Right Hand Sidebar with active overlay metrics buttons */}
-                    <div className="absolute right-2 top-[21%] flex flex-col items-center gap-2.5 select-none z-30">
+                    {/* Right Hand Sidebar with active overlay metrics buttons matching capture image.png */}
+                    <div className="absolute right-2 top-[20%] flex flex-col items-center gap-2.5 select-none z-30">
                       
-                      {/* Avatar with red overlay addition */}
+                      {/* Avatar matching Ernesto */}
                       <div className="relative mb-1 shrink-0">
                         <img 
-                          src={selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'} 
+                          src={selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'} 
                           alt="Model Avatar" 
                           className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md"
                           referrerPolicy="no-referrer"
                         />
-                        {!(
-                          (userProfile && (
-                            !selectedModel ||
-                            selectedModel.id === userProfile.id ||
-                            selectedModel.username === userProfile.username ||
-                            selectedModel.name === userProfile.name ||
-                            (userProfile.name && userProfile.name.toLowerCase().includes('adriana')) ||
-                            (userProfile.username && userProfile.username.toLowerCase().includes('adriana'))
-                          ))
-                        ) && (
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-[#fe2c55] rounded-full flex items-center justify-center border border-white">
-                            <Plus className="w-3.5 h-3.5 text-white stroke-[3.5px]" />
-                          </div>
-                        )}
                       </div>
 
-                      {/* Heart Like */}
+                      {/* Heart Like (red filled) */}
                       <div className="flex flex-col items-center shrink-0">
                         <div className="bg-black/35 p-2 rounded-full backdrop-blur-3xs hover:bg-black/45 transition cursor-pointer pointer-events-auto">
-                          <Heart className="w-5.5 h-5.5 text-red-500 fill-red-500" />
+                          <Heart className="w-5.5 h-5.5 text-[#fe2c55] fill-[#fe2c55]" />
                         </div>
-                        <span className="text-[10px] font-black mt-0.5 shadow-xs">3.1K</span>
+                        <span className="text-[10px] font-black mt-0.5 shadow-xs text-white">3.1K</span>
                       </div>
 
                       {/* Comments count */}
@@ -9678,23 +12639,12 @@ export default function CastingLiveSection({
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                           </svg>
                         </div>
-                        <span className="text-[10px] font-black mt-0.5 shadow-xs">18</span>
+                        <span className="text-[10px] font-black mt-0.5 shadow-xs text-white">18</span>
                       </div>
 
-                      {/* Bookmark Favorites */}
-                      {selectedCategoryFilter !== 'Finanzas' && (
-                        <div className="flex flex-col items-center shrink-0">
-                          <div className="bg-black/35 p-2 rounded-full backdrop-blur-3xs hover:bg-black/45 transition cursor-pointer pointer-events-auto">
-                            <Bookmark className="w-5.5 h-5.5 text-amber-400 fill-amber-400" />
-                          </div>
-                          <span className="text-[10px] font-black mt-0.5 shadow-xs">112</span>
-                        </div>
-                      )}
-
-                      {/* Share Arrow exactly matching z.png */}
+                      {/* Share Arrow */}
                       <div className="flex flex-col items-center shrink-0">
                         <div className="bg-black/35 p-2 rounded-full backdrop-blur-3xs hover:bg-black/45 transition cursor-pointer pointer-events-auto">
-                          {/* Curved sharing arrow SVG */}
                           <svg className="w-5.5 h-5.5 text-white fill-current" viewBox="0 0 24 24">
                             <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" />
                           </svg>
@@ -9704,37 +12654,28 @@ export default function CastingLiveSection({
                       {/* Vinyl turntable spinning */}
                       <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-slate-700 p-1 animate-spin mt-1 shrink-0">
                         <div className="w-full h-full bg-slate-800 rounded-full border border-slate-600 flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 bg-[#fe2c55] rounded-full" />
+                          <div className="w-1.5 h-1.5 bg-[#fe2c55] rounded-full shadow-[0_0_6px_#fe2c55]" />
                         </div>
                       </div>
 
                     </div>
 
-                    {/* Lower Description Text Layer */}
-                    <div className="space-y-1.5 text-left mt-auto pb-6 pr-10">
-                      <span className="font-extrabold text-[12px] block">@{selectedModel?.username || userProfile?.username || 'Shambalí'}</span>
-                      <p className="text-[10px] font-semibold text-slate-100 leading-normal line-clamp-3 overflow-hidden drop-shadow-md">
-                        {renderFormattedDescription(uploadDescription.trim() || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25')}
+                    {/* Lower Description Text Layer matching capture image.png */}
+                    <div className="space-y-1 text-left mt-auto pb-3 pr-10">
+                      <span className="font-black text-[12px] block text-white">@{selectedModel?.username || userProfile?.username || 'ernestovs'}</span>
+                      <p className="text-[10px] font-semibold text-slate-100 leading-snug drop-shadow-md">
+                        Fashion Sponsors Network styl -<br />
+                        Google Chrome 2025-04-15 09-22-25
                       </p>
+                      <span className="text-[10.5px] font-bold text-[#fe2c55] block cursor-pointer hover:underline">
+                        @fashionfinances
+                      </span>
 
-                      {/* Interactive floating reaction emojis matching capture zdd.png */}
-                      <div className="flex items-center gap-1.5 bg-black/45 backdrop-blur-md px-2.5 py-1 rounded-full select-none max-w-max border border-white/10 my-1 pointer-events-auto">
-                        {['😍', '😂', '😳', '❤️', '🔗'].map((emo) => (
-                          <button
-                            key={emo}
-                            type="button"
-                            onClick={() => alert(`Reaccionaste con ${emo} en la vista previa.`)}
-                            className="hover:scale-130 active:scale-95 transition cursor-pointer text-xs drop-shadow-md border-0 bg-transparent flex items-center justify-center p-0.5"
-                          >
-                            {emo}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-1 text-[9px] font-bold text-slate-300">
-                        <Music className="w-3 h-3 text-[#fe2c55]" />
+                      {/* Sound info with musical note */}
+                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 pt-0.5">
+                        <Music className="w-3 h-3 text-[#fe2c55] shrink-0" />
                         <span className="truncate w-36">
-                          {uploadMusic.trim() || `Sonido original - @${selectedModel?.username || userProfile?.username || 'Shambalí'}`}
+                          {uploadMusic.trim() || `Sonido original - @${selectedModel?.username || userProfile?.username || 'ernestovs'}`}
                         </span>
                       </div>
                     </div>
@@ -10400,45 +13341,50 @@ export default function CastingLiveSection({
 
               </div>
 
-              {/* Three Phone-associated buttons in capture yy.png: ✂ Editar, 🎵 Sonidos, Aa Texto */}
-              <div className="flex items-center gap-2 select-none">
+              {/* Three Phone-associated buttons matching capture image.png: ✏️ Editar, 🎵 Sonidos, Aa Texto */}
+              <div className="flex items-center gap-2 select-none pt-1">
                 <button
                   type="button"
                   onClick={() => setTiktokSubTool(tiktokSubTool === 'editor' ? null : 'editor')}
-                  className={`px-3 py-1.5 border rounded-lg font-extrabold text-[10px] flex items-center gap-1 cursor-pointer transition ${
+                  className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
                     tiktokSubTool === 'editor' 
-                      ? 'bg-[#fe2c55] text-white border-transparent shadow' 
-                      : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                      ? 'bg-[#fe2c55] text-white border-transparent shadow-md' 
+                      : 'bg-[#eaedf2] hover:bg-slate-200 text-[#1e293b] border-0'
                   }`}
                 >
-                  {/* Scissors icon */}
-                  <svg className={`w-3.5 h-3.5 ${tiktokSubTool === 'editor' ? 'text-white' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-4.879-4.879L21 12m-6.879 2.121L19 8m-4.879 6.121L12 19M8.684 10.742a3 3 0 11-4.81-2.772m4.81 2.772a3 3 0 00-2.684-4.81" />
+                  {/* Pencil / edit icon matching image.png */}
+                  <svg className={`w-3.5 h-3.5 ${tiktokSubTool === 'editor' ? 'text-white' : 'text-[#1e293b]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                   </svg>
                   <span>Editar</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setTiktokSubTool(tiktokSubTool === 'sounds' ? null : 'sounds')}
-                  className={`px-3 py-1.5 border rounded-lg font-extrabold text-[10px] flex items-center gap-1 cursor-pointer transition ${
+                  className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
                     tiktokSubTool === 'sounds' 
-                      ? 'bg-[#fe2c55] text-white border-transparent shadow' 
-                      : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                      ? 'bg-[#fe2c55] text-white border-transparent shadow-md' 
+                      : 'bg-[#eaedf2] hover:bg-slate-200 text-[#1e293b] border-0'
                   }`}
                 >
-                  <Music className={`w-3.5 h-3.5 ${tiktokSubTool === 'sounds' ? 'text-white' : 'text-slate-500'}`} />
+                  {/* Double note icon matching image.png */}
+                  <svg className={`w-3.5 h-3.5 ${tiktokSubTool === 'sounds' ? 'text-white' : 'text-[#1e293b]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18V5l12-2v13" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="16" r="3" />
+                  </svg>
                   <span>Sonidos</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setTiktokSubTool(tiktokSubTool === 'text' ? null : 'text')}
-                  className={`px-3 py-1.5 border rounded-lg font-extrabold text-[10px] flex items-center gap-1 cursor-pointer transition ${
+                  className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
                     tiktokSubTool === 'text' 
-                      ? 'bg-[#fe2c55] text-white border-transparent shadow' 
-                      : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                      ? 'bg-[#fe2c55] text-white border-transparent shadow-md' 
+                      : 'bg-[#eaedf2] hover:bg-slate-200 text-[#1e293b] border-0'
                   }`}
                 >
-                  <span className={`font-mono text-xs mr-0.5 ${tiktokSubTool === 'text' ? 'text-white' : 'text-slate-550'}`}>Aa</span>
+                  <span className={`font-black text-xs ${tiktokSubTool === 'text' ? 'text-white' : 'text-[#1e293b]'}`}>Aa</span>
                   <span>Texto</span>
                 </button>
               </div>
@@ -10746,7 +13692,7 @@ export default function CastingLiveSection({
               {/* "+ Cargar" button styled exactly like screenshot (pulsating pinkish-red) */}
               <button
                 type="button"
-                onClick={() => setShowUploadModal(true)}
+                onClick={() => setShowCreationTypeModal(true)}
                 className="w-full py-2.5 px-4 bg-[#fe2c55] hover:bg-[#e02247] text-white text-xs font-black rounded-lg shadow-md shadow-rose-500/10 text-center flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer border-0 uppercase tracking-wider"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
@@ -10975,7 +13921,11 @@ export default function CastingLiveSection({
                                         return v;
                                       });
                                       setVideosList(updated);
-                                      localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+try {
+  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+} catch (e) {
+  console.warn(e);
+}
                                     }}
                                     className="cursor-pointer border-0 p-0 bg-transparent outline-none transform active:scale-95 transition-transform inline-block"
                                     title="Click para cambiar política de privacidad"
@@ -11025,7 +13975,11 @@ export default function CastingLiveSection({
                                         return v;
                                       });
                                       setVideosList(updated);
-                                      localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+try {
+  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+} catch (e) {
+  console.warn(e);
+}
                                     }}
                                     className="px-2 py-1 rounded border border-slate-100 hover:border-rose-200 hover:bg-rose-50 cursor-pointer text-xs font-black flex items-center gap-1 text-[#fe2c55] select-none transition bg-white"
                                     title="Dar me gusta (+1)"
@@ -11053,7 +14007,11 @@ export default function CastingLiveSection({
                                     onClick={() => {
                                       const updated = videosList.filter(v => v.id !== vid.id);
                                       setVideosList(updated);
-                                      localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+try {
+  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+} catch (e) {
+  console.warn(e);
+}
                                     }}
                                     className="px-3 py-1.5 border border-slate-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 text-slate-800 rounded-lg text-[10px] font-extrabold uppercase transition-all duration-150 transform active:scale-95 cursor-pointer bg-white"
                                   >
@@ -12369,7 +15327,11 @@ export default function CastingLiveSection({
                                 return v;
                               });
                               setVideosList(updated);
-                              localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+try {
+  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+} catch (e) {
+  console.warn(e);
+}
                             }}
                             className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded-lg transition cursor-pointer border-0 bg-transparent text-xs font-bold"
                             title="Borrar comentario"
@@ -12405,7 +15367,11 @@ export default function CastingLiveSection({
                               return v;
                             });
                             setVideosList(updated);
-                            localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+try {
+  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+} catch (e) {
+  console.warn(e);
+}
                             setNewModCommentText('');
                           }
                         }}
@@ -12428,7 +15394,11 @@ export default function CastingLiveSection({
                             return v;
                           });
                           setVideosList(updated);
-                          localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+try {
+  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
+} catch (e) {
+  console.warn(e);
+}
                           setNewModCommentText('');
                         }}
                         className="px-4 py-2 bg-[#fe2c55] hover:bg-[#e02247] text-white text-xs font-bold rounded-xl transition cursor-pointer border-0"
@@ -12562,7 +15532,7 @@ export default function CastingLiveSection({
     });
 
     return (
-      <div className="bg-[#fffbfc] min-h-[750px] p-4 md:p-6 rounded-2xl border border-pink-100 shadow-xs flex flex-col gap-6 text-slate-800 animate-fade-in" id="investor-shop-dashboard">
+      <div className="bg-[#fffbfc] min-h-[750px] p-4 md:p-6 rounded-2xl border border-pink-100 shadow-xs flex flex-col gap-6 text-slate-800 animate-fade-in w-full max-w-full min-w-0 overflow-x-hidden" id="investor-shop-dashboard">
         
         {/* TOP SECTION: HORIZONTAL RECS / METRICS (TABLET & DESKTOP ROW-BASED ACCORDING TO USER REQ) */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full" id="investor-top-metrics-grid">
@@ -12574,16 +15544,7 @@ export default function CastingLiveSection({
               <button
                 onClick={() => {
                   setSelectedInvestorStore(null);
-                  setInvestorSearchTerm('');
-                  setSelectedMainCategory('Todos');
-                  setSelectedSubcategory('Todos');
-                  setSelectedSizes([]);
-                  setSelectedColors([]);
-                  setSelectedFabrics([]);
-                  setSelectedDiscountRange('Todos');
-                  setSelectedSupports([]);
-                  setSelectedLengths([]);
-                  setOnlyNewArrivals(false);
+                  setShopTab('tiendas');
                 }}
                 className="w-full py-1.5 bg-slate-900 hover:bg-[#fe2c55] text-white font-extrabold text-xs uppercase rounded-lg transition-all duration-150 cursor-pointer border-0 shadow-xs flex items-center justify-center gap-1.5"
                 id="btn-ver-todas-tiendas"
@@ -12667,19 +15628,60 @@ export default function CastingLiveSection({
               <div 
                 className="relative w-full rounded-2xl overflow-hidden bg-cover bg-center border border-slate-200/20 p-5 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5 min-h-[180px] shadow-sm"
                 style={{ 
-                  backgroundImage: `url(${selectedInvestorStore.id === userProfile?.id ? customShopBanner : (selectedInvestorStore.bannerUrl || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200')})` 
+                  backgroundImage: `url(${selectedInvestorStore.bannerUrl || (selectedInvestorStore.id === userProfile?.id ? customShopBanner : undefined) || customShopBanner || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200'})` 
                 }}
               >
                 {/* Luxury Dark Gradient Overlay for optimal readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-900/15 z-0" />
 
+                {/* Botón arriba a la derecha para cambiar el fondo de esta imagen: solamente el icono de una cámara de foto con letras/trazo blanco y sin fondo */}
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
+                  <label
+                    htmlFor="boutique-header-banner-upload-input"
+                    className="p-2 sm:p-2.5 rounded-xl bg-transparent hover:bg-white/15 active:scale-95 text-white transition-all duration-150 cursor-pointer flex items-center justify-center border-0 shadow-none focus:outline-none"
+                    title="Cambiar fondo de la imagen"
+                    aria-label="Cambiar fondo de la imagen"
+                  >
+                    <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-md" />
+                    <input
+                      id="boutique-header-banner-upload-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target?.result) {
+                              const newBanner = event.target.result as string;
+                              setCustomShopBanner(newBanner);
+                              localStorage.setItem('coll_shop_custom_banner', newBanner);
+                              if (selectedInvestorStore) {
+                                setSelectedInvestorStore((prev: any) => prev ? { ...prev, bannerUrl: newBanner } : null);
+                                if (selectedInvestorStore.id) {
+                                  localStorage.setItem(`coll_shop_banner_${selectedInvestorStore.id}`, newBanner);
+                                }
+                              }
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
                 <div className="relative z-10 flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl overflow-hidden shadow-xs shrink-0 select-none relative bg-white">
                     {selectedInvestorStore.id === userProfile?.id && customShopLogo ? (
                       <img 
-                        src={customShopLogo || undefined} 
+                        src={customShopLogo || COUTURE_ELITE_LOGO_DATA_URL} 
                         alt={selectedInvestorStore.name} 
-                        className="w-full h-full object-cover scale-[1.12] transition duration-200" 
+                        className="w-full h-full object-cover scale-[1.02] transition duration-200" 
+                        onError={(e) => {
+                          e.currentTarget.src = COUTURE_ELITE_LOGO_DATA_URL;
+                        }}
                       />
                     ) : (
                       getFashionBrandLogo(selectedInvestorStore.id, selectedInvestorStore.name)
@@ -12688,7 +15690,7 @@ export default function CastingLiveSection({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <h3 className="text-base font-serif font-bold text-white leading-tight drop-shadow-sm">
-                        {selectedInvestorStore.id === userProfile?.id ? customShopName : selectedInvestorStore.name}
+                        {((selectedInvestorStore.id === userProfile?.id ? customShopName : selectedInvestorStore.name) || '').replace(/\s*Adriana Lima\s*/gi, ' ').trim()}
                       </h3>
                       <span className="bg-rose-600 text-white font-black text-[8.5px] px-2 py-0.5 rounded-full border border-rose-500/20 shadow-sm">
                         ⭐ {selectedInvestorStore.rating}
@@ -13247,10 +16249,36 @@ export default function CastingLiveSection({
                                   className={`bg-white rounded-2xl border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-pink-100 hover:border-pink-300'} flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 relative group text-left`}
                                 >
                                   {/* Image container aspect-square */}
-                                  <div className="aspect-square w-full overflow-hidden bg-slate-50 relative">
+                                  <div 
+                                    className="aspect-square w-full overflow-hidden bg-slate-50 relative cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const catalogImages = displayedProducts.map((p: any) => ({
+                                        src: p.image,
+                                        alt: p.name,
+                                        title: p.name,
+                                        price: `${(p.price * (1 - (p.discount || 0) / 100)).toFixed(2)}€`,
+                                        badge: p.isNewArrival ? 'ESTRENO 💫' : 'SUPERVENTAS'
+                                      }));
+                                      const currentIdx = displayedProducts.findIndex((p: any) => p.id === prod.id);
+                                      openImageLightbox({
+                                        src: prod.image,
+                                        alt: prod.name,
+                                        title: prod.name,
+                                        price: `${(prod.price * (1 - (prod.discount || 0) / 100)).toFixed(2)}€`,
+                                        badge: prod.isNewArrival ? 'ESTRENO 💫' : 'SUPERVENTAS',
+                                        images: catalogImages,
+                                        currentIndex: currentIdx >= 0 ? currentIdx : 0
+                                      });
+                                    }}
+                                  >
                                     <img 
                                       src={prod.image} 
                                       alt={prod.name} 
+                                      referrerPolicy="no-referrer"
+                                      onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=800';
+                                      }}
                                       className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300" 
                                     />
                                     
@@ -13388,17 +16416,6 @@ export default function CastingLiveSection({
                                         <span>Tallas disponibles:</span>
                                         <span className="font-extrabold text-slate-800">{(prod.sizes || ['S', 'M', 'L']).slice(0, 4).join(', ')}{(prod.sizes?.length > 4) ? '...' : ''}</span>
                                       </div>
-                                      <div className="pt-1.5 border-t border-slate-200/60">
-                                        <label className="flex items-center gap-1.5 text-[10px] font-bold text-rose-600 cursor-pointer select-none">
-                                          <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => handleToggleSelectProduct(prod, selectedInvestorStore.name)}
-                                            className="rounded text-[#fe2c55] focus:ring-[#fe2c55] w-3.5 h-3.5 cursor-pointer accent-rose-500"
-                                          />
-                                          <span>Adquirir prenda (Seleccionar)</span>
-                                        </label>
-                                      </div>
                                     </div>
 
                                     {/* Action buttons */}
@@ -13451,6 +16468,32 @@ export default function CastingLiveSection({
                                         <span>🛒</span> Al Carrito
                                       </button>
                                     </div>
+
+                                    {/* Botón Presentar en directo debajo de comprar y carrito */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const finalColor = activeColor;
+                                        const finalSize = prod.sizes?.[0] || 'M';
+                                        const finalPrice = prod.price * (1 - (prod.discount || 0) / 100);
+                                        const prodToPin = {
+                                          ...prod,
+                                          price: finalPrice,
+                                          originalPrice: prod.price,
+                                          description: prod.description || `Prenda de alta costura de ${selectedInvestorStore?.name || 'la boutique'}.`,
+                                          atelier: prod.atelier || selectedInvestorStore?.name || '@adrianalima_w1',
+                                          selectedColorChoice: finalColor,
+                                          selectedSizeChoice: finalSize
+                                        };
+                                        setPinnedShopProduct(prodToPin);
+                                        handleCategoryFilterChange('Tiendas');
+                                        setShowCreateBroadcastModal(true);
+                                      }}
+                                      className="w-full mt-2 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/20 active:scale-98"
+                                    >
+                                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                                      <span>🔴</span> Presentar en directo
+                                    </button>
                                   </div>
                                 </div>
                               );
@@ -13865,12 +16908,12 @@ export default function CastingLiveSection({
     };
 
     return (
-      <div className="bg-gradient-to-br from-[#fff8f9] via-white to-[#fffcfd] text-slate-800 p-6 md:p-8 rounded-3xl border border-pink-100/60 shadow-xl min-h-[750px] font-sans flex flex-col md:flex-row gap-6 w-full select-none" id="tiktok-shop-view-screen">
+      <div className={`bg-gradient-to-br from-[#fff8f9] via-white to-[#fffcfd] text-slate-800 ${shopTab === 'mi_tienda' || shopTab === 'tiendas' || shopTab === 'ofertas' ? 'p-3 sm:p-6' : 'p-6 md:p-8'} rounded-3xl border border-pink-100/60 shadow-xl min-h-[750px] font-sans flex flex-col md:flex-row gap-6 w-full select-none`} id="tiktok-shop-view-screen">
         
-        {/* LEFT NAV PANEL - Inspired by Victoria's Secret elegant boutique styling */}
-        {shopTab !== 'mi_tienda' && shopTab !== 'articulos' && shopTab !== 'ofertas' && shopTab !== 'vender' && shopTab !== 'tiendas' && shopTab !== 'carrito' && (
+        {/* LEFT NAV PANEL - Inspired by Victoria's Secret elegant boutique styling (hidden in full-screen stores, search, vender, and ofertas) */}
+        {shopTab !== 'tiendas' && shopTab !== 'carrito' && shopTab !== 'vender' && shopTab !== 'mi_tienda' && shopTab !== 'ofertas' && (
           <aside className="w-full md:w-[260px] shrink-0 flex flex-col justify-between bg-white p-5 rounded-2xl border border-pink-100/60 shadow-sm">
-          <div className="space-y-6">
+            <div className="space-y-6">
             
             <div className="flex items-center justify-between pb-3 border-b border-pink-100/60">
               <div className="flex items-center gap-2">
@@ -13880,6 +16923,10 @@ export default function CastingLiveSection({
               <button
                 type="button"
                 onClick={() => {
+                  if (shopTab === 'ofertas') {
+                    setShopTab('articulos');
+                    return;
+                  }
                   if (handleReturnFromStore()) return;
                   setShowTikTokShop(false);
                 }}
@@ -14015,16 +17062,26 @@ export default function CastingLiveSection({
                           setSelectedInvestorStore(getBoutiqueStoreData(model, realIdx));
                         }
                       }
-                      setCameFromShopTab(shopTab);
+                      setCameFromShopTab(shopTab || 'articulos');
                       setShopTab('mi_tienda');
+                      setTimeout(() => {
+                        const scrollContainers = document.querySelectorAll('.overflow-y-auto, main');
+                        scrollContainers.forEach(el => {
+                          el.scrollTop = 0;
+                        });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }, 50);
                     }}
                     className="flex items-center gap-3 cursor-pointer hover:opacity-85 transition duration-150 group"
                   >
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-pink-100 shrink-0 bg-white relative flex items-center justify-center p-1 shadow-3xs group-hover:scale-105 transition-transform">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-pink-100 shrink-0 bg-slate-900 relative flex items-center justify-center p-0.5 shadow-3xs group-hover:scale-105 transition-transform">
                       <img 
-                        src={customShopLogo} 
+                        src={customShopLogo || COUTURE_ELITE_LOGO_DATA_URL} 
                         alt="Logo de la empresa" 
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.currentTarget.src = COUTURE_ELITE_LOGO_DATA_URL;
+                        }}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -14129,7 +17186,17 @@ export default function CastingLiveSection({
 
               <button
                 type="button"
-                onClick={() => setShopTab('ofertas')}
+                onClick={() => {
+                  setCameFromShopTab(shopTab || 'articulos');
+                  setShopTab('ofertas');
+                  setTimeout(() => {
+                    const scrollContainers = document.querySelectorAll('.overflow-y-auto, main');
+                    scrollContainers.forEach(el => {
+                      el.scrollTop = 0;
+                    });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }, 50);
+                }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wide transition duration-150 text-left border cursor-pointer ${
                   shopTab === 'ofertas' 
                     ? 'bg-rose-50/70 border-rose-200/80 text-rose-600 shadow-3xs font-black' 
@@ -14222,7 +17289,7 @@ export default function CastingLiveSection({
         )}
 
         {/* RIGHT DISPLAY VIEWPORT - Styled in elegant soft cream-blush */}
-        <main className="flex-1 bg-[#faf6f7] p-5 md:p-6 rounded-2xl border border-pink-100/75 shadow-sm flex flex-col justify-between overflow-y-auto min-h-[500px]">
+        <main className="flex-1 min-w-0 max-w-full bg-[#faf6f7] p-5 md:p-6 rounded-2xl border border-pink-100/75 shadow-sm flex flex-col justify-between overflow-y-auto overflow-x-hidden min-h-[500px]">
           
           {/* TAB 1: REGISTER FASHION ITEM / FORM */}
           {shopTab === 'vender' && (
@@ -14691,31 +17758,6 @@ export default function CastingLiveSection({
                   </h3>
                   <p className="text-xs text-slate-500 font-semibold font-sans">Artículos y productos que están actualmente en tu catálogo para captar patrocinadores y sponsors.</p>
                 </div>
-                
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (tikTokShopItems.length > 0) {
-                        setPinnedShopProduct(tikTokShopItems[0]);
-                      }
-                      handleCategoryFilterChange('Tiendas');
-                      setShowCreateBroadcastModal(true);
-                    }}
-                    className="px-4 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-rose-500/25 border border-white/20 animate-pulse active:scale-95"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                    🔴 PRESENTAR EN DIRECTO
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShopTab('analisis')}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0 self-start sm:self-center"
-                  >
-                    ← Volver al Panel
-                  </button>
-                </div>
               </div>
 
               {tikTokShopItems.length === 0 ? (
@@ -14731,7 +17773,7 @@ export default function CastingLiveSection({
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 gap-5 max-w-xl mx-auto w-full">
                   {tikTokShopItems.map((item) => {
                     const originalPrice = item.price;
                     const discount = item.discount;
@@ -14900,6 +17942,10 @@ export default function CastingLiveSection({
               <div className="space-y-5 text-left animate-fade-in font-sans">
                 <div className="border-b border-pink-100 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-2 w-2 bg-rose-500 rounded-full animate-pulse" />
+                      <span className="text-[10.5px] font-bold tracking-widest text-rose-600 uppercase font-sans">TIENDA VINCULADA</span>
+                    </div>
                     <h3 className="text-lg md:text-xl font-serif font-bold text-slate-900 flex items-center gap-2 font-sans">
                       <span>📬</span> Centro de Ofertas Directas e Intermediación
                     </h3>
@@ -14910,10 +17956,22 @@ export default function CastingLiveSection({
 
                   <button
                     type="button"
-                    onClick={() => setShopTab('analisis')}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0 self-start sm:self-center shrink-0"
+                    onClick={() => {
+                      setShopTab('articulos');
+                      setTimeout(() => {
+                        const scrollContainers = document.querySelectorAll('.overflow-y-auto, main');
+                        scrollContainers.forEach(el => {
+                          el.scrollTop = 0;
+                        });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }, 50);
+                    }}
+                    className="p-1 px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 transition cursor-pointer border border-pink-200 shadow-2xs text-xs font-bold flex items-center gap-1.5 font-sans self-start sm:self-center shrink-0"
+                    title="Volver a Mi Escaparate"
+                    id="btn-return-bids-ofertas-to-escaparate"
                   >
-                    ← Volver al Panel
+                    <ArrowLeft className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Volver</span>
                   </button>
                 </div>
 
@@ -14989,7 +18047,7 @@ export default function CastingLiveSection({
                     }
 
                     return (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto w-full">
                         {filteredDirectLeads.map((lead) => (
                           <div 
                             key={lead.id}
@@ -15389,7 +18447,7 @@ export default function CastingLiveSection({
                     <p className="text-xs text-slate-500 font-semibold font-sans">No se encontraron leads de tipo "{offerFilter}" en el buzón actual.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3.5 font-sans">
+                  <div className="space-y-3.5 max-w-xl mx-auto w-full font-sans">
                     {visibleLeads.map((lead) => {
                       return (
                         <div 
@@ -15644,27 +18702,27 @@ export default function CastingLiveSection({
                   </h5>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-                  <div className="bg-white/80 p-4 rounded-xl border border-pink-100/30 shadow-4xs space-y-2">
-                    <span className="inline-block p-1 bg-pink-50 text-rose-500 rounded-lg text-xs font-bold">15%-25%</span>
-                    <h6 className="text-[11.5px] font-bold text-slate-800 leading-snug">Asocia Comisiones de Afiliados Exclusivas</h6>
-                    <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                <div className="grid grid-cols-1 gap-4 pt-1 max-w-xl mx-auto w-full">
+                  <div className="bg-white/90 p-4.5 rounded-xl border border-pink-100/50 shadow-2xs space-y-2 text-left">
+                    <span className="inline-block px-2 py-0.5 bg-pink-50 text-rose-500 rounded-lg text-xs font-bold">15%-25%</span>
+                    <h6 className="text-sm font-bold text-slate-800 leading-snug">Asocia Comisiones de Afiliados Exclusivas</h6>
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed">
                       Los y las modelos de Casting Live prefieren lucir artículos con incentivos más jugosos durante los directos para ganar comisiones extra.
                     </p>
                   </div>
 
-                  <div className="bg-white/80 p-4 rounded-xl border border-pink-100/30 shadow-4xs space-y-2">
-                    <span className="inline-block p-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold">👑 CTA</span>
-                    <h6 className="text-[11.5px] font-bold text-slate-800 leading-snug">Optimiza el CTA a "Sponsorizar Artículo"</h6>
-                    <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                  <div className="bg-white/90 p-4.5 rounded-xl border border-pink-100/50 shadow-2xs space-y-2 text-left">
+                    <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold">👑 CTA</span>
+                    <h6 className="text-sm font-bold text-slate-800 leading-snug">Optimiza el CTA a "Sponsorizar Artículo"</h6>
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed">
                       Las analíticas demuestran que los patrocinadores VIP reaccionan un 40% más a este texto que al tradicional "Comprar".
                     </p>
                   </div>
 
-                  <div className="bg-white/80 p-4 rounded-xl border border-pink-100/30 shadow-4xs space-y-2">
-                    <span className="inline-block p-1 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold">🔄 Rota</span>
-                    <h6 className="text-[11.5px] font-bold text-slate-800 leading-snug">Cambia de Artículos con Frecuencia</h6>
-                    <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                  <div className="bg-white/90 p-4.5 rounded-xl border border-pink-100/50 shadow-2xs space-y-2 text-left">
+                    <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold">🔄 Rota</span>
+                    <h6 className="text-sm font-bold text-slate-800 leading-snug">Cambia de Artículos con Frecuencia</h6>
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed">
                       Rota los artículos y productos para que siempre coincidan con las tendencias de pasarela para capturar miradas de inversores.
                     </p>
                   </div>
@@ -15697,9 +18755,9 @@ export default function CastingLiveSection({
                       setShopTab('analisis');
                     }
                   }}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0 self-start sm:self-auto"
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0 self-start sm:self-auto shrink-0"
                 >
-                  ← Volver
+                  ← Volver al Panel
                 </button>
               </div>
 
@@ -15741,7 +18799,7 @@ export default function CastingLiveSection({
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                     {filteredStores.map((store) => (
                       <div 
                         key={store.id} 
@@ -16060,7 +19118,7 @@ export default function CastingLiveSection({
             }
 
             return (
-              <div className="space-y-5 animate-fade-in text-left font-sans text-slate-805 w-full">
+              <div className="space-y-5 animate-fade-in text-left font-sans text-slate-805 w-full max-w-full min-w-0 overflow-x-hidden">
                 
                 {/* Redesigned Premium Boutique Header with Background Banner Cover */}
                 <div 
@@ -16074,16 +19132,17 @@ export default function CastingLiveSection({
                   <div className="relative z-10 flex flex-col sm:flex-row items-center justify-end w-full gap-3">
 
                     <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
-                      {/* Portada upload button for store owner only */}
+                      {/* Portada upload button: solamente el icono de una cámara de foto con letras blancas y sin fondo */}
                       {isViewingOwnStore && (
                         <div>
                           <button 
                             type="button"
                             onClick={() => shopBannerInputRef.current?.click()}
-                            className="bg-black/60 hover:bg-black/80 backdrop-blur-md text-white font-black text-[9.5px] px-3.5 py-2 rounded-xl border border-white/20 cursor-pointer flex items-center gap-1.5 transition duration-150 shadow-md uppercase"
+                            className="p-2 sm:p-2.5 rounded-xl bg-transparent hover:bg-white/15 active:scale-95 text-white transition-all duration-150 cursor-pointer flex items-center justify-center border-0 shadow-none focus:outline-none"
+                            title="Cambiar fondo de la imagen"
+                            aria-label="Cambiar fondo de la imagen"
                           >
-                            <UploadCloud className="w-3.5 h-3.5 text-white" />
-                            <span>Cambiar Portada 🖼️</span>
+                            <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-md" />
                           </button>
                           <input 
                             ref={shopBannerInputRef}
@@ -16095,7 +19154,15 @@ export default function CastingLiveSection({
                                 const reader = new FileReader();
                                 reader.onload = (event) => {
                                   if (event.target?.result) {
-                                    setCustomShopBanner(event.target.result as string);
+                                    const newBanner = event.target.result as string;
+                                    setCustomShopBanner(newBanner);
+                                    localStorage.setItem('coll_shop_custom_banner', newBanner);
+                                    if (selectedInvestorStore) {
+                                      setSelectedInvestorStore((prev: any) => prev ? { ...prev, bannerUrl: newBanner } : null);
+                                      if (selectedInvestorStore.id) {
+                                        localStorage.setItem(`coll_shop_banner_${selectedInvestorStore.id}`, newBanner);
+                                      }
+                                    }
                                   }
                                 };
                                 reader.readAsDataURL(e.target.files[0]);
@@ -16107,7 +19174,50 @@ export default function CastingLiveSection({
 
                       <button
                         onClick={() => {
-                          if (handleReturnFromStore()) return;
+                          if (localStorage.getItem('came_from_profile_sponsor') === 'true') {
+                            localStorage.removeItem('came_from_profile_sponsor');
+                            setSelectedInvestorStore(null);
+                            setShowTikTokShop(false);
+                            const prevTab = localStorage.getItem('previous_tab_before_sponsor') || 'profile';
+                            localStorage.removeItem('previous_tab_before_sponsor');
+                            if (onNavigateToTab) {
+                              onNavigateToTab(prevTab as any);
+                            }
+                            return;
+                          }
+                          if (cameFromAccountsQueSigues) {
+                            setCameFromAccountsQueSigues(false);
+                            setSelectedInvestorStore(null);
+                            setShowTikTokShop(false);
+                            return;
+                          }
+                          if (localStorage.getItem('came_from_results_podium') === 'true') {
+                            localStorage.removeItem('came_from_results_podium');
+                            setSelectedInvestorStore(null);
+                            setShowTikTokShop(false);
+                            let sessionData = null;
+                            const backupStr = localStorage.getItem('podium_session_backup');
+                            if (backupStr) {
+                              try {
+                                sessionData = JSON.parse(backupStr);
+                              } catch (e) {
+                                console.error(e);
+                              }
+                            }
+                            if (!sessionData) {
+                              sessionData = buildFinanzasCompletedSession(finanzasVotes);
+                            }
+                            setCompletedSessionToDisplay(sessionData);
+                            setShowFinanzasResults(true);
+                            return;
+                          }
+                          if (localStorage.getItem('came_from_finanzas') === 'true') {
+                            localStorage.removeItem('came_from_finanzas');
+                            setSelectedInvestorStore(null);
+                            setShowTikTokShop(false);
+                            setShowFinanzasResults(true);
+                            return;
+                          }
                           if (localStorage.getItem('selectedLiveModel_shopDirect') === 'true') {
                             localStorage.removeItem('selectedLiveModel_shopDirect');
                             localStorage.removeItem('selectedLiveModelId');
@@ -16116,18 +19226,22 @@ export default function CastingLiveSection({
                             }
                             return;
                           }
-                          if (!isViewingOwnStore) {
-                            setSelectedInvestorStore(null);
-                            setShopTab(cameFromShopTab || 'tiendas');
-                          } else {
-                            if (cameFromShopTab && cameFromShopTab !== 'mi_tienda') {
-                              setShopTab(cameFromShopTab);
-                            } else {
-                              setShopTab('analisis');
-                            }
-                            setSelectedMainCategory('Todos');
-                            setSelectedSubcategory('Todos');
-                          }
+
+                          // Return directly to the previous shop tab (e.g. 'articulos' - Escaparate Directo from image.png)
+                          const targetTab = (cameFromShopTab && cameFromShopTab !== 'mi_tienda') ? cameFromShopTab : 'articulos';
+                          setSelectedInvestorStore(null);
+                          setShopTab(targetTab);
+                          setSelectedMainCategory('Todos');
+                          setSelectedSubcategory('Todos');
+                          
+                          // Smooth scroll to top
+                          setTimeout(() => {
+                            const scrollContainers = document.querySelectorAll('.overflow-y-auto, main');
+                            scrollContainers.forEach(el => {
+                              el.scrollTop = 0;
+                            });
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }, 50);
                         }}
                         className="bg-black/60 hover:bg-black/80 backdrop-blur-md text-white font-black text-[9.5px] px-3.5 py-2 rounded-xl border border-white/20 cursor-pointer flex items-center gap-1.5 transition duration-150 shadow-md uppercase"
                       >
@@ -16153,9 +19267,12 @@ export default function CastingLiveSection({
                       >
                         {isViewingOwnStore && customShopLogo ? (
                           <img 
-                            src={shopLogo || undefined} 
+                            src={shopLogo || COUTURE_ELITE_LOGO_DATA_URL} 
                             alt={shopName} 
-                            className="w-full h-full object-cover scale-[1.12] transition duration-200 group-hover/logo:scale-[1.18]" 
+                            className="w-full h-full object-cover scale-[1.02] transition duration-200 group-hover/logo:scale-[1.08]" 
+                            onError={(e) => {
+                              e.currentTarget.src = COUTURE_ELITE_LOGO_DATA_URL;
+                            }}
                           />
                         ) : (
                           <div className="w-full h-full transition duration-200 group-hover/logo:scale-105 select-none">
@@ -16885,7 +20002,7 @@ export default function CastingLiveSection({
                             ☕ Aún no hay productos registrados o ninguno coincide con los filtros activos. {showShopFilters ? 'Intenta restablecerlos en la barra lateral o usa "Registrar Producto".' : 'Intenta restablecerlos pulsando "Filtrar Colección" para abrir el panel de filtros.'}
                           </div>
                         ) : (
-                          <div className={`grid grid-cols-1 md:grid-cols-2 ${showShopFilters ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
+                          <div className="grid grid-cols-1 gap-5 max-w-xl mx-auto w-full">
                             {displayedProducts.map((prod: any) => {
                               const activeColor = productSelectedColors[prod.id] || prod.colors?.[0] || 'Rojo';
                               const isWish = wishlistedProducts.includes(prod.id);
@@ -16900,10 +20017,40 @@ export default function CastingLiveSection({
                                   className={`bg-white rounded-2xl border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-pink-100 hover:border-pink-300'} flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 relative group text-left`}
                                 >
                                   {/* Image container aspect-square */}
-                                  <div className="aspect-square w-full overflow-hidden bg-slate-50 relative">
+                                  <div 
+                                    className="aspect-square w-full overflow-hidden bg-slate-50 relative cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const catalogImages = displayedProducts.map((p: any) => {
+                                        const pDiscount = p.discount || 0;
+                                        const pFinal = pDiscount > 0 ? (p.price * (1 - pDiscount / 100)) : p.price;
+                                        return {
+                                          src: p.image,
+                                          alt: p.name,
+                                          title: p.name,
+                                          price: `${pFinal.toFixed(2)}€`,
+                                          badge: p.isNewArrival ? 'ESTRENO 💫' : 'SUPERVENTAS'
+                                        };
+                                      });
+                                      const currentIdx = displayedProducts.findIndex((p: any) => p.id === prod.id);
+                                      openImageLightbox({
+                                        src: prod.image,
+                                        alt: prod.name,
+                                        title: prod.name,
+                                        price: `${finalPrice.toFixed(2)}€`,
+                                        badge: prod.isNewArrival ? 'ESTRENO 💫' : 'SUPERVENTAS',
+                                        images: catalogImages,
+                                        currentIndex: currentIdx >= 0 ? currentIdx : 0
+                                      });
+                                    }}
+                                  >
                                     <img 
                                       src={prod.image} 
                                       alt={prod.name} 
+                                      referrerPolicy="no-referrer"
+                                      onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=800';
+                                      }}
                                       className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300" 
                                     />
                                     
@@ -17002,19 +20149,6 @@ export default function CastingLiveSection({
                                           })}
                                         </div>
                                       </div>
-
-                                      {/* Checkbox selector */}
-                                      <div className="pt-2 border-t border-dashed border-slate-100">
-                                        <label className="flex items-center gap-1.5 text-[10px] font-bold text-rose-600 cursor-pointer select-none">
-                                          <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => handleToggleSelectProduct(prod, shopName)}
-                                            className="rounded text-[#fe2c55] focus:ring-[#fe2c55] w-3.5 h-3.5 cursor-pointer accent-rose-500"
-                                          />
-                                          <span>Adquirir prenda (Seleccionar)</span>
-                                        </label>
-                                      </div>
                                     </div>
 
                                     {/* Action buttons */}
@@ -17068,6 +20202,31 @@ export default function CastingLiveSection({
                                         <span>🛒</span> Al Carrito
                                       </button>
                                     </div>
+
+                                    {/* Botón Presentar en directo debajo de comprar y carrito */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const finalColor = prod.colors?.[0] || 'Negro';
+                                        const finalSize = prod.sizes?.[0] || 'M';
+                                        const prodToPin = {
+                                          ...prod,
+                                          price: finalPrice,
+                                          originalPrice: originalPrice,
+                                          description: prod.description || `Prenda de alta costura de ${shopName}.`,
+                                          atelier: prod.atelier || shopName,
+                                          selectedColorChoice: finalColor,
+                                          selectedSizeChoice: finalSize
+                                        };
+                                        setPinnedShopProduct(prodToPin);
+                                        handleCategoryFilterChange('Tiendas');
+                                        setShowCreateBroadcastModal(true);
+                                      }}
+                                      className="w-full mt-2 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/20 active:scale-98"
+                                    >
+                                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                                      <span>🔴</span> Presentar en directo
+                                    </button>
                                   </div>
                                 </div>
                               );
@@ -19641,7 +22800,7 @@ export default function CastingLiveSection({
 
           {/* Quick inline categories bubbles */}
           <div className="flex flex-wrap items-center gap-1.5" id="explore-categories-row">
-            {(['Todos', 'Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk'] as const).map((cat) => {
+            {(['Todos', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const).map((cat) => {
               const isSelected = selectedCategoryFilter === cat;
               return (
                 <button
@@ -19653,7 +22812,7 @@ export default function CastingLiveSection({
                       : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900'
                   }`}
                 >
-                  {cat === 'Todos' ? '🪐 Todos' : cat === 'Reels' ? '🎥 Reels' : cat === 'Fashion' ? '✨ Fashion' : cat === 'Finanzas' ? '📈 Finanzas' : cat === 'Modelos' ? '👑 Modelos' : cat === 'BackStage' ? '🎬 Backstage' : cat === 'Investors' ? '💼 Investors' : cat === 'Tiendas' ? '🛍️ Tiendas' : '👠 Catwalk'}
+                  {cat === 'Todos' ? '🪐 Todos' : cat === 'Fashion' ? '✨ Fashion' : cat === 'Finanzas' ? '📈 Finanzas' : cat === 'Modelos' ? '👑 Runway' : cat === 'BackStage' ? '🎬 Backstage' : cat === 'Investors' ? '💎 Jewellery' : cat === 'Tiendas' ? '🛍️ Tiendas' : cat === 'Catwalk' ? '👠 Catwalk' : cat === 'Fitnes' ? '💪 Fitnes' : cat === 'Beauty' ? '💄 Beauty' : '📱 Influencer'}
                 </button>
               );
             })}
@@ -19768,8 +22927,8 @@ export default function CastingLiveSection({
 
   if (showTikTokShop) {
     return (
-      <div className="relative w-full" id="casting_live-tiktok-shop-view">
-        {userProfile?.role === 'model' 
+      <div className="relative w-full max-w-full min-w-0 overflow-x-hidden" id="casting_live-tiktok-shop-view">
+        {userProfile?.role === 'model' || !selectedInvestorStore
           ? renderTikTokShopSellerDashboard() 
           : renderTikTokShopInvestorDashboard()
         }
@@ -19806,8 +22965,94 @@ export default function CastingLiveSection({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[750px] flex flex-col md:flex-row text-slate-800" id="casting_live-root-section">
+    <div className="bg-white rounded-2xl max-md:rounded-none border border-slate-200 max-md:border-none shadow-sm min-h-[750px] max-md:min-h-0 flex flex-col md:flex-row text-slate-800 relative w-full" id="casting_live-root-section">
       
+      {/* 🌧️ FULL-CHANNEL GIFT RAIN OVERLAY */}
+      {fullChannelGiftRain.length > 0 && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-[9998]">
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes gift-rain-fall-down {
+              0% {
+                transform: translateY(-80px) rotate(0deg) scale(0.6);
+                opacity: 0;
+              }
+              12% {
+                opacity: 1;
+                transform: translateY(8vh) rotate(20deg) scale(1.15);
+              }
+              88% {
+                opacity: 1;
+              }
+              100% {
+                transform: translateY(108vh) rotate(220deg) scale(0.85);
+                opacity: 0;
+              }
+            }
+          `}} />
+          {fullChannelGiftRain.map(particle => (
+            <div
+              key={particle.id}
+              className="absolute select-none drop-shadow-[0_4px_16px_rgba(255,215,0,0.7)]"
+              style={{
+                left: `${particle.xPercentage}%`,
+                top: `-80px`,
+                fontSize: `${particle.size}px`,
+                animation: `gift-rain-fall-down ${particle.duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${particle.delay}s forwards`,
+                transform: `rotate(${particle.rotation}deg)`,
+              }}
+            >
+              {particle.icon}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 🔔 ANIMATED RECIPIENT GIFT NOTICE BANNER */}
+      {activeChannelGiftNotice && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none max-w-[92vw] sm:max-w-md w-full animate-bounce-in">
+          <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-2xl border-2 border-amber-400/90 shadow-[0_0_40px_rgba(251,191,36,0.65)] p-3.5 sm:p-4 flex items-center gap-3">
+            {/* Animated shimmer beam */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-300/20 to-transparent animate-shimmer -skew-x-12 pointer-events-none" />
+            
+            {/* Recipient Avatar / Gift Badge */}
+            <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-pink-500 p-0.5 shadow-lg flex items-center justify-center animate-pulse">
+              <img 
+                src={activeChannelGiftNotice.recipientAvatar} 
+                alt={activeChannelGiftNotice.recipientName}
+                className="w-full h-full object-cover rounded-[14px]"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-slate-950 border-2 border-amber-400 rounded-full flex items-center justify-center text-lg shadow-md animate-bounce">
+                {activeChannelGiftNotice.giftIcon}
+              </div>
+            </div>
+
+            {/* Notice Details */}
+            <div className="flex-1 min-w-0 select-none">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500/30 to-rose-500/30 text-amber-300 border border-amber-400/50 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-xs">
+                  🎁 REGALO RECIBIDO EN DIRECTO
+                </span>
+              </div>
+              
+              <p className="text-xs sm:text-sm font-bold text-slate-100 truncate">
+                <span className="text-amber-300 font-extrabold">@{activeChannelGiftNotice.senderName}</span>
+                <span className="text-slate-300"> envió </span>
+                <span className="text-rose-400 font-black">{activeChannelGiftNotice.giftIcon} {activeChannelGiftNotice.giftName}</span>
+              </p>
+
+              <p className="text-[10.5px] sm:text-xs text-slate-300 flex items-center gap-1.5 mt-0.5">
+                <span>Para:</span>
+                <span className="text-white font-extrabold underline decoration-pink-500">@{activeChannelGiftNotice.recipientName}</span>
+                <span className="text-amber-400 font-mono font-black ml-auto bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40 text-[11px] shadow-2xs">
+                  🪙 {activeChannelGiftNotice.giftCost}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 🚀 LEFT COLUMN: Sidebar matching exact layout of xzxzxzxz.png */}
       <aside className="w-full md:w-[260px] border-r border-slate-100 p-4 shrink-0 flex flex-col justify-between bg-slate-50/50">
         <div className="space-y-6">
@@ -19954,22 +23199,7 @@ export default function CastingLiveSection({
             <div className="space-y-1.5" id="creator-studio-quick-shortcut">
               <button
                 type="button"
-                onClick={() => {
-                  setShowCreatorStudio(true);
-                  setCreatorStudioTab('publicaciones');
-                }}
-                className="w-full flex items-center justify-between gap-3 px-3 py-2 bg-gradient-to-r from-red-500/10 to-rose-500/10 hover:from-red-500/15 hover:to-rose-500/15 border border-dashed border-[#fe2c55]/30 hover:border-[#fe2c55]/50 text-slate-800 rounded-lg text-xs font-bold transition duration-150 cursor-pointer text-left shadow-xs"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Layout className="w-4 h-4 text-[#fe2c55]" />
-                  <span className="font-extrabold text-rose-700">Studio Creador</span>
-                </div>
-                <span className="text-[9px] bg-[#fe2c55] text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider scale-90">Ver Centro</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowUploadModal(true)}
+                onClick={() => setShowCreationTypeModal(true)}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 text-left border border-slate-250 cursor-pointer shadow-sm transition"
               >
                 <Plus className="w-4 h-4 text-[#fe2c55]" />
@@ -20143,23 +23373,6 @@ export default function CastingLiveSection({
                       Herramientas
                     </div>
 
-                    {/* Item: TikTok Studio */}
-                    <button
-                      onClick={() => {
-                        setShowCreatorStudio(true);
-                        setShowMoreDropdown(false);
-                        alert('🚀 Cargando Creator Studio... Accediendo a publicaciones, análisis de sonidos y control del canal.');
-                      }}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <div className="relative w-4 h-4 rounded bg-black flex items-center justify-center overflow-hidden shrink-0">
-                        <div className="absolute top-0.5 left-0.5 w-3 h-3 rounded-xs border border-cyan-400 opacity-60 pointer-events-none" />
-                        <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-xs border border-rose-400 opacity-60 pointer-events-none" />
-                        <span className="text-[8px] font-black text-white z-10 leading-none">d</span>
-                      </div>
-                      <span>Casting Live Studio</span>
-                    </button>
-
                     {/* Item: Crea efectos de TikTok */}
                     <button
                       onClick={() => {
@@ -20187,18 +23400,19 @@ export default function CastingLiveSection({
                       <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                     </button>
 
-                    {/* Item: Vender en TikTok Shop */}
+                    {/* Item: Panel y Herramientas de Mi Tienda */}
                     <button
+                      type="button"
                       onClick={() => {
-                        setShowTikTokShop(true);
-                        setShopTab('analisis');
                         setSelectedInvestorStore(null);
+                        setShowTikTokShop(true);
+                        setShopTab('articulos');
                         setShowMoreDropdown(false);
                       }}
                       className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
                     >
                       <ShoppingBag className="w-4 h-4 text-rose-500 shrink-0" />
-                      <span>{userProfile?.role === 'investor' ? 'Comprar en Casting Live Shop' : 'Vender en Casting Live Shop'}</span>
+                      <span>Panel y Herramientas de Mi Tienda</span>
                     </button>
                   </div>
                 </div>
@@ -20268,7 +23482,10 @@ export default function CastingLiveSection({
       </aside>
 
       {/* 🎬 CENTER COLUMN: Standard vertical Video Wall with playback, overlays, and controls */}
-      <main className="flex-1 bg-white flex flex-col items-center justify-start pt-1.5 pb-16 md:pb-32 p-2 sm:p-4 relative min-h-[680px]">
+      <main 
+        ref={feedContainerRef}
+        className="flex-1 bg-white flex flex-col items-center justify-start p-2 sm:p-4 pb-16 md:pb-32 relative min-h-[680px] w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container"
+      >
 
         {viewingTikTokProfileUsername ? (
           renderTikTokProfile(viewingTikTokProfileUsername)
@@ -20276,12 +23493,13 @@ export default function CastingLiveSection({
           renderExploreGrid()
         ) : (
           /* Main vertically centered container holding Stories at the top and Smartphone Video + Sidebar at the bottom */
-          <div className="flex flex-col items-center gap-2 w-full max-w-[380px] sm:max-w-[400px] md:max-w-[420px] animate-fade-in self-center px-1 select-none" id="main-feed-column-container">
+          <div className="flex flex-col items-center justify-center gap-2 w-full max-w-[380px] xs:max-w-[420px] sm:max-w-[480px] md:max-w-[560px] lg:max-w-[620px] animate-fade-in self-center px-2 xs:px-3 sm:px-4 select-none min-w-0 mx-auto box-border" id="main-feed-column-container">
             
 
 
+
             {/* 📸 STORIES SLIDER (HISTORIAS GRABADAS) - Centered in exact proportion */}
-            <div className="w-full max-w-full mx-auto relative group/stories select-none mb-1.5">
+            <div className="w-full max-w-full mx-auto relative group/stories select-none mb-1.5 px-1 sm:px-2">
               
               {/* Left Slider Arrow - appears smoothly on hover */}
               <button
@@ -20432,7 +23650,7 @@ export default function CastingLiveSection({
             </div>
 
             {/* Flex row wrapper to place sidebar inside the video window */}
-            <div className="flex flex-col items-center justify-center w-full">
+            <div className="flex flex-col items-center justify-center w-full max-w-full px-1.5 xs:px-2.5 sm:px-4 box-border min-w-0 mx-auto">
               
               {filteredVideos.length === 0 ? (
                 /* Empty Search results or empty category view */
@@ -20456,9 +23674,11 @@ export default function CastingLiveSection({
                   </button>
                 </div>
               ) : (
-                /* 📱 Smartphone video frame container styled with TikTok dimensions */
+                /* 📱 Smartphone video frame container styled with width 100%, max-width, and centered flexbox */
                 <div 
+                  ref={videoCardRef}
                   onWheel={(e) => {
+                    if (selectedCategoryFilter === 'Finanzas') return;
                     const now = Date.now();
                     if (now - lastScrollTime.current < 280) return;
                     if (Math.abs(e.deltaY) > 12) {
@@ -20474,91 +23694,306 @@ export default function CastingLiveSection({
                   }}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
-                  onTouchEnd={() => {
-                    if (touchStart === null || touchEnd === null) return;
-                    const distance = touchStart - touchEnd;
-                    const duration = Date.now() - touchStartTimeRef.current;
-                    const velocity = Math.abs(distance) / (duration || 1);
-                    const isSignificantSwipe = Math.abs(distance) > 25 || velocity > 0.2;
-                    if (isSignificantSwipe) {
-                      const now = Date.now();
-                      if (now - lastScrollTime.current > 200) {
-                        lastScrollTime.current = now;
-                        if (distance > 0) {
-                          setSlideDirection('up');
-                          handleNextVideo();
-                        } else {
-                          setSlideDirection('down');
-                          handlePrevVideo();
+                  onTouchEnd={(e) => {
+                    const touchDuration = Date.now() - touchStartTimeRef.current;
+                    const isCleanTap = !isTouchScrollingRef.current && touchDuration < 350;
+
+                    if (isCleanTap) {
+                      // Single tap on mobile channel/video toggles options overlay
+                      setMobileChannelControlsVisible(prev => !prev);
+                      setShowTouchTableOverlay(prev => !prev);
+                      setShowTouchRightSidebar(prev => !prev);
+                    } else {
+                      // Check if gesture was a vertical swipe for previous/next video
+                      if (touchStart !== null && touchEnd !== null) {
+                        const distance = touchStart - touchEnd;
+                        const velocity = Math.abs(distance) / (touchDuration || 1);
+                        const isSignificantSwipe = Math.abs(distance) > 28 || velocity > 0.22;
+                        if (isSignificantSwipe) {
+                          const now = Date.now();
+                          if (now - lastScrollTime.current > 200) {
+                            lastScrollTime.current = now;
+                            if (distance > 0) {
+                              setSlideDirection('up');
+                              handleNextVideo();
+                            } else {
+                              setSlideDirection('down');
+                              handlePrevVideo();
+                            }
+                          }
                         }
                       }
                     }
                     setTouchStart(null);
                     setTouchEnd(null);
+                    isTouchScrollingRef.current = false;
                   }}
-                  className="relative w-full max-w-[360px] sm:max-w-[400px] md:max-w-[420px] aspect-[9/16] h-[72vh] sm:h-[78vh] min-h-[480px] max-h-[750px] bg-black rounded-3xl shadow-2xl border border-slate-950 overflow-hidden flex items-center justify-center shrink-0 group/video-container mx-auto select-none" 
+                  className={`relative bg-black shadow-2xl overflow-hidden flex items-center justify-center shrink-0 group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
+                    isMobileChannelPinned
+                      ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-2 xs:p-3 sm:p-4 m-0 border-none shadow-none'
+                      : 'w-full max-w-[402px] h-[874px] max-h-[90vh] rounded-[48px] border-[4px] border-slate-900 ring-1 ring-white/10 shadow-2xl'
+                  }`} 
                   id="video-feed-main-card"
                 >
+                
+                {/* 📱 RIGHT SIDEBAR ELEMENTS BAR (Captura aa.png) - Visible on hover or touch tap */}
+                {!(showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showProjectDetailsInPopup || detailProjectUser || showFinanzasInscriptionInChannel) && (
+                  <div 
+                    className="absolute right-0 top-0 bottom-0 w-[58px] xs:w-[66px] sm:w-[76px] z-[90] flex items-center justify-end pr-1 xs:pr-1.5 sm:pr-2 pointer-events-auto group/channel-right-hover box-border"
+                    id="channel-right-hover-zone"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div 
+                      className={`flex flex-col items-center gap-2 select-none bg-[#0a0e1a]/85 backdrop-blur-md px-1.5 py-2 rounded-full border border-slate-700/50 shadow-[0_8px_25px_rgba(0,0,0,0.8)] transition-all duration-300 ease-out ${
+                        mobileChannelControlsVisible || showTouchRightSidebar
+                          ? 'opacity-100 translate-x-0 pointer-events-auto'
+                          : 'opacity-0 translate-x-3 pointer-events-none group-hover/channel-right-hover:opacity-100 group-hover/channel-right-hover:translate-x-0 group-hover/channel-right-hover:pointer-events-auto hover:opacity-100 hover:translate-x-0 hover:pointer-events-auto focus-within:opacity-100 focus-within:translate-x-0 focus-within:pointer-events-auto'
+                      }`}
+                      id="channel-right-sidebar-aa-png"
+                    >
+                      {/* Avatar with red overlay + button */}
+                      <div 
+                        className="relative mb-0.5 shrink-0 group cursor-pointer flex items-center justify-center" 
+                        onClick={() => setIsChannelFollowed(!isChannelFollowed)}
+                        title={isChannelFollowed ? "Siguiendo" : "Seguir a esta cuenta"}
+                      >
+                        <img 
+                          src={currentFinanzasSession?.presenter?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'} 
+                          alt="Model Avatar" 
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-[#fe2c55] shadow-md transition-transform group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full flex items-center justify-center text-white border border-slate-900 shadow-sm transition-all duration-200 ${
+                          isChannelFollowed ? 'bg-emerald-500 scale-90' : 'bg-[#fe2c55] hover:scale-110 active:scale-90'
+                        }`}>
+                          {isChannelFollowed ? (
+                            <span className="text-[8px] font-black">✓</span>
+                          ) : (
+                            <Plus className="w-2.5 h-2.5 stroke-[3.5px]" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Heart Like (1762) */}
+                      <div className="flex flex-col items-center shrink-0 relative group/channel-heart-zone">
+                        {/* Floating vertical menu with expanded emojis on hover */}
+                        <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200/90 py-2 px-1.5 rounded-full shadow-2xl shadow-black/40 ring-1 ring-black/10 animate-fade-in max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-none after:content-[''] after:absolute after:-right-3 after:inset-y-0 after:w-5 select-none">
+                          {[
+                            '❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '😘',
+                            '💕', '💘', '💗', '💓', '💞', '💯', '⚡', '🎁', '🥳', '👑',
+                            '🚀', '✨', '🌟', '🌹', '🌸', '🌺', '🌷', '💋', '👄', '💎',
+                            '🤍', '🤎', '💜', '💙', '💚', '💛', '🧡', '🤩', '😎', '😜',
+                            '🎀', '💃', '🕺', '🥂', '🍿', '🛍️', '👠', '🎵', '🎶', '🙌',
+                            '💫', '🎯', '💥', '🏆', '🥇', '🎈', '🪄', '🧸', '🌈', '🍦',
+                            '🍰', '🍫', '🍓', '🍒', '🌻', '🌼', '🦋', '🦄', '🕊️', '💸',
+                            '💰', '🤑', '🤝', '💪', '🙏', '👀', '🤤', '🤯', '🥵', '😻'
+                          ].map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSendFreeEmojiReaction(emoji);
+                              }}
+                              className="text-lg hover:scale-140 active:scale-90 hover:bg-slate-100/80 rounded-full p-0.5 transition-all cursor-pointer bg-transparent border-0 shrink-0"
+                              title={`Enviar ${emoji}`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setChannelLikesCount(prev => isChannelLiked ? prev - 1 : prev + 1);
+                            setIsChannelLiked(!isChannelLiked);
+                          }}
+                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center shadow-md transition cursor-pointer active:scale-90 ${
+                            isChannelLiked ? 'bg-rose-500 text-white shadow-rose-500/40' : 'bg-[#fff0f3] text-[#fe2c55] hover:bg-rose-100'
+                          }`}
+                          title="Me gusta"
+                        >
+                          <Heart className={`w-4 h-4 ${isChannelLiked ? 'fill-white' : 'fill-[#fe2c55] text-[#fe2c55]'}`} />
+                        </button>
+                        <span className="text-[9.5px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
+                          {channelLikesCount}
+                        </span>
+                      </div>
+
+                      {/* Share (81) */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleShareChannel}
+                          className="w-8.5 h-8.5 rounded-full bg-[#fff0f3] hover:bg-rose-100 text-slate-800 flex items-center justify-center shadow-md transition cursor-pointer active:scale-90"
+                          title="Compartir"
+                        >
+                          <svg className="w-4 h-4 text-slate-800 fill-current" viewBox="0 0 24 24">
+                            <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" />
+                          </svg>
+                        </button>
+                        <span className="text-[9.5px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
+                          {channelSharesCount}
+                        </span>
+                      </div>
+
+                      {/* Gift (Regalo) */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsShortVideoGiftPanelOpen(true);
+                          }}
+                          className="w-8.5 h-8.5 rounded-full bg-[#fff8eb] hover:bg-amber-100 text-amber-500 flex items-center justify-center shadow-md transition cursor-pointer active:scale-90"
+                          title="Enviar Regalo"
+                        >
+                          <Gift className="w-4 h-4 text-amber-500" />
+                        </button>
+                        <span className="text-[9px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
+                          Regalo
+                        </span>
+                      </div>
+
+                      {/* Botón Pantalla Completa / Salir */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileChannelPinned(!isMobileChannelPinned)}
+                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center shadow-md transition cursor-pointer active:scale-90 ${
+                            isMobileChannelPinned 
+                              ? 'bg-cyan-500 text-white shadow-cyan-500/50 ring-2 ring-white/60 animate-pulse' 
+                              : 'bg-[#fff0f3] text-slate-800 hover:bg-cyan-100'
+                          }`}
+                          title={isMobileChannelPinned ? "Salir de pantalla completa" : "Ver en pantalla completa"}
+                          id="btn-sidebar-fullscreen-toggle"
+                        >
+                          {isMobileChannelPinned ? (
+                            <Minimize2 className="w-4 h-4 text-white stroke-[2.5]" />
+                          ) : (
+                            <Maximize2 className="w-4 h-4 text-slate-800 stroke-[2]" />
+                          )}
+                        </button>
+                        <span className="text-[8.5px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
+                          {isMobileChannelPinned ? 'Salir' : 'Completa'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* 🎛️ EMBEDDED BROADCAST CONTROL OVERLAY AT TOP OF VIDEO FRAME (Captura z.png / image.png) */}
                 {/* 🎛️ TOP HOVER ZONE & EMBEDDED BROADCAST CONTROL OVERLAY (Captura z.png) */}
                 <div 
-                  className={`absolute top-0 inset-x-0 h-32 sm:h-36 z-50 group/top-hover-zone flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-opacity duration-200 ${
-                    isShortVideoGiftPanelOpen ? 'pointer-events-none opacity-0' : 'pointer-events-auto'
+                  className={`absolute top-0 inset-x-0 h-32 sm:h-36 z-[100] group/top-hover-zone flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-opacity duration-200 w-full max-w-full min-w-0 ${
+                    (isShortVideoGiftPanelOpen || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showFinanzasInscriptionInChannel || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
+                      ? 'pointer-events-none opacity-0 hidden'
+                      : 'pointer-events-auto'
                   }`} 
                   id="video-top-hover-zone"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {/* Subtle top indicator bar when not hovered */}
                   <div className="w-16 h-1 bg-white/40 group-hover/top-hover-zone:bg-transparent rounded-full transition-all duration-300 pointer-events-none mb-1 opacity-80 group-hover/top-hover-zone:opacity-0" />
 
                   {/* Complete Control Panel from z.png */}
                   <div 
-                    className="w-full bg-[#0e1019]/95 backdrop-blur-md text-white p-2 sm:p-2.5 rounded-2xl border border-slate-700/80 shadow-2xl flex flex-col gap-1.5 transition-all duration-300 select-none opacity-0 -translate-y-4 pointer-events-none group-hover/top-hover-zone:opacity-100 group-hover/top-hover-zone:translate-y-0 group-hover/top-hover-zone:pointer-events-auto hover:opacity-100 hover:translate-y-0 hover:pointer-events-auto" 
+                    className={`w-full max-w-full min-w-0 bg-[#0e1019]/95 backdrop-blur-md text-white p-2 sm:p-2.5 rounded-2xl border border-slate-700/80 shadow-2xl flex flex-col gap-1.5 transition-all duration-300 select-none ${
+                      mobileChannelControlsVisible
+                        ? 'opacity-100 translate-y-0 pointer-events-auto'
+                        : 'opacity-0 -translate-y-4 pointer-events-none group-hover/top-hover-zone:opacity-100 group-hover/top-hover-zone:translate-y-0 group-hover/top-hover-zone:pointer-events-auto hover:opacity-100 hover:translate-y-0 hover:pointer-events-auto'
+                    }`} 
                     id="embedded-broadcast-control-overlay"
                   >
-                    {/* Top Row: Volver a la página anterior & CREAR RETRANSMISION */}
-                    <div className="flex items-center justify-between gap-1.5">
-                      {/* BOTÓN VOLVER */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowSplitScreenMenu(false);
-                          setShowCreateBroadcastModal(false);
-                          setShowLiveToolsModal(false);
-                          setScreenSplitLayout('single');
-                          setIsDuoShoppingActive(false);
-                          if (selectedCategoryFilter === 'Tiendas') {
-                            setShopTab('escaparate');
-                          } else {
+                    {/* Top Row: Volver, Fijar canal & CREAR RETRANSMISION */}
+                    <div className="flex items-center justify-between gap-1 xs:gap-1.5 w-full max-w-full min-w-0">
+                      <div className="flex items-center gap-1 xs:gap-1.5 w-full justify-between min-w-0">
+                        {/* BOTÓN VOLVER */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowSplitScreenMenu(false);
+                            setShowCreateBroadcastModal(false);
+                            setShowLiveToolsModal(false);
+                            setScreenSplitLayout('single');
+                            setIsDuoShoppingActive(false);
+                            setSelectedCategoryFilter('Todos');
                             setActiveSubTab('para-ti');
-                          }
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#1b2030] hover:bg-[#262c42] text-white text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-xs shrink-0"
-                        title="Volver"
-                        id="btn-back-inside-video-overlay"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5 text-rose-500 stroke-[3]" />
-                        <span className="truncate font-black">Volver</span>
-                      </button>
+                            if (selectedCategoryFilter === 'Tiendas') {
+                              setShopTab('escaparate');
+                            }
+                          }}
+                          className="flex items-center justify-center gap-1 px-1.5 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 bg-[#1b2030] hover:bg-[#262c42] text-white text-[9px] xs:text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-xs shrink min-w-0"
+                          title="Volver"
+                          id="btn-back-inside-video-overlay"
+                        >
+                          <ArrowLeft className="w-3 xs:w-3.5 h-3 xs:h-3.5 text-rose-500 stroke-[3] shrink-0" />
+                          <span className="truncate font-black whitespace-nowrap">Volver</span>
+                        </button>
 
-                      {/* CREAR RETRANSMISION / DÚO */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCreateBroadcastModal(true);
-                          setBroadcastModalTab('camera');
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#9e112d] hover:bg-[#b51435] text-white text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer active:scale-95 shadow-xs shrink-0 border border-rose-500/40 uppercase tracking-wider"
-                        title="Crear"
-                        id="duo-live-shopping-button-top"
-                      >
-                        <Video className="w-3.5 h-3.5 text-white" />
-                        <span className="truncate font-black">Crear</span>
-                      </button>
+                        {/* BOTÓN FIJAR CANAL (PANTALLA COMPLETA) */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextState = !isMobileChannelPinned;
+                            setIsMobileChannelPinned(nextState);
+                          }}
+                          className={`flex items-center justify-center gap-1 px-1.5 xs:px-2 sm:px-2.5 py-1 xs:py-1.5 text-[9px] xs:text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink min-w-0 ${
+                            isMobileChannelPinned
+                              ? 'bg-cyan-600 text-white border-cyan-300 shadow-[0_0_14px_rgba(6,182,212,0.6)] animate-pulse'
+                              : 'bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border-slate-700/60'
+                          }`}
+                          title={isMobileChannelPinned ? "Salir de pantalla completa" : "Fijar canal en pantalla completa en el móvil"}
+                          id="btn-pin-channel-mobile-2"
+                        >
+                          {isMobileChannelPinned ? (
+                            <Minimize2 className="w-2.5 xs:w-3 sm:w-3.5 h-2.5 xs:h-3 sm:h-3.5 text-white shrink-0 stroke-[2.5]" />
+                          ) : (
+                            <Pin className="w-2.5 xs:w-3 sm:w-3.5 h-2.5 xs:h-3 sm:h-3.5 shrink-0 text-cyan-400 rotate-45" />
+                          )}
+                          <span className="truncate font-black whitespace-nowrap">
+                            {isMobileChannelPinned ? 'Salir Completa' : 'Fijar canal'}
+                          </span>
+                        </button>
+
+                        {/* BOTÓN FINALIZAR RETRANSMISIÓN Y DAR PASO (Canal Finanzas - Solo cuando el usuario está participando y en su turno de exposición de 5 minutos) */}
+                        {selectedCategoryFilter === 'Finanzas' && isCurrentUserTurnPresenting && (
+                          <button
+                            type="button"
+                            onClick={handleFinishRetransmissionAndPassToNextParticipant}
+                            className="flex items-center justify-center gap-1 px-1.5 xs:px-2 sm:px-2.5 py-1 xs:py-1.5 text-[9px] xs:text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink min-w-0 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-400/80 shadow-[0_0_12px_rgba(225,29,72,0.45)]"
+                            title="Finalizar tu exposición de 5 minutos y dar paso al siguiente participante"
+                            id="btn-finish-broadcast-pass-next-2"
+                          >
+                            <Square className="w-2.5 xs:w-3 sm:w-3.5 h-2.5 xs:h-3 sm:h-3.5 fill-white text-white shrink-0" />
+                            <span className="truncate font-black whitespace-nowrap">Finalizar</span>
+                          </button>
+                        )}
+
+                        {/* BOTÓN RETRANSMITIR CON CÁMARA (Solo en canal Tiendas) */}
+                        {selectedCategoryFilter === 'Tiendas' && (
+                          <button
+                            type="button"
+                            onClick={handleToggleUserCameraLiveBroadcast}
+                            className={`flex items-center justify-center gap-1 px-1.5 xs:px-2 sm:px-2.5 py-1 xs:py-1.5 text-[9px] xs:text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink min-w-0 ${
+                              isUserLiveStreamingWithCamera
+                                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.7)] animate-pulse'
+                                : 'bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border-slate-700/60'
+                            }`}
+                            title={isUserLiveStreamingWithCamera ? "Detener retransmisión en vivo" : "Retransmitir en vivo grabándote con tu propia cámara del móvil"}
+                            id="btn-retransmit-live-top-2"
+                          >
+                            <Radio className={`w-2.5 xs:w-3 sm:w-3.5 h-2.5 xs:h-3 sm:h-3.5 shrink-0 ${isUserLiveStreamingWithCamera ? 'text-white' : 'text-rose-500'}`} />
+                            <span className="truncate font-black whitespace-nowrap">
+                              {isUserLiveStreamingWithCamera ? `En Vivo (${formatLiveStreamDuration(liveStreamTimerSeconds)})` : 'Retransmitir'}
+                            </span>
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Middle Row: 5 Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3), Retransmitir) */}
-                    <div className="grid grid-cols-5 gap-1 pt-1.5 border-t border-slate-700/60 text-[9px] sm:text-[10px] font-extrabold text-center">
+                    {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3), [Retransmitir en Tiendas]) */}
+                    <div className={`grid ${selectedCategoryFilter === 'Tiendas' ? 'grid-cols-5' : 'grid-cols-4'} gap-1.5 sm:gap-2 pt-1.5 border-t border-slate-700/60 text-center w-full max-w-full min-w-0`}>
                       {/* 🎥 Cámara ON */}
                       <button
                         type="button"
@@ -20566,15 +24001,15 @@ export default function CastingLiveSection({
                           setIsBroadcastCamOn(!isBroadcastCamOn);
                           alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
                         }}
-                        className={`p-1 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                        className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[46px] sm:min-h-[52px] active:scale-95 ${
                           isBroadcastCamOn
-                            ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-extrabold shadow-xs'
+                            ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-black shadow-xs'
                             : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
                         }`}
                         title="Configurar Cámara"
                       >
-                        <Camera className="w-3.5 h-3.5 text-[#10b981]" />
-                        <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
+                        <Camera className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#10b981] shrink-0" />
+                        <span className="truncate w-full text-[8.5px] sm:text-[9.5px] font-black">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
                       </button>
 
                       {/* 🎙️ Mic ON */}
@@ -20585,64 +24020,72 @@ export default function CastingLiveSection({
                           setIsBroadcastMicOn(isMuted);
                           alert(isMuted ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.');
                         }}
-                        className={`p-1 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                        className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[46px] sm:min-h-[52px] active:scale-95 ${
                           !isMuted && isBroadcastMicOn
-                            ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-extrabold shadow-xs'
+                            ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-black shadow-xs'
                             : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
                         }`}
                         title="Configurar Micrófono"
                       >
-                        <Mic className="w-3.5 h-3.5 text-[#10b981]" />
-                        <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">{!isMuted ? 'Mic ON' : 'Mute'}</span>
+                        <Mic className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#10b981] shrink-0" />
+                        <span className="truncate w-full text-[8.5px] sm:text-[9.5px] font-black">{!isMuted ? 'Mic ON' : 'Mute'}</span>
                       </button>
 
                       {/* 🖥️ Pantalla */}
                       <button
                         type="button"
                         onClick={handleToggleScreenShare}
-                        className={`p-1 sm:p-1.5 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                        className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[46px] sm:min-h-[52px] active:scale-95 ${
                           isScreenSharingActive
-                            ? 'bg-indigo-950/60 text-indigo-300 border-indigo-500 font-extrabold shadow-xs animate-pulse'
+                            ? 'bg-indigo-950/70 text-indigo-300 border-indigo-500 font-black shadow-xs animate-pulse ring-1 ring-indigo-400'
                             : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
                         }`}
                         title="Compartir Pantalla"
                       >
-                        <Monitor className="w-3.5 h-3.5 text-slate-200" />
-                        <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
+                        <Monitor className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-200 shrink-0" />
+                        <span className="truncate w-full text-[8.5px] sm:text-[9.5px] font-black">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
                       </button>
 
                       {/* 👥 Invitados (3) */}
                       <button
                         type="button"
                         onClick={() => {
+                          setActiveFinanzasPopupUser(null);
+                          setShowProjectDetailsInPopup(false);
                           setShowCreateBroadcastModal(true);
                           setBroadcastModalTab('guests');
+                          if (selectedCategoryFilter === 'Finanzas') {
+                            setShowDuoMenu(true);
+                            setFinanzasDuoSubTool('invitar');
+                          }
                         }}
-                        className="p-1 sm:p-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-0.5 transition cursor-pointer font-bold"
+                        className="p-1.5 sm:p-2 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[46px] sm:min-h-[52px] active:scale-95"
                         title="Invitar Invitados"
                       >
-                        <Users className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">Invitados ({broadcastGuests.length || 3})</span>
+                        <Users className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-400 shrink-0" />
+                        <span className="truncate w-full text-[8.5px] sm:text-[9.5px] font-black">Invitados ({broadcastGuests.length || 3})</span>
                       </button>
 
-                      {/* 🌐 Retransmitir */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCreateBroadcastModal(true);
-                          setBroadcastModalTab('multistream');
-                        }}
-                        className="p-1 sm:p-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-0.5 transition cursor-pointer font-bold"
-                        title="Retransmitir en otras plataformas"
-                      >
-                        <Globe className="w-3.5 h-3.5 text-rose-400" />
-                        <span className="truncate w-full text-[8px] sm:text-[8.5px] font-black">Retransmitir</span>
-                      </button>
+                      {/* 🌐 Retransmitir (Solo en canal Tiendas) */}
+                      {selectedCategoryFilter === 'Tiendas' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCreateBroadcastModal(true);
+                            setBroadcastModalTab('multistream');
+                          }}
+                          className="p-1.5 sm:p-2 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[46px] sm:min-h-[52px] active:scale-95"
+                          title="Retransmitir en otras plataformas"
+                        >
+                          <Globe className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-rose-400 shrink-0" />
+                          <span className="truncate w-full text-[8.5px] sm:text-[9.5px] font-black">Retransmitir</span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Bottom Row: Categories Bar (image.png style) */}
-                    <div className="pt-1.5 border-t border-slate-700/60">
-                      <div className="flex items-center gap-1 sm:gap-1.5 w-full justify-between bg-[#0e1019] text-white p-1 rounded-[16px] border border-slate-700/70 shadow-md">
+                    <div className="pt-1.5 border-t border-slate-700/60 w-full max-w-full min-w-0">
+                      <div className="flex items-center gap-1 sm:gap-1.5 w-full max-w-full min-w-0 justify-between bg-[#0e1019] text-white p-1 rounded-[16px] border border-slate-700/70 shadow-md">
                         {/* Left Scroll Arrow */}
                         <button
                           type="button"
@@ -20653,7 +24096,7 @@ export default function CastingLiveSection({
                               categoriesSliderRef.current.scrollBy({ left: -140, behavior: 'smooth' });
                             }
                           }}
-                          className="w-5.5 h-5.5 sm:w-6 sm:h-6 bg-[#1b1f2e] hover:bg-black text-rose-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition border border-slate-700/50 active:scale-90"
+                          className="w-5.5 h-5.5 sm:w-6 sm:h-6 bg-[#1b1f2e] hover:bg-black text-rose-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition border border-slate-700/50 active:scale-90 relative overflow-visible"
                           title="Anterior"
                         >
                           <ChevronLeft className="w-3.5 h-3.5 stroke-[3]" />
@@ -20662,18 +24105,20 @@ export default function CastingLiveSection({
                         {/* Scrollable Categories Track */}
                         <div
                           ref={categoriesSliderRef}
-                          className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap flex items-center gap-1 scroll-smooth py-0.5 px-0.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                          className="flex-1 min-w-0 max-w-full overflow-x-auto whitespace-nowrap flex items-center gap-1 scroll-smooth py-0.5 px-0.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                         >
                           {[
                             { id: 'Todos', label: 'Todos 🌍' },
-                            { id: 'Reels', label: 'Reels 🎥' },
                             { id: 'Fashion', label: 'Fashion ✨' },
                             { id: 'Finanzas', label: 'Finanzas 📈' },
-                            { id: 'Modelos', label: 'Modelos 👑' },
+                            { id: 'Modelos', label: 'Runway 👑' },
                             { id: 'BackStage', label: 'BackStage 🎬' },
-                            { id: 'Investors', label: 'Investors 💼' },
+                            { id: 'Investors', label: 'Jewellery 💎' },
                             { id: 'Tiendas', label: 'Tiendas 🛍️' },
-                            { id: 'Catwalk', label: 'Catwalk 👠' }
+                            { id: 'Catwalk', label: 'Catwalk 👠' },
+                            { id: 'Fitnes', label: 'Fitnes 💪' },
+                            { id: 'Beauty', label: 'Beauty 💄' },
+                            { id: 'Influencer', label: 'Influencer 📱' }
                           ].map(cat => {
                             const isActive = selectedCategoryFilter === cat.id;
                             return (
@@ -20704,7 +24149,7 @@ export default function CastingLiveSection({
                               categoriesSliderRef.current.scrollBy({ left: 140, behavior: 'smooth' });
                             }
                           }}
-                          className="w-5.5 h-5.5 sm:w-6 sm:h-6 bg-[#1b1f2e] hover:bg-black text-rose-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition border border-slate-700/50 active:scale-90"
+                          className="w-5.5 h-5.5 sm:w-6 sm:h-6 bg-[#1b1f2e] hover:bg-black text-rose-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition border border-slate-700/50 active:scale-90 relative overflow-visible"
                           title="Siguiente"
                         >
                           <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
@@ -20716,37 +24161,40 @@ export default function CastingLiveSection({
 
                 {/* 📐 POPUP MODAL: DIVIDIR PANTALLA Y COMPARTIR PANTALLA CON COMPAÑEROS - White Theme Container */}
                 {showSplitScreenMenu && (
-                  <div className="absolute inset-x-2 top-14 z-[80] bg-white/98 backdrop-blur-2xl p-3 sm:p-4 rounded-2xl border-2 border-purple-500/80 shadow-2xl animate-fade-in text-slate-900 font-sans text-left space-y-3 pointer-events-auto">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <LayoutGrid className="w-4 h-4 text-purple-600 shrink-0" />
-                        <div>
-                          <h4 className="text-xs font-black uppercase text-slate-900 tracking-wider truncate m-0">
-                            Dividir Pantalla y Modos de Presentación
+                  <div className="absolute left-2 right-2 sm:left-4 sm:right-4 top-2 sm:top-4 z-[120] bg-white/98 backdrop-blur-2xl p-4 sm:p-5 rounded-3xl border-2 border-purple-500 shadow-2xl animate-fade-in text-slate-900 font-sans text-left space-y-3.5 pointer-events-auto max-w-lg mx-auto box-border" id="split-screen-layout-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center shrink-0">
+                          <LayoutGrid className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs sm:text-sm md:text-base font-black uppercase text-slate-900 tracking-wider truncate m-0">
+                            Disposición y División de Pantalla
                           </h4>
-                          <span className="text-[9px] text-purple-700 font-bold block truncate">
-                            Elige la disposición visual para compartir con tus compañeros
+                          <span className="text-[11px] sm:text-xs text-purple-700 font-bold block truncate mt-0.5">
+                            Elige la disposición visual para emitir con compañeros
                           </span>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowSplitScreenMenu(false)}
-                        className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer shrink-0"
+                        className="p-2 bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700 rounded-full w-9 h-9 flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-200 shadow-xs active:scale-95"
+                        title="Cerrar"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     </div>
 
-                    {/* Grid of Layout Options */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {/* Grid of Layout Options - Large Touch Targets */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
                       {[
-                        { id: 'single', name: '1. Individual', desc: '1 Solo Creador en Pantalla', icon: '📱' },
-                        { id: '50-50', name: '2. Lado a Lado (50/50)', desc: '2 Presentadores Divididos', icon: '👥' },
-                        { id: 'pip', name: '3. PIP (En Esquina)', desc: 'Pantalla + Creador en PIP', icon: '📐' },
-                        { id: 'grid-3', name: '4. Rejilla Trío (1+2)', desc: 'Anfitrión + 2 Compañeros', icon: '🧱' },
-                        { id: 'grid-4', name: '5. Cuadrícula (2x2)', desc: '4 Participantes en Simultáneo', icon: '🔲' },
-                        { id: 'presentation', name: '6. Presentación', desc: 'Pantalla Grande + Fila Abajo', icon: '🖥️' }
+                        { id: 'single', name: '1. Individual', desc: '1 Creador Único', icon: '📱' },
+                        { id: '50-50', name: '2. Lado a Lado (50/50)', desc: '2 Presentadores', icon: '👥' },
+                        { id: 'pip', name: '3. PiP Flotante', desc: 'Pantalla + Creador', icon: '📐' },
+                        { id: 'grid-3', name: '4. Rejilla Trío (1+2)', desc: 'Anfitrión + 2 Co-hosts', icon: '🧱' },
+                        { id: 'grid-4', name: '5. Cuadrícula (2x2)', desc: '4 Participantes', icon: '🔲' },
+                        { id: 'presentation', name: '6. Presentación', desc: 'Diapositiva + Panel', icon: '🖥️' }
                       ].map((mode) => (
                         <button
                           key={mode.id}
@@ -20756,40 +24204,40 @@ export default function CastingLiveSection({
                             setShowSplitScreenMenu(false);
                             alert(`📐 Layout "${mode.name}" activado para la transmisión.`);
                           }}
-                          className={`p-2 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 ${
+                          className={`p-3 sm:p-3.5 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[90px] sm:min-h-[96px] ${
                             screenSplitLayout === mode.id
-                              ? 'bg-purple-50 border-purple-500 text-purple-900 font-extrabold ring-2 ring-purple-400 shadow-md'
-                              : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100 hover:border-slate-300'
+                              ? 'bg-purple-100 border-purple-600 text-purple-950 font-black ring-2 ring-purple-400 shadow-md'
+                              : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-purple-50/60 hover:border-purple-300 font-bold shadow-2xs'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-base">{mode.icon}</span>
+                            <span className="text-xl sm:text-2xl">{mode.icon}</span>
                             {screenSplitLayout === mode.id && (
-                              <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
+                              <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-ping" />
                             )}
                           </div>
                           <div>
-                            <span className="text-[10.5px] font-black uppercase block leading-tight text-slate-900">{mode.name}</span>
-                            <span className="text-[8.5px] text-slate-500 block leading-tight font-medium mt-0.5">{mode.desc}</span>
+                            <span className="text-xs sm:text-[13px] font-black uppercase block leading-tight text-slate-900">{mode.name}</span>
+                            <span className="text-[10px] sm:text-[11px] text-slate-600 block leading-snug font-medium mt-0.5">{mode.desc}</span>
                           </div>
                         </button>
                       ))}
                     </div>
 
                     {/* Multi-Companion Screen Share Picker */}
-                    <div className="pt-2 border-t border-slate-200 flex flex-col gap-1.5">
+                    <div className="pt-3 border-t border-slate-200 flex flex-col gap-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase text-indigo-900 block">
-                          💻 Compartir Pantalla con Compañeros
+                        <span className="text-xs sm:text-[13px] font-black uppercase text-indigo-950 block">
+                          💻 Emitir Pantalla de Compañeros:
                         </span>
-                        <span className="text-[8.5px] text-emerald-800 font-black bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                        <span className="text-[10px] text-emerald-800 font-black bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
                           ✓ Multi-Transmisión Activa
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
                         {[
-                          { id: 'host', name: 'TÚ (Anfitrión)', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150' },
+                          { id: 'host', name: 'Mi Pantalla (Anfitrión)', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150' },
                           { id: 'g-1', name: 'Isabela Dubois', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
                           { id: 'g-2', name: 'Carlos Ruiz', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' },
                           { id: 'multi', name: 'Multi-Pantalla Compartida', avatar: '🌐' }
@@ -20800,18 +24248,19 @@ export default function CastingLiveSection({
                             onClick={() => {
                               setActiveScreenSharer(item.id);
                               setIsScreenSharingActive(true);
-                              alert(`💻 Pantalla compartida de "${item.name}" enviada al vídeo del directo.`);
+                              setShowSplitScreenMenu(false);
+                              alert(`💻 Pantalla compartida de "${item.name}" activada.`);
                             }}
-                            className={`px-2.5 py-1.5 rounded-xl border text-[9.5px] font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            className={`px-3 sm:px-3.5 py-2 rounded-xl border text-xs sm:text-[13px] font-extrabold flex items-center gap-2 transition cursor-pointer shrink-0 min-h-[40px] active:scale-95 ${
                               activeScreenSharer === item.id && isScreenSharingActive
-                                ? 'bg-indigo-600 text-white border-indigo-500 font-black shadow-sm'
-                                : 'bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200'
+                                ? 'bg-indigo-600 text-white border-indigo-700 font-black shadow-xs'
+                                : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
                             }`}
                           >
                             {item.avatar.startsWith('http') ? (
-                              <img src={item.avatar} alt={item.name} className="w-3.5 h-3.5 rounded-full object-cover border border-indigo-400" />
+                              <img src={item.avatar} alt={item.name} className="w-5 h-5 rounded-full object-cover border border-indigo-300" />
                             ) : (
-                              <span>{item.avatar}</span>
+                              <span className="text-base">{item.avatar}</span>
                             )}
                             <span className="font-extrabold">{item.name}</span>
                           </button>
@@ -20823,15 +24272,17 @@ export default function CastingLiveSection({
 
                 {/* 🖥️ POPUP MODAL: OPCIONES DE COMPARTIR PANTALLA */}
                 {showScreenShareMenu && (
-                  <div className="absolute inset-x-2 top-14 z-[85] bg-white/98 backdrop-blur-2xl p-3 sm:p-4 rounded-2xl border-2 border-indigo-500/80 shadow-2xl animate-fade-in text-slate-900 font-sans text-left space-y-3 pointer-events-auto">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Monitor className="w-4 h-4 text-indigo-600 shrink-0" />
-                        <div>
-                          <h4 className="text-xs font-black uppercase text-slate-900 tracking-wider truncate m-0">
+                  <div className="absolute left-2 right-2 sm:left-4 sm:right-4 top-2 sm:top-4 z-[120] bg-white/98 backdrop-blur-2xl p-4 sm:p-5 rounded-3xl border-2 border-indigo-500 shadow-2xl animate-fade-in text-slate-900 font-sans text-left space-y-3.5 pointer-events-auto max-w-lg mx-auto box-border" id="screen-share-options-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0">
+                          <Monitor className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs sm:text-sm md:text-base font-black uppercase text-slate-900 tracking-wider truncate m-0">
                             Opciones de Compartir Pantalla
                           </h4>
-                          <span className="text-[9px] text-indigo-700 font-bold block truncate">
+                          <span className="text-[11px] sm:text-xs text-indigo-700 font-bold block truncate mt-0.5">
                             Elige la fuente de pantalla que deseas transmitir en directo
                           </span>
                         </div>
@@ -20839,101 +24290,115 @@ export default function CastingLiveSection({
                       <button
                         type="button"
                         onClick={() => setShowScreenShareMenu(false)}
-                        className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition cursor-pointer shrink-0"
+                        className="p-2 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-full w-9 h-9 flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-200 shadow-xs active:scale-95"
+                        title="Cerrar"
+                        id="btn-close-screen-share-modal"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     </div>
 
                     {/* Opciones directas de Compartir Pantalla */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                       {/* 1. Toda la pantalla */}
                       <button
                         type="button"
                         onClick={() => handleStartSpecificScreenShare('full')}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
+                        className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
                           isScreenSharingActive && screenShareMode === 'full' && activeScreenSharer === 'host'
-                            ? 'bg-indigo-100 border-indigo-500 text-indigo-900 font-black ring-2 ring-indigo-400 shadow-sm'
-                            : 'bg-indigo-50/70 hover:bg-indigo-100 border-indigo-200 text-slate-900 font-bold'
+                            ? 'bg-indigo-100 border-indigo-600 text-indigo-950 font-black ring-2 ring-indigo-400 shadow-md'
+                            : 'bg-slate-50 hover:bg-indigo-50/70 border-slate-200 hover:border-indigo-300 text-slate-900 font-bold shadow-2xs'
                         }`}
+                        id="btn-share-full-screen"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-sm">🖥️</span>
+                          <span className="text-xl sm:text-2xl">🖥️</span>
                           {isScreenSharingActive && screenShareMode === 'full' && (
-                            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-ping" />
                           )}
                         </div>
-                        <span className="text-[11px] font-black text-slate-900 block leading-tight">Toda la Pantalla</span>
-                        <span className="text-[8.5px] text-slate-600 font-medium block leading-tight">Monitor completo o escritorio</span>
+                        <div>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Toda la Pantalla</span>
+                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Monitor completo o escritorio</span>
+                        </div>
                       </button>
 
                       {/* 2. Ventana de Aplicación */}
                       <button
                         type="button"
                         onClick={() => handleStartSpecificScreenShare('window')}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
+                        className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
                           isScreenSharingActive && screenShareMode === 'window' && activeScreenSharer === 'host'
-                            ? 'bg-purple-100 border-purple-500 text-purple-900 font-black ring-2 ring-purple-400 shadow-sm'
-                            : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-900 font-bold'
+                            ? 'bg-purple-100 border-purple-600 text-purple-950 font-black ring-2 ring-purple-400 shadow-md'
+                            : 'bg-slate-50 hover:bg-purple-50/70 border-slate-200 hover:border-purple-300 text-slate-900 font-bold shadow-2xs'
                         }`}
+                        id="btn-share-window"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-sm">🪟</span>
+                          <span className="text-xl sm:text-2xl">🪟</span>
                           {isScreenSharingActive && screenShareMode === 'window' && (
-                            <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-ping" />
                           )}
                         </div>
-                        <span className="text-[11px] font-black text-slate-900 block leading-tight">Ventana de App</span>
-                        <span className="text-[8.5px] text-slate-600 font-medium block leading-tight">Aplicación o ventana de software</span>
+                        <div>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Ventana de App</span>
+                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Aplicación o software</span>
+                        </div>
                       </button>
 
                       {/* 3. Pestaña del Navegador */}
                       <button
                         type="button"
                         onClick={() => handleStartSpecificScreenShare('tab')}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
+                        className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
                           isScreenSharingActive && screenShareMode === 'tab' && activeScreenSharer === 'host'
-                            ? 'bg-rose-100 border-rose-500 text-rose-900 font-black ring-2 ring-rose-400 shadow-sm'
-                            : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-900 font-bold'
+                            ? 'bg-rose-100 border-rose-600 text-rose-950 font-black ring-2 ring-rose-400 shadow-md'
+                            : 'bg-slate-50 hover:bg-rose-50/70 border-slate-200 hover:border-rose-300 text-slate-900 font-bold shadow-2xs'
                         }`}
+                        id="btn-share-tab"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-sm">🌐</span>
+                          <span className="text-xl sm:text-2xl">🌐</span>
                           {isScreenSharingActive && screenShareMode === 'tab' && (
-                            <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
                           )}
                         </div>
-                        <span className="text-[11px] font-black text-slate-900 block leading-tight">Pestaña Web</span>
-                        <span className="text-[8.5px] text-slate-600 font-medium block leading-tight">Navegador con audio de pestaña</span>
+                        <div>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Pestaña Web</span>
+                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Navegador con audio</span>
+                        </div>
                       </button>
 
                       {/* 4. Presentation / Slides */}
                       <button
                         type="button"
                         onClick={() => handleStartSpecificScreenShare('presentation')}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
+                        className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
                           isScreenSharingActive && screenSplitLayout === 'presentation'
-                            ? 'bg-amber-100 border-amber-500 text-amber-900 font-black ring-2 ring-amber-400 shadow-sm'
-                            : 'bg-amber-50/70 hover:bg-amber-100 border-amber-200 text-slate-900 font-bold'
+                            ? 'bg-amber-100 border-amber-600 text-amber-950 font-black ring-2 ring-amber-400 shadow-md'
+                            : 'bg-amber-50/70 hover:bg-amber-100 border-amber-200 hover:border-amber-400 text-slate-900 font-bold shadow-2xs'
                         }`}
+                        id="btn-share-slides"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-sm">📊</span>
+                          <span className="text-xl sm:text-2xl">📊</span>
                           {isScreenSharingActive && screenSplitLayout === 'presentation' && (
-                            <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-600 animate-ping" />
                           )}
                         </div>
-                        <span className="text-[11px] font-black text-slate-900 block leading-tight">Diapositivas / Slides</span>
-                        <span className="text-[8.5px] text-slate-600 font-medium block leading-tight">Presentación de catálogo y pasarela</span>
+                        <div>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Diapositivas</span>
+                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Presentación de catálogo</span>
+                        </div>
                       </button>
                     </div>
 
                     {/* Co-Presenters Screen Share Switcher */}
-                    <div className="pt-2 border-t border-slate-200 space-y-1.5">
-                      <span className="text-[9.5px] font-black uppercase text-indigo-900 block">
-                        👥 Emitir Pantalla de Invitados / Co-Presentadores:
+                    <div className="pt-3 border-t border-slate-200 space-y-2">
+                      <span className="text-xs sm:text-[13px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
+                        👥 Emitir Pantalla de Invitados:
                       </span>
-                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
                         {[
                           { id: 'host', name: 'Mi Pantalla (Anfitrión)', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150' },
                           { id: 'g-1', name: 'Isabela Dubois', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
@@ -20948,13 +24413,14 @@ export default function CastingLiveSection({
                               setShowScreenShareMenu(false);
                               alert(`💻 Transmitiendo pantalla de ${comp.name} en el directo.`);
                             }}
-                            className={`px-2.5 py-1.5 rounded-xl text-[9.5px] font-bold flex items-center gap-1.5 border transition cursor-pointer shrink-0 ${
+                            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-[13px] font-extrabold flex items-center gap-2 border transition cursor-pointer shrink-0 min-h-[42px] active:scale-95 ${
                               activeScreenSharer === comp.id && isScreenSharingActive
                                 ? 'bg-indigo-600 text-white border-indigo-700 font-black shadow-xs'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-2xs'
                             }`}
+                            id={`btn-sharer-${comp.id}`}
                           >
-                            <img src={comp.avatar} className="w-4 h-4 rounded-full object-cover border border-slate-300" alt="" />
+                            <img src={comp.avatar} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-slate-300" alt="" />
                             <span>{comp.name}</span>
                           </button>
                         ))}
@@ -20974,7 +24440,8 @@ export default function CastingLiveSection({
                           setShowScreenShareMenu(false);
                           alert('🛑 Compartición de pantalla finalizada.');
                         }}
-                        className="w-full bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition cursor-pointer shadow-sm border-0 active:scale-95 text-center block"
+                        className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-sm border-0 active:scale-95 text-center block min-h-[42px]"
+                        id="btn-stop-screen-share"
                       >
                         🛑 Detener Compartición de Pantalla
                       </button>
@@ -20982,30 +24449,33 @@ export default function CastingLiveSection({
                   </div>
                 )}
 
-                {/* 👯 POPUP MODAL: OPCIONES DE DÚO Y DÚO COMERCIAL (OCUPA TODO EL CANAL DE VÍDEO) */}
+                {/* 👯 POPUP MODAL: OPCIONES DE DÚO Y DÚO COMERCIAL */}
                 {showDuoMenu && (
-                  <div className="absolute inset-0 z-[86] bg-white/98 backdrop-blur-2xl p-3 sm:p-4 rounded-3xl border-2 border-[#fe2c55] shadow-2xl animate-fade-in text-slate-900 font-sans text-left pointer-events-auto h-full w-full overflow-y-auto flex flex-col gap-2.5">
-                    <div className="relative border-b border-slate-200 pb-2 pr-9 shrink-0">
+                  <div className="absolute inset-0 z-[86] bg-white/98 backdrop-blur-2xl p-3.5 sm:p-5 rounded-3xl border-2 border-[#fe2c55] shadow-2xl animate-fade-in text-slate-900 font-sans text-left pointer-events-auto h-full w-full overflow-y-auto flex flex-col gap-3" id="duo-collaboration-modal">
+                    <div className="relative border-b border-slate-200 pb-2.5 pr-11 shrink-0">
                       <button
                         type="button"
                         onClick={() => setShowDuoMenu(false)}
-                        className="absolute top-0 right-0 p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 rounded-full transition cursor-pointer shrink-0 z-10 border border-slate-200 shadow-xs active:scale-95"
+                        className="absolute top-0 right-0 p-2 bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 rounded-full w-9 h-9 flex items-center justify-center transition cursor-pointer shrink-0 z-10 border border-slate-300 shadow-xs active:scale-95"
                         title="Cerrar"
+                        id="btn-close-duo-modal"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
-                      <div className="flex items-center gap-2 min-w-0 pr-1">
-                        <Users className="w-5 h-5 text-[#fe2c55] shrink-0" />
+                      <div className="flex items-center gap-2.5 min-w-0 pr-1">
+                        <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                          <Users className="w-5 h-5 text-[#fe2c55]" />
+                        </div>
                         <div className="min-w-0">
-                          <h4 className="text-[11px] sm:text-xs font-black uppercase text-slate-900 tracking-wider m-0 leading-tight flex flex-wrap items-center gap-1.5">
+                          <h4 className="text-xs sm:text-sm md:text-base font-black uppercase text-slate-900 tracking-wider m-0 leading-tight flex flex-wrap items-center gap-1.5">
                             <span>
                               {selectedCategoryFilter === 'Finanzas'
                                 ? '👯 SERVICIOS DÚO Y COLABORACIÓN (FINANZAS)'
                                 : '👯 OPCIONES DE DÚO Y COLABORACIÓN'}
                             </span>
-                            <span className="text-[8px] bg-rose-500 text-white px-1.5 py-0.5 rounded-full font-black shrink-0">EN VIVO</span>
+                            <span className="text-[9px] sm:text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black shrink-0">EN VIVO</span>
                           </h4>
-                          <span className="text-[9px] text-rose-700 font-bold block truncate mt-0.5">
+                          <span className="text-[11px] sm:text-xs text-rose-700 font-bold block truncate mt-0.5">
                             {selectedCategoryFilter === 'Finanzas'
                               ? 'Servicios de interconexión y producción en directo para Finanzas'
                               : 'Transmite en pareja con Vendedores, Influencers, Modelos y Creadores'}
@@ -21016,240 +24486,426 @@ export default function CastingLiveSection({
 
                     {selectedCategoryFilter === 'Finanzas' ? (
                       /* 📈 SERVICIOS EXCLUSIVOS Y ESENCIALES PARA CANAL FINANZAS (MÁX. 10 PARTICIPANTES - ESTILO TIKTOK) */
-                      <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
+                      <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
                         {finanzasDuoSubTool === 'menu' ? (
                           <>
-                            <div className="bg-gradient-to-r from-emerald-50 via-rose-50 to-amber-50 p-2.5 rounded-xl border border-rose-200 text-[10px] text-slate-800 font-medium leading-snug">
-                              📊 <strong className="font-extrabold text-slate-900">Funciones Principales Dúo Finanzas (Máx. 10 Participantes):</strong>
-                              <span className="block text-[9px] text-slate-600 mt-0.5">Haz clic en cualquier opción para acceder al panel completo de herramientas interactivas.</span>
+                            <div className="bg-gradient-to-r from-emerald-50 via-rose-50 to-amber-50 p-3 rounded-2xl border border-rose-200 text-xs sm:text-[13px] text-slate-800 font-medium leading-relaxed">
+                              📊 <strong className="font-extrabold text-slate-900">Funciones Principales de Colaboración:</strong> Conecta hasta con <span className="font-extrabold text-rose-600 underline">10 analistas y creadores</span> simultáneamente, activa debates 1 a 1 con pantalla dividida 50/50, gestiona solicitudes o emite gráficos y balances en tiempo real.
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {[
-                                {
-                                  key: 'invitar',
-                                  title: 'Invitar Creador / Usuario',
-                                  desc: 'Invitar a un ponente o analista a tu directo',
-                                  icon: '👤',
-                                  badge: `${Object.keys(invitedUsersMap).length} Invitaciones`
-                                },
-                                {
-                                  key: 'solicitudes',
-                                  title: 'Aceptar Solicitudes',
-                                  desc: 'Aceptar participantes que piden unirse a la sesión',
-                                  icon: '✅',
-                                  badge: `${financeRequestsList.filter(r => r.status === 'pending').length} Pendientes`
-                                },
-                                {
-                                  key: 'duo1a1',
-                                  title: 'Dúo 1 a 1 (Pantalla Dividida)',
-                                  desc: 'Dos personas cara a cara en pantalla 50/50',
-                                  icon: '👥',
-                                  badge: screenSplitLayout === '50-50' ? 'Activo' : '50/50'
-                                },
-                                {
-                                  key: 'multiples',
-                                  title: 'Múltiples Invitados (Hasta 10)',
-                                  desc: 'Sesión multianfitrión en cuadrícula para hasta 10 ponentes',
-                                  icon: '👨‍👩‍👧‍👦',
-                                  badge: screenSplitLayout === 'grid' ? 'Activo' : '10 Slots'
-                                },
-                                {
-                                  key: 'audio',
-                                  title: 'Dúo Solo Audio',
-                                  desc: 'El participante interactúa con micrófono, sin cámara',
-                                  icon: '🎙️',
-                                  badge: 'Audio HD'
-                                },
-                                {
-                                  key: 'pantalla',
-                                  title: 'Compartir Pantalla',
-                                  desc: 'Transmitir presentaciones, gráficos y análisis financiero',
-                                  icon: '🖥️',
-                                  badge: isScreenSharingActive ? 'Transmitiendo' : '1080p60'
-                                },
-                                {
-                                  key: 'controles',
-                                  title: 'Controles de Participantes',
-                                  desc: 'Silenciar micrófono, cámara o gestionar moderación',
-                                  icon: '🎛️',
-                                  badge: '10 Usuarios'
-                                }
-                              ].map((item, idx) => (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  onClick={() => setFinanzasDuoSubTool(item.key as any)}
-                                  className="p-2.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-400 rounded-xl text-left cursor-pointer transition shadow-2xs hover:shadow-xs active:scale-[0.98] group flex items-start gap-2.5"
-                                >
-                                  <span className="text-base shrink-0 group-hover:scale-110 transition-transform mt-0.5">{item.icon}</span>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-[10.5px] sm:text-xs font-black text-slate-900 group-hover:text-rose-700 flex items-center justify-between gap-1">
-                                      <span className="truncate">{item.title}</span>
-                                      <span className="text-[8.5px] px-1.5 py-0.2 bg-rose-100 text-rose-800 rounded font-bold shrink-0">{item.badge}</span>
-                                    </div>
-                                    <p className="text-[9px] sm:text-[9.5px] text-slate-600 leading-tight font-medium m-0 mt-0.5">
-                                      {item.desc}
-                                    </p>
-                                  </div>
-                                </button>
-                              ))}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                              {/* 1. Invitar Creador o Usuario */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('invitar')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 bg-white hover:bg-rose-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px]"
+                                id="btn-duo-tool-invitar"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">👤</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-rose-100 text-rose-800 font-extrabold px-2 py-0.5 rounded-lg border border-rose-200">
+                                    {Object.keys(invitedUsersMap).filter(k => invitedUsersMap[k]).length} Invitados
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">1. Invitar Creador / Usuario</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Buscar creadores y enviar invitación para unirse al directo</span>
+                                </div>
+                              </button>
+
+                              {/* 2. Aceptar Solicitudes de Espectadores */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('solicitudes')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-white hover:bg-emerald-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px]"
+                                id="btn-duo-tool-solicitudes"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">✅</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-lg border border-emerald-200">
+                                    {financeRequestsList.filter(r => r.status === 'pending').length} Pendientes
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">2. Aceptar Solicitudes</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Aprobar o rechazar espectadores en lista de espera</span>
+                                </div>
+                              </button>
+
+                              {/* 3. Dúo 1 a 1 (Pantalla Dividida 50/50) */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('duo1a1')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px]"
+                                id="btn-duo-tool-duo1a1"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">👥</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-indigo-100 text-indigo-800 font-extrabold px-2 py-0.5 rounded-lg border border-indigo-200">
+                                    {screenSplitLayout === '50-50' ? '🟢 Activo' : '50 / 50'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">3. Dúo 1 a 1 (50/50)</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Emisión compartida simétrica con 1 anfitrión invitado</span>
+                                </div>
+                              </button>
+
+                              {/* 4. Transmisión con Múltiples Invitados (Hasta 10) */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('multiples')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-purple-400 bg-white hover:bg-purple-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px]"
+                                id="btn-duo-tool-multiples"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">👨‍👩‍👧‍👦</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-purple-100 text-purple-800 font-extrabold px-2 py-0.5 rounded-lg border border-purple-200">
+                                    {screenSplitLayout === 'grid-4' || screenSplitLayout === 'grid-9' ? '🟢 Multianfitrión' : '10 Slots'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">4. Multianfitrión (Hasta 10)</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Mesa redonda financiera con panelistas en cuadrícula</span>
+                                </div>
+                              </button>
+
+                              {/* 5. Dúo de Solo Audio */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('audio')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-white hover:bg-amber-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px]"
+                                id="btn-duo-tool-audio"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">🎙️</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-amber-100 text-amber-800 font-extrabold px-2 py-0.5 rounded-lg border border-amber-200">
+                                    {isAudioOnlyDuo ? '🟢 Audio ON' : 'Podcast Mode'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">5. Dúo Solo Audio</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Intervención por voz y podcast sin activar cámara</span>
+                                </div>
+                              </button>
+
+                              {/* 6. Compartir Pantalla */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('pantalla')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-cyan-400 bg-white hover:bg-cyan-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px]"
+                                id="btn-duo-tool-pantalla"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">🖥️</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-cyan-100 text-cyan-800 font-extrabold px-2 py-0.5 rounded-lg border border-cyan-200">
+                                    {isScreenSharingActive ? '🟢 Compartiendo' : '1080p'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">6. Compartir Pantalla</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Transmitir TradingView, gráficos y balances al directo</span>
+                                </div>
+                              </button>
+
+                              {/* 7. Controles y Moderación */}
+                              <button
+                                type="button"
+                                onClick={() => setFinanzasDuoSubTool('controles')}
+                                className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 bg-white hover:bg-rose-50/50 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 shadow-2xs hover:shadow-md active:scale-95 min-h-[92px] sm:col-span-2"
+                                id="btn-duo-tool-controles"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xl sm:text-2xl">🎛️</span>
+                                  <span className="text-[10px] sm:text-[11px] bg-slate-100 text-slate-800 font-extrabold px-2 py-0.5 rounded-lg border border-slate-200">
+                                    Panel Host
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">7. Moderación y Controles del Anfitrión</span>
+                                  <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Silenciar participantes, desactivar cámaras y gestionar turnos de palabra</span>
+                                </div>
+                              </button>
                             </div>
                           </>
                         ) : (
+                          /* SUB-VISTAS DE LAS 7 HERRAMIENTAS DE FINANZAS */
                           <div className="space-y-3">
                             {/* HEADER DE NAVEGACIÓN SUBTABS */}
-                            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200">
+                            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200 relative">
                               <button
                                 type="button"
-                                onClick={() => setFinanzasDuoSubTool('menu')}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 text-[11px] font-black rounded-xl transition cursor-pointer border border-slate-300 active:scale-95 shrink-0"
+                                onClick={() => {
+                                  setFinanzasDuoSubTool('menu');
+                                  setIsFinanzasDuoDropdownOpen(false);
+                                }}
+                                className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-900 hover:text-rose-700 text-xs sm:text-[13px] font-black rounded-xl transition cursor-pointer border border-slate-300 hover:border-rose-300 active:scale-95 shrink-0 shadow-2xs min-h-[42px]"
+                                id="btn-volver-menu-duo"
                               >
-                                <ArrowLeft className="w-3.5 h-3.5 text-rose-600 stroke-[3]" />
+                                <ArrowLeft className="w-4 h-4 text-rose-600 stroke-[3]" />
                                 <span>← Volver a Menú Dúo</span>
                               </button>
-                              <span className="text-[10px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg truncate">
-                                {finanzasDuoSubTool === 'invitar' && '👤 Panel de Invitaciones'}
-                                {finanzasDuoSubTool === 'solicitudes' && '✅ Solicitudes de Espectadores'}
-                                {finanzasDuoSubTool === 'duo1a1' && '👥 Dúo 1 a 1 (50/50)'}
-                                {finanzasDuoSubTool === 'multiples' && '👨‍👩‍👧‍👦 Multianfitrión (10 Slots)'}
-                                {finanzasDuoSubTool === 'audio' && '🎙️ Dúo Solo Audio'}
-                                {finanzasDuoSubTool === 'pantalla' && '🖥️ Compartición de Pantalla'}
-                                {finanzasDuoSubTool === 'controles' && '🎛️ Moderación y Controles'}
-                              </span>
+
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsFinanzasDuoDropdownOpen(prev => !prev)}
+                                  className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 hover:border-rose-400 rounded-xl text-xs sm:text-[13px] font-black transition cursor-pointer active:scale-95 shadow-2xs min-h-[42px]"
+                                  id="btn-subtool-selector"
+                                >
+                                  <span className="truncate max-w-[150px] sm:max-w-[210px]">
+                                    {finanzasDuoSubTool === 'invitar' && '👤 Panel de Invitaciones'}
+                                    {finanzasDuoSubTool === 'solicitudes' && '✅ Solicitudes de Espectadores'}
+                                    {finanzasDuoSubTool === 'duo1a1' && '👥 Dúo 1 a 1 (50/50)'}
+                                    {finanzasDuoSubTool === 'multiples' && '👨‍👩‍👧‍👦 Multianfitrión (10 Slots)'}
+                                    {finanzasDuoSubTool === 'audio' && '🎙️ Dúo Solo Audio'}
+                                    {finanzasDuoSubTool === 'pantalla' && '🖥️ Compartición de Pantalla'}
+                                    {finanzasDuoSubTool === 'controles' && '🎛️ Moderación y Controles'}
+                                  </span>
+                                  <ChevronDown className={`w-4 h-4 transition-transform ${isFinanzasDuoDropdownOpen ? 'rotate-180 text-rose-600' : 'text-rose-400'}`} />
+                                </button>
+
+                                {isFinanzasDuoDropdownOpen && (
+                                  <div className="absolute right-0 top-full mt-1.5 w-64 z-50 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 space-y-1 animate-fade-in text-left">
+                                    {[
+                                      { key: 'invitar', label: '👤 Panel de Invitaciones', badge: `${Object.keys(invitedUsersMap).filter(k => invitedUsersMap[k]).length} Invitados` },
+                                      { key: 'solicitudes', label: '✅ Solicitudes de Espectadores', badge: `${financeRequestsList.filter(r => r.status === 'pending').length} Pend.` },
+                                      { key: 'duo1a1', label: '👥 Dúo 1 a 1 (50/50)', badge: 'Pantalla 50/50' },
+                                      { key: 'multiples', label: '👨‍👩‍👧‍👦 Multianfitrión (10 Slots)', badge: '10 Slots' },
+                                      { key: 'audio', label: '🎙️ Dúo Solo Audio', badge: 'Audio HD' },
+                                      { key: 'pantalla', label: '🖥️ Compartición de Pantalla', badge: '1080p' },
+                                      { key: 'controles', label: '🎛️ Moderación y Controles', badge: 'Mute/Cam' },
+                                    ].map((item) => (
+                                      <button
+                                        key={item.key}
+                                        type="button"
+                                        onClick={() => {
+                                          setFinanzasDuoSubTool(item.key as any);
+                                          setIsFinanzasDuoDropdownOpen(false);
+                                        }}
+                                        className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-black transition cursor-pointer text-left ${
+                                          finanzasDuoSubTool === item.key
+                                            ? 'bg-rose-600 text-white shadow-xs'
+                                            : 'hover:bg-rose-50 text-slate-800'
+                                        }`}
+                                      >
+                                        <span className="truncate">{item.label}</span>
+                                        <span className={`text-[9.5px] px-1.5 py-0.5 rounded font-black shrink-0 ${
+                                          finanzasDuoSubTool === item.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                                        }`}>{item.badge}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </div>
 
                             {/* VISTA 1: INVITAR CREADOR / USUARIO */}
                             {finanzasDuoSubTool === 'invitar' && (
-                              <div className="space-y-2.5">
+                              <div className="space-y-3">
+                                {/* Barra de búsqueda y botón Invitar a los 10 */}
                                 <div className="flex items-center justify-between gap-2">
-                                  <input
-                                    type="text"
-                                    value={duoSearchQuery}
-                                    onChange={(e) => setDuoSearchQuery(e.target.value)}
-                                    placeholder="Buscar analista o creador..."
-                                    className="w-full text-[11px] px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500 font-medium"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newInvites: Record<string, boolean> = {};
-                                      FINANZAS_USERS.forEach(u => { newInvites[u.id] = true; });
-                                      setInvitedUsersMap(newInvites);
-                                      alert('📨 Invitación enviada a los 10 creadores de Finanzas.');
-                                    }}
-                                    className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black rounded-lg transition shrink-0 cursor-pointer shadow-xs active:scale-95"
-                                  >
-                                    ⚡ Invitar a los 10
-                                  </button>
+                                  <div className="relative flex-1">
+                                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    <input
+                                      type="text"
+                                      value={duoSearchQuery}
+                                      onChange={(e) => setDuoSearchQuery(e.target.value)}
+                                      placeholder="Buscar analista o creador..."
+                                      className="w-full text-xs sm:text-[13px] pl-9 pr-9 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 focus:border-rose-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-rose-500 font-medium transition shadow-2xs min-h-[42px]"
+                                      id="input-buscar-creador-duo"
+                                    />
+                                    {duoSearchQuery && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setDuoSearchQuery('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                                        title="Limpiar búsqueda"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {(() => {
+                                    const totalUsers = FINANZAS_USERS.length;
+                                    const invitedCount = Object.keys(invitedUsersMap).filter(k => invitedUsersMap[k]).length;
+                                    const allInvited = invitedCount >= totalUsers && totalUsers > 0;
+
+                                    return (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (allInvited) {
+                                            setInvitedUsersMap({});
+                                            alert('🔄 Se han restablecido las invitaciones.');
+                                          } else {
+                                            const newInvites: Record<string, boolean> = {};
+                                            FINANZAS_USERS.forEach(u => { newInvites[u.id] = true; });
+                                            setInvitedUsersMap(newInvites);
+                                            alert('📨 ¡Invitaciones enviadas con éxito a los 10 analistas y creadores de Finanzas!');
+                                          }
+                                        }}
+                                        className={`px-3.5 sm:px-4 py-2.5 text-white text-xs sm:text-[13px] font-black rounded-xl transition shrink-0 cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5 min-h-[42px] ${
+                                          allInvited
+                                            ? 'bg-emerald-600 hover:bg-emerald-700'
+                                            : 'bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:from-rose-700 hover:to-rose-800'
+                                        }`}
+                                        id="btn-invitar-a-los-10"
+                                      >
+                                        <span>{allInvited ? '✓ 10 INVITADOS (RESETEAR)' : '⚡ INVITAR A LOS 10'}</span>
+                                      </button>
+                                    );
+                                  })()}
                                 </div>
 
-                                <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
-                                  {FINANZAS_USERS.filter(u => u.name.toLowerCase().includes(duoSearchQuery.toLowerCase()) || u.role.toLowerCase().includes(duoSearchQuery.toLowerCase())).map((user) => {
-                                    const isInvited = !!invitedUsersMap[user.id];
-                                    return (
-                                      <div key={user.id} className="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl gap-2 hover:bg-slate-100 transition">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          <div className="relative shrink-0">
-                                            <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-300" />
-                                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                                {/* Filtros de Categoría Rápidos */}
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                                  {[
+                                    { id: 'all', label: 'Todos (10)' },
+                                    { id: 'analistas', label: 'Analistas Macro' },
+                                    { id: 'inversores', label: 'Inversores VIP' },
+                                    { id: 'traders', label: 'Traders & Riesgos' },
+                                  ].map((tab) => (
+                                    <button
+                                      key={tab.id}
+                                      type="button"
+                                      onClick={() => setDuoCategoryFilter(tab.id as any)}
+                                      className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition cursor-pointer border min-h-[32px] ${
+                                        duoCategoryFilter === tab.id
+                                          ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                      }`}
+                                    >
+                                      {tab.label}
+                                    </button>
+                                  ))}
+                                </div>
+
+                                {/* Lista de Creadores y Analistas */}
+                                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                                  {FINANZAS_USERS
+                                    .filter(u => {
+                                      if (!duoSearchQuery.trim()) return true;
+                                      const q = duoSearchQuery.toLowerCase();
+                                      return u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
+                                    })
+                                    .filter(u => {
+                                      if (duoCategoryFilter === 'all') return true;
+                                      if (duoCategoryFilter === 'analistas') return u.role.toLowerCase().includes('analista') || u.role.toLowerCase().includes('tecnológico');
+                                      if (duoCategoryFilter === 'inversores') return u.role.toLowerCase().includes('inversor') || u.role.toLowerCase().includes('directora') || u.role.toLowerCase().includes('especialista');
+                                      if (duoCategoryFilter === 'traders') return u.role.toLowerCase().includes('trader') || u.role.toLowerCase().includes('riesgos') || u.role.toLowerCase().includes('consultora');
+                                      return true;
+                                    })
+                                    .map((user) => {
+                                      const isInvited = !!invitedUsersMap[user.id];
+                                      return (
+                                        <div key={user.id} className="flex items-center justify-between p-2.5 sm:p-3 bg-slate-50 hover:bg-rose-50/60 border border-slate-200 hover:border-rose-300 rounded-2xl gap-3 transition shadow-2xs min-h-[64px]">
+                                          <div className="flex items-center gap-3 min-w-0">
+                                            <div className="relative shrink-0">
+                                              <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-slate-300" />
+                                              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+                                            </div>
+                                            <div className="min-w-0">
+                                              <p className="text-xs sm:text-[13px] md:text-sm font-extrabold text-slate-900 truncate m-0">{user.name}</p>
+                                              <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate m-0">@{user.username} • <span className="text-rose-600 font-bold">{user.role}</span></p>
+                                            </div>
                                           </div>
-                                          <div className="min-w-0">
-                                            <p className="text-[11px] font-extrabold text-slate-900 truncate m-0">{user.name}</p>
-                                            <p className="text-[9px] text-slate-500 font-medium truncate m-0">@{user.username} • <span className="text-rose-600 font-bold">{user.role}</span></p>
+
+                                          <div className="flex items-center gap-2 shrink-0">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setInvitedUsersMap(prev => {
+                                                  const next = { ...prev, [user.id]: !prev[user.id] };
+                                                  if (next[user.id]) {
+                                                    alert(`📨 Invitación enviada a ${user.name} (${user.role}).`);
+                                                  }
+                                                  return next;
+                                                });
+                                              }}
+                                              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-[13px] font-black transition cursor-pointer shrink-0 border shadow-2xs active:scale-95 min-h-[40px] ${
+                                                isInvited
+                                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
+                                                  : 'bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:from-rose-700 hover:to-rose-800 text-white border-rose-600'
+                                              }`}
+                                              id={`btn-invitar-user-${user.id}`}
+                                            >
+                                              {isInvited ? '✓ Invitación Enviada' : '+ Invitar al Directo'}
+                                            </button>
                                           </div>
                                         </div>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setInvitedUsersMap(prev => ({ ...prev, [user.id]: !prev[user.id] }));
-                                          }}
-                                          className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition cursor-pointer shrink-0 border ${
-                                            isInvited
-                                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                                              : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-600 active:scale-95'
-                                          }`}
-                                        >
-                                          {isInvited ? '✓ Invitación Enviada' : '+ Invitar al Directo'}
-                                        </button>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    })}
                                 </div>
                               </div>
                             )}
 
                             {/* VISTA 2: ACEPTAR SOLICITUDES */}
                             {finanzasDuoSubTool === 'solicitudes' && (
-                              <div className="space-y-2.5">
-                                <div className="p-2 bg-amber-50 border border-amber-200 rounded-xl text-[10px] text-amber-900 font-medium flex items-center justify-between gap-2 flex-wrap">
-                                  <span>👥 <strong>{financeRequestsList.filter(r => r.status === 'pending').length}</strong> espectadores piden unirse en directo</span>
-                                  <div className="flex items-center gap-2">
+                              <div className="space-y-3">
+                                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-2">
+                                  <div className="text-xs sm:text-[13px] text-emerald-950 font-bold">
+                                    <span>Espectadores esperando para intervenir ({financeRequestsList.filter(r => r.status === 'pending').length})</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setFinanceRequestsList(prev => prev.map(r => ({ ...r, status: 'pending' })));
-                                        alert('🔄 Permisos de todos los usuarios restablecidos a "En espera".');
+                                        alert('🔄 Lista de solicitudes restablecida.');
                                       }}
-                                      className="px-2 py-0.5 bg-amber-200 hover:bg-amber-300 text-amber-950 text-[9px] font-black rounded-md transition cursor-pointer border border-amber-300 active:scale-95 shadow-2xs"
+                                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-emerald-300 text-emerald-800 text-xs font-black rounded-xl transition cursor-pointer active:scale-95"
                                     >
-                                      🔄 Restablecer Todos
+                                      🔄 Reset
                                     </button>
-                                    <label className="flex items-center gap-1 cursor-pointer text-[9.5px]">
-                                      <input type="checkbox" defaultChecked className="rounded text-rose-600" />
-                                      <span>Auto-aceptar Verificados</span>
-                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setFinanceRequestsList(prev => prev.map(r => ({ ...r, status: 'accepted' })));
+                                        setScreenSplitLayout('grid-4');
+                                        alert('✅ Todas las solicitudes pendientes han sido aprobadas en directo.');
+                                      }}
+                                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl transition cursor-pointer active:scale-95 shadow-xs"
+                                    >
+                                      ⚡ Aceptar Todos
+                                    </button>
                                   </div>
                                 </div>
 
                                 <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
                                   {financeRequestsList.map((req) => (
-                                    <div key={req.id} className="p-2 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs hover:border-slate-300 transition">
-                                      <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
-                                          <img src={req.avatar} alt={req.name} className="w-8 h-8 rounded-full object-cover border border-slate-300 shrink-0" />
-                                          <div className="min-w-0">
-                                            <p className="text-[11px] font-extrabold text-slate-900 m-0 truncate">{req.name}</p>
-                                            <p className="text-[9px] text-slate-500 font-medium m-0 truncate">{req.role} • {req.time}</p>
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-black border ${
-                                            req.status === 'pending' ? 'bg-amber-100 text-amber-900 border-amber-300' :
-                                            req.status === 'accepted' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
-                                            req.status === 'accepted-audio' ? 'bg-indigo-100 text-indigo-900 border-indigo-300' :
-                                            'bg-rose-100 text-rose-900 border-rose-300'
-                                          }`}>
-                                            {req.status === 'pending' && '⏳ En espera'}
-                                            {req.status === 'accepted' && '📹 Vídeo Activo'}
-                                            {req.status === 'accepted-audio' && '🎙️ Audio Activo'}
-                                            {req.status === 'rejected' && '❌ Rechazado'}
-                                          </span>
+                                    <div key={req.id} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-slate-100 transition shadow-2xs">
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <img src={req.avatar} alt={req.name} className="w-10 h-10 rounded-full object-cover border border-slate-300 shrink-0" />
+                                        <div className="min-w-0">
+                                          <p className="text-xs sm:text-[13px] md:text-sm font-extrabold text-slate-900 truncate m-0">{req.name}</p>
+                                          <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate m-0">@{req.username} • Espera: <span className="font-bold text-slate-700">{req.timeWaiting}</span></p>
                                         </div>
                                       </div>
 
-                                      {/* ACTION BUTTONS & PERMISSION CONTROLS */}
-                                      <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-100 flex-wrap">
+                                      <div className="flex items-center gap-2 shrink-0">
                                         {req.status === 'pending' ? (
                                           <>
                                             <button
                                               type="button"
                                               onClick={() => {
                                                 setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'accepted' } : r));
-                                                alert(`✅ ${req.name} ha sido aceptado en vídeo para el directo.`);
+                                                setScreenSplitLayout('50-50');
+                                                alert(`✅ Has aceptado a ${req.name} para participar en directo.`);
                                               }}
-                                              className="flex-1 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-black rounded-lg transition active:scale-95 cursor-pointer text-center shadow-2xs"
+                                              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-[13px] font-black rounded-xl transition cursor-pointer active:scale-95 shadow-xs min-h-[38px]"
                                             >
                                               ✅ ACEPTAR VÍDEO
                                             </button>
                                             <button
                                               type="button"
                                               onClick={() => {
-                                                setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'accepted-audio' } : r));
-                                                alert(`🎙️ ${req.name} aceptado sólo audio.`);
+                                                setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'accepted' } : r));
+                                                setIsAudioOnlyDuo(true);
+                                                alert(`🎙️ Has aceptado a ${req.name} en modo Solo Audio.`);
                                               }}
-                                              className="flex-1 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[9.5px] font-black rounded-lg transition active:scale-95 cursor-pointer text-center shadow-2xs"
+                                              className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-[13px] font-black rounded-xl transition cursor-pointer active:scale-95 shadow-xs min-h-[38px]"
                                             >
                                               🎙️ SOLO AUDIO
                                             </button>
@@ -21257,64 +24913,19 @@ export default function CastingLiveSection({
                                               type="button"
                                               onClick={() => {
                                                 setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'rejected' } : r));
+                                                alert(`❌ Solicitud de ${req.name} rechazada.`);
                                               }}
-                                              className="px-2.5 py-1 bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-800 text-[9.5px] font-black rounded-lg transition cursor-pointer border border-slate-200"
+                                              className="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs sm:text-[13px] font-black rounded-xl transition cursor-pointer active:scale-95 min-h-[38px]"
                                             >
                                               ❌ RECHAZAR
                                             </button>
                                           </>
                                         ) : (
-                                          <>
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'pending' } : r));
-                                                alert(`🔄 Permisos de ${req.name} restablecidos a "En espera".`);
-                                              }}
-                                              className="flex-1 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[9.5px] font-black rounded-lg transition active:scale-95 cursor-pointer text-center shadow-2xs flex items-center justify-center gap-1"
-                                            >
-                                              <span>🔄 Restablecer Permisos</span>
-                                            </button>
-
-                                            {req.status !== 'accepted' && (
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'accepted' } : r));
-                                                  alert(`📹 Permiso cambiado a Vídeo para ${req.name}.`);
-                                                }}
-                                                className="px-2 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[9px] font-black rounded-lg transition cursor-pointer border border-emerald-300"
-                                              >
-                                                📹 Aceptar Vídeo
-                                              </button>
-                                            )}
-
-                                            {req.status !== 'accepted-audio' && (
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'accepted-audio' } : r));
-                                                  alert(`🎙️ Permiso cambiado a Solo Audio para ${req.name}.`);
-                                                }}
-                                                className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 text-[9px] font-black rounded-lg transition cursor-pointer border border-indigo-300"
-                                              >
-                                                🎙️ Solo Audio
-                                              </button>
-                                            )}
-
-                                            {req.status !== 'rejected' && (
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setFinanceRequestsList(prev => prev.map(r => r.id === req.id ? { ...r, status: 'rejected' } : r));
-                                                  alert(`❌ Permisos revocados para ${req.name}.`);
-                                                }}
-                                                className="px-2 py-1 bg-rose-100 hover:bg-rose-200 text-rose-900 text-[9px] font-black rounded-lg transition cursor-pointer border border-rose-300"
-                                              >
-                                                ❌ Revocar
-                                              </button>
-                                            )}
-                                          </>
+                                          <span className={`px-3 py-1.5 rounded-xl text-xs font-black ${
+                                            req.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                                          }`}>
+                                            {req.status === 'accepted' ? '✓ En Directo' : 'Rechazado'}
+                                          </span>
                                         )}
                                       </div>
                                     </div>
@@ -21323,409 +24934,242 @@ export default function CastingLiveSection({
                               </div>
                             )}
 
-                            {/* VISTA 3: DÚO 1 A 1 (PANTALLA DIVIDIDA) */}
+                            {/* VISTA 3: DÚO 1 A 1 (50/50) */}
                             {finanzasDuoSubTool === 'duo1a1' && (
-                              <div className="space-y-2.5">
-                                {/* Vista previa del split 50/50 */}
-                                <div className="p-2 bg-slate-950 rounded-xl border border-slate-800 text-white">
-                                  <p className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider mb-1.5 text-center">Vista Previa Split Screen 50 / 50</p>
-                                  <div className="grid grid-cols-2 gap-1.5 h-28">
-                                    <div className="bg-slate-800 rounded-lg p-2 flex flex-col items-center justify-center border border-slate-700 text-center relative overflow-hidden">
-                                      <div className="relative mb-0.5">
-                                        <img
-                                          src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
-                                          alt="Adriana Lima"
-                                          className="w-7 h-7 rounded-full object-cover border border-rose-400"
-                                        />
-                                        <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full border border-slate-900"></span>
-                                      </div>
-                                      <span className="text-[10px] font-black text-rose-400 truncate max-w-full">
-                                        Adriana Lima (Tú)
-                                      </span>
-                                      <span className="text-[8px] text-slate-300 font-extrabold">Anfitrión • Cámara HD</span>
-                                    </div>
-                                    <div className="bg-rose-950/60 rounded-lg p-2 flex flex-col items-center justify-center border border-rose-800/80 text-center">
-                                      {(() => {
-                                        const cohost = FINANZAS_USERS.find(u => u.id === selectedCoHostId) || FINANZAS_USERS[1];
-                                        return (
-                                          <>
-                                            <img src={cohost.avatar} alt={cohost.name} className="w-7 h-7 rounded-full object-cover border border-rose-400 mb-0.5" />
-                                            <span className="text-[10px] font-black text-rose-200 truncate max-w-full">{cohost.name}</span>
-                                            <span className="text-[8px] text-rose-300 font-medium truncate">{cohost.role}</span>
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  </div>
+                              <div className="space-y-3">
+                                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl text-xs sm:text-[13px] text-indigo-950 font-medium leading-relaxed">
+                                  Dividir pantalla <strong>50% Anfitrión</strong> y <strong>50% Co-Anfitrión</strong> en formato vertical u horizontal.
                                 </div>
-
-                                {/* Selección de Co-Anfitrión con Barra de Búsqueda */}
-                                <div className="space-y-1.5 relative">
-                                  <label className="block text-[10px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center justify-between">
-                                    <span>Buscar Co-Anfitrión 1 a 1:</span>
-                                    <span className="text-[9px] text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                      {coHostSearchQuery ? `${FINANZAS_USERS.filter(u => u.id !== 'f-1' && (u.name.toLowerCase().includes(coHostSearchQuery.toLowerCase()) || u.role.toLowerCase().includes(coHostSearchQuery.toLowerCase()))).length} encontrados` : 'Buscar en lista'}
-                                    </span>
-                                  </label>
-
-                                  <div className="relative">
-                                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                    <input
-                                      type="text"
-                                      value={coHostSearchQuery}
-                                      onFocus={() => setIsCoHostDropdownOpen(true)}
-                                      onChange={(e) => {
-                                        setCoHostSearchQuery(e.target.value);
-                                        setIsCoHostDropdownOpen(true);
-                                      }}
-                                      placeholder="Escribe un nombre o rol (ej: Alessandra, Gisele, Gigi)..."
-                                      className="w-full text-[11px] font-extrabold pl-8 pr-8 py-2 bg-slate-50 hover:bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 shadow-2xs transition"
-                                    />
-                                    {coHostSearchQuery ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setCoHostSearchQuery('');
-                                          setIsCoHostDropdownOpen(true);
-                                        }}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() => setIsCoHostDropdownOpen(prev => !prev)}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
-                                      >
-                                        <ChevronDown className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
-
-                                  {/* Desplegable interactivo de Co-Anfitriones */}
-                                  {isCoHostDropdownOpen && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 z-30 bg-white border border-slate-300 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar p-1 divide-y divide-slate-100">
-                                      {(() => {
-                                        const matches = FINANZAS_USERS.filter(u => u.id !== 'f-1').filter(u => {
-                                          if (!coHostSearchQuery.trim()) return true;
-                                          const q = coHostSearchQuery.toLowerCase();
-                                          return u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
-                                        });
-
-                                        if (matches.length === 0) {
-                                          return (
-                                            <div className="p-3 text-center text-[10px] text-slate-500 font-medium">
-                                              No se encontraron co-anfitriones con "{coHostSearchQuery}"
-                                            </div>
-                                          );
-                                        }
-
-                                        return matches.map((user) => {
-                                          const isSelected = user.id === selectedCoHostId;
-                                          return (
-                                            <button
-                                              key={user.id}
-                                              type="button"
-                                              onClick={() => {
-                                                setSelectedCoHostId(user.id);
-                                                setCoHostSearchQuery(user.name);
-                                                setIsCoHostDropdownOpen(false);
-                                              }}
-                                              className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition cursor-pointer ${
-                                                isSelected ? 'bg-rose-50 text-rose-900 font-black' : 'hover:bg-slate-100 text-slate-800'
-                                              }`}
-                                            >
-                                              <div className="flex items-center gap-2 min-w-0">
-                                                <img src={user.avatar} alt={user.name} className="w-6.5 h-6.5 rounded-full object-cover border border-slate-300 shrink-0" />
-                                                <div className="min-w-0">
-                                                  <p className="text-[10.5px] font-extrabold m-0 truncate">{user.name}</p>
-                                                  <p className="text-[8.5px] text-slate-500 font-medium m-0 truncate">{user.role}</p>
-                                                </div>
-                                              </div>
-                                              {isSelected && (
-                                                <span className="text-[8.5px] bg-rose-600 text-white font-black px-1.5 py-0.5 rounded shrink-0">
-                                                  Seleccionado ✓
-                                                </span>
-                                              )}
-                                            </button>
-                                          );
-                                        });
-                                      })()}
-                                    </div>
-                                  )}
+                                <div className="grid grid-cols-2 gap-2.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setScreenSplitLayout('50-50');
+                                      alert('👥 Modo Dúo 1 a 1 (50/50) activado.');
+                                    }}
+                                    className={`p-3.5 rounded-2xl border-2 text-center transition cursor-pointer font-black text-xs sm:text-sm min-h-[48px] ${
+                                      screenSplitLayout === '50-50' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 border-slate-300 text-slate-800'
+                                    }`}
+                                  >
+                                    División 50/50 Vertical
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setScreenSplitLayout('pip');
+                                      alert('🖼️ Modo Picture-in-Picture (PiP) activado.');
+                                    }}
+                                    className={`p-3.5 rounded-2xl border-2 text-center transition cursor-pointer font-black text-xs sm:text-sm min-h-[48px] ${
+                                      screenSplitLayout === 'pip' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 border-slate-300 text-slate-800'
+                                    }`}
+                                  >
+                                    Modo PiP (Flotante)
+                                  </button>
                                 </div>
-
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setScreenSplitLayout('50-50');
                                     setShowDuoMenu(false);
-                                    setFinanzasDuoSubTool('menu');
-                                    alert(`👥 Modo Dúo 1 a 1 activado en pantalla dividida 50/50 con ${FINANZAS_USERS.find(u => u.id === selectedCoHostId)?.name}.`);
+                                    alert('🚀 Transmisión Dúo 1 a 1 iniciada.');
                                   }}
-                                  className="w-full py-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white text-[11px] font-black rounded-xl transition shadow-md active:scale-[0.98] cursor-pointer text-center"
+                                  className="w-full bg-gradient-to-r from-indigo-600 to-rose-600 hover:from-indigo-700 hover:to-rose-700 text-white py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-md active:scale-95 text-center block min-h-[44px]"
                                 >
-                                  🚀 Activar Pantalla Dividida 50/50 Ahora
+                                  🚀 Iniciar Modo Dúo 1 a 1 en Directo
                                 </button>
                               </div>
                             )}
 
-                            {/* VISTA 4: MÚLTIPLES INVITADOS (HASTA 10) */}
+                            {/* VISTA 4: MULTIANFITRIÓN (HASTA 10 SLOTS) */}
                             {finanzasDuoSubTool === 'multiples' && (
-                              <div className="space-y-2.5">
-                                <div className="p-2 bg-rose-50 border border-rose-200 rounded-xl text-[10px] text-rose-900 font-bold flex items-center justify-between">
-                                  <span>👨‍👩‍👧‍👦 Cuadrícula Multianfitrión Activa</span>
-                                  <span className="px-2 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black">10 / 10 Slots</span>
+                              <div className="space-y-3">
+                                <div className="p-3 bg-purple-50 border border-purple-200 rounded-2xl text-xs sm:text-[13px] text-purple-950 font-medium leading-relaxed">
+                                  Configuración de <strong>Mesa Redonda Financiera</strong> con capacidad para 10 analistas en pantalla.
                                 </div>
-
-                                <div className="space-y-2 p-2 bg-slate-100 rounded-xl border border-slate-200 max-h-[250px] overflow-y-auto custom-scrollbar">
-                                  {/* Top Row: Host (Larger) */}
-                                  <div className="flex justify-center w-full">
-                                    <div className="aspect-square w-16 p-1 bg-white border-2 border-rose-500 rounded-xl flex flex-col items-center justify-center text-center shadow-xs relative overflow-hidden">
-                                      <span className="absolute top-0.5 left-0.5 text-[6.5px] bg-rose-600 text-white px-1 rounded font-black z-10">★ Tú</span>
-                                      <img src={FINANZAS_USERS[0].avatar} alt={FINANZAS_USERS[0].name} className="w-7 h-7 rounded-full object-cover border border-rose-300 my-0.5" />
-                                      <span className="text-[8.5px] font-black text-slate-900 truncate w-full leading-none">{FINANZAS_USERS[0].name.split(' ')[0]}</span>
-                                      <span className="text-[6.5px] text-rose-600 font-bold mt-0.5">Anfitrión</span>
-                                    </div>
-                                  </div>
-
-                                  {/* 3 Rows of 3 Users (9 Co-hosts) */}
-                                  <div className="grid grid-cols-3 gap-1.5 place-items-center">
-                                    {FINANZAS_USERS.slice(1, 10).map((u, i) => (
-                                      <div key={u.id} className="aspect-square w-full p-1 bg-white border border-slate-200 rounded-lg flex flex-col items-center justify-center text-center shadow-2xs relative overflow-hidden">
-                                        <span className="absolute top-0.5 left-0.5 text-[6.5px] bg-slate-900 text-white px-1 rounded font-black z-10">#{i+2}</span>
-                                        <img src={u.avatar} alt={u.name} className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-full object-cover border border-slate-300 my-0.5" />
-                                        <span className="text-[8px] font-extrabold text-slate-800 truncate w-full leading-none">{u.name.split(' ')[0]}</span>
-                                        <span className="text-[6.5px] text-emerald-600 font-bold mt-0.5">🟢 En vivo</span>
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                                  {Array.from({ length: 10 }).map((_, i) => {
+                                    const participant = FINANZAS_USERS[i];
+                                    const isSlotOccupied = i < 4;
+                                    return (
+                                      <div key={i} className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center text-center gap-1.5 min-h-[85px] ${
+                                        isSlotOccupied ? 'bg-purple-50 border-purple-300' : 'bg-slate-50 border-dashed border-slate-300'
+                                      }`}>
+                                        {isSlotOccupied ? (
+                                          <>
+                                            <img src={participant?.avatar} className="w-8 h-8 rounded-full object-cover border border-purple-400" alt="" />
+                                            <span className="text-[10.5px] font-extrabold text-purple-950 truncate max-w-full block leading-tight">{participant?.name.split(' ')[0]}</span>
+                                            <span className="text-[8.5px] bg-purple-200 text-purple-900 px-1 py-0.2 rounded font-black">Slot {i + 1}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span className="text-sm text-slate-400">+</span>
+                                            <span className="text-[9.5px] font-bold text-slate-400">Libre {i + 1}</span>
+                                          </>
+                                        )}
                                       </div>
-                                    ))}
-                                  </div>
+                                    );
+                                  })}
                                 </div>
-
-                                {(() => {
-                                  const isGridActive = screenSplitLayout === 'grid' || screenSplitLayout === 'grid-10';
-
-                                  return (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (isGridActive) {
-                                          setScreenSplitLayout('single');
-                                          setShowDuoMenu(false);
-                                          setFinanzasDuoSubTool('menu');
-                                          alert('📱 Cuadrícula de 10 Ponentes desactivada. Volviendo al modo de transmisión individual.');
-                                        } else {
-                                          setScreenSplitLayout('grid');
-                                          setShowDuoMenu(false);
-                                          setFinanzasDuoSubTool('menu');
-                                          alert('👨‍👩‍👧‍👦 Modo Múltiples Invitados activado (Cuadrícula de 10 Ponentes en directo en el canal).');
-                                        }
-                                      }}
-                                      className={`w-full py-2.5 text-[11px] font-black rounded-xl transition shadow-md active:scale-[0.98] cursor-pointer text-center flex items-center justify-center gap-1.5 ${
-                                        isGridActive
-                                          ? 'bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white'
-                                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
-                                      }`}
-                                    >
-                                      <span>{isGridActive ? '🛑 Desactivar Cuadrícula 10 Ponentes' : '🚀 Activar Cuadrícula 10 Ponentes'}</span>
-                                    </button>
-                                  );
-                                })()}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setScreenSplitLayout('grid-4');
+                                    setShowDuoMenu(false);
+                                    alert('👨‍👩‍👧‍👦 Mesa redonda multianfitrión activada en directo.');
+                                  }}
+                                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-md active:scale-95 text-center block min-h-[44px]"
+                                >
+                                  👨‍👩‍👧‍👦 Activar Cuadrícula Multianfitrión
+                                </button>
                               </div>
                             )}
 
                             {/* VISTA 5: DÚO SOLO AUDIO */}
                             {finanzasDuoSubTool === 'audio' && (
-                              <div className="space-y-2.5">
-                                <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center text-white space-y-2">
-                                  <div className="flex items-center justify-center gap-1.5 text-amber-400">
-                                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                                    <span className="text-[11px] font-black uppercase tracking-wider">Escenario de Voz HD</span>
-                                  </div>
-                                  
-                                  {/* Visualizador de ondas de audio */}
-                                  <div className="flex items-end justify-center gap-1 h-8 py-1">
-                                    {[40, 75, 100, 60, 90, 45, 80, 100, 50, 70].map((h, idx) => (
-                                      <span key={idx} style={{ height: `${h}%` }} className="w-1.5 bg-gradient-to-t from-amber-500 to-rose-500 rounded-full animate-pulse"></span>
-                                    ))}
-                                  </div>
-                                  <p className="text-[9.5px] text-slate-300 font-medium m-0">Los participantes hablarán únicamente por micrófono, manteniendo apagada la cámara para optimizar ancho de banda.</p>
+                              <div className="space-y-3">
+                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs sm:text-[13px] text-amber-950 font-medium leading-relaxed">
+                                  <strong>🎙️ Modo Podcast / Solo Audio:</strong> Los invitados participan únicamente mediante micrófono, ideal para debates rápidos sin necesidad de ancho de banda para vídeo.
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => alert('🎙️ Calidad Voz HD 48kHz activada.')}
-                                    className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-left hover:border-amber-400 transition"
-                                  >
-                                    <span className="text-[10px] font-black text-slate-900 block">🎙️ Audio HD (48kHz)</span>
-                                    <span className="text-[8.5px] text-slate-500">Máxima fidelidad de voz</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => alert('🔇 Filtro de Reducción de Ruido IA activado.')}
-                                    className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-left hover:border-amber-400 transition"
-                                  >
-                                    <span className="text-[10px] font-black text-slate-900 block">🔇 Supresión de Ruido</span>
-                                    <span className="text-[8.5px] text-slate-500">Filtra eco y ambiente</span>
-                                  </button>
-                                </div>
-
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setScreenSplitLayout('50-50');
-                                    setShowDuoMenu(false);
-                                    setFinanzasDuoSubTool('menu');
-                                    alert('🎙️ Transmisión Solo Audio Activada. Los invitados participan exclusivamente por voz.');
+                                    setIsAudioOnlyDuo(prev => !prev);
+                                    alert(!isAudioOnlyDuo ? '🎙️ Modo Solo Audio ACTIVADO para invitados.' : '📹 Modo Cámara reanudado.');
                                   }}
-                                  className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black rounded-xl transition shadow-md active:scale-[0.98] cursor-pointer text-center"
+                                  className={`w-full py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-md active:scale-95 text-center block min-h-[44px] ${
+                                    isAudioOnlyDuo ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300'
+                                  }`}
                                 >
-                                  🚀 Iniciar Modo Solo Audio
+                                  {isAudioOnlyDuo ? '✓ MODO SOLO AUDIO ACTIVO (DESACTIVAR)' : '🎙️ ACTIVAR MODO SOLO AUDIO'}
                                 </button>
                               </div>
                             )}
 
-                            {/* VISTA 6: COMPARTIR PANTALLA */}
+                            {/* VISTA 6: COMPARTICIÓN DE PANTALLA */}
                             {finanzasDuoSubTool === 'pantalla' && (
-                              <div className="space-y-2.5">
-                                <p className="text-[10px] font-extrabold text-slate-700 m-0">Selecciona el tipo de contenido financiero a transmitir:</p>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                  {[
-                                    { mode: 'full', title: '📈 Gráficos TradingView', desc: 'Bolsa y cripto en directo' },
-                                    { mode: 'presentation', title: '📊 Diapositivas PDF', desc: 'Presentación e informes' },
-                                    { mode: 'window', title: '💻 Ventana de Escritorio', desc: 'Terminal o App de inversión' },
-                                    { mode: 'tab', title: '🌐 Pestaña de Navegador', desc: 'Datos y noticias en vivo' }
-                                  ].map((src, i) => (
-                                    <button
-                                      key={i}
-                                      type="button"
-                                      onClick={() => handleStartSpecificScreenShare(src.mode as any)}
-                                      className="p-2.5 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-400 rounded-xl text-left cursor-pointer transition active:scale-95 group"
-                                    >
-                                      <p className="text-[10.5px] font-extrabold text-slate-900 group-hover:text-rose-700 m-0">{src.title}</p>
-                                      <p className="text-[8.5px] text-slate-500 m-0 mt-0.5">{src.desc}</p>
-                                    </button>
-                                  ))}
+                              <div className="space-y-3">
+                                <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-2xl text-xs sm:text-[13px] text-cyan-950 font-medium leading-relaxed">
+                                  <strong>🖥️ Emisión de Pantalla en Directo:</strong> Comparte gráficos de velas, TradingView, hojas de cálculo o pestañas del navegador en alta definición.
                                 </div>
-
-                                <div className="p-2 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-between text-[10px]">
-                                  <span className="font-bold text-slate-800">Calidad: 1080p @ 60fps</span>
-                                  <label className="flex items-center gap-1 cursor-pointer">
-                                    <input type="checkbox" defaultChecked className="rounded text-rose-600" />
-                                    <span>Incluir Audio del Sistema</span>
-                                  </label>
+                                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartSpecificScreenShare('full')}
+                                    className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-cyan-500 bg-white hover:bg-cyan-50 text-left transition cursor-pointer shadow-2xs min-h-[90px]"
+                                  >
+                                    <span className="text-xl sm:text-2xl block mb-1">🖥️</span>
+                                    <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Pantalla Completa</span>
+                                    <span className="text-[10px] sm:text-[11px] text-slate-600 font-medium block leading-snug mt-0.5">Desktop / Monitor</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartSpecificScreenShare('window')}
+                                    className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-cyan-500 bg-white hover:bg-cyan-50 text-left transition cursor-pointer shadow-2xs min-h-[90px]"
+                                  >
+                                    <span className="text-xl sm:text-2xl block mb-1">🪟</span>
+                                    <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Ventana Trading</span>
+                                    <span className="text-[10px] sm:text-[11px] text-slate-600 font-medium block leading-snug mt-0.5">Software Financiero</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartSpecificScreenShare('tab')}
+                                    className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-cyan-500 bg-white hover:bg-cyan-50 text-left transition cursor-pointer shadow-2xs min-h-[90px]"
+                                  >
+                                    <span className="text-xl sm:text-2xl block mb-1">🌐</span>
+                                    <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Pestaña Web</span>
+                                    <span className="text-[10px] sm:text-[11px] text-slate-600 font-medium block leading-snug mt-0.5">Bolsa y Noticias</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartSpecificScreenShare('presentation')}
+                                    className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-cyan-500 bg-white hover:bg-cyan-50 text-left transition cursor-pointer shadow-2xs min-h-[90px]"
+                                  >
+                                    <span className="text-xl sm:text-2xl block mb-1">📊</span>
+                                    <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Diapositivas</span>
+                                    <span className="text-[10px] sm:text-[11px] text-slate-600 font-medium block leading-snug mt-0.5">Presentación Slides</span>
+                                  </button>
                                 </div>
                               </div>
                             )}
 
-                            {/* VISTA 7: CONTROLES DE PARTICIPANTES */}
+                            {/* VISTA 7: CONTROLES Y MODERACIÓN */}
                             {finanzasDuoSubTool === 'controles' && (
-                              <div className="space-y-2.5">
-                                <div className="flex items-center justify-between gap-1.5 pb-1">
-                                  <span className="text-[10px] font-black text-slate-800">10 Participantes Conectados</span>
-                                  {(() => {
-                                    const allMuted = financeControlsList.length > 0 && financeControlsList.every(c => !c.micOn);
-                                    const allCamsOff = financeControlsList.length > 0 && financeControlsList.every(c => !c.camOn);
-
-                                    return (
-                                      <div className="flex items-center gap-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            if (allMuted) {
-                                              setFinanceControlsList(prev => prev.map(c => ({ ...c, micOn: true })));
-                                              alert('🎙️ Mudo desactivado: Se han activado todos los micrófonos.');
-                                            } else {
-                                              setFinanceControlsList(prev => prev.map(c => ({ ...c, micOn: false })));
-                                              alert('🔇 Todos los micrófonos han sido silenciados.');
-                                            }
-                                          }}
-                                          className={`px-2 py-0.5 text-[9px] font-extrabold rounded transition cursor-pointer border ${
-                                            allMuted
-                                              ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border-emerald-300'
-                                              : 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300'
-                                          }`}
-                                        >
-                                          {allMuted ? '🎙️ Activar Micrófonos' : '🔇 Silenciar Todos'}
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            if (allCamsOff) {
-                                              setFinanceControlsList(prev => prev.map(c => ({ ...c, camOn: true })));
-                                              alert('📷 Cámaras activadas: Se han encendido las cámaras de los participantes.');
-                                            } else {
-                                              setFinanceControlsList(prev => prev.map(c => ({ ...c, camOn: false })));
-                                              alert('📷 Cámaras de invitados apagadas.');
-                                            }
-                                          }}
-                                          className={`px-2 py-0.5 text-[9px] font-extrabold rounded transition cursor-pointer border ${
-                                            allCamsOff
-                                              ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border-emerald-300'
-                                              : 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300'
-                                          }`}
-                                        >
-                                          {allCamsOff ? '📷 Activar Cámaras' : '📷 Apagar Cámaras'}
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
+                              <div className="space-y-3">
+                                <div className="p-3 bg-slate-100 border border-slate-300 rounded-2xl flex items-center justify-between gap-2">
+                                  <span className="text-xs sm:text-[13px] font-bold text-slate-800">🎛️ Controles del Moderador / Anfitrión</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsDuoMutedMap(prev => {
+                                          const next: Record<string, boolean> = {};
+                                          FINANZAS_USERS.forEach(u => { next[u.id] = true; });
+                                          return next;
+                                        });
+                                        alert('🔇 Todos los invitados han sido silenciados.');
+                                      }}
+                                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition cursor-pointer active:scale-95 shadow-xs"
+                                    >
+                                      🔇 Silenciar Todos
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsDuoMutedMap({});
+                                        alert('🔊 Micrófonos reactivados para todos.');
+                                      }}
+                                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-900 text-xs font-black rounded-xl transition cursor-pointer active:scale-95"
+                                    >
+                                      🔊 Reactivar
+                                    </button>
+                                  </div>
                                 </div>
 
-                                <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
-                                  {financeControlsList.map((item) => (
-                                    <div key={item.id} className="p-1.5 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
-                                      <div className="min-w-0 flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
-                                        <div className="min-w-0">
-                                          <p className="text-[10.5px] font-black text-slate-900 truncate m-0">{item.name}</p>
-                                          <p className="text-[8.5px] text-slate-500 font-medium truncate m-0">{item.role}</p>
+                                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                                  {FINANZAS_USERS.slice(0, 5).map((user) => {
+                                    const isMuted = !!isDuoMutedMap[user.id];
+                                    const isCamOff = !!isDuoCamOffMap[user.id];
+                                    return (
+                                      <div key={user.id} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-2 hover:bg-slate-100 transition shadow-2xs min-h-[64px]">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-slate-300 shrink-0" />
+                                          <div className="min-w-0">
+                                            <p className="text-xs sm:text-[13px] md:text-sm font-extrabold text-slate-900 truncate m-0">{user.name}</p>
+                                            <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate m-0">@{user.username} • <span className="text-rose-600 font-bold">{user.role}</span></p>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setIsDuoMutedMap(prev => ({ ...prev, [user.id]: !prev[user.id] }));
+                                            }}
+                                            className={`px-3 py-2 rounded-xl text-xs sm:text-[13px] font-black transition cursor-pointer border min-h-[38px] ${
+                                              isMuted
+                                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
+                                            }`}
+                                          >
+                                            {isMuted ? '🔇 Muteado' : '🎙️ Mic ON'}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setIsDuoCamOffMap(prev => ({ ...prev, [user.id]: !prev[user.id] }));
+                                            }}
+                                            className={`px-3 py-2 rounded-xl text-xs sm:text-[13px] font-black transition cursor-pointer border min-h-[38px] ${
+                                              isCamOff
+                                                ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
+                                            }`}
+                                          >
+                                            {isCamOff ? '🚫 Cam OFF' : '📹 Cam ON'}
+                                          </button>
                                         </div>
                                       </div>
-
-                                      <div className="flex items-center gap-1 shrink-0">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setFinanceControlsList(prev => prev.map(c => c.id === item.id ? { ...c, micOn: !c.micOn } : c));
-                                          }}
-                                          className={`px-1.5 py-0.5 rounded text-[9px] font-black cursor-pointer border ${
-                                            item.micOn ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-300'
-                                          }`}
-                                        >
-                                          {item.micOn ? '🎙️ Mic ON' : '🔇 Mute'}
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setFinanceControlsList(prev => prev.map(c => c.id === item.id ? { ...c, camOn: !c.camOn } : c));
-                                          }}
-                                          className={`px-1.5 py-0.5 rounded text-[9px] font-black cursor-pointer border ${
-                                            item.camOn ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-300'
-                                          }`}
-                                        >
-                                          {item.camOn ? '📷 Cam ON' : '🚫 Off'}
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            if (item.id === 'f-1') return alert('No puedes expulsar al director de la sesión.');
-                                            setFinanceControlsList(prev => prev.filter(c => c.id !== item.id));
-                                            alert(`🚫 ${item.name} ha sido expulsado de la sala.`);
-                                          }}
-                                          className="px-1.5 py-0.5 rounded text-[8.5px] font-extrabold bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 transition cursor-pointer"
-                                        >
-                                          Expulsar
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
@@ -21733,299 +25177,1723 @@ export default function CastingLiveSection({
                         )}
                       </div>
                     ) : (
-                      /* 🔴 OPCIÓN PRINCIPAL HABITUAL: DÚO COMERCIAL CON BUSCADOR DE PRODUCTOS DE TIENDAS EN OTROS CANALES */
-                      (() => {
-                        const duoSystemProducts = [
-                          ...(tikTokShopItems || []),
-                          ...((selectedInvestorStore && selectedInvestorStore.name) 
-                            ? getStoreProductsForModel(selectedInvestorStore.id || 'isabella', selectedInvestorStore.name) 
-                            : getStoreProductsForModel('isabella', 'Isabella Dubois Couture'))
-                        ].filter((p, index, self) => index === self.findIndex((t) => (t.id && t.id === p.id) || (t.name && t.name === p.name)));
-
-                        const filteredDuoProductsList = duoSystemProducts.filter(p =>
-                          !duoSearchQuery ||
-                          p.name?.toLowerCase().includes(duoSearchQuery.toLowerCase()) ||
-                          p.category?.toLowerCase().includes(duoSearchQuery.toLowerCase())
-                        );
-
-                        const activePinnedProduct = pinnedShopProduct || tikTokShopItems[0];
-
-                        return (
-                          <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
-                            <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50/60 p-3 sm:p-3.5 rounded-xl border-2 border-rose-400 shadow-sm space-y-2.5">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-base">🛍️</span>
-                                  <div>
-                                    <h5 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">Dúo Comercial</h5>
-                                    <span className="text-[9.5px] font-extrabold text-rose-600 block">
-                                      Vendedor 🔴 + Modelo/Influencer 🟣
-                                    </span>
-                                  </div>
-                                </div>
-                                <span className="bg-gradient-to-r from-[#fe2c55] to-rose-600 text-white text-[8.5px] font-black px-2 py-0.5 rounded-full shadow-2xs uppercase tracking-wider">
-                                  Modo Comercial Live
-                                </span>
-                              </div>
-
-                              <p className="text-[10px] text-slate-700 leading-snug font-medium m-0">
-                                El <strong className="text-rose-700 font-black">Vendedor 🔴</strong> posee y gestiona el producto mientras la <strong className="text-purple-700 font-black">Modelo / Influencer 🟣</strong> lo presenta y luce en directo. El vendedor responde inquietudes técnicas en el chat en tiempo real.
-                              </p>
-
-                              {/* DISPOSICIÓN DE LA PANTALLA EN DÚO */}
-                              <div className="bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 space-y-2 text-center shadow-inner">
-                                <div className="text-[9px] font-black uppercase tracking-wider text-slate-300">
-                                  Disposición Visual de Pantalla:
-                                </div>
-                                <div className="grid grid-cols-2 gap-1.5 font-black text-[10px] uppercase">
-                                  <div className="bg-rose-950/80 border border-rose-500/60 p-2 rounded-lg text-rose-300 flex items-center justify-center gap-1 shadow-sm">
-                                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                                    <span>[ VENDEDOR 🔴 ]</span>
-                                  </div>
-                                  <div className="bg-purple-950/80 border border-purple-500/60 p-2 rounded-lg text-purple-300 flex items-center justify-center gap-1 shadow-sm">
-                                    <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-                                    <span>[ MODELO 🟣 ]</span>
-                                  </div>
-                                </div>
-
-                                {/* MOCKUP DEL PRODUCTO SELECCIONADO Y FIJADO */}
-                                <div className="mt-1.5 bg-slate-950/95 border border-amber-400/90 p-2 rounded-xl text-left text-[9.5px] flex items-center justify-between gap-2 shadow-md">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <img
-                                      src={activePinnedProduct?.image || 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=150'}
-                                      alt={activePinnedProduct?.name || 'Producto'}
-                                      className="w-10 h-10 rounded-lg object-cover border border-amber-400/80 shrink-0"
-                                    />
-                                    <div className="min-w-0">
-                                      <div className="font-extrabold text-amber-300 truncate text-[10px]" title={activePinnedProduct?.name}>
-                                        Producto presentado: {activePinnedProduct?.name || 'Vestido Atelier de Seda Roja'}
-                                      </div>
-                                      <div className="text-[9px] text-slate-300 font-mono flex items-center gap-1.5 flex-wrap">
-                                        <span>Precio: <span className="line-through text-slate-400">{(((activePinnedProduct?.price ?? 297.49) * 1.25)).toFixed(2)} €</span></span>
-                                        <span>|</span>
-                                        <span className="text-emerald-400 font-black">Oferta Live: {((activePinnedProduct?.price ?? 297.49)).toFixed(2)} €</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="bg-rose-600 text-white font-black text-[8.5px] px-2 py-1 rounded-lg uppercase tracking-wider shrink-0 shadow-sm">
-                                    🔴 COMPRAR AHORA
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* 🔍 BUSCADOR INTERACTIVO DE PRODUCTOS DE TIENDAS */}
-                              <div className="bg-white p-2.5 rounded-xl border-2 border-rose-300 shadow-xs space-y-2">
-                                <div className="flex items-center justify-between gap-2">
-                                  <label className="text-[10px] font-black uppercase text-slate-900 tracking-wider flex items-center gap-1.5">
-                                    <Search className="w-3.5 h-3.5 text-[#fe2c55]" />
-                                    <span>Elegir / Buscar Producto de la Tienda:</span>
-                                  </label>
-                                  <span className="text-[8.5px] font-extrabold text-rose-700 bg-rose-100/80 px-1.5 py-0.5 rounded border border-rose-300">
-                                    {filteredDuoProductsList.length} disponibles
-                                  </span>
-                                </div>
-
-                                <div className="relative">
-                                  <input
-                                    type="text"
-                                    value={duoSearchQuery}
-                                    onChange={(e) => setDuoSearchQuery(e.target.value)}
-                                    placeholder="Escribe el nombre del producto (ej: Vestido Atelier, Zapatos Red Velvet...)"
-                                    className="w-full bg-slate-50 text-slate-900 border-2 border-rose-200 focus:border-[#fe2c55] focus:bg-white rounded-xl pl-3 pr-8 py-1.5 text-[10.5px] font-semibold outline-none shadow-2xs transition placeholder:text-slate-400"
-                                  />
-                                  {duoSearchQuery && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setDuoSearchQuery('')}
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-800 text-xs font-black p-0.5"
-                                    >
-                                      ✕
-                                    </button>
-                                  )}
-                                </div>
-
-                                {/* LISTA DE RESULTADOS / PRODUCTOS DE TIENDA DISPONIBLES */}
-                                <div className="max-h-36 overflow-y-auto space-y-1 pr-0.5 custom-scrollbar">
-                                  {filteredDuoProductsList.length > 0 ? (
-                                    filteredDuoProductsList.slice(0, 10).map((prod) => {
-                                      const isSelected = (activePinnedProduct?.id === prod.id) || (activePinnedProduct?.name === prod.name);
-                                      return (
-                                        <button
-                                          key={prod.id || prod.name}
-                                          type="button"
-                                          onClick={() => {
-                                            setPinnedShopProduct(prod);
-                                            alert(`📌 ¡Producto "${prod.name}" seleccionado y fijado para el Dúo Comercial!`);
-                                          }}
-                                          className={`w-full p-1.5 rounded-lg border text-left flex items-center justify-between gap-2 transition cursor-pointer ${
-                                            isSelected
-                                              ? 'bg-rose-50 border-rose-500 ring-1 ring-rose-400 shadow-2xs'
-                                              : 'bg-white hover:bg-slate-50 border-slate-200'
-                                          }`}
-                                        >
-                                          <div className="flex items-center gap-2 min-w-0">
-                                            <img
-                                              src={prod.image || 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=100'}
-                                              alt={prod.name}
-                                              className="w-8 h-8 rounded-md object-cover border border-slate-300 shrink-0"
-                                            />
-                                            <div className="min-w-0">
-                                              <div className="text-[10px] font-bold text-slate-900 truncate" title={prod.name}>
-                                                {prod.name}
-                                              </div>
-                                              <div className="text-[8.5px] text-slate-500 font-mono">
-                                                {prod.price ? `${prod.price.toFixed(2)}€` : 'Consultar'} {prod.category ? `• ${prod.category}` : ''}
-                                              </div>
-                                            </div>
-                                          </div>
-                                          <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
-                                            isSelected
-                                              ? 'bg-[#fe2c55] text-white shadow-xs'
-                                              : 'bg-slate-100 text-slate-700 hover:bg-rose-100 hover:text-rose-800'
-                                          }`}>
-                                            {isSelected ? '✓ Fijado' : 'Fijar 📌'}
-                                          </span>
-                                        </button>
-                                      );
-                                    })
-                                  ) : (
-                                    <div className="p-2.5 text-center text-[9.5px] text-slate-600 bg-slate-50 rounded-lg border border-dashed border-slate-300 space-y-1.5">
-                                      <div>No se encontró &quot;{duoSearchQuery}&quot; en el catálogo estándar.</div>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const customProd = {
-                                            id: `custom-prod-${Date.now()}`,
-                                            name: duoSearchQuery.trim(),
-                                            category: 'Boutique Personalizada 🛍️',
-                                            price: 199.99,
-                                            discount: 15,
-                                            image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=300',
-                                            ctaText: 'Comprar en Directo 🔴'
-                                          };
-                                          setPinnedShopProduct(customProd);
-                                          alert(`📌 ¡Producto personalizado "${customProd.name}" fijado para el Dúo Comercial!`);
-                                        }}
-                                        className="px-3 py-1 bg-rose-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-rose-700 transition shadow-xs"
-                                      >
-                                        ➕ Usar &quot;{duoSearchQuery}&quot; como producto
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="text-[9px] text-slate-600 flex items-center gap-1.5 font-bold">
-                                <span className="text-xs">📌</span>
-                                <span>El producto seleccionado queda fijado automáticamente en pantalla durante todo el Dúo.</span>
-                              </div>
-
-                              {/* BOTÓN DE ACTIVACIÓN */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextState = !isDuoShoppingActive;
-                                  setIsDuoShoppingActive(nextState);
-                                  if (nextState) {
-                                    setScreenSplitLayout('50-50');
-                                    setShowDuoMenu(false);
-                                    alert(`🛍️ ¡Dúo Comercial Activado! Presentando "${activePinnedProduct?.name}" en pantalla dividida [ VENDEDOR 🔴 ] | [ MODELO 🟣 ].`);
-                                  } else {
-                                    setScreenSplitLayout('single');
-                                    setShowDuoMenu(false);
-                                    alert('📱 Dúo Comercial desactivado.');
-                                  }
-                                }}
-                                className={`w-full py-2 px-3 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition cursor-pointer shadow-md border-0 active:scale-95 flex items-center justify-center gap-1.5 ${
-                                  isDuoShoppingActive
-                                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                                    : 'bg-gradient-to-r from-[#fe2c55] via-rose-600 to-amber-600 text-white hover:brightness-110 animate-pulse'
-                                }`}
-                              >
-                                <span>{isDuoShoppingActive ? '🛑 Desactivar Dúo Comercial' : '🚀 Activar Dúo Comercial y Fijar Producto'}</span>
-                              </button>
-                            </div>
-
-                            {/* OTRAS OPCIONES SECUNDARIAS DE DÚO EN OTROS CANALES */}
-                            <div className="grid grid-cols-2 gap-2 pt-1">
-                              {/* Dúo Creadores / Entrevista */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIsDuoShoppingActive(false);
-                                  setScreenSplitLayout('50-50');
-                                  setShowDuoMenu(false);
-                                  alert('🎙️ Modo Dúo Creador / Entrevista activado en pantalla 50/50.');
-                                }}
-                                className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-left space-y-0.5 cursor-pointer transition"
-                              >
-                                <div className="text-xs font-black text-slate-900 flex items-center gap-1">
-                                  <span>🎙️</span>
-                                  <span>Dúo Creadores</span>
-                                </div>
-                                <p className="text-[8.5px] text-slate-600 leading-tight font-medium m-0">
-                                  Entrevista o charla libre entre 2 influencers/modelos.
-                                </p>
-                              </button>
-
-                              {/* Dúo Pitch / Casting Inversor */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIsDuoShoppingActive(false);
-                                  setScreenSplitLayout('50-50');
-                                  setShowDuoMenu(false);
-                                  alert('👔 Modo Dúo Pitch Inversor & Casting activado.');
-                                }}
-                                className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-left space-y-0.5 cursor-pointer transition"
-                              >
-                                <div className="text-xs font-black text-slate-900 flex items-center gap-1">
-                                  <span>💼</span>
-                                  <span>Dúo Casting / Pitch</span>
-                                </div>
-                                <p className="text-[8.5px] text-slate-600 leading-tight font-medium m-0">
-                                  Presentación ejecutiva a patrocinadores y agencias.
-                                </p>
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })()
+                      /* OPCIONES PARA OTROS CANALES (MODA, BELLEZA, GAMING...) */
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 flex-1 overflow-y-auto pr-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setScreenSplitLayout('50-50');
+                            setShowDuoMenu(false);
+                            alert('👥 Dúo Comercial 50/50 activado.');
+                          }}
+                          className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 bg-slate-50 hover:bg-rose-50/50 text-left transition cursor-pointer shadow-2xs min-h-[92px]"
+                        >
+                          <span className="text-xl sm:text-2xl block mb-1">👯</span>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Dúo Comercial 50/50</span>
+                          <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Venta y pasarela conjunta</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setScreenSplitLayout('grid-4');
+                            setShowDuoMenu(false);
+                            alert('👨‍👩‍👧‍👦 Multianfitrión activado.');
+                          }}
+                          className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-purple-400 bg-slate-50 hover:bg-purple-50/50 text-left transition cursor-pointer shadow-2xs min-h-[92px]"
+                        >
+                          <span className="text-xl sm:text-2xl block mb-1">👨‍👩‍👧‍👦</span>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Multianfitrión</span>
+                          <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Hasta 10 invitados</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAudioOnlyDuo(true);
+                            setShowDuoMenu(false);
+                            alert('🎙️ Modo Solo Audio activado.');
+                          }}
+                          className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/50 text-left transition cursor-pointer shadow-2xs min-h-[92px]"
+                        >
+                          <span className="text-xl sm:text-2xl block mb-1">🎙️</span>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Solo Audio</span>
+                          <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Podcast y voz</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowDuoMenu(false);
+                            setShowScreenShareMenu(true);
+                          }}
+                          className="p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-cyan-400 bg-slate-50 hover:bg-cyan-50/50 text-left transition cursor-pointer shadow-2xs min-h-[92px]"
+                        >
+                          <span className="text-xl sm:text-2xl block mb-1">🖥️</span>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Compartir Pantalla</span>
+                          <span className="text-[10.5px] sm:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Catálogo y navegador</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
 
+                {/* 🌌 CENTRAL EMBEDDED LOGO AND PARTICIPANTS GRID FOR FINANZAS CATEGORY */}
+                {selectedCategoryFilter === 'Finanzas' && (
+                  <div 
+                    onWheel={(e) => {
+                      e.stopPropagation();
+                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+                      if (sessionScrollLockRef.current) return;
+                      if (Math.abs(e.deltaY) < 15) return;
+                      
+                      sessionScrollLockRef.current = true;
+                      setTimeout(() => {
+                        sessionScrollLockRef.current = false;
+                      }, 350);
 
-                {/* System warning audio notification runs in background without cluttering the screen */}
+                      if (e.deltaY > 0) {
+                        handleScrollSession('down');
+                      } else {
+                        handleScrollSession('up');
+                      }
+                    }}
+                    onTouchStart={(e) => {
+                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+                      if (e.touches && e.touches[0]) {
+                        setTouchStartY(e.touches[0].clientY);
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+                      if (touchStartY !== null && e.changedTouches && e.changedTouches[0]) {
+                        const deltaY = e.changedTouches[0].clientY - touchStartY;
+                        if (Math.abs(deltaY) > 35) {
+                          if (deltaY < 0) {
+                            handleScrollSession('down');
+                          } else {
+                            handleScrollSession('up');
+                          }
+                        }
+                      }
+                      setTouchStartY(null);
+                    }}
+                    className="absolute inset-0 flex flex-col justify-between bg-[#0a0e1a] z-0 animate-fade-in p-2 sm:p-3 pt-4 sm:pt-6 pb-2 select-none overflow-y-auto w-full max-w-full min-w-0" 
+                    id="finanzas-empty-state-logo"
+                  >
+                    {/* ⚠️ MODAL: AVISO DE RESTRICCIÓN DE PARTICIPACIÓN SIMULTÁNEA EN DOS SESIONES */}
 
-                {/* 🌌 CENTRAL EMBEDDED LOGO FOR FINANZAS CATEGORY BY DEFAULT */}
-                {selectedCategoryFilter === 'Finanzas' && (!isFinanzasLiveConnected || isVoiceIntroPlaying || joinedPresenterIds.length < 10) && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-0 animate-fade-in p-4" id="finanzas-empty-state-logo">
-                    {/* ⏱️ 10-Second Notice above the Logo during audio intro */}
-                    {showProject5MinNotice && (
-                      <div className="mb-6 px-4 py-3 bg-amber-500/95 backdrop-blur-md text-slate-950 rounded-2xl shadow-2xl border border-amber-300/60 flex items-center gap-3 animate-slide-down max-w-xs sm:max-w-sm text-left z-20">
-                        <span className="text-xl shrink-0 animate-bounce">⏱️</span>
-                        <div>
-                          <div className="text-[10px] font-black uppercase tracking-wider text-amber-950/80 mb-0.5">Aviso del Sistema</div>
-                          <div className="text-[11.5px] font-extrabold leading-snug font-sans text-slate-950">
-                            Tienes 5 minutos para describir tu proyecto.
+
+                    {cannotJoinMultipleSessionsModal?.show && (
+                      <div 
+                        className="fixed inset-0 z-[700] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 text-white font-sans animate-fade-in select-none"
+                        onClick={() => setCannotJoinMultipleSessionsModal(null)}
+                      >
+                        <div 
+                          className="bg-[#0e1628] border-2 border-amber-500/80 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.95)] max-w-sm sm:max-w-md w-full text-center space-y-4 animate-scale-in relative overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Ambient lighting glow */}
+                          <div className="absolute -top-16 -left-16 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+                          <div className="absolute -bottom-16 -right-16 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
+
+                          {/* Close X button */}
+                          <button
+                            type="button"
+                            onClick={() => setCannotJoinMultipleSessionsModal(null)}
+                            className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-90 cursor-pointer"
+                            title="Cerrar aviso"
+                          >
+                            ✕
+                          </button>
+
+                          {/* Warning Alert Icon */}
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/15 border border-amber-500/60 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+                            <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-amber-400" />
+                          </div>
+
+                          {/* Modal Header */}
+                          <div className="space-y-1">
+                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-400 block font-mono">
+                              ⚠️ RESTRICCIÓN DE PARTICIPACIÓN
+                            </span>
+                            <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-tight leading-snug m-0">
+                              No puedes participar en otra sesión sin haber acabado la sesión actual
+                            </h3>
+                          </div>
+
+                          {/* Active Session Info Details */}
+                          <div className="bg-slate-950/90 border border-slate-800/90 rounded-2xl p-3.5 text-left space-y-2.5 shadow-inner">
+                            <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+                                Tu Sesión Activa en Curso
+                              </span>
+                              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                PARTICIPANDO AHORA
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-slate-800 border border-emerald-400/60 flex items-center justify-center text-lg shrink-0 shadow-sm">
+                                💼
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-xs sm:text-sm font-black text-white truncate m-0">
+                                  {cannotJoinMultipleSessionsModal.activeSessionTitle}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] text-emerald-400 font-bold font-mono">
+                                    {cannotJoinMultipleSessionsModal.activeSessionFee.toLocaleString('es-ES')} €
+                                  </span>
+                                  <span className="text-slate-500 text-[10px] font-bold">•</span>
+                                  <span className="text-[10px] text-slate-300 font-bold">
+                                    10º Participante ({userProfile?.name || 'Adriana Lima'})
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <p className="text-[10.5px] sm:text-[11px] text-slate-300 leading-relaxed m-0 pt-1 border-t border-slate-800/60 font-medium">
+                              Actualmente ya estás participando en <strong className="text-white">{cannotJoinMultipleSessionsModal.activeSessionTitle}</strong>. Ningún usuario puede participar en otra sesión sin haber acabado la sesión en la que está participando. Debes esperar a que concluyan los turnos de exposición, la votación y el escrutinio antes de inscribirte en <strong className="text-amber-300">{cannotJoinMultipleSessionsModal.attemptedSessionTitle || 'otra mesa'}</strong>.
+                            </p>
+                          </div>
+
+                          {/* Modal Actions */}
+                          <div className="space-y-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const targetIdx = activeSessionsOnly.findIndex(s => s.id === cannotJoinMultipleSessionsModal.activeSessionId);
+                                if (targetIdx !== -1) {
+                                  setActiveFinanzasSessionIndex(targetIdx);
+                                  setShowRondaNotice(true);
+                                }
+                                setShowFinanzasInscriptionInChannel(false);
+                                setCannotJoinMultipleSessionsModal(null);
+                              }}
+                              className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition border border-emerald-400 flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              <span>Ir a mi Sesión Activa ({cannotJoinMultipleSessionsModal.activeSessionTitle})</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setCannotJoinMultipleSessionsModal(null)}
+                              className="w-full py-2 px-4 bg-slate-900/90 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-xl transition border border-slate-700 cursor-pointer"
+                            >
+                              Entendido, Continuar Viendo
+                            </button>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <FashionsFinanceLogo 
-                      mode="dark" 
-                      withText={true} 
-                      className="w-24 h-24 sm:w-28 sm:h-28" 
-                      textClassName="text-white text-base sm:text-lg tracking-[0.25em] font-black"
-                      subTextClassName="text-rose-500 text-[10px] sm:text-[11px] tracking-[0.35em] font-bold mt-2"
-                    />
-                  </div>
-                )}
+                    {/* CONDITIONAL RENDER: SIMULATED EMPTY CHANNEL WITH LOGO OR ACTIVE CHANNEL */}
+                    {(simulateEmptyFinanzasChannel || activeSessionsOnly.length === 0) ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090d16] sm:bg-[#0a0e1a] z-50 animate-fade-in p-6 select-none text-center" id="finanzas-channel-empty-logo-view">
+                        <div className="flex flex-col items-center justify-center text-center animate-scale-in max-w-md mx-auto my-auto p-4">
+                          {/* Dark Logo Icon Card */}
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl p-3 bg-[#0e1628] border border-slate-800/80 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center justify-center mb-3 sm:mb-4 transition-transform hover:scale-105">
+                            <FashionsFinanceLogo 
+                              mode="dark" 
+                              withText={false} 
+                              className="w-full h-full border-0 bg-transparent shadow-none p-0" 
+                            />
+                          </div>
+                          
+                          {/* Title & Subtitle */}
+                          <h1 className="font-display font-black text-base sm:text-xl text-white tracking-[0.25em] leading-none uppercase drop-shadow-md">
+                            FASHIONS
+                          </h1>
+                          <h2 className="font-display font-bold text-[11px] sm:text-[12px] text-[#f43f5e] tracking-[0.35em] leading-none uppercase mt-2 drop-shadow-xs">
+                            FINANCE
+                          </h2>
 
-                {/* 🎥 LIVE STREAM VIDEO FOR FINANZAS CATEGORY WHEN CONNECTED AND 10 PARTICIPANTS PRESENT */}
-                {selectedCategoryFilter === 'Finanzas' && isFinanzasLiveConnected && !isVoiceIntroPlaying && joinedPresenterIds.length === 10 && (
+                          <div className="mt-4 inline-flex items-center gap-2 bg-amber-500/15 border border-amber-500/30 text-amber-300 px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-sm">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                            <span>CANAL EN ESPERA • SIN PARTICIPANTES ACTIVOS</span>
+                          </div>
+
+                          <p className="text-slate-400 text-xs sm:text-sm font-medium mt-3 leading-relaxed max-w-sm">
+                            Actualmente no hay ninguna mesa de inversión con participantes activos en directo en este canal de Finanzas.
+                          </p>
+
+                          {/* Action Button to open active session channel matching image.png */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSimulateEmptyFinanzasChannel(false);
+                              if (activeSessionsOnly.length === 0) {
+                                setOpenFinanzasSessions([
+                                  {
+                                    id: 'sess-open-1',
+                                    title: 'Mesa de Inversión #1 • Balmain Paris Directo',
+                                    brand: 'Balmain Paris',
+                                    category: 'Round STREETWEAR & URBAN',
+                                    entryFee: 10,
+                                    presenter: FINANZAS_USERS[0],
+                                    participants: [...FINANZAS_USERS],
+                                    status: 'active'
+                                  },
+                                  {
+                                    id: 'sess-open-2',
+                                    title: 'Mesa de Inversión #2 • Chanel Haute Couture',
+                                    brand: 'Chanel Haute Couture',
+                                    category: 'Ronda de Oro',
+                                    entryFee: 20,
+                                    presenter: FINANZAS_USERS[1],
+                                    participants: [FINANZAS_USERS[1], FINANZAS_USERS[2], FINANZAS_USERS[3], FINANZAS_USERS[4], FINANZAS_USERS[5], FINANZAS_USERS[6], FINANZAS_USERS[7], FINANZAS_USERS[8], FINANZAS_USERS[9], FINANZAS_USERS[0]],
+                                    status: 'active'
+                                  }
+                                ]);
+                                setActiveFinanzasSessionIndex(1);
+                              } else {
+                                const giseleIndex = activeSessionsOnly.findIndex(s => s.brand.includes('Chanel') || s.presenter.name.includes('Gisele'));
+                                if (giseleIndex !== -1) {
+                                  setActiveFinanzasSessionIndex(giseleIndex);
+                                } else {
+                                  setActiveFinanzasSessionIndex(0);
+                                }
+                              }
+                            }}
+                            className="w-full px-5 py-3.5 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 hover:from-rose-500 hover:to-pink-500 active:scale-95 text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl shadow-rose-600/50 transition cursor-pointer border border-rose-400/40 flex items-center justify-center gap-2 mt-6"
+                            id="btn-acceder-canal-image-png"
+                          >
+                            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
+                            <span>🔴 ACCEDER AL CANAL EN DIRECTO (Gisele Bündchen • Chanel)</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Badge: Active Presenter Online matching current open session */}
+                        {(() => {
+                          const isFullHouse = (currentFinanzasSession?.participants?.length || 0) >= 10 && joinedPresenterIds.length >= 10;
+                          if (!isFullHouse) return null; // Cut broadcast until all 10 participants are inside!
+
+                          const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
+                          const sessionParts = currentFinanzasSession?.participants || [];
+                          const firstPart = sessionParts[0] || DEFAULT_USER_PARTICIPANT;
+                          const rawActiveUser = activeFinanzasPopupUser || 
+                                             fullscreenFinanzasUser || 
+                                             selectedFinanzasUser || 
+                                             (presentingItem ? (FINANZAS_USERS.find(u => u.id === presentingItem.id || u.name === presentingItem.name) || sessionParts.find(p => p.id === presentingItem.id || p.name === presentingItem.name) || presentingItem) : null) || 
+                                             firstPart;
+                          const isErnesto = Boolean(
+                            rawActiveUser?.id === 'user-ernesto' ||
+                            rawActiveUser?.id === 'user' ||
+                            rawActiveUser?.id === userProfile?.id ||
+                            rawActiveUser?.name === 'Ernesto vs' ||
+                            rawActiveUser?.name === 'Ernesto VS' ||
+                            rawActiveUser?.name === userProfile?.name ||
+                            rawActiveUser?.username === 'ernestovs' ||
+                            rawActiveUser?.username === userProfile?.username
+                          );
+                          const activePresenterName = isErnesto ? 'Ernesto VS' : (rawActiveUser?.name || 'Ernesto VS');
+                          const activePresenterAvatar = (isErnesto || activePresenterName.toLowerCase().includes('ernesto') || activePresenterName.toLowerCase().includes('adriana'))
+                            ? (userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650')
+                            : (rawActiveUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650');
+                          const activeId = rawActiveUser?.id || (isErnesto ? 'user-ernesto' : 'f-1');
+                          const timerVal = isSpeakingPresenterIntro ? 300 : (finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300);
+                          const formattedTimer = `${Math.floor(timerVal / 60)}:${(timerVal % 60).toString().padStart(2, '0')}`;
+                          const activeUserObj = FINANZAS_USERS.find(u => u.name === activePresenterName) || (rawActiveUser && rawActiveUser.name === activePresenterName ? rawActiveUser : null) || firstPart;
+
+                          return (
+                            <>
+                              <div 
+                                onClick={() => {
+                                  if (activeUserObj) {
+                                    setSelectedFinanzasUser(activeUserObj);
+                                    setActiveFinanzasPopupUser(activeUserObj);
+                                    setDetailProjectUser(activeUserObj);
+                                    setShowProjectDetailsInPopup(true);
+                                    setShowQueueInPopup(false);
+                                    setIsVoiceIntroPlaying(false);
+                                  }
+                                }}
+                                className="absolute top-2.5 left-2 sm:left-3 z-40 bg-black/85 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-[#fe2c55]/40 flex items-center gap-1.5 sm:gap-2.5 shadow-xl max-w-[calc(100%-1rem)] cursor-pointer hover:bg-black/95 active:scale-95 transition overflow-hidden" 
+                                id="finanzas-presenter-online-badge-channel"
+                                title={`Ver detalles del proyecto de ${activePresenterName}`}
+                              >
+                                <span className="relative flex h-2 w-2 shrink-0">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe2c55] opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
+                                </span>
+                                <img
+                                  src={activePresenterAvatar || undefined}
+                                  alt={activePresenterName}
+                                  className="w-4 h-4 sm:w-6 sm:h-6 rounded-full object-cover border border-[#fe2c55] shrink-0"
+                                  referrerPolicy="no-referrer"
+                                />
+                                <span className="text-[9px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans whitespace-nowrap truncate min-w-0">
+                                  {activePresenterName} ONLINE
+                                </span>
+                                <div className="flex items-center gap-1 bg-[#fe2c55] text-white px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black uppercase tracking-wider font-mono shrink-0 shadow-sm shadow-[#fe2c55]/30 whitespace-nowrap">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  <span>DIRECTO {formattedTimer}</span>
+                                </div>
+                              </div>
+
+                              {/* ⏱️ 5-Second Ronda Notice Overlay directly under Presenter badge */}
+                              {showRondaNotice && (
+                                <div 
+                                  className="absolute top-11 sm:top-12 left-2 sm:left-3 z-40 bg-black/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-2xl text-white flex flex-col gap-0.5 font-sans animate-fade-in pointer-events-none select-none transition-all duration-300"
+                                  id="ronda-plata-5s-notice-1"
+                                >
+                                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-100">
+                                    <span>- {(() => {
+                                      const fee = currentFinanzasSession?.entryFee;
+                                      const cat = currentFinanzasSession?.category?.toUpperCase() || '';
+                                      if (cat.includes('TRABAJADORES') || cat.includes('STREETWEAR') || fee === 10) return 'ROUND STREETWEAR & URBAN EN CURSO';
+                                      if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'ROUND CASUAL & LIFESTYLE EN CURSO';
+                                      if (cat.includes('EMPRESARIOS') || cat.includes('GLAMOUR') || fee === 1000) return 'RONDA GLAMOUR ✨ EN CURSO';
+                                      if (cat.includes('MODELS') || cat.includes('ELEGANT') || cat.includes('CLASSIC') || fee === 10000) return 'RONDA ELEGANT & CLASSIC 🤍 EN CURSO';
+                                      if (cat.includes('INVERSI') || cat.includes('HIGH') || cat.includes('FASHION') || fee === 100000) return 'RONDA HIGH FASHION 👠 EN CURSO';
+                                      if (cat.includes('MILLONAR') || fee === 1000000) return 'RONDA HIGH FASHION 👠 EN CURSO';
+                                      return 'ROUND CASUAL & LIFESTYLE EN CURSO';
+                                    })()}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-400">
+                                    <span>- {(currentFinanzasSession?.entryFee || 10) >= 1000 ? `${new Intl.NumberFormat("es-ES").format(currentFinanzasSession?.entryFee || 10)} EUROS` : `${currentFinanzasSession?.entryFee || 10} EUROS`}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+
+                    {/* CONDITIONAL RENDER: EMBEDDED VOTING PROJECTS OR PROJECT DETAILS DIRECTLY INSIDE THE CHANNEL FRAME */}
+                    {showVotingProjectsModal ? (
+                      <div 
+                        onWheel={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                        className="absolute inset-0 z-50 bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none"
+                      >
+                        {renderSingleProjectSlider()}
+                      </div>
+                    ) : showFinanzasResults ? (
+                      (() => {
+                        const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
+                        return (
+                          <div className="absolute inset-0 z-[300] bg-slate-950 flex flex-col text-white rounded-none w-full max-w-full h-full font-sans overflow-x-hidden overflow-y-hidden animate-fade-in pointer-events-auto" id="finanzas-results-overlay">
+                            {/* Fixed Header bar pinned at the very top */}
+                            <div className="bg-slate-900 border-b border-slate-800 p-3 sm:p-4 shrink-0 shadow-2xl z-50 flex flex-col gap-2.5">
+                              {/* Top Row: Directo Finalizado badge & Finish Session Button */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowFinanzasResults(false);
+                                    setCompletedSessionToDisplay(null);
+                                    setShowFinanzasRecount(false);
+                                    setFinanzasVotes({});
+                                    setScrutinyVotesCount(0);
+                                    setShowProjectDetailsInPopup(false);
+                                    setDetailProjectUser(null);
+                                    setActiveFinanzasPopupUser(null);
+                                    handleFinishCurrentSessionAndNext();
+                                  }}
+                                  className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-2 border border-rose-500 active:scale-95"
+                                >
+                                  <span>🛑</span>
+                                  <span>Sesión Finalizada</span>
+                                </button>
+                                <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Directo Finalizado
+                                </span>
+                              </div>
+
+                              {/* Header Title & Information */}
+                              <div className="flex items-start gap-2 pt-1.5 border-t border-slate-800/80">
+                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0 mt-1" />
+                                <div>
+                                  <h2 className="text-xs sm:text-sm font-black uppercase text-amber-400 tracking-wider font-sans leading-snug m-0">
+                                    🏆 RESULTADOS FINALES Y RECUENTO DE VOTACIONES DE LA MESA
+                                  </h2>
+                                  <p className="text-[10px] text-slate-400 font-medium font-sans m-0 mt-0.5">
+                                    Canal de Finanzas y Modaparati Directo • Todos los participantes pueden ver la retransmisión en directo en la página principal
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Scrollable results body without visible scrollbar */}
+                            <div 
+                              className="flex-1 overflow-y-auto overflow-x-hidden p-0 scrollbar-none no-scrollbar w-full max-w-full h-full select-none"
+                              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                            >
+                              {/* The complete SessionResultsPodium component */}
+                              <SessionResultsPodium
+                                completedSessionToDisplay={activeSessionToDisplay}
+                                userProfile={{
+                                  id: userProfile?.id || 'user',
+                                  name: userProfile?.name || 'TÚ (Inversor)',
+                                  balance: userProfile?.balance || 150000,
+                                  patrocinadorId: userProfile?.patrocinadorId
+                                }}
+                                userProjects={FINANZAS_USERS.map(fu => {
+                                  const details = getFinanzasProjectDetails(fu.id);
+                                  return {
+                                    id: fu.id,
+                                    userId: fu.id,
+                                    title: details.title,
+                                    description: details.description,
+                                    metrics: details.metrics,
+                                    roi: details.roi,
+                                    tagline: details.tagline,
+                                    images: [
+                                      fu.avatar,
+                                      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
+                                      'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
+                                    ]
+                                  };
+                                })}
+                                models={models}
+                                onSelectModel={(m) => onGoToModelProfile?.(m.id || m.name)}
+                                onNavigateToTab={onNavigateToTab}
+                                setCompletedSessionToDisplay={(session) => {
+                                  setCompletedSessionToDisplay(session);
+                                  if (!session) {
+                                    setShowFinanzasResults(false);
+                                    setShowFinanzasRecount(false);
+                                    setShowProjectDetailsInPopup(false);
+                                    setDetailProjectUser(null);
+                                    setActiveFinanzasPopupUser(null);
+                                    handleFinishCurrentSessionAndNext();
+                                  }
+                                }}
+                                onFinishParticipationSession={() => {
+                                  setShowFinanzasResults(false);
+                                  setCompletedSessionToDisplay(null);
+                                  setShowFinanzasRecount(false);
+                                  setFinanzasVotes({});
+                                  setScrutinyVotesCount(0);
+                                  setShowProjectDetailsInPopup(false);
+                                  setDetailProjectUser(null);
+                                  setActiveFinanzasPopupUser(null);
+                                  handleFinishCurrentSessionAndNext();
+                                }}
+                                setSimulationLogs={() => {}}
+                                setIsCastingPublished={setIsCastingPublished}
+                                isCastingPublished={isCastingPublished}
+                                pool={activeSessionToDisplay.poolTotal || 100}
+                                prizePerWinner={((activeSessionToDisplay.poolTotal || 100) * 0.8) / (activeSessionToDisplay.winners?.length || 1)}
+                                isTie={(activeSessionToDisplay.winners?.length || 1) > 1}
+                                winnersToDisplay={getWinnersToDisplay(activeSessionToDisplay)}
+                                maxVotes={getMaxVotes(activeSessionToDisplay)}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : showFinanzasInscriptionInChannel ? (
+                      (() => {
+                        const currentSession = currentFinanzasSession || activeSessionsOnly[0];
+                        const selectedProj = defaultInscriptionProposals.find(p => p.id === selectedInscriptionProjectId) || defaultInscriptionProposals[0];
+                        const feeFormatted = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(currentFinanzasSession?.entryFee || 10) + '€';
+                        const poolFormatted = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((currentFinanzasSession?.entryFee || 10) * 10) + '€';
+
+                        return (
+                          <div 
+                            className="absolute inset-0 z-[250] bg-slate-900/60 backdrop-blur-md flex flex-col w-full h-full overflow-y-auto text-slate-800 font-sans text-left animate-fade-in pointer-events-auto p-2 sm:p-4 md:p-6 space-y-4 select-none pb-24 scrollbar-none"
+                            id="finanzas-inscription-in-channel-view"
+                          >
+                            {/* Top close & title bar */}
+                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setShowFinanzasInscriptionInChannel(false)}
+                                className="bg-slate-900/90 hover:bg-slate-800 text-white font-extrabold text-[10px] sm:text-xs px-3.5 py-2 rounded-full border border-slate-700 transition flex items-center gap-1.5 shadow-lg active:scale-95 cursor-pointer"
+                              >
+                                <span>✕</span>
+                                <span>Volver a la Mesa</span>
+                              </button>
+
+                              <div className="bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5 shadow-lg">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                                <span>Inscripción en Mesa Directo</span>
+                              </div>
+                            </div>
+
+                            {/* 1. TOP CAROUSEL OF SESSIONS / MESAS (Matching captura z.png) */}
+                            <div className="relative w-full flex flex-col items-center justify-center py-2">
+                              <div className="flex items-center justify-between w-full max-w-xl gap-2">
+                                {/* Left Arrow */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveFinanzasSessionIndex(prev => (prev - 1 + activeSessionsOnly.length) % activeSessionsOnly.length);
+                                  }}
+                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
+                                  title="Mesa anterior"
+                                >
+                                  <ChevronLeft className="w-5 h-5 text-slate-300" />
+                                </button>
+
+                                {/* Active Center 3D-styled Card */}
+                                <div className="flex-1 max-w-sm mx-auto">
+                                  {(() => {
+                                    const isPinkStreetwear = (currentFinanzasSession?.entryFee === 10 || currentFinanzasSession?.category?.toUpperCase().includes('TRABAJADORES') || currentFinanzasSession?.category?.toUpperCase().includes('STREETWEAR') || currentSession?.title?.includes('Trabajad') || currentSession?.title?.includes('STREETWEAR'));
+                                    return (
+                                      <div className={`${isPinkStreetwear ? 'bg-gradient-to-br from-[#FFF5F8] via-[#FADCE7] to-[#F3CAD9] border border-[#E8AEC1] text-slate-950 shadow-pink-950/15' : 'bg-[#0c1322] border border-slate-700/90 text-white shadow-2xl'} rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3.5 relative overflow-hidden`}>
+                                        {/* Top badge */}
+                                        <div className="flex justify-between items-start gap-2">
+                                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border leading-none ${
+                                            isPinkStreetwear ? 'bg-[#F2C9D8] border-[#DDA0B5] text-slate-950' : 'bg-slate-800/90 border-slate-600 text-slate-200'
+                                          }`}>
+                                            {currentFinanzasSession?.category?.toUpperCase().includes('BRONCE') || currentFinanzasSession?.category?.toUpperCase().includes('EMPRENDEDOR') || currentFinanzasSession?.category?.toUpperCase().includes('CASUAL') || currentFinanzasSession?.entryFee === 100 ? 'ROUND CASUAL & LIFESTYLE' :
+                                             isPinkStreetwear ? 'ROUND STREETWEAR & URBAN' :
+                                             currentFinanzasSession?.category?.toUpperCase().includes('EMPRESARIOS') || currentFinanzasSession?.category?.toUpperCase().includes('GLAMOUR') || currentFinanzasSession?.entryFee === 1000 ? 'RONDA GLAMOUR ✨' :
+                                             currentFinanzasSession?.category?.toUpperCase().includes('MODELS') || currentFinanzasSession?.category?.toUpperCase().includes('ELEGANT') || currentFinanzasSession?.entryFee === 10000 ? 'RONDA ELEGANT & CLASSIC 🤍' :
+                                             currentFinanzasSession?.category?.toUpperCase().includes('INVERSI') || currentFinanzasSession?.category?.toUpperCase().includes('FASHION') || currentFinanzasSession?.entryFee === 100000 ? 'RONDA HIGH FASHION 👠' :
+                                             currentFinanzasSession?.category?.toUpperCase().includes('MILLONARIOS') || currentFinanzasSession?.entryFee === 1000000 ? 'RONDA HIGH FASHION 👠' :
+                                             `RONDA ACTIVA • ${currentFinanzasSession?.category?.toUpperCase() || 'FINANZAS'}`}
+                                          </span>
+                                        </div>
+
+                                        {/* Title & Entry Fee */}
+                                        <div className="space-y-1">
+                                          <h3 className={`font-extrabold text-sm sm:text-base tracking-tight truncate ${isPinkStreetwear ? 'text-slate-950 font-black' : 'text-white'}`}>
+                                            {isPinkStreetwear
+                                              ? 'Round STREETWEAR & URBAN'
+                                              : (currentFinanzasSession?.entryFee === 100 || currentFinanzasSession?.category?.toUpperCase().includes('BRONCE') || currentFinanzasSession?.category?.toUpperCase().includes('EMPRENDEDOR') || currentFinanzasSession?.category?.toUpperCase().includes('CASUAL') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('CASUAL'))
+                                              ? 'Round CASUAL & LIFESTYLE'
+                                              : (currentFinanzasSession?.entryFee === 1000 || currentFinanzasSession?.category?.toUpperCase().includes('EMPRESARIOS') || currentFinanzasSession?.category?.toUpperCase().includes('GLAMOUR') || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour'))
+                                              ? 'Ronda Glamour ✨'
+                                              : (currentFinanzasSession?.entryFee === 10000 || currentFinanzasSession?.category?.toUpperCase().includes('MODELS') || currentFinanzasSession?.category?.toUpperCase().includes('ELEGANT') || currentSession?.title?.includes('Model') || currentSession?.title?.includes('Classic') || currentSession?.title?.includes('Elegant'))
+                                              ? 'Ronda Elegant & Classic 🤍'
+                                              : (currentFinanzasSession?.entryFee === 100000 || currentFinanzasSession?.category?.toUpperCase().includes('INVERSI') || currentFinanzasSession?.category?.toUpperCase().includes('FASHION') || currentSession?.title?.includes('Invers') || currentSession?.title?.includes('Rosa') || currentSession?.title?.includes('Fashion'))
+                                              ? 'Ronda High Fashion 👠'
+                                              : (currentFinanzasSession?.entryFee === 1000000 || currentFinanzasSession?.category?.toUpperCase().includes('MILLONAR') || currentSession?.title?.includes('Millonar') || currentSession?.title?.includes('Platino'))
+                                              ? 'Ronda High Fashion 👠'
+                                              : (currentSession?.title?.replace('Sesión de Inversión de ', 'Mesa ') || 'Mesa de Inversión')}
+                                          </h3>
+                                          {isPinkStreetwear && (
+                                            <p className={`text-[10px] font-medium leading-tight ${isPinkStreetwear ? 'text-slate-750' : 'text-slate-300'}`}>
+                                              Estilo moderno, sneakers, denim y cultura street.
+                                            </p>
+                                          )}
+                                          {(currentFinanzasSession?.entryFee === 100 || currentFinanzasSession?.category?.toUpperCase().includes('BRONCE') || currentFinanzasSession?.category?.toUpperCase().includes('EMPRENDEDOR') || currentFinanzasSession?.category?.toUpperCase().includes('CASUAL') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('CASUAL')) && (
+                                            <p className="text-[10px] text-amber-200/90 font-medium leading-tight">
+                                              Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
+                                            </p>
+                                          )}
+                                          {(currentFinanzasSession?.entryFee === 1000 || currentFinanzasSession?.category?.toUpperCase().includes('EMPRESARIOS') || currentFinanzasSession?.category?.toUpperCase().includes('GLAMOUR') || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour')) && (
+                                            <p className="text-[10px] text-slate-200 font-medium leading-tight">
+                                              vestidos, belleza, eventos, alfombra roja y looks impactantes.
+                                            </p>
+                                          )}
+                                          {(currentFinanzasSession?.entryFee === 10000 || currentFinanzasSession?.category?.toUpperCase().includes('MODELS') || currentFinanzasSession?.category?.toUpperCase().includes('ELEGANT') || currentSession?.title?.includes('Model') || currentSession?.title?.includes('Classic') || currentSession?.title?.includes('Elegant')) && (
+                                            <p className="text-[10px] text-amber-200/90 font-medium leading-tight">
+                                              sofisticado, clásico, atemporal y refinado.
+                                            </p>
+                                          )}
+                                          {(currentFinanzasSession?.entryFee === 100000 || currentFinanzasSession?.category?.toUpperCase().includes('INVERSI') || currentFinanzasSession?.category?.toUpperCase().includes('FASHION') || currentSession?.title?.includes('Invers') || currentSession?.title?.includes('Rosa') || currentSession?.title?.includes('Fashion')) && (
+                                            <p className="text-[10px] text-rose-200/90 font-medium leading-tight">
+                                              alta moda, diseñadores, pasarela y tendencias.
+                                            </p>
+                                          )}
+                                          {(currentFinanzasSession?.entryFee === 1000000 || currentFinanzasSession?.category?.toUpperCase().includes('MILLONAR') || currentSession?.title?.includes('Millonar') || currentSession?.title?.includes('Platino')) && (
+                                            <p className="text-[10px] text-amber-200/90 font-medium leading-tight">
+                                              alta moda, diseñadores, pasarela y tendencias.
+                                            </p>
+                                          )}
+                                          <div className="flex items-baseline gap-1.5">
+                                            <span className={`text-[11px] font-medium ${isPinkStreetwear ? 'text-slate-700' : 'text-slate-300'}`}>
+                                              Monto de Entrada:
+                                            </span>
+                                            <strong className={`font-mono text-sm sm:text-base font-black ${isPinkStreetwear ? 'text-slate-950' : 'text-amber-400'}`}>
+                                              {feeFormatted}
+                                            </strong>
+                                          </div>
+                                        </div>
+
+                                        {/* Recruitment state indicator */}
+                                        <div className="space-y-1.5">
+                                          <div className="flex justify-between items-center text-[9.5px] font-black font-mono tracking-wide">
+                                            <span className={`uppercase ${isPinkStreetwear ? 'text-slate-700 font-bold' : 'text-slate-400'}`}>CONVOCATORIA</span>
+                                            <span className={`font-black ${isPinkStreetwear ? 'text-slate-950' : 'text-emerald-400'}`}>
+                                              {currentSession?.participants?.length || 9}/10 Miembros
+                                            </span>
+                                          </div>
+
+                                          <div className={`w-full h-2 rounded-full overflow-hidden border ${isPinkStreetwear ? 'bg-slate-900/10 border-slate-900/10' : 'bg-white/10 border-white/5'}`}>
+                                            <div 
+                                              className={`h-full rounded-full transition-all duration-500 ${isPinkStreetwear ? 'bg-gradient-to-r from-pink-500 to-rose-600' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}
+                                              style={{ width: `${Math.min(100, ((currentSession?.participants?.length || 9) / 10) * 100)}%` }}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        {/* Card Footer */}
+                                        <div className={`pt-2.5 border-t flex justify-between items-center text-xs ${isPinkStreetwear ? 'border-slate-900/15' : 'border-white/10'}`}>
+                                          <span className={`text-[9.5px] font-black uppercase tracking-wider flex items-center gap-1.5 ${isPinkStreetwear ? 'text-rose-600' : 'text-rose-400'}`}>
+                                            <span className={`w-2 h-2 rounded-full inline-block ${isPinkStreetwear ? 'bg-rose-600 animate-ping' : 'bg-rose-500 animate-ping'}`} />
+                                            <span>ESCRUTINIO</span>
+                                          </span>
+
+                                          <span className="text-[10px] font-bold flex items-baseline gap-1">
+                                            <span className={`font-medium ${isPinkStreetwear ? 'text-slate-700' : 'text-slate-300'}`}>Pool:</span>
+                                            <span className={`font-mono font-black text-xs sm:text-sm ${isPinkStreetwear ? 'text-slate-950' : 'text-amber-300'}`}>
+                                              {poolFormatted}
+                                            </span>
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+
+                                {/* Right Arrow */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveFinanzasSessionIndex(prev => (prev + 1) % activeSessionsOnly.length);
+                                  }}
+                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
+                                  title="Siguiente mesa"
+                                >
+                                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                                </button>
+                              </div>
+
+                              {/* Pagination Dots */}
+                              <div className="flex items-center justify-center gap-1.5 mt-3">
+                                {activeSessionsOnly.map((s, idx) => (
+                                  <button
+                                    key={s.id}
+                                    type="button"
+                                    onClick={() => setActiveFinanzasSessionIndex(idx)}
+                                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                                      idx === (activeFinanzasSessionIndex % activeSessionsOnly.length)
+                                        ? 'w-6 bg-amber-400'
+                                        : 'w-2 bg-slate-600/70 hover:bg-slate-400'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* 2. MIDDLE CARD: VOTACIÓN ABIERTA & SIMULAR VOTACIONES IA */}
+                            <div className="w-full max-w-2xl mx-auto bg-[#0f172a] text-white p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-xl">
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[9.5px] font-black uppercase text-amber-400 tracking-wider">
+                                  <span>🗳️</span>
+                                  <span>RDA VOTACIÓN ABIERTA</span>
+                                </div>
+                                <h4 className="font-extrabold text-sm sm:text-base text-white tracking-tight m-0 truncate">
+                                  {currentFinanzasSession?.entryFee === 100 || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('CASUAL')
+                                    ? 'Round CASUAL & LIFESTYLE'
+                                    : currentFinanzasSession?.entryFee === 1000 || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour')
+                                    ? 'Ronda Glamour ✨'
+                                    : (currentSession?.title || 'Sesión de Inversión')}
+                                </h4>
+                                <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed m-0">
+                                  Fondo Acumulado: <strong className="text-amber-400 font-mono">{poolFormatted}</strong> — Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el <strong className="text-emerald-400">80% del premio</strong>.
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowFinanzasInscriptionInChannel(false);
+                                  setShowVotingProjectsModal(true);
+                                }}
+                                className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-[11px] sm:text-xs font-extrabold px-4 py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 shrink-0 whitespace-nowrap"
+                              >
+                                <span>✨</span>
+                                <span>Simular Votaciones IA</span>
+                              </button>
+                            </div>
+
+                            {/* 3. BOTTOM CARD: PAGAR INSCRIPCIÓN DE PROPUESTA (Matching captura z.png) */}
+                            <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xl space-y-4 text-slate-800">
+                              {/* Header with badge icon */}
+                              <div className="flex items-start gap-3">
+                                <div className="p-2.5 rounded-xl bg-slate-700 text-white flex items-center justify-center shadow-md shrink-0 mt-0.5">
+                                  <Award className="w-5 h-5 text-amber-300" />
+                                </div>
+                                <div className="space-y-0.5 min-w-0">
+                                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight m-0">
+                                    Pagar Inscripción de Propuesta
+                                  </h3>
+                                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-normal m-0">
+                                    Para ingresar en la {currentFinanzasSession?.entryFee === 100 || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('CASUAL') ? 'Round CASUAL & LIFESTYLE' : (currentFinanzasSession?.entryFee === 1000 || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour')) ? 'Ronda Glamour ✨' : (currentSession?.title || 'mesa de inversión')}, es obligatorio asignar uno de tus proyectos creados. Una vez asignado pulse en Disparar Pago de {feeFormatted} y Acceder a Votaciones.
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Form: Select user proposal */}
+                              <div className="space-y-2 pt-1">
+                                <label className="text-[10px] sm:text-[11px] font-black uppercase text-slate-700 tracking-wider block">
+                                  SELECCIONA CUÁL DE TUS PROYECTOS VAS A INSCRIBIR:
+                                </label>
+
+                                <select
+                                  value={selectedInscriptionProjectId}
+                                  onChange={(e) => setSelectedInscriptionProjectId(e.target.value)}
+                                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold focus:outline-none focus:border-indigo-500 shadow-xs cursor-pointer"
+                                >
+                                  {defaultInscriptionProposals.map(proj => (
+                                    <option key={proj.id} value={proj.id}>
+                                      {proj.title} ({proj.category}) — Presupuesto: {proj.budget}€
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Project details summary card */}
+                                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1.5 leading-relaxed font-sans">
+                                  <p className="m-0">
+                                    <strong className="text-slate-900">🎯 Objetivo:</strong> {selectedProj.objective}
+                                  </p>
+                                  <p className="m-0">
+                                    <strong className="text-slate-900">📈 Plan de Gasto:</strong> {selectedProj.fundUsage}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Footer Action Bar */}
+                              <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-baseline gap-1.5 text-xs text-slate-600 font-medium">
+                                  <span>Precio de inscripción:</span>
+                                  <strong className="text-sm sm:text-base font-black font-mono text-slate-900">
+                                    {feeFormatted}
+                                  </strong>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId)}
+                                  className="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs sm:text-sm px-5 py-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700"
+                                >
+                                  <Play className="w-3.5 h-3.5 fill-current text-amber-400" />
+                                  <span>Disparar Pago de {feeFormatted} y Acceder a Votaciones</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (showFinanzasRecount && selectedCategoryFilter === 'Finanzas') ? (
+                      (() => {
+                        const scrutinyVotesCompleted = scrutinyVotesCount;
+                        return (
+                      <div className="absolute inset-0 w-full h-full bg-white p-4 sm:p-6 text-slate-800 space-y-4 font-sans text-left overflow-y-auto animate-fade-in z-[200] select-text pb-20 pointer-events-auto">
+                        {/* Notice bar */}
+                        <div className="bg-rose-50 border border-rose-200 p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-rose-800">
+                          <div className="flex items-center gap-2">
+                            <span className="animate-spin text-base">⏳</span>
+                            <span>
+                              {scrutinyVotesCompleted < 10
+                                ? `Tabulando firmas y registrando escrutinio... Tiempo restante: ${formatMMSS(scrutinySeconds)} (${scrutinyVotesCompleted}/10 Votaron)`
+                                : `Escrutinio completado (00:00). Redirigiendo a Resultados Finales...`}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!completedSessionToDisplay) {
+                                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
+                                setCompletedSessionToDisplay(sessionData);
+                              }
+                              setSelectedCategoryFilter('Finanzas');
+                              setShowFinanzasRecount(false);
+                              setShowFinanzasResults(true);
+                            }}
+                            className="bg-[#fe2c55] hover:bg-[#df2046] text-white px-3.5 py-1.5 rounded-xl font-black text-[10.5px] uppercase tracking-wider cursor-pointer transition shadow-xs border-0 active:scale-95 shrink-0"
+                          >
+                            VER RESULTADOS
+                          </button>
+                        </div>
+
+                        {/* Gauge panel matching captura zxcv.png */}
+                        <div className="bg-[#fff9fa] border border-rose-100 rounded-2xl p-4 sm:p-6 space-y-4 text-center">
+                          {/* Circle gauge showing countdown and votes */}
+                          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-rose-200/70 flex items-center justify-center relative bg-white shadow-xs mx-auto">
+                            <div className="space-y-0.5 text-center">
+                              <span className="text-3xl sm:text-4xl font-extrabold font-mono text-[#fe2c55] block leading-none">{scrutinyVotesCompleted}</span>
+                              <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wider block">DE 10 VOTOS</span>
+                              <span className="text-[9px] font-mono font-black text-rose-600 block pt-0.5 animate-pulse">⏳ {formatMMSS(scrutinySeconds)}</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight m-0">Escrutinio Descentralizado</h3>
+                            <p className="text-[11px] text-slate-500 font-medium m-0">Computando resultados instantáneos al completar las firmas.</p>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="space-y-1.5 max-w-xl mx-auto pt-1">
+                            <div className="flex justify-between items-center text-xs font-mono font-bold">
+                              <span className="text-slate-700">Progreso de la Votación</span>
+                              <span className="text-[#fe2c55] font-extrabold">{scrutinyVotesCompleted * 10}% completado</span>
+                            </div>
+                            <div className="w-full h-3 rounded-full bg-slate-100 border border-rose-200 p-0.5 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-[#fe2c55] to-rose-700 transition-all duration-500" 
+                                style={{ width: `${scrutinyVotesCompleted * 10}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Cierre Banner */}
+                          <div className="bg-white border border-rose-100 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-2xs max-w-xl mx-auto">
+                            <div className="text-left flex items-center gap-2 w-full sm:w-auto">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                              <div>
+                                <span className="text-[9.5px] font-black uppercase text-emerald-600 block">
+                                  {scrutinyVotesCompleted === 10 ? '● CIERRE Y TABULACIÓN COMPLETA' : '● ESCRUTINIO EN CURSO'}
+                                </span>
+                                <span className="font-extrabold text-slate-800 text-[11.5px]">
+                                  {scrutinyVotesCompleted === 10
+                                    ? 'Todos los participantes han emitido su voto. Tabulando resultados...'
+                                    : `Procesando firmas y recuento de votos... Votaron ${scrutinyVotesCompleted} de 10.`}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0 w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
+                              <span className="text-[9px] text-slate-400 font-mono font-bold block uppercase">Consenso</span>
+                              <span className="text-xs font-extrabold text-rose-600 font-mono">
+                                {10 - scrutinyVotesCompleted} en cola
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action button to view final results and winners */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!completedSessionToDisplay) {
+                                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
+                                setCompletedSessionToDisplay(sessionData);
+                              }
+                              setSelectedCategoryFilter('Finanzas');
+                              setShowFinanzasRecount(false);
+                              setShowFinanzasResults(true);
+                            }}
+                            className="w-full max-w-xl mx-auto py-3 px-4 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg cursor-pointer active:scale-95 flex items-center justify-center gap-2 border-0 mt-2"
+                          >
+                            <span>🏆</span>
+                            <span>VER RESULTADOS FINALES Y GANADORES</span>
+                          </button>
+                        </div>
+
+                        {/* Participant Grid */}
+                        <div className="space-y-2.5">
+                          <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-600 m-0">
+                            ESTADO DE PARTICIPANTES ({scrutinyVotesCompleted}/10 VOTARON)
+                          </h4>
+
+                          <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                            {[
+                              { name: 'Sophia Loren', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Mia Kincaid', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Oliver Finch', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Amara Okafor', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Dante Moretti', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Kenji Sato', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300' },
+                              { name: userProfile?.name || 'Adriana Lima', role: 'Inversor Principal', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300', isSelf: true },
+                              { name: 'Isabella Dub...', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Marcus Sterl...', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=300' },
+                              { name: 'Liam Alvarez', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300' }
+                            ].map((item, idx) => (
+                              <div key={idx} className="bg-[#fffdfd] border border-rose-100 rounded-2xl p-2.5 flex flex-col items-center text-center gap-1.5 shadow-2xs relative w-full min-w-0 overflow-hidden">
+                                <div className="relative">
+                                  <img 
+                                    src={item.avatar} 
+                                    alt={item.name} 
+                                    className="w-12 h-12 rounded-2xl object-cover border-2 border-rose-200/80" 
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  {item.isSelf && (
+                                    <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+                                      TÚ
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="min-w-0 w-full">
+                                  <h5 className="text-xs font-black text-slate-900 truncate m-0 leading-tight">{item.name}</h5>
+                                  <span className="text-[9px] text-slate-400 font-semibold block truncate">{item.role}</span>
+                                </div>
+
+                                {idx < scrutinyVotesCompleted ? (
+                                  <div className="w-full bg-[#e6f4ea] border border-[#ceead6] text-[#137333] text-[9px] sm:text-[9.5px] font-extrabold py-1 px-1 rounded-lg text-center uppercase tracking-wider mt-1 truncate">
+                                    ✓ VOTO CARGADO
+                                  </div>
+                                ) : (
+                                  <div className="w-full bg-amber-50 border border-amber-200 text-amber-700 text-[9px] sm:text-[9.5px] font-bold py-1 px-1 rounded-lg text-center uppercase tracking-wider mt-1 animate-pulse truncate">
+                                    ⏳ REGISTRANDO...
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Bitácora de Consenso y Auditoría Distribuida */}
+                        <div className="bg-[#fff8f9] border border-rose-100 rounded-2xl p-3.5 space-y-1.5 text-left">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-extrabold text-[#d93025] font-mono flex items-center gap-1">
+                              <span>&gt;_</span> Bitácora de Consenso y Auditoría Distribuida
+                            </span>
+                            <span className="bg-rose-100/80 text-rose-700 text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
+                              NODO_CONECTADO
+                            </span>
+                          </div>
+                          <p className="text-[10.5px] font-mono text-slate-600 m-0 leading-relaxed">
+                            🔑 Protocolo de custodia encriptado activado con éxito. Computando orden final de votaciones y tabulando ganadores...
+                          </p>
+                        </div>
+                      </div>
+                      );
+                      })()
+                    ) : (showProjectDetailsInPopup || detailProjectUser) ? (
+                      <div 
+                        onWheel={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                        className="absolute inset-0 w-full h-full bg-white p-4 sm:p-6 text-slate-800 font-sans text-left overflow-y-auto animate-fade-in z-[200] select-text pb-20 pointer-events-auto flex flex-col justify-between" 
+                        id="channel-embedded-dossier-window"
+                      >
+                        {(() => {
+                          const targetUser = detailProjectUser || activeFinanzasPopupUser || selectedFinanzasUser || FINANZAS_USERS[0];
+                          const proj = getFinanzasProjectDetails(targetUser?.id || 'f-1');
+
+                          return (
+                            <div className="flex flex-col justify-between h-full min-h-full space-y-4">
+                              <div className="space-y-3 sm:space-y-4">
+                                
+                                {/* Header matching screenshot */}
+                                <div className="flex items-start justify-between gap-3 text-left">
+                                  <div className="flex flex-col text-left">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider flex items-center gap-1.5">
+                                      <span>📄</span> DOSSIER DE REGISTRO OFICIAL - PORTAL DE PROYECTOS
+                                    </span>
+                                    <h1 className="text-xl sm:text-2xl font-serif font-extrabold text-slate-900 tracking-tight leading-snug mt-1 m-0">
+                                      {proj.title}
+                                    </h1>
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider mt-1">
+                                      CATEGORÍA REGISTRADA: {proj.category ? proj.category.toUpperCase() : 'MODAS CIRCULARES'}
+                                    </span>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setShowProjectDetailsInPopup(false);
+                                      setDetailProjectUser(null);
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center font-bold text-sm transition cursor-pointer shrink-0 mt-0.5"
+                                    title="Cerrar ventana"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+
+                                {/* Step Navigation Pills matching screenshot */}
+                                <div className="flex items-center gap-2 sm:gap-3 pt-1 border-b border-slate-100 pb-3 flex-wrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setDetailModalStep('basic')}
+                                    className={`py-2 px-4 sm:px-5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer ${
+                                      detailModalStep === 'basic' || detailModalStep === 'all'
+                                        ? 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e] text-white shadow-sm'
+                                        : 'bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    <span>ⓘ</span>
+                                    <span>Paso 1: Información Básica</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setDetailModalStep('finance')}
+                                    className={`py-2 px-4 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer ${
+                                      detailModalStep === 'finance'
+                                        ? 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e] text-white shadow-sm'
+                                        : 'bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    <span>🔗</span>
+                                    <span>Paso 2: Estructura Financiera</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setDetailModalStep('team')}
+                                    className={`py-2 px-4 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer ${
+                                      detailModalStep === 'team'
+                                        ? 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e] text-white shadow-sm'
+                                        : 'bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    <span>👥</span>
+                                    <span>Paso 3: Equipo Creativo</span>
+                                  </button>
+                                </div>
+
+                                {/* Step 1: Información Básica Body */}
+                                {(detailModalStep === 'all' || detailModalStep === 'basic') && (
+                                  <div className="space-y-4 animate-fade-in text-left">
+                                    {/* Resumen de la propuesta / estilo */}
+                                    <div className="space-y-1.5">
+                                      <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider flex items-center gap-1">
+                                        <span>🥞</span> RESUMEN DE LA PROPUESTA / ESTILO
+                                      </span>
+                                      <div className="bg-amber-50/30 border border-amber-100/80 rounded-2xl p-4 sm:p-5 text-left shadow-2xs">
+                                        <p className="font-serif italic font-bold text-slate-800 text-xs sm:text-sm leading-relaxed m-0">
+                                          "{proj.tagline || 'Fórmula de diseño ecológico, optimización textil y proyección cruzada de marca.'}"
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Descripción extendida */}
+                                    <div className="space-y-1.5 pt-1">
+                                      <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider block">
+                                        DESCRIPCIÓN EXTENDIDA (DOSSIER COMPLETO DE MARCA)
+                                      </span>
+                                      <div className="bg-slate-50/80 border border-slate-200/60 rounded-2xl p-4 sm:p-5 text-left shadow-2xs">
+                                        <p className="font-medium text-slate-700 text-xs sm:text-sm leading-relaxed m-0">
+                                          {proj.description || 'Este proyecto estratégico busca mitigar la generación de desechos textiles mediante metodologías de confección de residuo cero con siluetas versátiles y minimalistas.'}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Correo y Teléfono side-by-side */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                      <div className="border border-slate-800/80 rounded-2xl p-3.5 sm:p-4 bg-white flex flex-col justify-center gap-1 shadow-2xs">
+                                        <span className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                                          CORREO ELECTRÓNICO OFICIAL
+                                        </span>
+                                        <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                                          <span className="text-[#e11d48]">✉</span>
+                                          <span className="truncate">{proj.contactEmail || 'adriana.lima@fashionfinances.net'}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="border border-slate-800/80 rounded-2xl p-3.5 sm:p-4 bg-white flex flex-col justify-center gap-1 shadow-2xs">
+                                        <span className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                                          TELÉFONO DE CONTACTO OFICIAL
+                                        </span>
+                                        <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                                          <span className="text-[#e11d48]">📞</span>
+                                          <span className="truncate">{proj.contactPhone || '+34 600 555 123'}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Step 2: Estructura Financiera */}
+                                {detailModalStep === 'finance' && (
+                                  <div className="space-y-3 animate-fade-in text-left pt-2">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider block">
+                                      ESTRUCTURA FINANCIERA & PLAN DE INVERSIÓN
+                                    </span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase">Meta / Presupuesto</span>
+                                        <span className="text-base font-black text-slate-900">{proj.fundingGoal || '50.000 €'}</span>
+                                        <span className="text-[10px] text-slate-500 mt-1">{proj.metrics}</span>
+                                      </div>
+                                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase">Retorno Estimado (ROI)</span>
+                                        <span className="text-xs font-black text-emerald-700">{proj.roi}</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 text-xs space-y-1">
+                                      <span className="text-[9px] font-bold text-slate-400 uppercase block">Desglose de Gastos</span>
+                                      <p className="font-semibold text-slate-800 leading-snug m-0">{proj.fundUsage}</p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Step 3: Equipo Creativo */}
+                                {detailModalStep === 'team' && (
+                                  <div className="space-y-3 animate-fade-in text-left pt-2">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider block">
+                                      EQUIPO CREATIVO Y LÍDER DE PROYECTO
+                                    </span>
+                                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-left">
+                                      <div className="flex items-center gap-3">
+                                        <img 
+                                          src={targetUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'} 
+                                          alt={targetUser?.name || 'Creador'} 
+                                          className="w-12 h-12 rounded-full object-cover border-2 border-rose-200 shadow-xs shrink-0"
+                                          referrerPolicy="no-referrer"
+                                        />
+                                        <div className="flex flex-col text-left">
+                                          <span className="text-[10px] font-black uppercase text-[#e11d48] tracking-wider">Creador/a Principal</span>
+                                          <span className="text-sm font-black text-slate-900">{targetUser?.name || 'Adriana Lima'}</span>
+                                          <span className="text-xs font-semibold text-slate-500">@{targetUser?.username || 'adriana'} · {targetUser?.role || 'Diseñadora'}</span>
+                                        </div>
+                                      </div>
+                                      <span className="text-[10px] bg-slate-900 text-white font-black px-3 py-1.5 rounded-xl shrink-0">
+                                        Líder Creativo
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Footer Bar matching screenshot */}
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 mt-6 shrink-0">
+                                <span className="text-[9.5px] sm:text-[10.5px] font-bold uppercase tracking-wider text-slate-400 text-center sm:text-left">
+                                  REGISTRADO SECRETAMENTE EN PASARELAS DE ALTA COSTURA
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowProjectDetailsInPopup(false);
+                                    setDetailProjectUser(null);
+                                  }}
+                                  className="w-full sm:w-auto border-2 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-extrabold text-xs px-5 py-2.5 rounded-full shadow-xs cursor-pointer uppercase transition active:scale-95 text-center"
+                                >
+                                  VOLVER A RESULTADOS
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <>
+                        {/* 🏢 CENTRAL STAGE: VOICE PRESENTATION & 5-MINUTE COUNTDOWN */}
+                        <div 
+                          key={currentFinanzasSession?.id || activeFinanzasSessionIndex}
+                          className={`flex-1 flex flex-col items-center justify-center text-center px-2 sm:px-3 py-1 my-auto select-none z-20 min-h-0 w-full max-w-full box-border ${slideDirection === 'up' ? 'animate-slide-up-tiktok' : 'animate-slide-down-tiktok'}`} 
+                          id="finanzas-central-stage-view"
+                        >
+                          {/* Current Session Badge Indicator (Round CASUAL & LIFESTYLE 100,00€) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const empIdx = openFinanzasSessions.findIndex(s => s.id === 'sess-emprendedores-1' || s.entryFee === 100 || s.category?.includes('Bronce') || s.title?.includes('Bronce') || s.title?.includes('CASUAL'));
+                              if (empIdx !== -1) {
+                                setActiveFinanzasSessionIndex(empIdx);
+                              }
+                              setShowFinanzasInscriptionInChannel(true);
+                            }}
+                            className="mb-1.5 inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-slate-900/95 border border-slate-700/90 hover:border-amber-500/60 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-rose-300 shadow-md box-border transition active:scale-95 cursor-pointer hover:bg-slate-800"
+                            id="badge-session-ronda-bronce-z-png"
+                            title="Ver Round CASUAL & LIFESTYLE (100,00€)"
+                          >
+                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#fe2c55] animate-pulse shrink-0" />
+                            <span className="text-white font-extrabold max-w-[170px] sm:max-w-[260px] truncate">
+                              {(currentFinanzasSession?.entryFee === 100 || currentFinanzasSession?.title?.includes('Bronce') || currentFinanzasSession?.title?.includes('Emprendedor') || currentFinanzasSession?.title?.includes('CASUAL'))
+                                ? 'Round CASUAL & LIFESTYLE'
+                                : (currentFinanzasSession?.entryFee === 1000 || currentFinanzasSession?.title?.includes('Empresar') || currentFinanzasSession?.title?.includes('Acero') || currentFinanzasSession?.title?.includes('Glamour'))
+                                ? 'Ronda Glamour ✨'
+                                : (currentFinanzasSession?.title || 'Round CASUAL & LIFESTYLE')}
+                            </span>
+                            <span className="text-emerald-300 font-mono font-bold text-[8.5px] sm:text-[9.5px] px-1.5 py-0.5 bg-emerald-950/80 rounded border border-emerald-500/40 whitespace-nowrap">
+                              {currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee.toFixed(2).replace('.', ',')} €` : '100,00 €'}
+                            </span>
+                          </button>
+
+                          {/* CASE 1: Voice is actively presenting a participant */}
+                          {isSpeakingPresenterIntro && (
+                            <div className="w-full max-w-[310px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] mx-auto bg-[#0e1628]/95 border-2 border-amber-500/60 rounded-2xl p-2.5 sm:p-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
+                              {/* Audio waves animation */}
+                              <div className="flex items-center gap-1 mb-2">
+                                <span className="w-1 h-4 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-1 h-6 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-1 h-8 bg-amber-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                <span className="w-1 h-5 bg-rose-500 rounded-full animate-bounce" style={{ animationDelay: '450ms' }} />
+                                <span className="w-1 h-3 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '600ms' }} />
+                              </div>
+
+                              {(() => {
+                                const targetUser = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
+                                const isErnesto = (
+                                  targetUser.id === 'user-ernesto' ||
+                                  targetUser.name === 'Ernesto vs' ||
+                                  targetUser.name === userProfile?.name ||
+                                  targetUser.username === userProfile?.username
+                                );
+                                const presentingIndex = currentFinanzasSession?.participants?.findIndex(
+                                  p => p.id === targetUser.id || p.name === targetUser.name
+                                );
+                                const numPos = presentingIndex !== -1 && presentingIndex !== undefined ? presentingIndex + 1 : (isErnesto ? 10 : 1);
+
+                                return (
+                                  <>
+                                    <div className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/50 text-amber-300 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-2">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+                                      <span>
+                                        {isErnesto 
+                                          ? '🎙️ PRESENTANDO AL 10º PARTICIPANTE (ÚLTIMO EN ENTRAR)' 
+                                          : `🎙️ PRESENTANDO AL ${numPos}º PARTICIPANTE`}
+                                      </span>
+                                    </div>
+
+                                    <div className="relative mb-1.5">
+                                      <img 
+                                        src={targetUser.avatar} 
+                                        alt={targetUser.name}
+                                        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border-2 ${isErnesto ? 'border-emerald-400 ring-2 ring-emerald-400/50' : 'border-amber-400'} shadow-xl`}
+                                        referrerPolicy="no-referrer"
+                                      />
+                                      <span className={`absolute -bottom-1 -right-1 ${isErnesto ? 'bg-emerald-500 text-slate-950' : 'bg-emerald-500 text-white'} text-[7.5px] font-black px-1.5 py-0.2 rounded-full border border-slate-900 shadow-md`}>
+                                        {isErnesto ? '10º' : `${numPos}º`}
+                                      </span>
+                                    </div>
+                                    <h3 className="text-white text-sm sm:text-base font-black tracking-tight leading-tight m-0">
+                                      {targetUser.name} {isErnesto ? '(Tú)' : ''}
+                                    </h3>
+                                    <span className="text-slate-300 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider mt-0.5 bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700/60">
+                                      {isErnesto ? 'Usuario Inversor (10º y Último Participante)' : (targetUser.role || 'Participante')}
+                                    </span>
+                                    <p className="text-amber-200/90 text-[10px] font-medium mt-1.5 leading-tight max-w-xs m-0">
+                                      {isErnesto 
+                                        ? '🔊 Presentación de tu proyecto ante la mesa de inversores.'
+                                        : `🔊 ${targetUser.name} es la 1ª participante en exponer su proyecto ante todos los miembros.`}
+                                    </p>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          {/* CASE 2: Voice finished, 1st participant is revealed with live 5-minute countdown clock */}
+                          {(!isSpeakingPresenterIntro && firstPresenterRevealed) && (
+                            <div className="w-full max-w-[310px] xs:max-w-[340px] sm:max-w-[380px] md:max-w-[420px] mx-auto bg-[#0e1628]/95 border-2 border-emerald-500/60 rounded-2xl p-2.5 sm:p-3 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
+                              {(() => {
+                                const activeUser = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
+                                const activeId = activeUser.id;
+                                const presentingIndex = finanzasPresentationQueue.findIndex(item => item.id === activeId || (item.name && item.name === activeUser.name));
+                                const currentParticipantNumber = presentingIndex !== -1 ? presentingIndex + 1 : 1;
+                                const timerVal = finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300;
+                                const minutes = Math.floor(timerVal / 60);
+                                const seconds = timerVal % 60;
+                                const formattedTimer = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                                const totalVoters = simulatedUserVote ? 10 : 9;
+
+                                const currentUserId = userProfile?.id || '';
+                                const currentUserName = userProfile?.name || '';
+                                const currentUserUsername = userProfile?.username || '';
+                                const activeUserObj = {
+                                  id: currentUserId || 'user-participant',
+                                  name: currentUserName || 'Usuario',
+                                  username: currentUserUsername || 'usuario',
+                                  avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                  role: 'Usuario Inversor / Participante'
+                                };
+                                const sessionParticipants = currentFinanzasSession?.participants || EMPRESARIOS_USERS;
+                                const isUserParticipatingInCurrent = currentFinanzasSession?.participants?.some(
+                                  p => (currentUserId && p.id === currentUserId) || 
+                                       (currentUserUsername && p.username === currentUserUsername) || 
+                                       (currentUserName && p.name === currentUserName && p.role && p.role.includes('Participante'))
+                                ) ?? false;
+                                const otherParticipants = sessionParticipants.filter(
+                                  p => p.id !== activeUserObj.id && p.username !== activeUserObj.username
+                                );
+                                const peerVoters = otherParticipants.slice(0, 9);
+                                const selfParticipant = activeUserObj;
+
+                                const isErnestoActive = isUserParticipatingInCurrent && (
+                                  (currentUserId && activeUser.id === currentUserId) ||
+                                  (currentUserUsername && activeUser.username === currentUserUsername) ||
+                                  (currentUserName && activeUser.name === currentUserName) ||
+                                  currentParticipantNumber === 10
+                                );
+
+                                return (
+                                  <>
+                                    {!isVotingPhaseActive ? (
+                                      <>
+                                        {/* Live Status Badge & Audio Reader Button */}
+                                        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1.5 box-border">
+                                          <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider box-border">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                                            <span>
+                                              {isErnestoActive 
+                                                ? '🔴 10º EN EXPOSICIÓN (ÚLTIMO EN ENTRAR A LA MESA)' 
+                                                : `🔴 ${currentParticipantNumber}º EN EXPOSICIÓN (DE 10)`}
+                                            </span>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={handleReadSessionParticipantsAndTurn}
+                                            className="inline-flex items-center gap-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/50 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-sm"
+                                            title="Escuchar en voz alta los 10 nombres y turnos de la sesión"
+                                            id="btn-voice-read-names-and-turns"
+                                          >
+                                            <Volume2 className="w-3 h-3 text-amber-400 shrink-0" />
+                                            <span>Leer Nombres y Turnos</span>
+                                          </button>
+                                        </div>
+
+                                        <div className="flex items-center justify-center gap-2 mb-1 w-full box-border">
+                                          <div className="relative shrink-0">
+                                            <img 
+                                              src={activeUser.avatar} 
+                                              alt={activeUser.name}
+                                              className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl object-cover border-2 border-emerald-400 shadow-lg"
+                                              referrerPolicy="no-referrer"
+                                            />
+                                            <span className="absolute -bottom-1 -right-1 bg-rose-500 text-white text-[7px] font-black px-1 py-0.2 rounded-full border border-slate-900 shadow-md">
+                                              EN VIVO
+                                            </span>
+                                          </div>
+                                          <div className="text-left min-w-0">
+                                            <h3 className="text-white text-sm sm:text-base font-black tracking-tight leading-tight m-0 truncate">
+                                              {activeUser.name} {isErnestoActive ? '(Tú)' : ''}
+                                            </h3>
+                                            <span className="text-slate-300 text-[9px] font-bold uppercase tracking-wider block truncate">
+                                              {isErnestoActive ? 'Usuario Inversor (10º y Último Participante)' : (activeUser.role || 'Usuario Inversor')}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* ⏱️ Prominent 5-minute countdown clock */}
+                                        <div className="mt-1.5 w-full bg-slate-950/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2 shadow-inner box-border">
+                                          <div className="flex items-center gap-1.5 text-left">
+                                            <span className="text-xs">⏱️</span>
+                                            <div>
+                                              <span className="text-[8px] text-slate-400 font-black uppercase tracking-wider block">TURNO ACTUAL</span>
+                                              <span className="text-[9.5px] text-slate-200 font-bold">5 min</span>
+                                            </div>
+                                          </div>
+                                          <div className="bg-[#080a10] border border-rose-600/70 text-rose-400 font-mono text-xs sm:text-sm font-black px-2.5 py-1 rounded-lg tracking-wider shadow-md animate-pulse">
+                                            {formattedTimer}
+                                          </div>
+                                          <div className="text-right">
+                                            <span className="text-[8px] text-slate-400 block font-bold">EXPOSICIÓN</span>
+                                            <span className="font-mono text-emerald-400 font-black text-[9.5px]">
+                                              {currentParticipantNumber}/10 (50m)
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Action button: Ver proyecto */}
+                                        <div className="mt-1.5 w-full box-border">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const fullUserObj = FINANZAS_USERS.find(u => u.id === activeUser.id) || activeUser;
+                                              setSelectedFinanzasUser(fullUserObj);
+                                              setActiveFinanzasPopupUser(fullUserObj);
+                                              setDetailProjectUser(fullUserObj);
+                                              setShowQueueInPopup(false);
+                                              setShowProjectDetailsInPopup(true);
+                                            }}
+                                            className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-[11px] py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 box-border"
+                                            id="btn-view-project-active"
+                                          >
+                                            <span>📋</span>
+                                            <span>VER PROYECTO DE {activeUser.name.toUpperCase()}</span>
+                                          </button>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        {/* 🗳️ FASE FINAL DE VOTACIÓN (10 MINUTOS) */}
+                                        <div className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/60 text-amber-300 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-1.5 animate-pulse">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                                          <span>🗳️ FASE FINAL DE VOTACIÓN Y DECISIÓN</span>
+                                        </div>
+
+                                        <div className="text-center mb-1">
+                                          <h3 className="text-white text-xs sm:text-sm font-black tracking-wide leading-tight m-0">
+                                            10 EXPOSICIONES CONCLUIDAS (50 MIN)
+                                          </h3>
+                                          <p className="text-slate-300 text-[8.5px] sm:text-[9px] font-bold mt-0.5 m-0">
+                                            Tiempo para deliberar y votar por el proyecto ganador:
+                                          </p>
+                                        </div>
+
+                                        {/* ⏱️ Prominent 10-minute voting countdown clock */}
+                                        <div className="mt-1 w-full bg-slate-950/90 border border-amber-500/60 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2 shadow-inner">
+                                          <div className="flex items-center gap-1.5 text-left">
+                                            <span className="text-sm">⏳</span>
+                                            <div>
+                                              <span className="text-[8px] text-amber-400 font-black uppercase tracking-wider block">TIEMPO VOTACIÓN</span>
+                                              <span className="text-[9.5px] text-slate-200 font-bold">10 min final</span>
+                                            </div>
+                                          </div>
+                                          <div className="bg-[#080a10] border border-amber-500 text-amber-300 font-mono text-sm sm:text-base font-black px-3 py-1 rounded-lg tracking-wider shadow-md animate-pulse">
+                                            {`${String(Math.floor(votingPhaseTimer / 60)).padStart(2, '0')}:${String(votingPhaseTimer % 60).padStart(2, '0')}`}
+                                          </div>
+                                          <div className="text-right">
+                                            <span className="text-[8px] text-slate-400 block font-bold">VOTOS</span>
+                                            <span className="font-mono text-emerald-400 font-black text-[9.5px]">
+                                              {totalVoters}/10
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+
+
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          {/* CASE 3: Waiting state fallback if not active */}
+                          {(!isSpeakingPresenterIntro && !firstPresenterRevealed) && (
+                            <>
+                              {/* Dark Logo Icon Card */}
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-2 bg-[#0e1628]/95 border border-slate-700/80 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center justify-center mb-1.5 transition-transform hover:scale-105">
+                                <FashionsFinanceLogo 
+                                  mode="dark" 
+                                  withText={false} 
+                                  className="w-full h-full border-0 bg-transparent shadow-none p-0" 
+                                />
+                              </div>
+
+                              {/* Title & Subtitle */}
+                              <h2 className="font-display font-black text-base sm:text-lg text-white tracking-[0.2em] leading-none uppercase drop-shadow-md m-0">
+                                FASHIONS
+                              </h2>
+                              <h3 className="font-display font-bold text-[10px] sm:text-[11px] text-[#fe2c55] tracking-[0.3em] leading-none uppercase mt-1 drop-shadow-xs m-0">
+                                FINANCE
+                              </h3>
+
+                              {/* Waiting / Active Badge */}
+                              <div className="mt-2 inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow-md">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                                <span>🔴 10 PARTICIPANTES CONECTADOS</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Always-Visible & Complete 10 Participants Table for Finanzas Session */}
+                        <div 
+                          className="relative w-full mt-auto pt-1 pb-1 z-30 select-none shrink-0 box-border"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Participant Grid & Action buttons panel - always visible with all 10 participants */}
+                          <div 
+                            className="flex flex-col gap-1 sm:gap-1.5 w-full max-w-full min-w-0 bg-slate-950/95 backdrop-blur-md p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl border border-slate-800/90 shadow-[0_16px_50px_rgba(0,0,0,0.9)] px-1.5 sm:px-2.5 mx-auto box-border" 
+                            id="finanzas-live-participants-panel-channel"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Header matching current session title and active count */}
+                            <div className="flex items-center justify-between px-0.5 w-full max-w-full min-w-0 gap-1 box-border">
+                              <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 overflow-hidden">
+                                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-500/50 shrink-0" />
+                                <span className="text-[8.5px] xs:text-[9.5px] sm:text-[11px] font-sans font-black uppercase tracking-wider text-white drop-shadow-sm truncate min-w-0">
+                                  {currentFinanzasSession?.title || 'MESA DE INVERSIÓN • VERSACE RUNWAY'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[7px] xs:text-[8px] sm:text-[9.5px] bg-[#fe2c55] text-white px-1.5 sm:px-2 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm animate-bounce whitespace-nowrap">
+                                  10 ONLINE
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Grid of participants in current active session (10 full distinct participants in 2x5 grid) */}
+                            <div className="grid grid-cols-5 gap-1 xs:gap-1.5 pb-0.5 pt-0.5 select-none w-full max-w-full min-w-0 box-border items-stretch" id="finanzas-live-grid-2x5-channel">
+                              {(() => {
+                                const currentUserId = userProfile?.id || '';
+                                const currentUserName = userProfile?.name || '';
+                                const currentUserUsername = userProfile?.username || '';
+                                const activeUserObj = {
+                                  id: userProfile?.id || 'user-participant',
+                                  name: userProfile?.name || 'Usuario',
+                                  username: userProfile?.username || 'usuario',
+                                  avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                  role: 'Usuario Inversor / Participante'
+                                };
+
+                                const rawParticipants = currentFinanzasSession?.participants || [];
+                                const isUserParticipating = rawParticipants.some(
+                                  p => (currentUserId && p.id === currentUserId) || 
+                                       (currentUserUsername && p.username === currentUserUsername) || 
+                                       (currentUserName && p.name === currentUserName && p.role && p.role.includes('Participante'))
+                                );
+
+                                const fallbackOthers = currentFinanzasSession?.id?.includes('empresarios')
+                                  ? EMPRESARIOS_USERS
+                                  : (currentFinanzasSession?.id?.includes('trabajadores')
+                                      ? TRABAJADORES_USERS
+                                      : (currentFinanzasSession?.id?.includes('topmodels')
+                                          ? TOPMODELS_USERS
+                                          : (currentFinanzasSession?.id?.includes('inversores')
+                                              ? INVERSORES_USERS
+                                              : (currentFinanzasSession?.id?.includes('millonarios')
+                                                  ? MILLONARIOS_USERS
+                                                  : FINANZAS_USERS))));
+
+                                const gridParticipants: Array<any> = rawParticipants.length >= 10 
+                                  ? rawParticipants.slice(0, 10) 
+                                  : fallbackOthers.slice(0, 10);
+
+                                return (
+                                  <>
+                                    {gridParticipants.map((user, idx) => {
+                                      const isErnesto = isUserParticipating && idx === 9;
+                                      const userObj = isErnesto ? activeUserObj : user;
+                                      const isChosenInSpotlight = (
+                                        (selectedFinanzasUser && (
+                                          selectedFinanzasUser.id === userObj.id || 
+                                          selectedFinanzasUser.name === userObj.name || 
+                                          (isErnesto && (selectedFinanzasUser.id === 'user-ernesto' || selectedFinanzasUser.name === 'Ernesto vs' || selectedFinanzasUser.name === userProfile?.name))
+                                        )) ||
+                                        (activeFinanzasPopupUser && (
+                                          activeFinanzasPopupUser.id === userObj.id || 
+                                          activeFinanzasPopupUser.name === userObj.name || 
+                                          (isErnesto && (activeFinanzasPopupUser.id === 'user-ernesto' || activeFinanzasPopupUser.name === 'Ernesto vs' || activeFinanzasPopupUser.name === userProfile?.name))
+                                        )) ||
+                                        (idx === 0 && !selectedFinanzasUser && !activeFinanzasPopupUser)
+                                      );
+
+                                      return (
+                                        <div
+                                          key={(userObj.id || user.id) + '-' + idx}
+                                          onClick={() => {
+                                            const turnIdx = idx;
+                                            const isErnestoTarget = isErnesto;
+                                            const targetUserObj = userObj;
+                                            setSelectedFinanzasUser(targetUserObj);
+                                            setActiveFinanzasPopupUser(targetUserObj);
+                                            setFirstPresenterRevealed(true);
+                                            setIsSpeakingPresenterIntro(false);
+                                            setIsVoiceIntroPlaying(false);
+
+                                            // Update timers for this presenter (5min = 300s)
+                                            setFinanzasTimers(prev => ({
+                                              ...prev,
+                                              [targetUserObj.id]: 300
+                                            }));
+                                            setFinanzasTimerActive({
+                                              [targetUserObj.id]: true
+                                            });
+
+                                            // Update presentation queue statuses
+                                            setFinanzasPresentationQueue(prev => {
+                                              return prev.map((item, qIdx) => {
+                                                if (qIdx < turnIdx) return { ...item, status: 'finished' as const };
+                                                if (qIdx === turnIdx || item.id === targetUserObj.id) return { ...item, status: 'presenting' as const };
+                                                return { ...item, status: 'waiting' as const };
+                                              });
+                                            });
+
+                                            // Voiceover announce the selected participant's turn out loud
+                                            const femaleNames = ['Adriana', 'Gisele', 'Sienna', 'Elena', 'Sofia', 'Yasmin', 'Candice', 'Victoria', 'Isabella', 'Claudia', 'Valerie', 'Olivia'];
+                                            const isFemale = femaleNames.some((fn) => targetUserObj.name.includes(fn));
+                                            const welcomeWord = isFemale ? 'Bienvenida' : 'Bienvenido';
+                                            const displayName = isErnestoTarget ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : targetUserObj.name;
+                                            const turnNumber = turnIdx + 1;
+                                            const turnAnnouncementText = isErnestoTarget
+                                              ? `Turno número 10 de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo en directo para presentar su proyecto ante la mesa de inversores.`
+                                              : `Turno número ${turnNumber} de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo en directo para exponer su proyecto. ${welcomeWord} y suerte.`;
+
+                                            setSystemVoiceNotification({
+                                              show: true,
+                                              message: `🎙️ Turno ${turnNumber} de 10: ${displayName} (5 min de exposición)`
+                                            });
+
+                                            try {
+                                              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                                              if (audioCtx.state === 'suspended') audioCtx.resume();
+                                              const osc = audioCtx.createOscillator();
+                                              const gain = audioCtx.createGain();
+                                              osc.connect(gain);
+                                              gain.connect(audioCtx.destination);
+                                              osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+                                              gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                                              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+                                              osc.start();
+                                              osc.stop(audioCtx.currentTime + 0.35);
+                                            } catch (e) {} 
+
+                                            if ('speechSynthesis' in window) {
+                                              try {
+                                                window.speechSynthesis.cancel();
+                                                const utterance = new SpeechSynthesisUtterance(turnAnnouncementText);
+                                                utterance.lang = 'es-ES';
+                                                utterance.volume = finanzasMuted ? 0 : finanzasVolume / 100;
+                                                utterance.rate = 0.95;
+                                                const voices = window.speechSynthesis.getVoices();
+                                                const spanishVoice = voices.find((v) => v.lang.includes('es'));
+                                                if (spanishVoice) utterance.voice = spanishVoice;
+                                                window.speechSynthesis.speak(utterance);
+                                              } catch (e) {}
+                                            }
+                                          }}
+                                          className="relative group/participant-item w-full min-w-0 max-w-full cursor-pointer flex flex-col items-stretch box-border"
+                                        >
+                                          <div
+                                            className={`w-full max-w-full min-w-0 aspect-[4/3] xs:aspect-[1/1] sm:aspect-square rounded-md xs:rounded-lg sm:rounded-xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-end box-border ${
+                                              isChosenInSpotlight 
+                                                ? 'border-[#fe2c55] ring-2 ring-[#fe2c55]/80 shadow-[0_0_10px_rgba(254,44,85,0.9)]' 
+                                                : isErnesto
+                                                  ? 'border-emerald-400 ring-1 ring-emerald-400/60 hover:border-emerald-300'
+                                                  : 'border-slate-700/70 hover:border-white/80'
+                                            }`}
+                                            title={`Ver detalles de ${userObj.name}${isErnesto ? ' (Tú - 10º Participante)' : ''}`}
+                                          >
+                                            <img
+                                              src={userObj.avatar}
+                                              alt={userObj.name}
+                                              className="absolute inset-0 w-full h-full object-cover"
+                                              referrerPolicy="no-referrer"
+                                            />
+                                            <span className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full border border-black/50 shadow-sm animate-pulse z-10 ${isErnesto ? 'bg-emerald-400' : 'bg-[#fe2c55]'}`} />
+                                            
+                                            {isErnesto ? (
+                                              <span className="absolute top-0.5 left-0.5 bg-emerald-500 text-slate-950 font-black text-[5.5px] xs:text-[6px] sm:text-[7px] px-1 py-0.2 rounded font-mono uppercase tracking-tight shadow z-10">
+                                                #10 TÚ
+                                              </span>
+                                            ) : (
+                                              <span className="absolute top-0.5 left-0.5 bg-black/80 text-white font-black text-[5.5px] xs:text-[6px] sm:text-[7px] px-1 py-0.2 rounded font-mono uppercase tracking-tight z-10">
+                                                #{idx + 1}
+                                              </span>
+                                            )}
+
+                                            <div className="relative z-10 w-full bg-slate-950/92 backdrop-blur-xs text-center py-0.5 px-0.5 min-w-0 max-w-full overflow-hidden box-border">
+                                              <span className={`text-[6.5px] xs:text-[7.5px] sm:text-[9px] font-black block truncate leading-tight min-w-0 ${isErnesto ? 'text-emerald-300' : 'text-white'}`}>
+                                                {isErnesto ? (userProfile?.name ? userProfile.name.split(' ')[0] : 'Adriana') : userObj.name.split(' ')[0]}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </>
+                                );
+                              })()}
+                            </div>
+
+                            {/* Action buttons: Solo 'Ver proyectos' si no participa o badge de participación si participa */}
+                            <div className="w-full flex flex-wrap items-center justify-center gap-1.5 mt-0.5 box-border" id="miembros-de-la-sala-btn-container-channel">
+                              {/* User participation status */}
+                              {currentFinanzasSession?.participants?.some(p => p.id === (userProfile?.id || 'user-ernesto') || p.username === (userProfile?.username || 'ernestovs') || p.name === 'Ernesto vs' || p.name === userProfile?.name) && (
+                                <div className="bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 font-extrabold text-[8px] xs:text-[8.5px] sm:text-[10px] px-2.5 py-1 rounded-full flex items-center justify-center gap-1 uppercase tracking-wider shadow-sm box-border">
+                                  <span>✅ ESTÁS PARTICIPANDO EN ESTA SESIÓN</span>
+                                </div>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowVotingProjectsModal(true);
+                                }}
+                                className="bg-white hover:bg-slate-100 active:scale-95 text-slate-950 font-black text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border border-slate-200/80 flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider font-sans shadow-md max-w-full truncate box-border"
+                                id="btn-votar-mejor-proyecto-channel"
+                              >
+                                <span className="text-xs shrink-0">📋</span>
+                                <span className="truncate min-w-0">VER PROYECTOS</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+                {/* 🎥 LIVE STREAM VIDEO FOR FINANZAS CATEGORY (Disabled to keep grid visible) */}
+                {false && (
                   <div className="absolute inset-0 w-full h-full bg-black z-0 animate-fade-in">
                     <video
                       src="https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"
@@ -22040,45 +26908,89 @@ export default function CastingLiveSection({
                     
                     {/* Badge: Active Presenter Online */}
                     {(() => {
+                      const isFullHouse = (currentFinanzasSession?.participants?.length || 0) >= 10 && joinedPresenterIds.length >= 10;
+                      if (!isFullHouse) return null; // Cut broadcast until all 10 participants are inside!
+
                       const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
-                      const activeUser = (presentingItem ? FINANZAS_USERS.find(u => u.id === presentingItem.id) : null) || 
-                                         activeFinanzasPopupUser || 
+                      const sessionParts = currentFinanzasSession?.participants || [];
+                      const firstPart = sessionParts[0] || DEFAULT_USER_PARTICIPANT;
+                      const rawActiveUser = activeFinanzasPopupUser || 
                                          fullscreenFinanzasUser || 
                                          selectedFinanzasUser || 
-                                         FINANZAS_USERS[0];
-                      const activePresenterName = activeUser?.name || presentingItem?.name || 'Adriana Lima';
-                      const activePresenterAvatar = activeUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150';
-                      const activeId = activeUser?.id || presentingItem?.id || 'f-1';
-                      const timerVal = finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300;
+                                         (presentingItem ? (FINANZAS_USERS.find(u => u.id === presentingItem.id || u.name === presentingItem.name) || sessionParts.find(p => p.id === presentingItem.id || p.name === presentingItem.name) || presentingItem) : null) || 
+                                         firstPart;
+                      const isErnesto = Boolean(
+                        rawActiveUser?.id === 'user-ernesto' ||
+                        rawActiveUser?.id === 'user' ||
+                        rawActiveUser?.id === userProfile?.id ||
+                        rawActiveUser?.name === 'Ernesto vs' ||
+                        rawActiveUser?.name === 'Ernesto VS' ||
+                        rawActiveUser?.name === userProfile?.name ||
+                        rawActiveUser?.username === 'ernestovs' ||
+                        rawActiveUser?.username === userProfile?.username
+                      );
+                      const activePresenterName = isErnesto ? 'Ernesto VS' : (rawActiveUser?.name || 'Ernesto VS');
+                      const activePresenterAvatar = (isErnesto || activePresenterName.toLowerCase().includes('ernesto') || activePresenterName.toLowerCase().includes('adriana'))
+                        ? (userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650')
+                        : (rawActiveUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650');
+                      const activeId = rawActiveUser?.id || (isErnesto ? 'user-ernesto' : 'f-1');
+                      const timerVal = isSpeakingPresenterIntro ? 300 : (finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300);
                       const formattedTimer = `${Math.floor(timerVal / 60)}:${(timerVal % 60).toString().padStart(2, '0')}`;
 
                       return (
-                        <div className="absolute top-3.5 left-3.5 z-40 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-[#fe2c55]/40 flex items-center gap-2.5 shadow-xl max-w-[92%]" id="finanzas-presenter-online-badge">
-                          <span className="relative flex h-2 w-2 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe2c55] opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
-                          </span>
-                          <img
-                            src={activePresenterAvatar || undefined}
-                            alt={activePresenterName}
-                            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#fe2c55] shrink-0"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans whitespace-nowrap truncate">
-                            {activePresenterName} ONLINE
-                          </span>
-                          <div className="flex items-center gap-1 bg-[#fe2c55] text-white px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider font-mono shrink-0 shadow-sm shadow-[#fe2c55]/30">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                            <span>DIRECTO {formattedTimer}</span>
+                        <>
+                          <div className="absolute top-3.5 left-3.5 z-40 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-[#fe2c55]/40 flex items-center gap-2.5 shadow-xl max-w-[92%]" id="finanzas-presenter-online-badge">
+                            <span className="relative flex h-2 w-2 shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe2c55] opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
+                            </span>
+                            <img
+                              src={activePresenterAvatar || undefined}
+                              alt={activePresenterName}
+                              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#fe2c55] shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans whitespace-nowrap truncate">
+                              {activePresenterName} ONLINE
+                            </span>
+                            <div className="flex items-center gap-1 bg-[#fe2c55] text-white px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider font-mono shrink-0 shadow-sm shadow-[#fe2c55]/30">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                              <span>DIRECTO {formattedTimer}</span>
+                            </div>
                           </div>
-                        </div>
+
+                          {/* ⏱️ Ronda de Emprendedores en Curso Overlay directly under Presenter badge */}
+                          {showRondaNotice && (
+                            <div 
+                              className="absolute top-13 left-3.5 z-40 bg-black/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-2xl text-white flex flex-col gap-0.5 font-sans animate-fade-in pointer-events-none select-none transition-all duration-300"
+                              id="ronda-plata-5s-notice-2"
+                            >
+                              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-100">
+                                <span>- {(() => {
+                                  const fee = currentFinanzasSession?.entryFee;
+                                  const cat = currentFinanzasSession?.category?.toUpperCase() || '';
+                                  if (cat.includes('TRABAJADORES') || cat.includes('STREETWEAR') || fee === 10) return 'ROUND STREETWEAR & URBAN EN CURSO';
+                                  if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'ROUND CASUAL & LIFESTYLE EN CURSO';
+                                  if (cat.includes('EMPRESARIOS') || cat.includes('GLAMOUR') || fee === 1000) return 'RONDA GLAMOUR ✨ EN CURSO';
+                                  if (cat.includes('MODELS') || cat.includes('ELEGANT') || cat.includes('CLASSIC') || fee === 10000) return 'RONDA ELEGANT & CLASSIC 🤍 EN CURSO';
+                                  if (cat.includes('INVERSI') || cat.includes('HIGH') || cat.includes('FASHION') || fee === 100000) return 'RONDA HIGH FASHION 👠 EN CURSO';
+                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'RONDA HIGH FASHION 👠 EN CURSO';
+                                  return 'ROUND CASUAL & LIFESTYLE EN CURSO';
+                                })()}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-400">
+                                <span>- {(currentFinanzasSession?.entryFee || 10) >= 1000 ? `${new Intl.NumberFormat("es-ES").format(currentFinanzasSession?.entryFee || 10)} EUROS` : `${currentFinanzasSession?.entryFee || 10} EUROS`}</span>
+                              </div>
+                            </div>
+                          )}
+                        </>
                       );
                     })()}
                   </div>
                 )}
 
-                {/* 🌌 CANAL SIN RETRANSMISIÓN EN DIRECTO: FONDO NEGRO CON LOGOTIPO EN EL CENTRO (Catwalk, Investors, Backstage, Fashion, Reels, Todos, etc. EXCEPTO Modelos que muestra directamente el feed de vídeos) */}
-                {selectedCategoryFilter !== 'Finanzas' && selectedCategoryFilter !== 'Modelos' && !categoryLiveConnectedMap[selectedCategoryFilter] && (
+                {/* 🌌 CANAL SIN RETRANSMISIÓN EN DIRECTO: FONDO NEGRO CON LOGOTIPO EN EL CENTRO (Modelos, Backstage, Inversores, Catwalk, Fashion, Reels, etc. EXCEPTO Finanzas) */}
+                {selectedCategoryFilter !== 'Finanzas' && !categoryLiveConnectedMap[selectedCategoryFilter] && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090d16] sm:bg-[#0a0e1a] z-0 animate-fade-in p-6 select-none" id="category-offline-logo-view">
                     <div className="flex flex-col items-center justify-center text-center animate-scale-in">
                       {/* Dark Logo Icon Card matching z.png */}
@@ -22098,8 +27010,8 @@ export default function CastingLiveSection({
                         FINANCE
                       </h2>
 
-                      {/* Action Button to start / connect retransmisión in direct channel */}
-                      <div className="mt-8 flex flex-col items-center gap-2">
+                      {/* Action Buttons to start retransmisión or view reels in direct channel */}
+                      <div className="mt-8 flex flex-col items-center gap-2.5 w-full max-w-[220px]">
                         <button
                           type="button"
                           onClick={() => {
@@ -22109,22 +27021,39 @@ export default function CastingLiveSection({
                               return next;
                             });
                           }}
-                          className="px-5 py-2.5 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white rounded-full font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 transition cursor-pointer border border-rose-400/30 flex items-center gap-2"
+                          className="w-full px-5 py-2.5 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white rounded-full font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 transition cursor-pointer border border-rose-400/30 flex items-center justify-center gap-2"
                           id="start-category-retransmision-btn"
                         >
                           <span className="w-2 h-2 rounded-full bg-white animate-ping" />
                           <span>Iniciar Retransmisión en Directo</span>
                         </button>
-                        <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                          Canal {selectedCategoryFilter === 'BackStage' ? 'Backstage' : selectedCategoryFilter} • Sin emisión
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryLiveConnectedMap((prev) => {
+                              const next = { ...prev, [selectedCategoryFilter]: true };
+                              localStorage.setItem('category_live_connected_map', JSON.stringify(next));
+                              return next;
+                            });
+                          }}
+                          className="w-full px-5 py-2.5 bg-[#141b2d] hover:bg-[#1d273f] text-white rounded-full font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition cursor-pointer border border-slate-700/80 flex items-center justify-center gap-2"
+                          id="view-reels-btn"
+                        >
+                          <span className="text-xs">🎬</span>
+                          <span>Ver Reels</span>
+                        </button>
+
+                        <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                          CANAL {selectedCategoryFilter === 'BackStage' ? 'BACKSTAGE' : selectedCategoryFilter === 'Investors' ? 'JEWELLERY' : selectedCategoryFilter === 'Modelos' ? 'RUNWAY' : selectedCategoryFilter.toUpperCase()} • SIN EMISIÓN
                         </span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 🎥 FEED DE VÍDEOS DE CANALES: MOSTRAR VÍDEOS DE MODELOS DIRECTAMENTE Y VÍDEOS DE RETRANSMISIÓN DE OTRAS CATEGORÍAS CUANDO RETRANSMISIÓN ESTÉ ACTIVA */}
-                {selectedCategoryFilter !== 'Finanzas' && (selectedCategoryFilter === 'Modelos' || categoryLiveConnectedMap[selectedCategoryFilter]) && activeVideo && (
+                {/* 🎥 FEED DE VÍDEOS DE CANALES: MOSTRAR VÍDEOS DE RETRANSMISIÓN DE CATEGORÍAS CUANDO RETRANSMISIÓN O REELS ESTÉ ACTIVA */}
+                {selectedCategoryFilter !== 'Finanzas' && categoryLiveConnectedMap[selectedCategoryFilter] && activeVideo && (
                   <>
                     <style>{`
                       @keyframes slideUpVideo {
@@ -22176,31 +27105,75 @@ export default function CastingLiveSection({
                       )}
                     </div>
 
-                    <div 
-                      key={`${activeVideo.id}-${activeVideoIndex}`}
-                      onAnimationEnd={() => setSlideDirection(null)}
-                      className={`absolute inset-0 w-full h-full bg-black z-0 overflow-hidden ${
-                        slideDirection === 'up'
-                          ? 'animate-slide-up-video'
-                          : slideDirection === 'down'
-                          ? 'animate-slide-down-video'
-                          : 'animate-fade-in'
-                      }`}
-                    >
-                      <video
-                        ref={(el) => {
-                          if (el) videoRefs.current[activeVideoIndex] = el;
-                        }}
-                        src={activeVideo.videoUrl}
-                        poster={activeVideo.coverUrl || activeVideo.poster || activeVideo.avatar}
-                        className="w-full h-full object-cover"
-                        autoPlay
-                        loop
-                        muted={isMuted}
-                        playsInline
-                      />
-                      {/* Dark gradient overlay for text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75 pointer-events-none" />
+                    {isUserLiveStreamingWithCamera && userLiveMediaStream ? (
+                      <div className="absolute inset-0 w-full h-full bg-black z-0 overflow-hidden flex items-center justify-center select-none" id="user-live-feed-camera-stage">
+                        <video
+                          ref={userLiveFeedVideoElementRef}
+                          autoPlay
+                          playsInline
+                          muted={true}
+                          className={`w-full h-full object-cover transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                        />
+                        {/* Live Floating Camera Tools */}
+                        <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/15">
+                          <button
+                            type="button"
+                            onClick={handleFlipLiveCamera}
+                            className="p-1.5 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
+                            title="Girar cámara (Frontal / Trasera)"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 text-cyan-300" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleToggleLiveStreamAudio}
+                            className="p-1.5 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
+                            title={isLiveStreamAudioMuted ? "Activar micrófono" : "Silenciar micrófono"}
+                          >
+                            {isLiveStreamAudioMuted ? (
+                              <MicOff className="w-3.5 h-3.5 text-rose-400" />
+                            ) : (
+                              <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleToggleUserCameraLiveBroadcast}
+                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider"
+                            title="Finalizar retransmisión"
+                          >
+                            Finalizar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        key={`${activeVideo.id}-${activeVideoIndex}`}
+                        onAnimationEnd={() => setSlideDirection(null)}
+                        className={`absolute inset-0 w-full h-full bg-black z-0 overflow-hidden ${
+                          slideDirection === 'up'
+                            ? 'animate-slide-up-video'
+                            : slideDirection === 'down'
+                            ? 'animate-slide-down-video'
+                            : 'animate-fade-in'
+                        }`}
+                      >
+                        <video
+                          ref={(el) => {
+                            if (el) videoRefs.current[activeVideoIndex] = el;
+                          }}
+                          src={activeVideo.videoUrl}
+                          poster={activeVideo.coverUrl || activeVideo.poster || activeVideo.avatar}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          loop
+                          muted={isMuted}
+                          playsInline
+                        />
+                        {/* Dark gradient overlay for text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75 pointer-events-none" />
+                      </div>
+                    )}
 
                     {/* Top Badge: Retransmisión Activa with option to stop/disconnect (no mostrar en el canal de Modelos que es feed directo de vídeos guardados) */}
                     {selectedCategoryFilter !== 'Modelos' && (
@@ -22473,7 +27446,17 @@ export default function CastingLiveSection({
 
                           return (
                             <div className="flex justify-center w-full shrink-0 my-0.5">
-                              <div className="relative aspect-square w-24 sm:w-28 bg-slate-900 rounded-xl overflow-hidden border-2 border-rose-500 flex flex-col justify-between p-1 sm:p-1.5 shadow-lg group hover:border-rose-400 transition">
+                              <div 
+                                onClick={() => {
+                                  setSelectedFinanzasUser(host);
+                                  setActiveFinanzasPopupUser(host);
+                                  setDetailProjectUser(host);
+                                  setShowProjectDetailsInPopup(true);
+                                  setShowQueueInPopup(false);
+                                  setIsVoiceIntroPlaying(false);
+                                }}
+                                className="relative aspect-square w-24 sm:w-28 bg-slate-900 rounded-xl overflow-hidden border-2 border-rose-500 flex flex-col justify-between p-1 sm:p-1.5 shadow-lg group hover:border-rose-400 transition cursor-pointer"
+                              >
                                 {camOn ? (
                                   <img
                                     src={host.avatar}
@@ -22522,7 +27505,15 @@ export default function CastingLiveSection({
                             return (
                               <div
                                 key={u.id}
-                                className="relative aspect-square w-full bg-slate-900 rounded-lg sm:rounded-xl overflow-hidden border-2 border-emerald-500/70 flex flex-col justify-between p-1 shadow-md group hover:border-rose-400 transition"
+                                onClick={() => {
+                                  setSelectedFinanzasUser(u);
+                                  setActiveFinanzasPopupUser(u);
+                                  setDetailProjectUser(u);
+                                  setShowProjectDetailsInPopup(true);
+                                  setShowQueueInPopup(false);
+                                  setIsVoiceIntroPlaying(false);
+                                }}
+                                className="relative aspect-square w-full bg-slate-900 rounded-lg sm:rounded-xl overflow-hidden border-2 border-emerald-500/70 flex flex-col justify-between p-1 shadow-md group hover:border-rose-400 transition cursor-pointer"
                               >
                                 {camOn ? (
                                   <img
@@ -23476,97 +28467,14 @@ export default function CastingLiveSection({
                   </div>
                 )}
 
-                {/* 🏆 RECUENTO DE VOTACIONES Y RESULTADOS FINALES OVERLAY INSIDE THIS CHANNEL */}
-                {showFinanzasResults && completedSessionToDisplay && (
-                  <div className="absolute inset-0 z-[60] bg-slate-950 flex flex-col text-white rounded-[22px] font-sans overflow-hidden animate-fade-in" id="finanzas-results-overlay">
-                    {/* Fixed Header bar pinned at the very top */}
-                    <div className="bg-slate-900 border-b border-slate-800 p-3 sm:p-4 shrink-0 shadow-2xl z-50 flex flex-col gap-2.5">
-                      {/* Top Row: Volver button right at the top */}
-                      <div className="flex items-center justify-between gap-2 w-full">
-                        <button
-                          type="button"
-                          onClick={() => setShowFinanzasResults(false)}
-                          className="bg-[#fe2c55] hover:bg-[#df2046] text-white px-4 py-1.5 rounded-xl text-xs font-black transition active:scale-95 cursor-pointer border-0 shadow-md flex items-center gap-1.5 shrink-0 uppercase tracking-wider"
-                          title="Volver"
-                        >
-                          <ArrowLeft className="w-4 h-4 text-white stroke-[3]" />
-                          <span>Volver</span>
-                        </button>
-
-                        <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Directo Finalizado
-                        </span>
-                      </div>
-
-                      {/* Header Title & Information */}
-                      <div className="flex items-start gap-2 pt-1.5 border-t border-slate-800/80">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0 mt-1" />
-                        <div>
-                          <h2 className="text-xs sm:text-sm font-black uppercase text-amber-400 tracking-wider font-sans leading-snug m-0">
-                            🏆 RESULTADOS FINALES Y RECUENTO DE VOTACIONES DE LA MESA
-                          </h2>
-                          <p className="text-[10px] text-slate-400 font-medium font-sans m-0 mt-0.5">
-                            Canal de Finanzas y Modaparati Directo • 10/10 Participantes han completado su voto
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Scrollable results body - 1px lateral margins */}
-                    <div className="flex-1 overflow-y-auto px-[1px] py-1 scrollbar-none">
-                      {/* The complete SessionResultsPodium component */}
-                      <SessionResultsPodium
-                        completedSessionToDisplay={completedSessionToDisplay}
-                        userProfile={{
-                          id: userProfile?.id || 'user',
-                          name: userProfile?.name || 'TÚ (Inversor)',
-                          balance: userProfile?.balance || 150000,
-                          patrocinadorId: userProfile?.patrocinadorId
-                        }}
-                        userProjects={FINANZAS_USERS.map(fu => {
-                          const details = getFinanzasProjectDetails(fu.id);
-                          return {
-                            id: fu.id,
-                            userId: fu.id,
-                            title: details.title,
-                            description: details.description,
-                            metrics: details.metrics,
-                            roi: details.roi,
-                            tagline: details.tagline,
-                            images: [
-                              fu.avatar,
-                              'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
-                              'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
-                            ]
-                          };
-                        })}
-                        models={models}
-                        onSelectModel={(m) => onGoToModelProfile?.(m.id || m.name)}
-                        onNavigateToTab={onNavigateToTab}
-                        setCompletedSessionToDisplay={(session) => {
-                          setCompletedSessionToDisplay(session);
-                          if (!session) setShowFinanzasResults(false);
-                        }}
-                        setSimulationLogs={() => {}}
-                        setIsCastingPublished={setIsCastingPublished}
-                        isCastingPublished={isCastingPublished}
-                        pool={completedSessionToDisplay.poolTotal || 100}
-                        prizePerWinner={((completedSessionToDisplay.poolTotal || 100) * 0.8) / (completedSessionToDisplay.winners?.length || 1)}
-                        isTie={(completedSessionToDisplay.winners?.length || 1) > 1}
-                        winnersToDisplay={getWinnersToDisplay(completedSessionToDisplay)}
-                        maxVotes={getMaxVotes(completedSessionToDisplay)}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* 🎴 CENTERED DETAILED MODAL OVERLAY FOR FINANZAS PARTICIPANT (Full screen overlay inside video container) */}
-               {activeFinanzasPopupUser && !isVoiceIntroPlaying && (
-                 <div className={`absolute inset-0 z-50 p-5 sm:p-6 flex flex-col justify-between animate-fade-in select-none pointer-events-auto rounded-[22px] overflow-y-auto scrollbar-none ${
-                   !showQueueInPopup && !showProjectDetailsInPopup
-                     ? 'bg-white text-slate-900 border border-slate-200/90 shadow-2xl'
-                     : 'bg-slate-950/98 text-white backdrop-blur-2xl'
-                 }`} id="finanzas-centered-popup-overlay">
+                {/* 🎴 CENTERED DETAILED MODAL OVERLAY FOR FINANZAS PARTICIPANT (Full screen modal matching capture z.png) */}
+               {activeFinanzasPopupUser && selectedCategoryFilter !== 'Finanzas' && (
+                 <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-fade-in select-none pointer-events-auto" id="finanzas-centered-popup-overlay">
+                   <div className={`w-full max-w-md sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-[24px] p-4 sm:p-5 shadow-2xl flex flex-col justify-between border ${
+                     !showQueueInPopup && !showProjectDetailsInPopup
+                       ? 'bg-[#0a0d17] text-white border-slate-800/90'
+                       : 'bg-slate-950/98 text-white border-slate-800'
+                   }`}>
                     {showQueueInPopup ? (
                       /* 📈 COLA DE EXPOSICIÓN DE PROYECTOS VIEW */
                       <div className="flex flex-col h-full justify-between gap-4 animate-fade-in text-left">
@@ -23787,8 +28695,8 @@ export default function CastingLiveSection({
                                   setFinanzasTimerActive({ user: true });
 
                                   const votesObj: Record<string, number> = {
-                                    'f-1': 9, 'f-2': 9, 'f-3': 9, 'f-4': 9, 'f-5': 9,
-                                    'f-6': 9, 'f-7': 9, 'f-8': 9, 'f-9': 9, 'user': 9
+                                    'f-1': 3, 'f-2': 2, 'f-3': 1, 'f-4': 1, 'f-5': 1,
+                                    'f-6': 0, 'f-7': 0, 'f-8': 0, 'f-9': 0, 'f-10': 1, 'user': 1
                                   };
                                   setFinanzasVotes(votesObj);
                                   localStorage.setItem('finanzas_project_votes', JSON.stringify(votesObj));
@@ -23844,6 +28752,7 @@ export default function CastingLiveSection({
                                   onClick={() => {
                                     const sessionData = buildFinanzasCompletedSession(finanzasVotes);
                                     setCompletedSessionToDisplay(sessionData);
+                                    setSelectedCategoryFilter('Finanzas');
                                     setShowFinanzasResults(true);
                                   }}
                                   className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black py-2 px-3 rounded-xl text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer border-0 shadow-lg flex items-center justify-center gap-1.5 font-sans mt-0.5"
@@ -23881,7 +28790,22 @@ export default function CastingLiveSection({
                               return (
                                 <div
                                   key={`${item.id}-${idx}`}
-                                  className={`flex items-center justify-between p-2.5 rounded-2xl border transition duration-300 ${
+                                  onClick={() => {
+                                    const fullUserObj = FINANZAS_USERS.find(u => u.id === item.id) || {
+                                      id: item.id,
+                                      name: item.name,
+                                      username: item.name.toLowerCase().replace(/\s+/g, '_'),
+                                      avatar: item.avatar,
+                                      role: item.role
+                                    };
+                                    setSelectedFinanzasUser(fullUserObj);
+                                    setActiveFinanzasPopupUser(fullUserObj);
+                                    setDetailProjectUser(fullUserObj);
+                                    setShowQueueInPopup(false);
+                                    setShowProjectDetailsInPopup(true);
+                                    setIsVoiceIntroPlaying(false);
+                                  }}
+                                  className={`flex items-center justify-between p-2.5 rounded-2xl border transition duration-300 cursor-pointer hover:scale-[1.01] active:scale-98 ${
                                     item.status === 'presenting'
                                       ? 'bg-[#fe2c55]/10 border-[#fe2c55]/40 shadow-md shadow-[#fe2c55]/5'
                                       : isUser
@@ -23949,18 +28873,52 @@ export default function CastingLiveSection({
                       </div>
                     ) : showProjectDetailsInPopup ? (
                       /* 📊 EMBEDDED DETAILED PROJECT VIEW MATCHING image.png INCRUSTADA DENTRO DEL CANAL */
-                      <div className="flex flex-col h-full bg-white text-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 space-y-3 font-sans text-left overflow-y-auto animate-fade-in border border-slate-200/90 shadow-2xl select-none">
+                      <div className="absolute inset-0 w-full h-full flex flex-col bg-white text-slate-800 p-4 sm:p-6 space-y-3 font-sans text-left overflow-y-auto animate-fade-in z-[200] select-none pb-20 pointer-events-auto">
                         
-                        {/* Top Header Close Button */}
-                        <div className="flex items-center justify-end border-b border-slate-100 pb-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setShowProjectDetailsInPopup(false)}
-                            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition border border-slate-200 cursor-pointer text-xs font-bold shrink-0 ml-2"
-                            title="Volver al directo"
-                          >
-                            ✕
-                          </button>
+                        {/* 📄 PORTAL DE REGISTRO DE PROYECTOS HEADER MATCHING image.png */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 rounded-2xl shadow-lg border border-slate-800 shrink-0 text-left">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-rose-600 text-white rounded-xl shadow-md shrink-0 flex items-center justify-center font-black">
+                              <span className="text-base">💎</span>
+                            </div>
+                            <div>
+                              <h2 className="text-base sm:text-lg font-bold font-display text-white tracking-tight m-0">
+                                Portal de Registro de Proyectos
+                              </h2>
+                              <p className="text-[10px] text-slate-300 m-0 font-medium">
+                                Gestión de marca y capital de inversión • Fashion Finances
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap self-stretch sm:self-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setShowProjectDetailsInPopup(false)}
+                              className="bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-[10px] px-3.5 py-2 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition active:scale-95"
+                            >
+                              <span>←</span>
+                              <span>Volver al Directo</span>
+                            </button>
+                            <div className="bg-emerald-500/20 text-emerald-300 font-black text-[9.5px] px-3 py-2 rounded-xl border border-emerald-400/30 flex items-center gap-1 shadow-2xs shrink-0">
+                              <span>🔒</span>
+                              <span>CIFRADO SSL</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* GREEN REGISTERED PROJECT BANNER MATCHING image.png */}
+                        <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl p-3.5 text-left shrink-0 shadow-2xs">
+                          <span className="bg-[#d1fae5] text-[#065f46] text-[9.5px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider inline-block mb-1">
+                            ✓ REGISTRADO
+                          </span>
+                          <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2 m-0">
+                            <span className="text-emerald-600 text-base">●</span>
+                            <span>{getFinanzasProjectDetails(activeFinanzasPopupUser.id).title}</span>
+                          </h3>
+                          <p className="text-[11px] text-slate-600 font-medium mt-0.5 m-0">
+                            Ya has subido un proyecto calificado para ingresar en las rondas.
+                          </p>
                         </div>
 
                         {/* Category, Title & Tagline */}
@@ -23992,10 +28950,7 @@ export default function CastingLiveSection({
                             }`}
                             title="Ver Identidad Creativa del Proyecto"
                           >
-                            <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono shrink-0 ${
-                              detailModalStep === 'basic' ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'
-                            }`}>1</span>
-                            <span className="whitespace-nowrap font-extrabold">1. Identidad Creativa</span>
+                            <span className="whitespace-nowrap font-extrabold">Identidad Creativa</span>
                           </button>
 
                           <button
@@ -24008,10 +28963,7 @@ export default function CastingLiveSection({
                             }`}
                             title="Ver Economía y Fondos"
                           >
-                            <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono shrink-0 ${
-                              detailModalStep === 'finance' ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'
-                            }`}>2</span>
-                            <span className="whitespace-nowrap font-extrabold">2. Economía y Fondos</span>
+                            <span className="whitespace-nowrap font-extrabold">Economía y Fondos</span>
                           </button>
 
                           <button
@@ -24024,10 +28976,7 @@ export default function CastingLiveSection({
                             }`}
                             title="Ver Equipo Humano"
                           >
-                            <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono shrink-0 ${
-                              detailModalStep === 'team' ? 'bg-white text-emerald-900' : 'bg-emerald-600 text-white'
-                            }`}>3</span>
-                            <span className="whitespace-nowrap font-extrabold">3. Equipo Humano ✓</span>
+                            <span className="whitespace-nowrap font-extrabold">Equipo Humano ✓</span>
                           </button>
                         </div>
 
@@ -24049,7 +28998,7 @@ export default function CastingLiveSection({
                         </div>
 
                         {/* Scrollable Container for Steps */}
-                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-none">
+                        <div className="space-y-3 pr-1">
                           {/* SECTION 1: IDENTIDAD CREATIVA */}
                           {(detailModalStep === 'all' || detailModalStep === 'basic') && (
                             <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 text-left animate-fade-in">
@@ -24376,12 +29325,42 @@ export default function CastingLiveSection({
                           )}
                         </div>
 
+                        {/* Vote Button at bottom of Project Details (Only exists if user is participating) */}
+                        {(() => {
+                          const rawParticipants = currentFinanzasSession?.participants || [];
+                          const activeUserObj = {
+                            id: userProfile?.id || 'user-ernesto',
+                            name: userProfile?.name || 'Adriana Lima',
+                            username: userProfile?.username || 'ernestovs',
+                          };
+                          const isUserParticipating = rawParticipants.some(
+                            p => p.id === activeUserObj.id || p.username === activeUserObj.username || p.name === 'Ernesto vs' || p.name === activeUserObj.name
+                          );
+
+                          if (!isUserParticipating) return null;
+
+                          return (
+                            <div className="pt-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleVoteForProject(activeFinanzasPopupUser);
+                                }}
+                                className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3 px-4 rounded-full text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition shadow-lg border-0"
+                              >
+                                <span className="text-sm">🗳️</span>
+                                <span>VOTAR POR ESTE PROYECTO ({activeFinanzasPopupUser.name.split(' ')[0]})</span>
+                              </button>
+                            </div>
+                          );
+                        })()}
+
                       </div>
                     ) : (
-                      /* 🎬 DETAILS VIEW */
+                      /* 🎬 DETAILS VIEW MATCHING CAPTURE ZXSA.PNG */
                       <>
                         {/* Header of details view */}
-                        <div className="flex items-center justify-end border-b border-slate-200 pb-2 flex-shrink-0">
+                        <div className="flex items-center justify-end border-b border-slate-800/80 pb-2 flex-shrink-0">
                           <button
                             type="button"
                             onClick={() => {
@@ -24389,35 +29368,34 @@ export default function CastingLiveSection({
                               setShowQueueInPopup(false);
                               setShowProjectDetailsInPopup(false);
                             }}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-3 py-1.5 text-[10px] sm:text-[11px] font-black transition cursor-pointer border border-slate-200 active:scale-95 shadow-2xs flex items-center gap-1"
+                            className="bg-[#1c2236] hover:bg-slate-700 text-slate-300 rounded-xl px-3 py-1 text-[10px] sm:text-[11px] font-black transition cursor-pointer border border-slate-700/80 active:scale-95 shadow-2xs flex items-center gap-1"
                           >
                             <span>✕</span>
                             <span>Cerrar</span>
                           </button>
                         </div>
 
-                        {/* Participant Avatar & Info */}
-                        <div className="flex flex-col items-center justify-center text-center gap-2 py-1 flex-shrink-0">
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-[#fe2c55] flex-shrink-0 shadow-lg relative group/popup-avatar">
+                        {/* Participant Avatar & Info matching capture ZXSA.png */}
+                        <div className="flex flex-col items-center justify-center text-center gap-1.5 py-1 flex-shrink-0">
+                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden border-2 border-[#fe2c55] flex-shrink-0 shadow-[0_0_15px_rgba(254,44,85,0.6)] relative group/popup-avatar">
                             <img
                               src={activeFinanzasPopupUser.avatar}
                               alt={activeFinanzasPopupUser.name}
                               className="w-full h-full object-cover transition duration-300 group-hover/popup-avatar:scale-108"
                               referrerPolicy="no-referrer"
                             />
-                            <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                           </div>
                           <div className="flex flex-col items-center">
-                            <h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight tracking-tight">
+                            <h2 className="text-lg sm:text-xl font-black text-white leading-tight tracking-tight">
                               {activeFinanzasPopupUser.name}
                             </h2>
-                            <span className="text-[10px] sm:text-[11px] text-slate-700 font-extrabold tracking-wider uppercase mt-1 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
-                              {activeFinanzasPopupUser.role}
+                            <span className="text-[10px] sm:text-[11px] text-slate-300 font-extrabold tracking-wider uppercase mt-1 bg-[#1c2236] px-3.5 py-0.5 rounded-full border border-slate-700/80">
+                              {activeFinanzasPopupUser.role || 'INVERSORA PRINCIPAL'}
                             </span>
                           </div>
                         </div>
 
-                        {/* Presentation Timer Status block */}
+                        {/* Card 1: Presentation Timer Status block matching ZXSA.png */}
                         {(() => {
                           const id = activeFinanzasPopupUser.id;
                           const timerVal = finanzasTimers[id] !== undefined ? finanzasTimers[id] : 300;
@@ -24425,40 +29403,31 @@ export default function CastingLiveSection({
                           const seconds = timerVal % 60;
                           const formattedTimer = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
                           const isActive = !!finanzasTimerActive[id];
-                          const isLowTime = timerVal < 60;
 
                           return (
-                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex items-center justify-between gap-3 text-left my-1 flex-shrink-0 shadow-2xs">
-                              <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-xl bg-[#fe2c55]/10 text-[#fe2c55] border border-[#fe2c55]/20 animate-pulse">
+                            <div className="bg-[#141824] border border-slate-800/90 rounded-2xl p-3 flex items-center justify-between gap-3 text-left my-1 flex-shrink-0 shadow-md">
+                              <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-xl bg-rose-950/60 text-rose-400 border border-rose-800/60 animate-pulse flex items-center justify-center">
                                   <span className="text-xs">⏱️</span>
                                 </div>
                                 <div className="flex-1">
-                                  <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold uppercase tracking-wider block leading-none">
-                                    Tiempo de Exposición
+                                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block leading-none">
+                                    TIEMPO DE EXPOSICIÓN
                                   </span>
-                                  <span className="text-[9px] sm:text-[10px] text-slate-800 font-bold leading-tight mt-0.5 block">
+                                  <span className="text-[10px] sm:text-[11px] text-slate-200 font-bold leading-tight mt-0.5 block">
                                     5 min para presentación en directo
                                   </span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className={`font-mono text-xs sm:text-sm font-black tracking-widest px-2.5 py-0.5 rounded-lg border ${
-                                  isLowTime
-                                    ? "text-red-600 bg-red-50 border-red-300 animate-pulse"
-                                    : "text-emerald-700 bg-emerald-50 border-emerald-300"
-                                }`}>
+                                <div className="bg-[#080a10] border border-red-900/80 text-[#fe2c55] font-mono text-xs sm:text-sm font-black px-2.5 py-1 rounded-lg tracking-widest shadow-inner">
                                   {formattedTimer}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <button
                                     type="button"
                                     onClick={() => setFinanzasTimerActive(prev => ({ ...prev, [id]: !isActive }))}
-                                    className={`p-1 rounded border text-[9px] font-bold transition-all cursor-pointer ${
-                                      isActive
-                                        ? "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200"
-                                        : "bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200"
-                                    }`}
+                                    className="p-1.5 rounded-lg bg-[#20273c] hover:bg-slate-700 text-white border border-slate-700/80 text-[10px] font-bold transition-all cursor-pointer"
                                     title={isActive ? "Pausar" : "Reanudar"}
                                   >
                                     {isActive ? "⏸️" : "▶️"}
@@ -24469,21 +29438,10 @@ export default function CastingLiveSection({
                                       setFinanzasTimers(prev => ({ ...prev, [id]: 300 }));
                                       setFinanzasTimerActive(prev => ({ ...prev, [id]: true }));
                                     }}
-                                    className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-[9px] font-bold transition-all cursor-pointer"
+                                    className="p-1.5 rounded-lg bg-[#20273c] hover:bg-slate-700 text-white border border-slate-700/80 text-[10px] font-bold transition-all cursor-pointer"
                                     title="Reiniciar (5m)"
                                   >
                                     🔄
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setFinanzasTimers(prev => ({ ...prev, [id]: 3 }));
-                                      setFinanzasTimerActive(prev => ({ ...prev, [id]: true }));
-                                    }}
-                                    className="p-1 rounded bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 text-[9px] font-bold transition-all cursor-pointer"
-                                    title="Terminar tiempo (Prueba rápida 3s)"
-                                  >
-                                    ⏩
                                   </button>
                                 </div>
                               </div>
@@ -24491,47 +29449,47 @@ export default function CastingLiveSection({
                           );
                         })()}
 
-                        {/* Project Details */}
-                        <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col gap-2 text-left my-2 overflow-y-auto min-h-[150px] max-h-[240px] sm:max-h-[280px] scrollbar-none text-slate-900">
+                        {/* Card 2: Project Details matching ZXSA.png */}
+                        <div className="bg-[#141824] border border-slate-800/90 rounded-2xl p-3.5 flex flex-col gap-1.5 text-left my-1 overflow-y-auto max-h-[160px] scrollbar-none text-white shadow-md">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] sm:text-[11px] text-amber-700 font-black tracking-wider uppercase flex items-center gap-1">
+                            <span className="text-[10px] sm:text-[11px] text-amber-400 font-black tracking-wider uppercase flex items-center gap-1">
                               📋 PROYECTO ACTIVO
                             </span>
-                            <span className="text-[9px] sm:text-[10px] font-mono text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold">
+                            <span className="text-[9px] sm:text-[10px] font-mono text-slate-300 bg-[#20273c] border border-slate-700/80 px-2 py-0.5 rounded-md font-bold">
                               ID: {activeFinanzasPopupUser.id}
                             </span>
                           </div>
-                          <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">
+                          <h3 className="text-sm sm:text-base font-black text-white leading-snug">
                             {getFinanzasProjectDetails(activeFinanzasPopupUser.id).title}
                           </h3>
-                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                          <p className="text-xs text-slate-300 leading-relaxed font-medium">
                             {getFinanzasProjectDetails(activeFinanzasPopupUser.id).description}
                           </p>
                           {getFinanzasProjectDetails(activeFinanzasPopupUser.id).tagline && (
-                            <p className="text-xs text-amber-950 font-bold italic bg-amber-50 border-l-4 border-[#fe2c55] p-2.5 rounded-r-xl mt-1 leading-relaxed font-serif">
+                            <p className="text-xs text-amber-200 font-bold italic bg-amber-950/40 border-l-4 border-[#fe2c55] p-2 rounded-r-xl mt-1 leading-relaxed font-serif">
                               "{getFinanzasProjectDetails(activeFinanzasPopupUser.id).tagline}"
                             </p>
                           )}
                         </div>
 
-                        {/* Project Metrics Summary Card */}
+                        {/* Card 3: Project Metrics Summary Card matching ZXSA.png */}
                         {(() => {
                           const project = getFinanzasProjectDetails(activeFinanzasPopupUser.id);
                           return (
-                            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200 space-y-1.5 text-[9px] sm:text-[10px] text-left my-1 flex-shrink-0 font-sans">
-                              <span className="text-[8.5px] text-amber-800 font-extrabold tracking-wider uppercase block">
+                            <div className="bg-[#141824] border border-slate-800/90 rounded-2xl p-3 space-y-2 text-[9px] sm:text-[10px] text-left my-1 flex-shrink-0 font-sans shadow-md">
+                              <span className="text-[9.5px] text-amber-400 font-black tracking-wider uppercase flex items-center gap-1">
                                 📊 FICHA DE RESUMEN DEL PROYECTO
                               </span>
                               <div className="grid grid-cols-2 gap-2">
-                                <div className="bg-white p-2 rounded-lg border border-slate-200">
-                                  <span className="text-[7.5px] text-slate-500 uppercase font-bold block">Métricas Clave</span>
-                                  <p className="text-[9px] sm:text-[10px] text-slate-900 font-bold mt-0.5 leading-normal">
+                                <div className="bg-[#1c2236] p-2.5 rounded-xl border border-slate-800">
+                                  <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider block">MÉTRICAS CLAVE</span>
+                                  <p className="text-[9.5px] sm:text-[10.5px] text-slate-200 font-bold mt-1 leading-normal">
                                     {project.metrics}
                                   </p>
                                 </div>
-                                <div className="bg-white p-2 rounded-lg border border-slate-200">
-                                  <span className="text-[7.5px] text-rose-700 uppercase font-bold block">Retorno Estimado (ROI)</span>
-                                  <p className="text-[9px] sm:text-[10px] text-slate-900 font-bold mt-0.5 leading-normal">
+                                <div className="bg-[#1c2236] p-2.5 rounded-xl border border-slate-800">
+                                  <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider block">RETORNO ESTIMADO (ROI)</span>
+                                  <p className="text-[9.5px] sm:text-[10.5px] text-slate-200 font-bold mt-1 leading-normal">
                                     {project.roi}
                                   </p>
                                 </div>
@@ -24540,22 +29498,23 @@ export default function CastingLiveSection({
                           );
                         })()}
 
-                        {/* Votes Indicator */}
+                        {/* Card 4: Votes Indicator matching ZXSA.png */}
                         {(() => {
-                          const currentVotesCount = (finanzasVotes[activeFinanzasPopupUser.id] && finanzasVotes[activeFinanzasPopupUser.id] < 10) ? finanzasVotes[activeFinanzasPopupUser.id] : 9;
+                          const initialDefault = activeFinanzasPopupUser.id === 'f-1' ? 3 : activeFinanzasPopupUser.id === 'f-2' ? 2 : (activeFinanzasPopupUser.id === 'f-3' || activeFinanzasPopupUser.id === 'f-4' || activeFinanzasPopupUser.id === 'f-5' || activeFinanzasPopupUser.id === 'f-10' || activeFinanzasPopupUser.id === 'user') ? 1 : 0;
+                          const currentVotesCount = finanzasVotes[activeFinanzasPopupUser.id] ?? initialDefault;
                           return (
                             <>
-                              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2 text-[10px] sm:text-[11px] my-1 flex-shrink-0 font-sans">
-                                <span className="text-slate-800 font-extrabold flex items-center gap-1.5 font-sans">
-                                  📊 Personas que ya han votado:
+                              <div className="flex items-center justify-between bg-[#06241b] border border-emerald-800/70 rounded-2xl px-4 py-2.5 text-[11px] sm:text-[12px] my-1 flex-shrink-0 font-sans shadow-md">
+                                <span className="text-slate-200 font-bold flex items-center gap-1.5 font-sans">
+                                  📊 Votos recibidos por este proyecto:
                                 </span>
-                                <strong className="text-emerald-800 font-black text-xs sm:text-sm bg-emerald-100 px-3 py-0.5 rounded-lg border border-emerald-300">
+                                <strong className="text-emerald-400 font-mono font-black text-sm bg-[#043324] px-3.5 py-0.5 rounded-xl border border-emerald-500/80">
                                   {currentVotesCount}
                                 </strong>
                               </div>
 
-                              {/* Button list footer */}
-                              <div className="flex flex-col gap-2 pt-1 flex-shrink-0">
+                              {/* Action buttons matching ZXSA.png: two white full rounded pill buttons */}
+                              <div className="flex flex-col gap-2.5 pt-2 flex-shrink-0">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -24563,9 +29522,9 @@ export default function CastingLiveSection({
                                     setActiveFinanzasPopupUser(null);
                                     setShowProjectDetailsInPopup(false);
                                   }}
-                                  className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 px-3 rounded-2xl text-[9.5px] sm:text-[10.5px] font-black flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer border-0 shadow-md uppercase tracking-wider font-sans"
+                                  className="w-full bg-white hover:bg-slate-100 text-slate-950 font-extrabold py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-lg border-0"
                                 >
-                                  <span>📺</span>
+                                  <span className="text-sm">📺</span>
                                   <span>VER DIRECTO (PANTALLA COMPLETA)</span>
                                 </button>
 
@@ -24573,20 +29532,14 @@ export default function CastingLiveSection({
                                   type="button"
                                   onClick={() => {
                                     setShowProjectDetailsInPopup(true);
+                                    if (activeFinanzasPopupUser) {
+                                      setDetailProjectUser(activeFinanzasPopupUser);
+                                    }
                                   }}
-                                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 py-2.5 px-3 rounded-2xl text-[9.5px] sm:text-[10.5px] font-black flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer border border-slate-200 shadow-2xs uppercase tracking-wider font-sans"
+                                  className="w-full bg-white hover:bg-slate-100 text-slate-950 font-extrabold py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-lg border-0"
                                 >
-                                  <span>📊</span>
+                                  <span className="text-sm">📊</span>
                                   <span>VER PROYECTO DETENIDAMENTE</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleVoteForProject(activeFinanzasPopupUser)}
-                                  className="w-full bg-[#fe2c55] hover:bg-[#df2046] text-white py-2.5 px-3 rounded-2xl text-[9.5px] sm:text-[10.5px] font-black flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer border-0 shadow-md uppercase tracking-wider font-sans"
-                                >
-                                  <span>✅</span>
-                                  <span>VOTAR POR ESTE PROYECTO ({currentVotesCount})</span>
                                 </button>
                               </div>
                             </>
@@ -24595,84 +29548,138 @@ export default function CastingLiveSection({
                       </>
                     )}
                   </div>
-                )}
+                </div>
+              )}
 
+                {/* 💬 IN-CHANNEL FLOATING COMMENTS WINDOW */}
                 {isCommentsOpen && (
-                  <div className="absolute inset-x-0 bottom-0 h-[400px] max-h-[70vh] bg-black/55 backdrop-blur-md border-t border-white/20 z-45 p-4 px-5 transition-all duration-300 animate-slide-up flex flex-col font-sans text-white rounded-t-[28px] shadow-[0_-12px_44px_rgba(0,0,0,0.6)] select-none">
-                    {/* Header: Title and Close Button */}
-                    <div className="flex items-center justify-between pb-2 border-b border-white/15 mb-2.5 shrink-0">
-                      <div className="flex flex-col text-left">
-                        <span className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5 select-none">
-                          💬 COMENTARIOS EN DIRECTO <span className="text-[10px] text-white font-black animate-pulse bg-[#fe2c55] px-2 py-0.5 rounded-full">{activeVideo.comments.length}</span>
+                  <div 
+                    id="in-channel-comments-window"
+                    className="absolute inset-x-0 bottom-0 h-[480px] max-h-[80vh] sm:max-h-[82vh] bg-slate-950/95 backdrop-blur-2xl border-t border-rose-500/30 z-[120] p-4 px-4.5 sm:px-5 transition-all duration-300 animate-slide-up flex flex-col font-sans text-white rounded-t-[32px] shadow-[0_-16px_50px_rgba(0,0,0,0.9)] select-none pointer-events-auto"
+                  >
+                    {/* Top drag handle indicator */}
+                    <div className="w-12 h-1 bg-white/25 rounded-full mx-auto -mt-1 mb-2.5 shrink-0" />
+
+                    {/* Header: Title, Live Counter Badge and Close Button */}
+                    <div className="flex items-center justify-between pb-2.5 border-b border-white/15 mb-2 shrink-0">
+                      <div className="flex items-center gap-2 text-left">
+                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5 select-none">
+                          💬 COMENTARIOS EN DIRECTO
+                        </span>
+                        <span className="text-[10px] text-white font-black animate-pulse bg-[#fe2c55] px-2 py-0.5 rounded-full shadow-sm">
+                          {activeVideo?.comments?.length ?? channelCommentsCount}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setIsCommentsOpen(false)}
-                        className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center text-xs transition cursor-pointer border-0 backdrop-blur-xs"
+                        className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-xs font-bold transition cursor-pointer border-0 backdrop-blur-sm active:scale-90"
+                        title="Cerrar ventana de comentarios"
                       >
                         ✕
                       </button>
                     </div>
 
                     {/* List of comments */}
-                    <div className="flex-1 space-y-2.5 overflow-y-auto py-1 pr-1 scrollbar-none" id="mobile-comments-list-container">
-                      {activeVideo.comments.length === 0 ? (
-                        <div className="text-center py-12 px-4 space-y-1.5 text-white/60 font-medium select-none">
-                          <span className="text-3xl block animate-pulse">💬</span>
-                          <p className="text-xs">No hay comentarios todavía.</p>
-                          <p className="text-[10px]">¡Sé el primero en comentar!</p>
+                    <div className="flex-1 space-y-2.5 overflow-y-auto py-1 pr-1 scrollbar-thin scrollbar-thumb-white/20" id="in-channel-comments-list-container">
+                      {(!activeVideo?.comments || activeVideo.comments.length === 0) ? (
+                        <div className="text-center py-12 px-4 space-y-2 text-white/60 font-medium select-none">
+                          <span className="text-4xl block animate-bounce">💬</span>
+                          <p className="text-xs font-semibold">No hay comentarios todavía.</p>
+                          <p className="text-[10px] text-white/40">¡Sé el primero en dejar tu comentario en este canal!</p>
                         </div>
                       ) : (
                         activeVideo.comments.slice(0, commentsToShowCount).map(comment => {
                           return (
-                            <div key={comment.id} className="bg-black/35 backdrop-blur-xs p-2.5 rounded-2xl border border-white/10 space-y-1 animate-fade-in">
+                            <div key={comment.id} className="bg-white/5 hover:bg-white/8 backdrop-blur-xs p-2.5 rounded-2xl border border-white/10 space-y-1.5 animate-fade-in transition-colors">
                               <div className="flex gap-2.5 text-xs text-left">
                                 <img 
                                   src={comment.avatar} 
                                   alt={comment.user} 
-                                  className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0"
+                                  className="w-7.5 h-7.5 rounded-full object-cover border border-white/20 shrink-0"
+                                  referrerPolicy="no-referrer"
                                 />
                                 <div className="flex-1 space-y-0.5 min-w-0">
                                   <div className="flex justify-between items-baseline">
-                                    <span className="font-extrabold text-pink-300">@{comment.user}</span>
+                                    <span className="font-extrabold text-pink-300 text-[11.5px]">@{comment.user}</span>
+                                    <span className="font-mono text-[9px] text-white/40">{comment.date}</span>
                                   </div>
                                   <p className="text-white/95 leading-normal break-words font-medium text-[11px]">{comment.text}</p>
-                                  <div className="flex items-center gap-3 text-[10px] text-white/60 font-medium pt-0.5">
-                                    <span className="font-mono text-white/50">{comment.date}</span>
+                                  <div className="flex items-center gap-3 text-[10px] text-white/60 font-medium pt-1">
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setReplyingToTarget({ commentId: comment.id, user: comment.user, text: comment.text });
                                         mobileCommentInputRef.current?.focus();
                                       }}
-                                      className="text-rose-400 hover:text-rose-300 font-bold transition cursor-pointer border-0 bg-transparent"
+                                      className="text-rose-400 hover:text-rose-300 font-bold transition cursor-pointer border-0 bg-transparent flex items-center gap-1"
                                     >
-                                      Responder
+                                      <span>↩</span> Responder
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => handleLikeComment(comment.id)}
-                                      className="flex items-center gap-1 text-[10px] text-white/60 hover:text-red-400 transition ml-auto select-none cursor-pointer border-0 bg-transparent"
+                                      className="flex items-center gap-1 text-[10px] text-white/60 hover:text-red-400 transition ml-auto select-none cursor-pointer border-0 bg-transparent active:scale-125"
                                       title="Me gusta"
                                     >
-                                      <Heart className={`w-3 h-3 transition active:scale-130 duration-200 ${comment.isLikedByMe ? 'fill-red-500 text-red-500' : 'text-white/60'}`} />
-                                      <span className="text-white/80">{comment.likesCount ?? 0}</span>
+                                      <Heart className={`w-3.5 h-3.5 transition active:scale-130 duration-200 ${comment.isLikedByMe ? 'fill-red-500 text-red-500' : 'text-white/60'}`} />
+                                      <span className={comment.isLikedByMe ? 'text-red-400 font-bold' : 'text-white/80'}>{comment.likesCount ?? 0}</span>
                                     </button>
                                   </div>
                                 </div>
                               </div>
+
+                              {/* Nested replies if present */}
+                              {comment.replies && comment.replies.length > 0 && (
+                                <div className="ml-7 pl-2.5 border-l-2 border-rose-500/30 space-y-1.5 pt-1">
+                                  {comment.replies.map(reply => (
+                                    <div key={reply.id} className="flex gap-2 text-[10.5px] text-left bg-black/30 p-1.5 rounded-xl border border-white/5">
+                                      <img 
+                                        src={reply.avatar} 
+                                        alt={reply.user} 
+                                        className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/10"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-baseline">
+                                          <span className="font-extrabold text-pink-300 text-[10px]">@{reply.user}</span>
+                                          <span className="text-[8px] text-white/40">{reply.date}</span>
+                                        </div>
+                                        <p className="text-white/90 leading-tight break-words">{reply.text}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         })
                       )}
                     </div>
 
+                    {/* Quick Reactions One-Tap Bar */}
+                    <div className="flex items-center justify-between gap-1 py-1.5 px-1 border-t border-white/10 my-1 overflow-x-auto scrollbar-none shrink-0">
+                      {['😍', '🔥', '💖', '👏', '👑', '✨', '🌹', '🚀'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setNewCommentText(prev => prev + emoji);
+                            mobileCommentInputRef.current?.focus();
+                          }}
+                          className="w-7.5 h-7.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-125 transition-transform flex items-center justify-center text-sm cursor-pointer border-0 shrink-0"
+                          title={`Reaccionar con ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Reply Target bar helper */}
                     {replyingToTarget && (
-                      <div className="flex items-center justify-between bg-rose-950/70 border border-rose-500/40 rounded-lg px-2.5 py-1 text-[8.5px] text-rose-200 shrink-0 mb-1 animate-fade-in backdrop-blur-xs">
-                        <span className="truncate text-left text-[8.5px]">Respondiendo a <strong>@{replyingToTarget.user}</strong></span>
-                        <button type="button" onClick={() => setReplyingToTarget(null)} className="text-rose-300 hover:text-white font-extrabold">✕</button>
+                      <div className="flex items-center justify-between bg-rose-950/80 border border-rose-500/50 rounded-xl px-3 py-1.5 text-[9px] text-rose-200 shrink-0 mb-1.5 animate-fade-in backdrop-blur-xs">
+                        <span className="truncate text-left">Respondiendo a <strong className="text-pink-300">@{replyingToTarget.user}</strong></span>
+                        <button type="button" onClick={() => setReplyingToTarget(null)} className="text-rose-300 hover:text-white font-extrabold text-xs ml-2 cursor-pointer border-0 bg-transparent">✕</button>
                       </div>
                     )}
 
@@ -24681,24 +29688,25 @@ export default function CastingLiveSection({
                       onSubmit={(e) => {
                         e.preventDefault();
                         handlePostComment(e);
+                        setChannelCommentsCount(prev => prev + 1);
                       }}
-                      className="pt-2 border-t border-white/15 flex items-center gap-2 mt-1.5 shrink-0"
+                      className="pt-1.5 border-t border-white/15 flex items-center gap-2 shrink-0"
                     >
                       <img 
                         src={userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150'} 
                         alt="avatar" 
-                        className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/20" 
+                        className="w-7.5 h-7.5 rounded-full object-cover shrink-0 border border-white/20" 
                         referrerPolicy="no-referrer"
                       />
-                      <div className="flex-1 flex items-center bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/20 focus-within:bg-black/70 focus-within:border-rose-400 transition-all">
+                      <div className="flex-1 flex items-center bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/20 focus-within:bg-black/80 focus-within:border-rose-400 transition-all shadow-inner">
                         <input
                           ref={mobileCommentInputRef}
                           type="text"
-                          placeholder="Añadir comentario..."
+                          placeholder={replyingToTarget ? `Responder a @${replyingToTarget.user}...` : "Escribe un comentario en el canal..."}
                           value={newCommentText}
                           onChange={(e) => setNewCommentText(e.target.value)}
-                          maxLength={100}
-                          className="flex-1 bg-transparent text-[11px] text-white placeholder-white/50 focus:outline-none py-0.5"
+                          maxLength={120}
+                          className="flex-1 bg-transparent text-[11px] sm:text-xs text-white placeholder-white/50 focus:outline-none py-0.5 min-w-0"
                         />
                         
                         <div className="flex items-center gap-1.5 ml-1 text-white/70">
@@ -24825,6 +29833,7 @@ export default function CastingLiveSection({
                         type="submit"
                         disabled={!newCommentText.trim()}
                         className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-[#fe2c55] hover:bg-rose-600 disabled:bg-white/15 text-white disabled:text-white/40 flex items-center justify-center transition shrink-0 cursor-pointer active:scale-95 shadow-md border-0"
+                        title="Enviar comentario"
                       >
                         <ArrowUp className="w-3.5 h-3.5 text-white font-extrabold stroke-[2.5px]" />
                       </button>
@@ -24883,229 +29892,113 @@ export default function CastingLiveSection({
                 </div>
               )}
 
-              {/* 📱 FULL-FRAME VIRTUAL GIFTS PANEL FOR SHORT VIDEOS (TikTok Layout Style) - OCCUPIES ENTIRE VIDEO FRAME */}
+              {/* 📱 FULL-FRAME VIRTUAL GIFTS PANEL (REGALOS EXTRA DEL CANAL - image.png) - OCCUPIES ENTIRE VIDEO FRAME */}
               {isShortVideoGiftPanelOpen && (
-                <div className="absolute inset-0 w-full h-full bg-[#0c0003]/95 backdrop-blur-md border border-rose-950/80 z-[60] p-4 px-5 transition-all duration-300 animate-fade-in flex flex-col font-sans text-white rounded-3xl shadow-2xl select-none">
-                  {/* Header: Title, Coins and Close Button */}
-                  <div className="flex items-center justify-between pb-2 border-b border-rose-900/15 mb-2.5 shrink-0">
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5 select-none">
-                        🎁 ENVIAR REGALOS <span className="text-[9px] text-red-500 font-black animate-pulse bg-red-950/40 px-1.5 py-0.5 rounded-full">26 REGALOS</span>
-                      </span>
-                      <span className="text-[9.5px] text-rose-450 font-bold tracking-wide select-none">
-                        Patrocina este vídeo de modelaje · Desliza abajo ↓
-                      </span>
-                    </div>
+                <div 
+                  className="absolute inset-0 w-full h-full bg-[#121316]/98 backdrop-blur-xl z-[60] p-4 sm:p-5 flex flex-col font-sans text-white text-left animate-fade-in rounded-3xl sm:rounded-[36px] shadow-2xl select-none border border-slate-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header: Title matching image.png */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3 shrink-0">
+                    <span className="text-xs sm:text-sm font-black text-[#facc15] flex items-center gap-2 select-none uppercase tracking-wide">
+                      <span>🎁</span> REGALOS EXTRA DEL CANAL
+                    </span>
                     
-                    <div className="flex items-center gap-2.5">
-                      {/* Coins Indicator styled like a shiny golden container */}
-                      <button
-                        onClick={() => {
-                          setLiveUserCoins(prev => prev + 1000);
-                          playGiftSoundClass(1000);
-                          alert('💰 ¡Carga virtual autorizada! Se han añadido +1000 Monedas de prueba gratis.');
-                        }}
-                        className="bg-[#261503]/80 hover:bg-[#3d2204] py-1.5 px-3 rounded-full border border-amber-500/50 text-[#fbd34d] font-mono text-[10px] font-black flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-inner"
-                        title="Haga clic para obtener +1000 Monedas gratis!"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span>{liveUserCoins}</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => setIsShortVideoGiftPanelOpen(false)}
-                        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs transition cursor-pointer border-0"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Gift list grid view (scrollable bottom drawer container) */}
-                  <div 
-                    className="flex-1 grid grid-cols-4 gap-x-2.5 gap-y-3.5 overflow-y-auto py-2 pr-1.5 scrollbar-thin scrollbar-thumb-rose-600/60 scrollbar-track-rose-950/10"
-                    style={{
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: 'rgb(225, 29, 72) rgba(12, 0, 3, 0.4)'
-                    }}
-                  >
-                    {shortVideoGiftsList.map((gift, giftIdx) => {
-                      const isSelected = selectedGiftIndex === giftIdx;
-                      
-                      // Get exact truncated names dynamically for clean column displays
-                      const displayName = gift.name.length > 9 ? gift.name.substring(0, 8) + '...' : gift.name;
-
-                      return (
-                        <button
-                          key={giftIdx}
-                          onClick={() => {
-                            setSelectedGiftIndex(giftIdx);
-                            handleSendShortVideoGift(gift);
-                          }}
-                          type="button"
-                          className={`flex flex-col items-center justify-between p-2 pb-1.5 rounded-2xl border transition-all duration-300 active:scale-95 cursor-pointer relative group text-center min-h-[105px] ${
-                            isSelected 
-                              ? 'bg-[#290a12] border-rose-500 shadow-[0_4px_16px_rgba(244,63,94,0.35)] scale-102 z-10' 
-                              : 'border-transparent hover:bg-white/5'
-                          }`}
-                        >
-                          {/* Gift Badge at Top Center */}
-                          {gift.badgeText && (
-                            <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[8px] font-extrabold uppercase text-white bg-red-650 px-1.5 py-0.5 rounded-full z-10 select-none shadow-md scale-90 whitespace-nowrap">
-                              {gift.badgeText}
-                            </span>
-                          )}
-                          
-                          <div className="flex-1 flex items-center justify-center mt-2">
-                            <span className="text-3xl transform group-hover:scale-115 transition-transform duration-200 block drop-shadow-md">
-                              {gift.icon}
-                            </span>
-                          </div>
-
-                          <div className="w-full mt-1.5 text-center">
-                            <span className="text-[10px] font-sans font-extrabold text-slate-100 block truncate max-w-full leading-tight">
-                              {displayName}
-                            </span>
-                            
-                            <span className="text-[9px] text-amber-400 font-mono font-black mt-0.5 flex items-center justify-center gap-0.5 leading-tight">
-                              <span>🪙</span>
-                              <span>{gift.cost}</span>
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Free micro-recharger bar */}
-                  <div className="pt-2 border-t border-rose-950/30 mt-2 flex items-center justify-between text-[9px] text-slate-400 shrink-0">
-                    <span>💳 Modo patrocinador ilimitado</span>
                     <button
-                      onClick={() => {
-                        setLiveUserCoins(prev => prev + 500);
-                        playGiftSoundClass(500);
-                        alert('💰 ¡Carga virtual autorizada! Se han añadido +500 Monedas extra gratis.');
-                      }}
-                      className="text-amber-400 hover:underline font-bold bg-transparent border-0 cursor-pointer"
+                      type="button"
+                      onClick={() => setIsShortVideoGiftPanelOpen(false)}
+                      className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white flex items-center justify-center text-xs transition cursor-pointer border-0"
+                      title="Cerrar regalos"
                     >
-                      Obtener +500 Gratis
+                      ✕
                     </button>
+                  </div>
+
+                  {/* 3-column Grid of gifts matching image.png */}
+                  <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-amber-500/40">
+                    {[
+                      { name: 'Certificado prof.', icon: '📜', cost: 500 },
+                      { name: 'Una estrella', icon: '⭐', cost: 50 },
+                      { name: 'Varias estrellas', icon: '✨', cost: 100 },
+                      { name: 'Billetes dólares', icon: '💵', cost: 300 },
+                      { name: 'Reloj de oro', icon: '⌚', cost: 5000 },
+                      { name: 'Pulsera', icon: '📿', cost: 800 },
+                      { name: 'Token', icon: '🪙', cost: 1000 },
+                      { name: 'Rosa roja', icon: '🌹', cost: 10 },
+                      { name: 'Beso', icon: '👄', cost: 5 },
+                      { name: 'Besos', icon: '😘', cost: 15 },
+                      { name: 'Te adoro', icon: '🥰', cost: 5 },
+                      { name: 'Osito', icon: '🧸', cost: 1 },
+                      { name: 'Corazón con lazo', icon: '💝', cost: 5 },
+                      { name: 'Rosa blanca', icon: '💮', cost: 10 },
+                      { name: 'Café', icon: '☕', cost: 20 },
+                      { name: 'Bolso', icon: '👜', cost: 3000 },
+                      { name: 'Te amo', icon: '💖', cost: 2 },
+                      { name: 'Te adoro', icon: '😍', cost: 1 },
+                      { name: 'Corazón blanco', icon: '🤍', cost: 3 },
+                      { name: 'Perfume', icon: '🧴', cost: 200 },
+                      { name: 'Collar diamantes', icon: '💎', cost: 2500 },
+                      { name: 'Collar de oro 18k', icon: '⛓️', cost: 1800 },
+                      { name: 'Un viaje', icon: '✈️', cost: 5000 },
+                      { name: 'Un coche', icon: '🚗', cost: 50000 },
+                      { name: 'Una casa', icon: '🏡', cost: 100000 },
+                      { name: 'Una copa', icon: '🍷', cost: 5 },
+                      { name: 'Anillo diamantes', icon: '💍', cost: 3500 },
+                      { name: 'Gafas de moda', icon: '🕶️', cost: 400 },
+                      { name: 'Vestido de moda', icon: '👗', cost: 100 },
+                      { name: 'Un avión', icon: '🛩️', cost: 1000000 },
+                      { name: 'Dos Alas de ángel', icon: '🪽', cost: 2 },
+                      { name: 'Ala de ángel VS', icon: '🪽', cost: 1 },
+                      { name: 'Collar de oro', icon: '🎗️', cost: 100 },
+                      { name: 'Collar de perlas', icon: '📿', cost: 80 },
+                      { name: 'Vestido de gala', icon: '💃', cost: 3000 },
+                      { name: 'Zapatos costura', icon: '👠', cost: 800 },
+                      { name: 'Ramo de rosas', icon: '💐', cost: 20 },
+                      { name: 'Bolígrafo de oro', icon: '✒️', cost: 10 },
+                      { name: 'Reloj', icon: '⏰', cost: 100000 },
+                      { name: 'Una moneda de oro', icon: '🪙', cost: 2 },
+                      { name: 'Varias monedas de oro', icon: '💰', cost: 5 },
+                      { name: 'Tesoro de monedas', icon: '🪙', cost: 10 },
+                      { name: 'Cena de lujo', icon: '🍽️', cost: 250 },
+                      { name: 'Manos juntas', icon: '🙏', cost: 1 }
+                    ].map((gift, giftIdx) => (
+                      <button
+                        key={giftIdx}
+                        onClick={() => {
+                          setSelectedGiftIndex(giftIdx);
+                          handleSendShortVideoGift(gift);
+                        }}
+                        type="button"
+                        title={`${gift.name} (${gift.cost} 🪙)`}
+                        className="bg-gradient-to-b from-[#FFFFFF] via-[#FFF4F7] to-[#FCE6EE] hover:from-[#FFFFFF] hover:to-[#FBCFE8] p-3 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-between text-center transition-all duration-200 cursor-pointer active:scale-95 border border-pink-100/90 shadow-md min-h-[96px] sm:min-h-[105px] group"
+                      >
+                        <span className="text-3xl sm:text-4xl select-none block drop-shadow-sm group-hover:scale-110 transition-transform duration-200 my-auto">
+                          {gift.icon}
+                        </span>
+                        <span className="text-[11.5px] sm:text-xs text-amber-500 font-black font-mono mt-1 flex items-center justify-center gap-1 leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.1)]">
+                          🪙 {gift.cost}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Footer matching image.png */}
+                  <div className="text-[9.5px] sm:text-[10px] text-slate-300 mt-2.5 text-center border-t border-white/10 pt-2 shrink-0 select-none">
+                    Presiona para enviar instantáneamente · Tu saldo: <span className="font-mono text-[#facc15] font-black">🪙 {liveUserCoins}</span>
                   </div>
                 </div>
               )}
 
-              {/* 🔴 Lower hover-trigger zone: covers the bottom part of the video frame occupied by this content */}
-              <div className="absolute bottom-0 left-0 right-0 h-[38%] pointer-events-auto z-10 group/lower-video-hover select-none">
-                {/* Left/Bottom overlay with details (Captions, Music, etc) */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent p-3.5 pb-5 text-white flex flex-col gap-2 pointer-events-none opacity-0 group-hover/lower-video-hover:opacity-100 group-hover/lower-video-hover:pointer-events-auto focus-within:opacity-100 transition-all duration-300 ease-in-out">
+              {/* 🔴 Lower hover-trigger zone: covers the video frame for hover triggers */}
+              <div className={`absolute bottom-0 left-0 right-0 ${selectedCategoryFilter === 'Finanzas' ? 'h-full' : 'h-[38%]'} pointer-events-auto z-10 group/lower-video-hover select-none flex flex-col justify-end`}>
+                {/* Left/Bottom overlay with details (Captions, Music, Finanzas Participants, etc) */}
+                <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-3.5 pb-5 text-white flex flex-col gap-2 transition-all duration-300 ease-in-out ${
+                  selectedCategoryFilter === 'Finanzas'
+                    ? 'opacity-100 pointer-events-auto z-30'
+                    : 'pointer-events-none opacity-0 group-hover/lower-video-hover:opacity-100 group-hover/lower-video-hover:pointer-events-auto group-hover/video-container:opacity-100 group-hover/video-container:pointer-events-auto focus-within:opacity-100'
+                }`}>
                 
-                {selectedCategoryFilter === 'Finanzas' ? (
-                  <div className="flex flex-col gap-1.5 w-full pointer-events-auto" id="finanzas-live-participants-panel">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] font-sans font-black uppercase tracking-wider text-white">LIVE RETRANSMISIÓN DIRECTO</span>
-                      </div>
-                      <span className="text-[8px] bg-[#fe2c55] text-white px-2 py-0.5 rounded-full font-black uppercase animate-bounce">
-                        {joinedPresenterIds.length} ONLINE
-                      </span>
-                    </div>
-
-                    {/* Grid of 10 users in two rows of five with larger size */}
-                    <div className="grid grid-cols-5 gap-3.5 pb-1 pt-1.5 select-none w-full" id="finanzas-live-grid-2x5">
-                      {FINANZAS_USERS.map((user, idx) => {
-                        const isJoined = joinedPresenterIds.includes(user.id);
-                        const isChosenInSpotlight = isJoined && (selectedFinanzasUser?.id === user.id || activeFinanzasPopupUser?.id === user.id);
-                        
-                        if (!isJoined) {
-                          return (
-                            <div
-                              key={user.id}
-                              onClick={() => handleConnectPresenter(user.id)}
-                              className="relative group/participant-item"
-                            >
-                              {/* Empty slot card */}
-                              <div
-                                className="w-full aspect-square rounded-2xl overflow-hidden relative cursor-pointer border-2 border-dashed border-white/10 hover:border-white/30 bg-slate-950/40 hover:bg-slate-900/40 transition-all duration-300 transform hover:scale-103 active:scale-95 shadow-lg flex flex-col items-center justify-center p-1 text-center"
-                                title={`Simular conexión de ${user.name}`}
-                              >
-                                {/* Silhouette / empty icon */}
-                                <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-1 group-hover/participant-item:text-[#fe2c55] group-hover/participant-item:border-[#fe2c55]/30 group-hover/participant-item:bg-[#fe2c55]/5 transition duration-300">
-                                  👤
-                                </div>
-                                <span className="text-[7.5px] font-black tracking-wider text-slate-400 uppercase leading-none block">
-                                  VACÍO
-                                </span>
-                                <span className="text-[6px] font-mono text-slate-550 block mt-0.5 uppercase leading-none">
-                                  Offline
-                                </span>
-                                
-                                {/* Quick connect button inside slot */}
-                                <div className="absolute inset-x-0 bottom-1 flex justify-center opacity-0 group-hover/participant-item:opacity-100 transition duration-300">
-                                  <span className="text-[6.5px] bg-[#fe2c55] text-white px-1.5 py-0.5 rounded-full font-black uppercase tracking-wide leading-none animate-pulse">
-                                    CONECTAR
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div
-                            key={user.id}
-                            onClick={() => {
-                              setSelectedFinanzasUser(user);
-                              setActiveFinanzasPopupUser(user);
-                            }}
-                            className="relative group/participant-item"
-                          >
-                            {/* Larger card container */}
-                            <div
-                              className={`w-full aspect-square rounded-2xl overflow-hidden relative cursor-pointer border-3 transition-all duration-300 transform hover:scale-108 active:scale-95 shadow-xl ${
-                                isChosenInSpotlight 
-                                  ? 'border-[#fe2c55] shadow-[0_0_16px_rgba(254,44,85,0.95)] scale-103' 
-                                  : 'border-white/20 hover:border-white/70'
-                              }`}
-                              title={`Ver detalles de ${user.name}`}
-                            >
-                              <img
-                                src={user.avatar}
-                                alt={user.name}
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                              {/* Subtle live tag */}
-                              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#fe2c55] shadow-md animate-pulse" />
-                              {/* Lower name strip */}
-                              <div className="absolute inset-x-0 bottom-0 bg-black/80 backdrop-blur-3xs text-center py-1 sm:py-1.5">
-                                <span className="text-[9px] sm:text-[11px] font-black text-white block truncate px-1 leading-none">
-                                  {user.name.split(' ')[0]}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Miembros de la sala button */}
-                    <div className="w-full flex justify-center mt-1.5" id="miembros-de-la-sala-btn-container">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveFinanzasPopupUser(FINANZAS_USERS[0]);
-                          setShowQueueInPopup(true);
-                        }}
-                        className="bg-white/10 hover:bg-white/20 active:scale-95 text-white font-extrabold text-[10px] sm:text-[11px] px-4 py-2 rounded-xl transition duration-150 border border-white/10 flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans shadow-md"
-                        id="btn-miembros-de-la-sala"
-                      >
-                        <span>👥 Miembros de la sala</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+                {selectedCategoryFilter === 'Finanzas' ? null : (
                   <>
                     {/* Creator details with Model Profiles Integration */}
                     <div className="flex items-center gap-1.5 pointer-events-auto flex-wrap" id="creator-details-header">
@@ -25181,13 +30074,12 @@ export default function CastingLiveSection({
                 )}
                 </div>
               </div>
-            </div>
           </>
         )}
               {/* Spinning vinyl record inside has been removed, moving layout elements to high-contrast sidebar outside */}
               
               {/* 🔊 Left Margin Volume Sidebar: Appears on hover over left margin for Modelos & all categories */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[52px] sm:w-[60px] h-[300px] z-[52] flex flex-col justify-center items-stretch pointer-events-auto group/left-sidebar-hover-zone" id="video-left-sidebar-wrapper">
+              <div className="absolute left-0 top-[36%] sm:top-[38%] -translate-y-1/2 w-[52px] sm:w-[60px] h-auto z-[350] flex flex-col justify-center items-stretch pointer-events-auto group/left-sidebar-hover-zone" id="video-left-sidebar-wrapper">
                 {/* Visual hover indicator when not hovered */}
                 <div className="w-1.5 h-14 bg-white/40 group-hover/left-sidebar-hover-zone:bg-transparent rounded-r-full transition-all duration-300 pointer-events-none opacity-80 group-hover/left-sidebar-hover-zone:opacity-0 flex items-center justify-center my-auto shadow-sm">
                   <Volume2 className="w-3 h-3 text-white/90 -ml-0.5" />
@@ -25283,18 +30175,37 @@ export default function CastingLiveSection({
                 </div>
               </div>
 
-              {/* 💖 High-fidelity Sidebar INSIDE the video container, running top-to-bottom and flush with the right edge */}
-              {true && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[64px] sm:w-[74px] z-[42] flex flex-col items-stretch pointer-events-auto group/sidebar-hover-zone" id="video-right-sidebar-wrapper">
+              {/* 💖 High-fidelity Sidebar INSIDE the video container, centered vertically on the right margin (appears only on mouse hover) */}
+              {!Boolean(
+                activeFinanzasPopupUser ||
+                detailProjectUser ||
+                showProjectDetailsInPopup ||
+                showQueueInPopup ||
+                showVotingProjectsModal ||
+                showFinanzasRecount ||
+                showFinanzasResults ||
+                showFinanzasInscriptionInChannel ||
+                showCreateStoryModal ||
+                isShortVideoGiftPanelOpen ||
+                isCommentsOpen ||
+                isActivityDrawerOpen
+              ) && (
+                <div className="absolute right-0 top-0 bottom-0 w-[70px] sm:w-[80px] z-[30] flex flex-col justify-center items-end pr-1.5 sm:pr-2 pointer-events-auto group/sidebar-hover-zone" id="video-right-sidebar-wrapper">
 
-
-
-                {/* The actual sidebar that matches premium platform layouts (appears smoothly only when mouse is in the right margin zone) */}
-                <div className="w-full h-auto bg-black/65 hover:bg-black/75 backdrop-blur-md py-4 sm:py-5 px-1 sm:px-1.5 rounded-[22px] border border-white/10 flex flex-col items-center justify-center gap-4 sm:gap-5 select-none shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300 ease-out opacity-0 translate-x-4 pointer-events-none group-hover/sidebar-hover-zone:opacity-100 group-hover/sidebar-hover-zone:translate-x-0 group-hover/sidebar-hover-zone:pointer-events-auto" id="video-right-sidebar-panel">
+                {/* The actual sidebar that matches premium platform layouts (centered vertically in the middle of the channel card, appears on hover or touch tap) */}
+                <div 
+                  className={`w-auto bg-[#0a0e1a]/85 hover:bg-[#0a0e1a]/95 backdrop-blur-md py-2 px-1.5 rounded-full border border-slate-700/50 flex flex-col items-center justify-center gap-2 select-none shadow-[0_8px_25px_rgba(0,0,0,0.8)] transition-all duration-300 ease-out ${
+                    mobileChannelControlsVisible || showTouchRightSidebar
+                      ? 'opacity-100 translate-x-0 pointer-events-auto'
+                      : 'opacity-0 translate-x-4 pointer-events-none group-hover/sidebar-hover-zone:opacity-100 group-hover/sidebar-hover-zone:translate-x-0 group-hover/sidebar-hover-zone:pointer-events-auto'
+                  }`} 
+                  id="video-right-sidebar-panel"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   
                   {/* Creator Profile Image with Red/Pink ring and pink addition button */}
-                  <div className="relative group/sidebar-avatar flex flex-col items-center mb-1 shrink-0">
-                    <div className="w-[36px] h-[36px] sm:w-[42px] sm:h-[42px] rounded-full p-[1.5px] bg-gradient-to-tr from-[#fe2c55] to-pink-500 shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer">
+                  <div className="relative group/sidebar-avatar flex flex-col items-center mb-0.5 shrink-0 justify-center">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full p-[1px] bg-gradient-to-tr from-[#fe2c55] to-pink-500 shadow-md transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer">
                       <img
                         src={
                           selectedCategoryFilter === 'Finanzas'
@@ -25340,7 +30251,12 @@ export default function CastingLiveSection({
                             const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
                             const activeUser = (presentingItem ? FINANZAS_USERS.find(u => u.id === presentingItem.id) : null) || activeFinanzasPopupUser || selectedFinanzasUser || FINANZAS_USERS[0];
                             if (activeUser) {
+                              setSelectedFinanzasUser(activeUser);
                               setActiveFinanzasPopupUser(activeUser);
+                              setDetailProjectUser(activeUser);
+                              setShowProjectDetailsInPopup(true);
+                              setShowQueueInPopup(false);
+                              setIsVoiceIntroPlaying(false);
                             }
                           } else if (activeVideo.modelId) {
                             onGoToModelProfile?.(activeVideo.modelId);
@@ -25372,15 +30288,15 @@ export default function CastingLiveSection({
                       return (
                         <button
                           onClick={(e) => handleFollowToggle(activeVideo.id, e)}
-                          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-md select-none border border-white transform hover:scale-110 active:scale-90 transition cursor-pointer z-35 ${
+                          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-md select-none border border-white transform hover:scale-110 active:scale-90 transition cursor-pointer z-35 ${
                             activeVideo.isFollowing ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-[#fe2c55] hover:bg-rose-600 text-white'
                           }`}
                           title={activeVideo.isFollowing ? "Siguiendo" : "Seguir"}
                         >
                           {activeVideo.isFollowing ? (
-                            <Check className="w-2.5 h-2.5 text-white stroke-[3.5px]" />
+                            <Check className="w-2 h-2 text-white stroke-[3.5px]" />
                           ) : (
-                            <Plus className="w-3 h-3 text-white stroke-[3.5px]" />
+                            <Plus className="w-2.5 h-2.5 text-white stroke-[3.5px]" />
                           )}
                         </button>
                       );
@@ -25388,15 +30304,42 @@ export default function CastingLiveSection({
                   </div>
 
                   {/* Heart Button Area */}
-                  <div className="flex flex-col items-center shrink-0">
+                  <div className="flex flex-col items-center shrink-0 relative group/video-heart-zone">
+                    {/* Floating vertical menu with expanded emojis on hover */}
+                    <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/video-heart-zone:flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200/90 py-2 px-1.5 rounded-full shadow-2xl shadow-black/40 ring-1 ring-black/10 animate-fade-in max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-none after:content-[''] after:absolute after:-right-3 after:inset-y-0 after:w-5 select-none">
+                      {[
+                        '❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '😘',
+                        '💕', '💘', '💗', '💓', '💞', '💯', '⚡', '🎁', '🥳', '👑',
+                        '🚀', '✨', '🌟', '🌹', '🌸', '🌺', '🌷', '💋', '👄', '💎',
+                        '🤍', '🤎', '💜', '💙', '💚', '💛', '🧡', '🤩', '😎', '😜',
+                        '🎀', '💃', '🕺', '🥂', '🍿', '🛍️', '👠', '🎵', '🎶', '🙌',
+                        '💫', '🎯', '💥', '🏆', '🥇', '🎈', '🪄', '🧸', '🌈', '🍦',
+                        '🍰', '🍫', '🍓', '🍒', '🌻', '🌼', '🦋', '🦄', '🕊️', '💸',
+                        '💰', '🤑', '🤝', '💪', '🙏', '👀', '🤤', '🤯', '🥵', '😻'
+                      ].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendFreeEmojiReaction(emoji);
+                          }}
+                          className="text-lg hover:scale-140 active:scale-90 hover:bg-slate-100/80 rounded-full p-0.5 transition-all cursor-pointer bg-transparent border-0 shrink-0"
+                          title={`Enviar ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+
                     <button
                       onClick={(e) => handleLikeToggle(activeVideo.id, e)}
-                      className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full bg-[#fff1f3] hover:bg-white text-slate-800 border border-rose-100 flex items-center justify-center shadow-md transition-all hover:scale-110 active:scale-75 cursor-pointer"
+                      className="w-8.5 h-8.5 rounded-full bg-[#fff1f3] hover:bg-white text-slate-800 border border-rose-100 flex items-center justify-center shadow-md transition-all hover:scale-105 active:scale-75 cursor-pointer"
                       title="Me gusta"
                     >
-                      <Heart className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${activeVideo.isLiked ? 'text-red-550 fill-red-550 scale-110 animate-[bounce_1s_infinite]' : 'text-rose-500'}`} />
+                      <Heart className={`w-4 h-4 ${activeVideo.isLiked ? 'text-red-550 fill-red-550 scale-110 animate-[bounce_1s_infinite]' : 'text-rose-500'}`} />
                     </button>
-                    <span className="text-[10px] sm:text-[11px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.likes}</span>
+                    <span className="text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.likes}</span>
                   </div>
 
                   {/* Comment Button Area (Toggles sidebar comment panel) */}
@@ -25411,16 +30354,16 @@ export default function CastingLiveSection({
                             setIsActivityDrawerOpen(false);
                           }
                         }}
-                        className={`w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer ${
+                        className={`w-8.5 h-8.5 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-105 active:scale-90 cursor-pointer ${
                           isCommentsOpen 
                             ? 'bg-[#fe2c55] border-[#fe2c55] text-white animate-pulse' 
                             : 'bg-[#fff1f3] hover:bg-white text-slate-800'
                         }`}
                         title="Comentarios"
                       >
-                        <MessageSquare className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${isCommentsOpen ? 'text-white' : 'text-slate-800'}`} />
+                        <MessageSquare className={`w-4 h-4 ${isCommentsOpen ? 'text-white' : 'text-slate-800'}`} />
                       </button>
-                      <span className="text-[10px] sm:text-[11px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.comments.length}</span>
+                      <span className="text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.comments.length}</span>
                     </div>
                   )}
 
@@ -25429,12 +30372,12 @@ export default function CastingLiveSection({
                     <div className="flex flex-col items-center shrink-0">
                       <button
                         onClick={(e) => handleFavoriteToggle(activeVideo.id, e)}
-                        className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full bg-[#fff1f3] hover:bg-white text-slate-950 border border-rose-100 flex items-center justify-center shadow-md transition-all hover:scale-110 active:scale-75 cursor-pointer"
+                        className="w-8.5 h-8.5 rounded-full bg-[#fff1f3] hover:bg-white text-slate-950 border border-rose-100 flex items-center justify-center shadow-md transition-all hover:scale-105 active:scale-75 cursor-pointer"
                         title="Añadir a favoritos"
                       >
-                        <Bookmark className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${activeVideo.isFavorited ? 'text-amber-500 fill-amber-500' : 'text-slate-705'}`} />
+                        <Bookmark className={`w-4 h-4 ${activeVideo.isFavorited ? 'text-amber-500 fill-amber-500' : 'text-slate-705'}`} />
                       </button>
-                      <span className="text-[10px] sm:text-[11px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.favorites}</span>
+                      <span className="text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.favorites}</span>
                     </div>
                   )}
 
@@ -25446,16 +30389,16 @@ export default function CastingLiveSection({
                           e.stopPropagation();
                           setIsSharePopoverOpen(!isSharePopoverOpen);
                         }}
-                        className={`w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer share-trigger-btn ${
+                        className={`w-8.5 h-8.5 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-105 active:scale-90 cursor-pointer share-trigger-btn ${
                           isSharePopoverOpen 
                             ? 'bg-rose-550 border-rose-550 text-white animate-pulse' 
                             : 'bg-[#fff1f3] hover:bg-white text-slate-900'
                         }`}
                         title="Compartir enlace"
                       >
-                        <Share2 className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${isSharePopoverOpen ? 'text-white' : 'text-slate-705'}`} />
+                        <Share2 className={`w-4 h-4 ${isSharePopoverOpen ? 'text-white' : 'text-slate-705'}`} />
                       </button>
-                      <span className="text-[10px] sm:text-[11px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.shares}</span>
+                      <span className="text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.shares}</span>
                     </div>
                   )}
 
@@ -25466,53 +30409,17 @@ export default function CastingLiveSection({
                         e.stopPropagation();
                         setIsShortVideoGiftPanelOpen(!isShortVideoGiftPanelOpen);
                       }}
-                      className={`w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer ${
+                      className={`w-8.5 h-8.5 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-105 active:scale-90 cursor-pointer ${
                         isShortVideoGiftPanelOpen 
                           ? 'bg-amber-500 border-amber-450 text-white animate-pulse' 
                           : 'bg-[#fff1f3] hover:bg-white text-slate-800'
                       }`}
                       title="Enviar Regalos Virtuales"
                     >
-                      <Gift className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${isShortVideoGiftPanelOpen ? 'text-white' : 'text-amber-500'}`} />
+                      <Gift className={`w-4 h-4 ${isShortVideoGiftPanelOpen ? 'text-white' : 'text-amber-500'}`} />
                     </button>
-                    <span className="text-[9px] sm:text-[10px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">Regalo</span>
+                    <span className="text-[9px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">Regalo</span>
                   </div>
-
-                  {/* Spinning vinyl record record art with matching border halo */}
-                  <div className="relative mt-0.5 animate-spin duration-[1800ms] linear shrink-0">
-                    <div className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full bg-slate-950 p-[1px] border border-slate-300 flex items-center justify-center relative overflow-hidden shadow-md">
-                      <div className="w-2 h-2 rounded-full bg-rose-500 border border-white/30 z-10" />
-                      <img
-                        src={
-                          selectedCategoryFilter === 'Finanzas'
-                            ? (() => {
-                                const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
-                                const activeUser = (presentingItem ? FINANZAS_USERS.find(u => u.id === presentingItem.id) : null) || 
-                                                   activeFinanzasPopupUser || 
-                                                   fullscreenFinanzasUser || 
-                                                   selectedFinanzasUser || 
-                                                   FINANZAS_USERS[0];
-                                return activeUser?.avatar || presentingItem?.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200';
-                              })()
-                            : (userProfile && (
-                                activeVideo.modelId === userProfile.id ||
-                                activeVideo.uploaderId === userProfile.id ||
-                                (userProfile.name?.toLowerCase().includes('adriana') && activeVideo.name?.toLowerCase().includes('adriana'))
-                              ))
-                                ? (userProfile.avatar || activeVideo.avatar)
-                                : (userProfile?.avatar || activeVideo.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200')
-                        }
-                        alt="Vinyl label animate"
-                        className="absolute inset-0 w-full h-full object-cover opacity-80"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.currentTarget.src = userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
-                        }}
-                      />
-                    </div>
-                  </div>
-
-
 
                 </div>
               </div>
@@ -26216,8 +31123,121 @@ export default function CastingLiveSection({
         </aside>
       )}
 
+      {/* ✨ CREATION CHOICE MODAL (Historia vs Reel) */}
+      {showCreationTypeModal && renderCreationTypeModal()}
+
+      {/* 🗳️ VOTING PROJECTS MODAL (Votar por el mejor proyecto) */}
+      {showVotingProjectsModal && selectedCategoryFilter !== 'Finanzas' && renderVotingProjectsModal()}
+
       {/* 📤 UPLOAD MODEL CLIP ("Cargar") POPUP MODAL */}
       {showUploadModal && renderUploadModal()}
+
+      {/* 🔒 FINANZAS ACCESS RESTRICTED MODAL (Simulación de Espectadores que no han pagado) */}
+      {showFinanzasPayModal && (
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999] flex items-center justify-center p-4 font-sans text-white animate-fade-in select-none">
+          <div className="w-full max-w-md bg-[#0f1423] border-2 border-[#fe2c55]/80 rounded-3xl shadow-[0_0_60px_rgba(254,44,85,0.4)] p-6 sm:p-7 relative flex flex-col items-center text-center gap-4 animate-scale-in">
+            <button
+              type="button"
+              onClick={() => setShowFinanzasPayModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center font-bold text-xs transition border-0 cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Adriana Lima Avatar & Live Lock Badge */}
+            <div className="relative">
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+                alt="Adriana Lima"
+                className="w-16 h-16 rounded-full object-cover border-2 border-[#fe2c55] shadow-lg shadow-rose-500/40"
+              />
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#fe2c55] text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-[#0f1423]">
+                🔒
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-[#fe2c55] tracking-widest bg-[#fe2c55]/15 px-3 py-1 rounded-full border border-[#fe2c55]/30 inline-block font-mono">
+                CANAL FINANZAS • EN DIRECTO
+              </span>
+              <h3 className="text-xl font-black text-white tracking-tight mt-1">
+                Pago de Sesión Requerido
+              </h3>
+              <p className="text-xs text-slate-300 font-medium leading-relaxed max-w-sm mx-auto">
+                Hola <strong>Adriana Lima</strong>. Estás en la emisión en vivo del <strong>Canal Finanzas</strong>. Para participar en la votación o unirte a la mesa de inversión, debes realizar el pago de la inscripción previa.
+              </p>
+            </div>
+
+            <div className="w-full bg-slate-900/90 border border-rose-500/30 p-3.5 rounded-2xl text-left space-y-1.5 shadow-inner">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+                  📌 Ir a la Página de Pago (captura z.png):
+                </span>
+                <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  10.00€
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-normal font-sans">
+                Accede a las <strong>Mesas de Inversión (Sesiones)</strong>, asigna tu proyecto y haz clic en <strong>"Disparar Pago de 10€ y Acceder a Votaciones"</strong> para desbloquear la experiencia completa.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 w-full pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFinanzasPayModal(false);
+                  if (onNavigateToTab) {
+                    onNavigateToTab('sessions');
+                  } else {
+                    alert('Accede a la sección de Mesas de Inversión para realizar el pago.');
+                  }
+                }}
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#fe2c55] via-rose-600 to-pink-600 hover:from-rose-600 hover:to-[#fe2c55] text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-rose-500/30 cursor-pointer border-0 active:scale-95 flex items-center justify-center gap-2 font-sans"
+              >
+                <span>💳</span>
+                <span>Ir a Pagar Sesión en Captura z.png (10€)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('user_paid_finanzas_session', 'true');
+                  setShowFinanzasPayModal(false);
+                  setShowVotingProjectsModal(false);
+                  setShowProjectDetailsInPopup(false);
+                  setDetailProjectUser(null);
+                  setActiveFinanzasPopupUser(null);
+                  setSelectedCategoryFilter('Finanzas');
+                  setSelectedLiveCategory('Finanzas');
+                }}
+                className="w-full py-2.5 px-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-[11px] uppercase tracking-wider rounded-xl transition border border-emerald-500/40 cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 font-sans"
+              >
+                <span>⚡</span>
+                <span>Simular Pago de 10€ Ahora Mismo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowFinanzasPayModal(false)}
+                className="py-2 px-4 text-slate-400 hover:text-white text-[11px] font-semibold transition cursor-pointer border-0 bg-transparent"
+              >
+                Continuar en modo espectador
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+            {/* 🚀 MODAL DE ACUMULACIÓN DE 10 PARTICIPANTES EN DIRECTO (TOP LEVEL) */}
+      <ParticipantsGatheringModal
+        isOpen={showParticipantsGatheringModal}
+        sessionTitle={gatheringSessionTitle || "MESA DE EMPRESARIOS #1"}
+        entryFee={gatheringSessionFee || 100}
+        participantsList={EMPRESARIOS_USERS}
+        onComplete={handleGatheringComplete}
+        onClose={() => setShowParticipantsGatheringModal(false)}
+      />
 
       {/* 🔮 BEAUTIFUL ACTIVE STORY LIGHTBOX PLAYER */}
       {selectedCastingLiveStory && (
@@ -26855,7 +31875,7 @@ export default function CastingLiveSection({
 
 
       {/* 📊 DETAILED PROJECT MODAL FOR PARTICIPANTS (WHITE BACKGROUND / PORTAL FIELDS) */}
-      {detailProjectUser && (
+      {detailProjectUser && selectedCategoryFilter !== 'Finanzas' && (
         <div className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 font-sans text-slate-800 select-none animate-fade-in overflow-y-auto">
           <div className="w-full max-w-2xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-5 sm:p-7 relative flex flex-col gap-4 my-auto text-left animate-scale-in max-h-[90vh] overflow-y-auto">
             {/* Close Button */}
@@ -26897,10 +31917,7 @@ export default function CastingLiveSection({
                 }`}
                 title="Ver Identidad Creativa del Proyecto"
               >
-                <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono shrink-0 ${
-                  detailModalStep === 'basic' ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'
-                }`}>1</span>
-                <span className="whitespace-nowrap font-extrabold">1. Identidad Creativa</span>
+                <span className="whitespace-nowrap font-extrabold">Identidad Creativa</span>
               </button>
 
               <button
@@ -26913,10 +31930,7 @@ export default function CastingLiveSection({
                 }`}
                 title="Ver Economía y Fondos"
               >
-                <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono shrink-0 ${
-                  detailModalStep === 'finance' ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'
-                }`}>2</span>
-                <span className="whitespace-nowrap font-extrabold">2. Economía y Fondos</span>
+                <span className="whitespace-nowrap font-extrabold">Economía y Fondos</span>
               </button>
 
               <button
@@ -26929,10 +31943,7 @@ export default function CastingLiveSection({
                 }`}
                 title="Ver Equipo Humano"
               >
-                <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono shrink-0 ${
-                  detailModalStep === 'team' ? 'bg-white text-emerald-900' : 'bg-emerald-600 text-white'
-                }`}>3</span>
-                <span className="whitespace-nowrap font-extrabold">3. Equipo Humano ✓</span>
+                <span className="whitespace-nowrap font-extrabold">Equipo Humano ✓</span>
               </button>
             </div>
 
@@ -27319,17 +32330,8 @@ function CastingLiveStoryLightbox({
   setShowLiveGiftsPopover = () => {},
   onGoToModelProfile
 }: CastingLiveStoryLightboxProps) {
-  // Check if user is Online
-  const isOnlineUser = (username: string) => {
-    const onlineUsernames = [
-      'valentinarossi_w1', 'isabelladubois_w2', 'sophialoren_w3', 'miakincaid_w4'
-    ];
-    return onlineUsernames.some(u => username && username.toLowerCase().includes(u.toLowerCase())) || username === userProfile?.username;
-  };
-
   // Custom timer for story progression
   React.useEffect(() => {
-    // Find all stories for current publisher
     const pubStories = activeStories.filter((s: any) => s.userId === selectedCastingLiveStory.userId);
     const finalPubStories = pubStories.length > 0 ? pubStories : [selectedCastingLiveStory];
     
@@ -27340,7 +32342,6 @@ function CastingLiveStoryLightbox({
       if (safeSubIndex < finalPubStories.length - 1) {
         setActiveStorySubIndex(prev => prev + 1);
       } else {
-        // Finish current publisher's stories, go to next publisher's first story!
         handleNextPublisher();
       }
     }, duration);
@@ -27466,36 +32467,6 @@ function CastingLiveStoryLightbox({
     }
   };
 
-  // Group horizontal publishers for preview columns
-  const masterPublishers: any[] = [];
-  const myActive = activeStories.filter((s: any) => s.userId === userProfile.id);
-  if (myActive.length > 0) {
-    masterPublishers.push(myActive[0]);
-  }
-  const othersActive = activeStories
-    .filter((s: any) => s.userId !== userProfile.id)
-    .filter((value, idx, self) => self.findIndex((t: any) => t.userId === value.userId) === idx);
-  masterPublishers.push(...othersActive);
-
-  const restOfModels = models.filter(m => !activeStories.some((as: any) => as.userId === m.id));
-  const mappedModels = restOfModels.map(model => ({
-    id: 'story-model-' + model.id,
-    userId: model.id,
-    name: model.name,
-    username: model.username,
-    avatar: model.avatar,
-    image: model.photos?.[0] || model.avatar || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=300',
-    title: 'Casting de ' + model.name,
-    createdAt: new Date().toISOString(),
-    isVideo: false,
-    isModelProfileStory: true
-  }));
-  masterPublishers.push(...mappedModels);
-
-  const currentPublisherIdx = masterPublishers.findIndex(s => s.userId === selectedCastingLiveStory.userId);
-  const prevPublisher = currentPublisherIdx > 0 ? masterPublishers[currentPublisherIdx - 1] : null;
-  const nextPublisher = currentPublisherIdx < masterPublishers.length - 1 ? masterPublishers[currentPublisherIdx + 1] : null;
-
   // Clean particles event-handler
   React.useEffect(() => {
     if (floatingParticles.length > 0) {
@@ -27519,22 +32490,32 @@ function CastingLiveStoryLightbox({
     setFloatingParticles(prev => [...prev, ...newParticles]);
   };
 
-  // Touch states & Scroll wheel cooldowns for premium swiping/scrolling transitions to switch videos
+  // Touch states & Scroll wheel cooldowns for gestures
   const [touchStart, setTouchStart] = React.useState<number | null>(null);
   const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
   const lastScrollTime = React.useRef<number>(0);
+  const [isPeekMode, setIsPeekMode] = React.useState(false);
 
-  // Swipe & Wheel interactive gestures to instantly switch videos / models (TikTok/Reels style)
+  // Close on Escape key to quickly return to background page
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedCastingLiveStory(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setSelectedCastingLiveStory]);
+
   const handleWheel = (e: React.WheelEvent) => {
     const now = Date.now();
-    if (now - lastScrollTime.current < 750) return; // Prevent excessive rapid skipping
-
+    if (now - lastScrollTime.current < 750) return;
     if (Math.abs(e.deltaY) > 25) {
       lastScrollTime.current = now;
       if (e.deltaY > 0) {
-        handleNextPublisher();
+        handleStepForward();
       } else {
-        handlePrevPublisher();
+        handleStepBackward();
       }
     }
   };
@@ -27556,9 +32537,9 @@ function CastingLiveStoryLightbox({
       if (now - lastScrollTime.current > 400) {
         lastScrollTime.current = now;
         if (distance > 0) {
-          handleNextPublisher();
+          handleStepForward();
         } else {
-          handlePrevPublisher();
+          handleStepBackward();
         }
       }
     }
@@ -27566,8 +32547,27 @@ function CastingLiveStoryLightbox({
     setTouchEnd(null);
   };
 
+  // Helper functions for forward/backward step (arrows & tap navigation)
+  const handleStepForward = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (safeSubIdx < finalPubStories.length - 1) {
+      setActiveStorySubIndex(safeSubIdx + 1);
+    } else {
+      handleNextPublisher();
+    }
+  };
+
+  const handleStepBackward = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (safeSubIdx > 0) {
+      setActiveStorySubIndex(safeSubIdx - 1);
+    } else {
+      handlePrevPublisher();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[3000] bg-white text-slate-900 flex flex-col md:flex-row items-center justify-center p-0 md:p-6 select-none animate-fade-in">
+    <div className="fixed inset-0 z-[3000] w-full max-w-full h-full bg-black/25 text-slate-900 flex items-center justify-center p-0 select-none animate-fade-in overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes flyUpAnimation {
           0% {
@@ -27595,104 +32595,76 @@ function CastingLiveStoryLightbox({
         }
       ` }} />
 
-      {/* Dynamic blurred background to match active story visual palette */}
+      {/* Background clickable dismiss overlay - subtle tint without blur so background page is crisp and visible */}
       <div 
-        className="absolute inset-0 bg-cover bg-center blur-3xl opacity-15 pointer-events-none" 
-        style={{ backgroundImage: `url(${currentActiveSubStory?.image})` }}
-      />
-      <div 
-        className="absolute inset-0 bg-white/95 cursor-zoom-out" 
+        className="absolute inset-0 w-full h-full bg-black/20 hover:bg-black/10 transition-colors cursor-pointer" 
         onClick={() => setSelectedCastingLiveStory(null)}
+        title="Haz clic en cualquier parte fuera de la historia para ver la página de fondo"
       />
 
-      <div className="absolute top-4 left-6 z-[3010] flex items-center gap-2 select-none">
-        <span className="font-sans font-black text-xl tracking-tight text-[#fe2c55] uppercase">
-          Casting <span className="text-slate-800 font-bold">Live</span>
-        </span>
+      {/* Top Floating Control Bar to view background or close */}
+      <div className="fixed top-3 sm:top-5 inset-x-0 z-[3030] flex items-center justify-center gap-2.5 pointer-events-auto px-4">
+        <button 
+          type="button"
+          onClick={() => setSelectedCastingLiveStory(null)}
+          className="bg-slate-900/90 hover:bg-black text-white font-semibold text-xs px-4 py-2 rounded-full border border-white/30 backdrop-blur-md shadow-2xl flex items-center gap-2 cursor-pointer transition hover:scale-105 active:scale-95"
+          title="Cerrar historia y ver la página de fondo completa"
+        >
+          <X className="w-4 h-4 text-rose-400 stroke-[2.5]" />
+          <span>Cerrar historia · Ver página de fondo</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsPeekMode(!isPeekMode)}
+          className={`text-xs font-semibold px-3.5 py-2 rounded-full border backdrop-blur-md shadow-2xl flex items-center gap-1.5 cursor-pointer transition hover:scale-105 active:scale-95 ${
+            isPeekMode 
+              ? 'bg-amber-400 text-slate-950 border-amber-300 font-bold shadow-amber-500/30' 
+              : 'bg-black/75 hover:bg-black text-white border-white/30'
+          }`}
+          title="Alternar transparencia para inspeccionar la página de fondo"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>{isPeekMode ? '👀 Fondo visible (Clic para restaurar)' : '👁️ Ver fondo sin cerrar'}</span>
+        </button>
       </div>
 
+      {/* Top right close button */}
       <button 
         onClick={() => setSelectedCastingLiveStory(null)}
-        className="absolute top-4 right-6 text-slate-800 hover:text-[#fe2c55] bg-slate-100 hover:bg-slate-250 p-2.5 rounded-full transition duration-150 font-black text-sm cursor-pointer w-10 h-10 flex items-center justify-center border border-slate-250 z-[3020] shadow-xs active:scale-95"
-        title="Cerrar historias"
+        className="fixed top-3 right-3 sm:top-5 sm:right-6 text-white hover:text-white bg-black/70 hover:bg-rose-600/90 backdrop-blur-md rounded-full transition duration-150 font-black text-sm cursor-pointer w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center border border-white/30 z-[3020] shadow-2xl active:scale-95"
+        title="Cerrar historias (Esc)"
       >
         ✕
       </button>
 
-      <div className="relative z-10 flex items-center justify-center gap-8 w-full max-w-6xl">
-        <div className="hidden md:flex items-center gap-4">
-          {prevPublisher ? (
-            <div 
-              onClick={() => {
-                setSelectedCastingLiveStory(prevPublisher);
-                setActiveStorySubIndex(0);
-              }}
-              className="flex flex-col items-center shrink-0 cursor-pointer group hover:scale-[1.03] transition-all duration-300 relative"
-            >
-              <div className="relative w-[184px] aspect-[9/16] bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-150">
-                <img 
-                  src={prevPublisher.image} 
-                  alt="prev" 
-                  className="absolute inset-0 w-full h-full object-cover blur-xs opacity-40" 
-                />
-                <div className="absolute inset-0 bg-black/60" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
-                  <div className={`w-[62px] h-[62px] rounded-full p-[2.5px] shadow-md bg-gradient-to-tr ${
-                    prevPublisher.isModelProfileStory
-                      ? 'from-pink-500 via-rose-500 to-amber-500'
-                      : 'from-[#fe2c55] via-purple-500 to-amber-500'
-                  }`}>
-                    <div className="w-full h-full bg-white rounded-full p-[2px] flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={prevPublisher.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'} 
-                        alt="" 
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    </div>
-                  </div>
-                  <span className="text-white text-xs font-black truncate w-full mt-2 drop-shadow-md">
-                    @{prevPublisher.username || prevPublisher.name.toLowerCase().replace(/\s+/g, '')}
-                  </span>
-                  <span className="text-white/75 text-[9px] font-mono mt-0.5">
-                    {prevPublisher.isModelProfileStory ? (
-                      <span className="text-cyan-300 font-bold">📸 Historia</span>
-                    ) : (
-                      <span className="text-red-400 font-bold">Activo</span>
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="w-[184px]" />
-          )}
+      {/* Left Outer Arrow Button (Positioned at left edge of page) */}
+      <button 
+        onClick={handleStepBackward}
+        className="fixed left-3 sm:left-6 md:left-12 lg:left-16 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/50 hover:bg-black/75 text-white border border-white/30 transition-all shadow-2xl hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center shrink-0 z-[3020] backdrop-blur-md"
+        title="Historia anterior"
+      >
+        <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5px]" />
+      </button>
 
-          {prevPublisher && (
-            <button 
-              onClick={handlePrevPublisher}
-              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-250 text-slate-800 transition shadow-sm hover:scale-105 active:scale-90 cursor-pointer flex items-center justify-center"
-              title="Anterior"
-            >
-              <ChevronLeft className="w-5 h-5 stroke-[3px]" />
-            </button>
-          )}
-        </div>
-
+      {/* Perfectly Centered Story Card */}
+      <div className="relative z-10 flex items-center justify-center w-full h-full pointer-events-none px-4">
         <div 
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className="relative w-full max-w-[370px] aspect-[9/16] bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-slate-250 animate-scale-up grow shrink-0"
+          className={`relative w-[300px] sm:w-[335px] md:w-[345px] h-[490px] sm:h-[540px] md:h-[570px] max-h-[74vh] max-w-[90vw] bg-black rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)] flex flex-col border border-white/20 animate-scale-up shrink-0 select-none pointer-events-auto mx-auto transition-all duration-300 ${
+            isPeekMode ? 'opacity-10 pointer-events-none' : 'opacity-100'
+          }`}
         >
-          <div className="absolute top-3.5 inset-x-3.5 z-30 flex gap-1.5 select-none">
+          <div className="absolute top-3 inset-x-3 z-30 flex gap-1.5 select-none">
             {finalPubStories.map((subItem: any, idx: number) => {
               let fillStyle: React.CSSProperties = { width: '0%', bg: '#ffffff' };
               if (idx < safeSubIdx) {
                 fillStyle = { width: '100%', bg: '#ffffff' };
               }
               return (
-                <div key={subItem.id || idx} className="h-[2.5px] flex-1 bg-white/25 rounded-full overflow-hidden relative">
+                <div key={subItem.id || idx} className="h-[2px] flex-1 bg-white/30 rounded-full overflow-hidden relative">
                   {idx === safeSubIdx ? (
                     <div 
                       key={`animate-sub-${subItem.id}-${safeSubIdx}`}
@@ -27709,10 +32681,10 @@ function CastingLiveStoryLightbox({
             })}
           </div>
 
-            {/* Profile User header row inside card */}
-          <div className="absolute top-5.5 inset-x-3 z-30 flex items-center justify-between select-none bg-gradient-to-b from-black/80 via-black/40 to-transparent p-3 rounded-2xl">
+          {/* Profile User header row inside card */}
+          <div className="absolute top-4.5 inset-x-3 z-30 flex items-center justify-between select-none px-2 py-1.5">
             <div 
-              className="flex items-center gap-2.5 text-white cursor-pointer hover:opacity-90 group transition-all"
+              className="flex items-center gap-2 text-white cursor-pointer hover:opacity-90 group transition-all"
               onClick={handleStoryUserRedirect}
               title={`Ver perfil de ${currentActiveSubStory.username || selectedCastingLiveStory.username}`}
             >
@@ -27720,104 +32692,52 @@ function CastingLiveStoryLightbox({
                 src={currentActiveSubStory.avatar || selectedCastingLiveStory.avatar} 
                 alt="" 
                 referrerPolicy="no-referrer"
-                className="w-8.5 h-8.5 rounded-full object-cover border border-white/20 shadow-md bg-slate-900 group-hover:border-white/45 transition-all"
+                className="w-7 h-7 rounded-full object-cover border border-white/30 shadow-md bg-slate-900 group-hover:border-white/60 transition-all"
               />
-              <div className="flex flex-col text-left">
-                <div className="flex items-center gap-1.5 leading-none">
-                  <span className="font-extrabold text-white text-[12px] drop-shadow-sm truncate max-w-[130px] group-hover:underline">
-                    {currentActiveSubStory.username || selectedCastingLiveStory.username}
-                  </span>
-                  <span className="text-white/60 text-[10px] font-sans font-medium">
-                    9h
-                  </span>
-                </div>
-                {/* Charming song and Online status indicator */}
-                <div className="flex items-center gap-1 mt-0.5 text-white/85 text-[8.5px] font-bold tracking-tight font-sans">
-                  {isOnlineUser(currentActiveSubStory.username || selectedCastingLiveStory.username) ? (
-                    <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-xs bg-red-500/90 text-white font-extrabold text-[7.5px] tracking-wider uppercase leading-none scale-90">
-                      🟢 EN DIRECTO
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-xs bg-zinc-700/90 text-white font-extrabold text-[7.5px] tracking-wider uppercase leading-none scale-90">
-                      📸 HISTORIA
-                    </span>
-                  )}
-                  <span className="text-rose-500 text-[9px] animate-pulse font-bold">♪</span>
-                  <span className="truncate max-w-[90px]" title="Amr Diab • Gamila (feat. Jana Diab)">Amr Diab • Gamila</span>
-                </div>
+              <div className="flex items-center gap-2 text-left">
+                <span className="font-bold text-white text-[12px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[140px] group-hover:underline">
+                  {currentActiveSubStory.username || selectedCastingLiveStory.username || currentActiveSubStory.name || selectedCastingLiveStory.name}
+                </span>
+                <span className="text-white/80 text-[10px] font-sans font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                  16 h
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Sound control */}
+            <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+              {/* Triple dots menu */}
+              <MoreHorizontal className="w-4.5 h-4.5 text-white/90 cursor-pointer hover:text-white" />
+              {/* Direct close button inside story card */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const nextMute = !isMuted;
-                  setIsMuted(nextMute);
-                  localStorage.setItem('story_muted', String(nextMute));
-                  try {
-                    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
-                    const osc = context.createOscillator();
-                    const gain = context.createGain();
-                    osc.connect(gain);
-                    gain.connect(context.destination);
-                    osc.frequency.setValueAtTime(nextMute ? 280 : 540, context.currentTime);
-                    gain.gain.setValueAtTime(0.04, context.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
-                    osc.start();
-                    osc.stop(context.currentTime + 0.25);
-                  } catch (_) {}
+                  setSelectedCastingLiveStory(null);
                 }}
-                className="text-white/90 hover:text-white p-1 hover:bg-white/10 rounded transition cursor-pointer"
-                title={isMuted ? "Sonido desactivado" : "Sonido activado"}
+                className="w-6 h-6 rounded-full bg-black/60 hover:bg-rose-600/80 text-white flex items-center justify-center transition cursor-pointer border border-white/30 shadow-md ml-0.5"
+                title="Cerrar historia y volver a la página de fondo"
               >
-                {isMuted ? <VolumeX className="w-4 h-4 text-white/70" /> : <Volume2 className="w-4 h-4 text-white animate-pulse" />}
+                <X className="w-3.5 h-3.5 text-white stroke-[2.5]" />
               </button>
-              
-              {/* Gifts/Reactions Toggle */}
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowLiveGiftsPopover(!showLiveGiftsPopover);
-                }}
-                className="text-white/90 hover:text-white p-1 hover:bg-white/10 rounded transition cursor-pointer"
-                title="Regalos Extra del Canal"
-              >
-                <Play className="w-3.5 h-3.5 transform rotate-90 text-white" />
-              </button>
-
-              {/* Triple dots menu */}
-              <MoreHorizontal className="w-4.5 h-4.5 text-white/90 cursor-pointer hover:text-white" />
             </div>
           </div>
 
           <div 
-            className="flex-1 w-full h-full relative bg-neutral-950 flex items-center justify-center cursor-pointer"
+            className="flex-1 w-full h-full relative bg-neutral-950 flex items-center justify-center cursor-pointer overflow-hidden"
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const clickX = e.clientX - rect.left;
               if (clickX < rect.width * 0.35) {
-                if (safeSubIdx > 0) {
-                  setActiveStorySubIndex(safeSubIdx - 1);
-                } else {
-                  handlePrevPublisher();
-                }
+                handleStepBackward();
               } else {
-                if (safeSubIdx < finalPubStories.length - 1) {
-                  setActiveStorySubIndex(safeSubIdx + 1);
-                } else {
-                  handleNextPublisher();
-                }
+                handleStepForward();
               }
             }}
           >
             {currentActiveSubStory.isVideo ? (
               <video 
                 src={currentActiveSubStory.image} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
                 autoPlay
                 muted={isMuted}
                 loop
@@ -27826,12 +32746,13 @@ function CastingLiveStoryLightbox({
             ) : (
               <img 
                 src={currentActiveSubStory.image} 
-                alt=""
+                alt="" 
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover transition-all duration-300"
+                className="w-full h-full object-cover object-center transition-all duration-300"
               />
             )}
-            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+
+            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
           </div>
 
           <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-3xl">
@@ -27851,60 +32772,13 @@ function CastingLiveStoryLightbox({
             ))}
           </div>
 
-          <div className="absolute bottom-18 inset-x-4 z-20 text-left select-none text-white">
-            <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-              {currentActiveSubStory.isModelProfileStory || selectedCastingLiveStory.isModelProfileStory ? (
-                <span className="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-mono text-[9px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full shadow-md">
-                  Historia de Amigo {safeSubIdx + 1} de {finalPubStories.length}
-                </span>
-              ) : (
-                <span className="inline-block bg-[#fe2c55]/90 text-white font-mono text-[9px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full shadow-md">
-                  Casting {safeSubIdx + 1} de {finalPubStories.length}
-                </span>
-              )}
-              <span className="inline-block bg-black/50 text-emerald-350 font-sans text-[8px] font-black px-2 py-0.5 rounded-full border border-emerald-500/20 shadow-sm animate-pulse">
-                ↕️ Scroll / Arrastra para pasar
-              </span>
-            </div>
-            <h4 className="text-xl font-black tracking-tight uppercase text-white drop-shadow-md">
-              {currentActiveSubStory.isModelProfileStory || selectedCastingLiveStory.isModelProfileStory ? (
-                <span>Escaparate de {currentActiveSubStory.name || selectedCastingLiveStory.name}</span>
-              ) : (
-                <span>{currentActiveSubStory.title || 'Historia Diaria'}</span>
-              )}
-            </h4>
-            <p className="text-[10px] text-slate-300 font-medium select-none">
-              {currentActiveSubStory.isModelProfileStory || selectedCastingLiveStory.isModelProfileStory ? (
-                <span>
-                  📸 Amigo sin directo • Visualizando fotos de su escaparate •{" "}
-                  <span 
-                    onClick={handleStoryUserRedirect}
-                    className="font-bold text-white cursor-pointer hover:underline transition-all z-40"
-                  >
-                    @{currentActiveSubStory.username || selectedCastingLiveStory.username}
-                  </span>
-                </span>
-              ) : (
-                <span>
-                  📍 Publicado en Casting Live •{" "}
-                  <span 
-                    onClick={handleStoryUserRedirect}
-                    className="font-bold text-white cursor-pointer hover:underline transition-all z-40"
-                  >
-                    @{currentActiveSubStory.username || selectedCastingLiveStory.username}
-                  </span>
-                </span>
-              )}
-            </p>
-          </div>
-
-          {/* Bottom reply & reaction bar inside card matching zzz.png */}
-          <div className="p-3.5 pt-1 pb-4 flex items-center justify-between gap-3 shrink-0">
-            <div className="flex-1 bg-transparent border border-white/20 rounded-full py-1.5 px-3.5 flex items-center">
+          {/* Bottom reply & reaction bar inside card */}
+          <div className="p-3 pt-2 pb-3.5 flex items-center justify-between gap-2 shrink-0 bg-black/90 backdrop-blur-xs z-30">
+            <div className="flex-1 bg-transparent border border-white/40 rounded-full py-1.5 px-3 flex items-center">
               <input 
                 type="text" 
                 placeholder={`Responder a ${currentActiveSubStory.username || selectedCastingLiveStory.username}...`}
-                className="bg-transparent text-white placeholder-white/50 text-[11.5px] focus:outline-none flex-1 border-none font-medium h-4 leading-none" 
+                className="bg-transparent text-white placeholder-white/60 text-[11px] focus:outline-none flex-1 border-none font-normal h-4 leading-none" 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const textInput = e.target as HTMLInputElement;
@@ -27915,7 +32789,7 @@ function CastingLiveStoryLightbox({
               />
             </div>
 
-            <div className="flex items-center gap-2 select-none shrink-0">
+            <div className="flex items-center gap-2.5 select-none shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -27924,86 +32798,36 @@ function CastingLiveStoryLightbox({
                   }));
                   spawnEmojiParticles('❤️');
                 }}
-                className="text-white hover:text-rose-500 active:scale-90 transition p-1 cursor-pointer bg-white/5 rounded-full hover:bg-white/10"
-                title="Reaccionar"
+                className="text-white hover:text-rose-500 active:scale-90 transition cursor-pointer p-0.5"
+                title="Me gusta"
               >
-                <Heart className="w-4.5 h-4.5 fill-current text-white hover:text-rose-500 animate-pulse" />
+                <Heart className="w-5 h-5 text-white hover:text-rose-500 stroke-[1.8]" />
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  alert('🔗 ¡Vínculo de Casting copiado al portapapeles!');
-                  spawnEmojiParticles('🔗');
+                  alert(`📩 Mensaje privado enviado a @${currentActiveSubStory.username || selectedCastingLiveStory.username}`);
+                  spawnEmojiParticles('✈️');
                 }}
-                className="text-white hover:text-indigo-400 active:scale-90 transition p-1 cursor-pointer bg-white/5 rounded-full hover:bg-white/10"
+                className="text-white hover:text-indigo-400 active:scale-90 transition cursor-pointer p-0.5"
                 title="Compartir"
               >
-                <Send className="w-4 h-4 text-white transform rotate-45 -translate-y-0.5" />
+                <Send className="w-5 h-5 text-white stroke-[1.8] transform rotate-45 -translate-y-0.5" />
               </button>
             </div>
           </div>
         </div>
-
-        <div className="hidden md:flex items-center gap-4">
-          {nextPublisher && (
-            <button 
-              onClick={handleNextPublisher}
-              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-250 text-slate-800 transition shadow-sm hover:scale-105 active:scale-90 cursor-pointer flex items-center justify-center"
-              title="Siguiente"
-            >
-              <ChevronRight className="w-5 h-5 stroke-[3px]" />
-            </button>
-          )}
-
-          {nextPublisher ? (
-            <div 
-              onClick={() => {
-                setSelectedCastingLiveStory(nextPublisher);
-                setActiveStorySubIndex(0);
-              }}
-              className="flex flex-col items-center shrink-0 cursor-pointer group hover:scale-[1.03] transition-all duration-300 relative"
-            >
-              <div className="relative w-[184px] aspect-[9/16] bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-150">
-                <img 
-                  src={nextPublisher.image} 
-                  alt="next" 
-                  className="absolute inset-0 w-full h-full object-cover blur-xs opacity-40" 
-                />
-                <div className="absolute inset-0 bg-black/60" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
-                  <div className={`w-[62px] h-[62px] rounded-full p-[2.5px] shadow-md bg-gradient-to-tr ${
-                    nextPublisher.isModelProfileStory
-                      ? 'from-pink-500 via-rose-500 to-amber-500'
-                      : 'from-[#fe2c55] via-purple-500 to-amber-500'
-                  }`}>
-                    <div className="w-full h-full bg-white rounded-full p-[2px] flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={nextPublisher.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'} 
-                        alt="" 
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    </div>
-                  </div>
-                  <span className="text-white text-xs font-black truncate w-full mt-2 drop-shadow-md">
-                    @{nextPublisher.username || nextPublisher.name.toLowerCase().replace(/\s+/g, '')}
-                  </span>
-                  <span className="text-white/75 text-[9px] font-mono mt-0.5">
-                    {nextPublisher.isModelProfileStory ? (
-                      <span className="text-cyan-300 font-bold">📸 Historia</span>
-                    ) : (
-                      <span className="text-red-400 font-bold">Activo</span>
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="w-[184px]" />
-          )}
-        </div>
       </div>
 
+      {/* Right Outer Arrow Button (Positioned at right edge of page) */}
+      <button 
+        onClick={handleStepForward}
+        className="fixed right-3 sm:right-6 md:right-12 lg:left-auto lg:right-16 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/50 hover:bg-black/75 text-white border border-white/30 transition-all shadow-2xl hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center shrink-0 z-[3020] backdrop-blur-md"
+        title="Siguiente historia"
+      >
+        <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5px]" />
+      </button>
     </div>
   );
 }

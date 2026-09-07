@@ -15,13 +15,14 @@ import {
   Share2, 
   QrCode, 
   Check, 
-  ArrowUpRight, 
   TrendingUp, 
   Wallet, 
   RefreshCw,
   Send,
   UserCheck,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   X
 } from 'lucide-react';
 import { ModelProfile } from '../types';
@@ -69,6 +70,13 @@ export default function PatrocinadosView({
   const [copied, setCopied] = useState(false);
   const [showInstagramKit, setShowInstagramKit] = useState(true);
   const [copiedInstagramMsg, setCopiedInstagramMsg] = useState(false);
+
+  const getValidAvatar = (p: Patrocinado) => {
+    if (!p?.avatar || p.avatar.includes('1524504388940-b1c1722553e1') || p.name?.toLowerCase().includes('valeria russo')) {
+      return 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150';
+    }
+    return p.avatar;
+  };
 
   const sponsorModel = models.find(m => m.id === patrocinadorId) || models.find(m => m.id === 'topf-1' || m.id === 'model-1') || models[0];
 
@@ -440,36 +448,25 @@ export default function PatrocinadosView({
             </div>
 
             {/* Link field container */}
-            <div 
-              onClick={() => onOpenRegisterForm && onOpenRegisterForm()}
-              className="bg-white hover:bg-rose-50/50 border border-pink-150 p-2 rounded-xl block cursor-pointer transition shadow-inner group relative"
-              title="Haz clic para abrir el formulario de inicio de Fashion Finances"
-            >
-              <div className="flex items-center justify-between gap-1.5">
-                <input
-                  type="text"
-                  readOnly
-                  value="https://collectives.model/ref?sponsor=user"
-                  className="bg-transparent text-[10px] font-mono font-bold text-rose-900 select-none pointer-events-none flex-1 px-1 py-0.5 min-w-0"
-                />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Avoid triggering register form modal on copy click
-                    navigator.clipboard.writeText("https://collectives.model/ref?sponsor=user");
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2500);
-                  }}
-                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9px] uppercase tracking-wide rounded-lg transition shrink-0 cursor-pointer flex items-center gap-1 border-0"
-                >
-                  {copied ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
-                  <span>{copied ? 'Copiado' : 'Copiar'}</span>
-                </button>
-              </div>
-              <div className="text-[9.5px] text-center text-rose-600 font-bold mt-1.5 group-hover:text-rose-800 transition flex items-center justify-center gap-0.5 uppercase tracking-wide">
-                <span>👉 CLIC PARA ABRIR FORMULARIO DE INICIO</span>
-                <ArrowUpRight className="w-3 h-3 text-rose-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </div>
+            <div className="bg-white border border-pink-150 p-2 rounded-xl flex items-center justify-between gap-1.5 shadow-inner">
+              <input
+                type="text"
+                readOnly
+                value="https://collectives.model/ref?sponsor=user"
+                className="bg-transparent text-[10px] font-mono font-bold text-rose-900 select-all flex-1 px-1 py-0.5 min-w-0"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText("https://collectives.model/ref?sponsor=user");
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2500);
+                }}
+                className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9px] uppercase tracking-wide rounded-lg transition shrink-0 cursor-pointer flex items-center gap-1 border-0"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                <span>{copied ? 'Copiado' : 'Copiar'}</span>
+              </button>
             </div>
 
             {/* Quick action grid (WhatsApp, Telegram, Instagram) */}
@@ -477,31 +474,32 @@ export default function PatrocinadosView({
               <button
                 type="button"
                 onClick={() => window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent('Sigue mi enlace de Haute Couture en Fashion Finances y gana el 10% de premios: https://collectives.model/ref?sponsor=user'))}
-                className="py-2 bg-[#25d366]/10 hover:bg-[#25d366]/20 text-[#128c7e] border border-[#25d366]/20 rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-0.5 cursor-pointer"
+                className="py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white border border-transparent rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-[0.98]"
               >
-                <span>💬</span>
+                <span className="text-[10px]">💬</span>
                 <span>WhatsApp</span>
               </button>
               
               <button
                 type="button"
                 onClick={() => window.open('https://t.me/share/url?url=' + encodeURIComponent('https://collectives.model/ref?sponsor=user') + '&text=' + encodeURIComponent('Únete a mi red de patrocinados de Haute Couture en Fashion Finances.'))}
-                className="py-2 bg-[#0088cc]/10 hover:bg-[#0088cc]/20 text-[#0077b5] border border-[#0088cc]/20 rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-0.5 cursor-pointer"
+                className="py-2 bg-[#0088cc] hover:bg-[#0077b5] text-white border border-transparent rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-[0.98]"
               >
-                <span>✈️</span>
+                <span className="text-[10px]">✈️</span>
                 <span>Telegram</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowInstagramKit(!showInstagramKit)}
-                className={`py-2 border rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-0.5 cursor-pointer ${
+                style={{ backgroundColor: showInstagramKit ? '#b91c1c' : '#e50914', color: '#ffffff' }}
+                className={`py-2 text-white border border-transparent rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-[0.98] ${
                   showInstagramKit
-                    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white border-transparent'
-                    : 'bg-rose-50/30 hover:bg-rose-100/50 text-rose-700 border-rose-200'
+                    ? '!bg-[#b91c1c] ring-2 ring-red-300'
+                    : '!bg-[#e50914] hover:!bg-[#cc0812]'
                 }`}
               >
-                <span>📸</span>
+                <span className="text-[10px]">📸</span>
                 <span>Instagram</span>
               </button>
             </div>
@@ -584,8 +582,8 @@ export default function PatrocinadosView({
 
       {/* Form: Add New Patrocinado (Simulates manually registering referrals) */}
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="bg-[#111827] text-slate-100 rounded-3xl border border-slate-800 p-6 sm:p-8 space-y-4 animate-fade-in text-left max-w-xl mx-auto shadow-lg" id="form-add-patrocinado">
-          <div className="border-b border-slate-800 pb-3">
+        <form onSubmit={handleSubmit} className="bg-slate-900/90 text-slate-100 rounded-3xl border border-slate-700/70 p-6 sm:p-8 space-y-4 animate-fade-in text-left max-w-xl mx-auto shadow-md" id="form-add-patrocinado">
+          <div className="border-b border-slate-700/60 pb-3">
             <h3 className="text-sm font-bold text-pink-400 font-sans uppercase tracking-widest">Registrar Nuevo Afiliado Manual</h3>
             <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">Simula el registro de inversores o modelos bajo tu enlace y asígnales un estado inicial.</p>
           </div>
@@ -601,7 +599,7 @@ export default function PatrocinadosView({
               placeholder="Ej. Carmen Alvarez"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
 
@@ -616,7 +614,7 @@ export default function PatrocinadosView({
               placeholder="Ej. carmenval"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
 
@@ -630,7 +628,7 @@ export default function PatrocinadosView({
               placeholder="Ej. Calle Gran Vía 45, Madrid"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
 
@@ -644,7 +642,7 @@ export default function PatrocinadosView({
               placeholder="Ej. +34 612 345 678"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
 
@@ -658,7 +656,7 @@ export default function PatrocinadosView({
               placeholder="Ej. carmen@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
 
@@ -747,7 +745,7 @@ export default function PatrocinadosView({
                 placeholder="🔍 Escribe para filtrar patrocinador..."
                 value={sponsorSelectQuery}
                 onChange={(e) => setSponsorSelectQuery(e.target.value)}
-                className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 transition-all font-sans"
+                className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pink-500 transition-all font-sans"
               />
               {sponsorSelectQuery && (
                 <button
@@ -765,7 +763,7 @@ export default function PatrocinadosView({
               onChange={(e) => {
                 setSelectedSponsor(e.target.value);
               }}
-              className="bg-[#1e293b] border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500 transition-colors font-medium cursor-pointer"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500 transition-colors font-medium cursor-pointer"
             >
               <option value="" className="text-slate-400 font-sans bg-slate-900">-- Elige un Patrocinador --</option>
               {models.length > 0 ? (
@@ -866,8 +864,8 @@ export default function PatrocinadosView({
           </button>
         </div>
 
-        {/* Search Input Filter */}
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-pink-50/60 shadow-3xs text-left">
+        {/* Search Input Filter & Collapse Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-slate-50/80 p-3.5 rounded-2xl border border-pink-50/60 shadow-3xs text-left">
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
@@ -875,12 +873,15 @@ export default function PatrocinadosView({
               placeholder="Buscar por nombre, apellido o ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl w-full pl-9 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-50"
+              className="bg-white border border-slate-200 rounded-xl w-full pl-9 pr-4 py-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-50"
             />
           </div>
-          <span className="text-[11px] text-slate-450 font-bold font-mono text-slate-500">
-            Viendo {filteredList.length} de {patrocinados.length} miembros ({activeTab === 'all' ? 'Todos' : activeTab === 'investor' ? 'Inversores' : activeTab === 'model' ? 'Modelos' : 'Pendientes'})
-          </span>
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            <span className="text-[11px] font-semibold font-mono text-slate-500">
+              Viendo {Math.min(filteredList.length, visibleCount)} de {patrocinados.length} ({activeTab === 'all' ? 'Todos' : activeTab === 'investor' ? 'Inversores' : activeTab === 'model' ? 'Modelos' : 'Pendientes'})
+            </span>
+          </div>
         </div>
 
       </div>
@@ -889,15 +890,16 @@ export default function PatrocinadosView({
       {filteredList.length === 0 ? (
         <div className="border border-dashed border-pink-200 rounded-2xl p-8 text-center bg-pink-50/20">
           <AlertCircle className="w-8 h-8 text-rose-300 mx-auto mb-2" />
-          <p className="text-rose-950 text-xs font-extrabold uppercase tracking-wide">No se encontraron patrocinados</p>
+          <p className="text-rose-900 text-xs font-bold uppercase tracking-wide">No se encontraron patrocinados</p>
           <p className="text-slate-400 text-[10px] mt-0.5">Prueba a pulsar otro tab, escribir un término diferente o invitar a un nuevo inversor.</p>
         </div>
       ) : (
-        <div className="overflow-hidden border border-pink-100/50 rounded-2xl bg-white shadow-3xs">
+        <div id="patrocinados-table-top" className="overflow-hidden border border-pink-100/50 rounded-2xl bg-white shadow-3xs">
           <div className="grid grid-cols-1 divide-y divide-slate-100">
             {filteredList.slice(0, visibleCount).map((p) => {
               const personalBonus = simulatedBonuses[p.id] || 0;
               const displayEarnings = p.earningsGenerated + personalBonus;
+              const currentAvatar = getValidAvatar(p);
 
               return (
                 <div
@@ -913,12 +915,12 @@ export default function PatrocinadosView({
                         id: p.id || `fallback-profile-${p.username}`,
                         name: p.name,
                         username: p.username,
-                        avatar: p.avatar,
+                        avatar: currentAvatar,
                         bio: `Perfil de ${p.role === 'model' ? 'Modelo Profesional' : 'Inversor Asociado'}: ${p.name}. Colaborador destacado en la ronda de Fashion Finances Inc.`,
                         totalLikes: Math.round((parseFloat(p.id.replace(/\D/g, '') || '5') * 15) % 150) + 40,
                         followersCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '8') * 132) % 1800) + 400,
                         photos: [
-                          p.avatar,
+                          currentAvatar,
                           "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600",
                           "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600"
                         ],
@@ -952,12 +954,12 @@ export default function PatrocinadosView({
                         id: p.id || `fallback-model-${p.username}`,
                         name: p.name,
                         username: p.username,
-                        avatar: p.avatar,
+                        avatar: currentAvatar,
                         bio: `Perfil de Modelo Profesional Referido: ${p.name}. Colaboradora destacada en la ronda de Fashion Finances Inc.`,
                         totalLikes: Math.round((parseFloat(p.id.replace(/\D/g, '') || '5') * 15) % 150) + 40,
                         followersCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '8') * 132) % 1800) + 400,
                         photos: [
-                          p.avatar,
+                          currentAvatar,
                           "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600",
                           "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600"
                         ],
@@ -975,16 +977,19 @@ export default function PatrocinadosView({
                       <div className="flex items-center gap-3">
                         <div className="relative shrink-0">
                           <img
-                            src={p.avatar}
+                            src={currentAvatar}
                             alt={p.name}
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150';
+                            }}
                             onClick={() => {
                               if (matchedModel && onSelectModel) {
                                 onSelectModel(matchedModel);
                               }
                             }}
                             referrerPolicy="no-referrer"
-                            className={`w-12 h-12 rounded-xl object-cover border border-slate-150 shadow-3xs transition-transform ${
-                              matchedModel ? 'cursor-pointer hover:scale-105 hover:border-pink-500 hover:ring-2 hover:ring-pink-100' : ''
+                            className={`w-12 h-12 rounded-xl object-cover border border-slate-200/80 shadow-3xs transition-transform ${
+                              matchedModel ? 'cursor-pointer hover:scale-105 hover:border-pink-400 hover:ring-2 hover:ring-pink-100' : ''
                             }`}
                             title={matchedModel ? `Ver perfil privado de ${p.name}` : undefined}
                           />
@@ -1006,8 +1011,8 @@ export default function PatrocinadosView({
                                   onSelectModel(matchedModel);
                                 }
                               }}
-                              className={`font-black text-slate-850 text-xs sm:text-sm capitalize ${
-                                matchedModel ? 'cursor-pointer text-rose-800 hover:text-rose-955 hover:underline flex items-center gap-1' : ''
+                              className={`font-bold text-slate-750 text-xs sm:text-sm capitalize transition-colors ${
+                                matchedModel ? 'cursor-pointer text-rose-700 hover:text-rose-900 hover:underline flex items-center gap-1' : 'text-slate-700 group-hover:text-rose-700'
                               }`}
                               title={matchedModel ? `Ver perfil privado de ${p.name}` : undefined}
                             >
@@ -1022,10 +1027,10 @@ export default function PatrocinadosView({
                                   onSelectModel(matchedModel);
                                 }
                               }}
-                              className={`px-2 py-0.5 rounded-full text-[8.5px] font-black tracking-widest uppercase inline-flex items-center gap-0.5 ${
+                              className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold tracking-wider uppercase inline-flex items-center gap-0.5 ${
                                 p.role === 'model'
-                                  ? 'bg-rose-50 text-rose-600 border border-rose-100 cursor-pointer hover:bg-rose-100 transition'
-                                  : 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                  ? 'bg-rose-50 text-rose-600 border border-rose-150 cursor-pointer hover:bg-rose-100 transition'
+                                  : 'bg-indigo-50 text-indigo-600 border border-indigo-150'
                               }`}
                             >
                               {p.role === 'model' ? <Heart className="w-2.5 h-2.5 fill-current" /> : <ShieldCheck className="w-2.5 h-2.5" />}
@@ -1033,19 +1038,19 @@ export default function PatrocinadosView({
                             </span>
 
                             {/* New Status Badge built with 🟢, 🟡, ⚪ as requested */}
-                            <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-black inline-flex items-center gap-1 border ${
+                            <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold inline-flex items-center gap-1 border ${
                               p.status === 'active' 
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                                 : p.status === 'pending'
                                   ? 'bg-amber-50 text-amber-700 border-amber-100'
-                                  : 'bg-slate-150 text-slate-600 border-slate-205'
+                                  : 'bg-slate-100 text-slate-600 border-slate-200'
                             }`}>
                               <span>{p.status === 'active' ? '🟢 Activo' : p.status === 'pending' ? '🟡 Pendiente' : '⚪ Inactivo'}</span>
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">@{p.username}</span>
+                            <span className="text-[10px] text-slate-450 font-mono">@{p.username}</span>
                           </div>
                         </div>
                       </div>
@@ -1055,16 +1060,16 @@ export default function PatrocinadosView({
                   {/* Referred info & dates */}
                   <div className="flex flex-col sm:items-end text-left sm:text-right gap-0.5 font-sans">
                     {/* Calendar view showcasing refer date cleanly */}
-                    <div className="flex items-center gap-1 text-slate-500 text-[11px] font-semibold" title="Fecha desde que fue referido">
-                      <Calendar className="w-3.5 h-3.5 text-rose-300" />
-                      <span>Referido desde: <strong className="text-slate-700 font-sans">{p.registeredAt}</strong></span>
+                    <div className="flex items-center gap-1 text-slate-500 text-[11px] font-medium" title="Fecha desde que fue referido">
+                      <Calendar className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Referido desde: <strong className="text-slate-600 font-sans font-semibold">{p.registeredAt}</strong></span>
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap sm:justify-end">
                       {/* Generative Prizes with dynamic highlight block of high contrast */}
-                      <div className="flex items-center text-xs text-slate-600 bg-pink-50/40 px-2 py-0.5 rounded-lg border border-pink-100/30" title="Premio acumulado por afiliación">
+                      <div className="flex items-center text-xs text-slate-600 bg-pink-50/50 px-2 py-0.5 rounded-lg border border-pink-100/40" title="Premio acumulado por afiliación">
                         <DollarSign className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                        <span>Premio generado: <strong className="text-rose-700 font-mono text-[12.5px] font-black">{displayEarnings.toFixed(2)}€</strong></span>
+                        <span>Premio generado: <strong className="text-rose-600 font-mono text-[12px] font-bold">{displayEarnings.toFixed(2)}€</strong></span>
                       </div>
                     </div>
                   </div>
@@ -1073,17 +1078,48 @@ export default function PatrocinadosView({
               );
             })}
 
-            {filteredList.length > visibleCount && (
-              <div className="p-4 bg-slate-50/50 hover:bg-slate-50 border-t border-slate-100 flex items-center justify-center transition-colors">
+            {/* Bottom action controls: Expand more or Collapse users */}
+            {filteredList.length > visibleCount ? (
+              <div className="p-3 bg-slate-50/60 border-t border-slate-100 flex flex-wrap items-center justify-center gap-2 transition-colors">
                 <button
                   type="button"
                   onClick={() => setVisibleCount(prev => prev + 5)}
-                  className="w-full sm:w-auto text-center px-6 py-2.5 bg-white border border-pink-105 hover:bg-pink-50/30 text-xs font-bold text-rose-600 hover:text-rose-800 transition rounded-xl flex items-center justify-center gap-1 cursor-pointer select-none shadow-3xs"
+                  className="px-5 py-2 bg-white border border-pink-200 hover:bg-pink-50/40 text-xs font-bold text-rose-600 hover:text-rose-700 transition rounded-xl flex items-center justify-center gap-1.5 cursor-pointer select-none shadow-3xs"
                 >
+                  <ChevronDown className="w-3.5 h-3.5" />
                   <span>Desplegar más usuarios</span>
-                  <span className="bg-rose-100 text-rose-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full font-mono">
+                  <span className="bg-rose-100 text-rose-700 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full font-mono">
                     +{filteredList.length - visibleCount}
                   </span>
+                </button>
+                {visibleCount > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVisibleCount(5);
+                      const el = document.getElementById('patrocinados-table-top');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }}
+                    className="px-4 py-2 bg-white border border-slate-200/90 hover:bg-slate-50 text-xs font-bold text-slate-600 hover:text-slate-800 transition rounded-xl flex items-center justify-center gap-1.5 cursor-pointer select-none shadow-3xs"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Contraer usuarios</span>
+                  </button>
+                )}
+              </div>
+            ) : filteredList.length > 5 && (
+              <div className="p-3 bg-slate-50/60 border-t border-slate-100 flex flex-wrap items-center justify-center gap-2 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibleCount(5);
+                    const el = document.getElementById('patrocinados-table-top');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }}
+                  className="px-4 py-2 bg-white border border-slate-200/90 hover:bg-slate-50 text-xs font-bold text-slate-600 hover:text-slate-800 transition rounded-xl flex items-center justify-center gap-1.5 cursor-pointer select-none shadow-3xs"
+                >
+                  <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Contraer usuarios</span>
                 </button>
               </div>
             )}

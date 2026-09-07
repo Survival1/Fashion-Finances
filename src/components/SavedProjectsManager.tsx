@@ -31,6 +31,10 @@ import {
   TrendingDown,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Filter,
   UserCheck,
   Clock,
   Trash2,
@@ -41,6 +45,7 @@ import {
   Plus,
   FileText,
   Eye,
+  Trophy,
   X
 } from 'lucide-react';
 
@@ -88,6 +93,31 @@ export default function SavedProjectsManager({
     userProjects.length > 0 ? [userProjects[0].id] : []
   );
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+
+  // Controls for Historial de Rondas de Inversión Ganadas
+  const [historyViewMode, setHistoryViewMode] = useState<'by_project' | 'table'>('by_project');
+  const [historySearchQuery, setHistorySearchQuery] = useState<string>('');
+  const [historySelectedProjectFilter, setHistorySelectedProjectFilter] = useState<string>('all');
+  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
+
+  const toggleProjectAccordion = (projectId: string) => {
+    setExpandedProjects(prev => {
+      const current = prev[projectId] ?? true;
+      return { ...prev, [projectId]: !current };
+    });
+  };
+
+  const expandAllProjects = (allIds: string[]) => {
+    const next: Record<string, boolean> = {};
+    allIds.forEach(id => { next[id] = true; });
+    setExpandedProjects(next);
+  };
+
+  const collapseAllProjects = (allIds: string[]) => {
+    const next: Record<string, boolean> = {};
+    allIds.forEach(id => { next[id] = false; });
+    setExpandedProjects(next);
+  };
   const [scheduleType, setScheduleType] = useState<'now' | 'scheduled'>('now');
   const [scheduleDate, setScheduleDate] = useState<string>('');
   const [queuedInvestments, setQueuedInvestments] = useState<any[]>(() => {
@@ -156,6 +186,100 @@ export default function SavedProjectsManager({
           };
         })
     );
+
+  // Group won history by project to determine:
+  // 1. Cuántas veces ha ganado un proyecto
+  // 2. En cuántas sesiones y en cuáles
+  // 3. Cuánto es el total que ha ganado ese proyecto hasta la fecha
+  const projectWinningsSummary = React.useMemo(() => {
+    const summaryMap: Record<string, {
+      projectId: string;
+      projectTitle: string;
+      projectCategory?: string;
+      winCount: number;
+      sessionsList: { id: string; title: string; date: string; prize: number }[];
+      totalPrize: number;
+    }> = {};
+
+    userProjects.forEach(proj => {
+      summaryMap[proj.id] = {
+        projectId: proj.id,
+        projectTitle: proj.title,
+        projectCategory: proj.category,
+        winCount: 0,
+        sessionsList: [],
+        totalPrize: 0,
+      };
+    });
+
+    historyWonLog.forEach((log) => {
+      let targetId = log.projectId;
+      if (!targetId && log.projectName) {
+        const matched = userProjects.find(p => p.title.trim().toLowerCase() === log.projectName?.trim().toLowerCase());
+        if (matched) targetId = matched.id;
+      }
+      if (!targetId && userProjects.length > 0) {
+        targetId = userProjects[0].id;
+      }
+      const finalId = targetId || 'proj-won-general';
+
+      if (!summaryMap[finalId]) {
+        summaryMap[finalId] = {
+          projectId: finalId,
+          projectTitle: log.projectName || userProjects[0]?.title || 'Eco-Fashion Runway',
+          projectCategory: userProjects[0]?.category || 'Moda',
+          winCount: 0,
+          sessionsList: [],
+          totalPrize: 0,
+        };
+      }
+
+      summaryMap[finalId].winCount += 1;
+      summaryMap[finalId].totalPrize += log.prize;
+      summaryMap[finalId].sessionsList.push({
+        id: log.id,
+        title: log.title,
+        date: log.date,
+        prize: log.prize,
+      });
+    });
+
+    return Object.values(summaryMap).filter(p => p.winCount > 0);
+  }, [historyWonLog, userProjects]);
+
+  // Filter project summaries according to project filter dropdown and search input
+  const filteredProjectSummaries = React.useMemo(() => {
+    return projectWinningsSummary.filter(pSummary => {
+      if (historySelectedProjectFilter !== 'all' && pSummary.projectId !== historySelectedProjectFilter) {
+        return false;
+      }
+      if (historySearchQuery.trim()) {
+        const query = historySearchQuery.toLowerCase();
+        const matchesTitle = pSummary.projectTitle.toLowerCase().includes(query);
+        const matchesCat = (pSummary.projectCategory || '').toLowerCase().includes(query);
+        const matchesSession = pSummary.sessionsList.some(s => s.title.toLowerCase().includes(query));
+        return matchesTitle || matchesCat || matchesSession;
+      }
+      return true;
+    });
+  }, [projectWinningsSummary, historySelectedProjectFilter, historySearchQuery]);
+
+  // Filter raw history log for the chronological table view
+  const filteredHistoryWonLog = React.useMemo(() => {
+    return historyWonLog.filter(log => {
+      const proj = projectWinningsSummary.find(p => p.projectId === log.projectId || p.projectTitle === log.projectName) || projectWinningsSummary[0];
+      if (historySelectedProjectFilter !== 'all' && proj?.projectId !== historySelectedProjectFilter) {
+        return false;
+      }
+      if (historySearchQuery.trim()) {
+        const query = historySearchQuery.toLowerCase();
+        const matchesTitle = log.title.toLowerCase().includes(query);
+        const matchesProj = (log.projectName || proj?.projectTitle || '').toLowerCase().includes(query);
+        return matchesTitle || matchesProj;
+      }
+      return true;
+    });
+  }, [historyWonLog, projectWinningsSummary, historySelectedProjectFilter, historySearchQuery]);
 
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
@@ -480,14 +604,30 @@ export default function SavedProjectsManager({
       if (isNowFull) {
         const uniqueNewId = `sess-auto-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const sessionCategory = currentSessObj.entryFee === 10
-          ? 'Trabajadores'
+          ? 'Streetwear & Urban'
           : currentSessObj.entryFee === 100
-            ? 'Emprendedores'
-            : 'Empresarios';
+            ? 'Casual & Lifestyle'
+            : currentSessObj.entryFee === 1000
+              ? 'Glamour'
+              : currentSessObj.entryFee === 10000
+                ? 'Ronda Elegant & Classic'
+                : currentSessObj.entryFee === 100000 || currentSessObj.entryFee === 1000000
+                  ? 'High Fashion'
+                  : 'High Fashion';
 
         const newEmptySession: InvestmentSession = {
           id: uniqueNewId,
-          title: `Sesión de Inversión de ${sessionCategory} - R-${Math.floor(Date.now() % 1000)}`,
+          title: currentSessObj.entryFee === 10
+            ? `Round STREETWEAR & URBAN - R-${Math.floor(Date.now() % 1000)}`
+            : currentSessObj.entryFee === 100
+              ? `Round CASUAL & LIFESTYLE - R-${Math.floor(Date.now() % 1000)}`
+              : currentSessObj.entryFee === 1000
+                ? `Ronda Glamour ✨ - R-${Math.floor(Date.now() % 1000)}`
+                : currentSessObj.entryFee === 10000
+                  ? `Ronda Elegant & Classic 🤍 - R-${Math.floor(Date.now() % 1000)}`
+                  : (currentSessObj.entryFee === 100000 || currentSessObj.entryFee === 1000000)
+                    ? `Ronda High Fashion 👠 - R-${Math.floor(Date.now() % 1000)}`
+                    : `Sesión de Inversión de ${sessionCategory} - R-${Math.floor(Date.now() % 1000)}`,
           entryFee: currentSessObj.entryFee,
           status: 'filling',
           timeLeft: 1200,
@@ -685,12 +825,9 @@ export default function SavedProjectsManager({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="w-full space-y-6">
         
-        {/* COLUMN LEFT (2/3): list of saved projects + winnings history */}
-        <div className="lg:col-span-8 space-y-6">
-          
-          {/* SECTION A: DETAILED PROJECTS SAVED */}
+        {/* SECTION A: DETAILED PROJECTS SAVED */}
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-3xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -1753,430 +1890,362 @@ export default function SavedProjectsManager({
           </div>
 
           {/* SECTION B: WINNINGS HISTORY log (exclusively won, without participant clutter) */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-3xs space-y-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <History className="w-4 h-4 text-emerald-500" />
-                <span>Historial de Rondas de Inversión Ganadas</span>
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Registro exclusivo de tus éxitos comerciales. No se muestran proyectos que participaron pero no ganaron.
-              </p>
-            </div>
-
-            {historyWonLog.length === 0 ? (
-              <div className="border border-dashed border-slate-150 rounded-xl p-6 text-center text-xs text-slate-400 bg-slate-50/50">
-                <Award className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                Aún no has ganado un premio oficial de ronda de inversión. Participa en las sesiones de inversión rápida para competir con tu proyecto y calificar en las elecciones automatizadas.
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-150">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-slate-500 font-mono border-b border-slate-150">
-                      <th className="p-3">Código / Ronda</th>
-                      <th className="p-3">Estado</th>
-                      <th className="p-3">Fecha de Consumación</th>
-                      <th className="p-3 text-right">Premio Recibido (80%)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-[11px]">
-                    {historyWonLog.map((log) => (
-                      <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-3 font-semibold text-slate-800">
-                          {log.title}
-                        </td>
-                        <td className="p-3">
-                          <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
-                            <Check className="w-2.5 h-2.5" />
-                            <span>✓ GANADOR</span>
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-500">
-                          {new Date(log.date).toLocaleDateString('es-ES', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </td>
-                        <td className="p-3 text-right font-bold text-emerald-600 font-mono text-xs">
-                          +{log.prize.toFixed(2)}€
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* COLUMN RIGHT (1/3): DIRECT SIMULATED INVESTMENT PORTAL */}
-        <div className="lg:col-span-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto space-y-6 pr-1 scrollbar-thin">
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-3xs space-y-5 text-white animate-fade-in">
-            <div>
-              <span className="text-[10px] font-extrabold text-indigo-300 bg-indigo-950/60 px-2.5 py-1 rounded uppercase tracking-wider inline-flex items-center gap-1 mb-2 border border-indigo-900/50">
-                <Sparkles className="w-3 h-3 text-indigo-400" />
-                <span>Multi-Inversión y Cola</span>
-              </span>
-              <h3 className="text-sm font-bold text-white">Pasarela de Competición</h3>
-              <p className="text-[10px] text-slate-400 leading-normal mt-1">
-                Lanza varios proyectos en paralelo de forma inmediata o programada en tu cola de inversión.
-              </p>
-            </div>
-
-            <hr className="border-slate-800" />
-
-            {/* SELECTION 1: MULTIPLE PROJECTS */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="block text-[10px] font-extrabold uppercase text-slate-400 font-mono">
-                  1. Proyectos a Postular ({selectedProjectIds.length})
-                </label>
-                {userProjects.length > 0 && (
-                  <div className="flex gap-2 text-[9px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedProjectIds(userProjects.map(p => p.id))}
-                      className="text-indigo-400 hover:text-indigo-300 transition"
-                    >
-                      Todos
-                    </button>
-                    <span className="text-slate-700">|</span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedProjectIds([])}
-                      className="text-slate-400 hover:text-slate-350 transition"
-                    >
-                      Ninguno
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {userProjects.length === 0 ? (
-                <p className="text-[11px] text-amber-400 bg-amber-950/30 p-2.5 rounded-lg border border-amber-900/50 font-medium">
-                  Debe crear un proyecto primero.
+          <div 
+            style={{ backgroundColor: '#FDF2F5' }}
+            className="rounded-2xl border border-pink-200/80 p-6 shadow-3xs space-y-5 transition-all"
+          >
+            {/* Header with Title and Global KPI Badges */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-pink-200/60 pb-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <History className="w-4 h-4 text-emerald-600" />
+                  <span>Historial de Rondas de Inversión Ganadas</span>
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Registro exclusivo de tus éxitos comerciales. No se muestran proyectos que participaron pero no ganaron.
                 </p>
-              ) : (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 max-h-48 overflow-y-auto space-y-2">
-                  {userProjects.map((p) => {
-                    const isSelected = selectedProjectIds.includes(p.id);
-                    return (
-                      <label key={p.id} className="flex items-start gap-2.5 text-xs text-slate-200 cursor-pointer hover:text-white select-none transition">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => {
-                            if (isSelected) {
-                              setSelectedProjectIds(selectedProjectIds.filter(id => id !== p.id));
-                            } else {
-                              setSelectedProjectIds([...selectedProjectIds, p.id]);
-                            }
-                          }}
-                          className="accent-indigo-500 rounded mt-0.5 cursor-pointer w-3.5 h-3.5"
-                        />
-                        <div className="min-w-0">
-                          <span className="block font-semibold truncate">{p.title}</span>
-                          <span className="block text-[9px] text-slate-450 font-mono bg-slate-950/80 px-1.5 py-0.2 rounded w-fit mt-0.5">
-                            {p.category}
-                          </span>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* SELECTION 2: WHERE */}
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-extrabold uppercase text-slate-400 font-mono">
-                2. Destino (Mesa de Inversión Rápida)
-              </label>
-              {activeFillingSessions.length === 0 ? (
-                <p className="text-[11px] text-slate-400 bg-slate-900 p-2 text-center rounded border border-slate-800">
-                  No hay salas activas de reclutamiento.
-                </p>
-              ) : (
-                <select
-                  value={selectedSessionId}
-                  onChange={(e) => setSelectedSessionId(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl w-full px-3 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-indigo-550 cursor-pointer"
-                >
-                  {activeFillingSessions.map((s) => (
-                    <option key={s.id} value={s.id} className="bg-slate-900 text-white">
-                      {s.title} (Entrada: {s.entryFee}€)
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            {/* SELECTION 3: SCHEDULER DATE */}
-            <div className="space-y-2">
-              <label className="block text-[10px] font-extrabold uppercase text-slate-400 font-mono">
-                3. Programación de Inversión
-              </label>
-              
-              <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setScheduleType('now')}
-                  className={`py-2 px-2.5 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 ${
-                    scheduleType === 'now'
-                      ? 'bg-indigo-600 text-white shadow-3xs'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <Coins className="w-3.5 h-3.5" />
-                  <span>Ahora</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScheduleType('scheduled')}
-                  className={`py-2 px-2.5 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 ${
-                    scheduleType === 'scheduled'
-                      ? 'bg-indigo-600 text-white shadow-3xs'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Programar</span>
-                </button>
               </div>
 
-              {scheduleType === 'scheduled' && (
-                <div className="space-y-1.5 pt-1 animate-fade-in bg-slate-900 p-3 rounded-xl border border-slate-850">
-                  <div className="flex items-center gap-1.5 text-[10px] text-indigo-300 font-semibold mb-1">
-                    <Clock className="w-3 h-3 text-indigo-400" />
-                    <span>Fecha y Hora de Autolanzamiento *</span>
-                  </div>
-                  <input
-                    type="datetime-local"
-                    value={scheduleDate}
-                    onChange={(e) => setScheduleDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-850 rounded-lg px-2.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                    min={new Date().toISOString().slice(0, 16)}
-                    required
-                  />
-                  <span className="text-[9px] text-slate-450 block leading-tight">
-                    El sistema monitorea la cola en segundo plano para ejecutar y vaciar tu inversión automáticamente al llegar esta fecha.
+              {historyWonLog.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 border border-pink-200 rounded-xl text-xs font-bold text-rose-800 shadow-3xs">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{historyWonLog.length} {historyWonLog.length === 1 ? 'Victoria' : 'Victorias'}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 border border-pink-200 rounded-xl text-xs font-bold text-slate-700 shadow-3xs">
+                    <Folder className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>{projectWinningsSummary.length} {projectWinningsSummary.length === 1 ? 'Proyecto Ganador' : 'Proyectos Ganadores'}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 border border-emerald-200 rounded-xl text-xs font-extrabold text-emerald-700 font-mono shadow-3xs">
+                    <span>+{historyWonLog.reduce((acc, curr) => acc + curr.prize, 0).toFixed(2)}€ Acumulados</span>
                   </span>
                 </div>
               )}
             </div>
 
-            {/* FINANCIAL INVOICE OVERVIEW METADATA */}
-            {selectedSession && (
-              <div className="bg-slate-900 rounded-xl p-4 space-y-2 border border-slate-800">
-                <span className="text-[9px] tracking-wider uppercase font-bold text-slate-450 block font-mono">Resumen de Operación</span>
-                
-                <div className="divide-y divide-slate-800 text-[10px] space-y-1.5 pt-1">
-                  <div className="flex justify-between text-slate-300 pt-1">
-                    <span>Inscripción por proyecto:</span>
-                    <strong className="text-white">-{selectedSession.entryFee}€</strong>
+            {/* BARRA DE HERRAMIENTAS, BÚSQUEDA Y FILTRADO (Organización cuando hay muchos proyectos) */}
+            {historyWonLog.length > 0 && (
+              <div className="bg-white/90 backdrop-blur-xs rounded-xl border border-pink-200/80 p-3 shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                {/* Search Bar */}
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                    placeholder="Buscar por proyecto, sesión o categoría..."
+                    className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50/70 border border-pink-200/80 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-rose-400 focus:bg-white transition"
+                  />
+                  {historySearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setHistorySearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                      title="Borrar búsqueda"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Selector de Proyecto */}
+                  <div className="relative">
+                    <select
+                      value={historySelectedProjectFilter}
+                      onChange={(e) => setHistorySelectedProjectFilter(e.target.value)}
+                      className="text-xs bg-white border border-pink-200/90 text-slate-700 rounded-lg px-2.5 py-1.5 pr-7 font-medium focus:outline-hidden focus:border-rose-400 cursor-pointer shadow-3xs max-w-[220px] truncate"
+                    >
+                      <option value="all">Todos los proyectos ({projectWinningsSummary.length})</option>
+                      {projectWinningsSummary.map(p => (
+                        <option key={p.projectId} value={p.projectId}>
+                          {p.projectTitle} ({p.winCount} {p.winCount === 1 ? 'victoria' : 'victorias'} · +{p.totalPrize.toFixed(2)}€)
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="flex justify-between text-slate-305 pt-1.5">
-                    <span>Proyectos Seleccionados:</span>
-                    <strong className="text-indigo-400">{selectedProjectIds.length}</strong>
+
+                  {/* Toggle de Modo de Vista */}
+                  <div className="flex items-center bg-pink-100/70 p-0.5 rounded-lg border border-pink-200">
+                    <button
+                      type="button"
+                      onClick={() => setHistoryViewMode('by_project')}
+                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer ${
+                        historyViewMode === 'by_project'
+                          ? 'bg-white text-rose-800 shadow-3xs'
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                      title="Vista agrupada por proyecto (ideal para organizar muchos proyectos)"
+                    >
+                      <Layers className="w-3 h-3" />
+                      <span>Por Proyecto</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryViewMode('table')}
+                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer ${
+                        historyViewMode === 'table'
+                          ? 'bg-white text-rose-800 shadow-3xs'
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                      title="Vista de lista cronológica"
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>Todas las Rondas</span>
+                    </button>
                   </div>
-                  <div className="flex justify-between text-slate-300 pt-1.5 border-t border-slate-800/60 font-semibold">
-                    <span>Coste Total Previsto:</span>
-                    <strong className="text-amber-400 font-mono text-xs">
-                      {(selectedSession.entryFee * selectedProjectIds.length)}€
-                    </strong>
-                  </div>
-                  <div className="flex justify-between text-slate-300 pt-1.5">
-                    <span>Tu Saldo Disponible:</span>
-                    <strong className="text-white font-mono">
-                      {userProfile ? userProfile.balance.toFixed(2) : '0.00'}€
-                    </strong>
-                  </div>
+
+                  {/* Botones de Expandir / Contraer todos (solo visible en modo by_project) */}
+                  {historyViewMode === 'by_project' && filteredProjectSummaries.length > 1 && (
+                    <div className="flex items-center gap-1 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => expandAllProjects(filteredProjectSummaries.map(p => p.projectId))}
+                        className="px-2 py-1 bg-white hover:bg-rose-50 border border-pink-200 rounded-md text-slate-600 font-semibold cursor-pointer transition shadow-3xs"
+                      >
+                        Expandir
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => collapseAllProjects(filteredProjectSummaries.map(p => p.projectId))}
+                        className="px-2 py-1 bg-white hover:bg-rose-50 border border-pink-200 rounded-md text-slate-600 font-semibold cursor-pointer transition shadow-3xs"
+                      >
+                        Contraer
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* CTA TRIGGER INVESTMENT BUTTON */}
-            <button
-              onClick={handleQueueOrJoin}
-              disabled={userProjects.length === 0 || activeFillingSessions.length === 0 || selectedProjectIds.length === 0}
-              className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-3xs outline-none ${
-                userProjects.length === 0 || activeFillingSessions.length === 0 || selectedProjectIds.length === 0
-                  ? 'bg-slate-900 text-slate-500 border border-slate-800 cursor-not-allowed shadow-none'
-                  : 'bg-indigo-650 hover:bg-indigo-700 text-white border border-indigo-600'
-              }`}
-            >
-              {scheduleType === 'now' ? (
-                <>
-                  <Coins className="w-4 h-4 text-amber-400" />
-                  <span>Invertir ahora ({selectedProjectIds.length}) Proyectos</span>
-                </>
-              ) : (
-                <>
-                  <Clock className="w-4 h-4 text-indigo-400 animate-pulse" />
-                  <span>Programar ({selectedProjectIds.length}) Inversiones en Cola</span>
-                </>
-              )}
-            </button>
-
-            {/* SSL SAFE ENFORCER CARD */}
-            <div className="flex items-center gap-2 rounded-xl p-3 bg-slate-900/40 border border-slate-850">
-              <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <div className="text-[9px] text-slate-400 leading-normal">
-                Esta solicitud transfiere de forma segura las tasas SEPA desde tu saldo a las cuentas transaccionales automatizadas.
-              </div>
-            </div>
-
-          </div>
-
-          {/* NEW SECTION: VISUAL INVESTMENT QUEUE & SCHEDULER HISTORY */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-white space-y-4 animate-fade-in">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-[9px] tracking-wider uppercase font-bold text-slate-500 font-mono block">Cola en tiempo real</span>
-                <h4 className="text-xs font-bold text-white flex items-center gap-1.5 mt-0.5">
-                  <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Historial y Cola de Inversión ({queuedInvestments.length})</span>
-                </h4>
-              </div>
-              {queuedInvestments.length > 0 && (
-                <button
-                  onClick={() => {
-                    setQueuedInvestments([]);
-                  }}
-                  className="text-[9px] text-red-400 hover:text-red-300 transition font-bold"
-                >
-                  Limpiar historial
-                </button>
-              )}
-            </div>
-
-            <hr className="border-slate-800/80" />
-
-            {queuedInvestments.length === 0 ? (
-              <div className="text-center py-6 text-[10px] text-slate-500 bg-slate-900/30 rounded-xl border border-slate-900">
-                <Clock className="w-6 h-6 text-slate-650 mx-auto mb-1.5" />
-                Ningún proyecto en cola programada.<br />Usa el programador de arriba para encolar autolanzamientos.
-              </div>
-            ) : (
-              <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                {queuedInvestments.map((item) => {
-                  const isQueued = item.status === 'queued';
-                  const isCompleted = item.status === 'completed';
-                  const isCancelled = item.status === 'cancelled';
-
-                  return (
-                    <div 
-                      key={item.id} 
-                      className={`p-3 rounded-xl border text-[11px] space-y-2 transition ${
-                        isQueued 
-                          ? 'bg-indigo-950/20 border-indigo-900/50' 
-                          : isCompleted 
-                            ? 'bg-slate-900/40 border-slate-900' 
-                            : 'bg-red-950/10 border-red-950'
-                      }`}
+            {/* VISTA 1: AGRUPADA POR PROYECTO (Acordeón Ultra-Cómodo para muchos proyectos) */}
+            {historyWonLog.length > 0 && historyViewMode === 'by_project' && (
+              <div className="space-y-3">
+                {filteredProjectSummaries.length === 0 ? (
+                  <div className="bg-white/90 border border-dashed border-pink-200 rounded-xl p-6 text-center text-xs text-slate-500">
+                    No se encontraron proyectos con victorias que coincidan con los filtros seleccionados.
+                    <button
+                      type="button"
+                      onClick={() => { setHistorySearchQuery(''); setHistorySelectedProjectFilter('all'); }}
+                      className="block mx-auto mt-2 text-rose-600 font-bold hover:underline cursor-pointer"
                     >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="min-w-0">
-                          <p className="font-bold text-white leading-normal truncate">
-                            {item.projectNames.join(' + ')}
-                          </p>
-                          <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                            Mesa: <strong className="text-slate-300 font-semibold">{item.sessionTitle}</strong>
-                          </p>
+                      Restablecer filtros
+                    </button>
+                  </div>
+                ) : (
+                  filteredProjectSummaries.map((pSummary) => {
+                    const isOpen = expandedProjects[pSummary.projectId] ?? true;
+                    return (
+                      <div
+                        key={pSummary.projectId}
+                        className="bg-white/95 rounded-xl border border-pink-200/90 shadow-3xs overflow-hidden transition-all hover:border-pink-300"
+                      >
+                        {/* Cabecera del Proyecto (Fila interactiva que resume todo limpiamente) */}
+                        <div
+                          onClick={() => toggleProjectAccordion(pSummary.projectId)}
+                          className="p-4 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-rose-50/30 transition-colors select-none"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-pink-50 border border-pink-200 flex items-center justify-center shrink-0">
+                              <Trophy className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                <span className="text-[9.5px] font-extrabold uppercase font-mono bg-pink-100/70 text-rose-700 px-2 py-0.5 rounded border border-pink-200">
+                                  {pSummary.projectCategory || 'Proyecto de Moda'}
+                                </span>
+                                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10.5px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-200">
+                                  🏆 Ha ganado {pSummary.winCount} {pSummary.winCount === 1 ? 'vez' : 'veces'}
+                                </span>
+                              </div>
+                              <h4 className="font-bold text-slate-900 text-sm leading-tight truncate" title={pSummary.projectTitle}>
+                                {pSummary.projectTitle}
+                              </h4>
+                            </div>
+                          </div>
+
+                          {/* Métricas y Control de Apertura */}
+                          <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-pink-100">
+                            {/* En cuántas sesiones */}
+                            <div className="text-left sm:text-right">
+                              <span className="text-[10px] text-slate-500 uppercase font-mono block">Sesiones ganadas</span>
+                              <span className="text-xs font-bold text-indigo-700 inline-flex items-center gap-1">
+                                <Layers className="w-3 h-3 text-indigo-500" />
+                                {pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}
+                              </span>
+                            </div>
+
+                            {/* Cuánto es el total ganado a la fecha */}
+                            <div className="text-right">
+                              <span className="text-[10px] text-slate-500 uppercase font-mono block">Total hasta la fecha</span>
+                              <span className="text-sm sm:text-base font-black text-emerald-600 font-mono">
+                                +{pSummary.totalPrize.toFixed(2)}€
+                              </span>
+                            </div>
+
+                            {/* Botón Acordeón */}
+                            <div className="pl-1">
+                              <div className={`p-1.5 rounded-lg bg-pink-50 border border-pink-200 text-slate-600 transition-transform duration-200 ${isOpen ? 'rotate-180 bg-pink-100 text-rose-800' : ''}`}>
+                                <ChevronDown className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* STATUS BADGES */}
-                        {isQueued ? (
-                          <span className="shrink-0 inline-flex items-center gap-1 text-[8px] font-extrabold text-indigo-300 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block animate-pulse" />
-                            <span>COLA</span>
-                          </span>
-                        ) : isCompleted ? (
-                          <span className="shrink-0 inline-flex items-center gap-1 text-[8px] font-extrabold text-emerald-400 bg-slate-950 px-2 py-0.5 rounded border border-emerald-950">
-                            <span>✓ EJECUTADO</span>
-                          </span>
-                        ) : (
-                          <span className="shrink-0 inline-flex items-center gap-1 text-[8px] font-extrabold text-red-400 bg-red-950/50 px-2 py-0.5 rounded border border-red-900/40">
-                            <span>FALLIDO</span>
-                          </span>
-                        )}
-                      </div>
+                        {/* Desglose de Sesiones (Solo cuando está abierto) */}
+                        {isOpen && (
+                          <div className="border-t border-pink-100/90 bg-slate-50/50 p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                                <span>Sesiones y Rondas en las que ha ganado ({pSummary.sessionsList.length}):</span>
+                              </span>
+                            </div>
 
-                      <div className="flex justify-between items-center text-[9px] text-slate-500 font-mono bg-slate-950/40 p-1.5 rounded">
-                        <span>Coste previsto: {item.totalCost}€</span>
-                        <span>{item.projectIds.length} Proy.</span>
-                      </div>
+                            <div className="overflow-x-auto rounded-lg border border-pink-200/70 bg-white shadow-3xs">
+                              <table className="w-full text-left border-collapse">
+                                <thead>
+                                  <tr className="bg-[#FFF8FA] text-[10px] font-extrabold uppercase text-rose-900/80 font-mono border-b border-pink-200/60">
+                                    <th className="p-2.5">Sesión / Ronda</th>
+                                    <th className="p-2.5">Fecha de Consumación</th>
+                                    <th className="p-2.5">Estado</th>
+                                    <th className="p-2.5 text-right">Premio Recibido (80%)</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-pink-100/70 text-[11px]">
+                                  {pSummary.sessionsList.map((sess, idx) => (
+                                    <tr key={sess.id + '-' + idx} className="hover:bg-rose-50/30 transition">
+                                      <td className="p-2.5 font-bold text-slate-800 flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                                        <span>{sess.title}</span>
+                                      </td>
+                                      <td className="p-2.5 text-slate-500 whitespace-nowrap">
+                                        {new Date(sess.date).toLocaleDateString('es-ES', {
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </td>
+                                      <td className="p-2.5">
+                                        <span className="inline-flex items-center gap-1 text-[9.5px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
+                                          <Check className="w-2.5 h-2.5" />
+                                          <span>✓ GANADOR</span>
+                                        </span>
+                                      </td>
+                                      <td className="p-2.5 text-right font-bold text-emerald-600 font-mono text-xs whitespace-nowrap">
+                                        +{sess.prize.toFixed(2)}€
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
 
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-900 text-[10px]">
-                        <span className="text-slate-400 flex items-center gap-1 font-sans">
-                          <Calendar className="w-3 h-3 text-slate-500" />
-                          <span>
-                            {isQueued 
-                              ? `Planificado: ${new Date(item.scheduledAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}` 
-                              : isCompleted 
-                                ? `Ejecutado: ${new Date(item.executedAt || item.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}`
-                                : `Error: ${item.errorLog || 'Fallo general'}`
-                            }
-                          </span>
-                        </span>
-
-                        {isQueued && (
-                          <div className="flex gap-2 shrink-0">
-                            <button
-                              onClick={() => {
-                                // Manual run immediately (bypassing window.confirm which is blocked in sandboxed iframe)
-                                const result = executeInvestment(item.projectIds, item.sessionId);
-                                if (result.success) {
-                                  alert(`🚀 ¡Lanzado con éxito! Se ha ejecutado tu inversión programada.`);
-                                  setQueuedInvestments(prev => 
-                                    prev.map(q => q.id === item.id 
-                                      ? { ...q, status: 'completed' as const, executedAt: new Date().toISOString() } 
-                                      : q
-                                    )
-                                  );
-                                } else {
-                                  alert(`❌ Error al lanzar: ${result.error}`);
-                                }
-                              }}
-                              className="text-[10px] text-indigo-400 hover:text-indigo-300 transition font-bold"
-                            >
-                              Lanzar ya
-                            </button>
-                            <button
-                              onClick={() => {
-                                setQueuedInvestments(prev => 
-                                  prev.map(q => q.id === item.id ? { ...q, status: 'cancelled' as const, errorLog: 'Cancelado por usuario' } : q)
-                                );
-                              }}
-                              className="text-[10px] text-red-400 hover:text-red-300 transition font-bold"
-                            >
-                              Cancelar
-                            </button>
+                            {/* Resumen del proyecto al pie */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px] text-slate-600 bg-pink-50/40 p-2.5 rounded-lg border border-pink-100">
+                              <span>
+                                Este proyecto ha obtenido <strong>{pSummary.winCount} {pSummary.winCount === 1 ? 'victoria oficial' : 'victorias oficiales'}</strong> en <strong>{pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}</strong> de inversión.
+                              </span>
+                              <span className="font-extrabold text-emerald-700 font-mono text-xs">
+                                Total acumulado: +{pSummary.totalPrize.toFixed(2)}€
+                              </span>
+                            </div>
                           </div>
                         )}
-                        {!isQueued && (
-                          <button
-                            onClick={() => {
-                              setQueuedInvestments(prev => prev.filter(q => q.id !== item.id));
-                            }}
-                            className="text-slate-400 hover:text-red-400 transition"
-                            title="Eliminar de historial"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* VISTA 2: CRONOLÓGICA GENERAL (Tabla completa sin apreturas) */}
+            {historyWonLog.length > 0 && historyViewMode === 'table' && (
+              <div className="overflow-x-auto rounded-xl border border-pink-200/80 bg-white shadow-3xs">
+                {filteredHistoryWonLog.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-500">
+                    No hay rondas que coincidan con la búsqueda.
+                    <button
+                      type="button"
+                      onClick={() => { setHistorySearchQuery(''); setHistorySelectedProjectFilter('all'); }}
+                      className="block mx-auto mt-2 text-rose-600 font-bold hover:underline cursor-pointer"
+                    >
+                      Restablecer filtros
+                    </button>
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#FFF5F8] text-[10px] font-extrabold uppercase text-rose-900/80 font-mono border-b border-pink-200/70">
+                        <th className="p-3">Código / Ronda</th>
+                        <th className="p-3">Proyecto Ganador</th>
+                        <th className="p-3">Categoría</th>
+                        <th className="p-3">Estado</th>
+                        <th className="p-3">Fecha de Consumación</th>
+                        <th className="p-3 text-right">Premio Recibido (80%)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-pink-100/70 text-[11px]">
+                      {filteredHistoryWonLog.map((log) => {
+                        const projSummary = projectWinningsSummary.find(p => p.projectId === log.projectId || p.projectTitle === log.projectName) 
+                          || projectWinningsSummary[0];
+                        const projectName = log.projectName || projSummary?.projectTitle || userProjects[0]?.title || 'Eco-Fashion Runway';
+                        const category = projSummary?.projectCategory || 'Moda';
+
+                        return (
+                          <tr key={log.id} className="hover:bg-rose-50/40 transition-colors">
+                            <td className="p-3 font-semibold text-slate-800">
+                              {log.title}
+                            </td>
+                            <td className="p-3">
+                              <span className="font-bold text-slate-800 block text-xs">
+                                {projectName}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                Proyecto titular
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-[9.5px] font-extrabold uppercase font-mono bg-pink-50 text-rose-700 px-2 py-0.5 rounded border border-pink-150 inline-block">
+                                {category}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
+                                <Check className="w-2.5 h-2.5" />
+                                <span>✓ GANADOR</span>
+                              </span>
+                            </td>
+                            <td className="p-3 text-slate-500 whitespace-nowrap">
+                              {new Date(log.date).toLocaleDateString('es-ES', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                            <td className="p-3 text-right font-bold text-emerald-600 font-mono text-xs whitespace-nowrap">
+                              +{log.prize.toFixed(2)}€
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+
+            {historyWonLog.length === 0 && (
+              <div className="border border-dashed border-pink-200 rounded-xl p-6 text-center text-xs text-slate-500 bg-white/70">
+                <Award className="w-8 h-8 text-rose-300 mx-auto mb-2" />
+                Aún no has ganado un premio oficial de ronda de inversión. Participa en las sesiones de inversión rápida para competir con tu proyecto y calificar en las elecciones automatizadas.
               </div>
             )}
           </div>
-        </div>
 
       </div>
 

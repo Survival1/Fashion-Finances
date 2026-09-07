@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   Sparkles, 
   TrendingUp, 
   Coins, 
   Users, 
   ArrowRight, 
+  ArrowUp,
   ShieldCheck, 
   Award, 
   Zap, 
@@ -20,6 +21,7 @@ import {
 import { ModelProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 import FashionRankingSlider from './FashionRankingSlider';
+import HeroPresentationVideo from './HeroPresentationVideo';
 
 interface LandingPageProps {
   models: ModelProfile[];
@@ -40,14 +42,16 @@ export default function LandingPage({
   onRegisterClick,
   onModelClick
 }: LandingPageProps) {
+  const topRef = useRef<HTMLDivElement>(null);
   const rankingRef = useRef<HTMLDivElement>(null);
   const simulaRef = useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const [coverVideoUrl, setCoverVideoUrl] = React.useState<string>(() => {
+  const [coverVideoUrl, setCoverVideoUrl] = useState<string>(() => {
     return localStorage.getItem('landing_page_cover_video_url') || '';
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleStorageChange = () => {
       setCoverVideoUrl(localStorage.getItem('landing_page_cover_video_url') || '');
     };
@@ -59,8 +63,44 @@ export default function LandingPage({
     };
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      if (scrollY > 150) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Also attach to document/root in case of inner container scrolling
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      rootElement.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rootElement) {
+        rootElement.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
   // Take top 4 models from the system for the Fashion Ranking Preview
   const topModels = [...models].slice(0, 4);
+
+  const scrollToTop = () => {
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      rootElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
     if (ref.current) {
@@ -69,15 +109,21 @@ export default function LandingPage({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+    <div ref={topRef} id="landing-page-root" className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col antialiased selection:bg-indigo-500 selection:text-white w-full relative">
       {/* Editorial Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 py-4 px-6 sticky top-0 z-50 transition-all duration-300">
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-100 py-3.5 px-4 sm:px-6 sticky top-0 z-50 transition-all duration-300 shadow-xs">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <FashionsFinanceLogo mode="light" className="w-10 h-10" />
+          <div 
+            onClick={scrollToTop}
+            title="Ir arriba / Inicio"
+            className="flex items-center gap-3 cursor-pointer group select-none hover:opacity-85 transition"
+          >
+            <FashionsFinanceLogo mode="light" className="w-9 h-9 sm:w-10 sm:h-10 group-hover:scale-105 transition-transform" />
             <div>
-              <h1 className="font-display font-semibold text-lg text-slate-950 leading-tight">Fashion Finances</h1>
-              <p className="text-[10px] text-slate-400 tracking-widest uppercase font-mono">Investors & Models</p>
+              <h1 className="font-display font-semibold text-base sm:text-lg text-slate-950 leading-tight flex items-center gap-1.5">
+                Fashion Finances
+              </h1>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 tracking-widest uppercase font-mono">Investors & Models</p>
             </div>
           </div>
 
@@ -139,6 +185,9 @@ export default function LandingPage({
             Descubre <span className="bg-gradient-to-r from-red-600 via-rose-600 to-red-800 bg-clip-text text-transparent font-semibold">Fashion Finances</span>: la plataforma innovadora donde las finanzas se fusionan con la moda.
           </h2>
 
+          {/* Vídeo Oficial de Presentación colocado directamente debajo de "la moda." */}
+          <HeroPresentationVideo onExploreClick={() => scrollToSection(rankingRef)} />
+
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed font-sans">
             Únete a una comunidad global de modelos e inversores, construyendo juntas un futuro más brillante. Regístrate ahora y lleva tus sueños al siguiente nivel.
           </p>
@@ -191,7 +240,7 @@ export default function LandingPage({
           <div className="text-center space-y-2">
             <span className="text-[10px] text-indigo-600 font-mono tracking-widest uppercase font-bold">Un Ecosistema Simbiótico</span>
             <h3 className="text-2xl sm:text-3xl font-display font-semibold text-slate-950">
-              ¿Por qué Fashion&Finances es diferente?
+              ¿Por qué Fashion Finances es diferente?
             </h3>
             <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
               Unimos inversores creativos con personas influyentes del modelaje mediante contratos digitales de apadrinamiento mutuo.
@@ -392,14 +441,14 @@ export default function LandingPage({
       </section>
 
       {/* Hero CTA Block: Regístrate y Empieza */}
-      <section className="bg-slate-950 py-20 px-6 relative overflow-hidden text-white">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      <section className="bg-white border-t border-slate-200 py-20 px-6 relative overflow-hidden text-slate-900">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-slate-50 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-3xl mx-auto text-center space-y-6 relative z-10">
-          <h3 className="text-2xl sm:text-4xl font-display font-semibold tracking-tight">
+          <h3 className="text-2xl sm:text-4xl font-display font-semibold tracking-tight text-slate-950">
             ¿Preparado para transformar tus aspiraciones?
           </h3>
-          <p className="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
             Consigue patrocinadores reales para tus obras o genera comisiones estables apoyando colectivamente alternativas exclusivas inspiradas en la economía digital.
           </p>
 
@@ -407,27 +456,39 @@ export default function LandingPage({
             <button
               type="button"
               onClick={onRegisterClick}
-              className="w-full sm:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-600/25 hover:shadow-xl transition active:translate-y-px cursor-pointer"
+              className="w-full sm:w-auto px-10 py-4 bg-slate-950 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-900/15 hover:shadow-xl transition active:translate-y-px cursor-pointer"
             >
-              Regístrate y Empieza
+              REGÍSTRATE Y EMPIEZA
             </button>
             <button
               type="button"
               onClick={onLoginClick}
-              className="w-full sm:w-auto px-10 py-4 bg-transparent hover:bg-white/10 text-white border border-white/25 font-bold text-xs uppercase tracking-widest rounded-2xl transition cursor-pointer"
+              className="w-full sm:w-auto px-10 py-4 bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-900 font-bold text-xs uppercase tracking-widest rounded-2xl shadow-xs transition active:translate-y-px cursor-pointer"
             >
-              Ya tengo cuenta
+              YA TENGO CUENTA
             </button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-950 border-t border-white/5 py-10 px-6 text-center text-[11px] text-slate-500 relative z-10">
+      <footer className="bg-white border-t border-slate-100 py-10 px-6 text-center text-[11px] text-slate-500 relative z-10">
         <p className="max-w-md mx-auto leading-relaxed">
           © 2026 Fashion Finances Platform. Licencia Pública de Distribución Tecnológica. Una incubadora creativa internacional.
         </p>
       </footer>
+
+      {/* Floating Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 p-3 bg-slate-950/90 hover:bg-slate-900 text-white rounded-full shadow-2xl border border-white/20 backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer group"
+          title="Desplazar hacia arriba"
+        >
+          <ArrowUp className="w-5 h-5 text-indigo-400 group-hover:-translate-y-0.5 transition-transform" />
+        </button>
+      )}
     </div>
   );
 }

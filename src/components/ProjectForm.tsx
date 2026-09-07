@@ -268,9 +268,6 @@ export default function ProjectForm({
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 tracking-tight">Portal de Registro de Proyectos</h2>
-            <p className="text-xs text-slate-500 mt-1 max-w-xl">
-              De acuerdo a las reglas de Fashion Finances, antes de entrar en las sesiones de inversión debes dar de alta tu marca, registrar un plan de uso de fondos e identificar a tu equipo creativo.
-            </p>
           </div>
         </div>
 
@@ -331,11 +328,6 @@ export default function ProjectForm({
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono ${
-                  activeStep === 'basic' ? 'bg-indigo-500 text-white' : 'bg-slate-150 text-slate-600'
-                }`}>
-                  1
-                </span>
                 <span className="text-xs">Identidad Creativa</span>
               </div>
               {title && <Check className="w-3.5 h-3.5 text-emerald-500" />}
@@ -352,11 +344,6 @@ export default function ProjectForm({
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono ${
-                  activeStep === 'finance' ? 'bg-indigo-500 text-white' : 'bg-slate-150 text-slate-600'
-                }`}>
-                  2
-                </span>
                 <span className="text-xs">Economía y Fondos</span>
               </div>
               {fundUsage && objective && <Check className="w-3.5 h-3.5 text-emerald-500" />}
@@ -373,11 +360,6 @@ export default function ProjectForm({
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono ${
-                  activeStep === 'team' ? 'bg-indigo-500 text-white' : 'bg-slate-150 text-slate-600'
-                }`}>
-                  3
-                </span>
                 <span className="text-xs">Equipo Humano</span>
               </div>
               {teamMembers.length > 0 && <Check className="w-3.5 h-3.5 text-emerald-500" />}
@@ -823,7 +805,7 @@ export default function ProjectForm({
                         />
                       </div>
                       <span className="text-[10px] text-slate-450 block mt-1 leading-normal">
-                        Rango: <strong>10€</strong> (Mesa Trabajores), <strong>100€</strong> (Emprendedores) o <strong>1.000€</strong> (Empresarios).
+                        Rango: <strong>10€</strong> (Streetwear & Urban), <strong>100€</strong> (Casual & Lifestyle) o <strong>1.000€</strong> (Empresarios).
                       </span>
                     </div>
 

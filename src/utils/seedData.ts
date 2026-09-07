@@ -207,7 +207,7 @@ export function generateTop100Ranking(): { females: RankingModel[], males: Ranki
     };
   });
 
-  const males = maleNames.slice(0, 45).map((name, i) => {
+  const males = maleNames.slice(0, 50).map((name, i) => {
     const photoId = malePhotoIds[i % malePhotoIds.length];
     const likes = Math.max(1100, 14200 - i * 260 - Math.floor(Math.random() * 90));
     const followers = Math.floor(likes * 3.1 + Math.random() * 150);
@@ -283,18 +283,18 @@ export function seedInitialData() {
 
   const defaultUser: UserSessionProfile = {
     id: 'user-investor',
-    name: 'Ernesto vs',
-    username: 'ernestovs',
+    name: 'Adriana Lima',
+    username: 'adrianalima',
     role: 'investor',
     patrocinadorId: defaultSponsor.id,
     balance: 1500.0, // Raised to 1,500€ to make testing 10€, 100€ and 1,000€ sessions possible!
     totalEarnings: 0,
     totalInvested: 0,
     totalCommissions: 0,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
     direccion: 'Paseo de la Castellana 120, Madrid',
     telefono: '+34 600 123 456',
-    email: 'ernesto.vs@investcollect.com',
+    email: 'adriana.lima@investcollect.com',
     shareDireccion: true,
     shareTelefono: true,
     shareEmail: true,
@@ -330,16 +330,16 @@ export function seedInitialData() {
     }
   ];
 
-  // Seed initial investment sessions (Workers, Entrepreneurs, Business owners)
-  // 1. Sesión de inversión de trabajadores - Monto 10€
+  // Seed initial investment sessions
+  // 1. Sesión Round STREETWEAR & URBAN - Monto 10€
   const session1: InvestmentSession = {
     id: 'sess-workers',
-    title: 'Sesión de Inversión de Trabajadores',
+    title: 'Round STREETWEAR & URBAN',
     entryFee: 10,
-    status: 'filling',
+    status: 'voting',
     timeLeft: 340, // 5 min 40 s left
     createdAt: '2026-05-31T14:40:00Z',
-    poolTotal: 90, // 9 participants * 10€
+    poolTotal: 100, // 10 participants * 10€
     participants: [
       { userId: 'part-1', name: 'Adriana Lima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', votesReceived: 4, hasVoted: false },
       { userId: 'part-2', name: 'Candice Swanepoel', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150', votesReceived: 2, hasVoted: true, votedFor: 'part-1' },
@@ -349,14 +349,15 @@ export function seedInitialData() {
       { userId: 'part-6', name: 'Oliver Finch', avatar: FASHION_PHOTOS[11] || 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=150', votesReceived: 0, hasVoted: true, votedFor: 'part-2' },
       { userId: 'part-7', name: 'Sara Sampaio', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150', votesReceived: 1, hasVoted: true, votedFor: 'part-2' },
       { userId: 'part-8', name: 'Julian Brooks', avatar: FASHION_PHOTOS[9] || 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=150', votesReceived: 0, hasVoted: true, votedFor: 'part-3' },
-      { userId: 'part-9', name: 'Miranda Kerr', avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=150', votesReceived: 0, hasVoted: true, votedFor: 'part-4' }
+      { userId: 'part-9', name: 'Miranda Kerr', avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=150', votesReceived: 0, hasVoted: true, votedFor: 'part-4' },
+      { userId: 'part-10', name: 'Gisele Bündchen', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', votesReceived: 0, hasVoted: false }
     ]
   };
 
-  // 2. Sesión de inversión de emprendedores - Monto 100€
+  // 2. Sesión Round CASUAL & LIFESTYLE - Monto 100€
   const session2: InvestmentSession = {
     id: 'sess-entrepreneurs',
-    title: 'Sesión de Inversión de Emprendedores',
+    title: 'Round CASUAL & LIFESTYLE',
     entryFee: 100,
     status: 'filling',
     timeLeft: 1200,
@@ -372,10 +373,10 @@ export function seedInitialData() {
     ]
   };
 
-  // 3. Sesión de inversión de empresarios - Monto 1,000€
+  // 3. Ronda Glamour ✨ - Monto 1,000€
   const session3: InvestmentSession = {
     id: 'sess-businessmen',
-    title: 'Sesión de Inversión de Empresarios',
+    title: 'Ronda Glamour ✨',
     entryFee: 1000,
     status: 'filling',
     timeLeft: 1800,
@@ -389,10 +390,10 @@ export function seedInitialData() {
     ]
   };
 
-  // 4. Sesión de inversión de top models - Monto 10,000€
+  // 4. Ronda Elegant & Classic 🤍 - Monto 10,000€
   const session4: InvestmentSession = {
     id: 'sess-topmodels',
-    title: 'Mesa de Top Models',
+    title: 'Ronda Elegant & Classic 🤍',
     entryFee: 10000,
     status: 'filling',
     timeLeft: 2400,
@@ -409,10 +410,10 @@ export function seedInitialData() {
     ]
   };
 
-  // 5. Sesión de inversión de inversores - Monto 100,000€
+  // 5. Ronda High Fashion 👠 - Monto 100,000€
   const session5: InvestmentSession = {
     id: 'sess-investors',
-    title: 'Mesa de Inversores',
+    title: 'Ronda High Fashion 👠',
     entryFee: 100000,
     status: 'filling',
     timeLeft: 3600,
@@ -429,10 +430,10 @@ export function seedInitialData() {
     ]
   };
 
-  // 6. Sesión de inversión de millonarios - Monto 1,000,000€
+  // 6. Sesión de inversión High Fashion - Monto 1,000,000€
   const session6: InvestmentSession = {
     id: 'sess-millionaires',
-    title: 'Mesa de Millonarios',
+    title: 'Ronda High Fashion 👠',
     entryFee: 1000000,
     status: 'filling',
     timeLeft: 7200,
@@ -486,7 +487,7 @@ export function seedInitialData() {
       type: 'investment',
       amount: -10.0,
       date: '2026-05-31T14:40:00Z',
-      description: 'Entrada reservada para Sesión de Inversión de Trabajadores',
+      description: 'Entrada reservada para Round STREETWEAR & URBAN',
       projectName: 'Eco-Fashion Runway'
     }
   ];

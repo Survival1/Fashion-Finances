@@ -1,4 +1,5 @@
 import express from "express";
+import http from "http";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
@@ -64,7 +65,16 @@ if (!fs.existsSync(DB_FILE)) {
 
 async function startServer() {
   const app = express();
-  app.use(express.json());
+  const server = http.createServer(app);
+  app.use(express.json({ limit: '100mb' }));
+  app.use(express.raw({ type: ['video/*', 'application/octet-stream'], limit: '150mb' }));
+
+  // Static serving for public directory
+  const publicDir = path.join(process.cwd(), "public");
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+  app.use(express.static(publicDir));
 
   // Background executions queue monitor (ticks every 5 seconds)
   setInterval(() => {
@@ -243,10 +253,53 @@ async function startServer() {
     res.json({ success: true, order });
   });
 
+  // Check hero video availability
+  app.get("/api/hero-video-status", (req, res) => {
+    const publicVideo = path.join(process.cwd(), "public", "hero_video.mp4");
+    const exists = fs.existsSync(publicVideo);
+    res.json({ exists, url: exists ? "/hero_video.mp4" : null });
+  });
+
+  // Upload or update hero video
+  app.post("/api/upload-hero-video", (req, res) => {
+    try {
+      const publicDir = path.join(process.cwd(), "public");
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true });
+      }
+      const targetFile = path.join(publicDir, "hero_video.mp4");
+
+      if (Buffer.isBuffer(req.body)) {
+        fs.writeFileSync(targetFile, req.body);
+      } else if (req.body && req.body.videoBase64) {
+        const base64Data = req.body.videoBase64.replace(/^data:video\/\w+;base64,/, "");
+        fs.writeFileSync(targetFile, Buffer.from(base64Data, "base64"));
+      } else {
+        res.status(400).json({ error: "No video payload received" });
+        return;
+      }
+
+      // Also sync with dist if it exists
+      const distDir = path.join(process.cwd(), "dist");
+      if (fs.existsSync(distDir)) {
+        fs.copyFileSync(targetFile, path.join(distDir, "hero_video.mp4"));
+      }
+
+      console.log(`[Hero Video] Video uploaded successfully to ${targetFile}`);
+      res.json({ success: true, url: "/hero_video.mp4" });
+    } catch (err) {
+      console.error("Error saving hero video:", err);
+      res.status(500).json({ error: "Failed to save video" });
+    }
+  });
+
   // --- VITE MIDDLEWARE SETUP ---
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: { server },
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -258,7 +311,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server fully running on http://localhost:${PORT}`);
   });
 }

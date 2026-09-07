@@ -1,7 +1,35 @@
+import './utils/safeStorage';
 import {StrictMode, Component, ErrorInfo, ReactNode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { purgeExpendableStorage } from './utils/safeStorage';
+
+// Suppress benign iframe websocket connection rejections
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event?.reason?.message || String(event?.reason || '');
+    if (
+      reason.includes('WebSocket') ||
+      reason.includes('websocket') ||
+      reason.includes('failed to connect') ||
+      reason.includes('QuotaExceededError')
+    ) {
+      event.preventDefault();
+    }
+  });
+
+  window.addEventListener('error', (event) => {
+    const msg = event?.message || '';
+    if (
+      msg.includes('WebSocket') ||
+      msg.includes('websocket') ||
+      msg.includes('QuotaExceededError')
+    ) {
+      event.preventDefault();
+    }
+  });
+}
 
 interface Props {
   children: ReactNode;
@@ -24,10 +52,18 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    // If it is a QuotaExceededError, auto-clean expendable keys
+    if (error?.name === 'QuotaExceededError' || error?.message?.includes('exceeded the quota')) {
+      try {
+        purgeExpendableStorage();
+      } catch (e) {}
+    }
   }
 
   private handleReset = () => {
-    localStorage.clear();
+    try {
+      localStorage.clear();
+    } catch (e) {}
     window.location.reload();
   };
 

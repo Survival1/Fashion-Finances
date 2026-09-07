@@ -143,3 +143,16 @@ export interface FinancialMovement {
   description: string;
   projectName?: string;
 }
+
+export interface HistoryWonRecord {
+  id: string;
+  title: string;
+  prize: number;
+  date: string;
+  projectId?: string;
+  projectName?: string;
+  votesReceived?: number;
+  coWinnersCount?: number;
+  coWinnersNames?: string[];
+  totalWinnersCount?: number;
+}

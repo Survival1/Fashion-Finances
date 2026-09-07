@@ -1,5 +1,22 @@
-import React, { useState } from 'react';
-import { BALMAIN_LOGO_DATA_URL } from '../utils/brandLogos';
+import React, { useState, useEffect } from 'react';
+import { 
+  BALMAIN_LOGO_DATA_URL, 
+  CHANEL_LOGO_DATA_URL, 
+  DIOR_LOGO_DATA_URL, 
+  GUCCI_LOGO_DATA_URL, 
+  PRADA_LOGO_DATA_URL, 
+  YSL_LOGO_DATA_URL, 
+  COUTURE_ELITE_LOGO_DATA_URL,
+  VICTORIAS_SECRET_LOGO_DATA_URL,
+  LOREAL_LOGO_DATA_URL,
+  CAROLINA_HERRERA_LOGO_DATA_URL,
+  RICHEMONT_LOGO_DATA_URL,
+  VERSACE_LOGO_DATA_URL,
+  BALENCIAGA_LOGO_DATA_URL,
+  LOUIS_VUITTON_LOGO_DATA_URL,
+  HERMES_LOGO_DATA_URL
+} from '../utils/brandLogos';
+import Top1ModelDonationCard from './Top1ModelDonationCard';
 import { 
   Check, 
   X, 
@@ -22,7 +39,16 @@ import {
   TrendingUp,
   UploadCloud,
   User,
-  Info
+  Info,
+  Gift,
+  Heart,
+  Sparkles,
+  DollarSign,
+  Send,
+  Star,
+  Award,
+  Flame,
+  CheckCircle2
 } from 'lucide-react';
 
 interface Participant {
@@ -76,6 +102,7 @@ interface SessionResultsPodiumProps {
   isTie: boolean;
   winnersToDisplay: Participant[];
   maxVotes: number;
+  onFinishParticipationSession?: () => void;
 }
 
 const WinnerProjectSlider = ({ images }: { images: string[] }) => {
@@ -101,77 +128,317 @@ const WinnerProjectSlider = ({ images }: { images: string[] }) => {
   };
 
   return (
-    <div className="w-full max-w-xl sm:max-w-2xl mx-auto bg-white border border-pink-200 rounded-2xl p-4 flex flex-col space-y-3 relative shadow-md">
+    <div className="w-full max-w-xl sm:max-w-2xl mx-auto bg-white border border-pink-200 rounded-2xl p-4 sm:p-5 flex flex-col space-y-3 relative shadow-md">
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-          <span className="text-[10px] font-black uppercase text-slate-800 font-sans tracking-tight">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+          <span className="text-xs font-bold uppercase text-slate-800 font-sans tracking-tight">
             Colección de Alta Costura del Proyecto Ganador
           </span>
         </div>
-        <span className="text-[9px] font-mono text-slate-500 font-black bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
-          Carrusel de 3 vistas
+        <span className="text-[10px] font-mono text-slate-600 font-bold bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">
+          {activeIndex + 1} de {images.length}
         </span>
       </div>
       
-      {/* 3 Images Viewport side-by-side with arrows */}
-      <div className="relative w-full">
-        <div className="grid grid-cols-3 gap-2 w-full">
-          {[0, 1, 2].map((offset) => {
-            const imgIndex = (activeIndex + offset) % images.length;
-            const imgUrl = images[imgIndex];
-            return (
-              <div 
-                key={offset} 
-                className="relative aspect-[3/4] rounded-xl overflow-hidden border border-slate-100 bg-slate-50 group shadow-2xs transition-all duration-300 hover:shadow-md cursor-pointer"
-                onClick={() => setActiveIndex(imgIndex)}
-              >
-                <img 
-                  src={imgUrl} 
-                  alt={`Proyecto Imagen de Alta Costura ${imgIndex + 1}`} 
-                  className="w-full h-full object-cover transition-all duration-350 transform hover:scale-[1.03]"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-mono px-2 py-0.5 rounded-full font-bold select-none pointer-events-none">
-                  {imgIndex + 1}
-                </div>
-              </div>
-            );
-          })}
+      {/* Single Large Image Slider with Left and Right Arrows */}
+      <div className="relative w-full group select-none">
+        <div className="relative w-full h-72 sm:h-96 md:h-[400px] rounded-2xl overflow-hidden border border-slate-100 bg-slate-900 shadow-sm">
+          <img 
+            key={activeIndex}
+            src={images[activeIndex]} 
+            alt={`Proyecto Imagen de Alta Costura ${activeIndex + 1}`} 
+            className="w-full h-full object-cover transition-opacity duration-300"
+            referrerPolicy="no-referrer"
+          />
+
+          {/* Bottom gradient overlay with current image index badge */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-3 sm:p-4 flex items-center justify-between pointer-events-none">
+            <span className="text-white text-xs font-semibold drop-shadow-sm font-sans">
+              Vista #{activeIndex + 1} • Alta Costura
+            </span>
+            <div className="bg-black/60 backdrop-blur-xs text-white text-[10px] font-mono px-2.5 py-1 rounded-full font-bold">
+              {activeIndex + 1} / {images.length}
+            </div>
+          </div>
         </div>
         
-        {/* Navigation Arrows */}
-        {images.length > 3 && (
+        {/* Navigation Arrows: Left and Right */}
+        {images.length > 1 && (
           <>
             <button
               type="button"
               onClick={handlePrev}
-              className="absolute -left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-slate-800 opacity-95 hover:opacity-100 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-pink-150 flex items-center justify-center shadow-md z-20"
-              title="Imagen de alta costura anterior"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-lg border border-pink-150 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all z-20"
+              title="Ver imagen anterior"
             >
-              <ChevronLeft className="w-4 h-4 text-rose-600" />
+              <ChevronLeft className="w-5 h-5 text-rose-600" />
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-slate-800 opacity-95 hover:opacity-100 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-pink-150 flex items-center justify-center shadow-md z-20"
-              title="Siguiente imagen de alta costura"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-lg border border-pink-150 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all z-20"
+              title="Ver siguiente imagen"
             >
-              <ChevronRight className="w-4 h-4 text-rose-600" />
+              <ChevronRight className="w-5 h-5 text-rose-600" />
             </button>
           </>
         )}
       </div>
+
+      {/* Pagination indicators / thumbnails */}
+      {images.length > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-1">
+          {images.map((img, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveIndex(idx);
+              }}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                idx === activeIndex
+                  ? 'w-7 bg-rose-500 shadow-2xs'
+                  : 'w-2 bg-slate-200 hover:bg-slate-300'
+              }`}
+              title={`Ir a imagen ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
+export const PRESET_SPONSOR_BRANDS: Record<string, {
+  name: string;
+  amount: number;
+  logoUrl: string;
+  sector: string;
+  storeId: string;
+  hasExclusivity: boolean;
+  proposalDescription: string;
+  pedestalTitle: string;
+}> = {
+  balmain: {
+    name: 'BALMAIN PARIS',
+    amount: 15000,
+    logoUrl: BALMAIN_LOGO_DATA_URL,
+    sector: 'CALZADO DE PASARELA Y LUJO 👠',
+    storeId: 'balmain_paris_paloma',
+    hasExclusivity: true,
+    proposalDescription: 'Contrato de exclusividad para patrocinio de calzado de pasarela y lujo en la gala de resultados finales.',
+    pedestalTitle: 'PATROCINADOR EXCLUSIVO GALA 👑'
+  },
+  balmain_paris_paloma: {
+    name: 'BALMAIN PARIS',
+    amount: 15000,
+    logoUrl: BALMAIN_LOGO_DATA_URL,
+    sector: 'CALZADO DE PASARELA Y LUJO 👠',
+    storeId: 'balmain_paris_paloma',
+    hasExclusivity: true,
+    proposalDescription: 'Contrato de exclusividad para patrocinio de calzado de pasarela y lujo en la gala de resultados finales.',
+    pedestalTitle: 'PATROCINADOR EXCLUSIVO GALA 👑'
+  },
+  victorias_secret: {
+    name: "VICTORIA'S SECRET SPAIN",
+    amount: 25000,
+    logoUrl: VICTORIAS_SECRET_LOGO_DATA_URL,
+    sector: 'PÓDIUM LOGO OFICIAL & GALA VERANO 🌸',
+    storeId: 'victorias_secret_spain',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinador oficial de alas y vestuario exclusivo de gala con contrato de embajadora internacional.',
+    pedestalTitle: 'PATROCINADOR DIAMANTE VS 🌸'
+  },
+  victorias_secret_spain: {
+    name: "VICTORIA'S SECRET SPAIN",
+    amount: 25000,
+    logoUrl: VICTORIAS_SECRET_LOGO_DATA_URL,
+    sector: 'PÓDIUM LOGO OFICIAL & GALA VERANO 🌸',
+    storeId: 'victorias_secret_spain',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinador oficial de alas y vestuario exclusivo de gala con contrato de embajadora internacional.',
+    pedestalTitle: 'PATROCINADOR DIAMANTE VS 🌸'
+  },
+  loreal: {
+    name: "L'ORÉAL GROUP",
+    amount: 18000,
+    logoUrl: LOREAL_LOGO_DATA_URL,
+    sector: 'CASTING LIVE PRODUCT ADS - MAQUILLAJE 💄',
+    storeId: 'loreal_group',
+    hasExclusivity: true,
+    proposalDescription: 'Campaña publicitaria y patrocinio oficial en productos cosméticos de pasarela y televisión.',
+    pedestalTitle: 'SPONSOR OFICIAL DE MAQUILLAJE 💄'
+  },
+  loreal_group: {
+    name: "L'ORÉAL GROUP",
+    amount: 18000,
+    logoUrl: LOREAL_LOGO_DATA_URL,
+    sector: 'CASTING LIVE PRODUCT ADS - MAQUILLAJE 💄',
+    storeId: 'loreal_group',
+    hasExclusivity: true,
+    proposalDescription: 'Campaña publicitaria y patrocinio oficial en productos cosméticos de pasarela y televisión.',
+    pedestalTitle: 'SPONSOR OFICIAL DE MAQUILLAJE 💄'
+  },
+  carolina_herrera: {
+    name: 'CAROLINA HERRERA ESPAÑA',
+    amount: 21000,
+    logoUrl: CAROLINA_HERRERA_LOGO_DATA_URL,
+    sector: 'SPONSOR DE PASARELA DE ALTA COSTURA 👑',
+    storeId: 'carolina_herrera_spain',
+    hasExclusivity: true,
+    proposalDescription: 'Contrato de exclusividad en vestidos de noche y perfumería selecta para la gala de coronación.',
+    pedestalTitle: 'PATROCINADOR SUPREMO ALTA COSTURA 👑'
+  },
+  carolina_herrera_spain: {
+    name: 'CAROLINA HERRERA ESPAÑA',
+    amount: 21000,
+    logoUrl: CAROLINA_HERRERA_LOGO_DATA_URL,
+    sector: 'SPONSOR DE PASARELA DE ALTA COSTURA 👑',
+    storeId: 'carolina_herrera_spain',
+    hasExclusivity: true,
+    proposalDescription: 'Contrato de exclusividad en vestidos de noche y perfumería selecta para la gala de coronación.',
+    pedestalTitle: 'PATROCINADOR SUPREMO ALTA COSTURA 👑'
+  },
+  richemont: {
+    name: 'RICHEMONT LUXURY',
+    amount: 24000,
+    logoUrl: RICHEMONT_LOGO_DATA_URL,
+    sector: 'RELOJERÍA DE LUJO SUIZA 🇨🇭',
+    storeId: 'richemont_boutique',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinio en alta relojería y joyería de precisión para desfiles y eventos de gala.',
+    pedestalTitle: 'PATROCINADOR DE ALTA RELOJERÍA ⌚'
+  },
+  richemont_boutique: {
+    name: 'RICHEMONT LUXURY',
+    amount: 24000,
+    logoUrl: RICHEMONT_LOGO_DATA_URL,
+    sector: 'RELOJERÍA DE LUJO SUIZA 🇨🇭',
+    storeId: 'richemont_boutique',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinio en alta relojería y joyería de precisión para desfiles y eventos de gala.',
+    pedestalTitle: 'PATROCINADOR DE ALTA RELOJERÍA ⌚'
+  },
+  gucci: {
+    name: 'GUCCI FIRENZE',
+    amount: 16000,
+    logoUrl: GUCCI_LOGO_DATA_URL,
+    sector: 'ACCESORIOS Y MODA DE VANGUARDIA 👜',
+    storeId: 'gucci_firenze_atelier',
+    hasExclusivity: true,
+    proposalDescription: 'Alianza de patrocinio estratégico en accesorios icónicos, bolsos de autor y calzado vanguardista.',
+    pedestalTitle: 'PATROCINADOR DE VANGUARDIA 🏆'
+  },
+  gucci_firenze_atelier: {
+    name: 'GUCCI FIRENZE',
+    amount: 16000,
+    logoUrl: GUCCI_LOGO_DATA_URL,
+    sector: 'ACCESORIOS Y MODA DE VANGUARDIA 👜',
+    storeId: 'gucci_firenze_atelier',
+    hasExclusivity: true,
+    proposalDescription: 'Alianza de patrocinio estratégico en accesorios icónicos, bolsos de autor y calzado vanguardista.',
+    pedestalTitle: 'PATROCINADOR DE VANGUARDIA 🏆'
+  },
+  versace: {
+    name: 'VERSACE MILANO',
+    amount: 20000,
+    logoUrl: VERSACE_LOGO_DATA_URL,
+    sector: 'PASARELA MEDUSA & GLAMOUR 👑',
+    storeId: 'versace',
+    hasExclusivity: true,
+    proposalDescription: 'Acuerdo de patrocinio oficial en alta costura italiana, estampados barrocos y vestidos de alfombra roja.',
+    pedestalTitle: 'PATROCINADOR MEDUSA GLAMOUR ✨'
+  },
+  balenciaga: {
+    name: 'BALENCIAGA RUNWAY',
+    amount: 19000,
+    logoUrl: BALENCIAGA_LOGO_DATA_URL,
+    sector: 'VANGUARDIA & MODA URBANA DE LUJO 🖤',
+    storeId: 'balenciaga',
+    hasExclusivity: true,
+    proposalDescription: 'Línea de patrocinio en siluetas futuristas, calzado de pasarela y diseño disruptivo contemporáneo.',
+    pedestalTitle: 'SPONSOR VANGUARDIA DE LUJO 🖤'
+  },
+  louis_vuitton: {
+    name: 'LOUIS VUITTON MAISON',
+    amount: 26000,
+    logoUrl: LOUIS_VUITTON_LOGO_DATA_URL,
+    sector: 'MARROQUINERÍA Y MONOGRAMA 🇫🇷',
+    storeId: 'louis_vuitton',
+    hasExclusivity: true,
+    proposalDescription: 'Contrato de patrocinio global en marroquinería de lujo, equipaje de autor y prêt-à-porter de prestigio.',
+    pedestalTitle: 'SPONSOR GLOBAL MONOGRAMA ⚜️'
+  },
+  ysl: {
+    name: 'SAINT LAURENT PARIS',
+    amount: 17500,
+    logoUrl: YSL_LOGO_DATA_URL,
+    sector: 'ELEGANCIA NOCTURNA Y FRAGANCIAS 🖤',
+    storeId: 'ysl_paris_official',
+    hasExclusivity: true,
+    proposalDescription: 'Línea de patrocinio en prêt-à-porter de lujo y sastrería nocturna de alta gama.',
+    pedestalTitle: 'PATROCINADOR DE LUJO NOCTURNO 🌙'
+  },
+  hermes: {
+    name: 'HERMÈS PARIS',
+    amount: 28000,
+    logoUrl: HERMES_LOGO_DATA_URL,
+    sector: 'CUERO ARTESANAL & CARRÉS DE SEDA 🐎',
+    storeId: 'hermes',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinio artesanal exclusivo en marroquinería de herencia, pañuelos de seda y accesorios de alta artesanía.',
+    pedestalTitle: 'SPONSOR PRESTIGIO ARTESANAL 🐎'
+  },
+  couture_elite: {
+    name: 'COUTURE ELITE BOUTIQUE',
+    amount: 23000,
+    logoUrl: COUTURE_ELITE_LOGO_DATA_URL,
+    sector: 'PÓDIUM PASARELA VIP & ALAS DE ORO 💎',
+    storeId: 'couture_elite',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinio premier en pasarelas VIP internacionales y colecciones cápsula de edición limitada.',
+    pedestalTitle: 'SPONSOR OFICIAL COUTURE ELITE 💎'
+  },
+  chanel: {
+    name: 'CHANEL PARIS',
+    amount: 22000,
+    logoUrl: CHANEL_LOGO_DATA_URL,
+    sector: 'ALTA COSTURA Y ALTA PERFUMERÍA ✨',
+    storeId: 'chanel_paris_official',
+    hasExclusivity: true,
+    proposalDescription: 'Patrocinio premier en fragancias de autor, marroquinería y vestidos de gala para pasarelas internacionales.',
+    pedestalTitle: 'SPONSOR DIAMANTE DE ALTA COSTURA 💎'
+  },
+  dior: {
+    name: 'DIOR PARIS',
+    amount: 18500,
+    logoUrl: DIOR_LOGO_DATA_URL,
+    sector: 'SASTRERÍA Y MARROQUINERÍA SUPREMA 👑',
+    storeId: 'dior_couture_elite',
+    hasExclusivity: true,
+    proposalDescription: 'Acuerdo de patrocinio oficial para vestuario exclusivo, desfiles prêt-à-porter y joyería fina.',
+    pedestalTitle: 'PATROCINADOR OFICIAL DE PASARELA 🌟'
+  },
+  prada: {
+    name: 'PRADA MILANO',
+    amount: 20000,
+    logoUrl: PRADA_LOGO_DATA_URL,
+    sector: 'PRÊT-À-PORTER & DISEÑO EDITORIAL 👗',
+    storeId: 'prada_milano_fashion',
+    hasExclusivity: true,
+    proposalDescription: 'Contrato de mecenazgo editorial para colecciones de diseño contemporáneo y líneas ecológicas.',
+    pedestalTitle: 'SPONSOR EDITORIAL DE PRESTIGIO ⚜️'
+  }
+};
+
 const presetProjects: Record<string, any> = {
-  'isabella dubois': {
-    title: "Atelier Dubois: Haute Couture Éco-Responsable",
+  'alessandra ambrosio': {
+    title: "Atelier Ambrosio: Haute Couture Éco-Responsable",
     category: "Alta Costura & Diseño",
     descriptionShort: "Colección de vestidos de gala biodegradables confeccionados a partir de hilos de seda orgánica y tinturas botánicas.",
-    descriptionLong: "Atelier Dubois redefine el lujo textil mediante un modelo de alta costura circular certificado bajo estándares GOTS. Cada vestido se esculpe y tiñe a mano utilizando compuestos florales silvestres locales y un empaque de biopolímero 100% hidro-soluble, reduciendo de forma drástica la contaminación textil e impulsando la artesanía local francesa.",
+    descriptionLong: "Atelier Ambrosio redefine el lujo textil mediante un modelo de alta costura circular certificado bajo estándares GOTS. Cada vestido se esculpe y tiñe a mano utilizando compuestos florales silvestres locales y un empaque de biopolímero 100% hidro-soluble, reduciendo de forma drástica la contaminación textil e impulsando la artesanía local.",
     budget: 15000,
     fundingGoal: 20000,
     objective: "Confeccionar y presentar la primera línea cápsula en la semana de la alta costura de París, promoviendo vestidos de gala ecológicos de impacto cero de carbono.",
@@ -183,13 +450,87 @@ const presetProjects: Record<string, any> = {
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Plan-de-Viabilidad-Sostenible.pdf",
     documentationUrl: "https://collectives.network/docs/premium-viability-v1.pdf",
-    team: [{ name: "Alessandra Ambrosio", role: "Diseñadora Principal y Fundadora", experience: "8 años en alta costura", bio: "Graduada de la Chambre Syndicale de la Couture Parisienne. Apasionada del residuo cero." }]
+    team: [{ name: "Alessandra Ambrosio", role: "Diseñadora Principal y Fundadora", experience: "8 años en alta costura", bio: "Graduada de la Chambre Syndicale de la Couture Parisienne. Apasionada del residuo cero." }],
+    images: [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'isabella dubois': {
+    title: "Atelier Dubois: Haute Couture Éco-Responsable",
+    category: "Alta Costura & Diseño",
+    descriptionShort: "Colección de vestidos de gala biodegradables confeccionados a partir de hilos de seda orgánica y tinturas botánicas.",
+    descriptionLong: "Atelier Dubois redefine el lujo textil mediante un modelo de alta costura circular certificado bajo estándares GOTS. Cada vestido se esculpe y tiñe a mano utilizando compuestos florales silvestres locales y un empaque de biopolímero 100% hidro-soluble, reduciendo de forma drástica la contaminación textil e impulsando la artesanía local francesa.",
+    budget: 15000,
+    fundingGoal: 20000,
+    objective: "Confeccionar y presentar la primera línea cápsula en la semana de la alta costura de París, promoviendo vestidos de gala ecológicos de impacto cero de carbono.",
+    fundUsage: "70% compra de insumos textiles orgánicos certificados y remuneración del personal de taller local, 20% relaciones públicas y marketing digital, 10% distribución sostenible de empaque.",
+    timeline: "Fase 1: Curaduría de fibras y tintado ecológico. Fase 2: Patronaje y sastrería de gala a mano. Fase 3: Desfile oficial y pre-ventas editoriales.",
+    contactEmail: "atelier.dubois@fashionfinances.net",
+    contactPhone: "+33 6 4531 2901",
+    budgetBreakdown: "Materiales Orgánicos Certificados (Seda GOTS): 5.500€\nTaller de Confección & Remuneración Ética: 5.000€\nFotografías Editoriales y Casting: 2.500€\nPrensa y Posicionamiento Digital: 2.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Plan-de-Viabilidad-Sostenible.pdf",
+    documentationUrl: "https://collectives.network/docs/premium-viability-v1.pdf",
+    team: [{ name: "Isabella Dubois", role: "Diseñadora Principal y Fundadora", experience: "8 años en alta costura", bio: "Graduada de la Chambre Syndicale de la Couture Parisienne. Apasionada del residuo cero." }],
+    images: [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-isabella': {
+    title: "Atelier Ambrosio: Haute Couture Éco-Responsable",
+    category: "Alta Costura & Diseño",
+    descriptionShort: "Colección de vestidos de gala biodegradables confeccionados a partir de hilos de seda orgánica y tinturas botánicas.",
+    descriptionLong: "Redefine el lujo textil mediante un modelo de alta costura circular certificado bajo estándares GOTS. Cada vestido se esculpe y tiñe a mano utilizando compuestos florales silvestres locales y un empaque de biopolímero 100% hidro-soluble.",
+    budget: 15000,
+    fundingGoal: 20000,
+    objective: "Confeccionar y presentar la primera línea cápsula en la semana de la alta costura de París, promoviendo vestidos de gala ecológicos.",
+    fundUsage: "70% compra de insumos textiles orgánicos certificados y remuneración ética, 20% marketing digital y prensa, 10% distribución sostenible.",
+    timeline: "Fase 1: Curaduría de fibras. Fase 2: Patronaje y sastrería a mano. Fase 3: Desfile oficial.",
+    contactEmail: "atelier.ambrosio@fashionfinances.net",
+    contactPhone: "+33 6 4531 2901",
+    budgetBreakdown: "Materiales Orgánicos Certificados: 5.500€\nTaller de Confección: 5.000€\nFotografías y Casting: 2.500€\nPrensa: 2.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Plan-de-Viabilidad-Sostenible.pdf",
+    documentationUrl: "https://collectives.network/docs/premium-viability-v1.pdf",
+    team: [{ name: "Alessandra Ambrosio", role: "Diseñadora Principal", experience: "8 años en alta costura", bio: "Especialista en sostenibilidad y vestidos de gala residuo cero." }],
+    images: [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'candice swanepoel': {
+    title: "Milano Vintage Denim: Upcycling de Lujo",
+    category: "Upcycling & Sostenibilidad",
+    descriptionShort: "Reestructuración artesanal y customización de mezclilla retro clásica de archivo en la región de Lombardía.",
+    descriptionLong: "Bajo la consigna de residuo cero, Milano Vintage Denim adquiere vaqueros de archivo clásicos de algodón puro y los desensambla a mano en la capital de la moda para construir chaquetas elegantes y corsés vanguardistas de edición ultra-limitada.",
+    budget: 8500,
+    fundingGoal: 11000,
+    objective: "Montar un taller modelo de upcycling colaborativo en Milán y lanzar la plataforma de comercio electrónico internacional.",
+    fundUsage: "45% abastecimiento y curaduría de inventario denim clásico, 40% sastrería artesanal fina, 15% producción de portafolio e-commerce.",
+    timeline: "Paso 1: Adquisición selectiva de mezclilla. Paso 2: Diseño estructural en panel. Paso 3: Lanzamiento piloto online.",
+    contactEmail: "candice.swanepoel.denim@fashionfinances.net",
+    contactPhone: "+39 02 4432 9901",
+    budgetBreakdown: "Inventario Vaquero de Archivo: 3.500€\nManufactura en Sastrería de Milán: 3.000€\nPlataforma E-commerce & Pasarela: 2.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Proyecto_Upcycling_Indigo.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Candice Swanepoel", role: "Directora Creativa", experience: "6 años especializada en mezclilla", bio: "Pionera del supra-reciclaje y preservación textil." }],
+    images: [
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1550614000-4895a10e1bfd?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'sophia loren': {
     title: "Milano Vintage Denim: Upcycling de Lujo",
     category: "Upcycling & Sostenibilidad",
     descriptionShort: "Reestructuración artesanal y customización de mezclilla retro clásica de archivo en la región de Lombardía.",
-    descriptionLong: "Bajo la consigna de residuo cero, Milano Vintage Denim adquiere vaqueros de archivo clásicos de algodón puro y los desensambla a mano en la capital de la moda para construir chaquetas elegantes y corsés vanguardistas de edición ultra-limitada. Uniendo la historia de la mezclilla con la estética de pasarela.",
+    descriptionLong: "Bajo la consigna de residuo cero, Milano Vintage Denim adquiere vaqueros de archivo clásicos de algodón puro y los desensambla a mano en la capital de la moda para construir chaquetas elegantes y corsés vanguardistas de edición ultra-limitada.",
     budget: 8500,
     fundingGoal: 11000,
     objective: "Montar un taller modelo de upcycling colaborativo en Milán y lanzar la plataforma de comercio electrónico internacional.",
@@ -201,43 +542,173 @@ const presetProjects: Record<string, any> = {
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Proyecto_Upcycling_Indigo.pdf",
     documentationUrl: "#",
-    team: [{ name: "Sophia Loren", role: "Directora Creativa", experience: "6 años especializada en mezclilla", bio: "Pionera del supra-reciclaje italiano y preservación textil." }]
+    team: [{ name: "Sophia Loren", role: "Directora Creativa", experience: "6 años especializada en mezclilla", bio: "Pionera del supra-reciclaje italiano y preservación textil." }],
+    images: [
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1550614000-4895a10e1bfd?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-sophia': {
+    title: "Milano Vintage Denim: Upcycling de Lujo",
+    category: "Upcycling & Sostenibilidad",
+    descriptionShort: "Reestructuración artesanal y customización de mezclilla retro clásica de archivo en la región de Lombardía.",
+    descriptionLong: "Bajo la consigna de residuo cero, adquiere vaqueros de archivo clásicos de algodón puro para construir chaquetas elegantes y corsés vanguardistas de edición ultra-limitada.",
+    budget: 8500,
+    fundingGoal: 11000,
+    objective: "Montar un taller modelo de upcycling colaborativo en Milán y lanzar la plataforma de comercio electrónico.",
+    fundUsage: "45% abastecimiento denim clásico, 40% sastrería artesanal fina, 15% producción e-commerce.",
+    timeline: "Paso 1: Adquisición selectiva. Paso 2: Diseño estructural. Paso 3: Lanzamiento online.",
+    contactEmail: "candice.swanepoel.denim@fashionfinances.net",
+    contactPhone: "+39 02 4432 9901",
+    budgetBreakdown: "Inventario Vaquero: 3.500€\nManufactura en Sastrería: 3.000€\nPlataforma E-commerce: 2.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Proyecto_Upcycling_Indigo.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Candice Swanepoel", role: "Directora Creativa", experience: "6 años especializada en mezclilla", bio: "Pionera del supra-reciclaje." }],
+    images: [
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1550614000-4895a10e1bfd?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'marcus sterling': {
     title: "Sartorial Aero-Weave: Trajes Inteligentes",
     category: "Sastrería Tecnológica",
     descriptionShort: "Trajes premium termo-regulados y repelentes a manchas confeccionados con compuestos de cáñamo.",
-    descriptionLong: "Elegancia masculina sin precedentes adaptada al clima urbano. Aero-Weave desarrolla sastrería formal de lujo utilizando una trama ecológica que difunde la temperatura corporal óptima y resiste vertidos hídricos sin emplear agentes plásticos. Trajes para viajar cómodamente.",
+    descriptionLong: "Elegancia masculina sin precedentes adaptada al clima urbano. Aero-Weave desarrolla sastrería formal de lujo utilizando una trama ecológica que difunde la temperatura corporal óptima y resiste vertidos hídricos sin emplear agentes plásticos.",
     budget: 25000,
     fundingGoal: 30000,
     objective: "Perfeccionar el algoritmo de escaneo digital 3D móvil a medida para entregas automatizadas en 72 horas.",
-    fundUsage: "60% adquisición de textiles inteligentes eco-responsables, 25% desarrollo y calibración del software móvil de confección, 15% transporte.",
-    timeline: "Lanzamiento 1: Ensayo en taller y entrega a probadores beta. Lanzamiento 2: Integración en app móvil. Lanzamiento 3: Campaña de fidelización.",
+    fundUsage: "60% adquisición de textiles inteligentes eco-responsables, 25% desarrollo del software móvil, 15% transporte.",
+    timeline: "Lanzamiento 1: Ensayo en taller. Lanzamiento 2: Integración app. Lanzamiento 3: Campaña de fidelización.",
     contactEmail: "marcus.sterling@aeroweave.com",
     contactPhone: "+44 20 7946 0192",
-    budgetBreakdown: "Adquisición de Patentes de Tela Bioclimática: 15.005€\nIngeniería de Tallaje Computarizado en 3D: 6.000€\nCampañas de Prensa & RRPP Ejecutivas: 4.000€",
+    budgetBreakdown: "Patentes de Tela Bioclimática: 15.000€\nTallaje Computarizado 3D: 6.000€\nCampañas de Prensa & RRPP: 4.000€",
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Sartorial_Aero_Proposal_v3.pdf",
     documentationUrl: "#",
-    team: [{ name: "Marcus Sterling", role: "CEO & Ingeniero", experience: "10 años en tecnología textil", bio: "Investigador ex-MIT especialista en nanotecnologías aplicadas a hilaturas sostenibles." }]
+    team: [{ name: "Marcus Sterling", role: "CEO & Ingeniero", experience: "10 años en tecnología textil", bio: "Investigador especialista en hilaturas sostenibles." }],
+    images: [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-marcus': {
+    title: "Sartorial Aero-Weave: Trajes Inteligentes",
+    category: "Sastrería Tecnológica",
+    descriptionShort: "Trajes premium termo-regulados y repelentes a manchas confeccionados con compuestos de cáñamo.",
+    descriptionLong: "Elegancia masculina sin precedentes adaptada al clima urbano. Aero-Weave desarrolla sastrería formal de lujo utilizando una trama ecológica que difunde la temperatura corporal óptima.",
+    budget: 25000,
+    fundingGoal: 30000,
+    objective: "Perfeccionar el algoritmo de escaneo digital 3D móvil a medida para entregas automatizadas en 72 horas.",
+    fundUsage: "60% adquisición de textiles inteligentes, 25% software móvil, 15% transporte.",
+    timeline: "Fase 1: Taller y beta. Fase 2: App móvil. Fase 3: Fidelización.",
+    contactEmail: "marcus.sterling@aeroweave.com",
+    contactPhone: "+44 20 7946 0192",
+    budgetBreakdown: "Patentes de Tela Bioclimática: 15.000€\nTallaje 3D: 6.000€\nPrensa y RRPP: 4.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Sartorial_Aero_Proposal_v3.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Marcus Sterling", role: "CEO & Ingeniero", experience: "10 años en tecnología textil", bio: "Investigador especialista en hilaturas sostenibles." }],
+    images: [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'clara mendez': {
+    title: "Mendez Silk Flora: Alta Costura Botánica",
+    category: "Alta Costura & Seda",
+    descriptionShort: "Prendas etéreas de seda natural hiladas a mano con estampados botánicos de flor prensada.",
+    descriptionLong: "Mendez Silk Flora combina la riqueza textil artesanal con el prensado de flores naturales sobre sedas puras y crepés de máxima ligereza, creando piezas de gala irrepetibles con fragancias botánicas sutiles.",
+    budget: 9500,
+    fundingGoal: 14000,
+    objective: "Lanzar la primera pasarela de vestidos con tinturas orgánicas prensadas y consolidar venta privada.",
+    fundUsage: "50% sedas naturales de hilado manual, 30% taller de estampación botánica, 20% catálogo editorial.",
+    timeline: "Fase 1: Recolección y tintado. Fase 2: Modelaje sobre maniquí. Fase 3: Venta exclusiva.",
+    contactEmail: "clara.mendez@mendezcouture.es",
+    contactPhone: "+34 91 555 8822",
+    budgetBreakdown: "Sedas Puras y Crepés: 4.500€\nTaller de Prensado Botánico: 3.000€\nCatálogo Editorial: 2.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Mendez_Flora_Dossier.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Clara Mendez", role: "Diseñadora de Alta Costura", experience: "7 años en sastrería botánica", bio: "Artesana de sedas naturales y extractos florales." }],
+    images: [
+      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-clara': {
+    title: "Mendez Silk Flora: Alta Costura Botánica",
+    category: "Alta Costura & Seda",
+    descriptionShort: "Prendas etéreas de seda natural hiladas a mano con estampados botánicos de flor prensada.",
+    descriptionLong: "Mendez Silk Flora combina la riqueza textil artesanal con el prensado de flores naturales sobre sedas puras y crepés de máxima ligereza.",
+    budget: 9500,
+    fundingGoal: 14000,
+    objective: "Lanzar la primera pasarela de vestidos con tinturas orgánicas prensadas y consolidar venta privada.",
+    fundUsage: "50% sedas naturales, 30% taller de estampación botánica, 20% catálogo editorial.",
+    timeline: "Fase 1: Tintado floral. Fase 2: Modelaje en maniquí. Fase 3: Gala privada.",
+    contactEmail: "clara.mendez@mendezcouture.es",
+    contactPhone: "+34 91 555 8822",
+    budgetBreakdown: "Sedas Puras: 4.500€\nTaller Botánico: 3.000€\nCatálogo Editorial: 2.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Mendez_Flora_Dossier.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Clara Mendez", role: "Diseñadora", experience: "7 años en alta costura", bio: "Artesana de sedas botánicas." }],
+    images: [
+      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'liam alvarez': {
     title: "Myco-Sneakers: Calzado 3D Orgánico",
     category: "Calzado de Vanguardia",
     descriptionShort: "Zapatillas deportivas impresas en 3D con poliuretano de base fúngica flexible y compostable.",
-    descriptionLong: "La iniciativa Myco-Sneakers diseña calzado deportivo de vanguardia a partir de hilos elásticos de micelio de hongo lignificado. Garantiza una amortiguación física ergonómica fantástica, y al final de su vida útil se composta en tierra vegetal de jardín en solo seis meses libres de plástico.",
+    descriptionLong: "La iniciativa Myco-Sneakers diseña calzado deportivo de vanguardia a partir de hilos elásticos de micelio de hongo lignificado. Garantiza una amortiguación física ergonómica fantástica, y al final de su vida útil se截composta en tierra vegetal.",
     budget: 12000,
     fundingGoal: 15000,
     objective: "Completar los ensayos mecánicos de impacto en planta y comercializar el primer lote de 500 pares beta.",
-    fundUsage: "50% optimización y acondicionamiento mecánico de impresoras 3D industriales, 30% ensayos de laboratorio sobre biodegradabilidad, 20% posicionamiento digital.",
-    timeline: "Fase A: Ajuste de flexión elástica fúngica. Fase B: Fabricación de moldes 3D. Fase C: Campaña viral y envíos iniciales.",
+    fundUsage: "50% optimización de impresoras 3D industriales, 30% ensayos de biodegradabilidad, 20% posicionamiento digital.",
+    timeline: "Fase A: Ajuste elástico. Fase B: Moldes 3D. Fase C: Campaña y envíos.",
     contactEmail: "liam.alvarez@mycosneakers.io",
     contactPhone: "+34 601 234 567",
-    budgetBreakdown: "Maquinaria de Extrusión 3D Industrial: 6.000€\nEnsayos de Laboratorio & Certificaciones: 3.500€\nMarketing Viral Multicanal: 2.500€",
+    budgetBreakdown: "Maquinaria 3D Industrial: 6.000€\nEnsayos de Laboratorio: 3.500€\nMarketing Digital: 2.500€",
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Myco_Tech_Evaluation.pdf",
     documentationUrl: "#",
-    team: [{ name: "Liam Alvarez", role: "Diseñador de Calzado", experience: "7 años en calzado deportivo", bio: "Especialista en impresión aditiva en calzado ergonómico biodegradable." }]
+    team: [{ name: "Liam Alvarez", role: "Diseñador de Calzado", experience: "7 años en calzado deportivo", bio: "Especialista en impresión aditiva en calzado ergonómico biodegradable." }],
+    images: [
+      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-liam': {
+    title: "Myco-Sneakers: Calzado 3D Orgánico",
+    category: "Calzado de Vanguardia",
+    descriptionShort: "Zapatillas deportivas impresas en 3D con poliuretano de base fúngica flexible y compostable.",
+    descriptionLong: "La iniciativa Myco-Sneakers diseña calzado deportivo de vanguardia a partir de hilos elásticos de micelio de hongo lignificado.",
+    budget: 12000,
+    fundingGoal: 15000,
+    objective: "Completar los ensayos mecánicos de impacto en planta y comercializar el primer lote de 500 pares beta.",
+    fundUsage: "50% maquinaria 3D, 30% certificaciones, 20% marketing.",
+    timeline: "Fase A: Flexión elástica. Fase B: Moldes 3D. Fase C: Envíos.",
+    contactEmail: "liam.alvarez@mycosneakers.io",
+    contactPhone: "+34 601 234 567",
+    budgetBreakdown: "Maquinaria 3D: 6.000€\nEnsayos: 3.500€\nMarketing: 2.500€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Myco_Tech_Evaluation.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Liam Alvarez", role: "Diseñador de Calzado", experience: "7 años en calzado deportivo", bio: "Especialista en impresión aditiva." }],
+    images: [
+      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'mia kincaid': {
     title: "Nordic Frost: Abrigos de Cáñamo y Alpaca",
@@ -248,68 +719,111 @@ const presetProjects: Record<string, any> = {
     fundingGoal: 22000,
     objective: "Exponer la línea cápsula invernal en las ferias comerciales internacionales de Copenhague y Estocolmo.",
     fundUsage: "55% hilatura ética y de abastecimiento andino, 30% pruebas hídricas con cámara de frío, 15% publicidad sostenible en redes de diseño.",
-    timeline: "Periodo 1: Adquisición ética de lana de alpaca y extracción de cáñamo. Periodo 2: Confección de muestras híbridas. Periodo 3: Ferias y ventas.",
+    timeline: "Periodo 1: Adquisición ética de lana. Periodo 2: Confección de muestras híbridas. Periodo 3: Ferias y ventas.",
     contactEmail: "mia.kincaid@nordicfrost.se",
     contactPhone: "+46 8 123 4567",
-    budgetBreakdown: "Fibras de Alpaca & Logística Ética: 9.000€\nSimulación Climática & Pruebas en Cámara: 5.000€\nCreación de Marca Internacional: 4.000€",
+    budgetBreakdown: "Fibras de Alpaca & Logística Ética: 9.000€\nSimulación Climática & Pruebas: 5.000€\nMarca Internacional: 4.000€",
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Dossier_NordicFrost_Alpaca.pdf",
     documentationUrl: "#",
-    team: [{ name: "Mia Kincaid", role: "Fundadora", experience: "5 años confección nórdica", bio: "Apasionada del desarrollo rural andino y recolección de fibras orgánicas." }]
+    team: [{ name: "Mia Kincaid", role: "Fundadora", experience: "5 años confección nórdica", bio: "Apasionada del desarrollo rural y recolección de fibras orgánicas." }],
+    images: [
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-mia': {
+    title: "Nordic Frost: Abrigos de Cáñamo y Alpaca",
+    category: "Ropa de Abrigo Premium",
+    descriptionShort: "Gabardinas y prendas de invierno termo-aislantes rellenas de cáñamo silvestre procesado libre de plásticos.",
+    descriptionLong: "Abrigos de invierno de alto rendimiento diseñados para mitigar temperaturas bajo cero sin requerir rellenos plásticos.",
+    budget: 18000,
+    fundingGoal: 22000,
+    objective: "Exponer la línea cápsula invernal en las ferias comerciales internacionales de Copenhague y Estocolmo.",
+    fundUsage: "55% hilatura ética, 30% pruebas climáticas, 15% publicidad.",
+    timeline: "Periodo 1: Fibras. Periodo 2: Confección. Periodo 3: Ferias.",
+    contactEmail: "mia.kincaid@nordicfrost.se",
+    contactPhone: "+46 8 123 4567",
+    budgetBreakdown: "Fibras de Alpaca: 9.000€\nPruebas Climáticas: 5.000€\nMarca Internacional: 4.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Dossier_NordicFrost_Alpaca.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Mia Kincaid", role: "Fundadora", experience: "5 años confección", bio: "Diseñadora de prendas de abrigo sostenibles." }],
+    images: [
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'oliver finch': {
     title: "Echo Circular: Modas Desmontables",
     category: "Moda Modular & Circular",
     descriptionShort: "Colección urbana modular de paneles intercambiables con broches de aluminio reciclado.",
-    descriptionLong: "Combatimos la sobreproducción textil ofreciendo una única chaqueta estructural convertible en chaleco ligero o gabardina ejecutiva según se añadan o remuevan sus módulos. Confeccionada con lino orgánico europeo y herrajes reciclables de precisión.",
+    descriptionLong: "Combatimos la sobreproducción textil ofreciendo una única chaqueta estructural convertible en chaleco ligero o gabardina ejecutiva según se añadan o remuevan sus módulos.",
     budget: 14000,
     fundingGoal: 16500,
     objective: "Consolidar el desarrollo de broche modular patentado y automatizar el muestrario digital.",
-    fundUsage: "55% hilatura ética y de abastecimiento andino, 30% pruebas hídricas con cámara de frío, 15% publicidad sostenible en redes de diseño.",
-    timeline: "Fase 1: Matricería de broches. Fase 2: Confección de muestras híbridas. Fase 3: Lanzamiento comercial.",
+    fundUsage: "55% herrajes y cierres patentados, 30% materiales termo-sellados, 15% muestrario virtual.",
+    timeline: "Fase 1: Matricería. Fase 2: Confección. Fase 3: Lanzamiento.",
     contactEmail: "oliver.finch@echocircular.co.uk",
     contactPhone: "+44 7700 900077",
-    budgetBreakdown: "Diseño & Matricería de Cierres de Precisión: 7.000€\nMateriales Termo-Sellados e Hilos de Alta Tenacidad: 4.550€\nDesarrollo Web de Realidad Virtual Muestrario: 2.500€",
+    budgetBreakdown: "Cierres de Precisión: 7.000€\nMateriales Termo-Sellados: 4.550€\nMuestrario Virtual 3D: 2.500€",
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Echo_Circular_Modular_Dossier.pdf",
     documentationUrl: "#",
-    team: [{ name: "Oliver Finch", role: "Arquitecto Textil", experience: "9 años de diseño industrial", bio: "Ingeniero convertido a la moda buscando reducir la huella de descarte." }]
+    team: [{ name: "Oliver Finch", role: "Arquitecto Textil", experience: "9 años de diseño industrial", bio: "Ingeniero convertido a la moda buscando reducir la huella de descarte." }],
+    images: [
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'amara okafor': {
     title: "Afro-Heritage AvantGarde",
     category: "Couture Cultural de Impacto",
     descriptionShort: "Alta costura de gala elaborada con textiles tradicionales Adire creados por artesanas nigerianas.",
-    descriptionLong: "Fomentamos la economía local de cooperativas de artesanas de tintura índigo en Nigeria rindiendo tributo a sus técnicas históricas. Reconvertimos tejidos Adire en trajes majestuosos asimétricos diseñados para impactar en las pasarelas globales de lujo.",
+    descriptionLong: "Fomentamos la economía local de cooperativas de artesanas de tintura índigo en Nigeria rindiendo tributo a sus técnicas históricas. Reconvertimos tejidos Adire en trajes majestuosos asimétricos.",
     budget: 16000,
     fundingGoal: 18000,
     objective: "Financiar el pago directo y transporte de 45 costureras locales nigerianas y lanzar la marca en la bienal de Milán.",
-    fundUsage: "65% retribución justa y logística cooperativa directa, 25% acabados de alta costura a mano en taller asociado de Madrid, 10% campaña institucional.",
-    timeline: "Fase A: Producción comunitaria en Lagos. Fase B: Confección de siluetas asimétricas. Fase C: Presentación oficial.",
+    fundUsage: "65% retribución justa, 25% acabados de alta costura a mano, 10% campaña institucional.",
+    timeline: "Fase A: Producción en Lagos. Fase B: Siluetas asimétricas. Fase C: Presentación.",
     contactEmail: "amara.okafor@afroheritage.org",
     contactPhone: "+234 1 234 5678",
-    budgetBreakdown: "Logística y Compensación Directa Cooperativa: 9.500€\nPatronaje & Armado de Siluetas de Gala: 4.500€\nCampañas y Eventos Editoriales de Presentación: 2.000€",
+    budgetBreakdown: "Compensación Directa: 9.500€\nPatronaje y Armado: 4.500€\nEventos Editoriales: 2.000€",
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Impact_Afro_Heritage_GOTS.pdf",
     documentationUrl: "#",
-    team: [{ name: "Amara Okafor", role: "Diseñadora en Jefe", experience: "8 años de couture étnico", bio: "Graduada de Central Saint Martins dedicada al renacimiento de saberes tradicionales." }]
+    team: [{ name: "Amara Okafor", role: "Diseñadora en Jefe", experience: "8 años de couture étnico", bio: "Graduada de Central Saint Martins dedicada al renacimiento de saberes tradicionales." }],
+    images: [
+      "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200"
+    ]
   },
   'julian brooks': {
     title: "Vino-Leather: Marroquinería de Uva",
     category: "Marroquinería Premium Vegana",
     descriptionShort: "Bolsos de mano ejecutivos y monederos premium creados a partir de descarte de uvas de viñedos ecológicos.",
-    descriptionLong: "Alternativa premium de alta definición libre de piel animal, fabricada a partir de cáscaras y semillas de uva u orujo obtenido de bodegas biodinámicas en España. Un material impermeable de textura clásica espectacular que rivaliza con el mejor cuero vacuno.",
+    descriptionLong: "Alternativa premium de alta definición libre de piel animal, fabricada a partir de cáscaras y semillas de uva u orujo obtenido de bodegas biodinámicas en España.",
     budget: 11000,
     fundingGoal: 13500,
     objective: "Consolidar el primer taller piloto de corte digital láser y costura de bolsos premium de piel vegetal.",
-    fundUsage: "45% abastecimiento y refinamiento del cuero vegetal español, 40% manufactura artesana en Elche, 15% empaquetado de madera noble recuperada.",
-    timeline: "Fase 1: Curtido ecológico de uva. Fase 2: Costura artesana de precisión. Fase 3: Comercialización directa.",
+    fundUsage: "45% abastecimiento cuero vegetal, 40% manufactura artesana, 15% empaque.",
+    timeline: "Fase 1: Curtido ecológico. Fase 2: Costura artesana. Fase 3: Comercialización.",
     contactEmail: "julian.brooks@vinoleather.es",
     contactPhone: "+34 912 345 678",
-    budgetBreakdown: "Adquisición de Rollos de Cuero de Uva Orgánica: 4.500€\nManufactura Artesanal & Costura Especializada: 3.500€\nHerrajes de Precisión e Hilos Eco-Sostenibles: 3.000€",
+    budgetBreakdown: "Cuero de Uva: 4.500€\nManufactura Artesanal: 3.500€\nHerrajes de Precisión: 3.000€",
     videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
     documentationName: "Viabilidad_VinoLeather.pdf",
     documentationUrl: "#",
-    team: [{ name: "Julian Brooks", role: "Diseñador Industrial & Fundador", experience: "4 años de artes de calzado", bio: "Artesano de curtición botánica comprometido con la reorientación del sector vinícola." }]
+    team: [{ name: "Julian Brooks", role: "Diseñador Industrial & Fundador", experience: "4 años de artes de calzado", bio: "Artesano de curtición botánica." }],
+    images: [
+      "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&q=80&w=1200"
+    ]
   }
 };
 
@@ -328,11 +842,39 @@ export default function SessionResultsPodium({
   prizePerWinner,
   isTie,
   winnersToDisplay,
-  maxVotes
+  maxVotes,
+  onFinishParticipationSession
 }: SessionResultsPodiumProps) {
   const [showFullTally, setShowFullTally] = useState(false);
   const [activeWinnerIndex, setActiveWinnerIndex] = useState(0);
   const [isSimulatedFiveWinners, setIsSimulatedFiveWinners] = useState(false);
+
+  // Immediately cancel any active speech synthesis and ongoing audio voiceovers when results page mounts
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (err) {}
+    }
+
+    // Keep speech cancelled throughout the duration of this results page
+    const interval = setInterval(() => {
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    }, 250);
+
+    return () => {
+      clearInterval(interval);
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    };
+  }, []);
 
   const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement, Event>, name: string) => {
     const target = e.currentTarget;
@@ -368,7 +910,6 @@ export default function SessionResultsPodium({
       target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150';
     }
   };
-  const [viewMode, setViewMode] = useState<'individual' | 'mosaic'>('individual');
   const [sponsorViewMode, setSponsorViewMode] = useState<'individual' | 'mosaic'>('individual');
 
   const simulatedWinners: Participant[] = [
@@ -418,6 +959,24 @@ export default function SessionResultsPodium({
   const [activeModalTab, setActiveModalTab] = useState<'info' | 'financial' | 'team'>('info');
   const [sponsorSliderIndex, setSponsorSliderIndex] = useState(0);
   const [selectedPodiumSponsorDetail, setSelectedPodiumSponsorDetail] = useState<any | null>(null);
+  const [modelBrandOverrides, setModelBrandOverrides] = useState<Record<string, string>>({});
+  const [showBrandAssigner, setShowBrandAssigner] = useState(false);
+  const [userTop1BoutiqueId, setUserTop1BoutiqueId] = useState<string>(() => {
+    return localStorage.getItem('user_top1_boutique_id') || localStorage.getItem('user_selected_boutique_id') || 'balmain_paris_paloma';
+  });
+
+  useEffect(() => {
+    const handleBoutiqueChange = (e: any) => {
+      const bId = e.detail?.id || localStorage.getItem('user_top1_boutique_id') || localStorage.getItem('user_selected_boutique_id');
+      if (bId) setUserTop1BoutiqueId(bId);
+    };
+    window.addEventListener('user_boutique_sponsor_changed', handleBoutiqueChange);
+    window.addEventListener('storage', handleBoutiqueChange);
+    return () => {
+      window.removeEventListener('user_boutique_sponsor_changed', handleBoutiqueChange);
+      window.removeEventListener('storage', handleBoutiqueChange);
+    };
+  }, []);
   const prizeTotal80 = pool * 0.80;
 
   // Helper to reliably find and navigate to a model's profile when clicked
@@ -506,6 +1065,8 @@ export default function SessionResultsPodium({
 
   const handleSponsorClick = (sponsor: any) => {
     localStorage.setItem('came_from_results_podium', 'true');
+    const targetStore = sponsor?.storeId || 'balmain_paris_paloma';
+    localStorage.setItem('initial_selected_store_id', targetStore);
     if (completedSessionToDisplay) {
       try {
         localStorage.setItem('podium_session_backup', JSON.stringify(completedSessionToDisplay));
@@ -516,7 +1077,6 @@ export default function SessionResultsPodium({
     if (setCompletedSessionToDisplay) {
       setCompletedSessionToDisplay(null);
     }
-    const targetStore = sponsor?.storeId || 'balmain_paris_paloma';
     if (onNavigateToTab) {
       onNavigateToTab('casting_live');
     }
@@ -573,17 +1133,24 @@ export default function SessionResultsPodium({
 
   // Helper to find the complete project detail for the winner
   const getWinnerFullProject = (part: Participant) => {
-    const isWinnerSelf = part.userId === userProfile.id || part.name.toLowerCase() === userProfile.name.toLowerCase();
+    if (!part) return {} as any;
+    const isWinnerSelf = part.userId === userProfile.id || part.name?.toLowerCase() === userProfile.name?.toLowerCase();
     
-    const userProj: any = (isWinnerSelf ? userProjects.find(p => p.userId === userProfile.id) : null)
-      || userProjects.find(p => p.userId === part.userId || p.id === part.projectId)
-      || userProjects[0];
+    const userProj: any = isWinnerSelf ? userProjects.find(p => p.userId === userProfile.id) : null;
       
-    const userKey = part.name.toLowerCase().trim();
-    const matchedPreset = presetProjects[userKey] || Object.values(presetProjects).find((p: any) => p.title?.toLowerCase().includes(userKey)) || {};
+    const userKey = part.name ? part.name.toLowerCase().trim() : '';
+    const projId = part.projectId ? part.projectId.toLowerCase().trim() : '';
+    const matchedPreset = presetProjects[userKey] 
+      || (projId ? presetProjects[projId] : null)
+      || Object.entries(presetProjects).find(([k, v]: any) => userKey.includes(k) || k.includes(userKey) || v.title?.toLowerCase().includes(userKey))?.[1]
+      || {};
     
+    const projectImages = (isWinnerSelf && userProj?.images && userProj.images.length > 0)
+      ? userProj.images
+      : (matchedPreset.images && matchedPreset.images.length > 0 ? matchedPreset.images : (userProj?.images || [part.avatar]));
+
     return {
-      id: userProj?.id || `proj-sim-${part.userId}`,
+      id: userProj?.id || matchedPreset.id || `proj-sim-${part.userId}`,
       userId: part.userId,
       title: (isWinnerSelf ? userProj?.title : matchedPreset.title) || `Colección Sustentable - ${part.name}`,
       category: (isWinnerSelf ? userProj?.category : matchedPreset.category) || 'Modas Circulares',
@@ -596,14 +1163,14 @@ export default function SessionResultsPodium({
       timeline: (isWinnerSelf ? userProj?.timeline : matchedPreset.timeline) || 'Consagrado en 3 fases críticas: abastecimiento, corte experimental de patrón, y desfiles e-commerce.',
       team: (isWinnerSelf ? userProj?.team : matchedPreset.team) || [{ name: part.name, role: 'Líder Creativo', experience: '5 años de trayectoria', bio: 'Apasionado de la sastrería circular sostenible.' }],
       termsAccepted: true,
-      images: userProj?.images || [part.avatar],
+      images: projectImages,
       status: 'active',
       contactEmail: (isWinnerSelf ? userProj?.contactEmail : matchedPreset.contactEmail) || `${part.name.toLowerCase().replace(/\s+/g, '.')}@fashionfinances.net`,
       contactPhone: (isWinnerSelf ? userProj?.contactPhone : matchedPreset.contactPhone) || '+34 600 555 123',
       budgetBreakdown: (isWinnerSelf ? userProj?.budgetBreakdown : matchedPreset.budgetBreakdown) || 'Adquisición de Insumos: 2.000€\nTaller de Confección: 1.500€\nPublicidad & Promoción: 1.500€',
-      videos: isWinnerSelf ? userProj?.videos : (matchedPreset.videos || ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"]),
-      documentationName: isWinnerSelf ? userProj?.documentationName : (matchedPreset.documentationName || 'Plan-de-Viabilidad-Sostenible.pdf'),
-      documentationUrl: isWinnerSelf ? userProj?.documentationUrl : (matchedPreset.documentationUrl || 'https://collectives.network/docs/premium-viability-v1.pdf')
+      videos: (isWinnerSelf && userProj?.videos) ? userProj.videos : (matchedPreset.videos || ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"]),
+      documentationName: (isWinnerSelf && userProj?.documentationName) ? userProj.documentationName : (matchedPreset.documentationName || 'Plan-de-Viabilidad-Sostenible.pdf'),
+      documentationUrl: (isWinnerSelf && userProj?.documentationUrl) ? userProj.documentationUrl : (matchedPreset.documentationUrl || 'https://collectives.network/docs/premium-viability-v1.pdf')
     };
   };
 
@@ -625,6 +1192,57 @@ export default function SessionResultsPodium({
 
   const activeWinnersList = isSimulatedFiveWinners ? simulatedWinners : winnersToDisplay;
   const activeIsTie = isSimulatedFiveWinners ? true : isTie;
+
+  // Construct the list of winning brands (5 curated luxury brands always fully scrollable)
+  const defaultBrandKeys = ['balmain', 'chanel', 'dior', 'gucci', 'prada', 'ysl'];
+  
+  const winningBrandsList = defaultBrandKeys.map((brandKey, idx) => {
+    const winner = activeWinnersList[idx] || activeWinnersList[0] || {
+      userId: 'topf-1',
+      name: 'Paloma Elsesser',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+      votesReceived: 5
+    };
+    
+    // Check if this winner is the Top 1 winner or current user
+    const isTop1OrUser = idx === 0 || winner.userId === userProfile?.id || (winner.name && userProfile?.name && winner.name.toLowerCase() === userProfile.name.toLowerCase());
+    const top1ChosenBoutique = isTop1OrUser ? (userTop1BoutiqueId || localStorage.getItem('user_top1_boutique_id') || localStorage.getItem('user_selected_boutique_id')) : null;
+
+    const assignedBrandKey = modelBrandOverrides[winner.userId] 
+      || modelBrandOverrides[winner.name?.toLowerCase()] 
+      || (top1ChosenBoutique && PRESET_SPONSOR_BRANDS[top1ChosenBoutique] ? top1ChosenBoutique : null)
+      || brandKey;
+    
+    const brandData = PRESET_SPONSOR_BRANDS[assignedBrandKey] || PRESET_SPONSOR_BRANDS[brandKey] || PRESET_SPONSOR_BRANDS.balmain;
+
+    return {
+      id: `winner-brand-${winner.userId || idx}-${assignedBrandKey}-${idx}`,
+      brandKey: assignedBrandKey,
+      ...brandData,
+      modelUserId: winner.userId,
+      modelName: winner.name,
+      modelAvatar: winner.avatar,
+      votesReceived: winner.votesReceived
+    };
+  });
+
+  const activeSponsorIndex = Math.min(sponsorSliderIndex, Math.max(0, winningBrandsList.length - 1));
+  const currentWinningBrand = winningBrandsList[activeSponsorIndex] || {
+    id: 'default-brand-balmain',
+    brandKey: 'balmain',
+    name: 'BALMAIN PARIS',
+    amount: 15000,
+    logoUrl: BALMAIN_LOGO_DATA_URL,
+    sector: 'CALZADO DE PASARELA Y LUJO 👠',
+    storeId: 'balmain_paris_paloma',
+    hasExclusivity: true,
+    pedestalTitle: 'PATROCINADOR EXCLUSIVO GALA 👑',
+    proposalDescription: 'Contrato de exclusividad para patrocinio de calzado de pasarela y lujo en la gala de resultados finales.',
+    modelUserId: '',
+    modelName: '',
+    modelAvatar: '',
+    votesReceived: 0
+  };
 
   const winnersWithBrands = activeWinnersList.map(w => {
     return {
@@ -664,23 +1282,36 @@ export default function SessionResultsPodium({
 
   // Helper to find project images for winner
   const getWinnerProjectImages = (part: Participant) => {
-    const isWinnerSelf = part.userId === userProfile.id || part.name.toLowerCase() === userProfile.name.toLowerCase();
-    const winnerProj = (isWinnerSelf ? userProjects.find(p => p.userId === userProfile.id) : null)
-      || userProjects.find(p => p.userId === part.userId || p.id === part.projectId)
-      || userProjects[0];
-    
-    return ensureThreeImages(winnerProj?.images);
+    if (!part) return ensureThreeImages([]);
+    const fullProj = getWinnerFullProject(part);
+    return ensureThreeImages(fullProj.images);
   };
 
   return (
-    <div className="bg-white text-slate-800 rounded-3xl border border-pink-200 p-6 sm:p-10 space-y-10 shadow-xl animate-fade-in text-left relative overflow-hidden" id="podium-results-screen" style={{ backgroundImage: 'linear-gradient(to bottom, #fff8f9 0%, #ffffff 100%)' }}>
+    <div className="bg-white text-slate-800 rounded-none border-0 p-3 sm:p-6 pb-20 space-y-6 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full scrollbar-none no-scrollbar box-border" id="podium-results-screen" style={{ backgroundImage: 'linear-gradient(to bottom, #fff8f9 0%, #ffffff 100%)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       
       {/* Immersive stadium visual background effects */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-pink-100/40 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-rose-50/30 rounded-full blur-3xl pointer-events-none" />
 
       {/* SECTION 1: HEADER BRAND TITLE */}
-      <div className="text-center pt-8 pb-5 border-b border-pink-100 relative z-10">
+      <div className="text-center pt-8 pb-5 border-b border-pink-100 relative z-10 flex flex-col items-center">
+        {/* Prominent Finish Session Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (onFinishParticipationSession) {
+              onFinishParticipationSession();
+            } else if (setCompletedSessionToDisplay) {
+              setCompletedSessionToDisplay(null);
+            }
+          }}
+          className="mb-4 bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-2xl shadow-xl border border-rose-400/50 uppercase tracking-wider transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2.5 z-20"
+        >
+          <span className="text-base animate-pulse">🛑</span>
+          <span>Sesión Finalizada</span>
+        </button>
+
         <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
           {resultsSponsors && resultsSponsors.length > 0 ? (
             resultsSponsors.map((spon, idx) => (
@@ -746,7 +1377,6 @@ export default function SessionResultsPodium({
           <button
             onClick={() => {
               setIsSimulatedFiveWinners(false);
-              setViewMode('individual');
               setSponsorViewMode('individual');
               setActiveWinnerIndex(0);
             }}
@@ -761,7 +1391,6 @@ export default function SessionResultsPodium({
           <button
             onClick={() => {
               setIsSimulatedFiveWinners(true);
-              setViewMode('mosaic');
               setSponsorViewMode('individual');
               setActiveWinnerIndex(0);
             }}
@@ -786,84 +1415,177 @@ export default function SessionResultsPodium({
             <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-pink-50/30 to-transparent pointer-events-none" />
             
             {/* Decorative title */}
-            <div className="text-center space-y-1.5 relative z-10">
-              <div className="inline-flex items-center gap-1.5 bg-[#fe2c55]/10 border border-[#fe2c55]/20 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-[#fe2c55] mx-auto">
-                ✨ MESA FINALIZADA ✨
+            {/* Decorative title */}
+            <div className="text-center space-y-2 relative z-10">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-300/60 px-4 py-1 rounded-full text-[10.5px] font-black uppercase tracking-[0.2em] text-amber-900 mx-auto shadow-xs">
+                <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA <span>✦</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-display font-black text-rose-950 tracking-tight uppercase">THE ANGELS RANKING</h3>
-              <p className="text-[9.5px] sm:text-[11px] text-slate-500 uppercase tracking-widest font-bold max-w-md mx-auto">LA MODELO MÁS ADMIRADA DE LA EDICIÓN DE HOY Y SU FINANCIACIÓN RECAUDADA</p>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-slate-950 tracking-tight uppercase">
+                RESULTADOS FINALES
+              </h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.15em] font-bold max-w-lg mx-auto">
+                ASIGNACIÓN OFICIAL DE CAPITAL DE INVERSIÓN Y RECONOCIMIENTO FINANCIERO
+              </p>
             </div>
 
             {/* Podium pedestal columns or Multi-winner Slider */}
             {isMultiWinner ? (
               <div className="space-y-6 relative z-10 w-full animate-fade-in">
-                {/* Tie Headline Badge */}
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-amber-500/15 border border-amber-300/40 px-4 py-1.5 rounded-full text-xs font-bold text-amber-800 tracking-wide uppercase shadow-sm">
-                  <span className="text-sm">✨</span> ¡EMPATE HISTÓRICO: {activeWinnersList.length} GANADORAS! <span className="text-sm">✨</span>
+                {/* Tie Headline Announcement */}
+                <div className="text-center space-y-1.5 animate-fade-in">
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 border border-amber-300/80 px-5 py-1.5 rounded-full text-xs sm:text-sm font-serif font-black text-amber-900 tracking-wider uppercase shadow-xs">
+                    <span className="text-amber-600 text-xs">✦</span>
+                    <span>EMPATE HISTÓRICO</span>
+                    <span className="text-amber-600 text-xs">✦</span>
+                  </div>
+                  <h4 className="text-base sm:text-lg font-sans font-black text-slate-900 uppercase tracking-tight">
+                    {activeWinnersList.length} PROYECTOS HAN CONSEGUIDO FINANCIACIÓN
+                  </h4>
                 </div>
 
-                {/* Main Spotlight Panel for Selected Winner */}
-                <div className="max-w-md mx-auto bg-gradient-to-b from-[#fffbeb] via-white to-amber-50/10 border-2 border-amber-300 rounded-3xl p-6 shadow-xl relative overflow-hidden transition-all duration-300 group/spotlight">
+                {/* 🏆 MAIN SPOTLIGHT CARD FOR FUNDED PROJECT (LUXURY FINTECH REDESIGN) */}
+                <div className="max-w-md mx-auto bg-gradient-to-b from-white via-[#fffdfa] to-amber-50/20 border-2 border-amber-300 ring-4 ring-amber-100/40 rounded-3.5xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300 group/spotlight text-center space-y-4">
                   
-                  {/* Majestic Diamond Crown overlapping the spotlight frame */}
-                  <div className="absolute top-1 left-1/2 -translate-x-1/2 z-20 w-16 h-16 sm:w-20 sm:h-20 drop-shadow-md select-none pointer-events-none transition-transform duration-300 scale-105 group-hover/spotlight:scale-110">
-                    <img 
-                      src="https://gallery.yopriceville.com/var/albums/Free-Clipart-Pictures/Crowns-PNG/Diamond_Tiara_with_Rubies_PNG_Clipart.png" 
-                      alt="Diamond Crown" 
-                      className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(239,68,68,0.5)]"
-                    />
-                  </div>
+                  {/* Subtle golden ambient background glow */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-300/15 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-                  {/* Winner avatar with gold rotating-like radial glow */}
-                  <div className="relative mt-8 mb-4">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 via-rose-300 to-amber-300 blur-md scale-105 animate-pulse opacity-75" />
-                    <img 
-                      src={firstPlace.avatar} 
-                      alt={firstPlace.name} 
-                      onClick={() => handleNavigateToModelProfile(firstPlace)}
-                      className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover mx-auto border-4 border-amber-400 shadow-xl cursor-pointer hover:scale-105 transition-transform duration-200 relative z-10 animate-fade-in"
-                      title={`Ver perfil de ${firstPlace.name}`}
-                    />
-                    <div 
-                      onClick={() => handleNavigateToModelProfile(firstPlace)}
-                      className="absolute bottom-0 right-1/2 translate-x-1/2 z-20 bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-3 py-1 rounded-full shadow-md border border-amber-300 tracking-wider cursor-pointer hover:scale-105 transition-transform"
-                      title={`Ver perfil de ${firstPlace.name}`}
-                    >
-                      CO-DIAMOND ANGEL
+                  {/* 1. Top Badge: FUNDING AWARDED / FINANCIACIÓN CONCEDIDA */}
+                  <div className="relative z-10 flex justify-center">
+                    <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-300/70 text-amber-900 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
+                      <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
                     </div>
                   </div>
 
-                  {/* Name and votes */}
-                  <div className="space-y-1">
-                    <h4 className="text-lg sm:text-xl font-serif font-black text-slate-900 cursor-pointer hover:text-rose-600 hover:underline transition-colors flex items-center justify-center gap-1.5"
+                  {/* 2. Sophisticated Luxury Golden Diamond Emblem */}
+                  <div className="relative z-10 flex flex-col items-center justify-center pt-1">
+                    <div className="relative inline-flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 blur-md opacity-60 rounded-full scale-125 animate-pulse pointer-events-none" />
+                      <svg 
+                        className="w-10 h-10 sm:w-12 sm:h-12 relative z-10 filter drop-shadow-[0_2px_8px_rgba(217,119,6,0.35)]" 
+                        viewBox="0 0 64 64" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <linearGradient id="goldTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#FFF2A3" />
+                            <stop offset="50%" stopColor="#F59E0B" />
+                            <stop offset="100%" stopColor="#D97706" />
+                          </linearGradient>
+                          <linearGradient id="goldTableGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#FEF3C7" />
+                            <stop offset="100%" stopColor="#FBBF24" />
+                          </linearGradient>
+                          <linearGradient id="goldFacetLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#FDE68A" />
+                            <stop offset="100%" stopColor="#B45309" />
+                          </linearGradient>
+                          <linearGradient id="goldFacetRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#F59E0B" />
+                            <stop offset="100%" stopColor="#92400E" />
+                          </linearGradient>
+                        </defs>
+                        {/* Diamond Table (top surface) */}
+                        <polygon points="20,16 44,16 54,26 10,26" fill="url(#goldTopGrad)" stroke="#B45309" strokeWidth="1" />
+                        <polygon points="24,17 40,17 48,25 16,25" fill="url(#goldTableGrad)" opacity="0.95" />
+                        {/* Lower Pavilion facets */}
+                        <polygon points="10,26 32,54 22,26" fill="url(#goldFacetLeftGrad)" stroke="#B45309" strokeWidth="1" />
+                        <polygon points="22,26 32,54 42,26" fill="url(#goldTopGrad)" stroke="#B45309" strokeWidth="1" />
+                        <polygon points="42,26 32,54 54,26" fill="url(#goldFacetRightGrad)" stroke="#B45309" strokeWidth="1" />
+                        {/* Top crown facets */}
+                        <polygon points="20,16 10,26 22,26" fill="url(#goldFacetLeftGrad)" stroke="#B45309" strokeWidth="1" />
+                        <polygon points="44,16 54,26 42,26" fill="url(#goldFacetRightGrad)" stroke="#B45309" strokeWidth="1" />
+                        <polygon points="20,16 44,16 32,26" fill="#FEF3C7" opacity="0.9" stroke="#B45309" strokeWidth="1" />
+                        {/* Sparkle light highlights */}
+                        <circle cx="26" cy="20" r="1.5" fill="#FFFFFF" opacity="0.95" />
+                        <circle cx="38" cy="30" r="1.2" fill="#FFFFFF" opacity="0.9" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* 3. Circular creator photo with refined double gold border and soft lighting */}
+                  <div className="relative z-10 my-2 flex justify-center">
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 blur-md scale-105 opacity-60 pointer-events-none" />
+                      <img 
+                        src={firstPlace.avatar} 
+                        alt={firstPlace.name} 
                         onClick={() => handleNavigateToModelProfile(firstPlace)}
+                        className="w-28 h-28 sm:w-34 sm:h-34 rounded-full object-cover mx-auto border-4 border-amber-300 ring-4 ring-amber-50 shadow-xl cursor-pointer hover:scale-105 transition-all duration-300 relative z-10"
                         title={`Ver perfil de ${firstPlace.name}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 4. Information of Creator & Votes (Secondary Hierarchy) */}
+                  <div className="space-y-1 relative z-10">
+                    <h4 
+                      className="text-xl sm:text-2xl font-serif font-black text-slate-900 cursor-pointer hover:text-amber-700 transition-colors tracking-tight block"
+                      onClick={() => handleNavigateToModelProfile(firstPlace)}
+                      title={`Ver perfil de ${firstPlace.name}`}
                     >
-                      <span>{firstPlace.name}</span>
+                      {firstPlace.name}
                     </h4>
-                    <p className="text-xs sm:text-sm text-rose-600 font-extrabold flex items-center justify-center gap-1">
-                      <span className="text-rose-500">❤️</span> {firstPlace.votesReceived} votos recibidos
+                    <p className="text-xs text-slate-500 font-semibold flex items-center justify-center gap-1.5">
+                      <span className="text-rose-500">❤️</span> 
+                      <span>{firstPlace.votesReceived} votos recibidos</span>
                     </p>
                   </div>
 
-                  {/* Slider controls embedded in the card */}
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-amber-100">
+                  {/* Subtle luxury divider */}
+                  <div className="border-t border-amber-200/70 my-2 relative z-10" />
+
+                  {/* 5. FINANCIACIÓN CONSEGUIDA (HIGHLIGHT FINANCIAL BLOCK) */}
+                  {(() => {
+                    const winnerFundingAmount = prizePerWinner > 0 
+                      ? prizePerWinner 
+                      : (prizeTotal80 > 0 ? (prizeTotal80 / (activeWinnersList.length || 1)) : 10000);
+                    const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
+
+                    return (
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-50/80 via-white to-amber-50/40 border border-amber-200/90 shadow-xs relative z-10 space-y-1">
+                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-800 block">
+                          FINANCIACIÓN CONSEGUIDA
+                        </span>
+                        <div className="text-3xl sm:text-4xl font-sans font-black text-slate-950 tracking-tight block py-0.5">
+                          {formattedFunding}
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 uppercase tracking-wider font-semibold">
+                          Capital asignado por selección comunitaria
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* 8. Badge de Empate · Posición #1 */}
+                  <div className="relative z-10 flex justify-center pt-1">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-4xs">
+                      <span>✦</span> EMPATE · POSICIÓN #1 <span>✦</span>
+                    </div>
+                  </div>
+
+                  {/* 7. Navegación entre los Ganadores */}
+                  <div className="flex items-center justify-between pt-3 border-t border-amber-100 relative z-10">
                     <button 
                       onClick={() => setActiveWinnerIndex(prev => prev === 0 ? activeWinnersList.length - 1 : prev - 1)}
-                      className="p-2 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 transition cursor-pointer active:scale-90 border border-amber-200"
-                      title="Anterior ganadora"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-700 transition-all border border-amber-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
+                      title="Proyecto financiado anterior"
+                      aria-label="Proyecto financiado anterior"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
                     </button>
-                    <span className="text-[10px] font-mono tracking-widest text-amber-850 font-bold uppercase">
-                      CO-GANADORA {activeWinnerIndex + 1} DE {activeWinnersList.length}
+                    
+                    <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-slate-700 font-bold uppercase">
+                      PROYECTO FINANCIADO · {activeWinnerIndex + 1} / {activeWinnersList.length}
                     </span>
+
                     <button 
                       onClick={() => setActiveWinnerIndex(prev => prev === activeWinnersList.length - 1 ? 0 : prev + 1)}
-                      className="p-2 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 transition cursor-pointer active:scale-90 border border-amber-200"
-                      title="Siguiente ganadora"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-700 transition-all border border-amber-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
+                      title="Siguiente proyecto financiado"
+                      aria-label="Siguiente proyecto financiado"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
                     </button>
                   </div>
                 </div>
@@ -881,7 +1603,7 @@ export default function SessionResultsPodium({
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-200 cursor-pointer ${
                             isSelected 
                               ? 'bg-amber-400 text-slate-900 border-amber-400 font-extrabold shadow-sm scale-105' 
-                              : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                           }`}
                         >
                           <img 
@@ -898,62 +1620,92 @@ export default function SessionResultsPodium({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center pt-4 max-w-sm mx-auto w-full relative z-10 animate-fade-in">
+              <div className="flex flex-col items-center justify-center pt-2 max-w-md mx-auto w-full relative z-10 animate-fade-in">
                 {firstPlace && (() => {
-                  const matchedModel = models.find(m => m.id === firstPlace.userId || m.name.toLowerCase() === firstPlace.name.toLowerCase());
+                  const winnerFundingAmount = prizePerWinner > 0 ? prizePerWinner : (prizeTotal80 > 0 ? prizeTotal80 : 10000);
+                  const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
+
                   return (
-                    <div className="w-full bg-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl relative border-2 border-amber-400/40 overflow-hidden text-center transition-all duration-300 hover:border-amber-400">
-                      {/* Ambient background glow inside the black card */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-                      
-                      {/* Header label with star (no crowns!) */}
-                      <div className="inline-flex items-center gap-1.5 bg-amber-400/10 border border-amber-400/30 px-3.5 py-1 rounded-full text-[10px] font-mono tracking-widest text-amber-400 font-black uppercase mx-auto mb-5">
-                        ✨ INVERSOR LÍDER DE LA EDICIÓN ✨
-                      </div>
+                    <div className="w-full bg-gradient-to-b from-white via-[#fffdfa] to-amber-50/20 border-2 border-amber-300 ring-4 ring-amber-100/40 rounded-3.5xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center space-y-4">
+                      {/* Subtle golden ambient background glow */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-300/15 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-                      {/* Clean High-Fashion circular profile frame */}
-                      <div className="relative mb-5 inline-block">
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-300 to-rose-500 blur-sm scale-105 pointer-events-none animate-pulse" />
-                        <img 
-                          src={firstPlace.avatar} 
-                          alt={firstPlace.name} 
-                          onClick={() => handleNavigateToModelProfile(firstPlace)}
-                          className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover mx-auto border-3 border-amber-400 shadow-xl cursor-pointer hover:scale-105 transition duration-200 relative z-10"
-                          title={`Ver perfil de ${firstPlace.name}`}
-                        />
-                      </div>
-
-                      {/* Name of winner */}
-                      <h4 
-                        onClick={() => handleNavigateToModelProfile(firstPlace)}
-                        className="text-white font-sans font-black text-xl sm:text-2xl tracking-tight hover:text-amber-400 hover:underline cursor-pointer transition-colors block"
-                        title={`Ver perfil de ${firstPlace.name}`}
-                      >
-                        {firstPlace.name}
-                      </h4>
-
-                      {/* Votes info */}
-                      <div className="text-xs text-slate-300 font-extrabold flex items-center justify-center gap-1.5 mt-1.5">
-                        <span className="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
-                        <span>❤️ {firstPlace.votesReceived} votos acumulados</span>
-                      </div>
-
-                      {/* Luxury modern Funding box */}
-                      <div className="mt-6 p-4 sm:p-5 bg-gradient-to-br from-amber-400/10 via-amber-400/5 to-transparent border border-amber-400/25 rounded-2xl">
-                        <span className="text-[10px] font-mono tracking-widest text-amber-400 font-black uppercase block">
-                          FINANCIACIÓN OBTENIDA
-                        </span>
-                        <div className="text-xl sm:text-2xl font-sans font-black text-white block mt-1 tracking-tight">
-                          80,00 €
+                      {/* Top Badge */}
+                      <div className="relative z-10 flex justify-center">
+                        <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-300/70 text-amber-900 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
+                          <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
                         </div>
-                        <p className="text-[9.5px] text-slate-400 block mt-1 uppercase tracking-wide font-semibold leading-relaxed">
-                          Adjudicación única (80% del premio total de la ronda)
+                      </div>
+
+                      {/* Luxury Gold Diamond */}
+                      <div className="relative z-10 flex justify-center pt-1">
+                        <div className="relative inline-flex items-center justify-center">
+                          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 blur-md opacity-60 rounded-full scale-125 animate-pulse pointer-events-none" />
+                          <svg 
+                            className="w-10 h-10 sm:w-12 sm:h-12 relative z-10 filter drop-shadow-[0_2px_8px_rgba(217,119,6,0.35)]" 
+                            viewBox="0 0 64 64" 
+                            fill="none" 
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <polygon points="20,16 44,16 54,26 10,26" fill="url(#goldTopGrad)" stroke="#B45309" strokeWidth="1" />
+                            <polygon points="24,17 40,17 48,25 16,25" fill="#FEF3C7" opacity="0.95" />
+                            <polygon points="10,26 32,54 22,26" fill="#FDE68A" stroke="#B45309" strokeWidth="1" />
+                            <polygon points="22,26 32,54 42,26" fill="#F59E0B" stroke="#B45309" strokeWidth="1" />
+                            <polygon points="42,26 32,54 54,26" fill="#B45309" stroke="#B45309" strokeWidth="1" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Circular creator photo */}
+                      <div className="relative z-10 my-2 flex justify-center">
+                        <div className="relative inline-block">
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 blur-md scale-105 opacity-60 pointer-events-none" />
+                          <img 
+                            src={firstPlace.avatar} 
+                            alt={firstPlace.name} 
+                            onClick={() => handleNavigateToModelProfile(firstPlace)}
+                            className="w-28 h-28 sm:w-34 sm:h-34 rounded-full object-cover mx-auto border-4 border-amber-300 ring-4 ring-amber-50 shadow-xl cursor-pointer hover:scale-105 transition-all duration-300 relative z-10"
+                            title={`Ver perfil de ${firstPlace.name}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Name & votes */}
+                      <div className="space-y-1 relative z-10">
+                        <h4 
+                          className="text-xl sm:text-2xl font-serif font-black text-slate-900 cursor-pointer hover:text-amber-700 transition-colors tracking-tight block"
+                          onClick={() => handleNavigateToModelProfile(firstPlace)}
+                          title={`Ver perfil de ${firstPlace.name}`}
+                        >
+                          {firstPlace.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 font-semibold flex items-center justify-center gap-1.5">
+                          <span className="text-rose-500">❤️</span> 
+                          <span>{firstPlace.votesReceived} votos recibidos</span>
                         </p>
                       </div>
 
-                      {/* Tiny elegant subtitle label */}
-                      <div className="mt-4 text-[9px] font-mono tracking-widest text-slate-500 uppercase font-bold">
-                        DIAMOND ANGEL SELECCIONADA
+                      {/* Divider */}
+                      <div className="border-t border-amber-200/70 my-2 relative z-10" />
+
+                      {/* Funding block */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-50/80 via-white to-amber-50/40 border border-amber-200/90 shadow-xs relative z-10 space-y-1">
+                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-800 block">
+                          FINANCIACIÓN CONSEGUIDA
+                        </span>
+                        <div className="text-3xl sm:text-4xl font-sans font-black text-slate-950 tracking-tight block py-0.5">
+                          {formattedFunding}
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 uppercase tracking-wider font-semibold">
+                          Capital asignado por selección comunitaria
+                        </p>
+                      </div>
+
+                      {/* Position Badge */}
+                      <div className="relative z-10 flex justify-center pt-1">
+                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-4xs">
+                          <span>✦</span> POSICIÓN #1 · SELECCIONADO <span>✦</span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -967,143 +1719,25 @@ export default function SessionResultsPodium({
             </p>
           </div>
 
-          {/* DYNAMIC WINNER SLIDER OR MOSAIC VIEW */}
+          {/* DYNAMIC WINNER CAROUSEL VIEW */}
           {firstPlace && (() => {
-            if (viewMode === 'mosaic' && isMultiWinner) {
-              return (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-amber-500/10 via-amber-50/5 to-amber-500/5 p-4 rounded-2xl border border-amber-300/30">
-                    <div className="text-left space-y-1">
-                      <h4 className="text-xs font-black text-amber-900 tracking-wider font-mono flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                        VISTA COMPARATIVA: MOSAICO DE PROYECTOS EMPATADOS
-                      </h4>
-                      <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                        Explora simultáneamente las 5 iniciativas empresariales creativas que han empatado en primer lugar.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setViewMode('individual')}
-                      className="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 text-[10.5px] font-bold rounded-xl border border-slate-200 shadow-3xs cursor-pointer transition active:scale-95 shrink-0"
-                    >
-                      Ver en Carrusel Individual
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {activeWinnersList.map((winner, idx) => {
-                      const proj = getWinnerFullProject(winner);
-                      const images = getWinnerProjectImages(winner);
-                      const coverImage = images[0] || winner.avatar;
-                      return (
-                        <div 
-                          key={winner.userId || idx}
-                          className="bg-white rounded-3xl border border-pink-100/85 shadow-sm hover:shadow-md hover:border-amber-300 transition-all duration-300 flex flex-col overflow-hidden text-left relative group"
-                        >
-                          {/* Decorative Cover image */}
-                          <div className="h-36 relative overflow-hidden">
-                            <img 
-                              src={coverImage} 
-                              alt={proj.title} 
-                              className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                            
-                            {/* Model Profile Badge overlapping the cover */}
-                            <div 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleNavigateToModelProfile(winner);
-                              }}
-                              className="absolute bottom-3 left-3 flex items-center gap-2 cursor-pointer group/model"
-                              title={`Ver perfil de ${winner.name}`}
-                            >
-                              <img 
-                                src={winner.avatar} 
-                                alt={winner.name} 
-                                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md group-hover/model:scale-105 transition-transform"
-                              />
-                              <div>
-                                <h4 className="text-xs font-black text-white leading-tight drop-shadow-sm group-hover/model:underline">{winner.name}</h4>
-                                <span className="text-[9px] font-mono font-bold text-amber-300 bg-amber-950/40 px-1.5 py-0.5 rounded-md">
-                                  👑 CO-GANADORA ({winner.votesReceived} votos)
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Info section */}
-                          <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                            <div className="space-y-2">
-                              <div>
-                                <span className="inline-block text-[8px] font-black tracking-widest text-[#be185d] bg-pink-100/60 px-2 py-0.5 rounded-full">
-                                  CATEGORÍA: {proj.category.toUpperCase()}
-                                </span>
-                                <h5 className="text-sm sm:text-base font-serif font-black text-slate-900 mt-1 line-clamp-1 group-hover:text-amber-700 transition">
-                                  {proj.title}
-                                </h5>
-                              </div>
-                              
-                              <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 italic">
-                                "{proj.descriptionShort}"
-                              </p>
-
-                              {/* Mini budget stats */}
-                              <div className="grid grid-cols-2 gap-2 pt-1.5">
-                                <div className="bg-slate-50/70 rounded-xl p-2 border border-slate-100">
-                                  <p className="text-[7.5px] text-slate-400 font-bold uppercase tracking-wider">PRESUPUESTO</p>
-                                  <p className="text-xs font-black text-slate-800">{proj.budget.toLocaleString()}€</p>
-                                </div>
-                                <div className="bg-slate-50/70 rounded-xl p-2 border border-slate-100">
-                                  <p className="text-[7.5px] text-slate-400 font-bold uppercase tracking-wider">META FINANCIACIÓN</p>
-                                  <p className="text-xs font-black text-[#be185d]">{proj.fundingGoal ? proj.fundingGoal.toLocaleString() : (proj.budget * 1.3).toLocaleString()}€</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Action Button to Open Full Modal Detail */}
-                            <button
-                              type="button"
-                              onClick={() => setSelectedFullProject(proj)}
-                              className="w-full py-2.5 bg-slate-50 hover:bg-gradient-to-r hover:from-amber-400 hover:to-amber-500 text-slate-700 hover:text-slate-950 border border-slate-200 hover:border-amber-400 font-black text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-3xs"
-                            >
-                              <span>📂 Ver Detalles Completos</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            }
-
-            // Normal Slider Single Winner View
             const winnerProjectImages = getWinnerProjectImages(firstPlace);
             const winnerProject = getWinnerFullProject(firstPlace);
             return (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-pink-100/50 pb-2">
                   <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-slate-800 font-sans flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#fe2c55] animate-pulse" />
-                    {isMultiWinner ? 'GALLERY OF IMAGES FROM THE WINNING PROJECTS' : 'GALLERY OF IMAGES FROM THE WINNING PROJECT'}
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    {isMultiWinner ? 'GALERÍA DE ALTA COSTURA DE LOS PROYECTOS FINANCIADOS' : 'GALERÍA DE ALTA COSTURA DEL PROYECTO FINANCIADO'}
                   </h3>
-                  {isMultiWinner && (
-                    <button
-                      onClick={() => setViewMode('mosaic')}
-                      className="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 text-[10px] font-black uppercase tracking-wider rounded-xl cursor-pointer transition active:scale-95 shadow-3xs flex items-center gap-1.5 shrink-0"
-                    >
-                      <span>📁 VISTA MOSAICO COMPARTIDO</span>
-                    </button>
-                  )}
                 </div>
 
-                {/* INTERACTIVE CAROUSEL SLIDER OF THE 5 WINNING PROJECTS */}
+                {/* INTERACTIVE CAROUSEL SLIDER OF THE WINNING PROJECTS */}
                 {isMultiWinner && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase font-mono">
-                        CARRUSEL DE PROYECTOS GANADORES (SELECCIONA UNO):
+                        CARRUSEL DE PROYECTOS FINANCIADOS (SELECCIONA UNO):
                       </span>
                       <div className="flex items-center gap-1">
                         <button
@@ -1112,7 +1746,7 @@ export default function SessionResultsPodium({
                             const container = document.getElementById('winning-projects-scroller');
                             if (container) container.scrollBy({ left: -260, behavior: 'smooth' });
                           }}
-                          className="w-6 h-6 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-[#fe2c55] border border-slate-200 flex items-center justify-center cursor-pointer transition-all active:scale-90 shadow-4xs"
+                          className="w-6 h-6 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-amber-600 border border-slate-200 flex items-center justify-center cursor-pointer transition-all active:scale-90 shadow-4xs"
                           title="Desplazar a la izquierda"
                         >
                           <ChevronLeft className="w-3.5 h-3.5" />
@@ -1123,7 +1757,7 @@ export default function SessionResultsPodium({
                             const container = document.getElementById('winning-projects-scroller');
                             if (container) container.scrollBy({ left: 260, behavior: 'smooth' });
                           }}
-                          className="w-6 h-6 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-[#fe2c55] border border-slate-200 flex items-center justify-center cursor-pointer transition-all active:scale-90 shadow-4xs"
+                          className="w-6 h-6 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-amber-600 border border-slate-200 flex items-center justify-center cursor-pointer transition-all active:scale-90 shadow-4xs"
                           title="Desplazar a la derecha"
                         >
                           <ChevronRight className="w-3.5 h-3.5" />
@@ -1150,7 +1784,7 @@ export default function SessionResultsPodium({
                               }}
                               className={`flex-none w-64 sm:w-72 snap-start rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-300 relative group flex flex-col justify-end text-left h-40 ${
                                 isSelected
-                                  ? 'border-[#fe2c55] ring-4 ring-rose-500/15 scale-[1.01] shadow-md shadow-rose-500/10'
+                                  ? 'border-amber-400 ring-4 ring-amber-400/20 scale-[1.01] shadow-md shadow-amber-500/10'
                                   : 'border-slate-200/80 hover:border-slate-350 opacity-90 hover:opacity-100'
                               }`}
                             >
@@ -1170,7 +1804,7 @@ export default function SessionResultsPodium({
                                     e.stopPropagation();
                                     handleNavigateToModelProfile(winner);
                                   }}
-                                  className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 hover:bg-rose-900/80 cursor-pointer transition"
+                                  className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 hover:bg-amber-950/80 cursor-pointer transition"
                                   title={`Ver perfil de ${winner.name}`}
                                 >
                                   <img 
@@ -1181,19 +1815,19 @@ export default function SessionResultsPodium({
                                   <span className="text-[9px] text-white font-bold truncate max-w-[120px] hover:underline">{winner.name}</span>
                                 </div>
                                 {isSelected ? (
-                                  <span className="text-[8px] bg-[#fe2c55] text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-xs">
-                                    🏆 SELECCIONADO
+                                  <span className="text-[8px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-xs">
+                                    ✦ SELECCIONADO
                                   </span>
                                 ) : (
-                                  <span className="text-[8px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                    GANADORA
+                                  <span className="text-[8px] bg-amber-100/90 text-amber-900 border border-amber-300/80 font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    FINANCIADO
                                   </span>
                                 )}
                               </div>
 
                               {/* Project info overlay at bottom */}
                               <div className="p-3 relative z-10 space-y-1 mt-auto pointer-events-none">
-                                <span className="inline-block text-[7px] font-black text-rose-300 bg-rose-950/60 backdrop-blur-xs px-1.5 py-0.2 rounded uppercase font-mono">
+                                <span className="inline-block text-[7px] font-black text-amber-300 bg-amber-950/60 backdrop-blur-xs px-1.5 py-0.2 rounded uppercase font-mono">
                                   {proj.category}
                                 </span>
                                 <h4 className="text-xs font-black text-white leading-tight line-clamp-1 group-hover:text-amber-200 transition-colors">
@@ -1218,17 +1852,17 @@ export default function SessionResultsPodium({
                 </div>
 
                 {/* PROJECT SUMMARY AND DETAIL VIEW ACTION (MATCHING imagen.png STYLE) */}
-                <div className="bg-gradient-to-r from-white via-pink-50/20 to-[#fff8f9] border border-pink-200/80 p-5 sm:p-6 rounded-3xl shadow-sm space-y-4 hover:border-pink-300 transition-all text-left">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-pink-100 pb-3">
+                <div className="bg-gradient-to-r from-white via-amber-50/20 to-[#fffdfa] border border-amber-200/80 p-5 sm:p-6 rounded-3xl shadow-sm space-y-4 hover:border-amber-300 transition-all text-left">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-100 pb-3">
                     <div className="space-y-1 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-block text-[8.5px] font-black tracking-widest text-[#be185d] bg-pink-100/70 px-2.5 py-0.5 rounded-full">
-                          🏆 DETALLES DEL PROYECTO SELECCIONADO
+                        <span className="inline-block text-[8.5px] font-black tracking-widest text-amber-900 bg-amber-100/70 px-2.5 py-0.5 rounded-full">
+                          ✦ DETALLES DEL PROYECTO FINANCIADO
                         </span>
                         <button
                           type="button"
                           onClick={() => handleNavigateToModelProfile(firstPlace)}
-                          className="inline-flex items-center gap-1 text-[9px] font-black text-rose-700 hover:text-rose-900 bg-rose-100/80 hover:bg-rose-200 px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                          className="inline-flex items-center gap-1 text-[9px] font-black text-amber-800 hover:text-amber-950 bg-amber-100/80 hover:bg-amber-200 px-2.5 py-0.5 rounded-full transition cursor-pointer"
                           title={`Ver perfil de ${firstPlace?.name}`}
                         >
                           <span>👤 Creadora: <strong>{firstPlace?.name}</strong></span>
@@ -1236,16 +1870,16 @@ export default function SessionResultsPodium({
                       </div>
                       <h4 
                         onClick={() => handleNavigateToModelProfile(firstPlace)}
-                        className="text-base sm:text-lg font-serif font-bold text-slate-900 mt-1 cursor-pointer hover:text-rose-600 transition-colors"
+                        className="text-base sm:text-lg font-serif font-bold text-slate-900 mt-1 cursor-pointer hover:text-amber-700 transition-colors"
                         title={`Ver perfil de ${firstPlace?.name}`}
                       >
                         {winnerProject.title}
                       </h4>
-                      <p className="text-[11px] font-semibold text-rose-600 font-mono">
+                      <p className="text-[11px] font-semibold text-amber-700 font-mono">
                         CATEGORÍA: {winnerProject.category.toUpperCase()}
                       </p>
                     </div>
-                    <div className="bg-[#fffbfc] border border-pink-150 px-3.5 py-2 rounded-xl font-mono text-center shrink-0 self-start sm:self-center">
+                    <div className="bg-[#fffbfc] border border-amber-200/60 px-3.5 py-2 rounded-xl font-mono text-center shrink-0 self-start sm:self-center">
                       <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">PRESUPUESTO</p>
                       <p className="text-xs sm:text-sm font-black text-slate-800">{winnerProject.budget.toLocaleString()}€</p>
                     </div>
@@ -1260,7 +1894,7 @@ export default function SessionResultsPodium({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs py-1">
                     <div className="space-y-1 bg-[#fffcfd]/40 rounded-xl p-3 border border-pink-100/40">
-                      <p className="font-extrabold text-[#be185d] flex items-center gap-1.5">
+                      <p className="font-extrabold text-amber-800 flex items-center gap-1.5">
                         <span className="text-xs">🎯</span> Objetivo Estratégico
                       </p>
                       <p className="text-[11px] text-slate-550 leading-relaxed line-clamp-3">
@@ -1268,7 +1902,7 @@ export default function SessionResultsPodium({
                       </p>
                     </div>
                     <div className="space-y-1 bg-[#fffcfd]/40 rounded-xl p-3 border border-pink-100/40">
-                      <p className="font-extrabold text-[#be185d] flex items-center gap-1.5">
+                      <p className="font-extrabold text-amber-800 flex items-center gap-1.5">
                         <span className="text-xs">📈</span> Plan de Gasto Recomendado
                       </p>
                       <p className="text-[11px] text-slate-550 leading-relaxed line-clamp-3">
@@ -1281,7 +1915,7 @@ export default function SessionResultsPodium({
                     <button
                       type="button"
                       onClick={() => setSelectedFullProject(winnerProject)}
-                      className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 hover:shadow-md text-[#1a1516] border border-pink-300 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-xs flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-50 via-amber-100 to-amber-200 hover:brightness-105 hover:shadow-md text-slate-900 border border-amber-300 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-xs flex items-center justify-center gap-2"
                     >
                       <span>📂 Ver Proyecto Completo</span>
                     </button>
@@ -1291,70 +1925,35 @@ export default function SessionResultsPodium({
             );
           })()}
 
-          {/* COMPONENT: REPARTO DE PREMIOS OFICIAL - VICTORIA ICON STYLE MATCHING zz.png */}
+          {/* COMPONENT: BENEFICIO DE PATROCINADOR (10%) */}
           <div className="bg-gradient-to-r from-pink-50/70 via-white to-pink-50/70 rounded-3xl border border-pink-200 p-5 shadow-sm relative overflow-hidden" id="financial-share-angels">
             <div className="absolute top-0 right-0 py-1 px-3 bg-amber-400 text-slate-950 font-sans tracking-widest font-black text-[9px] uppercase rounded-bl-xl shadow-xs">
-              REPARTO ESTRATÉGICO
+              BENEFICIO DE PATROCINADOR
             </div>
 
-            <div className="flex flex-col gap-4 text-left pt-2">
-              {/* Winner Share Box (80%) */}
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center shrink-0 relative shadow-sm border border-pink-100">
-                  <img
-                    src={firstPlace?.avatar || "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=256"}
-                    alt={firstPlace?.name}
-                    onClick={() => handleNavigateToModelProfile(firstPlace)}
-                    className="w-14 h-14 rounded-full object-cover cursor-pointer hover:scale-105 duration-100 transition border-2 border-rose-400"
-                    title={`Ver perfil de ${firstPlace?.name}`}
-                  />
-                  {/* Copa por fuera del área de la imagen */}
-                  <span className="absolute -top-1.5 -left-1.5 bg-amber-400 border border-amber-300 text-xs w-6 h-6 flex items-center justify-center rounded-full shadow-md z-10 animate-pulse">
-                    🏆
-                  </span>
-                  <span className="absolute -bottom-1 -right-1 bg-rose-600 text-white font-mono font-black text-[9px] px-1.5 py-0.2 rounded-full leading-none z-10">
-                    80%
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-[11px] font-black uppercase tracking-wider text-rose-900 font-sans">
-                    BENEFICIO DEL GANADOR (80%)
-                  </h4>
-                  <p className="text-xs text-slate-600 font-semibold leading-relaxed mt-0.5">
-                    El ganador <strong 
-                      onClick={() => handleNavigateToModelProfile(firstPlace)}
-                      className="text-rose-700 hover:text-rose-500 hover:underline cursor-pointer font-bold inline-flex items-center gap-0.5"
-                      title={`Ver perfil de ${firstPlace?.name}`}
-                    >
-                      {firstPlace?.name} ↗
-                    </strong> obtiene el <strong>80% de los votos efectivos/pozo de la mesa</strong>, embolsando <strong className="text-rose-700">{prizePerWinner.toFixed(2)}€</strong> de recompensa directa en sus finanzas.
-                  </p>
-                </div>
-              </div>
-
-              <div className="h-px w-full bg-pink-200/80" />
-
-              {/* Sponsor Share Box (10%) - Placed at the bottom of this box */}
+            <div className="flex flex-col text-left pt-2">
+              {/* Sponsor Share Box (10%) */}
               {(() => {
-                let sponsorModel = (userProfile?.patrocinadorId && models.find(m => m.id === userProfile.patrocinadorId)) ||
-                  models.find(m => m.name.toLowerCase().includes('alexander') || m.username.includes('alexander')) ||
-                  models.find(m => m.id === 'topm-1') ||
-                  getSponsorForWinner(firstPlace) ||
+                let sponsorModel = models.find(m => m.id === 'topm-1' || m.name.toLowerCase().includes('alexander') || m.username.includes('alexander')) ||
+                  (userProfile?.patrocinadorId && models.find(m => m.id === userProfile.patrocinadorId)) ||
+                  models[1] ||
                   models[0];
                 const sponsorName = sponsorModel?.name || 'Alexander Vance';
+                const sponsorAvatar = sponsorModel?.avatar || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=256";
 
                 return (
                   <div className="flex items-center gap-4 bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/80 shadow-xs">
                     <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center shrink-0 relative shadow-sm border border-amber-250">
                       <img
-                        src={sponsorModel?.avatar || "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=256"}
+                        src={sponsorAvatar}
                         alt={sponsorName}
                         onClick={() => {
                           if (sponsorModel && onSelectModel) {
                             onSelectModel(sponsorModel);
                           }
                         }}
-                        className="w-14 h-14 rounded-full object-cover cursor-pointer hover:scale-105 duration-100 transition"
+                        className="w-14 h-14 rounded-full object-cover cursor-pointer hover:scale-105 duration-100 transition border-2 border-amber-400"
+                        title={`Ver perfil de ${sponsorName} (Patrocinador)`}
                       />
                       {/* Apretón de manos por fuera del área de la imagen */}
                       <span className="absolute -top-1.5 -left-1.5 bg-amber-400 border border-amber-300 text-xs w-6 h-6 flex items-center justify-center rounded-full shadow-md z-10">
@@ -1369,16 +1968,16 @@ export default function SessionResultsPodium({
                         BENEFICIO DE PATROCINADOR (10%)
                       </h4>
                       <p className="text-xs text-slate-600 font-semibold leading-relaxed mt-0.5">
-                        Su Patrocinador oficial, <strong 
+                        La persona que invitó a Adriana Lima a registrarse en esta aplicación, su patrocinador <strong 
                           onClick={() => {
                             if (sponsorModel && onSelectModel) {
                               onSelectModel(sponsorModel);
                             }
                           }}
-                          className="text-amber-800 hover:text-amber-600 hover:underline cursor-pointer font-bold"
+                          className="text-amber-800 hover:text-amber-600 hover:underline cursor-pointer font-bold inline-flex items-center gap-0.5"
                         >
-                          {sponsorName}
-                        </strong>, recibe el <strong>10% por éxito del patrocinio</strong>, equivalente a <strong className="text-amber-800 font-mono">+{(pool * 0.1).toFixed(2)}€</strong>.
+                          {sponsorName} ↗
+                        </strong>, recibe el <strong>10% por éxito del patrocinio</strong>, equivalente a <strong className="text-amber-800 font-mono">+{(pool * 0.1).toFixed(2)}€</strong> de comisión directa.
                       </p>
                     </div>
                   </div>
@@ -1387,13 +1986,22 @@ export default function SessionResultsPodium({
             </div>
           </div>
 
+          {/* 👑 CONTENEDOR DE LA MODELO LÍDER DEL RANKING (MODELO DIAMANTE #1) CON SISTEMA DE DONACIONES Y REGALOS */}
+          <Top1ModelDonationCard
+            models={models}
+            userProfile={userProfile}
+            onSelectModel={onSelectModel}
+            onNavigateToTab={onNavigateToTab}
+          />
 
 
 
-          {/* 🤝 🎖️ NUEVO PÓDIUM COMPLEMENTARIO: SPONSORS DE PATROCINADORES (INVERSORES) */}
-          <div className="bg-gradient-to-b from-stone-50 via-white to-[#fff9fb] p-6 sm:p-10 rounded-3.5xl border border-pink-100 shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-8">
+
+          {/* 🤝 🎖️ NUEVO PÓDIUM COMPLEMENTARIO: SLIDER DE 5 MARCAS PATROCINADORAS */}
+          <div className="bg-gradient-to-b from-stone-50 via-white to-[#fff9fb] p-4 sm:p-8 rounded-3.5xl border border-pink-100 shadow-xl relative overflow-hidden flex flex-col items-center justify-center text-center space-y-6 w-full">
             <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
             
+            {/* Header */}
             <div className="text-center space-y-2 relative z-10 w-full animate-fade-in">
               <span className="px-3.5 py-1 bg-pink-100/70 border border-pink-200 text-rose-700 text-[8.5px] uppercase font-black tracking-[0.2em] rounded-full inline-block">
                 🤝 INVERSORES ESTRATÉGICOS 💎
@@ -1405,315 +2013,324 @@ export default function SessionResultsPodium({
                 EL SPONSOR PRINCIPAL DE LA GALA DE RESULTADOS
               </p>
               <p className="text-[10px] text-slate-500 max-w-md mx-auto pt-1 leading-normal font-sans font-medium">
-                Conglomerado y firma asociada que patrocina oficialmente el capital de inversión de la ronda de hoy.
+                Conglomerado y firmas asociadas que patrocinan oficialmente el capital de inversión de cada una de las modelos ganadoras.
               </p>
+
+              {/* Counter / Info Badges */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <span className="px-3 py-1 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border border-amber-300/60 text-amber-800 text-[9.5px] font-black uppercase tracking-wider rounded-full shadow-3xs flex items-center gap-1.5">
+                  <span>👑</span> {winningBrandsList.length} MARCAS GANADORAS ASOCIADAS A LAS {winningBrandsList.length} CO-GANADORAS
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowBrandAssigner(!showBrandAssigner)}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-900 text-[9px] font-bold uppercase tracking-wider rounded-full shadow-4xs transition cursor-pointer flex items-center gap-1"
+                  title="Permite asignar marcas a cada modelo o verificar marcas idénticas compartidas"
+                >
+                  <span>⚙️</span> Personalizar Patrocinios
+                </button>
+              </div>
             </div>
 
-            {/* Podium layout for corporate sponsors backing top investors */}
-            {resultsSponsors.length === 1 ? (
-              <div className="flex flex-col items-center max-w-sm mx-auto w-full relative z-10 pt-4 group">
-                <div 
-                  onClick={() => handleSponsorClick(resultsSponsors[0])}
-                  className={`border rounded-t-3xl bg-gradient-to-t via-amber-50/10 to-white p-6 pb-5 text-center shadow-md w-full relative transition-all duration-300 hover:shadow-lg cursor-pointer ${resultsSponsors[0].hasExclusivity ? 'border-amber-300 ring-2 ring-amber-300' : 'border-slate-200'}`}
-                >
-                  {resultsSponsors[0].hasExclusivity && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 py-1 px-3 rounded-full border border-amber-400 shadow-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                      <span>🌟</span> CONTRATO DE EXCLUSIVIDAD <span>🌟</span>
-                    </div>
-                  )}
-                  
-                  {/* Initials circle or custom brand logo */}
-                  {resultsSponsors[0].logoUrl ? (
-                    <img 
-                      src={resultsSponsors[0].logoUrl} 
-                      alt={resultsSponsors[0].name} 
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-contain bg-white border-2 border-amber-400 shadow-xl mx-auto transform group-hover:scale-105 transition duration-300 cursor-pointer hover:ring-2 hover:ring-amber-500 p-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSponsorClick(resultsSponsors[0]);
-                      }}
-                      title="Ver Tienda de Balmain Paris"
-                    />
-                  ) : (
-                    <div 
-                      className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center tracking-widest shadow-2xl mx-auto transform group-hover:scale-105 transition duration-300 cursor-pointer hover:ring-2 hover:ring-amber-500 ${resultsSponsors[0].logoStyle || 'bg-[#2a1b18] text-amber-200 border-2 border-amber-400 font-serif font-black text-sm sm:text-base'}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSponsorClick(resultsSponsors[0]);
-                      }}
-                      title="Ver Tienda de Balmain Paris"
-                    >
-                      {resultsSponsors[0].logoInitials || 'EXCL'}
-                    </div>
-                  )}
-                  <span 
-                    className="text-slate-900 font-black text-sm sm:text-base block mt-4 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-amber-600 transition"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSponsorClick(resultsSponsors[0]);
-                    }}
+            {/* Quick Brand Switcher / Assigner Panel (If toggled) */}
+            {showBrandAssigner && (
+              <div className="bg-white/95 backdrop-blur border-2 border-amber-200 p-4 sm:p-5 rounded-2.5xl shadow-md text-left space-y-3 animate-fade-in relative z-20 max-w-xl mx-auto w-full">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900 uppercase font-sans">
+                      Asignación de Marcas Patrocinadoras
+                    </h4>
+                    <p className="text-[9.5px] text-slate-500">
+                      Puedes asignar la misma marca a varias modelos (p. ej. 2 o más marcas idénticas) o firmas independientes.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowBrandAssigner(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition cursor-pointer"
                   >
-                    {resultsSponsors[0].name}
-                  </span>
-                  <span className="text-[8.5px] text-amber-600 font-mono font-bold block mt-1 leading-none uppercase">
-                    {resultsSponsors[0].sector || 'Sponsor Exclusivo'}
-                  </span>
-                  <span className="text-xs text-rose-500 font-black block mt-1.5 font-mono">
-                    € {Number(resultsSponsors[0].amount).toLocaleString()}
-                  </span>
-                </div>
-                {/* Pedestal */}
-                <div 
-                  onClick={() => handleSponsorClick(resultsSponsors[0])}
-                  className="w-full bg-gradient-to-b from-amber-50 to-amber-100 border-x border-b border-amber-200 shadow-inner py-3.5 text-center rounded-b-2xl flex flex-col items-center justify-center min-h-[60px] cursor-pointer hover:bg-amber-100 transition"
-                >
-                  <span className="text-sm font-black text-amber-700">PATROCINADOR EXCLUSIVO GALA 👑</span>
-                </div>
-              </div>
-            ) : resultsSponsors.length === 2 ? (
-              <div className="grid grid-cols-2 gap-4 sm:gap-6 items-end justify-center pt-4 max-w-md mx-auto w-full relative z-10">
-                {/* Left: 2º Sponsor */}
-                <div className="flex flex-col items-center group">
-                  <div className="border border-slate-200 rounded-t-2xl bg-gradient-to-t via-stone-50/50 to-white p-4 pb-3.5 text-center shadow-sm w-full transition-all duration-300 hover:shadow-md">
-                    {resultsSponsors[1].logoUrl ? (
-                      <img 
-                        src={resultsSponsors[1].logoUrl} 
-                        alt={resultsSponsors[1].name} 
-                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-slate-200 shadow-md mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-pink-500"
-                        onClick={() => handleSponsorClick(resultsSponsors[1])}
-                        title="Ver Datos de Contratación"
-                      />
-                    ) : (
-                      <div 
-                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-sans tracking-[0.15em] shadow-lg mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-pink-500 ${resultsSponsors[1].logoStyle || 'bg-[#1e2c1e] text-[#e3ded4] border font-bold text-xs sm:text-sm'}`}
-                        onClick={() => handleSponsorClick(resultsSponsors[1])}
-                        title="Ver Datos de Contratación"
-                      >
-                        {resultsSponsors[1].logoInitials || 'SP2'}
-                      </div>
-                    )}
-                    <span 
-                      className="text-slate-800 font-black text-[10.5px] sm:text-xs block mt-3 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-[#fe2c55] transition"
-                      onClick={() => handleSponsorClick(resultsSponsors[1])}
-                    >
-                      {resultsSponsors[1].name}
-                    </span>
-                    <span className="text-[7.8px] text-slate-400 font-mono font-bold block mt-0.5 leading-none uppercase">
-                      {resultsSponsors[1].sector || 'Patrocinador Oficial'}
-                    </span>
-                    <span className="text-[9.5px] text-[#fe2c55] font-extrabold block mt-1 font-mono">
-                      € {Number(resultsSponsors[1].amount).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gradient-to-b from-[#eaeaea] to-[#dddddd] border-x border-b border-slate-300 shadow-inner py-1.5 text-center rounded-b-xl flex flex-col items-center justify-center min-h-[45px]">
-                    <span className="text-sm font-black text-slate-600">2º</span>
-                  </div>
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
 
-                {/* Right: 1º Sponsor */}
-                <div className="flex flex-col items-center scale-105 z-10 group">
-                  <div className="border border-amber-300 rounded-t-2xl bg-gradient-to-t via-amber-50/20 to-white p-5 pb-4 text-center shadow-md w-full relative transition-all duration-300 hover:shadow-lg">
-                    {resultsSponsors[0].logoUrl ? (
-                      <img 
-                        src={resultsSponsors[0].logoUrl} 
-                        alt={resultsSponsors[0].name} 
-                        className="w-16 h-16 sm:w-18 sm:h-18 rounded-full object-cover border-2 border-amber-400 shadow-xl mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-amber-500"
-                        onClick={() => handleSponsorClick(resultsSponsors[0])}
-                        title="Ver Datos de Contratación"
-                      />
-                    ) : (
-                      <div 
-                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center tracking-widest shadow-2xl mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-amber-500 ${resultsSponsors[0].logoStyle || 'bg-[#2a1b18] text-amber-200 border-2 border-amber-400 font-serif font-black text-xs sm:text-sm'}`}
-                        onClick={() => handleSponsorClick(resultsSponsors[0])}
-                        title="Ver Datos de Contratación"
-                      >
-                        {resultsSponsors[0].logoInitials || 'SP1'}
-                      </div>
-                    )}
-                    <span 
-                      className="text-slate-900 font-black text-[11px] sm:text-xs block mt-3 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-amber-600 transition"
-                      onClick={() => handleSponsorClick(resultsSponsors[0])}
-                    >
-                      {resultsSponsors[0].name}
-                    </span>
-                    <span className="text-[7.8px] text-amber-600 font-mono font-bold block mt-0.5 leading-none uppercase">
-                      {resultsSponsors[0].sector || 'Sponsor Principal'}
-                    </span>
-                    <span className="text-[10px] text-rose-500 font-black block mt-1 font-mono">
-                      € {Number(resultsSponsors[0].amount).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gradient-to-b from-amber-50 to-amber-100/60 border-x border-b border-amber-200 shadow-inner py-2 text-center rounded-b-xl flex flex-col items-center justify-center min-h-[50px]">
-                    <span className="text-sm font-black text-amber-700">1º</span>
-                  </div>
-                </div>
-              </div>
-            ) : resultsSponsors.length === 3 ? (
-              <div className="grid grid-cols-3 gap-3 sm:gap-6 items-end justify-center pt-4 max-w-lg mx-auto w-full relative z-10">
-                {/* 2º PLACE (LEFT): SILVER SPONSOR */}
-                <div className="flex flex-col items-center group">
-                  <div className="border border-pink-100 rounded-t-2xl bg-gradient-to-t via-stone-50 to-white p-4 pb-3.5 text-center shadow-sm w-full transition-all duration-300 hover:shadow-md">
-                    {resultsSponsors[1].logoUrl ? (
-                      <img 
-                        src={resultsSponsors[1].logoUrl} 
-                        alt={resultsSponsors[1].name} 
-                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-slate-200 shadow-md mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-pink-500"
-                        onClick={() => handleSponsorClick(resultsSponsors[1])}
-                        title="Ver Datos de Contratación"
-                      />
-                    ) : (
-                      <div 
-                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-sans tracking-[0.15em] shadow-lg mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-pink-500 ${resultsSponsors[1].logoStyle || 'bg-[#1e2c1e] text-[#e3ded4] border border-[#e3ded4]/20 font-bold text-xs sm:text-sm'}`}
-                        onClick={() => handleSponsorClick(resultsSponsors[1])}
-                        title="Ver Datos de Contratación"
-                      >
-                        {resultsSponsors[1].logoInitials || 'KER'}
-                      </div>
-                    )}
-                    <span 
-                      className="text-slate-800 font-black text-[10.5px] sm:text-xs block mt-3 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-[#fe2c55] transition"
-                      onClick={() => handleSponsorClick(resultsSponsors[1])}
-                    >
-                      {resultsSponsors[1].name}
-                    </span>
-                    <span className="text-[7.8px] text-slate-400 font-mono font-bold block mt-0.5 leading-none uppercase">
-                      {resultsSponsors[1].sector || 'Sponsor de Moda'}
-                    </span>
-                    <span className="text-[9.5px] text-[#fe2c55] font-extrabold block mt-1 font-mono">
-                      € {Number(resultsSponsors[1].amount).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gradient-to-b from-[#eaeaea] to-[#dddddd] border-x border-b border-slate-300 shadow-inner py-1.5 text-center rounded-b-xl flex flex-col items-center justify-center min-h-[45px]">
-                    <span className="text-sm font-black text-slate-600">2º</span>
-                  </div>
-                </div>
-
-                {/* 1º PLACE (CENTER - GOLD): GOLD SPONSOR */}
-                <div className="flex flex-col items-center z-10 scale-105 group">
-                  <div className="border border-amber-300 rounded-t-2xl bg-gradient-to-t via-amber-50/20 to-white p-5 pb-4 text-center shadow-md w-full relative transition-all duration-300 hover:shadow-lg">
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 py-0.5 px-2 rounded-full border border-amber-300 shadow-sm text-[8px] font-black uppercase tracking-wider">
-                      SÓLIDO
-                    </div>
-                    {resultsSponsors[0].logoUrl ? (
-                      <img 
-                        src={resultsSponsors[0].logoUrl} 
-                        alt={resultsSponsors[0].name} 
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-amber-400 shadow-xl mx-auto transform group-hover:scale-110 transition duration-300 animate-[pulse_4s_infinite] cursor-pointer hover:ring-2 hover:ring-amber-500"
-                        onClick={() => handleSponsorClick(resultsSponsors[0])}
-                        title="Ver Datos de Contratación"
-                      />
-                    ) : (
-                      <div 
-                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center tracking-widest shadow-2xl mx-auto transform group-hover:scale-110 transition duration-300 animate-[pulse_3s_infinite] cursor-pointer hover:ring-2 hover:ring-amber-500 ${resultsSponsors[0].logoStyle || 'bg-[#2a1b18] text-amber-200 border-2 border-amber-400 font-serif font-black text-xs sm:text-sm'}`}
-                        onClick={() => handleSponsorClick(resultsSponsors[0])}
-                        title="Ver Datos de Contratación"
-                      >
-                        {resultsSponsors[0].logoInitials || 'LVMH'}
-                      </div>
-                    )}
-                    <span 
-                      className="text-slate-900 font-black text-[11.1px] sm:text-xs block mt-3 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-amber-600 transition"
-                      onClick={() => handleSponsorClick(resultsSponsors[0])}
-                    >
-                      {resultsSponsors[0].name}
-                    </span>
-                    <span className="text-[7.8px] text-amber-600 font-mono font-bold block mt-0.5 leading-none uppercase">
-                      {resultsSponsors[0].sector || 'Patrocinio Titán'}
-                    </span>
-                    <span className="text-[10px] text-rose-500 font-black block mt-1 font-mono">
-                      € {Number(resultsSponsors[0].amount).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gradient-to-b from-amber-50 to-amber-100/60 border-x border-b border-amber-200 shadow-inner py-2 text-center rounded-b-xl flex flex-col items-center justify-center min-h-[55px]">
-                    <span className="text-base font-black text-amber-700">1º</span>
-                  </div>
-                </div>
-
-                {/* 3º PLACE (RIGHT): BRONZE SPONSOR */}
-                <div className="flex flex-col items-center group">
-                  <div className="border border-pink-100 rounded-t-2xl bg-gradient-to-t via-stone-50 to-white p-4 pb-3.5 text-center shadow-sm w-full transition-all duration-300 hover:shadow-md">
-                    {resultsSponsors[2].logoUrl ? (
-                      <img 
-                        src={resultsSponsors[2].logoUrl} 
-                        alt={resultsSponsors[2].name} 
-                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-slate-200 shadow-md mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-pink-500"
-                        onClick={() => handleSponsorClick(resultsSponsors[2])}
-                        title="Ver Datos de Contratación"
-                      />
-                    ) : (
-                      <div 
-                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center tracking-widest shadow-lg mx-auto transform group-hover:scale-105 transition cursor-pointer hover:ring-2 hover:ring-pink-500 ${resultsSponsors[2].logoStyle || 'bg-zinc-900 border border-zinc-800 text-white font-serif font-bold text-[10px] sm:text-xs'}`}
-                        onClick={() => handleSponsorClick(resultsSponsors[2])}
-                        title="Ver Datos de Contratación"
-                      >
-                        {resultsSponsors[2].logoInitials || 'RICH'}
-                      </div>
-                    )}
-                    <span 
-                      className="text-slate-800 font-black text-[10.5px] sm:text-xs block mt-3 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-[#fe2c55] transition"
-                      onClick={() => handleSponsorClick(resultsSponsors[2])}
-                    >
-                      {resultsSponsors[2].name}
-                    </span>
-                    <span className="text-[7.8px] text-slate-400 font-mono font-bold block mt-0.5 leading-none uppercase">
-                      {resultsSponsors[2].sector || 'Sponsor de Lujo'}
-                    </span>
-                    <span className="text-[9.5px] text-[#fe2c55] font-extrabold block mt-1 font-mono">
-                      € {Number(resultsSponsors[2].amount).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gradient-to-b from-[#eaeaea] to-[#dddddd] border-x border-b border-slate-300 shadow-inner py-1.5 text-center rounded-b-xl flex flex-col items-center justify-center min-h-[45px]">
-                    <span className="text-sm font-black text-slate-600">3º</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 items-stretch justify-center pt-4 max-w-4xl mx-auto w-full relative z-10">
-                {resultsSponsors.map((spon, idx) => {
-                  const place = idx + 1;
-                  const isGold = idx === 0;
-                  
-                  return (
-                    <div key={spon.id} className="flex flex-col items-center group">
-                      <div className={`border rounded-t-2xl bg-gradient-to-t via-stone-50 to-white p-4 pb-3.5 text-center shadow-xs w-full transition-all duration-300 hover:shadow-md ${isGold ? 'border-amber-300' : 'border-slate-100'}`}>
-                        {spon.logoUrl ? (
-                          <img 
-                            src={spon.logoUrl} 
-                            alt={spon.name} 
-                            className="w-14 h-14 rounded-full object-cover border-2 border-slate-100 shadow-md mx-auto transform group-hover:scale-105 transition cursor-pointer"
-                            onClick={() => handleSponsorClick(spon)}
-                            title="Ver Datos de Contratación"
-                          />
-                        ) : (
-                          <div 
-                            className={`w-14 h-14 rounded-full flex items-center justify-center font-sans tracking-[0.1em] shadow-xs mx-auto transform group-hover:scale-105 transition cursor-pointer ${spon.logoStyle || 'bg-slate-800 text-white font-bold text-xs'}`}
-                            onClick={() => handleSponsorClick(spon)}
-                            title="Ver Datos de Contratación"
-                          >
-                            {spon.logoInitials || spon.name.substring(0, 3)}
-                          </div>
-                        )}
-                        <span 
-                          className="text-slate-800 font-extrabold text-[11px] block mt-3 truncate uppercase tracking-wider font-sans cursor-pointer hover:text-[#fe2c55] transition"
-                          onClick={() => handleSponsorClick(spon)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {activeWinnersList.map((winner, wIdx) => {
+                    const currentKey = winningBrandsList[wIdx]?.brandKey || 'balmain';
+                    return (
+                      <div key={winner.userId || wIdx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <img src={winner.avatar} alt={winner.name} className="w-6 h-6 rounded-full object-cover border border-rose-300" />
+                          <span className="text-[10px] font-black text-slate-800 truncate">{winner.name}</span>
+                        </div>
+                        <select
+                          value={currentKey}
+                          onChange={(e) => {
+                            setModelBrandOverrides(prev => ({
+                              ...prev,
+                              [winner.userId]: e.target.value,
+                              [winner.name?.toLowerCase()]: e.target.value
+                            }));
+                          }}
+                          className="w-full text-[10px] font-bold text-slate-800 bg-white border border-slate-300 rounded-lg px-2 py-1 focus:ring-1 focus:ring-amber-500 focus:outline-none"
                         >
-                          {spon.name}
-                        </span>
-                        <span className="text-[7.5px] text-slate-400 font-mono font-bold block mt-0.5 leading-none uppercase">
-                          {spon.sector || 'Sponsor de Moda'}
-                        </span>
-                        <span className="text-[9px] text-[#fe2c55] font-extrabold block mt-1 font-mono">
-                          € {Number(spon.amount).toLocaleString()}
-                        </span>
+                          <option value="balmain">BALMAIN PARIS (€ 15.000)</option>
+                          <option value="victorias_secret">VICTORIA'S SECRET SPAIN (€ 25.000)</option>
+                          <option value="loreal">L'ORÉAL GROUP (€ 18.000)</option>
+                          <option value="carolina_herrera">CAROLINA HERRERA ESPAÑA (€ 21.000)</option>
+                          <option value="richemont">RICHEMONT LUXURY SWISS (€ 24.000)</option>
+                          <option value="gucci">GUCCI FIRENZE (€ 16.000)</option>
+                          <option value="versace">VERSACE MILANO (€ 20.000)</option>
+                          <option value="balenciaga">BALENCIAGA RUNWAY (€ 19.000)</option>
+                          <option value="louis_vuitton">LOUIS VUITTON MAISON (€ 26.000)</option>
+                          <option value="ysl">SAINT LAURENT PARIS (€ 17.500)</option>
+                          <option value="hermes">HERMÈS PARIS (€ 28.000)</option>
+                          <option value="couture_elite">COUTURE ELITE BOUTIQUE (€ 23.000)</option>
+                          <option value="chanel">CHANEL PARIS (€ 22.000)</option>
+                          <option value="dior">DIOR PARIS (€ 18.500)</option>
+                          <option value="prada">PRADA MILANO (€ 20.000)</option>
+                        </select>
                       </div>
-                      <div className={`w-full border-x border-b shadow-inner py-1 text-center rounded-b-xl flex flex-col items-center justify-center min-h-[35px] ${isGold ? 'bg-gradient-to-b from-amber-50 to-amber-100/60 border-amber-200 text-amber-700' : 'bg-gradient-to-b from-[#eaeaea] to-[#dddddd] border-slate-200 text-slate-600'}`}>
-                        <span className="text-xs font-black">{place}º</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-[9.5px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Reset to default 5 distinct brands
+                      setModelBrandOverrides({});
+                    }}
+                    className="text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer"
+                  >
+                    Restablecer 5 Marcas Distintas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Example preset: 2 models sponsor Balmain Paris
+                      const newOverrides: Record<string, string> = {};
+                      activeWinnersList.forEach((w, idx) => {
+                        if (idx === 0 || idx === 1) newOverrides[w.userId] = 'balmain';
+                        else if (idx === 2) newOverrides[w.userId] = 'chanel';
+                        else if (idx === 3) newOverrides[w.userId] = 'dior';
+                        else newOverrides[w.userId] = 'gucci';
+                      });
+                      setModelBrandOverrides(newOverrides);
+                    }}
+                    className="text-amber-700 hover:text-amber-900 font-bold underline cursor-pointer"
+                  >
+                    Demostrar Marca Duplicada (2x Balmain)
+                  </button>
+                </div>
               </div>
             )}
+
+            {/* 🌟 5-BRAND INTERACTIVE SLIDER CONTAINER (PERFECTLY CENTERED WITH EMBEDDED VISIBLE ARROWS) */}
+            <div className="relative z-10 w-full max-w-[340px] sm:max-w-sm mx-auto flex flex-col items-center justify-center">
+              
+              {/* Slider Main Stage with navigation buttons */}
+              <div className="w-full relative flex items-center justify-center px-6 sm:px-8">
+                
+                {/* Left navigation arrow - Always visible & centered vertically */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSponsorSliderIndex((prev) => 
+                      (prev - 1 + winningBrandsList.length) % winningBrandsList.length
+                    );
+                  }}
+                  disabled={winningBrandsList.length <= 1}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-600 border-2 border-pink-200 hover:border-amber-400 shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer z-30 ring-2 ring-white/90"
+                  aria-label="Marca anterior"
+                  title="Marca anterior"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                </button>
+
+                {/* Central Featured Brand Card */}
+                <div className="w-full group">
+                  <div 
+                    onClick={() => handleSponsorClick(currentWinningBrand)}
+                    className="border-2 border-amber-300 ring-2 ring-amber-300/40 rounded-t-3.5xl bg-gradient-to-t via-amber-50/15 to-white p-5 sm:p-6 pb-5 text-center shadow-lg relative transition-all duration-300 hover:shadow-xl cursor-pointer"
+                  >
+                    {/* Top Exclusivity Ribbon */}
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 py-1 px-3 sm:px-3.5 rounded-full border border-amber-300 shadow-md text-[8.5px] sm:text-[9px] font-black uppercase tracking-widest flex items-center gap-1 whitespace-nowrap">
+                      <span>🌟</span> CONTRATO DE EXCLUSIVIDAD <span>🌟</span>
+                    </div>
+                    
+                    {/* Brand Circular Logo */}
+                    <div className="mt-2 relative">
+                      {currentWinningBrand.logoUrl ? (
+                        <img 
+                          src={currentWinningBrand.logoUrl} 
+                          alt={currentWinningBrand.name} 
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-contain bg-white border-2 border-amber-400 shadow-xl mx-auto transform group-hover:scale-105 transition duration-300 cursor-pointer hover:ring-2 hover:ring-amber-500 p-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSponsorClick(currentWinningBrand);
+                          }}
+                          title={`Ver Tienda de ${currentWinningBrand.name}`}
+                        />
+                      ) : (
+                        <div 
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center tracking-widest shadow-2xl mx-auto transform group-hover:scale-105 transition duration-300 cursor-pointer hover:ring-2 hover:ring-amber-500 bg-[#2a1b18] text-amber-200 border-2 border-amber-400 font-serif font-black text-sm sm:text-base"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSponsorClick(currentWinningBrand);
+                          }}
+                        >
+                          {currentWinningBrand.name.substring(0, 3)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Brand Name */}
+                    <span 
+                      className="text-slate-900 font-black text-base sm:text-lg block mt-3 truncate uppercase tracking-widest font-sans cursor-pointer hover:text-amber-600 transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSponsorClick(currentWinningBrand);
+                      }}
+                    >
+                      {currentWinningBrand.name}
+                    </span>
+
+                    {/* Sector */}
+                    <span className="text-[8.5px] sm:text-[9.5px] text-amber-600 font-mono font-bold block mt-1 leading-none uppercase tracking-wide truncate">
+                      {currentWinningBrand.sector || 'Patrocinador Exclusivo'}
+                    </span>
+
+                    {/* Sponsoring Winner Badge */}
+                    {currentWinningBrand.modelName && (
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNavigateToModelProfile({
+                            userId: currentWinningBrand.modelUserId,
+                            name: currentWinningBrand.modelName,
+                            avatar: currentWinningBrand.modelAvatar
+                          });
+                        }}
+                        className="mt-3 pt-2.5 border-t border-dashed border-pink-100 flex items-center justify-center gap-1.5 sm:gap-2 group/model cursor-pointer hover:opacity-90 transition"
+                        title={`Ver perfil de la ganadora ${currentWinningBrand.modelName}`}
+                      >
+                        <span className="text-[8.5px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider">Patrocinada por:</span>
+                        <img 
+                          src={currentWinningBrand.modelAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'} 
+                          alt={currentWinningBrand.modelName} 
+                          className="w-5 h-5 rounded-full object-cover border border-rose-300 shadow-4xs shrink-0" 
+                        />
+                        <span className="text-[10px] sm:text-[10.5px] font-black text-rose-900 group-hover/model:underline truncate max-w-[110px]">
+                          {currentWinningBrand.modelName}
+                        </span>
+                        <span className="text-[7.5px] sm:text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full shrink-0">
+                          👑 Co-Ganadora
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pedestal bottom bar */}
+                  <div 
+                    onClick={() => handleSponsorClick(currentWinningBrand)}
+                    className="w-full bg-gradient-to-b from-amber-50 to-amber-100 border-x border-b border-amber-200 shadow-inner py-3 text-center rounded-b-2.5xl flex flex-col items-center justify-center min-h-[52px] cursor-pointer hover:bg-amber-100 transition px-2"
+                  >
+                    <span className="text-xs sm:text-sm font-black text-amber-700 leading-tight">
+                      {currentWinningBrand.pedestalTitle || 'PATROCINADOR EXCLUSIVO GALA 👑'}
+                    </span>
+                  </div>
+
+                  {/* Quick Action Link below pedestal (Single centered button) */}
+                  <div className="flex items-center justify-center pt-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSponsorClick(currentWinningBrand)}
+                      className="w-full max-w-[210px] py-2 bg-slate-950 hover:bg-black text-amber-300 text-[10.5px] font-black uppercase tracking-wider rounded-xl shadow-md transition-all duration-200 hover:scale-102 flex items-center justify-center gap-1.5 cursor-pointer border border-amber-400/30"
+                    >
+                      <span>🛍️</span> Ver Tienda Oficial
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right navigation arrow - Always visible & centered vertically */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSponsorSliderIndex((prev) => 
+                      (prev + 1) % winningBrandsList.length
+                    );
+                  }}
+                  disabled={winningBrandsList.length <= 1}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-600 border-2 border-pink-200 hover:border-amber-400 shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer z-30 ring-2 ring-white/90"
+                  aria-label="Siguiente marca"
+                  title="Siguiente marca"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                </button>
+              </div>
+
+              {/* Slider Pagination Controls */}
+              <div className="flex flex-col items-center justify-center space-y-2 pt-4">
+                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
+                  Marca {activeSponsorIndex + 1} de {winningBrandsList.length}
+                </span>
+
+                {/* Dot indicators */}
+                <div className="flex items-center justify-center gap-2">
+                  {winningBrandsList.map((brand, idx) => (
+                    <button
+                      key={brand.id || idx}
+                      type="button"
+                      onClick={() => setSponsorSliderIndex(idx)}
+                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        idx === activeSponsorIndex
+                          ? 'w-7 bg-amber-500 shadow-xs'
+                          : 'w-2.5 bg-slate-200 hover:bg-slate-300'
+                      }`}
+                      title={`Ir a marca ${brand.name}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Mini Brand Ribbon (Quick selection thumbnails) */}
+              <div className="pt-4 border-t border-dashed border-pink-100 w-full text-center">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
+                  Firmas Ganadoras en la Gala
+                </p>
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
+                  {winningBrandsList.map((brand, idx) => {
+                    const isSelected = idx === activeSponsorIndex;
+                    return (
+                      <div
+                        key={`ribbon-${brand.id || idx}`}
+                        onClick={() => setSponsorSliderIndex(idx)}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-xl cursor-pointer transition border text-left ${
+                          isSelected
+                            ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-300/40 shadow-xs scale-105'
+                            : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600 opacity-70 hover:opacity-100'
+                        }`}
+                        title={`Seleccionar ${brand.name}`}
+                      >
+                        {brand.logoUrl ? (
+                          <img src={brand.logoUrl} alt={brand.name} className="w-5 h-5 rounded-full object-contain bg-white border border-amber-200 shrink-0" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-slate-800 text-white text-[8px] flex items-center justify-center font-bold shrink-0">
+                            {brand.name.substring(0, 2)}
+                          </div>
+                        )}
+                        <div className="leading-none">
+                          <span className="text-[9.5px] font-black text-slate-900 block truncate max-w-[80px]">
+                            {brand.name.split(' ')[0]}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
           </div>
 
 
@@ -1806,9 +2423,13 @@ export default function SessionResultsPodium({
         
         <button
            onClick={() => {
-             setCompletedSessionToDisplay(null);
-             setSimulationLogs([]);
-             setIsCastingPublished(false);
+             if (onFinishParticipationSession) {
+               onFinishParticipationSession();
+             } else {
+               setCompletedSessionToDisplay(null);
+               setSimulationLogs([]);
+               setIsCastingPublished(false);
+             }
            }}
            className="px-5 py-2.5 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 text-black border border-pink-250 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-md"
         >
@@ -1816,10 +2437,10 @@ export default function SessionResultsPodium({
         </button>
       </div>
 
-      {/* FULL WINNING PROJECT DOSSIER MODAL */}
+      {/* FULL WINNING PROJECT DOSSIER MODAL EMBEDDED INSIDE CHANNEL */}
       {selectedFullProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto backdrop-blur-md bg-slate-950/50" id="full-project-dossier-modal">
-          <div className="bg-white border border-pink-200 rounded-3xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden animate-scale-up text-left">
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-2 sm:p-4 sm:p-6 overflow-y-auto backdrop-blur-md bg-slate-950/70 animate-fade-in" id="full-project-dossier-modal">
+          <div className="bg-white border border-pink-200 rounded-3xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[95%] sm:max-h-[90%] overflow-hidden animate-scale-up text-left my-auto">
             
             {/* Modal Header */}
             <div className="p-4 sm:p-6 border-b border-pink-100 bg-[#fffbfc] relative shrink-0">
@@ -2116,7 +2737,7 @@ export default function SessionResultsPodium({
 
       {/* 📜 B2B SPONSORSHIP CONTRACT DETAIL MODAL FOR PODIUM VIEW */}
       {selectedPodiumSponsorDetail && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-950/90 p-2 sm:p-4 animate-fade-in font-sans backdrop-blur-md overflow-y-auto">
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-2 sm:p-4 animate-fade-in font-sans backdrop-blur-md overflow-y-auto">
           <div className="bg-white border-2 border-emerald-300 rounded-3xl w-full max-w-lg p-6 sm:p-8 text-slate-900 space-y-6 shadow-2xl relative my-auto transform scale-100 transition duration-300">
             
             {/* Absolute close button */}
@@ -2209,6 +2830,8 @@ export default function SessionResultsPodium({
               <button
                 onClick={() => {
                   localStorage.setItem('came_from_results_podium', 'true');
+                  const targetStore = selectedPodiumSponsorDetail?.storeId || 'balmain_paris_paloma';
+                  localStorage.setItem('initial_selected_store_id', targetStore);
                   if (completedSessionToDisplay) {
                     try {
                       localStorage.setItem('podium_session_backup', JSON.stringify(completedSessionToDisplay));

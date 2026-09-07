@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.5
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ModelProfile, UserSessionProfile, InvestmentSession, ProjectData, ChatMessage, FinancialMovement } from './types';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { ModelProfile, UserSessionProfile, InvestmentSession, ProjectData, ChatMessage, FinancialMovement, HistoryWonRecord } from './types';
 import { seedInitialData, generateTop100Ranking, RankingModel } from './utils/seedData';
 import { compressAndResizeImage } from './utils/imageCompressor';
 import ModelGrid from './components/ModelGrid';
@@ -13,7 +13,7 @@ import SessionSimulator from './components/SessionSimulator';
 import ProjectForm from './components/ProjectForm';
 import DirectMessageChat from './components/DirectMessageChat';
 import ContactForm from './components/ContactForm';
-import ModelFacebookProfile from './components/ModelFacebookProfile';
+import ModelFacebookProfile, { ProfileIntroAndSponsors } from './components/ModelFacebookProfile';
 import HeartRainOverlay from './components/HeartRainOverlay';
 import PatrocinadosView, { Patrocinado } from './components/PatrocinadosView';
 import SavedProjectsManager from './components/SavedProjectsManager';
@@ -22,6 +22,8 @@ import LandingPage from './components/LandingPage';
 import VictoriaSecretRanking from './components/VictoriaSecretRanking';
 import FashionsFinanceLogo from './components/FashionsFinanceLogo';
 import FashionRankingSlider from './components/FashionRankingSlider';
+import GlobalMobileImageLightbox from './components/GlobalMobileImageLightbox';
+import MobileNavigationMenu from './components/MobileNavigationMenu';
 import { 
   Sparkles, 
   Home, 
@@ -67,32 +69,145 @@ const generateNextUserId = (): string => {
   return formattedId;
 };
 
+const DEFAULT_TOP_10_PHOTOS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=600',
+  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600',
+];
+
+function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
+  const photosList = useMemo(() => {
+    const list: string[] = [];
+    if (model.avatar) list.push(model.avatar);
+    if (model.photos && Array.isArray(model.photos)) {
+      model.photos.forEach(p => {
+        if (p && !list.includes(p)) list.push(p);
+      });
+    }
+    DEFAULT_TOP_10_PHOTOS.forEach(p => {
+      if (list.length < 10 && !list.includes(p)) {
+        list.push(p);
+      }
+    });
+    return list.slice(0, 10);
+  }, [model]);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const prevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev === 0 ? photosList.length - 1 : prev - 1));
+  };
+
+  const nextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev === photosList.length - 1 ? 0 : prev + 1));
+  };
+
+  return (
+    <div className="w-full flex-1 bg-slate-950 rounded-2xl flex items-center justify-center p-3 sm:p-4 relative min-h-[220px] sm:min-h-[260px] md:min-h-[300px] overflow-hidden shadow-inner group">
+      {/* Photo counter badge */}
+      <div className="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[10px] font-mono font-bold flex items-center gap-1.5 border border-white/15 shadow-md select-none">
+        <Camera className="w-3 h-3 text-rose-400" />
+        <span>{currentIndex + 1} / {photosList.length}</span>
+      </div>
+
+      {/* Main image */}
+      <img
+        key={currentIndex}
+        src={photosList[currentIndex]}
+        alt={`${model.name} photo ${currentIndex + 1}`}
+        referrerPolicy="no-referrer"
+        onClick={nextPhoto}
+        className="max-w-full max-h-[26vh] sm:max-h-[30vh] md:max-h-[34vh] lg:max-h-[38vh] object-contain rounded-xl shadow-2xl border border-slate-900/60 transition-all duration-300 animate-fade-in cursor-pointer select-none"
+        title="Haz clic para siguiente foto"
+      />
+
+      {/* Left chevron button */}
+      {photosList.length > 1 && (
+        <button
+          type="button"
+          onClick={prevPhoto}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8.5 h-8.5 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
+          title="Foto anterior"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* Right chevron button */}
+      {photosList.length > 1 && (
+        <button
+          type="button"
+          onClick={nextPhoto}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8.5 h-8.5 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
+          title="Siguiente foto"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* Bottom pagination dots */}
+      {photosList.length > 1 && (
+        <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/15">
+          {photosList.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex(idx);
+              }}
+              className={`h-1.5 rounded-full transition-all duration-200 cursor-pointer ${
+                idx === currentIndex ? 'w-4 bg-rose-500' : 'w-1.5 bg-white/40 hover:bg-white/80'
+              }`}
+              title={`Ver foto ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   // --- Persistent State Hooks ---
   const [models, setModels] = useState<ModelProfile[]>(() => {
     try {
       const raw = localStorage.getItem('coll_models');
-      const version = localStorage.getItem('db_version_v8');
+      const version = localStorage.getItem('db_version_v12');
       if (raw && version === 'true') {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 100) return parsed;
       }
     } catch (e) {}
     const seed = seedInitialData();
     localStorage.setItem('coll_models', JSON.stringify(seed.models));
-    localStorage.setItem('db_version_v8', 'true');
+    localStorage.setItem('db_version_v12', 'true');
     return seed.models;
   });
 
   const [userProfile, setUserProfile] = useState<UserSessionProfile | null>(() => {
     try {
       const raw = localStorage.getItem('coll_userProfile');
-      const version = localStorage.getItem('db_version_v8');
+      const version = localStorage.getItem('db_version_v9');
       if (raw && version === 'true') {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.id && parsed.role) {
+          const avatarUrl = (!parsed.avatar || parsed.avatar.includes('photo-1507003211169-0a1dd7228f2d'))
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
+            : parsed.avatar;
           return {
             ...parsed,
+            name: parsed.name === 'Ernesto vs' || parsed.name === 'Ernesto VS' ? 'Adriana Lima' : parsed.name,
+            avatar: avatarUrl,
             balance: typeof parsed.balance === 'number' && !isNaN(parsed.balance) ? parsed.balance : (parsed.role === 'investor' ? 100.00 : 0.00),
             totalEarnings: typeof parsed.totalEarnings === 'number' && !isNaN(parsed.totalEarnings) ? parsed.totalEarnings : 0.00,
             totalInvested: typeof parsed.totalInvested === 'number' && !isNaN(parsed.totalInvested) ? parsed.totalInvested : 0.00,
@@ -104,7 +219,7 @@ export default function App() {
     } catch (e) {}
     const seed = seedInitialData();
     localStorage.setItem('coll_userProfile', JSON.stringify(seed.userProfile));
-    localStorage.setItem('db_version_v8', 'true');
+    localStorage.setItem('db_version_v9', 'true');
     return seed.userProfile;
   });
 
@@ -137,7 +252,29 @@ export default function App() {
           const hasInvestors = parsed.some((s: InvestmentSession) => s.id === 'sess-investors');
           const hasMillionaires = parsed.some((s: InvestmentSession) => s.id === 'sess-millionaires');
           if (hasWorkers && hasEntrepreneurs && hasBusinessmen && hasTopModels && hasInvestors && hasMillionaires) {
-            return parsed;
+            const updated = parsed.map((s: InvestmentSession) => {
+              if (s.id === 'sess-workers' || s.entryFee === 10 || (s.title && s.title.toLowerCase().includes('trabajad'))) {
+                return { ...s, title: 'Round STREETWEAR & URBAN' };
+              }
+              if (s.id === 'sess-entrepreneurs' || s.entryFee === 100 || (s.title && (s.title.toLowerCase().includes('bronce') || s.title.toLowerCase().includes('emprend')))) {
+                return { ...s, title: 'Round CASUAL & LIFESTYLE' };
+              }
+              if (s.id === 'sess-businessmen' || s.entryFee === 1000 || (s.title && (s.title.toLowerCase().includes('acero') || s.title.toLowerCase().includes('empresar')))) {
+                return { ...s, title: 'Ronda Glamour ✨' };
+              }
+              if (s.id === 'sess-topmodels' || s.entryFee === 10000 || (s.title && (s.title.toLowerCase().includes('model') || s.title.toLowerCase().includes('oro') || s.title.toLowerCase().includes('classic') || s.title.toLowerCase().includes('elegant')))) {
+                return { ...s, title: 'Ronda Elegant & Classic 🤍' };
+              }
+              if (s.id === 'sess-investors' || s.entryFee === 100000 || (s.title && (s.title.toLowerCase().includes('invers') || s.title.toLowerCase().includes('rosa')))) {
+                return { ...s, title: 'Ronda High Fashion 👠' };
+              }
+              if (s.id === 'sess-millionaires' || s.entryFee === 1000000 || (s.title && (s.title.toLowerCase().includes('millonar') || s.title.toLowerCase().includes('platino')))) {
+                return { ...s, title: 'Ronda High Fashion 👠' };
+              }
+              return s;
+            });
+            localStorage.setItem('coll_sessions', JSON.stringify(updated));
+            return updated;
           }
         }
       }
@@ -173,7 +310,7 @@ export default function App() {
     return seed.movements;
   });
 
-  const [historyWonLog, setHistoryWonLog] = useState<{ id: string; title: string; prize: number; date: string }[]>(() => {
+  const [historyWonLog, setHistoryWonLog] = useState<{ id: string; title: string; prize: number; date: string; projectId?: string; projectName?: string }[]>(() => {
     try {
       const raw = localStorage.getItem('coll_historyLog');
       const version = localStorage.getItem('db_version_v8');
@@ -182,7 +319,7 @@ export default function App() {
       }
     } catch (e) {}
     const initialLog = [
-      { id: 'sess-old-1', title: 'Sesión Emprendedores - Genesis R1', prize: 80.00, date: '2026-05-30T16:00:00Z' }
+      { id: 'sess-old-1', title: 'Sesión Emprendedores - Genesis R1', prize: 80.00, date: '2026-05-30T16:00:00Z', projectId: 'proj-1', projectName: 'Eco-Fashion Runway' }
     ];
     localStorage.setItem('coll_historyLog', JSON.stringify(initialLog));
     return initialLog;
@@ -192,11 +329,11 @@ export default function App() {
 
   const [top100Rankings, setTop100Rankings] = useState<{ females: RankingModel[], males: RankingModel[] }>(() => {
     const cache = localStorage.getItem('coll_top_100_ranking');
-    const currentDbVersion = localStorage.getItem('db_version_v8');
+    const currentDbVersion = localStorage.getItem('db_version_v12');
     if (cache && currentDbVersion === 'true') {
       try {
         const parsed = JSON.parse(cache);
-        if (parsed && Array.isArray(parsed.females) && Array.isArray(parsed.males)) {
+        if (parsed && Array.isArray(parsed.females) && Array.isArray(parsed.males) && (parsed.females.length + parsed.males.length >= 100)) {
           return parsed;
         }
       } catch (e) {
@@ -223,7 +360,15 @@ export default function App() {
   const [patrocinadosList, setPatrocinadosList] = useState<Patrocinado[]>(() => {
     try {
       const raw = localStorage.getItem('coll_patrocinados');
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed: Patrocinado[] = JSON.parse(raw);
+        return parsed.map(p => {
+          if (p.avatar && p.avatar.includes('1524504388940-b1c1722553e1')) {
+            return { ...p, avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' };
+          }
+          return p;
+        });
+      }
     } catch (e) {}
     const defaultPatrocinados: Patrocinado[] = [
       {
@@ -280,7 +425,7 @@ export default function App() {
         id: 'pat-5',
         name: 'Valeria Russo',
         username: 'val_russo',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
         role: 'model',
         registeredAt: '5 de jun. 2026',
         earningsGenerated: 0.00,
@@ -410,7 +555,7 @@ export default function App() {
         id: 'friend-5',
         name: 'Elena Rostova',
         username: 'elenarostova',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=200',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
         role: 'model',
         bio: 'Estilo de vida, moda urbana e innovación sostenible.',
         online: false,
@@ -461,7 +606,7 @@ export default function App() {
         id: 'fol-4',
         name: 'Elena Rostova',
         username: 'elenarostova',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=200',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
         role: 'model',
         bio: 'Estilo de vida, moda urbana e innovación sostenible.',
         online: false,
@@ -529,6 +674,45 @@ export default function App() {
     window.addEventListener('ranking_videos_updated', handleSyncRankings);
     return () => {
       window.removeEventListener('ranking_videos_updated', handleSyncRankings);
+    };
+  }, []);
+
+  // Sync user profile, movements and wallet balance from external events (e.g. gifts and donations sent from ranking/cards/live)
+  useEffect(() => {
+    const handleProfileSync = () => {
+      try {
+        const rawUser = localStorage.getItem('coll_userProfile');
+        if (rawUser) {
+          const parsed = JSON.parse(rawUser);
+          if (parsed && parsed.id) {
+            setUserProfile(prev => ({
+              ...(prev || parsed),
+              ...parsed
+            }));
+          }
+        }
+        const rawMovements = localStorage.getItem('coll_movements');
+        if (rawMovements) {
+          const parsedMov = JSON.parse(rawMovements);
+          if (Array.isArray(parsedMov)) {
+            setMovements(parsedMov);
+          }
+        }
+      } catch (e) {
+        console.error("Error syncing profile & movements in App:", e);
+      }
+    };
+
+    window.addEventListener('user-profile-updated', handleProfileSync);
+    window.addEventListener('wallet-updated', handleProfileSync);
+    window.addEventListener('movements-updated', handleProfileSync);
+    window.addEventListener('storage', handleProfileSync);
+
+    return () => {
+      window.removeEventListener('user-profile-updated', handleProfileSync);
+      window.removeEventListener('wallet-updated', handleProfileSync);
+      window.removeEventListener('movements-updated', handleProfileSync);
+      window.removeEventListener('storage', handleProfileSync);
     };
   }, []);
 
@@ -1077,12 +1261,16 @@ export default function App() {
     if (!userProfile) return;
     let nextHistory = historyWonLog;
     if (won) {
+      const userPart = completedSess.participants?.find(p => p.userId === userProfile.id || p.name === userProfile.name);
+      const matchedProj = userPart?.projectId ? projects.find(pr => pr.id === userPart.projectId) : projects[0];
       nextHistory = [
         {
           id: completedSess.id,
           title: completedSess.title,
           prize: totalPrize,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          projectId: matchedProj?.id || 'proj-1',
+          projectName: matchedProj?.title || 'Eco-Fashion Runway'
         },
         ...historyWonLog
       ];
@@ -1358,7 +1546,7 @@ export default function App() {
       setEditShareEmail(modelUser.shareEmail !== false);
 
       saveStateToLocalStorage(models, modelUser, projects, sessions, messages, movements);
-      setActiveTabTab('home');
+      setActiveTabTab('profile');
       alert(`Sesión iniciada como ${targetModel.name} (Modelo #1). Accede a tu Perfil para subir fotos al feed o al Chat para comunicarte con tus patrocinados.`);
     }
   };
@@ -1707,7 +1895,7 @@ export default function App() {
     const landingPageMales = combinedRankedModels.filter(m => m.gender === 'male');
 
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between w-full max-w-full overflow-x-hidden overflow-y-auto">
         <LandingPage
           models={models}
           topFemales={landingPageFemales}
@@ -2490,14 +2678,7 @@ export default function App() {
 
               {/* LEFT: Image Stage (Vignette container) */}
               <div className="md:w-[55%] bg-slate-50 flex flex-col justify-between items-center p-5 relative min-h-[300px] sm:min-h-[360px] md:h-[450px] lg:h-[550px] overflow-y-auto">
-                <div className="w-full flex-1 bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative min-h-[180px] sm:min-h-[220px] overflow-hidden shadow-inner">
-                  <img 
-                    src={selectedModelForExpandedView.avatar} 
-                    alt={selectedModelForExpandedView.name}
-                    referrerPolicy="no-referrer"
-                    className="max-w-full max-h-[26vh] sm:max-h-[30vh] md:max-h-[34vh] lg:max-h-[38vh] object-contain rounded-xl shadow-2xl border border-slate-900/60"
-                  />
-                </div>
+                <ExpandedModelPhotoSlider model={selectedModelForExpandedView} />
 
                 {/* Redes Sociales outside the image area (in the light area) */}
                 <div className="w-full mt-4 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm z-10">
@@ -2547,6 +2728,25 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Call to action: Elegir como Patrocinador (Located below Official Social Media) */}
+                <div className="w-full mt-4 flex flex-col items-center gap-2 z-10 pt-3 border-t border-slate-200/80">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRegSponsorId(selectedModelForExpandedView.id);
+                      setSelectedModelForExpandedView(null);
+                      setShowRegisterModal(true);
+                    }}
+                    className="w-full max-w-md py-2.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-extrabold text-xs uppercase tracking-widest rounded-2xl shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <UserPlus2 className="w-4 h-4 text-rose-500" />
+                    <span>Elegir como Patrocinador</span>
+                  </button>
+                  <p className="text-[9.5px] text-slate-400 text-center font-sans max-w-sm leading-tight">
+                    Al elegir a {selectedModelForExpandedView.name}, se pre-seleccionará automáticamente en tu formulario de registro.
+                  </p>
                 </div>
               </div>
 
@@ -2615,27 +2815,6 @@ export default function App() {
                       <span className="block text-xs font-bold text-slate-800 font-mono mt-0.5">{(selectedModelForExpandedView.totalLikes).toLocaleString()} votos</span>
                     </div>
                   </div>
-
-
-                </div>
-
-                {/* Call to action (Elegir patrocinador & registrarse) */}
-                <div className="p-4 bg-slate-50/80 border-t border-slate-150 flex flex-col gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRegSponsorId(selectedModelForExpandedView.id);
-                      setSelectedModelForExpandedView(null);
-                      setShowRegisterModal(true);
-                    }}
-                    className="max-w-xs w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl shadow-xs hover:shadow-md transition cursor-pointer flex items-center justify-center gap-2 mx-auto"
-                  >
-                    <UserPlus2 className="w-3.5 h-3.5 text-white" />
-                    <span>Elegir como Patrocinador</span>
-                  </button>
-                  <p className="text-[9px] text-slate-400 text-center font-sans">
-                    Al elegir a {selectedModelForExpandedView.name}, se pre-seleccionará automáticamente en tu formulario de registro.
-                  </p>
                 </div>
 
               </div>
@@ -2650,7 +2829,7 @@ export default function App() {
   const userSponsor = models.find(m => m.id === userProfile.patrocinadorId);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden overflow-y-auto select-none">
       <HeartRainOverlay />
       
       {showVictoriaSecretRanking && (
@@ -2664,12 +2843,20 @@ export default function App() {
             setActiveTabTab('home');
             setShowVictoriaSecretRanking(false);
           }}
+          onNavigateToStore={(storeId) => {
+            setShowVictoriaSecretRanking(false);
+            localStorage.setItem('came_from_profile_sponsor', 'true');
+            localStorage.setItem('previous_tab_before_sponsor', activeTab);
+            setInitialSelectedStoreId(storeId);
+            setPreviousTab(activeTab);
+            setActiveTabTab('casting_live');
+          }}
         />
       )}
 
 
       {/* PRIMARY HEADER BRANDING */}
-      <header className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-[100] shrink-0 shadow-sm">
+      <header className="bg-white border-b border-slate-100 py-2 sm:py-4 px-3 sm:px-6 sticky top-0 z-[100] shrink-0 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <FashionsFinanceLogo mode="light" className="w-10 h-10" />
@@ -2734,9 +2921,9 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER TABS WRAPPER */}
-      <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-1 flex flex-col lg:flex-row gap-6">
+      <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 max-md:p-3 flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         {/* LEFT NAV PANEL - Styled with high contrast and desktop responsiveness */}
-        <aside className="lg:w-64 shrink-0 flex flex-col gap-4">
+        <aside className="lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden">
           {/* User profile segment */}
           <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs space-y-3">
             <div className="flex items-center gap-3">
@@ -2899,11 +3086,60 @@ export default function App() {
             </button>
           </nav>
 
+          {/* Container of Information Intro and Companies I Sponsor - Desktop view directly below Cerrar Sesión button */}
+          <div className="hidden lg:block">
+            <ProfileIntroAndSponsors
+              userProfile={selectedModelForView ? {
+                id: selectedModelForView.id,
+                name: selectedModelForView.name,
+                username: selectedModelForView.username,
+                role: 'model',
+                bio: selectedModelForView.bio,
+                avatar: selectedModelForView.avatar
+              } : userProfile}
+              onNavigateToTab={(tab, targetStoreId) => {
+                if (targetStoreId) {
+                  localStorage.setItem('came_from_profile_sponsor', 'true');
+                  localStorage.setItem('previous_tab_before_sponsor', activeTab);
+                  setInitialSelectedStoreId(targetStoreId);
+                }
+                setPreviousTab(activeTab);
+                setActiveTabTab(tab);
+              }}
+              onOpenRanking={() => setShowVictoriaSecretRanking(true)}
+              models={models}
+              onSelectModel={(mod) => {
+                setSelectedModelForView(mod);
+                setModelViewSourceTab('ranking');
+                setActiveTabTab('home');
+              }}
+            />
+          </div>
+
 
         </aside>
 
         {/* RIGHT MASTER DETAIL CONTENT VIEWPORT */}
-        <section className="flex-1 flex flex-col gap-6" id="master-viewport">
+        <section className="flex-1 flex flex-col gap-6 min-w-0 max-w-full overflow-x-hidden" id="master-viewport">
+          {/* 📱 MOBILE NAVIGATION MENU (image.png) - Visible across all tabs on mobile view */}
+          <MobileNavigationMenu
+            activeTab={activeTab}
+            userRole={userProfile.role}
+            onNavigateToTab={(tab) => {
+              if (tab === 'home') {
+                setSelectedModelForView(null);
+                setModelViewSourceTab(null);
+              }
+              setActiveTabTab(tab as any);
+            }}
+            onLogout={handleLogout}
+            selectedModelForView={selectedModelForView}
+            onResetSelectedModel={() => {
+              setSelectedModelForView(null);
+              setModelViewSourceTab(null);
+            }}
+          />
+
           {activeTab === 'home' && (
             selectedModelForView ? (
               <div className="space-y-4 animate-fade-in">
@@ -2957,10 +3193,13 @@ export default function App() {
                   realLoggedInUser={userProfile || undefined}
                   onOpenRanking={() => setShowVictoriaSecretRanking(true)}
                   onNavigateToTab={(tab, targetStoreId) => {
-                    setActiveTabTab(tab);
                     if (targetStoreId) {
+                      localStorage.setItem('came_from_profile_sponsor', 'true');
+                      localStorage.setItem('previous_tab_before_sponsor', activeTab);
                       setInitialSelectedStoreId(targetStoreId);
                     }
+                    setPreviousTab(activeTab);
+                    setActiveTabTab(tab);
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
                   onGoToModelProfile={(modelId, modelObj) => {
@@ -2991,6 +3230,7 @@ export default function App() {
                   }}
                   initialSocialModal={profileSocialModalState}
                   onSocialModalChange={setProfileSocialModalState}
+                  onLogout={handleLogout}
                 />
               </div>
             ) : userProfile && userProfile.role === 'model' ? (
@@ -3038,6 +3278,7 @@ export default function App() {
                   }}
                   initialSocialModal={profileSocialModalState}
                   onSocialModalChange={setProfileSocialModalState}
+                  onLogout={handleLogout}
                 />
               </div>
             ) : (
@@ -3076,6 +3317,7 @@ export default function App() {
                   }}
                   initialSocialModal={profileSocialModalState}
                   onSocialModalChange={setProfileSocialModalState}
+                  onLogout={handleLogout}
                 />
               </div>
             )
@@ -3196,345 +3438,7 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'profile' && userProfile.role === 'model' && (
-            <div className="space-y-8 animate-fade-in text-slate-800">
-              {/* Premium Header Card */}
-              <div className="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-650/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="space-y-2 max-w-2xl select-none text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-black tracking-widest px-2.5 py-1 rounded-md uppercase flex items-center gap-1">
-                      <Award className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                      <span>SALA DE LA FAMA</span>
-                    </span>
-                    <span className="bg-slate-800 text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
-                      Global Elite
-                    </span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-display font-medium tracking-tight text-white flex items-center gap-2">
-                    Podio de Modelos <span className="text-indigo-400 font-bold font-mono">TOP 100</span>
-                  </h2>
-                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                    Visualiza la élite internacional de creadores registrados en Fashion Finances. Desliza horizontalmente para explorar el ranking de 50 mujeres y 50 hombres que lideran las tendencias mundiales.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 w-full md:w-auto items-center md:items-end">
-                  <div className="bg-slate-950 px-4 py-3 rounded-xl border border-slate-800 text-center sm:text-left shrink-0 w-full md:w-[220px]">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block tracking-wider">Total Modelos</span>
-                    <span className="text-xl font-bold font-mono text-indigo-400">100 Creadores</span>
-                  </div>
-                  <button
-                    onClick={() => setShowVictoriaSecretRanking(true)}
-                    className="bg-[#FDFBF7] hover:bg-[#F9F5EC] text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_20px_-4px_rgba(211,180,112,0.3)] hover:shadow-[0_8px_30px_-4px_rgba(211,180,112,0.4)] transition-all duration-300 flex items-center justify-center py-2.5 px-6 gap-0 shrink-0 w-full md:w-auto cursor-pointer group active:scale-[0.98]"
-                    id="btn-victoria-secret-ranking"
-                  >
-                    {/* Beautiful Elegant Crown SVG on the left */}
-                    <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                      <svg className="w-12 h-9 text-[#B4975A] fill-current" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-                        {/* Crown base */}
-                        <path d="M22,48 L78,48 L75,44 L25,44 Z" fill="#B4975A" />
-                        <rect x="20" y="49" width="60" height="3.5" fill="#8E7238" rx="1" />
-                        
-                        {/* Elegant fleur-de-lis / curve design spikes */}
-                        <path 
-                          d="M 21.5 43 
-                             C 11 31, 23 23, 27 26 
-                             C 33 20, 36 32, 40 35 
-                             C 43.5 10, 50 13, 50 13 
-                             C 50 13, 56.5 10, 60 35 
-                             C 64 32, 67 20, 73 26 
-                             C 77 23, 89 31, 78.5 43 
-                             Z" 
-                          fill="#B4975A" 
-                        />
-                        
-                        {/* Dark overlay curves for elegant depth shadow */}
-                        <path 
-                          d="M 50 13 
-                             C 44 24, 44 36, 50 43 
-                             C 56 36, 56 24, 50 13 
-                             Z" 
-                          fill="#8E7238" 
-                        />
-                        
-                        {/* Elegant fleur curls details */}
-                        <path d="M46.5,21 C43,24 40,21 38,18 C42,19 47,25 48.5,31 Z M53.5,21 C57,24 60,21 62,18 C58,19 53,25 51.5,31 Z" fill="#B4975A" />
-                        <path d="M50,11.5 C48,20 43,28 43,34 C43,43 57,43 57,34 C57,28 52,20 50,11.5 Z" fill="#B4975A" stroke="#705625" strokeWidth="0.5" />
-                        
-                        {/* Shiny pearl circular jewels on the tips */}
-                        <circle cx="17.5" cy="28.5" r="2" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                        <circle cx="28.5" cy="20.5" r="1.8" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                        <circle cx="50" cy="9.5" r="2.5" fill="#FFF" stroke="#B4975A" strokeWidth="1.2" />
-                        <circle cx="71.5" cy="20.5" r="1.8" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                        <circle cx="82.5" cy="28.5" r="2" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                        
-                        {/* Inset diamonds cutout on base */}
-                        <polygon points="30,46.5 32,44.5 30,42.5 28,44.5" fill="#FFF" />
-                        <polygon points="40,46.5 42,44.5 40,42.5 38,44.5" fill="#FFF" />
-                        <polygon points="50,46.5 52,44.5 50,42.5 48,44.5" fill="#FFF" />
-                        <polygon points="60,46.5 62,44.5 60,42.5 58,44.5" fill="#FFF" />
-                        <polygon points="70,46.5 72,44.5 70,42.5 68,44.5" fill="#FFF" />
-                      </svg>
-                    </div>
-
-                    {/* Vintage separator line */}
-                    <div className="h-6 w-[1.5px] bg-[#D3B470]/60 mx-4" />
-
-                    {/* Serif elegant title text exactly as in ChatGPT image 10 jun */}
-                    <span className="font-serif text-base sm:text-lg font-bold text-[#B4975A] tracking-[0.25em] select-none text-center">
-                      RANKING
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* SLIDER 1: MUJERES */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between select-none">
-                  <div className="space-y-0.5 text-left">
-                    <h3 className="text-base sm:text-lg font-bold font-display text-slate-900 flex items-center gap-2">
-                      <span className="bg-rose-500 text-white w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono">F</span>
-                      <span>Modelos Femeninas</span>
-                    </h3>
-                    <p className="text-[11px] text-slate-500 font-medium">Rankings ordenados por popularidad global de mecenas y votos.</p>
-                  </div>
-                </div>
-
-                <FashionRankingSlider
-                  models={top100Rankings.females}
-                  gender="female"
-                  onModelClick={handleRankingModelClick}
-                />
-              </div>
-
-              <div className="hidden">
-                <div className="relative group">
-
-                  {/* Horizontal flow container without scrollbars */}
-                  <div
-                    ref={womenSliderRef}
-                    className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                  >
-                  {top100Rankings.females.map((model, idx) => {
-                    const isPodium = idx < 3;
-                    const podiumBg = idx === 0 
-                      ? 'border-amber-400 text-amber-400 bg-amber-950/80' 
-                      : idx === 1 
-                        ? 'border-slate-300 text-slate-300 bg-slate-800/80' 
-                        : 'border-amber-700 text-amber-700 bg-amber-900/80';
-
-                    return (
-                      <div
-                        key={model.id}
-                        className="snap-start shrink-0 w-44 sm:w-52 bg-slate-950 text-white rounded-2xl border border-slate-900 overflow-hidden relative shadow-md transition hover:-translate-y-1 hover:border-indigo-500/40 group flex flex-col justify-between"
-                      >
-                        {/* Photo Box */}
-                        <div
-                          onClick={() => handleRankingModelClick(model)}
-                          className="relative h-48 sm:h-56 overflow-hidden shrink-0 bg-slate-950 cursor-pointer text-left"
-                          title={`Ver perfil de ${model.name}`}
-                        >
-                          <img
-                            src={model.avatar}
-                            alt={model.name}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                          
-                          {/* Rank badge */}
-                          <div className={`absolute top-2 left-2 backdrop-blur-md border font-extrabold font-mono text-[9px] sm:text-[10px] py-1 px-2 rounded-lg z-10 flex items-center gap-1 shadow-md ${isPodium ? podiumBg : 'border-slate-800 text-slate-400 bg-slate-950/70'}`}>
-                            {idx === 0 && '👑 '}
-                            <span>#{idx + 1}</span>
-                          </div>
-
-                          {/* Online indicator */}
-                          {model.isOnline && (
-                            <span className="absolute top-2.5 right-2 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white shadow-md animate-pulse z-10" />
-                          )}
-
-                          {/* Status Badge */}
-                          {model.statusText && (
-                            <div className="absolute bottom-2 left-2 bg-slate-950/80 text-indigo-400 text-[8px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded border border-indigo-500/20 backdrop-blur-xs select-none">
-                              {model.statusText}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Text and stats */}
-                        <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
-                          <div className="space-y-0.5 text-left">
-                            <h4 
-                              onClick={() => handleRankingModelClick(model)}
-                              className="font-display font-semibold text-xs sm:text-sm text-slate-100 truncate group-hover:text-indigo-400 transition-colors cursor-pointer"
-                              title={`Ver perfil de ${model.name}`}
-                            >
-                              {model.name}
-                            </h4>
-                            <span className="text-[9px] text-slate-500 font-mono block">@{model.username}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-semibold uppercase">
-                            <Users className="w-3 h-3 text-slate-500 hover:scale-105 transition" />
-                            <span>{(model.followersCount || 0).toLocaleString()} followers</span>
-                          </div>
-
-                          {/* Interactive Footer */}
-                          <div className="flex items-center gap-2 border-t border-slate-900 pt-2 mt-1">
-                            {/* Like vote */}
-                            <button
-                              onClick={() => handleLikeRankingModel(model.id, 'female')}
-                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-900 hover:bg-rose-950/40 text-rose-400 rounded-lg text-[10px] font-bold cursor-pointer select-none border border-slate-900 hover:border-rose-900/50 transition duration-150"
-                            >
-                              <Heart className="w-2.5 h-2.5 fill-current shrink-0 active:scale-130 transition-transform" />
-                              <span>{model.totalLikes.toLocaleString()}</span>
-                            </button>
-
-                            {/* Chat interaction */}
-                            <button
-                              onClick={() => {
-                                const matched = models.find(m => m.name === model.name);
-                                handleLaunchChatWithModel(matched ? matched.id : 'model-1');
-                              }}
-                              title="Enviar mensaje privado"
-                              className="text-indigo-400 hover:text-white bg-slate-900 hover:bg-slate-850 p-1.5 rounded-lg border border-slate-900 hover:border-indigo-500/20 transition-all cursor-pointer"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* SLIDER 2: HOMBRES */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between select-none">
-                  <div className="space-y-0.5 text-left">
-                    <h3 className="text-base sm:text-lg font-bold font-display text-slate-900 flex items-center gap-2">
-                      <span className="bg-indigo-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono">M</span>
-                      <span>Modelos Masculinos</span>
-                    </h3>
-                    <p className="text-[11px] text-slate-500 font-medium">Rankings ordenados por popularidad global de mecenas y votos.</p>
-                  </div>
-                </div>
-
-                <FashionRankingSlider
-                  models={top100Rankings.males}
-                  gender="male"
-                  onModelClick={handleRankingModelClick}
-                />
-              </div>
-
-              <div className="hidden">
-                <div className="relative group">
-
-                  {/* Horizontal flow container without scrollbars */}
-                  <div
-                    ref={menSliderRef}
-                    className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                  >
-                  {top100Rankings.males.map((model, idx) => {
-                    const isPodium = idx < 3;
-                    const podiumBg = idx === 0 
-                      ? 'border-amber-400 text-amber-400 bg-amber-950/80' 
-                      : idx === 1 
-                        ? 'border-slate-300 text-slate-300 bg-slate-800/80' 
-                        : 'border-amber-700 text-amber-700 bg-amber-900/80';
-
-                    return (
-                      <div
-                        key={model.id}
-                        className="snap-start shrink-0 w-44 sm:w-52 bg-slate-950 text-white rounded-2xl border border-slate-900 overflow-hidden relative shadow-md transition hover:-translate-y-1 hover:border-indigo-500/40 group flex flex-col justify-between"
-                      >
-                        {/* Photo Box */}
-                        <div
-                          onClick={() => handleRankingModelClick(model)}
-                          className="relative h-48 sm:h-56 overflow-hidden shrink-0 bg-slate-950 cursor-pointer text-left"
-                          title={`Ver perfil de ${model.name}`}
-                        >
-                          <img
-                            src={model.avatar}
-                            alt={model.name}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                          
-                          {/* Rank badge */}
-                          <div className={`absolute top-2 left-2 backdrop-blur-md border font-extrabold font-mono text-[9px] sm:text-[10px] py-1 px-2 rounded-lg z-10 flex items-center gap-1 shadow-md ${isPodium ? podiumBg : 'border-slate-800 text-slate-400 bg-slate-950/70'}`}>
-                            {idx === 0 && '👑 '}
-                            <span>#{idx + 1}</span>
-                          </div>
-
-                          {/* Online indicator */}
-                          {model.isOnline && (
-                            <span className="absolute top-2.5 right-2 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white shadow-md animate-pulse z-10" />
-                          )}
-
-                          {/* Status Badge */}
-                          {model.statusText && (
-                            <div className="absolute bottom-2 left-2 bg-slate-950/80 text-indigo-400 text-[8px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded border border-indigo-500/20 backdrop-blur-xs select-none">
-                              {model.statusText}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Text and stats */}
-                        <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
-                          <div className="space-y-0.5 text-left">
-                            <h4 
-                              onClick={() => handleRankingModelClick(model)}
-                              className="font-display font-semibold text-xs sm:text-sm text-slate-100 truncate group-hover:text-indigo-400 transition-colors cursor-pointer"
-                              title={`Ver perfil de ${model.name}`}
-                            >
-                              {model.name}
-                            </h4>
-                            <span className="text-[9px] text-slate-500 font-mono block">@{model.username}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-semibold uppercase">
-                            <Users className="w-3 h-3 text-slate-500 hover:scale-105 transition" />
-                            <span>{(model.followersCount || 0).toLocaleString()} followers</span>
-                          </div>
-
-                          {/* Interactive Footer */}
-                          <div className="flex items-center gap-2 border-t border-slate-900 pt-2 mt-1">
-                            {/* Like vote */}
-                            <button
-                              onClick={() => handleLikeRankingModel(model.id, 'male')}
-                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-900 hover:bg-rose-950/40 text-rose-400 rounded-lg text-[10px] font-bold cursor-pointer select-none border border-slate-900 hover:border-rose-900/50 transition duration-150"
-                            >
-                              <Heart className="w-2.5 h-2.5 fill-current shrink-0 active:scale-130 transition-transform" />
-                              <span>{model.totalLikes.toLocaleString()}</span>
-                            </button>
-
-                            {/* Chat interaction */}
-                            <button
-                              onClick={() => {
-                                const matched = models.find(m => m.name === model.name);
-                                handleLaunchChatWithModel(matched ? matched.id : 'model-1');
-                              }}
-                              title="Enviar mensaje privado"
-                              className="text-indigo-400 hover:text-white bg-slate-900 hover:bg-slate-850 p-1.5 rounded-lg border border-slate-900 hover:border-indigo-500/20 transition-all cursor-pointer"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-          )}
-
-          {activeTab === 'profile' && userProfile.role !== 'model' && (
+          {activeTab === 'profile' && userProfile && (
             <div className="space-y-6 animate-fade-in">
               <ModelFacebookProfile
                 userProfile={userProfile}
@@ -3545,10 +3449,13 @@ export default function App() {
                 realLoggedInUser={userProfile}
                 onOpenRanking={() => setShowVictoriaSecretRanking(true)}
                 onNavigateToTab={(tab, targetStoreId) => {
-                  setActiveTabTab(tab);
                   if (targetStoreId) {
+                    localStorage.setItem('came_from_profile_sponsor', 'true');
+                    localStorage.setItem('previous_tab_before_sponsor', activeTab);
                     setInitialSelectedStoreId(targetStoreId);
                   }
+                  setPreviousTab(activeTab);
+                  setActiveTabTab(tab);
                 }}
                 onLaunchChat={handleLaunchChatWithModel}
                 onGoToModelProfile={(modelId) => {
@@ -3570,6 +3477,7 @@ export default function App() {
                 }}
                 initialSocialModal={profileSocialModalState}
                 onSocialModalChange={setProfileSocialModalState}
+                onLogout={handleLogout}
               />
             </div>
           )}
@@ -4152,83 +4060,83 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'casting_live' && (
-            <div className="space-y-4 animate-fade-in pt-0">
-              <CastingLiveSection
-                models={models}
-                userProfile={userProfile}
-                selectedLiveModelId={selectedLiveModelId}
-                initialSelectedStoreId={initialSelectedStoreId}
-                onClearSelectedStoreId={() => setInitialSelectedStoreId(null)}
-                onOpenChatWithModel={(modelId) => {
-                  const target = models.find(m => m.id === modelId || m.username.toLowerCase() === modelId.toLowerCase()) ||
-                                 patrocinadosList.find(p => p.id === modelId || p.username.toLowerCase() === modelId.toLowerCase());
-                  const targetId = target ? target.id : modelId;
-                  setPreviousTab('casting_live');
-                  setActiveChatTargetId(targetId);
-                  setActiveTabTab('chat');
-                }}
-                onGoToModelProfile={(modelId, modelObj) => {
-                  setModelViewSourceTab('casting_live');
-                  if (modelObj) {
-                    setSelectedModelForView(modelObj);
-                    setActiveTabTab('home');
-                    return;
+          <div className={activeTab === 'casting_live' ? 'space-y-4 max-md:space-y-0 animate-fade-in pt-0 w-full max-w-full overflow-x-hidden min-w-0 max-md:h-full flex-1 flex flex-col' : 'hidden'}>
+            <CastingLiveSection
+              models={models}
+              userProfile={userProfile}
+              selectedLiveModelId={selectedLiveModelId}
+              initialSelectedStoreId={initialSelectedStoreId}
+              onClearSelectedStoreId={() => setInitialSelectedStoreId(null)}
+              onOpenChatWithModel={(modelId) => {
+                const target = models.find(m => m.id === modelId || m.username.toLowerCase() === modelId.toLowerCase()) ||
+                               patrocinadosList.find(p => p.id === modelId || p.username.toLowerCase() === modelId.toLowerCase());
+                const targetId = target ? target.id : modelId;
+                setPreviousTab('casting_live');
+                setActiveChatTargetId(targetId);
+                setActiveTabTab('chat');
+              }}
+              onGoToModelProfile={(modelId, modelObj) => {
+                setModelViewSourceTab('casting_live');
+                if (modelObj) {
+                  setSelectedModelForView(modelObj);
+                  setActiveTabTab('home');
+                  return;
+                }
+                let target = models.find(m => m.id === modelId);
+                if (!target && modelId) {
+                  const lower = modelId.toLowerCase().trim();
+                  target = models.find(m => m.id.toLowerCase() === lower || m.name.toLowerCase().trim() === lower || m.name.toLowerCase().includes(lower) || (m.username && m.username.toLowerCase().includes(lower)));
+                }
+                if (!target && modelId) {
+                  const firstName = modelId.toLowerCase().split(' ')[0];
+                  if (firstName.length >= 3) {
+                    target = models.find(m => m.name.toLowerCase().includes(firstName));
                   }
-                  let target = models.find(m => m.id === modelId);
-                  if (!target && modelId) {
-                    const lower = modelId.toLowerCase().trim();
-                    target = models.find(m => m.id.toLowerCase() === lower || m.name.toLowerCase().trim() === lower || m.name.toLowerCase().includes(lower) || (m.username && m.username.toLowerCase().includes(lower)));
-                  }
-                  if (!target && modelId) {
-                    const firstName = modelId.toLowerCase().split(' ')[0];
-                    if (firstName.length >= 3) {
-                      target = models.find(m => m.name.toLowerCase().includes(firstName));
-                    }
-                  }
-                  if (target) {
-                    setSelectedModelForView(target);
-                    setActiveTabTab('home');
-                  } else if (modelId) {
-                    const isAdriana = modelId.toLowerCase().includes('adriana');
-                    const isAlessandra = modelId.toLowerCase().includes('alessandra');
-                    const isSophia = modelId.toLowerCase().includes('sophia');
-                    const isAlexander = modelId.toLowerCase().includes('alexander');
+                }
+                if (target) {
+                  setSelectedModelForView(target);
+                  setActiveTabTab('home');
+                } else if (modelId) {
+                  const isAdriana = modelId.toLowerCase().includes('adriana');
+                  const isAlessandra = modelId.toLowerCase().includes('alessandra');
+                  const isSophia = modelId.toLowerCase().includes('sophia');
+                  const isAlexander = modelId.toLowerCase().includes('alexander');
 
-                    const fallbackName = isAdriana ? 'Adriana Lima' : isAlessandra ? 'Alessandra Ambrosio' : isSophia ? 'Sophia Loren' : isAlexander ? 'Alexander Vance' : (modelId.startsWith('f-') ? (modelId === 'f-1' ? 'Adriana Lima' : modelId === 'f-2' ? 'Gisele Bündchen' : modelId === 'f-3' ? 'Marcus Vance' : modelId === 'f-4' ? 'Sienna Cole' : modelId === 'f-5' ? 'Liam Cooper' : modelId === 'f-6' ? 'Elena Rostova' : 'Modelo') : modelId);
+                  const fallbackName = isAdriana ? 'Adriana Lima' : isAlessandra ? 'Alessandra Ambrosio' : isSophia ? 'Sophia Loren' : isAlexander ? 'Alexander Vance' : (modelId.startsWith('f-') ? (modelId === 'f-1' ? 'Adriana Lima' : modelId === 'f-2' ? 'Gisele Bündchen' : modelId === 'f-3' ? 'Marcus Vance' : modelId === 'f-4' ? 'Sienna Cole' : modelId === 'f-5' ? 'Liam Cooper' : modelId === 'f-6' ? 'Elena Rostova' : 'Modelo') : modelId);
 
-                    const fallbackUsername = isAdriana ? 'adrianalima_w1' : isAlessandra ? 'alessandraambrosio_w2' : isSophia ? 'sophialoren_w3' : isAlexander ? 'alexandervance_m1' : modelId.toLowerCase().replace(/\s+/g, '_');
+                  const fallbackUsername = isAdriana ? 'adrianalima_w1' : isAlessandra ? 'alessandraambrosio_w2' : isSophia ? 'sophialoren_w3' : isAlexander ? 'alexandervance_m1' : modelId.toLowerCase().replace(/\s+/g, '_');
 
-                    const fallbackAvatar = isAdriana ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650' : isAlessandra ? 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650' : isSophia ? 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650' : isAlexander ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+                  const fallbackAvatar = isAdriana ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650' : isAlessandra ? 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650' : isSophia ? 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650' : isAlexander ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
 
-                    const fallbackModel: ModelProfile = {
-                      id: modelId,
-                      name: fallbackName,
-                      username: fallbackUsername,
-                      avatar: fallbackAvatar,
-                      bio: 'Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.',
-                      role: 'model',
-                      rating: 5.0,
-                      followersCount: 210400,
-                      totalLikes: 14960,
-                      verified: true
-                    };
-                    setSelectedModelForView(fallbackModel);
-                    setActiveTabTab('home');
-                  }
-                }}
-                onNavigateToTab={(tab, targetStoreId) => {
-                  setPreviousTab(activeTab);
-                  setActiveTabTab(tab);
-                  if (targetStoreId) {
-                    setInitialSelectedStoreId(targetStoreId);
-                  }
-                }}
-                onUpdateUserProfile={handleUpdateProfile}
-                onGiftTransaction={handleGiftTransaction}
-              />
-            </div>
-          )}
+                  const fallbackModel: ModelProfile = {
+                    id: modelId,
+                    name: fallbackName,
+                    username: fallbackUsername,
+                    avatar: fallbackAvatar,
+                    bio: 'Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.',
+                    role: 'model',
+                    rating: 5.0,
+                    followersCount: 210400,
+                    totalLikes: 14960,
+                    verified: true
+                  };
+                  setSelectedModelForView(fallbackModel);
+                  setActiveTabTab('home');
+                }
+              }}
+              onNavigateToTab={(tab, targetStoreId) => {
+                setPreviousTab(activeTab);
+                if (targetStoreId) {
+                  localStorage.setItem('came_from_profile_sponsor', 'true');
+                  localStorage.setItem('previous_tab_before_sponsor', activeTab);
+                  setInitialSelectedStoreId(targetStoreId);
+                }
+                setActiveTabTab(tab);
+              }}
+              onUpdateUserProfile={handleUpdateProfile}
+              onGiftTransaction={handleGiftTransaction}
+            />
+          </div>
         </section>
       </main>
 
@@ -4236,8 +4144,13 @@ export default function App() {
 
       {/* 1. Add simulated Funds modal */}
       {showAddFundsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 text-white text-xs space-y-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[1px] p-4 animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddFundsModal(false);
+          }}
+        >
+          <div className="bg-[#0c1322]/95 border border-slate-700/80 rounded-2xl w-full max-w-sm p-6 text-white text-xs space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-md">
             <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
               <PlusCircle className="w-5 h-5 text-indigo-400" />
               <span>Añadir Fondos Simulación (Backoffice)</span>
@@ -5725,7 +5638,7 @@ export default function App() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-white border-t border-slate-200 py-8 px-6 text-slate-500 mt-12 shrink-0 shadow-xs">
+      <footer className="bg-white border-t border-slate-200 py-8 px-6 text-slate-500 mt-12 max-md:hidden shrink-0 shadow-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
           <div className="flex items-center gap-3">
             <div className="bg-white border border-slate-150 p-1 rounded-2xl shadow-3xs flex items-center justify-center transition-transform hover:scale-105">
@@ -5736,6 +5649,9 @@ export default function App() {
           <p className="text-slate-450 font-medium">© 2026 Fashion Finances Platform. Licencia Pública de Distribución Tecnológica.</p>
         </div>
       </footer>
+
+      {/* 📱 VENTANA AMPLIADA GLOBAL PARA IMÁGENES EN VISTA MÓVIL */}
+      <GlobalMobileImageLightbox />
     </div>
   );
 }

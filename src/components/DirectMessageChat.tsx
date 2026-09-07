@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, ModelProfile } from '../types';
+import { saveLuxuryWatchGift, playLuxuryWatchSoundEffect } from './LuxuryWatchAnimation';
 import { 
   Send, 
   Image, 
@@ -178,25 +179,27 @@ export default function DirectMessageChat({
     }
   ];
 
-  // Compile active targets
+  // Compile active targets (exclude current user to avoid self-chatting)
   const getCombinedContacts = (): MessageTarget[] => {
     const list: MessageTarget[] = [];
     
     // 1. Add models
     models.forEach(m => {
-      list.push({
-        id: m.id,
-        name: m.name,
-        username: m.username,
-        avatar: m.avatar,
-        role: 'model',
-        status: m.totalLikes > 100 ? 'online' : 'offline'
-      });
+      if (m.id !== currentUserId) {
+        list.push({
+          id: m.id,
+          name: m.name,
+          username: m.username,
+          avatar: m.avatar,
+          role: 'model',
+          status: m.totalLikes > 100 ? 'online' : 'offline'
+        });
+      }
     });
 
-    // 2. Add patrocinados (avoid duplicates)
+    // 2. Add patrocinados (avoid duplicates and exclude self)
     patrocinados.forEach(p => {
-      if (!list.some(item => item.username === p.username)) {
+      if (p.id !== currentUserId && !list.some(item => item.username === p.username || item.id === p.id)) {
         list.push({
           id: p.id,
           name: p.name,
@@ -208,9 +211,9 @@ export default function DirectMessageChat({
       }
     });
 
-    // 3. Add standard contacts (avoid duplicates)
+    // 3. Add standard contacts (avoid duplicates and exclude self)
     defaultStandardContacts.forEach(c => {
-      if (!list.some(item => item.username === c.username)) {
+      if (c.id !== currentUserId && !list.some(item => item.username === c.username || item.id === c.id)) {
         list.push(c);
       }
     });
@@ -333,7 +336,8 @@ export default function DirectMessageChat({
   const currentChatHistory = initialMessages.filter(
     (msg) =>
       (msg.senderId === currentUserId && msg.receiverId === activeContactId) ||
-      (msg.senderId === activeContactId && msg.receiverId === currentUserId)
+      (msg.senderId === activeContactId && msg.receiverId === currentUserId) ||
+      (msg.id.startsWith('msg-reply') && (msg.senderId === activeContactId || (msg.receiverId === currentUserId && activeContact && msg.senderId === activeContact.id)))
   );
 
   const handleSend = (e: React.FormEvent, customImg?: string) => {
@@ -891,30 +895,33 @@ export default function DirectMessageChat({
                     )}
 
                     {currentChatHistory.map((msg) => {
-                      const isMine = msg.senderId === currentUserId;
+                      const isReply = msg.id.startsWith('msg-reply') || msg.id.startsWith('msg-gcal-2');
+                      const isOtherUser = isReply || msg.senderId === activeContactId || (msg.receiverId === currentUserId && msg.senderId !== currentUserId);
+                      const isMine = !isOtherUser && msg.senderId === currentUserId;
                       const isGiftMsg = msg.text?.includes('Regalo Extra');
+
                       return (
-                        <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                          <div className={`max-w-[75%] rounded-2xl p-3.5 space-y-1 ${
+                        <div key={msg.id} className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+                          <div className={`max-w-[78%] sm:max-w-[70%] rounded-2xl p-3.5 space-y-1.5 ${
                             isMine
                               ? isGiftMsg
-                                ? 'bg-amber-50 text-amber-900 rounded-tr-none shadow-3xs border border-amber-200'
-                                : 'bg-zinc-900 text-white rounded-tr-none shadow-3xs'
-                              : 'bg-zinc-100 text-zinc-900 rounded-tl-none border border-zinc-200/60 shadow-3xs'
+                                ? 'bg-amber-50 text-amber-950 rounded-tr-none shadow-3xs border border-amber-200 ml-auto'
+                                : 'bg-zinc-900 text-white rounded-tr-none shadow-3xs ml-auto'
+                              : 'bg-zinc-100 text-zinc-900 rounded-tl-none border border-zinc-200/80 shadow-3xs mr-auto'
                           }`}>
                             {msg.text && <p className="text-xs sm:text-xs font-medium whitespace-pre-wrap leading-relaxed">{msg.text}</p>}
                             {msg.imageUrl && (
-                               <div className="rounded-xl overflow-hidden border border-slate-150/50 mt-1 max-w-[180px]">
-                                <img src={msg.imageUrl} alt="attachment" referrerPolicy="no-referrer" className="w-[180px] h-auto object-cover" />
+                               <div className="rounded-xl overflow-hidden border border-slate-150/50 mt-1 max-w-[200px]">
+                                <img src={msg.imageUrl} alt="attachment" referrerPolicy="no-referrer" className="w-[200px] h-auto object-cover" />
                               </div>
                             )}
                             
-                            <div className="flex items-center justify-end gap-1 text-[9px] mt-1 shrink-0 select-none">
-                              <span className={isMine ? isGiftMsg ? 'text-amber-600 font-mono' : 'text-zinc-400 font-mono' : 'text-zinc-500 font-mono'}>
+                            <div className={`flex items-center ${isMine ? 'justify-end' : 'justify-start'} gap-1 text-[9px] mt-1 shrink-0 select-none`}>
+                              <span className={isMine ? isGiftMsg ? 'text-amber-700 font-mono' : 'text-zinc-400 font-mono' : 'text-zinc-500 font-mono'}>
                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                               {isMine && (
-                                <CheckCheck className="w-3 h-3 text-emerald-600" title="Mensaje Leído por destinatario" />
+                                <CheckCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Mensaje Leído por destinatario" />
                               )}
                             </div>
                           </div>
@@ -1076,6 +1083,25 @@ export default function DirectMessageChat({
                                     timestamp: new Date().toISOString()
                                   };
                                   onSendMessage(newMsg);
+
+                                  if (gift.name.toLowerCase().includes('reloj') || gift.icon === '⌚' || gift.icon === '⏰') {
+                                    playLuxuryWatchSoundEffect(true);
+                                    saveLuxuryWatchGift({
+                                      id: `watch-${Date.now()}`,
+                                      senderId: currentUserId,
+                                      senderName: 'Tú (Inversor)',
+                                      senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+                                      receiverId: activeContactId,
+                                      receiverName: activeContact?.name || 'Modelo',
+                                      receiverAvatar: activeContact?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+                                      giftName: gift.name,
+                                      giftIcon: gift.icon,
+                                      cost: gift.cost,
+                                      euroCost: gift.cost,
+                                      message: 'Regalado desde el chat directo',
+                                      timestamp: Date.now()
+                                    });
+                                  }
 
                                   // Sweet simulated reaction
                                   setTimeout(() => {

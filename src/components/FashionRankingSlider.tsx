@@ -4,10 +4,11 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Heart, Award, Eye, Radio } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Award, Eye, Radio, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { ModelProfile } from '../types';
 
 import descargaImg from '../assets/images/descarga.jpg';
+import RoyalMaleCrown from './RoyalMaleCrown';
 
 interface FashionRankingSliderProps {
   models: ModelProfile[];
@@ -39,8 +40,12 @@ export default function FashionRankingSlider({
   // Auto-center when models array changes or is loaded
   useEffect(() => {
     if (models.length > 0) {
-      // Start in the middle or at 0
-      setActiveIndex(Math.min(2, Math.floor(models.length / 2)));
+      const customVidIdx = models.findIndex(m => m.videoUrl && (m.videoUrl.startsWith('blob:') || !m.videoUrl.includes('mixkit.co')));
+      if (customVidIdx !== -1) {
+        setActiveIndex(customVidIdx);
+      } else {
+        setActiveIndex(0);
+      }
     }
   }, [models]);
 
@@ -100,12 +105,12 @@ export default function FashionRankingSlider({
   }
 
   return (
-    <div className="relative w-full pt-16 pb-8 select-none overflow-hidden flex flex-col items-center">
+    <div className="relative w-full pt-20 sm:pt-24 pb-8 select-none overflow-x-clip overflow-y-visible flex flex-col items-center">
       {/* 3D Stage Container */}
       <div 
-        className="relative w-full flex items-center justify-center"
+        className="relative w-full flex items-center justify-center overflow-visible"
         style={{ 
-          height: `${cardHeight + 145}px`,
+          height: `${cardHeight + 175}px`,
           perspective: '1200px',
           perspectiveOrigin: '50% 50%'
         }}
@@ -240,13 +245,40 @@ function ModelRankingCard({
 }: ModelRankingCardProps) {
   const isMale = gender === 'male' || (model && model.gender === 'male');
   const [videoError, setVideoError] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [volume, setVolume] = useState(0.8);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    if (videoRef.current) {
+      videoRef.current.volume = newVol;
+      videoRef.current.muted = newVol === 0;
+    }
+    setIsMuted(newVol === 0);
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      const nextMuted = !videoRef.current.muted;
+      videoRef.current.muted = nextMuted;
+      setIsMuted(nextMuted);
+      if (!nextMuted && volume === 0) {
+        setVolume(0.8);
+        videoRef.current.volume = 0.8;
+      }
+    } else {
+      setIsMuted(!isMuted);
+    }
+  };
 
   // Select a preset high-luxury video loop if no custom video is uploaded yet
   const presetFemaleVideos = [
     'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
     'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
-    'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
-    'https://assets.mixkit.co/videos/preview/mixkit-smiling-woman-model-posing-in-the-street-40499-large.mp4'
+    'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4'
   ];
 
   const presetMaleVideos = [
@@ -256,13 +288,14 @@ function ModelRankingCard({
     'https://assets.mixkit.co/videos/preview/mixkit-man-with-sunglasses-posing-in-creative-light-40496-large.mp4'
   ];
 
-  // Primary model image/photo: card #3 (index 2) or Adriana Lima or fallback to model.avatar or descargaImg
-  const modelNameLower = (model?.name || '').toLowerCase();
-  const displayImage = (index === 2 || model?.id === 'part-3' || modelNameLower.includes('adriana') || modelNameLower.includes('candice'))
-    ? (descargaImg || model?.avatar || '')
-    : (model?.avatar || descargaImg || '');
-
   const modelVideo = model?.videoUrl || (isMale ? presetMaleVideos : presetFemaleVideos)[index % 4];
+
+  useEffect(() => {
+    setVideoError(false);
+  }, [modelVideo]);
+
+  // Primary model image/photo: fallback to model.avatar or descargaImg
+  const displayImage = model?.avatar || descargaImg || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
 
   // Dynamic styling variants based on gender
   const frameBg = isMale ? 'bg-[#EBF8FF]' : 'bg-[#FCE7F3]';
@@ -301,14 +334,24 @@ function ModelRankingCard({
         transition: 'transform 600ms cubic-bezier(0.25, 1, 0.5, 1), opacity 600ms'
       }}
     >
-      {/* 1. Diamond and Ruby Crown positioned atop the frame */}
-      <div className="absolute -top-12 sm:-top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 group-hover:scale-115 group-hover:-translate-y-1">
-        <img 
-          src="https://gallery.yopriceville.com/var/albums/Free-Clipart-Pictures/Crowns-PNG/Diamond_Tiara_with_Rubies_PNG_Clipart.png" 
-          alt="Corona de Diamantes y Rubíes" 
-          referrerPolicy="no-referrer"
-          className="w-19 sm:w-23 h-auto object-contain drop-shadow-[0_4px_14px_rgba(239,68,68,0.5)]"
-        />
+      {/* 1. Crown positioned atop the frame (Royal Gold Crown for male models, Tiara for female models) - positioned right against the image without touching */}
+      <div 
+        style={{ bottom: 'calc(100% + 2px)' }}
+        className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 group-hover:scale-105"
+      >
+        {isMale ? (
+          <RoyalMaleCrown 
+            imgClassName="w-24 sm:w-28 h-auto"
+            showSparkles={true}
+          />
+        ) : (
+          <img 
+            src="https://gallery.yopriceville.com/var/albums/Free-Clipart-Pictures/Crowns-PNG/Diamond_Tiara_with_Rubies_PNG_Clipart.png" 
+            alt="Corona de Diamantes y Rubíes" 
+            referrerPolicy="no-referrer"
+            className="w-20 sm:w-24 h-auto object-contain drop-shadow-[0_4px_14px_rgba(239,68,68,0.5)]"
+          />
+        )}
       </div>
 
       {/* 2. Modern Portrait Frame - Fills with model photo or video */}
@@ -317,11 +360,12 @@ function ModelRankingCard({
         {/* Model Image or Video - Fills the entire portrait container */}
         {offset === 0 && modelVideo && !videoError ? (
           <video
+            ref={videoRef}
             src={modelVideo || undefined}
             poster={displayImage}
             autoPlay
             loop
-            muted
+            muted={isMuted}
             playsInline
             onError={() => setVideoError(true)}
             className="w-full h-full object-cover relative z-5 transition-all duration-500"
@@ -341,17 +385,64 @@ function ModelRankingCard({
           />
         )}
 
-        {/* Floating Active EN VIVO Badge overlay */}
+        {/* Floating Active EN LÍNEA Badge overlay */}
         {model?.isOnline && (
-          <span className="absolute top-4 right-4 z-20 bg-red-600 text-white font-sans font-bold text-[8.5px] px-2 py-0.5 rounded-md tracking-wider animate-pulse shadow-md">
-            EN VIVO
+          <span className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-emerald-600 text-white font-sans font-bold text-[8.5px] px-2.5 py-0.5 rounded-md tracking-wider animate-pulse shadow-md whitespace-nowrap flex items-center gap-1 border border-white/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+            EN LÍNEA
           </span>
+        )}
+
+        {/* Volume Bar Overlay on Active Video - Appears on hover over left side of card */}
+        {offset === 0 && modelVideo && !videoError && (
+          <div className="absolute inset-y-0 left-0 w-1/2 z-20 group/volume-left pointer-events-auto flex items-end p-3">
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              className="opacity-0 group-hover/volume-left:opacity-100 transition-opacity duration-300 flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white shadow-xl hover:bg-black"
+              title="Ajustar volumen"
+            >
+              <button
+                type="button"
+                onClick={toggleMute}
+                className="text-white hover:text-rose-400 cursor-pointer p-0.5"
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5 text-white" />
+                )}
+              </button>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-12 sm:w-16 h-1 accent-rose-500 cursor-pointer rounded-lg bg-white/40"
+              />
+            </div>
+          </div>
         )}
 
       </div>
 
       {/* 3. Base details card with premium layout matching the mockup zx.png */}
-      <div className={`w-full bg-white border-2 ${cardBorderColor} rounded-[20px] p-2.5 pt-5 sm:pt-5.5 text-center select-none shadow-md mt-1`}>
+      <div className={`w-full bg-white border-2 ${cardBorderColor} rounded-[20px] p-2.5 pt-3 text-center select-none shadow-md mt-1 flex flex-col items-center justify-center relative`}>
+        {/* Small "Elígeme" button positioned above the model's name */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onModelClick(model);
+          }}
+          className="mb-1 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 active:scale-95 text-white px-3 py-0.5 rounded-full shadow-md border border-white/40 flex items-center gap-1 cursor-pointer transition-transform hover:scale-105"
+          id={`btn-eligeme-${model?.id || index}`}
+        >
+          <Sparkles className="w-2.5 h-2.5 text-yellow-200 fill-current animate-pulse" />
+          <span>Elígeme</span>
+        </button>
+
         <h4 className={`text-[12px] sm:text-[13px] font-black font-serif ${textColor} tracking-tight leading-tight line-clamp-1 uppercase`}>
           {model?.name || 'Modelo'}
         </h4>
@@ -361,11 +452,6 @@ function ModelRankingCard({
             {(model?.totalLikes || 0).toLocaleString()} votos
           </span>
         </div>
-      </div>
-
-      {/* Behind-scene Rank indicator */}
-      <div className="absolute top-2 left-2.5 z-40 text-white text-[13px] font-mono font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">
-        #{index + 1}
       </div>
 
     </div>
