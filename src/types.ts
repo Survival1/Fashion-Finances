@@ -72,6 +72,7 @@ export interface ProjectTeamMember {
   name: string;
   role: string;
   experience: string;
+  avatar?: string;
   profileLink?: string; // social link or portfolio
   bio?: string;
 }

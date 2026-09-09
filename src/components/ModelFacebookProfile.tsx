@@ -5396,7 +5396,7 @@ export default function ModelFacebookProfile({
                   <span className="px-2.5 py-0.5 bg-[#E0F2FE] rounded-md text-[#0284C7] border border-[#0284C7]/30 text-[10px] font-mono font-black uppercase tracking-wider shadow-3xs">
                     B2B
                   </span>
-                  <h3 className="text-xs sm:text-[13px] font-black text-[#171717] uppercase tracking-wider font-sans">
+                  <h3 className="text-xs sm:text-[13px] font-bold text-slate-600 uppercase tracking-wider font-sans">
                     Contratación de modelo y partnerships
                   </h3>
                 </div>
@@ -5438,7 +5438,7 @@ export default function ModelFacebookProfile({
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-end bg-white border border-[#CDE3F5] hover:border-[#BAE0FA] p-3.5 sm:p-4 rounded-2xl shadow-[0_2px_14px_rgba(2,132,199,0.04)] transition-all duration-200">
+                  <div className="flex items-center justify-center py-2">
                     <button
                           onClick={() => {
                             if (onOpenRanking) {

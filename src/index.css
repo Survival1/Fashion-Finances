@@ -75,7 +75,7 @@
 }
 
 /* Global button styling matching clean design (white background, slate border, dark text) */
-button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):not(.tab-trigger) {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]) {
   background-color: #ffffff !important;
   background-image: none !important;
   color: #0f172a !important; /* Soft dark text */
@@ -88,15 +88,52 @@ button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"
   cursor: pointer !important;
 }
 
-button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):not(.tab-trigger):hover {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):hover {
   background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
   transform: translateY(-0.5px) !important;
 }
 
-button:not(.icon-only):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):not(.tab-trigger):active {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):active {
   transform: translateY(0px) !important;
   filter: brightness(0.98) !important;
+}
+
+/* Pearl Pink Button (Rosa Perla) */
+.pearl-pink-btn {
+  background-color: #fce7f3 !important;
+  background-image: linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%) !important;
+  color: #831843 !important;
+  border: 1.5px solid #f472b6 !important;
+  box-shadow: 0 2px 6px rgba(244, 114, 182, 0.25) !important;
+  font-weight: 700 !important;
+  letter-spacing: normal !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.pearl-pink-btn:hover {
+  background-color: #fbcfe8 !important;
+  background-image: linear-gradient(135deg, #ffe4ec 0%, #fbcfe8 50%, #f9a8d4 100%) !important;
+  border-color: #ec4899 !important;
+  color: #701a75 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.35) !important;
+}
+
+.pearl-pink-btn:active {
+  transform: translateY(0px) !important;
+  box-shadow: 0 1px 3px rgba(244, 114, 182, 0.2) !important;
+}
+
+.pearl-pink-btn-disabled {
+  background-color: #fdf2f8 !important;
+  background-image: none !important;
+  color: #9ca3af !important;
+  border: 1.5px solid #fce7f3 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 /* Global replacement of heavy red/rose backgrounds with modern clean styles */

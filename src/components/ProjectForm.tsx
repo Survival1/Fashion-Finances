@@ -27,8 +27,10 @@ import {
   Info,
   ChevronRight,
   User,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
+import { generateProjectPDF } from '../utils/pdfGenerator';
 
 interface ProjectFormProps {
   userProjects: ProjectData[];
@@ -94,9 +96,10 @@ export default function ProjectForm({
   // Step 3: Team state
   const [teamMembers, setTeamMembers] = useState<ProjectTeamMember[]>([
     { 
-      name: 'Ernesto vs', 
+      name: 'Ernesto V. S.', 
       role: 'Fundador y Diseñador', 
       experience: '5 años en el sector creativo',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
       profileLink: 'https://instagram.com/ernestovs',
       bio: 'Apasionado de la sastrería minimalista y textiles orgánicos compostables.'
     }
@@ -251,6 +254,27 @@ export default function ProjectForm({
         onNavigateToTab('saved_projects');
       }
     }, 2000);
+  };
+
+  const handleDownloadPDF = () => {
+    generateProjectPDF({
+      project: {
+        title: title || 'Borrador de Proyecto',
+        category,
+        budget,
+        fundingGoal: fundingGoal || (budget * 50),
+        descriptionShort: descShort,
+        descriptionLong: descLong,
+        objective,
+        fundUsage,
+        timeline,
+        team: teamMembers,
+        budgetItems: budgetItems.map(b => ({ item: b.item, amount: b.amount })),
+        contactEmail,
+        contactPhone,
+      },
+      authorName: teamMembers[0]?.name || 'Ernesto V. S.'
+    });
   };
 
   return (
@@ -1201,7 +1225,7 @@ export default function ProjectForm({
                   </div>
 
                   {/* BOTTOM SUBMIT BAR */}
-                  <div className="pt-4 border-t border-slate-150 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="pt-4 border-t border-slate-150 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setActiveStep('finance')}
@@ -1211,19 +1235,51 @@ export default function ProjectForm({
                       <span>Volver al Paso 2</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={!termsAccepted}
-                      className={`px-8 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-95 w-full sm:w-auto ${
-                        termsAccepted 
-                          ? 'bg-[#0284c7] hover:bg-sky-700 text-white' 
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <span>Completar y Registrar Proyecto</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={handleDownloadPDF}
+                        style={{
+                          backgroundColor: '#fce7f3',
+                          backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
+                          borderColor: '#f472b6',
+                          color: '#831843'
+                        }}
+                        className="pearl-pink-btn custom-bg px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 w-full sm:w-auto"
+                        title="Descargar dossier del proyecto en formato PDF"
+                      >
+                        <Download className="w-4 h-4 text-pink-700" />
+                        <span>Descargar Proyecto</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={!termsAccepted}
+                        style={
+                          termsAccepted
+                            ? {
+                                backgroundColor: '#fce7f3',
+                                backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
+                                borderColor: '#f472b6',
+                                color: '#831843'
+                              }
+                            : {
+                                backgroundColor: '#fdf2f8',
+                                borderColor: '#fce7f3',
+                                color: '#9ca3af'
+                              }
+                        }
+                        className={`custom-bg px-8 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm whitespace-nowrap active:scale-95 w-full sm:w-auto ${
+                          termsAccepted 
+                            ? 'pearl-pink-btn cursor-pointer' 
+                            : 'pearl-pink-btn-disabled cursor-not-allowed'
+                        }`}
+                      >
+                        <span>Registrar proyecto</span>
+                        <ArrowRight className={`w-4 h-4 ${termsAccepted ? 'text-pink-700' : 'text-slate-400'}`} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="text-center font-mono text-[9px] text-slate-400 flex items-center justify-center gap-2 py-2">

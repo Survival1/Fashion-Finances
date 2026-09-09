@@ -4,6 +4,14 @@ import { seedInitialData } from '../utils/seedData';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import { 
+  TRABAJADORES_USERS, 
+  FINANZAS_USERS, 
+  EMPRESARIOS_USERS, 
+  TOPMODELS_USERS, 
+  INVERSORES_USERS, 
+  MILLONARIOS_USERS 
+} from './CastingLiveSection';
+import { 
   Play, 
   Sparkles, 
   Award, 
@@ -997,76 +1005,7 @@ export default function SessionSimulator({
     const sessObj = sessions.find(s => s.id === sessionId);
     if (!sessObj) return;
 
-    // Check if user is already participating in this session or has paid
-    const isAlreadyInThisSession = sessObj.participants.some(p => p.userId === activeProfile.id);
-    if (isAlreadyInThisSession) {
-      const fee = sessObj.entryFee || 100;
-      let targetTitle = (fee === 10 || sessObj.id === 'sess-workers')
-        ? 'Round STREETWEAR & URBAN'
-        : (fee === 100 || sessObj.id === 'sess-entrepreneurs' || (sessObj.title && (sessObj.title.toLowerCase().includes('bronce') || sessObj.title.toLowerCase().includes('emprend') || sessObj.title.toLowerCase().includes('casual'))))
-        ? 'Round CASUAL & LIFESTYLE'
-        : (fee === 1000 || sessObj.id === 'sess-businessmen' || (sessObj.title && (sessObj.title.toLowerCase().includes('empresar') || sessObj.title.toLowerCase().includes('acero') || sessObj.title.toLowerCase().includes('glamour'))))
-        ? 'Ronda Glamour ✨'
-        : (fee === 10000 || sessObj.id === 'sess-topmodels' || (sessObj.title && (sessObj.title.toLowerCase().includes('model') || sessObj.title.toLowerCase().includes('oro') || sessObj.title.toLowerCase().includes('classic') || sessObj.title.toLowerCase().includes('elegant'))))
-        ? 'Ronda Elegant & Classic 🤍'
-        : (fee === 100000 || fee === 1000000 || sessObj.id === 'sess-investors' || sessObj.id === 'sess-millionaires' || (sessObj.title && (sessObj.title.toLowerCase().includes('invers') || sessObj.title.toLowerCase().includes('rosa') || sessObj.title.toLowerCase().includes('fashion') || sessObj.title.toLowerCase().includes('millonar') || sessObj.title.toLowerCase().includes('platino'))))
-        ? 'Ronda High Fashion 👠'
-        : (sessObj.title || 'Mesa #1');
-      let targetBrand = (fee === 10 || sessObj.id === 'sess-workers')
-        ? 'Estilo moderno, sneakers, denim y cultura street.'
-        : (fee === 100 || sessObj.id === 'sess-entrepreneurs')
-        ? 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.'
-        : (fee === 1000 || sessObj.id === 'sess-businessmen')
-        ? 'vestidos, belleza, eventos, alfombra roja y looks impactantes.'
-        : (fee === 10000 || sessObj.id === 'sess-topmodels')
-        ? 'sofisticado, clásico, atemporal y refinado.'
-        : (fee === 100000 || fee === 1000000 || sessObj.id === 'sess-investors' || sessObj.id === 'sess-millionaires')
-        ? 'alta moda, diseñadores, pasarela y tendencias.'
-        : 'Proyectos Emergentes';
-      let targetCategory = (fee === 10 || sessObj.id === 'sess-workers')
-        ? 'Round STREETWEAR & URBAN'
-        : (fee === 100 || sessObj.id === 'sess-entrepreneurs')
-        ? 'Round CASUAL & LIFESTYLE'
-        : (fee === 1000 || sessObj.id === 'sess-businessmen')
-        ? 'Ronda Glamour ✨'
-        : (fee === 10000 || sessObj.id === 'sess-topmodels')
-        ? 'Ronda Elegant & Classic 🤍'
-        : (fee === 100000 || fee === 1000000 || sessObj.id === 'sess-investors' || sessObj.id === 'sess-millionaires')
-        ? 'Ronda High Fashion 👠'
-        : 'Ronda de Inversión';
-      let targetId = sessObj.id;
-      let currentChannelSession = {
-        id: targetId,
-        title: targetTitle,
-        brand: targetBrand,
-        category: targetCategory,
-        status: 'active' as const,
-        entryFee: fee,
-        poolTotal: 10 * fee,
-        participants: [...sessObj.participants]
-      };
-      setGatheringSessionData(currentChannelSession);
-      setShowGatheringModal(true);
-      return;
-    }
-
-    // Check if user is already participating in ANOTHER active session that is not completed
-    const activeParticipatingSession = sessions.find(s => 
-      s.id !== sessionId &&
-      s.status !== 'completed' &&
-      s.participants.some(p => p.userId === activeProfile.id || p.name.toLowerCase() === activeProfile.name.toLowerCase() || (activeProfile.name === 'Ernesto vs' && (p.userId === 'user-ernesto' || p.name === 'Ernesto (Tú)' || p.name === 'Ernesto vs')))
-    );
-
-    if (activeParticipatingSession) {
-      alert(`⚠️ Restricción de participación: Ya estás participando en "${activeParticipatingSession.title}". No puedes participar en otra sesión sin haber acabado la sesión en la que estás participando.`);
-      return;
-    }
-
-    if (sessObj.participants.length >= 10) {
-      alert('⚠️ Esta sesión ya tiene el límite máximo de 10 participantes.');
-      return;
-    }
-
+    // Check if user has enough balance
     if (activeProfile.balance < sessObj.entryFee) {
       setInsufficientBalanceError({ required: sessObj.entryFee, actual: activeProfile.balance });
       return;
@@ -1085,13 +1024,6 @@ export default function SessionSimulator({
       objective: 'Proyecto de innovación y emprendimiento',
       fundUsage: 'Desarrollo y marketing'
     };
-
-    // Funding goal constraint
-    const fundingWon = getProjectFundingWon(activeProject.id, activeProject.title);
-    if (fundingWon >= activeProject.budget) {
-      alert(`❌ Este proyecto ya ha conseguido el tope de financiación establecido en su Presupuesto de Referencia de ${activeProject.budget}€ (Financiación conseguida: ${fundingWon.toFixed(2)}€) y no puede volver a participar.`);
-      return;
-    }
 
     const updatedSessions = sessions.map((sess) => {
       if (sess.id === sessionId) {
@@ -1430,7 +1362,99 @@ export default function SessionSimulator({
     }
 
     setGatheringSessionData(currentChannelSession);
-    setShowGatheringModal(true);
+    setShowGatheringModal(false);
+
+    // Build the complete list of 6 sessions for the finance channel, with user in the chosen round
+    const allSessionsList = [
+      {
+        id: 'sess-trabajadores-1',
+        title: 'Round STREETWEAR & URBAN',
+        brand: 'Estilo moderno, sneakers, denim y cultura street.',
+        category: 'Round STREETWEAR & URBAN',
+        entryFee: 10,
+        presenter: TRABAJADORES_USERS[0],
+        participants: fee === 10 ? [...TRABAJADORES_USERS.slice(0, 9), userParticipant] : TRABAJADORES_USERS.slice(0, 10),
+        status: 'active' as const
+      },
+      {
+        id: 'sess-emprendedores-1',
+        title: 'Round CASUAL & LIFESTYLE',
+        brand: 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.',
+        category: 'Round CASUAL & LIFESTYLE',
+        entryFee: 100,
+        presenter: FINANZAS_USERS[0],
+        participants: fee === 100 ? [...FINANZAS_USERS.slice(0, 9), userParticipant] : FINANZAS_USERS.slice(0, 10),
+        status: 'active' as const
+      },
+      {
+        id: 'sess-empresarios-1',
+        title: 'Ronda Glamour ✨',
+        brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
+        category: 'Ronda Glamour ✨',
+        entryFee: 1000,
+        presenter: EMPRESARIOS_USERS[0],
+        participants: fee === 1000 ? [...EMPRESARIOS_USERS.slice(0, 9), userParticipant] : EMPRESARIOS_USERS.slice(0, 10),
+        status: 'active' as const
+      },
+      {
+        id: 'sess-topmodels-1',
+        title: 'Ronda Elegant & Classic 🤍',
+        brand: 'sofisticado, clásico, atemporal y refinado.',
+        category: 'Ronda Elegant & Classic 🤍',
+        entryFee: 10000,
+        presenter: TOPMODELS_USERS[0],
+        participants: fee === 10000 ? [...TOPMODELS_USERS.slice(0, 9), userParticipant] : TOPMODELS_USERS.slice(0, 10),
+        status: 'active' as const
+      },
+      {
+        id: 'sess-inversores-1',
+        title: 'Ronda High Fashion 👠',
+        brand: 'alta moda, diseñadores, pasarela y tendencias.',
+        category: 'Ronda High Fashion 👠',
+        entryFee: 100000,
+        presenter: INVERSORES_USERS[0],
+        participants: fee === 100000 ? [...INVERSORES_USERS.slice(0, 9), userParticipant] : INVERSORES_USERS.slice(0, 10),
+        status: 'active' as const
+      },
+      {
+        id: 'sess-millonarios-1',
+        title: 'Ronda High Fashion 👠',
+        brand: 'alta moda, diseñadores, pasarela y tendencias.',
+        category: 'Ronda High Fashion 👠',
+        entryFee: 1000000,
+        presenter: MILLONARIOS_USERS[0],
+        participants: fee >= 1000000 ? [...MILLONARIOS_USERS.slice(0, 9), userParticipant] : MILLONARIOS_USERS.slice(0, 10),
+        status: 'active' as const
+      }
+    ];
+
+    const listStr = JSON.stringify(allSessionsList);
+    localStorage.setItem('open_finanzas_sessions_list_v37', listStr);
+    localStorage.setItem('open_finanzas_sessions_list_v35', listStr);
+    localStorage.setItem('open_finanzas_sessions_list_v30', listStr);
+    localStorage.setItem('open_finanzas_sessions_list_v16', listStr);
+    localStorage.setItem('open_finanzas_sessions_list_v15', listStr);
+    localStorage.setItem('open_finanzas_sessions_list_v3', listStr);
+    localStorage.setItem('finanzas_target_session_id', targetId);
+    localStorage.setItem('finanzas_active_session_fee', String(fee));
+    localStorage.setItem('finanzas_target_session_name', targetTitle);
+    localStorage.setItem('finanzas_scenario', 'scenario_c');
+    localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+    localStorage.setItem('finanzas_voting_phase_timer', '0');
+    localStorage.setItem('finanzas_user_participating', 'true');
+    localStorage.setItem('user_paid_finanzas_session', 'true');
+    localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
+    localStorage.setItem('finanzas_user_role', 'Usuario Inversor (10º Participante)');
+    localStorage.setItem('finanzas_user_project_id', activeProject.id || 'proj-1');
+    localStorage.setItem('finanzas_user_project_title', activeProject.title || 'Eco-Fashion Runway');
+
+    // Notify other components of storage update
+    window.dispatchEvent(new Event('storage'));
+
+    // Redirigir de inmediato al canal de finanzas
+    if (onNavigateToTab) {
+      onNavigateToTab('casting_live');
+    }
   };
 
   const handleFinishGatheringInSimulator = () => {
@@ -3677,8 +3701,7 @@ export default function SessionSimulator({
 
                       {/* Recruitment state bar indicator */}
                       <div className="space-y-1.5">
-                        <div className="flex justify-between items-center text-[9px] font-extrabold font-mono tracking-wide">
-                          <span className={sess.entryFee === 10 ? 'text-slate-700' : (isSelected ? 'text-slate-350' : 'text-slate-400')}>CONVULSIÓN</span>
+                        <div className="flex justify-end items-center text-[9px] font-extrabold font-mono tracking-wide">
                           <span className={sess.entryFee === 10 ? 'text-slate-950 font-black' : (isSelected ? 'text-slate-200' : 'text-slate-650 font-semibold')}>
                             {sess.participants.length}/10 Miembros
                           </span>
@@ -4134,23 +4157,51 @@ export default function SessionSimulator({
                 </div>
 
                 <div className="space-y-2.5">
-                  {selectedProject.team.map((m, idx) => (
-                    <div key={idx} className="bg-slate-50 p-3.5 rounded-xl border border-slate-150 space-y-2">
-                      <div className="flex justify-between">
-                        <div>
-                          <strong className="text-slate-800 text-xs">{m.name}</strong>
-                          <p className="text-[10px] text-slate-500">{m.role}</p>
+                  {selectedProject.team.map((m, idx) => {
+                    const lower = (m.name || '').toLowerCase();
+                    const isErn = lower.includes('ernesto');
+                    const isAdr = lower.includes('adriana');
+                    const avatarUrl = m.avatar || (
+                      isErn
+                        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200'
+                        : isAdr
+                          ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+                          : undefined
+                    );
+                    const displayName = isErn ? 'Ernesto V. S.' : m.name;
+
+                    return (
+                      <div key={idx} className="bg-slate-50 p-3.5 rounded-xl border border-slate-150 space-y-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex items-center gap-2.5">
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt={displayName}
+                                className="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                {displayName.slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <strong className="text-slate-800 text-xs block">{displayName}</strong>
+                              <p className="text-[10px] text-slate-500">{m.role}</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-indigo-600 italic self-start bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 shrink-0">{m.experience}</span>
                         </div>
-                        <span className="text-[10px] text-indigo-600 italic self-start bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{m.experience}</span>
+                        {m.bio && <p className="text-[10px] text-slate-600 bg-white p-2 rounded border border-slate-100 leading-relaxed italic">"{m.bio}"</p>}
+                        {m.profileLink && (
+                          <a href={m.profileLink} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-600 hover:underline inline-block mt-0.5 font-medium">
+                            🔗 Portfolio / Contacto: {m.profileLink}
+                          </a>
+                        )}
                       </div>
-                      {m.bio && <p className="text-[10px] text-slate-600 bg-white p-2 rounded border border-slate-100 leading-relaxed italic">"{m.bio}"</p>}
-                      {m.profileLink && (
-                        <a href={m.profileLink} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-600 hover:underline inline-block mt-0.5 font-medium">
-                          🔗 Portfolio / Contacto: {m.profileLink}
-                        </a>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

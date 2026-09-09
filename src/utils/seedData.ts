@@ -317,8 +317,20 @@ export function seedInitialData() {
       fundUsage: '80% materiales y diseño de vestuario, 15% booking de local climatizado verde, 5% staff técnico.',
       timeline: 'Fase 1: Recolección y refinamiento de textiles. Fase 2: Confección de 12 looks. Fase 3: Pasarela en directo.',
       team: [
-        { name: 'Ernesto vs', role: 'Diseñador Principal', experience: '5 años en textiles sustentables' },
-        { name: 'Adriana Lima', role: 'Dirección de Arte', experience: 'Modelo internacional y curadora de modas' }
+        { 
+          name: 'Ernesto V. S.', 
+          role: 'Diseñador Principal', 
+          experience: '5 años en textiles sustentables',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
+          bio: 'Fundador y diseñador creativo especializado en biomateriales reciclados y colecciones eco-sostenibles.'
+        },
+        { 
+          name: 'Adriana Lima', 
+          role: 'Dirección de Arte', 
+          experience: 'Modelo internacional y curadora de modas',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+          bio: 'Top model internacional de alta costura y supervisora de estética y pasarela para el desfile.'
+        }
       ],
       termsAccepted: true,
       images: [

@@ -2675,17 +2675,39 @@ export default function SessionResultsPodium({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedFullProject.team && selectedFullProject.team.map((member: any, i: number) => (
-                      <div key={i} className="bg-[#fffcfd]/40 rounded-2xl p-4 border border-pink-100/50 space-y-3 relative hover:border-pink-200 transition">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-pink-100 border border-pink-150 flex items-center justify-center font-serif text-pink-700 font-bold text-sm uppercase shrink-0">
-                            {member.name.slice(0, 2)}
+                    {selectedFullProject.team && selectedFullProject.team.map((member: any, i: number) => {
+                      const lower = (member.name || '').toLowerCase();
+                      const isErn = lower.includes('ernesto');
+                      const isAdr = lower.includes('adriana');
+                      const avatarUrl = member.avatar || (
+                        isErn
+                          ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300'
+                          : isAdr
+                            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'
+                            : undefined
+                      );
+                      const displayName = isErn ? 'Ernesto V. S.' : member.name;
+
+                      return (
+                        <div key={i} className="bg-[#fffcfd]/40 rounded-2xl p-4 border border-pink-100/50 space-y-3 relative hover:border-pink-200 transition">
+                          <div className="flex items-start gap-3">
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt={displayName}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-pink-200 shadow-xs shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-pink-100 border border-pink-150 flex items-center justify-center font-serif text-pink-700 font-bold text-sm uppercase shrink-0">
+                                {displayName.slice(0, 2)}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-serif font-black text-slate-900 text-sm truncate">{displayName}</p>
+                              <p className="text-[10px] font-bold text-pink-600 font-mono uppercase tracking-tight">{member.role}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-serif font-black text-slate-900 text-sm truncate">{member.name}</p>
-                            <p className="text-[10px] font-bold text-pink-600 font-mono uppercase tracking-tight">{member.role}</p>
-                          </div>
-                        </div>
 
                         <div className="text-xs space-y-1 bg-white/80 p-3 rounded-xl border border-slate-100">
                           <p className="text-slate-500">
@@ -2710,7 +2732,8 @@ export default function SessionResultsPodium({
                           </div>
                         )}
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </div>
               )}

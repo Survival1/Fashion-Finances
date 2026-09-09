@@ -1467,7 +1467,7 @@ const PRESET_SONGS = [
   { id: 'track-f3', title: 'Houdini', artist: 'Dua Lipa', duration: '0:33', cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=80', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3' }
 ];
 
-const FINANZAS_USERS = [
+export const FINANZAS_USERS = [
   { id: 'f-1', name: 'Alessia Vance', username: 'alessia_vance_w1', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', role: 'Modelo Directora' },
   { id: 'f-2', name: 'Gisele Bündchen', username: 'gisele_invest', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Inversora Principal' },
   { id: 'f-3', name: 'Marcus Vance', username: 'marcus_v_capital', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Asesor Fintech' },
@@ -2350,6 +2350,8 @@ export default function CastingLiveSection({
         setSearchTerm('');
         setActiveSubTab('para-ti');
         setShowProjectDetailsInPopup(false);
+        setShowFinanzasInscriptionInChannel(false);
+        setShowParticipantsGatheringModal(false);
         setDetailProjectUser(null);
         setFullscreenFinanzasUser(null);
         setActiveFinanzasPopupUser(null);
@@ -2386,10 +2388,17 @@ export default function CastingLiveSection({
           });
         }
         // If transitioning to live session, show spotlight presentation matching z.png
-        setIsSpeakingPresenterIntro(true);
-        setFirstPresenterRevealed(false);
+        const isVotingActiveSaved = localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
+        if (isVotingActiveSaved) {
+          setIsVotingPhaseActive(true);
+          setVotingPhaseTimer(0);
+          setIsSpeakingPresenterIntro(false);
+          setFirstPresenterRevealed(true);
+        } else {
+          setIsSpeakingPresenterIntro(true);
+          setFirstPresenterRevealed(false);
+        }
         localStorage.removeItem('casting_live_default_category_filter');
-        localStorage.removeItem('finanzas_target_session_id');
         localStorage.removeItem('finanzas_active_session_fee');
       }
     };
@@ -3126,39 +3135,55 @@ export default function CastingLiveSection({
   };
 
   // Handler to process inscription fee payment & join table (matching captura z.png & image.png)
-  const handleExecutePaymentAndJoinSession = (projectId?: string) => {
+  const handleExecutePaymentAndJoinSession = (projectId?: string, explicitFee?: number) => {
     if (!currentFinanzasSession && openFinanzasSessions.length === 0) return;
-    const myId = userProfile?.id || "user-adriana";
-    const myName = userProfile?.name || "Adriana Lima";
-    const myUsername = userProfile?.username || "adrianalima";
+    const myId = userProfile?.id || "user-ernesto";
+    const myName = userProfile?.name || "Ernesto vs";
+    const myUsername = userProfile?.username || "ernestovs";
     const myAvatar = userProfile?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650";
 
-    const targetSession = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession || openFinanzasSessions[0];
+    // Determine target session - default to the 100€ Round CASUAL & LIFESTYLE if fee is 100 or requested
+    const is100Round = explicitFee === 100 || 
+      currentFinanzasSession?.entryFee === 100 || 
+      activeSessionsOnly[activeFinanzasSessionIndex]?.entryFee === 100 || 
+      (!explicitFee && !currentFinanzasSession);
+
+    let targetSession = is100Round
+      ? (openFinanzasSessions.find(s => s.entryFee === 100 || s.id === "sess-emprendedores-1" || s.title?.toUpperCase().includes("CASUAL")) || openFinanzasSessions[1] || openFinanzasSessions[0])
+      : (activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession || openFinanzasSessions[0]);
 
     const fee = targetSession.entryFee || 100;
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
     const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
 
+    const currentBalance = userProfile?.balance ?? 150000;
+    if (currentBalance < fee) {
+      alert(`❌ Saldo insuficiente. Tu saldo es de ${new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2 }).format(currentBalance)}€, pero requieres ${feeFormatted} para disparar el pago y entrar en esta mesa.`);
+      return;
+    }
+
     // Deduct user balance if profile is available
     if (userProfile && onUpdateUserProfile) {
-      const nextBalance = Math.max(0, (userProfile.balance || 150000) - fee);
+      const nextBalance = Math.max(0, currentBalance - fee);
       onUpdateUserProfile({
         ...userProfile,
-        balance: nextBalance
+        balance: nextBalance,
+        totalInvested: (userProfile.totalInvested || 0) + fee
       });
     }
 
-    const fallbackOthers = targetSession.id.includes("empresarios") 
-      ? EMPRESARIOS_USERS 
-      : (targetSession.id.includes("trabajadores") 
-          ? TRABAJADORES_USERS 
-          : (targetSession.id.includes("topmodels") 
-              ? TOPMODELS_USERS 
-              : (targetSession.id.includes("inversores") 
-                  ? INVERSORES_USERS 
-                  : (targetSession.id.includes("millonarios") 
-                      ? MILLONARIOS_USERS 
-                      : FINANZAS_USERS))));
+    let fallbackOthers = FINANZAS_USERS;
+    if (fee === 10 || targetSession.id === 'sess-trabajadores-1') {
+      fallbackOthers = TRABAJADORES_USERS;
+    } else if (fee === 1000 || targetSession.id === 'sess-empresarios-1') {
+      fallbackOthers = EMPRESARIOS_USERS;
+    } else if (fee === 10000 || targetSession.id === 'sess-topmodels-1') {
+      fallbackOthers = TOPMODELS_USERS;
+    } else if (fee === 100000 || targetSession.id === 'sess-inversores-1') {
+      fallbackOthers = INVERSORES_USERS;
+    } else if (fee >= 1000000 || targetSession.id === 'sess-millonarios-1') {
+      fallbackOthers = MILLONARIOS_USERS;
+    }
 
     const userParticipant = {
       id: myId,
@@ -3173,7 +3198,7 @@ export default function CastingLiveSection({
     // Ensure target session has exactly 10 members (the 9 peers + user as 10th)
     const updatedSessions = openFinanzasSessions.map(s => {
       if (s.id === targetSession.id) {
-        const isUserMatch = (p: any) => p.id === myId || p.username === myUsername || p.name === myName || (myName && p.name?.toLowerCase() === myName.toLowerCase()) || p.id === "user-adriana" || p.id === "user-ernesto" || p.id === "user" || p.name === "Ernesto vs";
+        const isUserMatch = (p: any) => p.id === myId || p.username === myUsername || p.name === myName || (myName && p.name?.toLowerCase() === myName.toLowerCase()) || p.id === "user-adriana" || p.id === "user-ernesto" || p.id === "user" || p.name === "Ernesto vs" || (p.role && p.role.includes("10º"));
         const otherParticipants = (s.participants || []).filter(p => !isUserMatch(p));
         
         const finalNine = otherParticipants.length >= 9 
@@ -3182,6 +3207,8 @@ export default function CastingLiveSection({
 
         return {
           ...s,
+          title: s.entryFee === 100 ? 'Round CASUAL & LIFESTYLE' : s.title,
+          status: 'active' as const,
           participants: [...finalNine, userParticipant]
         };
       }
@@ -3192,38 +3219,48 @@ export default function CastingLiveSection({
     localStorage.setItem("open_finanzas_sessions_list_v37", JSON.stringify(updatedSessions));
     localStorage.setItem("finanzas_target_session_id", targetSession.id);
     localStorage.setItem("finanzas_user_participating", "true");
+    localStorage.setItem("finanzas_is_voting_phase_active", "true");
+    localStorage.setItem("finanzas_voting_phase_timer", "0");
+    localStorage.setItem("finanzas_scenario", "scenario_c");
 
     const activeList = updatedSessions.filter(s => s.status === "active");
-    const targetIdx = activeList.findIndex(s => s.id === targetSession.id);
+    const targetIdx = activeList.findIndex(s => s.id === targetSession.id || (is100Round && s.entryFee === 100));
     if (targetIdx !== -1) {
       setActiveFinanzasSessionIndex(targetIdx);
     }
 
-    // Show 10 participants gathering modal in real time
-    setGatheringSessionTitle(targetSession.title || "MESA DE EMPRESARIOS #1");
-    setGatheringSessionFee(fee || 100);
-    setShowParticipantsGatheringModal(true);
-    return;
+    // Direct transition to Finanzas live channel matching capture z.png
+    setShowFinanzasInscriptionInChannel(false);
+    setShowParticipantsGatheringModal(false);
+    setSelectedCategoryFilter('Finanzas');
 
-    // Unmute sound and configure audio volume
-    setFinanzasMuted(false);
-    setFinanzasVolume(100);
+    // Activate voting phase and show live channel matching z.png
+    setIsVotingPhaseActive(true);
+    setVotingPhaseTimer(0);
+    setSimulatedUserVote(false); // Displays 9/10 votes
+    setFinanzasScenario('scenario_c');
     setIsFinanzasLiveConnected(true);
     setIsSpeakingPresenterIntro(false);
     setFirstPresenterRevealed(true);
 
-    // Set first presenter in the spotlight
-    const sessionTitle = targetSession.title || "Mesa de Inversión";
-    const firstPresenter = targetSession.presenter?.name 
-      ? (FINANZAS_USERS.find(u => u.name === targetSession.presenter.name) || targetSession.presenter) 
-      : (targetSession.participants?.[0] || FINANZAS_USERS[0]);
-    const presenterName = firstPresenter?.name || "Adriana Lima";
-
+    // Set first presenter in spotlight (Alessia Vance, #1)
+    const firstPresenter = FINANZAS_USERS[0];
     setSelectedFinanzasUser(firstPresenter);
     setActiveFinanzasPopupUser(null);
     setShowQueueInPopup(false);
+    setShowVotingProjectsModal(false);
+    setShowFinanzasRecount(false);
+    setShowFinanzasResults(false);
+    setShowProjectDetailsInPopup(false);
+    setDetailProjectUser(null);
+    setFullscreenFinanzasUser(null);
+    setShowRondaNotice(false);
 
-    // Reset everyone's timer to 300s (5 minutes)
+    // Unmute sound and configure audio volume
+    setFinanzasMuted(false);
+    setFinanzasVolume(100);
+
+    // Reset timers
     setFinanzasTimers(prev => {
       const next = { ...prev };
       FINANZAS_USERS.forEach(u => {
@@ -3246,7 +3283,7 @@ export default function CastingLiveSection({
       [firstPresenter.id || "f-1"]: true
     });
 
-    setIsVoiceIntroPlaying(true);
+    setIsVoiceIntroPlaying(false);
 
     // Play start chimes via Web Audio API
     try {
@@ -3276,12 +3313,13 @@ export default function CastingLiveSection({
       console.log("AudioContext chime not supported or blocked:", e);
     }
 
-    const fullSpeechMessage = `¡Pago de ${feeFormatted} confirmado! Bienvenidos a la ${sessionTitle}. Contamos con los 10 participantes completos en la sala. Damos inicio a la ronda de exposición y votaciones en directo. El primer participante en presentar su propuesta es ${presenterName}. ¡Mucha suerte a todos!`;
+    const sessionTitle = targetSession.title || "Round CASUAL & LIFESTYLE";
+    const fullSpeechMessage = `¡Pago de ${feeFormatted} confirmado! Te has unido a la ${sessionTitle} como participante con tu propuesta. Damos paso a la fase final de deliberación y votación ante la mesa de inversión.`;
 
     // Show system banner notification
     setSystemVoiceNotification({
       show: true,
-      message: `🎙️ ¡10/10 Participantes Conectados! Iniciando ${sessionTitle} con audio en directo...`
+      message: `🎙️ ¡10/10 Participantes Conectados! ${sessionTitle} (${feeFormatted}) - Fase Final de Votación y Decisión`
     });
 
     setTimeout(() => {
@@ -3290,26 +3328,28 @@ export default function CastingLiveSection({
 
     // Synthesize and speak audio via Web Speech API
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(fullSpeechMessage);
-      utterance.lang = 'es-ES';
-      utterance.volume = 1;
-      utterance.rate = 0.95;
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(fullSpeechMessage);
+        utterance.lang = 'es-ES';
+        utterance.volume = 1;
+        utterance.rate = 0.95;
 
-      const voices = window.speechSynthesis.getVoices();
-      const spanishVoice = voices.find(v => v.lang.includes('es'));
-      if (spanishVoice) {
-        utterance.voice = spanishVoice;
-      }
+        const voices = window.speechSynthesis.getVoices();
+        const spanishVoice = voices.find(v => v.lang.includes('es'));
+        if (spanishVoice) {
+          utterance.voice = spanishVoice;
+        }
 
-      utterance.onend = () => {
-        setIsVoiceIntroPlaying(false);
-      };
-      utterance.onerror = () => {
-        setIsVoiceIntroPlaying(false);
-      };
+        utterance.onend = () => {
+          setIsVoiceIntroPlaying(false);
+        };
+        utterance.onerror = () => {
+          setIsVoiceIntroPlaying(false);
+        };
 
-      window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {}
     }
   };
 
@@ -25466,7 +25506,7 @@ try {
                       <>
                         {/* Badge: Active Presenter Online matching current open session */}
                         {(() => {
-                          const isFullHouse = (currentFinanzasSession?.participants?.length || 0) >= 10 && joinedPresenterIds.length >= 10;
+                          const isFullHouse = (currentFinanzasSession?.participants?.length || 0) >= 10 || joinedPresenterIds.length >= 10 || isVotingPhaseActive;
                           if (!isFullHouse) return null; // Cut broadcast until all 10 participants are inside!
 
                           const presentingItem = finanzasPresentationQueue.find(item => item.status === 'presenting');
@@ -25498,42 +25538,60 @@ try {
 
                           return (
                             <>
-                              <div 
-                                onClick={() => {
-                                  if (activeUserObj) {
-                                    setSelectedFinanzasUser(activeUserObj);
-                                    setActiveFinanzasPopupUser(activeUserObj);
-                                    setDetailProjectUser(activeUserObj);
-                                    setShowProjectDetailsInPopup(true);
-                                    setShowQueueInPopup(false);
-                                    setIsVoiceIntroPlaying(false);
-                                  }
-                                }}
-                                className="absolute top-2.5 left-2 sm:left-3 z-40 bg-black/85 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-[#fe2c55]/40 flex items-center gap-1.5 sm:gap-2.5 shadow-xl max-w-[calc(100%-1rem)] cursor-pointer hover:bg-black/95 active:scale-95 transition overflow-hidden" 
-                                id="finanzas-presenter-online-badge-channel"
-                                title={`Ver detalles del proyecto de ${activePresenterName}`}
-                              >
-                                <span className="relative flex h-2 w-2 shrink-0">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe2c55] opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
-                                </span>
-                                <img
-                                  src={activePresenterAvatar || undefined}
-                                  alt={activePresenterName}
-                                  className="w-4 h-4 sm:w-6 sm:h-6 rounded-full object-cover border border-[#fe2c55] shrink-0"
-                                  referrerPolicy="no-referrer"
-                                />
-                                <span className="text-[9px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans whitespace-nowrap truncate min-w-0">
-                                  {activePresenterName} ONLINE
-                                </span>
-                                <div className="flex items-center gap-1 bg-[#fe2c55] text-white px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black uppercase tracking-wider font-mono shrink-0 shadow-sm shadow-[#fe2c55]/30 whitespace-nowrap">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                  <span>DIRECTO {formattedTimer}</span>
+                              {isVotingPhaseActive ? (
+                                <div 
+                                  className="absolute top-2.5 left-2 sm:left-3 z-40 bg-black/85 backdrop-blur-md px-3 sm:px-3.5 py-1.5 rounded-full border border-slate-700/80 flex items-center gap-2 sm:gap-2.5 shadow-xl max-w-[calc(100%-1rem)]" 
+                                  id="finanzas-round-casual-lifestyle-badge"
+                                >
+                                  <span className="relative flex h-2 w-2 shrink-0">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe2c55] opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
+                                  </span>
+                                  <span className="text-[9.5px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans whitespace-nowrap">
+                                    {currentFinanzasSession?.title?.toUpperCase() || 'ROUND CASUAL & LIFESTYLE'}
+                                  </span>
+                                  <div className="flex items-center gap-1 bg-emerald-950/80 border border-emerald-500/60 text-emerald-400 px-2 py-0.5 rounded-md text-[8.5px] sm:text-[10px] font-black font-mono tracking-wider shrink-0 shadow-sm whitespace-nowrap">
+                                    <span>{new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(currentFinanzasSession?.entryFee || 100)} €</span>
+                                  </div>
                                 </div>
-                              </div>
+                              ) : (
+                                <div 
+                                  onClick={() => {
+                                    if (activeUserObj) {
+                                      setSelectedFinanzasUser(activeUserObj);
+                                      setActiveFinanzasPopupUser(activeUserObj);
+                                      setDetailProjectUser(activeUserObj);
+                                      setShowProjectDetailsInPopup(true);
+                                      setShowQueueInPopup(false);
+                                      setIsVoiceIntroPlaying(false);
+                                    }
+                                  }}
+                                  className="absolute top-2.5 left-2 sm:left-3 z-40 bg-black/85 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-[#fe2c55]/40 flex items-center gap-1.5 sm:gap-2.5 shadow-xl max-w-[calc(100%-1rem)] cursor-pointer hover:bg-black/95 active:scale-95 transition overflow-hidden" 
+                                  id="finanzas-presenter-online-badge-channel"
+                                  title={`Ver detalles del proyecto de ${activePresenterName}`}
+                                >
+                                  <span className="relative flex h-2 w-2 shrink-0">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe2c55] opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
+                                  </span>
+                                  <img
+                                    src={activePresenterAvatar || undefined}
+                                    alt={activePresenterName}
+                                    className="w-4 h-4 sm:w-6 sm:h-6 rounded-full object-cover border border-[#fe2c55] shrink-0"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <span className="text-[9px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans whitespace-nowrap truncate min-w-0">
+                                    {activePresenterName} ONLINE
+                                  </span>
+                                  <div className="flex items-center gap-1 bg-[#fe2c55] text-white px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black uppercase tracking-wider font-mono shrink-0 shadow-sm shadow-[#fe2c55]/30 whitespace-nowrap">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                    <span>DIRECTO {formattedTimer}</span>
+                                  </div>
+                                </div>
+                              )}
 
                               {/* ⏱️ 5-Second Ronda Notice Overlay directly under Presenter badge */}
-                              {showRondaNotice && (
+                              {showRondaNotice && !isVotingPhaseActive && (
                                 <div 
                                   className="absolute top-11 sm:top-12 left-2 sm:left-3 z-40 bg-black/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-2xl text-white flex flex-col gap-0.5 font-sans animate-fade-in pointer-events-none select-none transition-all duration-300"
                                   id="ronda-plata-5s-notice-1"
@@ -25809,8 +25867,7 @@ try {
 
                                         {/* Recruitment state indicator */}
                                         <div className="space-y-1.5">
-                                          <div className="flex justify-between items-center text-[9.5px] font-black font-mono tracking-wide">
-                                            <span className={`uppercase ${isPinkStreetwear ? 'text-slate-700 font-bold' : 'text-slate-400'}`}>CONVOCATORIA</span>
+                                          <div className="flex justify-end items-center text-[9.5px] font-black font-mono tracking-wide">
                                             <span className={`font-black ${isPinkStreetwear ? 'text-slate-950' : 'text-emerald-400'}`}>
                                               {currentSession?.participants?.length || 9}/10 Miembros
                                             </span>
@@ -25962,7 +26019,7 @@ try {
 
                                 <button
                                   type="button"
-                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId)}
+                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, currentFinanzasSession?.entryFee || 100)}
                                   className="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs sm:text-sm px-5 py-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700"
                                 >
                                   <Play className="w-3.5 h-3.5 fill-current text-amber-400" />

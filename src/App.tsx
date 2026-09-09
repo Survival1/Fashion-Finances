@@ -230,7 +230,28 @@ export default function App() {
       const raw = localStorage.getItem('coll_projects');
       const version = localStorage.getItem('db_version_v8');
       if (raw && version === 'true') {
-        return JSON.parse(raw) || [];
+        const parsed: ProjectData[] = JSON.parse(raw) || [];
+        return parsed.map(p => ({
+          ...p,
+          team: (p.team || []).map(m => {
+            const lower = (m.name || '').toLowerCase();
+            if (lower.includes('ernesto')) {
+              return {
+                ...m,
+                name: 'Ernesto V. S.',
+                avatar: m.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400'
+              };
+            }
+            if (lower.includes('adriana')) {
+              return {
+                ...m,
+                name: 'Adriana Lima',
+                avatar: m.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'
+              };
+            }
+            return m;
+          })
+        }));
       }
     } catch (e) {}
     const seed = seedInitialData();

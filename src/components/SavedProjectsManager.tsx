@@ -10,7 +10,8 @@ import {
   InvestmentSession, 
   UserSessionProfile, 
   FinancialMovement,
-  ParticipantState
+  ParticipantState,
+  HistoryWonRecord
 } from '../types';
 import { 
   Folder, 
@@ -46,12 +47,14 @@ import {
   FileText,
   Eye,
   Trophy,
-  X
+  X,
+  Download
 } from 'lucide-react';
+import { generateProjectPDF } from '../utils/pdfGenerator';
 
 interface SavedProjectsProps {
   userProjects: ProjectData[];
-  historyWonLog: { id: string; title: string; prize: number; date: string; projectId?: string; projectName?: string }[];
+  historyWonLog: HistoryWonRecord[];
   sessions: InvestmentSession[];
   userProfile: UserSessionProfile | null;
   onUpdateSessions: (nextSessions: InvestmentSession[]) => void;
@@ -161,6 +164,29 @@ export default function SavedProjectsManager({
       .reduce((sum, log) => sum + log.prize, 0);
   };
 
+  // Calculate funded projects metrics
+  const fundedProjectsList = userProjects.filter(p => {
+    const fundingWon = getProjectFundingWon(p.id, p.title);
+    return fundingWon > 0;
+  });
+  const totalFundedProjectsCount = fundedProjectsList.length;
+  const fullyFundedProjectsCount = userProjects.filter(p => {
+    const fundingWon = getProjectFundingWon(p.id, p.title);
+    return fundingWon >= p.budget && p.budget > 0;
+  }).length;
+  const totalFundingWonAll = userProjects.reduce((acc, p) => acc + getProjectFundingWon(p.id, p.title), 0);
+
+  // Controls for Slider de Proyectos Financiados
+  const [sliderIndex, setSliderIndex] = useState<number>(0);
+  const [sliderFilterMode, setSliderFilterMode] = useState<'funded_only' | 'all'>('funded_only');
+  const displayFundedProjects = sliderFilterMode === 'funded_only' ? fundedProjectsList : userProjects;
+
+  React.useEffect(() => {
+    if (sliderIndex >= displayFundedProjects.length && displayFundedProjects.length > 0) {
+      setSliderIndex(0);
+    }
+  }, [displayFundedProjects.length, sliderIndex]);
+
   const hasEnteredAnySession = (projectId: string) => {
     const proj = userProjects.find(p => p.id === projectId);
     const inOngoing = sessions.some(s => s.participants.some(p => p.projectId === projectId));
@@ -197,7 +223,16 @@ export default function SavedProjectsManager({
       projectTitle: string;
       projectCategory?: string;
       winCount: number;
-      sessionsList: { id: string; title: string; date: string; prize: number }[];
+      sessionsList: { 
+        id: string; 
+        title: string; 
+        date: string; 
+        prize: number;
+        votesReceived: number;
+        coWinnersCount: number;
+        coWinnersNames: string[];
+        totalWinnersCount: number;
+      }[];
       totalPrize: number;
     }> = {};
 
@@ -241,6 +276,10 @@ export default function SavedProjectsManager({
         title: log.title,
         date: log.date,
         prize: log.prize,
+        votesReceived: log.votesReceived ?? 7,
+        coWinnersCount: log.coWinnersCount ?? 0,
+        coWinnersNames: log.coWinnersNames || [],
+        totalWinnersCount: log.totalWinnersCount ?? ((log.coWinnersCount ?? 0) + 1),
       });
     });
 
@@ -458,6 +497,55 @@ export default function SavedProjectsManager({
     onUpdateProjects(updated);
     setIsEditing(false);
     alert('🎉 ¡Proyecto actualizado correctamente con éxito!');
+  };
+
+  const handleCoverImageUpload = (projectId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('La imagen seleccionada supera los 10MB. Por favor selecciona una imagen más ligera.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64 && onUpdateProjects) {
+        const updated = userProjects.map(p => {
+          if (p.id === projectId) {
+            const currentImages = p.images ? [...p.images] : [];
+            return {
+              ...p,
+              images: [base64, ...currentImages.filter(img => img !== base64)]
+            };
+          }
+          return p;
+        });
+        onUpdateProjects(updated);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDownloadProjectPDF = (proj: ProjectData) => {
+    generateProjectPDF({
+      project: {
+        title: proj.title,
+        category: proj.category,
+        budget: proj.budget,
+        fundingGoal: proj.fundingGoal,
+        descriptionShort: proj.descriptionShort,
+        descriptionLong: proj.descriptionLong,
+        objective: proj.objective,
+        fundUsage: proj.fundUsage,
+        timeline: proj.timeline,
+        team: proj.team,
+        contactEmail: proj.contactEmail,
+        contactPhone: proj.contactPhone,
+      },
+      authorName: userProfile?.name || proj.team?.[0]?.name || 'Ernesto V. S.'
+    });
   };
 
   const handleDeleteProject = (projectId: string) => {
@@ -858,9 +946,10 @@ export default function SavedProjectsManager({
             ) : (
               <div className="space-y-6 font-sans text-slate-800">
                 {/* Visual Project Selection Deck */}
-                <div className="space-y-2 relative">
+                <div className="space-y-2 relative p-3 sm:p-4 rounded-2xl bg-sky-50/50 border border-sky-200/60 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono block">
+                    <span className="text-[10px] font-bold text-sky-900 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
                       Selecciona un proyecto para inspeccionar:
                     </span>
                     {/* Slider Navigation Buttons */}
@@ -868,7 +957,7 @@ export default function SavedProjectsManager({
                       <button
                         type="button"
                         onClick={scrollLeft}
-                        className="p-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-500 hover:text-indigo-600 transition cursor-pointer active:scale-95 shadow-3xs"
+                        className="p-1.5 rounded-lg bg-white hover:bg-sky-50 border border-sky-200 text-sky-700 hover:text-sky-900 transition cursor-pointer active:scale-95 shadow-3xs"
                         title="Deslizar a la izquierda"
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
@@ -876,7 +965,7 @@ export default function SavedProjectsManager({
                       <button
                         type="button"
                         onClick={scrollRight}
-                        className="p-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-500 hover:text-indigo-600 transition cursor-pointer active:scale-95 shadow-3xs"
+                        className="p-1.5 rounded-lg bg-white hover:bg-sky-50 border border-sky-200 text-sky-700 hover:text-sky-900 transition cursor-pointer active:scale-95 shadow-3xs"
                         title="Deslizar a la derecha"
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -885,7 +974,7 @@ export default function SavedProjectsManager({
                   </div>
                   <div 
                     ref={scrollContainerRef}
-                    className="flex overflow-x-auto pb-3 pt-1 gap-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent scroll-smooth"
+                    className="flex overflow-x-auto pb-3 pt-1 gap-4 scrollbar-thin scrollbar-thumb-sky-200 scrollbar-track-transparent scroll-smooth"
                   >
                     {userProjects.map((p, idx) => {
                       const isSelected = p.id === selectedProjectId;
@@ -894,42 +983,51 @@ export default function SavedProjectsManager({
                       return (
                         <button
                           key={p.id}
+                          type="button"
                           onClick={() => {
                             setSelectedProjectId(p.id);
                             setIsEditing(false);
                           }}
-                          className={`text-left p-4 rounded-xl border transition-all duration-300 min-w-[210px] max-w-[240px] flex-1 cursor-pointer relative group ${
+                          style={{
+                            backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
+                            backgroundImage: isSelected 
+                              ? 'linear-gradient(135deg, #ffffff 0%, #e0f2fe 35%, #7dd3fc 100%)' 
+                              : 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #e0f2fe 100%)',
+                            borderColor: isSelected ? '#38bdf8' : '#e2e8f0',
+                            color: isSelected ? '#0369a1' : '#0c4a6e'
+                          }}
+                          className={`portfolio-project-card project-card-btn tab-trigger custom-bg text-left p-4 rounded-xl border-2 transition-all duration-300 min-w-[210px] max-w-[240px] flex-1 cursor-pointer relative group ${
                             isSelected
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 ring-2 ring-indigo-600 ring-offset-2'
-                              : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-800 hover:border-slate-300 shadow-xs'
+                              ? 'shadow-md shadow-sky-200/50 ring-2 ring-sky-300 ring-offset-2'
+                              : 'hover:border-sky-300 text-slate-800 shadow-xs hover:shadow-sm'
                           }`}
                         >
                           {isSelected && (
-                            <span className="absolute top-2.5 right-2.5 bg-white text-indigo-600 rounded-full p-0.5">
-                              <Check className="w-3 h-3" />
+                            <span className="absolute top-2.5 right-2.5 bg-white text-sky-600 border border-sky-200 rounded-full p-1 shadow-sm flex items-center justify-center">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
                             </span>
                           )}
-                          <span className={`text-[9px] uppercase font-bold tracking-wider font-mono block mb-1 ${
-                            isSelected ? 'text-indigo-250' : 'text-slate-400'
+                          <span className={`text-[9px] uppercase font-extrabold tracking-wider font-mono block mb-1.5 ${
+                            isSelected ? 'text-sky-800' : 'text-slate-500'
                           }`}>
                             {p.category || 'Categoría'}
                           </span>
-                          <strong className={`block text-xs font-bold leading-tight truncate ${
-                            isSelected ? 'text-white' : 'text-slate-800 group-hover:text-indigo-600 transition-colors'
+                          <strong className={`block text-xs sm:text-sm font-extrabold leading-snug truncate ${
+                            isSelected ? 'text-slate-900' : 'text-slate-800 group-hover:text-sky-950 transition-colors'
                           }`}>
-                            {p.title}
+                            {p.title || 'Proyecto Sin Título'}
                           </strong>
                           
-                          <div className="mt-3.5 space-y-1">
+                          <div className="mt-3.5 space-y-1.5">
                             <div className="flex justify-between items-center text-[9px]">
-                              <span className={isSelected ? 'text-indigo-250' : 'text-slate-400'}>Financiación:</span>
-                              <span className={`font-bold font-mono ${isSelected ? 'text-white' : 'text-slate-750'}`}>
+                              <span className={isSelected ? 'text-sky-800 font-bold' : 'text-slate-500 font-medium'}>Financiación:</span>
+                              <span className={`font-black font-mono ${isSelected ? 'text-sky-950' : 'text-slate-700'}`}>
                                 {progressPercent.toFixed(0)}%
                               </span>
                             </div>
-                            <div className={`w-full h-1.5 rounded-full overflow-hidden ${isSelected ? 'bg-indigo-750/50' : 'bg-slate-200'}`}>
+                            <div className={`w-full h-2 rounded-full overflow-hidden ${isSelected ? 'bg-white/80 border border-sky-300/80 shadow-inner' : 'bg-slate-100 border border-slate-200'}`}>
                               <div
-                                className={`h-full rounded-full ${isSelected ? 'bg-amber-400' : 'bg-indigo-600'}`}
+                                className={`h-full rounded-full transition-all duration-500 ${isSelected ? 'bg-sky-500' : 'bg-sky-500'}`}
                                 style={{ width: `${progressPercent}%` }}
                               />
                             </div>
@@ -1365,25 +1463,53 @@ export default function SavedProjectsManager({
 
                       {/* Display list of active team edit */}
                       <div className="space-y-2">
-                        {editTeam.map((member, idx) => (
-                          <div key={`edit-team-${idx}`} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs flex justify-between items-start">
-                            <div className="text-left space-y-0.5">
-                              <p className="font-bold text-slate-800">{member.name} <span className="font-medium text-slate-400 font-mono text-[9px]">({member.role})</span></p>
-                              <p className="text-[10px] text-slate-500 leading-tight">{member.experience}</p>
-                              {member.bio && <p className="text-[9px] bg-white p-1 rounded border leading-relaxed text-slate-500">{member.bio}</p>}
+                        {editTeam.map((member, idx) => {
+                          const lower = (member.name || '').toLowerCase();
+                          const isErn = lower.includes('ernesto');
+                          const isAdr = lower.includes('adriana');
+                          const avatarUrl = member.avatar || (
+                            isErn
+                              ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200'
+                              : isAdr
+                                ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+                                : undefined
+                          );
+                          const displayName = isErn ? 'Ernesto V. S.' : member.name;
+
+                          return (
+                            <div key={`edit-team-${idx}`} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs flex justify-between items-start gap-2.5">
+                              <div className="flex items-start gap-2.5">
+                                {avatarUrl ? (
+                                  <img
+                                    src={avatarUrl}
+                                    alt={displayName}
+                                    className="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                    {displayName.slice(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="text-left space-y-0.5">
+                                  <p className="font-bold text-slate-800">{displayName} <span className="font-medium text-slate-400 font-mono text-[9px]">({member.role})</span></p>
+                                  <p className="text-[10px] text-slate-500 leading-tight">{member.experience}</p>
+                                  {member.bio && <p className="text-[9px] bg-white p-1 rounded border leading-relaxed text-slate-500">{member.bio}</p>}
+                                </div>
+                              </div>
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeTeamMember(idx)}
+                                  className="p-1 text-rose-500 hover:bg-rose-100 rounded cursor-pointer shrink-0"
+                                  title="Quitar miembro"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
-                            {idx > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => removeTeamMember(idx)}
-                                className="p-1 text-rose-500 hover:bg-rose-100 rounded cursor-pointer shrink-0"
-                                title="Quitar miembro"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Form to add team member in SavedProjects */}
@@ -1472,15 +1598,33 @@ export default function SavedProjectsManager({
                         className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm animate-fade-in text-left block relative"
                       >
                         {/* HERO COVER BANNER */}
-                        <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900">
+                        <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900 group">
+                          {/* BUTTON WITH CAMERA TO CHANGE COVER IMAGE */}
+                          <label
+                            htmlFor={`cover-upload-${project.id}`}
+                            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white border border-white/25 backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition-all active:scale-95"
+                            title="Cambiar imagen de portada"
+                          >
+                            <Camera className="w-4 h-4 text-sky-300" />
+                            <span className="text-[11px] font-medium tracking-wide">Cambiar Portada</span>
+                            <input
+                              id={`cover-upload-${project.id}`}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleCoverImageUpload(project.id, e)}
+                            />
+                          </label>
+
                           {hasCoverImage ? (
                             <>
                               <img 
                                 src={coverUrl!} 
                                 alt={project.title} 
-                                className="w-full h-full object-cover opacity-60 saturate-110 brightness-[0.7] transform hover:scale-105 transition-transform duration-700" 
+                                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" 
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                              {/* Subtle bottom gradient only behind text to preserve total clarity across the image */}
+                              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
                             </>
                           ) : (
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 opacity-95">
@@ -1491,18 +1635,14 @@ export default function SavedProjectsManager({
                           )}
 
                           {/* OVERLAY HEADER CONTENT */}
-                          <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end text-white">
+                          <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end text-white pointer-events-none">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-white/15 backdrop-blur-md text-white rounded-md border border-white/10">
+                              <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-black/60 backdrop-blur-md text-white rounded-md border border-white/20 shadow-sm">
                                 {project.category}
-                              </span>
-                              <span className="text-[9px] font-bold text-indigo-200 bg-indigo-950/60 border border-indigo-800/40 px-2.5 py-1 rounded-md flex items-center gap-1 shadow-3xs">
-                                <Check className="w-3 h-3 text-indigo-400" />
-                                <span>Seleccionado para invertir</span>
                               </span>
                             </div>
                             
-                            <h4 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white leading-tight">
+                            <h4 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                               {project.title}
                             </h4>
                           </div>
@@ -1728,8 +1868,22 @@ export default function SavedProjectsManager({
                               </span>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {project.team.map((member, i) => {
-                                  // Generate nice initials for avatar
-                                  const initials = member.name ? member.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() : 'M';
+                                  const lowerName = (member.name || '').toLowerCase();
+                                  const isErnesto = lowerName.includes('ernesto');
+                                  const isAdriana = lowerName.includes('adriana');
+
+                                  const memberAvatar = member.avatar || (
+                                    isErnesto
+                                      ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400'
+                                      : isAdriana
+                                        ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'
+                                        : undefined
+                                  );
+
+                                  const displayName = isErnesto ? 'Ernesto V. S.' : member.name;
+
+                                  // Generate nice initials for avatar fallback
+                                  const initials = displayName ? displayName.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() : 'M';
                                   // Premium colors for avatars
                                   const colorPalette = [
                                     'bg-indigo-100 text-indigo-700 border-indigo-150',
@@ -1741,13 +1895,24 @@ export default function SavedProjectsManager({
                                   const avatarColor = colorPalette[i % colorPalette.length];
 
                                   return (
-                                    <div key={i} className="p-4 bg-slate-50/50 border border-slate-150 rounded-2xl flex items-start gap-3 hover:bg-slate-50 hover:border-indigo-200 transition-all duration-300">
-                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs border shrink-0 ${avatarColor}`}>
-                                        {initials}
-                                      </div>
+                                    <div key={i} className="p-4 bg-slate-50/50 border border-slate-150 rounded-2xl flex items-start gap-3.5 hover:bg-slate-50 hover:border-indigo-200 transition-all duration-300">
+                                      {memberAvatar ? (
+                                        <div className="relative shrink-0">
+                                          <img
+                                            src={memberAvatar}
+                                            alt={displayName}
+                                            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-slate-200 shadow-xs ring-1 ring-slate-100"
+                                            referrerPolicy="no-referrer"
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs border shrink-0 ${avatarColor}`}>
+                                          {initials}
+                                        </div>
+                                      )}
                                       <div className="min-w-0 flex-1 space-y-1">
                                         <div className="flex flex-wrap items-center justify-between gap-1">
-                                          <span className="font-bold text-slate-800 text-xs truncate max-w-[120px]">{member.name}</span>
+                                          <span className="font-bold text-slate-800 text-xs truncate max-w-[130px]" title={displayName}>{displayName}</span>
                                           <span className="text-[8px] bg-indigo-50/80 text-indigo-700 font-bold px-2 py-0.5 rounded border border-indigo-100">{member.role}</span>
                                         </div>
                                         <p className="text-[10px] text-slate-500 font-medium leading-normal">{member.experience}</p>
@@ -1792,6 +1957,22 @@ export default function SavedProjectsManager({
                               >
                                 <Eye className="w-3.5 h-3.5 text-indigo-300" />
                                 <span>Ver Proyecto</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadProjectPDF(project)}
+                                style={{
+                                  backgroundColor: '#fce7f3',
+                                  backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
+                                  borderColor: '#f472b6',
+                                  color: '#831843'
+                                }}
+                                className="pearl-pink-btn custom-bg flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold transition active:scale-95 cursor-pointer font-sans shadow-3xs"
+                                title="Descargar este proyecto en formato .pdf"
+                              >
+                                <Download className="w-3.5 h-3.5 text-pink-700" />
+                                <span>Descargar PDF</span>
                               </button>
 
                               <button
@@ -2109,6 +2290,8 @@ export default function SavedProjectsManager({
                                     <th className="p-2.5">Sesión / Ronda</th>
                                     <th className="p-2.5">Fecha de Consumación</th>
                                     <th className="p-2.5">Estado</th>
+                                    <th className="p-2.5">Votos Obtenidos</th>
+                                    <th className="p-2.5">Otros Ganadores Contigo</th>
                                     <th className="p-2.5 text-right">Premio Recibido (80%)</th>
                                   </tr>
                                 </thead>
@@ -2134,6 +2317,25 @@ export default function SavedProjectsManager({
                                           <span>✓ GANADOR</span>
                                         </span>
                                       </td>
+                                      <td className="p-2.5 whitespace-nowrap">
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md font-mono">
+                                          🗳️ {sess.votesReceived ?? 7} {sess.votesReceived === 1 ? 'voto' : 'votos'}
+                                        </span>
+                                      </td>
+                                      <td className="p-2.5 whitespace-nowrap">
+                                        {(sess.coWinnersCount ?? 0) > 0 ? (
+                                          <span 
+                                            className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md"
+                                            title={sess.coWinnersNames && sess.coWinnersNames.length > 0 ? `Co-ganadores: ${sess.coWinnersNames.join(', ')}` : undefined}
+                                          >
+                                            👥 {sess.coWinnersCount} {sess.coWinnersCount === 1 ? 'persona más' : 'personas más'} contigo ({(sess.coWinnersCount || 0) + 1} en total)
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50/90 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                            🥇 Ganador único (0 personas más)
+                                          </span>
+                                        )}
+                                      </td>
                                       <td className="p-2.5 text-right font-bold text-emerald-600 font-mono text-xs whitespace-nowrap">
                                         +{sess.prize.toFixed(2)}€
                                       </td>
@@ -2144,11 +2346,24 @@ export default function SavedProjectsManager({
                             </div>
 
                             {/* Resumen del proyecto al pie */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px] text-slate-600 bg-pink-50/40 p-2.5 rounded-lg border border-pink-100">
-                              <span>
-                                Este proyecto ha obtenido <strong>{pSummary.winCount} {pSummary.winCount === 1 ? 'victoria oficial' : 'victorias oficiales'}</strong> en <strong>{pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}</strong> de inversión.
-                              </span>
-                              <span className="font-extrabold text-emerald-700 font-mono text-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px] text-slate-600 bg-pink-50/40 p-3 rounded-lg border border-pink-100">
+                              <div className="space-y-0.5">
+                                <div>
+                                  Este proyecto ha obtenido <strong>{pSummary.winCount} {pSummary.winCount === 1 ? 'victoria oficial' : 'victorias oficiales'}</strong> en <strong>{pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}</strong> de inversión.
+                                </div>
+                                <div className="text-[10px] text-slate-500 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                                  <span>🗳️ Votos conseguidos: <strong>{pSummary.sessionsList.map(s => s.votesReceived ?? 7).join(', ')} votos</strong></span>
+                                  <span>•</span>
+                                  <span>
+                                    👥 Co-ganadores: <strong>
+                                      {pSummary.sessionsList.some(s => (s.coWinnersCount ?? 0) > 0) 
+                                        ? `${pSummary.sessionsList.reduce((acc, s) => acc + (s.coWinnersCount ?? 0), 0)} persona(s) adicional(es) en empate` 
+                                        : '0 (victoria exclusiva sin otros ganadores)'}
+                                    </strong>
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="font-extrabold text-emerald-700 font-mono text-xs whitespace-nowrap">
                                 Total acumulado: +{pSummary.totalPrize.toFixed(2)}€
                               </span>
                             </div>
@@ -2183,6 +2398,8 @@ export default function SavedProjectsManager({
                         <th className="p-3">Proyecto Ganador</th>
                         <th className="p-3">Categoría</th>
                         <th className="p-3">Estado</th>
+                        <th className="p-3">Votos Obtenidos</th>
+                        <th className="p-3">Otros Ganadores Contigo</th>
                         <th className="p-3">Fecha de Consumación</th>
                         <th className="p-3 text-right">Premio Recibido (80%)</th>
                       </tr>
@@ -2218,6 +2435,25 @@ export default function SavedProjectsManager({
                                 <span>✓ GANADOR</span>
                               </span>
                             </td>
+                            <td className="p-3 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md font-mono">
+                                🗳️ {log.votesReceived ?? 7} {log.votesReceived === 1 ? 'voto' : 'votos'}
+                              </span>
+                            </td>
+                            <td className="p-3 whitespace-nowrap">
+                              {(log.coWinnersCount ?? 0) > 0 ? (
+                                <span 
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md"
+                                  title={log.coWinnersNames && log.coWinnersNames.length > 0 ? `Co-ganadores: ${log.coWinnersNames.join(', ')}` : undefined}
+                                >
+                                  👥 {log.coWinnersCount} {log.coWinnersCount === 1 ? 'persona más' : 'personas más'} contigo ({(log.coWinnersCount || 0) + 1} en total)
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50/90 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                  🥇 Ganador único (0 personas más)
+                                </span>
+                              )}
+                            </td>
                             <td className="p-3 text-slate-500 whitespace-nowrap">
                               {new Date(log.date).toLocaleDateString('es-ES', {
                                 day: 'numeric',
@@ -2245,6 +2481,341 @@ export default function SavedProjectsManager({
                 Aún no has ganado un premio oficial de ronda de inversión. Participa en las sesiones de inversión rápida para competir con tu proyecto y calificar en las elecciones automatizadas.
               </div>
             )}
+          </div>
+
+          {/* TOTAL DE PROYECTOS FINANCIADOS (Debajo del recuadro de historial y rondas ganadas) */}
+          <div className="bg-gradient-to-br from-white via-sky-50/30 to-sky-100/40 rounded-2xl border border-sky-200/90 p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-150 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-sm shadow-sky-200">
+                  <Trophy className="w-5 h-5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
+                      Total de Proyectos Financiados
+                    </h4>
+                    <span className="text-[11px] font-mono font-bold bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full border border-sky-200">
+                      {totalFundedProjectsCount} de {userProjects.length} {userProjects.length === 1 ? 'proyecto' : 'proyectos'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Resumen consolidado de propuestas con financiamiento asegurado en rondas de votación
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="bg-white border border-sky-200 rounded-xl px-4 py-2 text-right shadow-3xs">
+                  <span className="text-[9px] uppercase font-bold text-sky-700 block font-mono">Capital Total Financiado</span>
+                  <strong className="text-sm sm:text-base font-black text-emerald-600 font-mono">
+                    +{totalFundingWonAll.toFixed(2)}€
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* CONTROLES Y FILTROS DEL SLIDER */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSliderFilterMode('funded_only');
+                    setSliderIndex(0);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                    sliderFilterMode === 'funded_only'
+                      ? 'bg-white text-sky-800 shadow-3xs border border-sky-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Solo Financiados ({totalFundedProjectsCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSliderFilterMode('all');
+                    setSliderIndex(0);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                    sliderFilterMode === 'all'
+                      ? 'bg-white text-sky-800 shadow-3xs border border-sky-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Todos en Slider ({userProjects.length})
+                </button>
+              </div>
+
+              {displayFundedProjects.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                    {sliderIndex + 1} / {displayFundedProjects.length}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setSliderIndex(prev => (prev > 0 ? prev - 1 : displayFundedProjects.length - 1))}
+                      className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-3xs transition active:scale-95 cursor-pointer"
+                      title="Proyecto anterior"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSliderIndex(prev => (prev < displayFundedProjects.length - 1 ? prev + 1 : 0))}
+                      className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-3xs transition active:scale-95 cursor-pointer"
+                      title="Siguiente proyecto"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SLIDER DE PROYECTOS FINANCIADOS */}
+            {displayFundedProjects.length === 0 ? (
+              <div className="text-center p-8 bg-white/80 rounded-2xl border border-dashed border-sky-200 text-xs text-slate-500 space-y-3">
+                <p className="max-w-md mx-auto">
+                  Aún no dispones de proyectos con financiación asegurada en sesiones de inversión. Compite en las sesiones para acumular el 80% de cada bote.
+                </p>
+                {userProjects.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSliderFilterMode('all');
+                      setSliderIndex(0);
+                    }}
+                    className="px-4 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl font-bold transition shadow-3xs cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-sky-600" />
+                    <span>Ver tus proyectos en el slider ({userProjects.length})</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="relative overflow-hidden rounded-2xl">
+                <AnimatePresence mode="wait">
+                  {(() => {
+                    const proj = displayFundedProjects[sliderIndex] || displayFundedProjects[0];
+                    if (!proj) return null;
+
+                    const fundingWon = getProjectFundingWon(proj.id, proj.title);
+                    const percent = Math.min(100, (fundingWon / proj.budget) * 100);
+                    const isFunded = fundingWon > 0;
+                    const isComplete = fundingWon >= proj.budget && proj.budget > 0;
+                    const winsCount = historyWonLog.filter(l => l.projectId === proj.id || l.projectName === proj.title).length;
+                    const coverImage = proj.images?.[0] || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80';
+
+                    return (
+                      <motion.div
+                        key={proj.id + '-' + sliderIndex}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.25 }}
+                        className="bg-white rounded-2xl border border-sky-200 overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-12 gap-0"
+                      >
+                        {/* SLIDER IMAGE SECTION */}
+                        <div className="relative md:col-span-5 h-56 md:h-auto min-h-[220px] bg-slate-900 overflow-hidden group">
+                          <img
+                            src={coverImage}
+                            alt={proj.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+
+                          {/* Top Badges */}
+                          <div className="absolute top-3 left-3 right-3 flex justify-between items-center gap-2">
+                            <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-black/40 backdrop-blur-md text-white rounded-md border border-white/10 font-mono">
+                              {proj.category || 'Proyecto'}
+                            </span>
+                            <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border shadow-sm font-mono flex items-center gap-1 ${
+                              isComplete 
+                                ? 'bg-emerald-500 text-white border-emerald-400' 
+                                : isFunded 
+                                  ? 'bg-sky-500 text-white border-sky-400'
+                                  : 'bg-slate-800/80 text-slate-300 border-white/20'
+                            }`}>
+                              {isComplete ? '🎉 100% Financiado' : isFunded ? `${percent.toFixed(0)}% Financiado` : 'En captación'}
+                            </span>
+                          </div>
+
+                          {/* Bottom image overlay */}
+                          <div className="absolute bottom-3 left-3 right-3 text-white">
+                            <div className="flex items-center gap-1.5 text-xs text-amber-300 font-bold mb-1">
+                              <Trophy className="w-3.5 h-3.5" />
+                              <span>{winsCount} {winsCount === 1 ? 'Victoria en ronda' : 'Victorias en rondas'}</span>
+                            </div>
+                            <h4 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1">
+                              {proj.title}
+                            </h4>
+                          </div>
+                        </div>
+
+                        {/* SLIDER CONTENT / DETAILS SECTION */}
+                        <div className="md:col-span-7 p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded font-mono inline-block mb-1">
+                                  {proj.category}
+                                </span>
+                                <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                                  {proj.title}
+                                </h3>
+                              </div>
+                              <span className="text-[11px] font-mono text-slate-400 shrink-0">
+                                ID: {proj.id.slice(0, 8)}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                              {proj.descriptionShort || proj.descriptionLong || 'Propuesta de moda y financiamiento para rondas de inversión en pasarela.'}
+                            </p>
+
+                            {/* FINANCIAL BREAKDOWN CARDS */}
+                            <div className="grid grid-cols-3 gap-2 pt-1">
+                              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5">
+                                <span className="text-[9px] uppercase font-bold text-emerald-800 block font-mono">Financiado</span>
+                                <strong className="text-xs sm:text-sm font-black text-emerald-700 font-mono block truncate">
+                                  +{fundingWon.toFixed(2)}€
+                                </strong>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                                <span className="text-[9px] uppercase font-bold text-slate-600 block font-mono">Presupuesto</span>
+                                <strong className="text-xs sm:text-sm font-black text-slate-800 font-mono block truncate">
+                                  {proj.budget.toFixed(2)}€
+                                </strong>
+                              </div>
+                              <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-2.5">
+                                <span className="text-[9px] uppercase font-bold text-sky-800 block font-mono">Restante</span>
+                                <strong className="text-xs sm:text-sm font-black text-sky-700 font-mono block truncate">
+                                  {Math.max(0, proj.budget - fundingWon).toFixed(2)}€
+                                </strong>
+                              </div>
+                            </div>
+
+                            {/* PROGRESS BAR */}
+                            <div className="space-y-1 pt-1">
+                              <div className="flex justify-between items-center text-[10px] font-mono">
+                                <span className="text-slate-500 font-medium">Progreso de Financiación</span>
+                                <span className="font-extrabold text-sky-900">{percent.toFixed(1)}%</span>
+                              </div>
+                              <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden border border-slate-200/70">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    isComplete 
+                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400' 
+                                      : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+                                  }`}
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* SLIDER CARD ACTIONS */}
+                          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedProjectId(proj.id);
+                                  if (!selectedProjectIds.includes(proj.id)) {
+                                    setSelectedProjectIds([proj.id]);
+                                  }
+                                  window.scrollTo({ top: 400, behavior: 'smooth' });
+                                }}
+                                className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-3xs"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-sky-300" />
+                                <span>Inspeccionar</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadProjectPDF(proj)}
+                                style={{
+                                  backgroundColor: '#fce7f3',
+                                  backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
+                                  borderColor: '#f472b6',
+                                  color: '#831843'
+                                }}
+                                className="pearl-pink-btn custom-bg px-3.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-3xs"
+                                title="Descargar dossier del proyecto en PDF"
+                              >
+                                <Download className="w-3.5 h-3.5 text-pink-700" />
+                                <span>Descargar PDF</span>
+                              </button>
+                            </div>
+
+                            <span className="text-[10px] font-medium text-slate-400">
+                              Usa las flechas o puntos
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+                </AnimatePresence>
+
+                {/* OVERLAY SLIDER ARROWS */}
+                {displayFundedProjects.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setSliderIndex(prev => (prev > 0 ? prev - 1 : displayFundedProjects.length - 1))}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-800 border border-slate-200 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer z-10"
+                      title="Anterior"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-slate-700" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSliderIndex(prev => (prev < displayFundedProjects.length - 1 ? prev + 1 : 0))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-800 border border-slate-200 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer z-10"
+                      title="Siguiente"
+                    >
+                      <ChevronRight className="w-5 h-5 text-slate-700" />
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* PAGINATION DOTS INDICATOR */}
+            {displayFundedProjects.length > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-1">
+                {displayFundedProjects.map((p, idx) => (
+                  <button
+                    key={p.id + '-' + idx}
+                    type="button"
+                    onClick={() => setSliderIndex(idx)}
+                    className={`transition-all rounded-full cursor-pointer ${
+                      sliderIndex === idx 
+                        ? 'w-7 h-2.5 bg-sky-600 shadow-xs' 
+                        : 'w-2.5 h-2.5 bg-sky-200 hover:bg-sky-300'
+                    }`}
+                    title={`Ir al proyecto ${idx + 1}: ${p.title}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-600 bg-white/90 p-3 rounded-xl border border-sky-150 gap-2">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                <span>Total de proyectos financiados: <strong>{totalFundedProjectsCount} de {userProjects.length}</strong></span>
+              </span>
+              {fullyFundedProjectsCount > 0 && (
+                <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[10px]">
+                  🎉 {fullyFundedProjectsCount} {fullyFundedProjectsCount === 1 ? 'proyecto con 100% de presupuesto completado' : 'proyectos con 100% de presupuesto completados'}
+                </span>
+              )}
+            </div>
           </div>
 
       </div>
