@@ -85,6 +85,8 @@ interface DirectMessageChatProps {
   initialMessages: ChatMessage[];
   currentUserId: string;
   currentUserRole?: string;
+  currentUserName?: string;
+  currentUserUsername?: string;
   onSendMessage: (msg: ChatMessage) => void;
   selectedContactId?: string;
   onSelectModel?: (model: ModelProfile) => void;
@@ -110,6 +112,8 @@ export default function DirectMessageChat({
   initialMessages,
   currentUserId,
   currentUserRole,
+  currentUserName,
+  currentUserUsername,
   onSendMessage,
   selectedContactId,
   onSelectModel,
@@ -119,16 +123,8 @@ export default function DirectMessageChat({
   sharedDraftImage = null,
   onClearSharedDraftImage
 }: DirectMessageChatProps) {
-  // Built-in list of other standard users/contacts on the platform to represent more "other users"
+  // Built-in list of other standard users/contacts on the platform (excluding Adriana Lima as she is current user)
   const defaultStandardContacts: MessageTarget[] = [
-    {
-      id: 'topf-1',
-      name: 'Adriana Lima',
-      username: 'adrianalima_w1',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-      role: 'investor',
-      status: 'online'
-    },
     {
       id: 'topf-2',
       name: 'Alessandra Ambrosio',
@@ -179,13 +175,39 @@ export default function DirectMessageChat({
     }
   ];
 
+  // Helper to determine if a contact is the logged in user (Adriana Lima)
+  const isSelf = (target: { id?: string; name?: string; username?: string }) => {
+    if (!target) return false;
+    if (target.id && currentUserId && target.id === currentUserId) return true;
+    if (target.username && currentUserUsername && target.username.toLowerCase() === currentUserUsername.toLowerCase()) return true;
+    if (target.name && currentUserName && target.name.toLowerCase() === currentUserName.toLowerCase()) return true;
+
+    // Explicit check: When logged in as Adriana Lima, exclude all Adriana Lima instances
+    const isCurrentUserAdriana = 
+      !currentUserName || 
+      currentUserName.toLowerCase().includes('adriana') || 
+      (currentUserUsername && currentUserUsername.toLowerCase().includes('adrianalima')) ||
+      currentUserId === 'topf-1' || 
+      currentUserId === 'model-1' || 
+      currentUserId === 'user-investor' ||
+      currentUserId === 'user';
+
+    if (isCurrentUserAdriana) {
+      if (target.id === 'topf-1' || target.id === 'model-1' || target.id === 'user-investor') return true;
+      if (target.name && target.name.toLowerCase().includes('adriana lima')) return true;
+      if (target.username && target.username.toLowerCase().includes('adrianalima')) return true;
+    }
+
+    return false;
+  };
+
   // Compile active targets (exclude current user to avoid self-chatting)
   const getCombinedContacts = (): MessageTarget[] => {
     const list: MessageTarget[] = [];
     
     // 1. Add models
     models.forEach(m => {
-      if (m.id !== currentUserId) {
+      if (!isSelf(m)) {
         list.push({
           id: m.id,
           name: m.name,
@@ -199,7 +221,7 @@ export default function DirectMessageChat({
 
     // 2. Add patrocinados (avoid duplicates and exclude self)
     patrocinados.forEach(p => {
-      if (p.id !== currentUserId && !list.some(item => item.username === p.username || item.id === p.id)) {
+      if (!isSelf(p) && !list.some(item => item.username === p.username || item.id === p.id)) {
         list.push({
           id: p.id,
           name: p.name,
@@ -213,7 +235,7 @@ export default function DirectMessageChat({
 
     // 3. Add standard contacts (avoid duplicates and exclude self)
     defaultStandardContacts.forEach(c => {
-      if (c.id !== currentUserId && !list.some(item => item.username === c.username || item.id === c.id)) {
+      if (!isSelf(c) && !list.some(item => item.username === c.username || item.id === c.id)) {
         list.push(c);
       }
     });
@@ -283,11 +305,13 @@ export default function DirectMessageChat({
   // Sync contacts if models or patrocinados list gets modified
   useEffect(() => {
     setAllContacts(getCombinedContacts());
-  }, [models, patrocinados]);
+  }, [models, patrocinados, currentUserId, currentUserName, currentUserUsername]);
 
   // Set default active contact on load
   useEffect(() => {
     const combined = getCombinedContacts();
+    setAllContacts(combined);
+
     if (selectedContactId) {
       const targetLower = selectedContactId.toLowerCase();
       const match = combined.find(c =>
@@ -295,9 +319,8 @@ export default function DirectMessageChat({
         c.username.toLowerCase() === targetLower ||
         c.id.toLowerCase() === targetLower
       );
-      if (match) {
+      if (match && !isSelf(match)) {
         setActiveContactId(match.id);
-        setUnfoldedContactIds(prev => ({ ...prev, [match.id]: true }));
         if (deletedContactIds.includes(match.id)) {
           const nextDeleted = deletedContactIds.filter(id => id !== match.id);
           setDeletedContactIds(nextDeleted);
@@ -314,16 +337,20 @@ export default function DirectMessageChat({
           role: 'model',
           status: 'online'
         };
-        setAllContacts(prev => [newContact, ...prev.filter(c => c.id !== selectedContactId)]);
-        setActiveContactId(selectedContactId);
+        if (!isSelf(newContact)) {
+          setAllContacts(prev => [newContact, ...prev.filter(c => c.id !== selectedContactId && !isSelf(c))]);
+          setActiveContactId(selectedContactId);
+        }
       }
-    } else if (combined.length > 0 && !activeContactId) {
-      const visible = combined.filter(c => !deletedContactIds.includes(c.id));
-      if (visible.length > 0) {
-        setActiveContactId(visible[0].id);
+    } else if (combined.length > 0) {
+      const visible = combined.filter(c => !deletedContactIds.includes(c.id) && !isSelf(c));
+      if (!activeContactId || isSelf({ id: activeContactId }) || !visible.some(c => c.id === activeContactId)) {
+        if (visible.length > 0) {
+          setActiveContactId(visible[0].id);
+        }
       }
     }
-  }, [selectedContactId, deletedContactIds]);
+  }, [selectedContactId, deletedContactIds, currentUserId, currentUserName, currentUserUsername]);
 
   // Scroll viewport down
   useEffect(() => {
@@ -591,10 +618,13 @@ export default function DirectMessageChat({
                 <div key={contact.id} className="relative group">
                   <button
                     onClick={() => {
-                      setActiveContactId(contact.id);
-                      setIsBlocked(false);
-                      setIsReported(false);
-                      setUnfoldedContactIds(prev => ({ ...prev, [contact.id]: true }));
+                      if (activeContactId === contact.id) {
+                        setUnfoldedContactIds(prev => ({ ...prev, [contact.id]: false }));
+                      } else {
+                        setActiveContactId(contact.id);
+                        setIsBlocked(false);
+                        setIsReported(false);
+                      }
                     }}
                     className={`tab-trigger w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition border ${
                       isActive
@@ -712,6 +742,18 @@ export default function DirectMessageChat({
 
               {/* Private messaging safety utilities */}
               <div className="flex items-center gap-1.5 text-xs">
+                {Boolean(unfoldedContactIds[activeContact.id]) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUnfoldedContactIds(prev => ({ ...prev, [activeContact.id]: false }));
+                    }}
+                    className="tab-trigger px-2.5 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition cursor-pointer"
+                    title="Ver ficha de presentación"
+                  >
+                    Ficha
+                  </button>
+                )}
                 <button
                   onClick={() => setIsBlocked(!isBlocked)}
                   className={`tab-trigger px-2.5 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider transition ${
@@ -722,7 +764,6 @@ export default function DirectMessageChat({
                 >
                   {isBlocked ? 'Bloqueado' : 'Bloquear'}
                 </button>
-
                 <button
                   onClick={() => {
                     setIsReported(true);
@@ -739,9 +780,13 @@ export default function DirectMessageChat({
 
             {(() => {
               const matchedModel = models.find(m => m.id === activeContact.id || m.username.toLowerCase() === activeContact.username.toLowerCase());
-              const isUnfolded = !matchedModel || unfoldedContactIds[activeContact.id] || currentUserRole === 'model';
+              const isUnfolded = Boolean(unfoldedContactIds[activeContact.id]);
 
-              if (matchedModel && !isUnfolded) {
+              if (!isUnfolded) {
+                const bioText = matchedModel?.bio || (activeContact.role === 'model' || activeContact.id.startsWith('top')
+                  ? "Top Modelo Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes."
+                  : "Perfil oficial verificado en la plataforma. Conéctate conmigo para explorar alianzas, patrocinios y proyectos exclusivos.");
+
                 return (
                   <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-white border border-slate-100/50 rounded-2xl m-4 shadow-3xs space-y-6 overflow-y-auto">
                     {/* Model Avatar Details */}
@@ -752,15 +797,19 @@ export default function DirectMessageChat({
                         referrerPolicy="no-referrer"
                         className="w-24 h-24 rounded-2xl object-cover border-4 border-indigo-50 shadow-md mx-auto"
                       />
-                      <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border-2 border-white uppercase">
+                      <span className={`absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border-2 border-white uppercase ${
+                        activeContact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'
+                      }`}>
                         {activeContact.status === 'online' ? 'Online' : 'Offline'}
                       </span>
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 font-display flex items-center justify-center gap-1.5">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 font-display flex items-center justify-center gap-2">
                         <span>{activeContact.name}</span>
-                        <span className="bg-indigo-100 text-indigo-700 text-[9px] font-black px-1.5 py-0.5 rounded animate-pulse">SPONSOR</span>
+                        <span className="bg-slate-100 text-slate-700 text-[10px] font-black tracking-wider px-2 py-0.5 rounded border border-slate-200 uppercase">
+                          {activeContact.role === 'model' || activeContact.id.startsWith('top') ? 'SPONSOR' : activeContact.role.toUpperCase()}
+                        </span>
                       </h3>
                       <p className="text-xs text-slate-400 font-mono">@{activeContact.username}</p>
                     </div>
@@ -769,7 +818,7 @@ export default function DirectMessageChat({
                     <div className="bg-slate-50 border border-slate-100/80 rounded-2xl p-5 text-slate-600 text-xs sm:text-sm leading-relaxed italic max-w-md mx-auto relative shadow-3xs">
                       <span className="absolute -top-3 left-6 text-2xl text-indigo-200 font-serif select-none">“</span>
                       <p className="font-sans font-medium text-slate-700 md:max-w-xs xl:max-w-md mx-auto leading-relaxed">
-                        {matchedModel.bio || "Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión y sé uno de mis recomendados!"}
+                        {bioText}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-2 font-mono not-italic uppercase tracking-wider font-bold">
                         — Descripción personalizada por la modelo
@@ -783,7 +832,7 @@ export default function DirectMessageChat({
                           type="button"
                           onClick={() => {
                             if (onPatrocinateClick) {
-                              onPatrocinateClick(matchedModel.id);
+                              onPatrocinateClick(matchedModel?.id || activeContact.id);
                             }
                           }}
                           className="w-full sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md shadow-indigo-500/10 hover:shadow-lg hover:shadow-indigo-500/20 active:translate-y-px cursor-pointer"
@@ -791,18 +840,16 @@ export default function DirectMessageChat({
                           Patrocíname
                         </button>
                       )}
-
                       <button
                         type="button"
                         onClick={() => {
                           setUnfoldedContactIds(prev => ({ ...prev, [activeContact.id]: true }));
                         }}
-                        className="w-full sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-md hover:shadow-lg active:translate-y-px cursor-pointer border border-slate-700/50"
+                        className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-bold tracking-wider uppercase bg-white hover:bg-slate-50 text-slate-900 transition-all shadow-xs hover:shadow-sm active:translate-y-px cursor-pointer border border-slate-200"
                       >
-                        Chatea conmigo
+                        CHATEA CONMIGO
                       </button>
                     </div>
-
                     {currentUserRole === 'visitor' && (
                       <p className="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto pb-4">
                         Al patrocinar a <strong>{activeContact.name}</strong>, serás redirigido al formulario de registro patrocinado por la modelo. El 10% de tus premios apoyará estratégicamente su red.

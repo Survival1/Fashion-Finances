@@ -8227,46 +8227,16 @@ export default function CastingLiveSection({
       const savedStr = localStorage.getItem(`saved_videos_${currentUserId}`);
       let existingSavedVideos: any[] = [];
       if (savedStr) {
-        existingSavedVideos = JSON.parse(savedStr);
-      } else {
-        existingSavedVideos = [
-          {
-            id: 'sv-1',
-            title: 'Urban Silhouette Walk',
-            description: 'Cinta de pasarela urbana en retroiluminación carmín.',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
-            music: 'Chic Urban Lofi Beats',
-            likes: 423,
-            views: '11.4K',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-            name: 'Lovelehee',
-            videoCategory: 'Fashion'
-          },
-          {
-            id: 'sv-2',
-            title: 'Neon Studio Dance',
-            description: 'Práctica de pose fluida para la campaña internacional de primavera.',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
-            music: 'Neon Synthwave Chic',
-            likes: 852,
-            views: '24.9K',
-            avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150',
-            name: 'Marii2121',
-            videoCategory: 'Modelos'
-          },
-          {
-            id: 'sv-3',
-            title: 'Editorial Silhouette Vogue',
-            description: 'Sesión artística monocromática de movimiento continuo.',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-modeling-40156-large.mp4',
-            music: 'Alternative Deep Vogue',
-            likes: 297,
-            views: '8.3K',
-            avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
-            name: 'Ann_______',
-            videoCategory: 'Catwalk'
+        try {
+          const parsed = JSON.parse(savedStr);
+          if (Array.isArray(parsed)) {
+            existingSavedVideos = parsed.filter((v: any) => v && v.id !== 'sv-uploaded-adriana' && v.id !== 'sv-1' && v.id !== 'sv-2' && v.id !== 'sv-3');
           }
-        ];
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        existingSavedVideos = [];
       }
       
       if (!wasFavorited) {
@@ -8632,60 +8602,10 @@ export default function CastingLiveSection({
         if (savedStr) {
           const parsed = JSON.parse(savedStr);
           if (Array.isArray(parsed)) {
-            existingSavedVideos = parsed;
+            existingSavedVideos = parsed.filter((v: any) => v && v.id !== 'sv-uploaded-adriana' && v.id !== 'sv-1' && v.id !== 'sv-2' && v.id !== 'sv-3');
           }
         } else {
-          // Fallback default list matching ModelFacebookProfile.tsx
-          existingSavedVideos = [
-            {
-              id: 'sv-uploaded-adriana',
-              title: 'Adriana Lima Runway',
-              description: 'Pasarela internacional de Adriana Lima.',
-              videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
-              music: 'Música original - Fashion Finances Studio',
-              likes: 852,
-              views: '1.2K',
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-              name: 'adrianalima_w1',
-              videoCategory: 'Fashion'
-            },
-            {
-              id: 'sv-1',
-              title: 'Urban Silhouette Walk',
-              description: 'Cinta de pasarela urbana en retroiluminación carmín.',
-              videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
-              music: 'Chic Urban Lofi Beats',
-              likes: 423,
-              views: '11.4K',
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-              name: 'Lovelehee',
-              videoCategory: 'Catwalk'
-            },
-            {
-              id: 'sv-2',
-              title: 'Neon Studio Dance',
-              description: 'Práctica de pose fluida para la campaña internacional de primavera.',
-              videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
-              music: 'Neon Synthwave Chic',
-              likes: 852,
-              views: '24.9K',
-              avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150',
-              name: 'Marii2121',
-              videoCategory: 'Modelos'
-            },
-            {
-              id: 'sv-3',
-              title: 'Editorial Silhouette Vogue',
-              description: 'Sesión artística monocromática de movimiento continuo.',
-              videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-modeling-40156-large.mp4',
-              music: 'Alternative Deep Vogue',
-              likes: 297,
-              views: '8.3K',
-              avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
-              name: 'Ann_______',
-              videoCategory: 'Fashion'
-            }
-          ];
+          existingSavedVideos = [];
         }
       } catch (e) {
         console.error('Error loading saved videos', e);
@@ -18792,7 +18712,7 @@ try {
                     if (cameFromShopTab && cameFromShopTab !== 'tiendas' && cameFromShopTab !== 'mi_tienda') {
                       setShopTab(cameFromShopTab);
                     } else {
-                      setShopTab('analisis');
+                      setShowTikTokShop(false);
                     }
                   }}
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0 self-start sm:self-auto shrink-0"
@@ -23413,47 +23333,76 @@ try {
                       Herramientas
                     </div>
 
-                    {/* Item: Crea efectos de TikTok */}
-                    <button
-                      onClick={() => {
-                        setShowEffectsModal(true);
-                        setShowMoreDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
-                      <span>Crea efectos de Casting Live</span>
-                    </button>
+                    {/* Si la sesión es de Inversor (Adriana Lima), solo mostrar un botón que ponga 'Ir a Tiendas' */}
+                    {userProfile?.role === 'investor' || 
+                     userProfile?.name?.toLowerCase().includes('inversor') || 
+                     userProfile?.name?.toLowerCase().includes('adriana') || 
+                     userProfile?.username?.toLowerCase().includes('adrianalima') ||
+                     userProfile?.name === 'Ernesto vs' ||
+                     userProfile?.username === 'ernestovs' ? (
+                      <button
+                        type="button"
+                        id="btn-ir-a-tiendas"
+                        onClick={() => {
+                          setSelectedInvestorStore(null);
+                          setShowTikTokShop(true);
+                          setShopTab('tiendas');
+                          setCameFromShopTab(null);
+                          setShowMoreDropdown(false);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-800 hover:bg-rose-50/70 hover:text-rose-600 transition cursor-pointer border border-slate-200/90 bg-white hover:border-pink-200 shadow-3xs text-left"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Store className="w-4 h-4 text-rose-500 shrink-0" />
+                          <span>Ir a Tiendas</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                      </button>
+                    ) : (
+                      <>
+                        {/* Item: Crea efectos de TikTok */}
+                        <button
+                          onClick={() => {
+                            setShowEffectsModal(true);
+                            setShowMoreDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
+                        >
+                          <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
+                          <span>Crea efectos de Casting Live</span>
+                        </button>
 
-                    {/* Item: Herramientas LIVE */}
-                    <button
-                      onClick={() => {
-                        setShowLiveToolsModal(true);
-                        setShowMoreDropdown(false);
-                      }}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Herramientas LIVE</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
+                        {/* Item: Herramientas LIVE */}
+                        <button
+                          onClick={() => {
+                            setShowLiveToolsModal(true);
+                            setShowMoreDropdown(false);
+                          }}
+                          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>Herramientas LIVE</span>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                        </button>
 
-                    {/* Item: Panel y Herramientas de Mi Tienda */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedInvestorStore(null);
-                        setShowTikTokShop(true);
-                        setShopTab('articulos');
-                        setShowMoreDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-rose-500 shrink-0" />
-                      <span>Panel y Herramientas de Mi Tienda</span>
-                    </button>
+                        {/* Item: Panel y Herramientas de Mi Tienda */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedInvestorStore(null);
+                            setShowTikTokShop(true);
+                            setShopTab('articulos');
+                            setShowMoreDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
+                        >
+                          <ShoppingBag className="w-4 h-4 text-rose-500 shrink-0" />
+                          <span>Panel y Herramientas de Mi Tienda</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { UserSessionProfile, ModelProfile, ChatMessage } from '../types';
 import ModelBookingSystem from './ModelBookingSystem';
 import UserUploadedVideos from './UserUploadedVideos';
@@ -179,7 +179,8 @@ export function ProfileIntroAndSponsors({
   onNavigateToTab,
   onOpenRanking,
   models: propModels,
-  onSelectModel
+  onSelectModel,
+  friendsCount = 5
 }: {
   userProfile: any;
   bioText?: string;
@@ -188,6 +189,7 @@ export function ProfileIntroAndSponsors({
   onOpenRanking?: () => void;
   models?: ModelProfile[];
   onSelectModel?: (model: ModelProfile) => void;
+  friendsCount?: number;
 }) {
   const [signedAgreements] = useState<Record<string, any>>(() => {
     if (propSignedAgreements) return propSignedAgreements;
@@ -413,7 +415,7 @@ export function ProfileIntroAndSponsors({
           </div>
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-indigo-500 font-bold" />
-            <span>Mis amigos: <strong className="text-indigo-650">{userProfile?.role === 'model' ? 142 : 5} amigos</strong></span>
+            <span>Mis amigos: <strong className="text-indigo-650">{friendsCount} amigos</strong></span>
           </div>
         </div>
       </div>
@@ -755,6 +757,120 @@ export default function ModelFacebookProfile({
   
   // Find current model's profile info
   const currentModel = models.find(m => m.id === userProfile.id);
+
+  // Helper to determine if a contact/model is the current profile or the logged in user
+  const isSelfContact = useCallback((item: { id?: string; username?: string; name?: string }) => {
+    if (!item) return false;
+    const currentId = userProfile?.id?.toLowerCase();
+    const currentUsername = userProfile?.username?.toLowerCase();
+    const currentName = userProfile?.name?.toLowerCase();
+    
+    const loggedId = realLoggedInUser?.id?.toLowerCase();
+    const loggedUsername = realLoggedInUser?.username?.toLowerCase();
+    const loggedName = realLoggedInUser?.name?.toLowerCase();
+
+    const targetId = item.id?.toLowerCase();
+    const targetUsername = item.username?.toLowerCase();
+    const targetName = item.name?.toLowerCase();
+
+    // Direct exact matches
+    if (currentId && targetId && currentId === targetId) return true;
+    if (currentUsername && targetUsername && currentUsername === targetUsername) return true;
+    if (currentName && targetName && currentName === targetName) return true;
+
+    if (loggedId && targetId && loggedId === targetId) return true;
+    if (loggedUsername && targetUsername && loggedUsername === targetUsername) return true;
+    if (loggedName && targetName && loggedName === targetName) return true;
+
+    // Adriana Lima specific check so she never appears in her own social lists
+    const isCurrentAdriana = (currentName && currentName.includes('adriana')) || 
+                             (currentUsername && currentUsername.includes('adrianalima')) || 
+                             (loggedName && loggedName.includes('adriana')) || 
+                             (loggedUsername && loggedUsername.includes('adrianalima'));
+    const isTargetAdriana = (targetName && targetName.includes('adriana')) || 
+                            (targetUsername && targetUsername.includes('adrianalima')) || 
+                            targetId === 'topf-1';
+    if (isCurrentAdriana && isTargetAdriana) return true;
+
+    return false;
+  }, [userProfile?.id, userProfile?.username, userProfile?.name, realLoggedInUser?.id, realLoggedInUser?.username, realLoggedInUser?.name]);
+
+  // Dynamic social lists: exactly in sync between button counter and full page list
+  const socialFriendsList = useMemo(() => {
+    const candidateFriends = [
+      { id: 'topf-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', bio: 'Model and best friend. High fashion enthusiast.' },
+      { id: 'topf-3', name: 'Candice Swanepoel', username: 'candiceswanepoel_w3', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
+      ...models.map((m) => ({
+        id: m.id,
+        name: m.name,
+        username: m.username,
+        avatar: m.avatar,
+        bio: m.bio || 'Colega de modelaje y amiga de Casting Live'
+      }))
+    ];
+
+    const seen = new Set<string>();
+    const list: any[] = [];
+    for (const item of candidateFriends) {
+      if (isSelfContact(item)) continue;
+      const key = (item.username || item.id).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push(item);
+    }
+    // Fixed to 5 closest friends so button and list are always 5 and match perfectly
+    return list.slice(0, 5);
+  }, [models, isSelfContact]);
+
+  const socialFollowersList = useMemo(() => {
+    const candidateFollowers = [
+      { id: 'user-investor', name: 'Ernesto vs', username: 'ernestovs', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200', bio: 'Fintech enthusiast, angel investor in green luxury fashion' },
+      { id: 'fol-sophia', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
+      { id: 'usr-carmen', name: 'Carmen de la Cruz', username: 'carmen_moda', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', bio: 'Amante de la costura prêt-à-porter y la financiación ética' },
+      ...models.map((m) => ({
+        id: m.id,
+        name: m.name,
+        username: m.username,
+        avatar: m.avatar,
+        bio: m.bio || 'Modelo profesional y sponsor financiero'
+      }))
+    ];
+
+    const seen = new Set<string>();
+    const list: any[] = [];
+    for (const item of candidateFollowers) {
+      if (isSelfContact(item)) continue;
+      const key = (item.username || item.id).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push(item);
+    }
+    return list.slice(0, 8);
+  }, [models, isSelfContact]);
+
+  const socialFollowingList = useMemo(() => {
+    const candidateFollowing = [
+      { id: 'fol-sophia-2', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
+      ...models.map((m) => ({
+        id: m.id,
+        name: m.name,
+        username: m.username,
+        avatar: m.avatar,
+        bio: m.bio || 'Explorando nuevas pasarelas en la alta costura'
+      }))
+    ];
+
+    const seen = new Set<string>();
+    const list: any[] = [];
+    for (const item of candidateFollowing) {
+      if (isSelfContact(item)) continue;
+      const key = (item.username || item.id).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push(item);
+    }
+    return list.slice(0, 14);
+  }, [models, isSelfContact]);
 
   // States
   const [activeProfileOrWallTab, setActiveProfileOrWallTab] = useState<'perfil' | 'muro'>('perfil');
@@ -1168,55 +1284,109 @@ export default function ModelFacebookProfile({
     (s: any) => s.userId === userProfile.id && s.expiresAt > Date.now()
   );
 
-  const [archivedStories, setArchivedStories] = useState<any[]>(() => {
-    const saved = localStorage.getItem(`archived_stories_${userProfile.id}`);
-    if (saved) return JSON.parse(saved);
-    const defaultArchived = [
-      {
-        id: 'archived-story-1',
-        userId: userProfile.id,
-        username: userProfile.username,
-        name: userProfile.name,
-        avatar: userProfile.avatar,
-        image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600',
-        title: 'Runway París de archivo',
-        createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
-        expiresAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-        isVideo: false
-      },
-      {
-        id: 'archived-story-2',
-        userId: userProfile.id,
-        username: userProfile.username,
-        name: userProfile.name,
-        avatar: userProfile.avatar,
-        image: 'https://images.unsplash.com/photo-1481824429379-07aa5e5b0739?auto=format&fit=crop&q=80&w=600',
-        title: 'Milán Backstage histórico',
-        createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
-        expiresAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
-        isVideo: false
-      },
-      {
-        id: 'archived-story-3',
-        userId: userProfile.id,
-        username: userProfile.username,
-        name: userProfile.name,
-        avatar: userProfile.avatar,
-        image: 'https://images.unsplash.com/photo-1549439602-43faec43ae8a?auto=format&fit=crop&q=80&w=600',
-        title: 'Vogue Editorial Look de archivo',
-        createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
-        expiresAt: Date.now() - 9 * 24 * 60 * 60 * 1000,
-        isVideo: false
+  const isDefaultArchivedStory = (s: any) => {
+    if (!s) return true;
+    const id = String(s.id || '');
+    if (id.startsWith('archived-story-')) return true;
+    const title = String(s.title || '');
+    if (title.includes('Runway París') || title.includes('Milán Backstage') || title.includes('Vogue Editorial')) return true;
+    const img = String(s.image || '');
+    if (img.includes('photo-1509631179647-0177331693ae') || img.includes('photo-1481824429379-07aa5e5b0739') || img.includes('photo-1549439602-43faec43ae8a')) return true;
+    return false;
+  };
+
+  const purgePrelaunchTestStories = () => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('archived_stories_')) {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                const filtered = parsed.filter((s: any) => !isDefaultArchivedStory(s));
+                localStorage.setItem(k, JSON.stringify(filtered));
+              }
+            } catch (e) {}
+          }
+        }
       }
-    ];
-    localStorage.setItem(`archived_stories_${userProfile.id}`, JSON.stringify(defaultArchived));
-    return defaultArchived;
+    } catch (e) {}
+  };
+
+  const [archivedStories, setArchivedStories] = useState<any[]>(() => {
+    purgePrelaunchTestStories();
+    const saved = localStorage.getItem(`archived_stories_${userProfile.id}`);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((s: any) => !isDefaultArchivedStory(s));
+        }
+      } catch (e) {}
+    }
+    return [];
   });
+
+  const isDefaultSavedVideo = (vid: any) => {
+    if (!vid) return true;
+    const id = String(vid.id || '');
+    const url = String(vid.videoUrl || '');
+    const desc = String(vid.description || '');
+    const title = String(vid.title || '');
+    const name = String(vid.name || '');
+
+    if (id === 'sv-uploaded-adriana' || id === 'sv-1' || id === 'sv-2' || id === 'sv-3' || id === 'uploaded-adriana') return true;
+    if (id.startsWith('sv-') && !id.includes('-user-') && !id.includes('-custom-')) return true;
+    if (url.includes('mixkit-beautiful-woman-posing-with-a-red-light-40486') || url.includes('mixkit-woman-posing-with-a-red-light-40158') || url.includes('mixkit-fashion-model-dancing-under-studio-light-40157') || url.includes('mixkit-girl-in-neon-sign-modeling-40156')) return true;
+    if (desc.includes('¡Nueva sesión de modelaje subida a Fashion Finances!') || title.includes('¡Nueva sesión de modelaje subida!')) return true;
+    if (desc.includes('FLorem Ipsum') || desc.includes('Cinta de pasarela urbana') || desc.includes('Práctica de pose fluida') || desc.includes('Sesión artística monocromática')) return true;
+    return false;
+  };
+
+  const purgePrelaunchTestVideos = () => {
+    try {
+      const PURGE_KEY = 'fashion_finances_prelaunch_videos_purged_v4';
+      if (!localStorage.getItem(PURGE_KEY)) {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('saved_videos_')) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        const liveStr = localStorage.getItem('coll_casting_live_videos');
+        if (liveStr) {
+          try {
+            const parsed = JSON.parse(liveStr);
+            if (Array.isArray(parsed)) {
+              const cleanedLive = parsed.filter((v: any) => !String(v.id || '').includes('uploaded') && !String(v.id || '').includes('sv-') && !isDefaultSavedVideo(v));
+              localStorage.setItem('coll_casting_live_videos', JSON.stringify(cleanedLive));
+            }
+          } catch (e) {}
+        }
+        localStorage.setItem(PURGE_KEY, 'true');
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  };
 
   const migrateSavedVideos = (videos: any[], userId: string) => {
     if (!videos || !Array.isArray(videos)) return [];
     let modified = false;
-    const migrated = videos.map((vid, idx) => {
+    const nonDefaultVideos = videos.filter((vid) => {
+      if (!vid || isDefaultSavedVideo(vid)) {
+        modified = true;
+        return false;
+      }
+      return true;
+    });
+
+    const migrated = nonDefaultVideos.map((vid, idx) => {
       if (!vid) return null;
       if (!vid.videoCategory) {
         modified = true;
@@ -1235,7 +1405,6 @@ export default function ModelFacebookProfile({
         } else if (name.includes('adriana')) {
           return { ...vid, videoCategory: 'Fashion' };
         } else {
-          // Fallback if we cannot decide by keywords but it is a user uploaded video, alternate to make them both visible
           if (vid.id && String(vid.id).includes('uploaded')) {
             return { ...vid, videoCategory: idx % 2 === 0 ? 'Catwalk' : 'Modelos' };
           }
@@ -1255,7 +1424,10 @@ export default function ModelFacebookProfile({
   };
 
   const [savedVideos, setSavedVideos] = useState<any[]>(() => {
-    let baseList = [];
+    const didPurge = purgePrelaunchTestVideos();
+    if (didPurge) return [];
+
+    let baseList: any[] = [];
     const userId = userProfile?.id || 'anonymous';
     const saved = localStorage.getItem(`saved_videos_${userId}`);
     if (saved) {
@@ -1265,56 +1437,7 @@ export default function ModelFacebookProfile({
         console.error(e);
       }
     } else {
-      baseList = [
-        {
-          id: 'sv-uploaded-adriana',
-          title: 'FLorem Ipsum es simplemente el tex...',
-          description: 'FLorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha...',
-          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
-          music: 'Música original - Fashion Finances Studio',
-          likes: 852,
-          views: '1.2K',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-          name: 'adrianalima_w1',
-          videoCategory: 'Fashion'
-        },
-        {
-          id: 'sv-1',
-          title: 'Urban Silhouette Walk',
-          description: 'Cinta de pasarela urbana en retroiluminación carmín.',
-          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
-          music: 'Chic Urban Lofi Beats',
-          likes: 423,
-          views: '11.4K',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-          name: 'Lovelehee',
-          videoCategory: 'Catwalk'
-        },
-        {
-          id: 'sv-2',
-          title: 'Neon Studio Dance',
-          description: 'Práctica de pose fluida para la campaña internacional de primavera.',
-          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
-          music: 'Neon Synthwave Chic',
-          likes: 852,
-          views: '24.9K',
-          avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150',
-          name: 'Marii2121',
-          videoCategory: 'Modelos'
-        },
-        {
-          id: 'sv-3',
-          title: 'Editorial Silhouette Vogue',
-          description: 'Sesión artística monocromática de movimiento continuo.',
-          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-modeling-40156-large.mp4',
-          music: 'Alternative Deep Vogue',
-          likes: 297,
-          views: '8.3K',
-          avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
-          name: 'Ann_______',
-          videoCategory: 'Fashion'
-        }
-      ];
+      baseList = [];
     }
 
     // Now merge uploaded videos from coll_casting_live_videos matching this model
@@ -1326,7 +1449,7 @@ export default function ModelFacebookProfile({
           const viewedUsername = (userProfile?.username || '').toLowerCase().trim();
           const uploadedSaved = parsedLive
             .filter((v: any) => {
-              if (!v || !v.id) return false;
+              if (!v || !v.id || isDefaultSavedVideo(v)) return false;
               const isUploaded = String(v.id).includes('uploaded') || String(v.id).includes('sv-');
               if (!isUploaded) return false;
               // Match if associated with the viewed profile in any way
@@ -1337,11 +1460,11 @@ export default function ModelFacebookProfile({
             })
             .map((v: any) => ({
               id: v.id,
-              title: v.description ? (v.description.length > 35 ? v.description.substring(0, 32) + '...' : v.description) : '¡Nueva sesión de modelaje subida!',
-              description: v.description || '¡Nueva sesión de modelaje subida a Fashion Finances! 📸🌟 #trend #fashionista',
+              title: v.description ? (v.description.length > 35 ? v.description.substring(0, 32) + '...' : v.description) : 'Vídeo subido',
+              description: v.description || 'Vídeo de modelaje',
               videoUrl: v.videoUrl,
-              music: v.music || 'Música original - Fashion Finances Studio',
-              likes: v.likes || 12,
+              music: v.music || 'Música original',
+              likes: v.likes || 0,
               views: '1.2K',
               avatar: v.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
               name: v.username || 'Anonymous',
@@ -1390,8 +1513,30 @@ export default function ModelFacebookProfile({
   });
 
   useEffect(() => {
+    // Run pre-launch purge and cleanup on mount
+    purgePrelaunchTestVideos();
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('saved_videos_')) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const arr = JSON.parse(raw);
+              if (Array.isArray(arr)) {
+                const cleaned = arr.filter((v: any) => !isDefaultSavedVideo(v));
+                if (cleaned.length !== arr.length) {
+                  localStorage.setItem(key, JSON.stringify(cleaned));
+                }
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    } catch (e) {}
+
     const handleStorageChange = () => {
-      let baseList = [];
+      let baseList: any[] = [];
       const userId = userProfile?.id || 'anonymous';
       const saved = localStorage.getItem(`saved_videos_${userId}`);
       if (saved) {
@@ -1402,56 +1547,7 @@ export default function ModelFacebookProfile({
           console.error(e);
         }
       } else {
-        baseList = [
-          {
-            id: 'sv-uploaded-adriana',
-            title: 'FLorem Ipsum es simplemente el tex...',
-            description: 'FLorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha...',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
-            music: 'Música original - Fashion Finances Studio',
-            likes: 852,
-            views: '1.2K',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-            name: 'adrianalima_w1',
-            videoCategory: 'Fashion'
-          },
-          {
-            id: 'sv-1',
-            title: 'Urban Silhouette Walk',
-            description: 'Cinta de pasarela urbana en retroiluminación carmín.',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
-            music: 'Chic Urban Lofi Beats',
-            likes: 423,
-            views: '11.4K',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-            name: 'Lovelehee',
-            videoCategory: 'Catwalk'
-          },
-          {
-            id: 'sv-2',
-            title: 'Neon Studio Dance',
-            description: 'Práctica de pose fluida para la campaña internacional de primavera.',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
-            music: 'Neon Synthwave Chic',
-            likes: 852,
-            views: '24.9K',
-            avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722553e1?auto=format&fit=crop&q=80&w=150',
-            name: 'Marii2121',
-            videoCategory: 'Modelos'
-          },
-          {
-            id: 'sv-3',
-            title: 'Editorial Silhouette Vogue',
-            description: 'Sesión artística monocromática de movimiento continuo.',
-            videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-modeling-40156-large.mp4',
-            music: 'Alternative Deep Vogue',
-            likes: 297,
-            views: '8.3K',
-            avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
-            name: 'Ann_______',
-            videoCategory: 'Fashion'
-          }
-        ];
+        baseList = [];
       }
 
       const castingLiveVideosStr = localStorage.getItem('coll_casting_live_videos');
@@ -1462,7 +1558,7 @@ export default function ModelFacebookProfile({
             const viewedUsername = (userProfile?.username || '').toLowerCase().trim();
             const uploadedSaved = parsedLive
               .filter((v: any) => {
-                if (!v || !v.id) return false;
+                if (!v || !v.id || isDefaultSavedVideo(v)) return false;
                 const isUploaded = String(v.id).includes('uploaded') || String(v.id).includes('sv-');
                 if (!isUploaded) return false;
                 // Match if associated with the viewed profile in any way
@@ -1538,7 +1634,9 @@ export default function ModelFacebookProfile({
   }, [userProfile?.id]);
 
   const handleDeleteVideo = (videoId: string) => {
-    const next = savedVideos.filter((v: any) => v.id !== videoId);
+    const target = savedVideos.find((v: any) => v.id === videoId);
+    const targetUrl = target?.videoUrl;
+    const next = savedVideos.filter((v: any) => v.id !== videoId && (targetUrl ? v.videoUrl !== targetUrl : true));
     setSavedVideos(next);
     const userId = userProfile?.id || 'anonymous';
     localStorage.setItem(`saved_videos_${userId}`, JSON.stringify(next));
@@ -1549,13 +1647,32 @@ export default function ModelFacebookProfile({
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
-          const filtered = parsed.filter((v: any) => v.id !== videoId);
+          const filtered = parsed.filter((v: any) => v.id !== videoId && (targetUrl ? v.videoUrl !== targetUrl : true));
           localStorage.setItem('coll_casting_live_videos', JSON.stringify(filtered));
         }
       }
     } catch (e) {
       console.error(e);
     }
+
+    // Also remove from all saved_videos_ keys across localStorage
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('saved_videos_')) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const arr = JSON.parse(raw);
+              if (Array.isArray(arr)) {
+                const updated = arr.filter((v: any) => v.id !== videoId && (targetUrl ? v.videoUrl !== targetUrl : true));
+                localStorage.setItem(key, JSON.stringify(updated));
+              }
+            } catch (err) {}
+          }
+        }
+      }
+    } catch (e) {}
 
     window.dispatchEvent(new Event('saved_videos_updated'));
     window.dispatchEvent(new Event('storage'));
@@ -2117,8 +2234,13 @@ export default function ModelFacebookProfile({
       const savedArchived = localStorage.getItem(`archived_stories_${userProfile.id}`);
       if (savedArchived) {
         try {
-          setArchivedStories(JSON.parse(savedArchived));
+          const parsed = JSON.parse(savedArchived);
+          if (Array.isArray(parsed)) {
+            setArchivedStories(parsed.filter((s: any) => !isDefaultArchivedStory(s)));
+          }
         } catch (e) {}
+      } else {
+        setArchivedStories([]);
       }
     };
     window.addEventListener('stories-updated', handleStoriesUpdated);
@@ -4814,21 +4936,23 @@ export default function ModelFacebookProfile({
         {/* Profile Details Overlap Panel */}
         <div className="px-6 pt-5 pb-6 relative">
 
-          {/* Ajustes de Privacidad Gear Button - Aligned to the far right on the same level as the name */}
-          <div className="absolute top-2.5 right-6 z-30 group">
-            <button
-              type="button"
-              onClick={() => setShowSettingsDrawer(true)}
-              className="w-10 h-10 rounded-xl bg-white hover:bg-slate-50 text-[#443a3c] transition cursor-pointer flex items-center justify-center shadow-md hover:scale-105 active:scale-95 duration-200 border border-slate-200"
-              title="Ajustes de Privacidad"
-              id="settings-gear-button"
-            >
-              <Settings className="w-5 h-5 shrink-0 hover:rotate-45 duration-300 ease-in-out text-slate-700" />
-            </button>
-            <div className="absolute right-0 top-full mt-2 bg-slate-900 border border-slate-800 text-white text-[10px] font-black tracking-wide py-1.5 px-3 rounded-xl shadow-xl opacity-0 scale-90 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 whitespace-nowrap z-50 flex items-center gap-1.5 font-sans">
-              <span>⚙️</span> Ajustes de privacidad
+          {/* Ajustes de Privacidad Gear Button - Visible only on user's own profile */}
+          {isOwnProfile && (
+            <div className="absolute top-2.5 right-6 z-30 group">
+              <button
+                type="button"
+                onClick={() => setShowSettingsDrawer(true)}
+                className="w-10 h-10 rounded-xl bg-white hover:bg-slate-50 text-[#443a3c] transition cursor-pointer flex items-center justify-center shadow-md hover:scale-105 active:scale-95 duration-200 border border-slate-200"
+                title="Ajustes de Privacidad"
+                id="settings-gear-button"
+              >
+                <Settings className="w-5 h-5 shrink-0 hover:rotate-45 duration-300 ease-in-out text-slate-700" />
+              </button>
+              <div className="absolute right-0 top-full mt-2 bg-slate-900 border border-slate-800 text-white text-[10px] font-black tracking-wide py-1.5 px-3 rounded-xl shadow-xl opacity-0 scale-90 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 whitespace-nowrap z-50 flex items-center gap-1.5 font-sans">
+                <span>⚙️</span> Ajustes de privacidad
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 mb-4 select-none">
             {/* Avatar overlay */}
@@ -5107,7 +5231,7 @@ export default function ModelFacebookProfile({
                     <div className="min-w-0">
                       <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Amigos</span>
                       <span className="text-xs font-black text-slate-800 font-mono">
-                        {userProfile.role === 'model' ? '142' : '5'}
+                        {socialFriendsList.length}
                       </span>
                     </div>
                   </div>
@@ -5123,10 +5247,7 @@ export default function ModelFacebookProfile({
                     <div className="min-w-0">
                       <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidores</span>
                       <span className="text-xs font-black text-slate-800 font-mono">
-                        {userProfile.role === 'model'
-                          ? (currentModel?.followersCount || 1420).toLocaleString()
-                          : "8"
-                        }
+                        {socialFollowersList.length}
                       </span>
                     </div>
                   </div>
@@ -5142,10 +5263,7 @@ export default function ModelFacebookProfile({
                     <div className="min-w-0">
                       <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidos</span>
                       <span className="text-xs font-black text-slate-800 font-mono">
-                        {userProfile.role === 'model'
-                          ? Math.floor((currentModel?.followersCount || 1420) / 10 + 12).toLocaleString()
-                          : "14"
-                        }
+                        {socialFollowingList.length}
                       </span>
                     </div>
                   </div>
@@ -5384,6 +5502,7 @@ export default function ModelFacebookProfile({
                   onOpenRanking={onOpenRanking}
                   models={models}
                   onSelectModel={(m) => onGoToModelProfile && onGoToModelProfile(m.id, m)}
+                  friendsCount={socialFriendsList.length}
                 />
               </div>
 
@@ -7570,27 +7689,6 @@ export default function ModelFacebookProfile({
                     if (activeGalleryTab === ('stories_archive' as any)) {
                       return (
                         <div className="space-y-4 text-left">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-900/5 p-4 rounded-xl border border-slate-200 gap-3">
-                            <div>
-                              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">📦 Archivo de Historias Privado</h4>
-                              <p className="text-[10px] text-slate-500 leading-normal">
-                                Las historias que subes se guardan de forma indefinida de manera totalmente privada aquí para ti.
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-xs shrink-0 self-start sm:self-center">
-                              <span className="text-[10px] text-slate-705 font-bold">Activar Archivo:</span>
-                              <input 
-                                type="checkbox" 
-                                checked={storyArchiveEnabled} 
-                                onChange={(e) => {
-                                  setStoryArchiveEnabled(e.target.checked);
-                                  localStorage.setItem(`story_archive_enabled_${userProfile.id}`, JSON.stringify(e.target.checked));
-                                }}
-                                className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
-                              />
-                            </div>
-                          </div>
-
                           {archivedStories.length === 0 ? (
                             <div className="py-12 text-center text-slate-400 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
                               <svg className="w-8 h-8 mx-auto mb-2 opacity-50 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -7720,9 +7818,17 @@ export default function ModelFacebookProfile({
 
                           {filteredSavedVideos.length === 0 ? (
                             <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200 w-full">
-                              <span className="text-4xl block mb-2">📂</span>
-                              <p className="text-xs font-black text-slate-600">No hay vídeos guardados en la categoría {savedVideoCategoryFilter === 'Catwalk' ? 'Catwalks' : savedVideoCategoryFilter}</p>
-                              <p className="text-[10px] text-slate-400 mt-1">Guarda vídeos desde Casting Live asignando esta categoría para que se muestren aquí.</p>
+                              <span className="text-4xl block mb-2">📹</span>
+                              <p className="text-xs font-black text-slate-700">
+                                {savedVideoCategoryFilter === 'Todos'
+                                  ? 'No tienes vídeos guardados'
+                                  : `No hay vídeos guardados en la categoría ${savedVideoCategoryFilter === 'Catwalk' ? 'Catwalks' : savedVideoCategoryFilter}`}
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-1">
+                                {savedVideoCategoryFilter === 'Todos'
+                                  ? 'Guarda vídeos desde Casting Live para verlos aquí.'
+                                  : 'Guarda vídeos desde Casting Live asignando esta categoría para que se muestren aquí.'}
+                              </p>
                             </div>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -7752,10 +7858,10 @@ export default function ModelFacebookProfile({
                                       e.stopPropagation();
                                       handleDeleteVideo(vid.id);
                                     }}
-                                    className="absolute top-2.5 right-2.5 z-45 w-8 h-8 rounded-full bg-black/40 text-white/70 hover:text-white hover:bg-black/70 flex items-center justify-center transition-all duration-200 active:scale-90 hover:scale-110 cursor-pointer opacity-0 group-hover:opacity-100"
-                                    title="Eliminar video guardado"
+                                    className="absolute top-2.5 right-2.5 z-45 w-8 h-8 rounded-full bg-black/60 hover:bg-rose-600 text-white flex items-center justify-center transition-all duration-200 active:scale-90 hover:scale-110 cursor-pointer shadow-md"
+                                    title="Eliminar este video"
                                   >
-                                    <X className="w-5.5 h-5.5 stroke-[2.5] drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                                    <X className="w-5 h-5 stroke-[2.5] drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
                                   </button>
 
                                   <video 
@@ -9190,9 +9296,9 @@ export default function ModelFacebookProfile({
             <div className="text-center">
               <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Página Social de Cuenta</span>
               <h3 className="text-sm sm:text-base font-black text-slate-950 font-display flex items-center gap-1.5 justify-center">
-                {activeSocialModal === 'friends' ? 'Mis Amigos Recíprocos' :
-                 activeSocialModal === 'followers' ? 'Mis Seguidores' : 
-                 'Mis Perfiles Seguidos'}
+                {activeSocialModal === 'friends' ? `Mis Amigos Recíprocos (${socialFriendsList.length})` :
+                 activeSocialModal === 'followers' ? `Mis Seguidores (${socialFollowersList.length})` : 
+                 `Mis Perfiles Seguidos (${socialFollowingList.length})`}
               </h3>
             </div>
 
@@ -9219,9 +9325,9 @@ export default function ModelFacebookProfile({
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
-                      {activeSocialModal === 'friends' ? 'Mis Amigos (Círculo Íntimo)' :
-                       activeSocialModal === 'followers' ? 'Seguidores de mi Canal' : 
-                       'Perfiles del ecosistema que sigo'}
+                      {activeSocialModal === 'friends' ? `Mis Amigos (Círculo Íntimo - ${socialFriendsList.length})` :
+                       activeSocialModal === 'followers' ? `Seguidores de mi Canal (${socialFollowersList.length})` : 
+                       `Perfiles del ecosistema que sigo (${socialFollowingList.length})`}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">
                       Gestiona tu círculo social, inicia conversaciones premium o apoya a tus colegas de Fashion Finances de forma directa.
@@ -9258,54 +9364,10 @@ export default function ModelFacebookProfile({
               {/* Friends/Followers Rows Container */}
               <div className="bg-white rounded-2xl border border-slate-150 shadow-sm divide-y divide-slate-100 overflow-hidden">
                 {(() => {
-                  const otherModels = models.filter(m => m.id !== userProfile.id);
-                  const mockFriendsList = [
-                    { id: 'topf-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', bio: 'Model and best friend. High fashion enthusiast.' },
-                    { id: 'topf-3', name: 'Candice Swanepoel', username: 'candiceswanepoel_w3', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
-                    ...otherModels.slice(1, 6).map((m) => ({
-                      id: m.id,
-                      name: m.name,
-                      username: m.username,
-                      avatar: m.avatar,
-                      bio: m.bio || 'Colega de modelaje y amiga de Casting Live'
-                    }))
-                  ];
-
-                  const mockFollowersList = [
-                    { id: 'user-investor', name: 'Ernesto vs', username: 'ernestovs', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200', bio: 'Fintech enthusiast, angel investor in green luxury fashion' },
-                    { id: 'topf-3', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
-                    { id: 'usr-3', name: 'Carmen de la Cruz', username: 'carmen_moda', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', bio: 'Amante de la costura prêt-à-porter y la financiación ética' },
-                    ...otherModels.slice(0, 5).map((m) => ({
-                      id: m.id,
-                      name: m.name,
-                      username: m.username,
-                      avatar: m.avatar,
-                      bio: m.bio || 'Modelo profesional y sponsor financiero'
-                    }))
-                  ];
-
-                  const mockFollowingList = [
-                    ...otherModels.slice(0, 8).map(m => ({
-                      id: m.id,
-                      name: m.name,
-                      username: m.username,
-                      avatar: m.avatar,
-                      bio: m.bio || 'Explorando nuevas pasarelas en la alta costura'
-                    })),
-                    { id: 'topf-3', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' }
-                  ];
-
-                  const rawList = 
-                    activeSocialModal === 'friends' ? mockFriendsList :
-                    activeSocialModal === 'followers' ? mockFollowersList : 
-                    mockFollowingList;
-
-                  const seenIds = new Set<string>();
-                  const currentList = rawList.filter(item => {
-                    if (seenIds.has(item.id)) return false;
-                    seenIds.add(item.id);
-                    return true;
-                  });
+                  const currentList = 
+                    activeSocialModal === 'friends' ? socialFriendsList :
+                    activeSocialModal === 'followers' ? socialFollowersList : 
+                    socialFollowingList;
 
                   const getModelStatus = (item: any) => {
                     const modelRef = models.find(m => m.id === item.id || m.username === item.username);
@@ -9316,8 +9378,8 @@ export default function ModelFacebookProfile({
                       };
                     }
                     // Intelligent fallback to match the screenshots & show live/online states elegantly
-                    const isOnline = item.id === 'topf-1' || item.id === 'user-investor' || item.username?.includes('w1') || item.username?.includes('w4');
-                    const isCastingLive = item.id === 'topf-3' || item.username?.includes('w3') || item.username?.includes('m2');
+                    const isOnline = item.id === 'user-investor' || item.username?.includes('w1') || item.username?.includes('w4') || item.username?.includes('m1');
+                    const isCastingLive = item.id === 'fol-sophia' || item.username?.includes('w3') || item.username?.includes('m2');
                     return { isOnline, isCastingLive };
                   };
 

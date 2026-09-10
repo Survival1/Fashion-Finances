@@ -661,6 +661,46 @@ export default function App() {
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [activeSocialModalInvestor, setActiveSocialModalInvestor] = useState<'followers' | 'following' | 'friends' | null>(null);
 
+  // Filter social lists to never include the logged-in user
+  const displayedFriends = useMemo(() => {
+    return friendsList.filter(item => {
+      if (!item) return false;
+      const isSelf = 
+        (userProfile?.id && item.id && userProfile.id.toLowerCase() === item.id.toLowerCase()) ||
+        (userProfile?.name && item.name && userProfile.name.toLowerCase() === item.name.toLowerCase()) ||
+        (userProfile?.username && item.username && userProfile.username.toLowerCase() === item.username.toLowerCase()) ||
+        ((userProfile?.name?.toLowerCase().includes('adriana') || userProfile?.username?.toLowerCase().includes('adrianalima')) && 
+         (item.name?.toLowerCase().includes('adriana') || item.username?.toLowerCase().includes('adrianalima') || item.id === 'friend-1'));
+      return !isSelf;
+    });
+  }, [friendsList, userProfile?.id, userProfile?.name, userProfile?.username]);
+
+  const displayedFollowers = useMemo(() => {
+    return followersList.filter(item => {
+      if (!item) return false;
+      const isSelf = 
+        (userProfile?.id && item.id && userProfile.id.toLowerCase() === item.id.toLowerCase()) ||
+        (userProfile?.name && item.name && userProfile.name.toLowerCase() === item.name.toLowerCase()) ||
+        (userProfile?.username && item.username && userProfile.username.toLowerCase() === item.username.toLowerCase()) ||
+        ((userProfile?.name?.toLowerCase().includes('adriana') || userProfile?.username?.toLowerCase().includes('adrianalima')) && 
+         (item.name?.toLowerCase().includes('adriana') || item.username?.toLowerCase().includes('adrianalima') || item.id === 'fol-1'));
+      return !isSelf;
+    });
+  }, [followersList, userProfile?.id, userProfile?.name, userProfile?.username]);
+
+  const displayedFollowing = useMemo(() => {
+    return followingList.filter(item => {
+      if (!item) return false;
+      const isSelf = 
+        (userProfile?.id && item.id && userProfile.id.toLowerCase() === item.id.toLowerCase()) ||
+        (userProfile?.name && item.name && userProfile.name.toLowerCase() === item.name.toLowerCase()) ||
+        (userProfile?.username && item.username && userProfile.username.toLowerCase() === item.username.toLowerCase()) ||
+        ((userProfile?.name?.toLowerCase().includes('adriana') || userProfile?.username?.toLowerCase().includes('adrianalima')) && 
+         (item.name?.toLowerCase().includes('adriana') || item.username?.toLowerCase().includes('adrianalima') || item.id === 'fol-1'));
+      return !isSelf;
+    });
+  }, [followingList, userProfile?.id, userProfile?.name, userProfile?.username]);
+
   // Load / Setup state on mounted
   useEffect(() => {
     setIsLoaded(true);
@@ -3134,6 +3174,7 @@ export default function App() {
                 setModelViewSourceTab('ranking');
                 setActiveTabTab('home');
               }}
+              friendsCount={displayedFriends.length}
             />
           </div>
 
@@ -3438,6 +3479,8 @@ export default function App() {
                 initialMessages={messages}
                 currentUserId={userProfile.id}
                 currentUserRole={userProfile.role}
+                currentUserName={userProfile.name}
+                currentUserUsername={userProfile.username}
                 onSendMessage={handleSendMessage}
                 selectedContactId={activeChatTargetId}
                 sharedDraftImage={sharedDraftImage}
@@ -3953,7 +3996,7 @@ export default function App() {
                         <UserPlus2 className="w-4 h-4 text-pink-550 shrink-0" />
                         <div className="min-w-0">
                           <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Amigos</span>
-                          <span className="text-xs font-black text-slate-800 font-mono">{friendsList.length}</span>
+                          <span className="text-xs font-black text-slate-800 font-mono">{displayedFriends.length}</span>
                         </div>
                       </div>
                       <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
@@ -3968,7 +4011,7 @@ export default function App() {
                         <Users className="w-4 h-4 text-pink-550 shrink-0" />
                         <div className="min-w-0">
                           <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidores</span>
-                          <span className="text-xs font-black text-slate-800 font-mono">{followersList.length}</span>
+                          <span className="text-xs font-black text-slate-800 font-mono">{displayedFollowers.length}</span>
                         </div>
                       </div>
                       <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
@@ -3983,7 +4026,7 @@ export default function App() {
                         <UserCheck className="w-4 h-4 text-pink-550 shrink-0" />
                         <div className="min-w-0">
                           <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidos</span>
-                          <span className="text-xs font-black text-slate-800 font-mono">{followingList.length}</span>
+                          <span className="text-xs font-black text-slate-800 font-mono">{displayedFollowing.length}</span>
                         </div>
                       </div>
                       <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
@@ -5476,9 +5519,9 @@ export default function App() {
             <div className="text-center">
               <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Página Social de Cuenta</span>
               <h3 className="text-sm sm:text-base font-black text-slate-950 font-display flex items-center gap-1.5 justify-center">
-                {activeSocialModalInvestor === 'friends' ? 'Mis Amigos (Cerrado)' :
-                 activeSocialModalInvestor === 'followers' ? 'Mis Seguidores (Inversor)' : 
-                 'Perfiles que Sigo (Inversor)'}
+                {activeSocialModalInvestor === 'friends' ? `Mis Amigos (Cerrado - ${displayedFriends.length})` :
+                 activeSocialModalInvestor === 'followers' ? `Mis Seguidores (Inversor - ${displayedFollowers.length})` : 
+                 `Perfiles que Sigo (Inversor - ${displayedFollowing.length})`}
               </h3>
             </div>
 
@@ -5505,9 +5548,9 @@ export default function App() {
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
-                      {activeSocialModalInvestor === 'friends' ? 'Mis Amigos Recíprocos (Inversor)' :
-                       activeSocialModalInvestor === 'followers' ? 'Seguidores en mi Colectivo' : 
-                       'Portafolio de creadores que sigo'}
+                      {activeSocialModalInvestor === 'friends' ? `Mis Amigos Recíprocos (Inversor - ${displayedFriends.length})` :
+                       activeSocialModalInvestor === 'followers' ? `Seguidores en mi Colectivo (${displayedFollowers.length})` : 
+                       `Portafolio de creadores que sigo (${displayedFollowing.length})`}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">
                       Gestiona tus conexiones, apoya directamente las pasarelas o lanza un canal premium dentro de Fashion Finances.
@@ -5545,9 +5588,9 @@ export default function App() {
               <div className="bg-white rounded-2xl border border-slate-150 shadow-sm divide-y divide-slate-100 overflow-hidden">
                 {(() => {
                   const currentList = 
-                    activeSocialModalInvestor === 'friends' ? friendsList :
-                    activeSocialModalInvestor === 'followers' ? followersList : 
-                    followingList;
+                    activeSocialModalInvestor === 'friends' ? displayedFriends :
+                    activeSocialModalInvestor === 'followers' ? displayedFollowers : 
+                    displayedFollowing;
 
                   if (currentList.length === 0) {
                     return (
