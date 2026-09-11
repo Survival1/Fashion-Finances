@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { UserSessionProfile, ModelProfile, ChatMessage } from '../types';
 import ModelBookingSystem from './ModelBookingSystem';
 import UserUploadedVideos from './UserUploadedVideos';
@@ -141,36 +142,6 @@ const DEFAULT_COMMENT_AUTHORS = [
   { name: "Sofía Martínez", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150" }
 ];
 
-const DEFAULT_FOLLOWED_STORES = [
-  {
-    id: 'victorias_secret_spain',
-    name: "Victoria's Secret Spain",
-    username: 'victoriassecret_es',
-    category: 'Lencería de Lujo & Pasarela 🌸',
-    avatar: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?auto=format&fit=crop&q=80&w=150',
-    verified: true,
-    rating: 4.9
-  },
-  {
-    id: 'balmain_paris_paloma',
-    name: 'Balmain Paris Paloma Elsesser',
-    username: 'palomaelsesser_w44',
-    category: 'Calzado & Alta Costura 👠',
-    avatar: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=150',
-    verified: true,
-    rating: 4.8
-  },
-  {
-    id: 'loren_luxury_boutique',
-    name: 'Loren Luxury Boutique Paris',
-    username: 'loren_paris_boutique',
-    category: 'Abrigos Éthéré & Atelier 🛍️',
-    avatar: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=150',
-    verified: true,
-    rating: 4.9
-  }
-];
-
 // Exported component for Intro & Sponsored Companies container
 export function ProfileIntroAndSponsors({
   userProfile,
@@ -200,33 +171,6 @@ export function ProfileIntroAndSponsors({
       return {};
     }
   });
-
-  const [followedIds, setFollowedIds] = useState<string[]>(() => {
-    try {
-      const cached = localStorage.getItem('followed_stores');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.filter((id: string) => id !== 'couture_elite_madrid');
-        }
-      }
-      return ['victorias_secret_spain', 'balmain_paris_paloma', 'loren_luxury_boutique'];
-    } catch {
-      return ['victorias_secret_spain', 'balmain_paris_paloma', 'loren_luxury_boutique'];
-    }
-  });
-
-  const toggleFollow = (storeId: string) => {
-    setFollowedIds(prev => {
-      const updated = prev.includes(storeId)
-        ? prev.filter(id => id !== storeId)
-        : [...prev, storeId];
-      localStorage.setItem('followed_stores', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const [showAllRanking, setShowAllRanking] = useState(false);
 
   // Retrieve models for ranking
   const allModels: ModelProfile[] = React.useMemo(() => {
@@ -270,110 +214,10 @@ export function ProfileIntroAndSponsors({
     return list.slice(0, 100);
   }, [allModels]);
 
-  const activeAgreements = propSignedAgreements || signedAgreements;
-  const activeFollowedStores = DEFAULT_FOLLOWED_STORES.filter(s => followedIds.includes(s.id));
-
   return (
     <div className="space-y-4 font-sans text-left">
-      {/* 🏪 BLOQUE: TIENDAS QUE SIGO (Solo tiendas seguidas) */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs text-left" id="bloque-tiendas-que-sigo">
-        <div className="flex items-center justify-between border-b border-slate-100/80 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-rose-500">
-              <Store className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-                <span>Tiendas que sigo</span>
-              </h3>
-              <p className="text-[10px] text-slate-400 font-medium font-sans">Boutiques de moda y sponsors oficiales</p>
-            </div>
-          </div>
-          <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100">
-            {activeFollowedStores.length} {activeFollowedStores.length === 1 ? 'tienda' : 'tiendas'}
-          </span>
-        </div>
-
-        {activeFollowedStores.length === 0 ? (
-          <div className="py-4 text-center text-slate-400 text-xs font-medium bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-            No estás siguiendo ninguna tienda actualmente.
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {activeFollowedStores.map(store => {
-              const isFollowing = followedIds.includes(store.id);
-              return (
-                <div
-                  key={store.id}
-                  onClick={() => {
-                    localStorage.setItem('came_from_profile_sponsor', 'true');
-                    if (onNavigateToTab) {
-                      onNavigateToTab('casting_live', store.id);
-                    }
-                  }}
-                  className="group flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/40 hover:bg-rose-50/30 hover:border-pink-200 transition-all cursor-pointer shadow-3xs"
-                  title={`Ver catálogo oficial de ${store.name}`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={store.avatar}
-                      alt={store.name}
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=150';
-                      }}
-                      referrerPolicy="no-referrer"
-                      className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 shrink-0 group-hover:scale-105 transition-transform"
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1">
-                        <h4 className="text-xs font-bold text-slate-800 truncate group-hover:text-rose-600 transition-colors">
-                          {store.name}
-                        </h4>
-                        {store.verified && (
-                          <CheckCircle2 className="w-3 h-3 text-rose-500 fill-rose-50 shrink-0" />
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-400 font-mono truncate">@{store.username}</p>
-                      <p className="text-[9.5px] text-rose-500 font-medium truncate mt-0.5 font-sans">{store.category}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFollow(store.id);
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer select-none flex items-center gap-1 ${
-                        isFollowing
-                          ? 'bg-rose-50 text-rose-600 border border-rose-200/80 hover:bg-rose-100'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                      }`}
-                      title={isFollowing ? "Dejar de seguir tienda" : "Seguir tienda"}
-                    >
-                      {isFollowing ? (
-                        <>
-                          <Check className="w-2.5 h-2.5 text-rose-600" />
-                          <span>Siguiendo</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-2.5 h-2.5 text-slate-500" />
-                          <span>Seguir</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
       {/* Intro Information Cards (FB Intro style) */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs">
+      <div className="bg-gradient-to-br from-[#FCE7F3] via-[#FFF1F6] to-[#E0F2FE] rounded-2xl border border-pink-200/60 p-5 space-y-4 shadow-xs">
         <div>
           <h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest flex items-center gap-1">
             <span>Información / Intro</span>
@@ -382,12 +226,12 @@ export function ProfileIntroAndSponsors({
 
         {/* Custom user-editable presentation/intro text */}
         <div className="space-y-2 text-left">
-          <p className="text-xs text-slate-600 leading-relaxed font-medium bg-slate-50/50 border border-slate-100 p-3.5 rounded-xl whitespace-pre-line">
+          <p className="text-xs text-slate-700 leading-relaxed font-medium bg-white/80 backdrop-blur-xs border border-white/90 p-3.5 rounded-xl whitespace-pre-line shadow-2xs">
             {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
           </p>
         </div>
 
-        <hr className="border-slate-100" />
+        <hr className="border-pink-200/50" />
 
         {/* Status details indicators */}
         <div className="text-xs space-y-2 text-slate-700">
@@ -407,7 +251,7 @@ export function ProfileIntroAndSponsors({
                 onNavigateToTab('casting_live');
               }
             }}
-            className="flex items-center gap-2 cursor-pointer hover:text-amber-600 transition-colors p-1 -m-1 rounded-lg hover:bg-amber-50/50"
+            className="flex items-center gap-2 cursor-pointer hover:text-amber-600 transition-colors p-1 -m-1 rounded-lg hover:bg-white/60"
             title="Ver Sponsoring Oficial y Ranking"
           >
             <Award className="w-4 h-4 text-amber-500 font-bold shrink-0" />
@@ -416,132 +260,6 @@ export function ProfileIntroAndSponsors({
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-indigo-500 font-bold" />
             <span>Mis amigos: <strong className="text-indigo-650">{friendsCount} amigos</strong></span>
-          </div>
-        </div>
-      </div>
-
-      {/* 🤝 EMPRESAS QUE PATROCINO */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs text-left">
-        <div>
-          <h3 className="text-xs font-bold text-slate-850 uppercase tracking-widest flex items-center gap-1.5">
-            <span>🤝</span>
-            <span>Empresas que Patrocino</span>
-          </h3>
-          <p className="text-[10px] text-slate-400 mt-1">Sponsors con quienes tengo un acuerdo verificado en Casting Live e intermediación. Haz clic en cualquiera para visitar su boutique y catálogo.</p>
-        </div>
-        
-        <div className="space-y-3">
-          {/* If there are any signed agreements, we can show them, plus default premium brands! */}
-          {activeAgreements && Object.keys(activeAgreements).length > 0 ? (
-            (Object.values(activeAgreements) as any[]).map((ag, idx) => {
-              if (!ag || typeof ag !== 'object') return null;
-              const companyName = ag.company || 'Empresa';
-              const campaignName = ag.campaign || 'Campaña';
-              const amountValue = ag.amount || '0';
-              const nameLower = companyName.toLowerCase();
-              let targetStoreId = 'victorias_secret_spain';
-              if (nameLower.includes('carolina')) targetStoreId = 'carolina_herrera_spain';
-              else if (nameLower.includes('loreal') || nameLower.includes("l'oréal")) targetStoreId = 'loreal_group';
-              else if (nameLower.includes('balmain')) targetStoreId = 'balmain_paris_paloma';
-
-              return (
-                <div 
-                  key={idx} 
-                  onClick={() => {
-                    localStorage.setItem('came_from_profile_sponsor', 'true');
-                    if (onNavigateToTab) {
-                      onNavigateToTab('casting_live', targetStoreId);
-                    }
-                  }}
-                  className="bg-gradient-to-r from-rose-50/20 to-pink-50/10 border border-rose-100/50 hover:border-pink-300 hover:shadow-xs active:scale-[0.99] transition-all rounded-xl p-3 flex items-center gap-3 cursor-pointer"
-                  title={`Ver tienda y catálogo de ${companyName}`}
-                >
-                  <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold uppercase shrink-0">
-                    {String(companyName).substring(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-850 truncate">{companyName}</p>
-                    <p className="text-[10px] text-rose-500 font-medium truncate">{campaignName}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-[10px] bg-emerald-50 text-emerald-700 font-mono font-black px-1.5 py-0.5 rounded-full">
-                      {String(amountValue).includes('/') ? amountValue : `${Number(amountValue).toLocaleString()}€`}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          ) : null}
-
-          {/* Default Premium Brand partnerships to keep it populated! */}
-          <div 
-            onClick={() => {
-              localStorage.setItem('came_from_profile_sponsor', 'true');
-              if (onNavigateToTab) {
-                onNavigateToTab('casting_live', 'victorias_secret_spain');
-              }
-            }}
-            className="bg-gradient-to-r from-pink-50/20 to-slate-50/20 border border-slate-100 hover:border-pink-200 hover:shadow-xs active:scale-[0.99] transition-all duration-150 rounded-xl p-3 flex items-center gap-3 cursor-pointer"
-            title="Ver tienda de Victoria's Secret Spain"
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=100" 
-              alt="VS" 
-              className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-850">Victoria's Secret Spain</p>
-              <p className="text-[10px] text-pink-600 font-semibold font-sans">Pódium Logo Oficial & Gala Verano</p>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-[10px] bg-emerald-50 text-emerald-700 font-black px-1.5 py-0.5 rounded-full font-mono">15.000€</span>
-            </div>
-          </div>
-
-          <div 
-            onClick={() => {
-              localStorage.setItem('came_from_profile_sponsor', 'true');
-              if (onNavigateToTab) {
-                onNavigateToTab('casting_live', 'loreal_group');
-              }
-            }}
-            className="bg-gradient-to-r from-purple-50/25 to-slate-50/20 border border-slate-100 hover:border-purple-200 hover:shadow-xs active:scale-[0.99] transition-all duration-150 rounded-xl p-3 flex items-center gap-3 cursor-pointer"
-            title="Ver tienda de L'Oréal Group"
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=100" 
-              alt="Loreal" 
-              className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-850 font-sans">L'Oréal Group</p>
-              <p className="text-[10px] text-purple-600 font-semibold font-sans">Casting Live Product Ads - Maquillaje</p>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-[10px] bg-emerald-50 text-emerald-700 font-black px-1.5 py-0.5 rounded-full font-mono">32.000€</span>
-            </div>
-          </div>
-
-          <div 
-            onClick={() => {
-              localStorage.setItem('came_from_profile_sponsor', 'true');
-              if (onNavigateToTab) {
-                onNavigateToTab('casting_live', 'carolina_herrera_spain');
-              }
-            }}
-            className="bg-gradient-to-r from-indigo-50/15 to-slate-50/15 border border-slate-100 hover:border-indigo-200 hover:shadow-xs active:scale-[0.99] transition-all duration-150 rounded-xl p-3 flex items-center gap-3 cursor-pointer"
-            title="Ver tienda de Carolina Herrera España"
-          >
-            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] shrink-0 font-bold text-slate-550 border border-slate-200">
-              CH
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-850 font-sans">Carolina Herrera España</p>
-              <p className="text-[10px] text-indigo-500 font-semibold font-sans">Sponsor de Pasarela de Alta Costura</p>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-[10px] bg-indigo-50 text-indigo-700 font-black px-1.5 py-0.5 rounded-full font-mono">25.000€</span>
-            </div>
           </div>
         </div>
       </div>
@@ -571,8 +289,8 @@ export function ProfileIntroAndSponsors({
         </div>
 
         {/* List of Models */}
-        <div className={showAllRanking ? "space-y-2 max-h-[540px] overflow-y-auto pr-1 scrollbar-thin" : "space-y-2"}>
-          {(showAllRanking ? sortedRankingModels.slice(0, 100) : sortedRankingModels.slice(0, 5)).map((model, idx) => {
+        <div className="space-y-2">
+          {sortedRankingModels.slice(0, 10).map((model, idx) => {
             const rank = idx + 1;
             const isFirst = rank === 1;
             const isSecond = rank === 2;
@@ -663,33 +381,6 @@ export function ProfileIntroAndSponsors({
             );
           })}
         </div>
-
-        {/* Action Buttons */}
-        {sortedRankingModels.length > 5 && (
-          <div className="pt-1 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setShowAllRanking(!showAllRanking)}
-              className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 active:scale-[0.99] text-slate-700 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 border border-slate-200/80 transition-all cursor-pointer shadow-3xs"
-            >
-              <span>{showAllRanking ? 'Mostrar menos (Top 5)' : `Ver los 100 modelos del ranking`}</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllRanking ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showAllRanking && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (onOpenRanking) onOpenRanking();
-                }}
-                className="w-full py-1.5 px-3 bg-rose-50 hover:bg-rose-100 active:scale-[0.99] text-rose-600 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1.5 border border-rose-200/80 transition-all cursor-pointer font-mono uppercase tracking-wider"
-              >
-                <span>Abrir Podio Visual Top 100</span>
-                <ExternalLink className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -4872,13 +4563,12 @@ export default function ModelFacebookProfile({
       {/* 🚀 FACEBOOK PROFILE HEADER CARD */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         {/* Cover Photo */}
-        <div className="h-44 sm:h-56 bg-slate-250 relative overflow-hidden">
+        <div className="h-52 sm:h-64 md:h-72 lg:h-[300px] relative overflow-hidden bg-slate-100">
           <img 
-            src={userProfile.banner || currentModel?.banner || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200"} 
+            src={userProfile.banner || currentModel?.banner || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1600"} 
             alt="Facebook Cover" 
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-cover opacity-100 transition-all duration-300"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
           
           {isOwnProfile && (
             <>
@@ -5042,21 +4732,24 @@ export default function ModelFacebookProfile({
               <div className="flex flex-wrap gap-2.5 items-center justify-center sm:justify-end shrink-0 sm:ml-auto z-10 pr-0 translate-y-7 sm:translate-y-9">
                 {isOwnProfile ? (
                   <>
-                    {/* 🛍️ Botón Tienda */}
+                    {/* 🎥 Botón Casting Live (Redirige al canal de Fashion) */}
                     <button
                       type="button"
                       onClick={() => {
+                        try {
+                          localStorage.setItem('casting_live_default_category_filter', 'Fashion');
+                        } catch {}
                         if (onNavigateToTab) {
-                          onNavigateToTab('casting_live', 'mi_escaparate');
+                          onNavigateToTab('casting_live', 'fashion');
                         } else {
-                          alert('Navegando a la Tienda...');
+                          alert('Navegando a Casting Live (Fashion)...');
                         }
                       }}
                       className="px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer select-none bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 border border-slate-200/80 shadow-xs uppercase tracking-wider"
-                      title="Ir a la Tienda (Mi Escaparate)"
+                      title="Ir a Casting Live (Canal Fashion)"
                     >
-                      <ShoppingBag className="w-3.5 h-3.5 text-slate-700" />
-                      <span>Tienda</span>
+                      <Video className="w-3.5 h-3.5 text-slate-700" />
+                      <span>Casting Live</span>
                     </button>
 
                     <button
@@ -5615,84 +5308,27 @@ export default function ModelFacebookProfile({
                   </div>
 
                   <div className="pt-4 border-t border-[#CDE3F5] text-left">
-                    <div className="flex flex-col gap-1 mb-3.5">
-                      <span className="text-[10px] uppercase font-bold text-[#697386] tracking-wider font-mono block">
-                        ¿Qué ofreces? / Contrata directamente
-                      </span>
-                      <p className="text-xs text-[#697386] leading-relaxed">
-                        Accede al catálogo interactivo y consulta los 15 tipos de contratos regulados estándar de la industria.
-                      </p>
-                    </div>
-                    
-                    {/* Premium visual banner and luxury button to open contract page modal */}
-                    <div className="bg-gradient-to-b from-[#E6F3FE] via-[#F2F9FF] to-[#E6F3FE] border border-[#BAE0FA] rounded-2xl p-6 text-center space-y-4 shadow-[0_2px_16px_rgba(2,132,199,0.04)] mb-3.5">
-                      <div className="inline-flex p-3 bg-white text-[#0284C7] rounded-2xl border border-[#0284C7]/20 shadow-xs">
-                        <Briefcase className="w-6 h-6 text-[#0284C7]" />
-                      </div>
+                    {/* Sky blue (Azul Cielo) visual banner and button to open contract page modal */}
+                    <div className="bg-gradient-to-b from-[#bfe2ff] via-[#cde9ff] to-[#bfe2ff] border border-[#7ec4f8] rounded-2xl p-6 text-center space-y-4 shadow-[0_4px_20px_rgba(2,132,199,0.12)] mb-3.5">
                       <div className="space-y-1.5">
-                        <h4 className="font-bold text-[#171717] text-sm sm:text-base tracking-tight font-sans">
+                        <h4 className="font-bold text-[#0c2840] text-sm sm:text-base tracking-tight font-sans">
                           Catálogo de Modalidades de Contratación
                         </h4>
-                        <p className="text-xs text-[#697386] max-w-md mx-auto leading-relaxed">
+                        <p className="text-xs text-[#1e3a58] max-w-md mx-auto leading-relaxed font-medium">
                           Consulta y selecciona entre 15 tipos de servicios profesionales, contratos de imagen y representación con pasarela y catálogo.
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setShowContractsModal(true)}
-                        className="w-full py-3.5 bg-white hover:bg-[#171717] hover:text-white text-[#171717] font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer border border-[#CDE3F5] hover:border-[#171717] shadow-sm hover:shadow-md flex items-center justify-center gap-2.5 active:scale-[0.99] group"
-                      >
-                        <FileText className="w-4 h-4 text-[#0284C7] group-hover:text-sky-300 transition-colors" />
-                        <span className="font-mono uppercase font-black tracking-wider text-[11px]">ABRIR OPCIONES DE CONTRATACIÓN (15 MODALIDADES)</span>
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3 mt-1">
-                      {/* Agende una cita */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowBookingSystem(!showBookingSystem);
-                          if (!showBookingSystem) {
-                            setShowAgreementForm(false);
-                            setShowUploadedVideos(false);
-                          }
-                        }}
-                        className={`flex-1 flex items-center justify-between text-left px-4 py-3.5 rounded-xl border transition-all duration-200 cursor-pointer shadow-3xs group ${
-                          showBookingSystem 
-                            ? 'border-[#0284C7] bg-[#E0F2FE] text-[#171717] font-extrabold ring-1 ring-[#0284C7]' 
-                            : 'bg-white border-[#CDE3F5] hover:border-[#0284C7] hover:shadow-xs hover:scale-[1.005]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Calendar className="w-4 h-4 shrink-0 text-[#0284C7]" />
-                          <span className="font-bold text-xs text-[#171717] truncate uppercase tracking-wide">Agende una cita</span>
-                        </div>
-                        <span className="text-[9px] uppercase font-black font-mono text-[#0284C7] bg-[#E0F2FE] border border-[#0284C7]/25 px-2.5 py-1 rounded-md shrink-0 ml-1">
-                          {showBookingSystem ? 'Ocultar' : 'Reservar'}
-                        </span>
-                      </button>
-
-                      {/* Casting Live */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
-                          if (onNavigateToTab) {
-                            onNavigateToTab('casting_live');
-                          } else {
-                            alert(`Navegando al canal de Finanzas de Casting Live...`);
-                          }
-                        }}
-                        className="flex-1 flex items-center justify-between text-left px-4 py-3.5 rounded-xl bg-white border-[#CDE3F5] border hover:border-[#0284C7] hover:shadow-xs hover:scale-[1.005] transition-all duration-200 cursor-pointer shadow-3xs group"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7] shrink-0 shadow-xs animate-pulse" />
-                          <span className="font-bold text-xs text-[#171717] truncate uppercase tracking-wide">Casting Live</span>
-                        </div>
-                        <span className="text-[9px] uppercase font-black font-mono text-[#0284C7] bg-[#E0F2FE] border border-[#0284C7]/25 px-2.5 py-1 rounded-md shrink-0 ml-1">Ver Directo</span>
-                      </button>
+                      <div className="flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowContractsModal(true)}
+                          className="px-5 py-2.5 bg-white hover:bg-[#0c2840] hover:text-white text-[#0c2840] font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer border border-[#90d0fc] hover:border-[#0c2840] shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2.5 active:scale-[0.99] group"
+                        >
+                          <FileText className="w-4 h-4 text-[#0284C7] group-hover:text-sky-300 transition-colors" />
+                          <span className="font-bold tracking-wide text-xs">Ver opciones de contratación</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -7792,7 +7428,6 @@ export default function ModelFacebookProfile({
                               { id: 'Modelos', label: 'Runway 👑', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
                               { id: 'BackStage', label: 'BackStage 🎬', color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700' },
                               { id: 'Investors', label: 'Jewellery 💎', color: 'bg-purple-50 hover:bg-purple-100 text-purple-700' },
-                              { id: 'Tiendas', label: 'Tiendas 🛍️', color: 'bg-sky-50 hover:bg-sky-100 text-sky-700' },
                               { id: 'Catwalk', label: 'Catwalk 👠', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
                               { id: 'Fitnes', label: 'Fitnes 💪', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
                               { id: 'Beauty', label: 'Beauty 💄', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
@@ -8289,7 +7924,6 @@ export default function ModelFacebookProfile({
                               { id: 'Modelos', label: 'RUNWAY 👑', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
                               { id: 'BackStage', label: 'BACKSTAGE 🎬', color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700' },
                               { id: 'Investors', label: 'JEWELLERY 💎', color: 'bg-purple-50 hover:bg-purple-100 text-purple-700' },
-                              { id: 'Tiendas', label: 'TIENDAS 🛍️', color: 'bg-sky-50 hover:bg-sky-100 text-sky-700' },
                               { id: 'Catwalk', label: 'CATWALK 👠', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
                               { id: 'Fitnes', label: 'FITNES 💪', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
                               { id: 'Beauty', label: 'BEAUTY 💄', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
@@ -9475,12 +9109,12 @@ export default function ModelFacebookProfile({
       )}
 
       {/* ⚙️ AJUSTES Y PRIVACIDAD DIALOG MODAL (yz.png) */}
-      {showSettingsDrawer && (
-        <div className="fixed inset-0 z-[110] bg-white flex flex-col animate-fade-in text-slate-800 border-x border-slate-200 no-scrollbar scrollbar-none">
-          <div className="bg-white w-full h-full border-x border-slate-200 shadow-none flex flex-col overflow-hidden relative">
+      {showSettingsDrawer && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-white flex flex-col text-slate-800 border-0 no-scrollbar scrollbar-none">
+          <div className="bg-white w-full h-full border-0 shadow-none flex flex-col overflow-hidden relative">
             
             {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-150 flex justify-between items-center bg-slate-50/50 shrink-0">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
                   <Edit className="w-5 h-5" />
@@ -9491,18 +9125,19 @@ export default function ModelFacebookProfile({
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setShowSettingsDrawer(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold hover:bg-slate-100 px-2.5 py-1.5 rounded-lg transition text-sm cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 font-bold hover:bg-slate-100 px-2.5 py-1.5 rounded-lg transition text-sm cursor-pointer border-0 shadow-none"
               >
                 ✕ Cerrar
               </button>
             </div>
 
             {/* Main content body (Splits in left menu and right detail content) */}
-            <div className="flex-1 flex overflow-hidden divide-x divide-slate-150">
+            <div className="flex-1 flex overflow-hidden divide-x divide-slate-100 bg-white">
               
               {/* LEFT SIDEBAR: vertical list of items from yz.png */}
-              <div className="w-[42%] sm:w-[35%] bg-slate-50/50 overflow-y-auto p-3 text-left space-y-4">
+              <div className="w-[42%] sm:w-[35%] bg-white overflow-y-auto p-3 text-left space-y-4 border-0">
                 
                 {/* Section header */}
                 <div className="space-y-1.5">
@@ -9513,10 +9148,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('profile')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'profile'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Camera className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9526,10 +9161,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('notifications')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'notifications'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Bell className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9547,10 +9182,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('privacy')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'privacy'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Lock className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9560,10 +9195,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('friends')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'friends'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Star className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9573,10 +9208,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('blocked')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'blocked'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Ban className="w-4 h-4 text-rose-500 shrink-0" />
@@ -9586,10 +9221,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('history')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'history'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Clock className="w-4 h-4 text-sky-500 shrink-0" />
@@ -9607,10 +9242,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('messages')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'messages'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Send className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9620,10 +9255,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('tags')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'tags'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Type className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9633,10 +9268,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('comments')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'comments'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <MessageSquare className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9646,10 +9281,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('sharing')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'sharing'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Share2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -9659,10 +9294,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('restricted')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'restricted'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <ShieldAlert className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9672,10 +9307,10 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => setActiveSettingsTab('filters')}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-left text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'filters'
-                          ? 'bg-slate-100 text-slate-900 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-3xs'
+                          ? 'active-tab bg-slate-100 text-slate-900'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <EyeOff className="w-4 h-4 text-slate-700 shrink-0" />
@@ -9813,7 +9448,7 @@ export default function ModelFacebookProfile({
                               RECORDATORIO IMPRESCINDIBLE PARA EL MODELO
                             </h5>
                             <p className="text-[10.5px] leading-relaxed text-slate-650 font-medium">
-                              Esta sección está diseñada <strong className="text-rose-700 uppercase font-black">exclusivamente</strong> para que subas tu vídeo de competencia al Ranking de la Landing Page. Es un requisito obligatorio elegir o subir un vídeo grabado en <strong className="text-slate-900 border-b-2 border-rose-300 pb-0.5 font-bold">PRIMERÍSIMO PRIMER PLANO</strong> (zoom extremo facial a tu rostro o mirada destacable). Los vídeos que no cumplan con esta directriz no se calificarán para recibir patrocinio de los inversores.
+                              Esta sección está diseñada <strong className="text-rose-700 uppercase font-black">exclusivamente</strong> para que subas tu vídeo de competencia al Ranking de la Landing Page. Es un requisito obligatorio elegir o subir un vídeo grabado en <strong className="text-slate-900 border-b-2 border-rose-300 pb-0.5 font-bold">Primer plano</strong> (zoom extremo facial a tu rostro o mirada destacable). Los vídeos que no cumplan con esta directriz no se calificarán para recibir patrocinio de los inversores.
                             </p>
                           </div>
                         </div>
@@ -9884,37 +9519,14 @@ export default function ModelFacebookProfile({
                           </div>
                         )}
 
-                        {/* Interactive upload panel / direct links */}
+                        {/* Subir archivo de vídeo local */}
                         <div className="p-4 bg-slate-50 border border-slate-200/85 rounded-2xl space-y-3">
                           <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1 font-mono">
-                            <span>➕</span> Vincular Enlace o Subir Archivo
+                            <span>📁</span> Subir Archivo de Vídeo Local
                           </p>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="Pegar enlace de vídeo vertical (.mp4)"
-                              className="flex-1 bg-white border border-slate-200 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none transition-all placeholder:text-slate-400"
-                              value={newCustomVideoUrl}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setNewCustomVideoUrl(val);
-                                if (val.trim()) {
-                                  setRankingFormVideoUrl(val.trim());
-                                }
-                              }}
-                            />
-                            <input
-                              type="text"
-                              placeholder="Alias"
-                              className="w-20 bg-white border border-slate-200 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 rounded-xl px-2 py-2 text-xs font-bold focus:outline-none text-center"
-                              value={newCustomVideoLabel}
-                              onChange={(e) => setNewCustomVideoLabel(e.target.value)}
-                            />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <label className="flex-1 cursor-pointer bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-black py-2 rounded-xl text-center uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-3xs">
-                              <span>📁 Subir local</span>
+                          <div>
+                            <label className="w-full cursor-pointer bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-black py-2.5 rounded-xl text-center uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-3xs">
+                              <span>📁 Subir vídeo local</span>
                               <input
                                 type="file"
                                 accept="video/*"
@@ -9937,27 +9549,6 @@ export default function ModelFacebookProfile({
                                 }}
                               />
                             </label>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const targetUrl = newCustomVideoUrl.trim() || rankingFormVideoUrl;
-                                if (!targetUrl) {
-                                  alert("Por favor ingresa una URL de vídeo o sube un archivo.");
-                                  return;
-                                }
-                                const label = newCustomVideoLabel.trim() || `Vídeo ${userRankingVideos.length + 1}`;
-                                if (!userRankingVideos.some(v => v.url === targetUrl)) {
-                                  setUserRankingVideos(prev => [{ label, url: targetUrl, isCustom: true }, ...prev]);
-                                }
-                                setRankingFormVideoUrl(targetUrl);
-                                setNewCustomVideoUrl('');
-                                setNewCustomVideoLabel('');
-                              }}
-                              className="flex-1 bg-slate-900 hover:bg-slate-950 text-white text-[11px] font-black py-2 rounded-xl text-center uppercase tracking-wider transition cursor-pointer"
-                            >
-                              Guardar en Colección
-                            </button>
                           </div>
                         </div>
 
@@ -10149,173 +9740,6 @@ export default function ModelFacebookProfile({
                           >
                             🚀 Publicar en el Ranking de la Landing Page
                           </button>
-                        </div>
-
-                        {/* 🏬 CONTENEDOR DE BÚSQUEDA Y ELECCIÓN DE BOUTIQUE PATROCINADORA (TOP 1 DEL RANKING) */}
-                        <div className="border-t border-slate-200/90 pt-5 mt-5 space-y-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 text-slate-900">
-                              <Crown className="w-4 h-4 text-amber-500 shrink-0" />
-                              <h5 className="text-[11px] font-black uppercase tracking-wider font-mono text-slate-800">
-                                Boutique Patrocinadora Oficial del Top 1
-                              </h5>
-                            </div>
-                            <span className="text-[9.5px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                              Pódium Gala Final
-                            </span>
-                          </div>
-
-                          <div className="bg-gradient-to-r from-amber-500/10 via-rose-50/50 to-amber-50/40 border border-amber-200/80 rounded-2xl p-3.5 space-y-2">
-                            <div className="flex items-start gap-2.5">
-                              <span className="text-xl select-none leading-none shrink-0">👑</span>
-                              <div className="space-y-1">
-                                <h6 className="text-[10px] font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                                  <span>ELIGE TU BOUTIQUE PATROCINADORA PARA EL PÓDIUM #1</span>
-                                </h6>
-                                <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium">
-                                  Selecciona qué boutique de lujo o atelier saldrá con su <strong className="text-slate-950 font-bold">logotipo oficial</strong> en los resultados finales de votación cuando seas la <strong className="text-rose-700 font-black">Modelo #1 del Ranking</strong>.
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Current Active Selection Pill */}
-                            {(() => {
-                              const activeBoutique = BOUTIQUE_STORES_INFO.find(b => b.id === selectedTop1BoutiqueId || b.username === selectedTop1BoutiqueId) || BOUTIQUE_STORES_INFO[0];
-                              return (
-                                <div className="mt-2 bg-white/90 backdrop-blur-xs border border-amber-300 rounded-xl p-2.5 flex items-center justify-between gap-3 shadow-xs">
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="shrink-0 flex items-center justify-center">
-                                      {renderBoutiqueEmblem(activeBoutique.name, 'w-8 h-8')}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-[10.5px] font-black text-slate-900 truncate">{activeBoutique.name}</span>
-                                        <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded-md shrink-0">★ {activeBoutique.rating}</span>
-                                      </div>
-                                      <p className="text-[9px] font-semibold text-rose-600 truncate">@{activeBoutique.username} • {activeBoutique.style}</p>
-                                    </div>
-                                  </div>
-                                  <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg shrink-0 flex items-center gap-1">
-                                    <Check className="w-3 h-3 text-emerald-600 stroke-[3]" /> SELECCIONADA
-                                  </span>
-                                </div>
-                              );
-                            })()}
-                          </div>
-
-                          {/* Search Bar matching z.png */}
-                          <div className="space-y-1.5">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">
-                              🔍 Búsqueda de Boutiques por Tienda o Creador
-                            </label>
-                            <div className="relative">
-                              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                              <input
-                                type="text"
-                                value={boutiqueSearchQuery}
-                                onChange={(e) => setBoutiqueSearchQuery(e.target.value)}
-                                placeholder="Busca tienda por Nombre (Ej. Atelier Valentina) o por Modelo (Ej. chloe)..."
-                                className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 font-medium transition"
-                              />
-                              {boutiqueSearchQuery && (
-                                <button
-                                  type="button"
-                                  onClick={() => setBoutiqueSearchQuery('')}
-                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Grid of Boutique Cards matching z.png */}
-                          <div className="max-h-[420px] overflow-y-auto pr-1 space-y-2.5">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                              {BOUTIQUE_STORES_INFO
-                                .filter(b => {
-                                  if (!boutiqueSearchQuery.trim()) return true;
-                                  const q = boutiqueSearchQuery.toLowerCase().trim();
-                                  return (
-                                    b.name.toLowerCase().includes(q) ||
-                                    b.username.toLowerCase().includes(q) ||
-                                    b.style.toLowerCase().includes(q) ||
-                                    b.city.toLowerCase().includes(q)
-                                  );
-                                })
-                                .map((boutique) => {
-                                  const isSelected = selectedTop1BoutiqueId === boutique.id || selectedTop1BoutiqueId === boutique.username;
-                                  return (
-                                    <div
-                                      key={boutique.id}
-                                      className={`p-3 rounded-2xl border transition-all flex flex-col justify-between gap-2.5 ${
-                                        isSelected
-                                          ? 'bg-amber-50/30 border-amber-400 ring-2 ring-amber-400/50 shadow-sm'
-                                          : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
-                                      }`}
-                                    >
-                                      <div className="flex items-start gap-2.5">
-                                        <div className="shrink-0 pt-0.5">
-                                          {renderBoutiqueEmblem(boutique.name, 'w-9 h-9')}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex items-center justify-between gap-1">
-                                            <h6 className="text-[11px] font-black text-slate-900 truncate" title={boutique.name}>
-                                              {boutique.name}
-                                            </h6>
-                                            <span className="text-[9px] font-black text-rose-700 bg-rose-50 border border-rose-200/70 px-1.5 py-0.2 rounded-md shrink-0 flex items-center gap-0.5">
-                                              <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                              {boutique.rating}
-                                            </span>
-                                          </div>
-                                          <p className="text-[9.5px] font-semibold text-rose-600 truncate">
-                                            @{boutique.username}
-                                          </p>
-                                          <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5">
-                                            {boutique.style}
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      <div className="pt-1 flex flex-col gap-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleSelectTop1Boutique(boutique)}
-                                          className={`w-full py-1.5 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                                            isSelected
-                                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-xs border border-amber-600'
-                                              : 'bg-slate-50 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 text-slate-700 border border-slate-200'
-                                          }`}
-                                        >
-                                          {isSelected ? (
-                                            <>
-                                              <Check className="w-3 h-3 text-slate-950 stroke-[3]" />
-                                              <span>ELEGIDA PARA TOP 1</span>
-                                            </>
-                                          ) : (
-                                            <span>ELEGIR ESTA BOUTIQUE</span>
-                                          )}
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (onNavigateToTab) {
-                                              setShowSettingsDrawer(false);
-                                              onNavigateToTab('patrocinados', boutique.id);
-                                            }
-                                          }}
-                                          className="w-full text-center text-[9px] font-bold text-slate-650 hover:text-slate-700 hover:underline py-0.5 transition cursor-pointer"
-                                        >
-                                          Ver Colección & Catálogo 🛍️
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                            </div>
-                          </div>
                         </div>
                       </div>
                       )}
@@ -10721,7 +10145,8 @@ export default function ModelFacebookProfile({
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {renderGiftsModal()}

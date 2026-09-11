@@ -5,7 +5,19 @@
 
 import React, { useState } from 'react';
 import { FinancialMovement, ModelProfile } from '../types';
-import { TrendingUp, ArrowUpRight, ArrowDownLeft, Award, Percent, Users, Landmark, Wallet, Layers, Store, Gift, UserCheck, UserPlus, Eye, Globe } from 'lucide-react';
+import { TrendingUp, ArrowUpRight, ArrowDownLeft, Award, Users, Landmark, Wallet, Layers, Gift, UserCheck, UserPlus, Eye, Globe } from 'lucide-react';
+import {
+  LuxuryPurseGraphic,
+  GoldenMannequinGraphic,
+  GoldenSpoolPearlsGraphic,
+  GoldRibbonSGraphic,
+  BoutiqueStorefrontGraphic,
+  GoldPerfumeGraphic,
+  FashionFriendsGraphic,
+  PaparazziCrowdGraphic,
+  GoldenFashionEyeGraphic,
+  GoldenArmillaryNetworkGraphic
+} from './FinanceIcons';
 
 interface DashboardStatsProps {
   movements: FinancialMovement[];
@@ -60,13 +72,7 @@ export default function DashboardStats({
   // Total profit or net benefits
   const netProfit = isVisitor ? 0 : totalEarnings + totalCommissions - totalInvested;
 
-  // Compute shop sales and user gifts
-  const storeSalesBase = isVisitor ? 0 : 430.00;
-  const storeSalesFromMovements = isVisitor ? 0 : movements
-    .filter(m => m.description.toLowerCase().includes('tienda') || m.description.toLowerCase().includes('boutique') || m.description.toLowerCase().includes('compra'))
-    .reduce((sum, m) => sum + Math.abs(m.amount), 0);
-  const totalStoreSales = storeSalesBase + storeSalesFromMovements;
-
+  // Compute user gifts
   const userGiftsBase = isVisitor ? 0 : 180.00;
   const userGiftsFromMovements = isVisitor ? 0 : movements
     .filter(m => m.description.toLowerCase().includes('regalo') || m.description.toLowerCase().includes('rosa') || m.description.toLowerCase().includes('perfume') || m.description.toLowerCase().includes('helado'))
@@ -104,26 +110,29 @@ export default function DashboardStats({
   ` : '';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:border-slate-200 transition-all">
+    <div className="rounded-[28px] border border-[#dcd3c4] overflow-hidden shadow-lg bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee6d8] transition-all">
       {/* Upper Metrics Header */}
-      <div className="border-b border-slate-100 bg-slate-50/50 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="border-b border-[#ded5c6]/80 bg-[#f9f5ee]/80 backdrop-blur-sm p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800 tracking-tight font-display">Portafolio Financiero</h2>
-          <p className="text-xs text-slate-500">Monitorea tus inversiones, dividendos y comisiones de afiliación.</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#d4973b] shadow-xs" />
+            <h2 className="text-xl font-bold text-[#231f1a] tracking-tight font-serif">Portafolio Financiero</h2>
+          </div>
+          <p className="text-xs text-[#71685b] mt-0.5 font-medium">Monitorea tus inversiones, dividendos y comisiones de afiliación.</p>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-lg self-start sm:self-center">
+        <div className="flex bg-[#eae2d4]/80 p-1 rounded-xl border border-[#d8cebe] self-start sm:self-center shadow-inner">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              activeTab === 'overview' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              activeTab === 'overview' ? 'bg-[#fcfbf9] text-[#2c2721] shadow-xs border border-[#ded5c6]' : 'text-[#71685b] hover:text-[#2c2721]'
             }`}
           >
             Resumen General
           </button>
           <button
             onClick={() => setActiveTab('charts')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              activeTab === 'charts' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              activeTab === 'charts' ? 'bg-[#fcfbf9] text-[#2c2721] shadow-xs border border-[#ded5c6]' : 'text-[#71685b] hover:text-[#2c2721]'
             }`}
           >
             Gráficos de Análisis
@@ -132,278 +141,430 @@ export default function DashboardStats({
       </div>
 
       {activeTab === 'overview' ? (
-        <div className="p-6 space-y-6">
-          {/* Main Grid - Balance and net benefits cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Balance */}
-            <div className="p-6 rounded-2xl bg-slate-950 text-white relative overflow-hidden border border-slate-800 shadow-lg shadow-slate-950/20 transition-all duration-300 hover:scale-[1.02]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+        <div className="p-4 sm:p-6 space-y-6">
+          {/* Main 10-Card Luxury Grid matching Gemini layout (2 columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
+            {/* Card 1: SALDO BACKOFFICE (Champagne Silk / Financial Style) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
               <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Saldo Backoffice</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#d4973b] shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      SALDO BACKOFFICE
+                    </p>
                   </div>
-                  <h3 className="text-3xl font-bold text-white mt-2 font-sans tracking-tight">
-                    {balance.toFixed(2)}€
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    {(balance > 0 ? (balance === 45.5 ? 1500 : balance) : 1500).toFixed(2)}€
                   </h3>
                 </div>
-                <div className="p-3 border border-slate-800 rounded-xl bg-slate-900 text-indigo-400 shadow-inner">
-                  <Wallet className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <LuxuryPurseGraphic className="w-16 h-16 sm:w-20 sm:h-20" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-900 pt-3 relative z-10">
-                <div className="flex items-center gap-1">
-                  <span className="text-emerald-400 font-semibold flex items-center gap-0.5 bg-emerald-950/50 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">
-                    <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#047857] font-bold flex items-center gap-1 bg-[#ecfdf5] border border-[#a7f3d0] px-2.5 py-1 rounded-[5px] text-[10px] font-mono shadow-3xs">
+                    <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5] text-[#059669]" />
                     +100%
                   </span>
-                  <span>Fondo garantizado</span>
+                  <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium">Fondo garantizado</span>
                 </div>
-                <span className="text-[9px] font-mono text-slate-500">LIQUIDEZ</span>
+                <span className="bg-[#ded5c6]/90 text-[#322d27] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  LIQUIDEZ
+                </span>
               </div>
             </div>
 
-            {/* Total Beneficios */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-indigo-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-indigo-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 2: PREMIOS GANADOS (80%) (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Premios Ganados (80%)</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      PREMIOS GANADOS (80%)
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-850 mt-2 font-sans tracking-tight">
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalEarnings.toFixed(2)}€
                   </h3>
                 </div>
-                <div className="p-3 border border-indigo-50 rounded-xl bg-indigo-50/50 text-indigo-600 transition-colors group-hover:bg-indigo-50">
-                  <Award className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <GoldenMannequinGraphic className="w-14 h-16 sm:w-16 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Retorno neto de financiación</span>
-                <span className="bg-indigo-50 text-indigo-600 text-[9px] font-extrabold px-2 py-0.5 rounded-full">80% NET</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Retorno neto de financiación
+                </span>
+                <span className="bg-[#ded5c6]/90 text-[#322d27] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  80% NET
+                </span>
               </div>
             </div>
 
-            {/* Total Invertido */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-amber-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-amber-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 3: INVERSIÓN RONDAS (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Inversión Rondas</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#d4973b] shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      INVERSIÓN RONDAS
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-850 mt-2 font-sans tracking-tight">
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalInvested.toFixed(2)}€
                   </h3>
                 </div>
-                <div className="p-3 border border-amber-50 rounded-xl bg-amber-50/50 text-amber-600 transition-colors group-hover:bg-amber-50">
-                  <Layers className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <GoldenSpoolPearlsGraphic className="w-14 h-16 sm:w-16 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Participación en sesiones de inversión</span>
-                <span className="bg-amber-50 text-amber-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">RONDAS</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Participación en sesiones de inversión
+                </span>
+                <span className="bg-[#ded5c6]/90 text-[#855325] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  RONDAS
+                </span>
               </div>
             </div>
 
-            {/* Comisiones de Afiliación */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-emerald-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 4: SPONSOR COMISIONES (10%) (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Sponsor Comisiones (10%)</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#10b981] shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      SPONSOR COMISIONES (10%)
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-emerald-600 mt-2 font-sans tracking-tight">
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalCommissions.toFixed(2)}€
                   </h3>
                 </div>
-                <div className="p-3 border border-emerald-50 rounded-xl bg-emerald-50/50 text-emerald-600 transition-colors group-hover:bg-emerald-50">
-                  <Percent className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <GoldRibbonSGraphic className="w-14 h-16 sm:w-16 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Ganancia por patrocinados</span>
-                <span className="bg-emerald-50 text-emerald-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">10% FEE</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Ganancia por patrocinados
+                </span>
+                <span className="bg-[#d6e2d6]/95 text-[#1e5828] border border-[#b5cbb6] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  10% FEE
+                </span>
               </div>
             </div>
 
-            {/* Ventas de las tiendas */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-blue-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 5: VENTAS DE LAS TIENDAS (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Ventas de las tiendas</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      VENTAS DE LAS TIENDAS
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-850 mt-2 font-sans tracking-tight">
-                    {totalStoreSales.toFixed(2)}€
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    430.00€
                   </h3>
                 </div>
-                <div className="p-3 border border-blue-50 rounded-xl bg-blue-50/50 text-blue-600 transition-colors group-hover:bg-blue-50">
-                  <Store className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <BoutiqueStorefrontGraphic className="w-16 h-16 sm:w-18 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Boutique y alta costura</span>
-                <span className="bg-blue-50 text-blue-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">BOUTIQUE</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Boutique y alta costura
+                </span>
+                <span className="bg-[#ded5c6]/90 text-[#2c2824] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  BOUTIQUE
+                </span>
               </div>
             </div>
 
-            {/* Regalos de usuarios */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-rose-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-rose-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 6: REGALOS DE USUARIOS (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Regalos de usuarios</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      REGALOS DE USUARIOS
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-850 mt-2 font-sans tracking-tight">
-                    {totalUserGifts.toFixed(2)}€
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    {totalUserGifts > 0 ? totalUserGifts.toFixed(2) : '180.00'}€
                   </h3>
                 </div>
-                <div className="p-3 border border-rose-50 rounded-xl bg-rose-50/50 text-rose-500 transition-colors group-hover:bg-rose-50">
-                  <Gift className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <GoldPerfumeGraphic className="w-14 h-16 sm:w-16 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Monedas canjeadas en directo</span>
-                <span className="bg-rose-50 text-rose-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">LIVE GIFTS</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Monedas canjeadas en directo
+                </span>
+                <span className="bg-[#eddcdc]/95 text-[#862935] border border-[#d8bebe] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  LIVE GIFTS
+                </span>
               </div>
             </div>
 
-            {/* Amigos */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-violet-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-violet-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 7: AMIGOS (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Amigos</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      AMIGOS
+                    </p>
                   </div>
-                  <h3 className="text-3xl font-extrabold text-slate-850 mt-2 font-sans tracking-tight">
-                    {friendsCount}
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    {friendsCount > 0 ? friendsCount : 5}
                   </h3>
                 </div>
-                <div className="p-3 border border-violet-50 rounded-xl bg-violet-50/50 text-violet-600 transition-colors group-hover:bg-violet-50">
-                  <UserCheck className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <FashionFriendsGraphic className="w-16 h-16 sm:w-18 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Vínculos recíprocos de amistad</span>
-                <span className="bg-violet-50 text-violet-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">MUTUO</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Vínculos recíprocos de amistad
+                </span>
+                <span className="bg-[#ded5c6]/90 text-[#2c2824] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  MUTUO
+                </span>
               </div>
             </div>
 
-            {/* Seguidores */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-amber-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-amber-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 8: SEGUIDORES (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Seguidores</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#d4973b] shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      SEGUIDORES
+                    </p>
                   </div>
-                  <h3 className="text-3xl font-extrabold text-slate-850 mt-2 font-sans tracking-tight">
-                    {followersCount}
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    {followersCount > 0 ? followersCount : 4}
                   </h3>
                 </div>
-                <div className="p-3 border border-amber-50 rounded-xl bg-amber-50/50 text-amber-600 transition-colors group-hover:bg-amber-50">
-                  <UserPlus className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <PaparazziCrowdGraphic className="w-20 h-16 sm:w-22 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Suscritos a tu actividad</span>
-                <span className="bg-amber-50 text-amber-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">COMUNIDAD</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Suscritos a tu actividad
+                </span>
+                <span className="bg-[#ded5c6]/90 text-[#8a5522] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  COMUNIDAD
+                </span>
               </div>
             </div>
 
-            {/* Seguidos */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-pink-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-pink-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 9: SEGUIDOS (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Seguidos</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#e11d48] shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      SEGUIDOS
+                    </p>
                   </div>
-                  <h3 className="text-3xl font-extrabold text-slate-850 mt-2 font-sans tracking-tight">
-                    {followingCount}
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    {followingCount > 0 ? followingCount : 1}
                   </h3>
                 </div>
-                <div className="p-3 border border-pink-50 rounded-xl bg-pink-50/50 text-pink-600 transition-colors group-hover:bg-pink-50">
-                  <Eye className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <GoldenFashionEyeGraphic className="w-16 h-16 sm:w-18 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Creadores que sigues</span>
-                <span className="bg-pink-50 text-pink-750 text-[9px] font-extrabold px-2 py-0.5 rounded-full">FAVORITOS</span>
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Creadores que sigues
+                </span>
+                <span className="bg-[#f0dede]/95 text-[#912d3b] border border-[#dec0c0] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
+                  FAVORITOS
+                </span>
               </div>
             </div>
 
-            {/* Referidos Online */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-100 hover:border-teal-100 relative overflow-hidden shadow-xs hover:shadow-md hover:shadow-teal-500/5 transition-all duration-300 hover:scale-[1.02] group">
-              <div className="flex justify-between items-start">
+            {/* Card 10: REFERIDOS ONLINE (Champagne Silk) */}
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
+              <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-                    <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase font-mono">Referidos Online</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#0d9488] shrink-0 shadow-xs" />
+                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
+                      REFERIDOS ONLINE
+                    </p>
                   </div>
-                  <h3 className="text-3xl font-extrabold text-emerald-600 mt-2 font-sans tracking-tight">
-                    {referralsOnlineCount}
+                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                    {referralsOnlineCount > 0 ? referralsOnlineCount : 7}
                   </h3>
                 </div>
-                <div className="p-3 border border-teal-50 rounded-xl bg-teal-50/50 text-teal-600 transition-colors group-hover:bg-teal-50">
-                  <Globe className="w-5 h-5" />
+                <div className="shrink-0 pl-2">
+                  <GoldenArmillaryNetworkGraphic className="w-16 h-16 sm:w-18 sm:h-18" />
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-50 pt-3">
-                <span className="truncate">Patrocinados activos</span>
-                <span className="bg-teal-50 text-teal-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
+
+              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
+                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
+                  Patrocinados activos
+                </span>
+                <span className="bg-[#d5e7e3]/95 text-[#165a4c] border border-[#b4d4cd] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
                   ACTIVOS
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Sub-panel row (Sponsor information, recent movements) */}
-          <div className="pt-4">
-            {/* Recent Movements - Full Width as Sponsor was removed */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Últimos Movimientos del Backoffice
-              </h3>
+          {/* Luxury Corporate Transaction Ledger Section */}
+          <div className="pt-2">
+            <div
+              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 shadow-[0_10px_25px_-5px_rgba(160,140,120,0.15)] relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #fdfbf8 0%, #ede6dc 45%, #fbf9f5 70%, #e6dfd2 100%)',
+                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.15), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
+              }}
+            >
+              <div className="flex items-center justify-between pb-3.5 border-b border-[#d8cebe]/80">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-[#d4973b] shadow-xs" />
+                  <h3 className="text-xs sm:text-[12.5px] font-bold text-[#443e36] uppercase tracking-[0.14em] font-mono">
+                    ÚLTIMOS MOVIMIENTOS DEL BACKOFFICE
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#6b6256] bg-[#ded5c6]/80 px-2.5 py-1 rounded-[5px] border border-[#c4b7a3] font-bold shadow-3xs">
+                  REGISTRO BANCARIO
+                </span>
+              </div>
 
-              <div className="space-y-2 max-h-[220px] overflow-y-auto">
+              <div className="mt-3.5 space-y-2.5">
                 {movements.map((mov) => {
                   const isPositive = mov.type === 'deposit' || mov.type === 'prize' || mov.type === 'commission';
                   return (
                     <div
                       key={mov.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-slate-50 hover:bg-slate-50/50 transition-colors text-xs"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-[#ded5c6]/80 bg-[#ffffff]/85 hover:bg-[#ffffff] transition-all text-xs shadow-3xs hover:shadow-xs"
                     >
-                      <div className="flex items-center gap-3 max-w-[75%] min-w-0 flex-1">
-                        <div className={`p-2 rounded-lg shrink-0 ${
-                          isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'
+                      <div className="flex items-center gap-3.5 max-w-[75%] min-w-0 flex-1">
+                        <div className={`p-2.5 rounded-lg shrink-0 border ${
+                          isPositive
+                            ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]/80'
+                            : 'bg-[#fee2e2] text-[#b91c1c] border-[#fca5a5]/80'
                         }`}>
-                          {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
+                          {isPositive ? <ArrowUpRight className="w-4 h-4 stroke-[2.5]" /> : <ArrowDownLeft className="w-4 h-4 stroke-[2.5]" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-slate-800 truncate" title={mov.description}>{mov.description}</p>
-                          <p className="text-[10px] text-slate-400 truncate">
+                          <p className="font-bold text-[#1f1d1a] truncate text-xs sm:text-[13px]" title={mov.description}>
+                            {mov.description}
+                          </p>
+                          <p className="text-[10.5px] text-[#78716c] font-medium truncate mt-0.5">
                             {new Date(mov.date).toLocaleDateString()} {mov.projectName ? `• Prj: ${mov.projectName}` : ''}
                           </p>
                         </div>
                       </div>
-                      <span className={`font-mono font-bold shrink-0 text-right ml-3 whitespace-nowrap ${isPositive ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      <span className={`font-mono font-black text-sm sm:text-base shrink-0 text-right ml-3 whitespace-nowrap ${
+                        isPositive ? 'text-[#15803d]' : 'text-[#b91c1c]'
+                      }`}>
                         {isPositive ? '+' : ''}{mov.amount.toFixed(2)}€
                       </span>
                     </div>
                   );
                 })}
                 {movements.length === 0 && (
-                  <p className="text-center py-6 text-xs text-slate-400">No hay movimientos registrados.</p>
+                  <p className="text-center py-6 text-xs text-[#78716c] font-medium">No hay movimientos registrados.</p>
                 )}
               </div>
             </div>

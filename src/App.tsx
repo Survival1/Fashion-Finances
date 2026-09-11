@@ -1582,7 +1582,7 @@ export default function App() {
         username: targetModel.username,
         role: 'model',
         patrocinadorId: 'topm-1', // Top male model sponsors her!
-        balance: 45.50,
+        balance: 1500.00,
         totalEarnings: 0,
         totalInvested: 0,
         totalCommissions: 120.00,
@@ -1807,7 +1807,7 @@ export default function App() {
         username: foundModel.username,
         role: 'model',
         patrocinadorId: 'model-2',
-        balance: 45.50,
+        balance: 1500.00,
         totalEarnings: 0,
         totalInvested: 0,
         totalCommissions: 120.00,
@@ -3554,13 +3554,12 @@ export default function App() {
                 {/* Profile Card & Model Dashboard features */}
                 <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs flex flex-col">
                   {/* Background Banner */}
-                  <div className="h-36 sm:h-48 bg-slate-100 relative overflow-hidden shrink-0">
+                  <div className="h-52 sm:h-64 md:h-72 lg:h-[300px] bg-slate-100 relative overflow-hidden shrink-0">
                     <img 
-                      src={userProfile.banner || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1200"} 
+                      src={userProfile.banner || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1600"} 
                       alt="Profile Banner" 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover opacity-100"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
                     
                     {/* Change Banner Overlay Trigger */}
                     <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-20">

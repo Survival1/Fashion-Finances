@@ -75,7 +75,7 @@
 }
 
 /* Global button styling matching clean design (white background, slate border, dark text) */
-button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]) {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]) {
   background-color: #ffffff !important;
   background-image: none !important;
   color: #0f172a !important; /* Soft dark text */
@@ -88,15 +88,41 @@ button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.
   cursor: pointer !important;
 }
 
-button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):hover {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):hover {
   background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
   transform: translateY(-0.5px) !important;
 }
 
-button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):active {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):active {
   transform: translateY(0px) !important;
   filter: brightness(0.98) !important;
+}
+
+/* Settings drawer borderless buttons with pure white background */
+button.settings-menu-btn,
+.settings-menu-btn {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #334155 !important;
+}
+
+button.settings-menu-btn:hover,
+.settings-menu-btn:hover {
+  background-color: #f8fafc !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+}
+
+button.settings-menu-btn.active-tab,
+.settings-menu-btn.active-tab {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Pearl Pink Button (Rosa Perla) */

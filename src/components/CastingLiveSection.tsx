@@ -174,19 +174,6 @@ export const accountsQueSigues = [
     ]
   },
   {
-    username: 'victoriassecret_es',
-    name: "Victoria's Secret Spain",
-    avatar: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?auto=format&fit=crop&q=80&w=150',
-    hasHeart: false,
-    bio: '🌸 Boutique de Alta Costura y Lencería de Lujo en Madrid. Colecciones exclusivas y desfiles en directo.',
-    seguidores: '120.5K',
-    meGusta: '890.4K',
-    videos: [
-      { id: 'vs-v1', title: 'DESFILE GALA DE VERANO 🌸', views: '28.4K', img: 'https://images.unsplash.com/photo-1506152983158-b4a74a01c721?auto=format&fit=crop&q=80&w=600' },
-      { id: 'vs-v2', title: 'NUEVA COLECCIÓN LINGERIE VIP', views: '19.2K', img: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600' }
-    ]
-  },
-  {
     username: 'adrianalima_w1',
     name: 'Adriana Lima',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
@@ -292,6 +279,78 @@ export const accountsQueSigues = [
     meGusta: '5.2B',
     videos: [
       { id: 'ky-v1', title: 'GLITTER MAKEUP SHOW', views: '3.2M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=600' }
+    ]
+  },
+  {
+    username: 'kendalljenner',
+    name: 'Kendall Jenner',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
+    hasHeart: true,
+    bio: '✨ Runway & editorial high fashion. Global ambassador. 🍸 #818',
+    seguidores: '290M',
+    meGusta: '3.8B',
+    videos: [
+      { id: 'kj-v1', title: 'PARIS COUTURE WEEK WALK', views: '1.8M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'gigihadid',
+    name: 'Gigi Hadid',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+    hasHeart: true,
+    bio: '🌟 Guest in Residence founder. High fashion & creative director.',
+    seguidores: '78M',
+    meGusta: '890M',
+    videos: [
+      { id: 'gh-v1', title: 'MILAN BACKSTAGE FASHION', views: '950K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'bellahadid',
+    name: 'Bella Hadid',
+    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=150',
+    hasHeart: false,
+    bio: '💎 Orebella alchemy of scent. Editorial muse & equestrian.',
+    seguidores: '60M',
+    meGusta: '720M',
+    videos: [
+      { id: 'bh-v1', title: 'CANNES RED CARPET LOOK', views: '1.1M', img: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'jonkortajarena',
+    name: 'Jon Kortajarena',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
+    hasHeart: true,
+    bio: '🕶️ Top model internacional & actor. Pasarelas de Tom Ford, Armani y Versace.',
+    seguidores: '3.9M',
+    meGusta: '45M',
+    videos: [
+      { id: 'jk-v1', title: 'TOM FORD MILANO CATWALK', views: '420K', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'haileybieber',
+    name: 'Hailey Bieber',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+    hasHeart: false,
+    bio: '✨ Rhode skincare & glazed lip trendsetter. Streetwear elegance.',
+    seguidores: '53M',
+    meGusta: '610M',
+    videos: [
+      { id: 'hb-v1', title: 'GLAZED DONUT SKINCARE ROUTINE', views: '2.4M', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'naomicampbell',
+    name: 'Naomi Campbell',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    hasHeart: true,
+    bio: '👑 Supermodel Icon & Philanthropist. Redefining fashion history.',
+    seguidores: '16M',
+    meGusta: '210M',
+    videos: [
+      { id: 'nc-v1', title: 'MASTERING THE LEGENDARY CATWALK', views: '3.8M', img: 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=600' }
     ]
   }
 ];
@@ -2155,6 +2214,7 @@ export default function CastingLiveSection({
   const [mobileChannelControlsVisible, setMobileChannelControlsVisible] = useState<boolean>(false);
   const [showTouchTableOverlay, setShowTouchTableOverlay] = useState<boolean>(false);
   const [showTouchRightSidebar, setShowTouchRightSidebar] = useState<boolean>(false);
+  const [isExpandedFollowingAccounts, setIsExpandedFollowingAccounts] = useState<boolean>(false);
 
   useEffect(() => {
     const detectTouch = () => {
@@ -2329,6 +2389,9 @@ export default function CastingLiveSection({
   }, []);
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>(() => {
+    if (initialSelectedStoreId === 'fashion' || initialSelectedStoreId === 'Fashion' || initialSelectedStoreId === 'canal_fashion') {
+      return 'Fashion';
+    }
     const cached = localStorage.getItem('casting_live_default_category_filter');
     if (cached && ['Todos', 'Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cached)) {
       localStorage.removeItem('casting_live_default_category_filter');
@@ -5447,27 +5510,24 @@ export default function CastingLiveSection({
 
   // TikTok Shop Seller & Strategy Dashboard states
   const [showTikTokShop, setShowTikTokShop] = useState(() => {
+    if (initialSelectedStoreId === 'fashion' || initialSelectedStoreId === 'Fashion' || initialSelectedStoreId === 'canal_fashion') return false;
     if (initialSelectedStoreId) return true;
-    const isShopTiendasOnly = localStorage.getItem('selectedLiveModel_shopTiendasOnly') === 'true';
     const activeModelId = localStorage.getItem('selectedLiveModelId');
-    return isShopTiendasOnly || !!activeModelId;
+    return !!activeModelId;
   });
   const [shopTab, setShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>(() => {
     if (initialSelectedStoreId === 'mi_escaparate' || initialSelectedStoreId === 'articulos' || initialSelectedStoreId === 'tienda' || initialSelectedStoreId === 'own_store_articulos') {
       return 'articulos';
     }
     if (initialSelectedStoreId) return 'mi_tienda';
-    const isShopTiendasOnly = localStorage.getItem('selectedLiveModel_shopTiendasOnly') === 'true';
     const activeModelId = localStorage.getItem('selectedLiveModelId');
-    const isShopDirect = localStorage.getItem('selectedLiveModel_shopDirect') === 'true';
-    if (isShopTiendasOnly) return 'tiendas';
     if (activeModelId) {
       return 'mi_tienda';
     }
     return 'vender';
   });
-  const [prevShopTab, setPrevShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>('tiendas');
-  const [cameFromShopTab, setCameFromShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>('tiendas');
+  const [prevShopTab, setPrevShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>('articulos');
+  const [cameFromShopTab, setCameFromShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>('articulos');
   const [cameFromAccountsQueSigues, setCameFromAccountsQueSigues] = useState<boolean>(false);
 
   useEffect(() => {
@@ -5483,6 +5543,29 @@ export default function CastingLiveSection({
     const storeToOpen = initialSelectedStoreId || localStorage.getItem('initial_selected_store_id');
     if (storeToOpen) {
       localStorage.removeItem('initial_selected_store_id');
+      if (storeToOpen === 'fashion' || storeToOpen === 'Fashion' || storeToOpen === 'canal_fashion') {
+        setShowTikTokShop(false);
+        setSelectedInvestorStore(null);
+        setSelectedCategoryFilter('Fashion');
+        setSelectedLiveCategory('Fashion');
+        setActiveVideoIndex(0);
+        setSearchTerm('');
+        setActiveSubTab('para-ti');
+        setShowProjectDetailsInPopup(false);
+        setShowFinanzasInscriptionInChannel(false);
+        setShowParticipantsGatheringModal(false);
+        setDetailProjectUser(null);
+        setFullscreenFinanzasUser(null);
+        setActiveFinanzasPopupUser(null);
+        setShowFinanzasPayModal(false);
+        setShowFinanzasResults(false);
+        setShowFinanzasRecount(false);
+        setShowVotingProjectsModal(false);
+        if (onClearSelectedStoreId) {
+          onClearSelectedStoreId();
+        }
+        return;
+      }
       if (storeToOpen === 'mi_escaparate' || storeToOpen === 'articulos' || storeToOpen === 'tienda' || storeToOpen === 'own_store_articulos') {
         setShowTikTokShop(true);
         setSelectedInvestorStore(null);
@@ -6270,19 +6353,15 @@ export default function CastingLiveSection({
 
   useEffect(() => {
     const activeModelId = selectedLiveModelId || localStorage.getItem('selectedLiveModelId');
-    const isShopDirect = localStorage.getItem('selectedLiveModel_shopDirect') === 'true';
-    const isShopTiendasOnly = localStorage.getItem('selectedLiveModel_shopTiendasOnly') === 'true';
+    localStorage.removeItem('selectedLiveModel_shopTiendasOnly');
 
-    if (isShopTiendasOnly) {
-      setShowTikTokShop(true);
-      setShopTab('tiendas');
-    } else if (activeModelId && models.length > 0) {
+    if (activeModelId && models.length > 0) {
       const idx = models.findIndex(m => m.id === activeModelId);
       if (idx !== -1) {
         const model = models[idx];
         setSelectedInvestorStore(getBoutiqueStoreData(model, idx));
         setShowTikTokShop(true);
-        setCameFromShopTab('tiendas');
+        setCameFromShopTab('articulos');
         setShopTab('mi_tienda');
       }
     }
@@ -9338,7 +9417,6 @@ export default function CastingLiveSection({
                           { id: 'Modelos', label: 'Runway 👑' },
                           { id: 'BackStage', label: 'BackStage 🎬' },
                           { id: 'Investors', label: 'Jewellery 💎' },
-                          { id: 'Tiendas', label: 'Tiendas 🛍️' },
                           { id: 'Catwalk', label: 'Catwalk 👠' },
                           { id: 'Fitnes', label: 'Fitnes 💪' },
                           { id: 'Beauty', label: 'Beauty 💄' },
@@ -11216,7 +11294,6 @@ export default function CastingLiveSection({
       { id: 'Modelos', label: 'RUNWAY 👑' },
       { id: 'BackStage', label: 'BACKSTAGE 🎬' },
       { id: 'Investors', label: 'JEWELLERY 💎' },
-      { id: 'Tiendas', label: 'TIENDAS 🛍️' },
       { id: 'Catwalk', label: 'CATWALK 👠' },
       { id: 'Fitnes', label: 'FITNES 💪' },
       { id: 'Beauty', label: 'BEAUTY 💄' },
@@ -11556,7 +11633,7 @@ export default function CastingLiveSection({
                       type="button"
                       className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
                       onClick={() => {
-                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
+                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
                         const currentIdx = order.indexOf(
                           (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory === 'BackStage' ? 'Backstage' : uploadVideoCategory === 'Investors' ? 'Jewellery' : uploadVideoCategory) as any
                         );
@@ -11591,7 +11668,6 @@ export default function CastingLiveSection({
                         { id: 'Runway', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309] border-[#fef3c7]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
                         { id: 'Backstage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2] border-[#cffafe]/50', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-[0_4px_12px_rgba(6,182,212,0.35)]' },
                         { id: 'Jewellery', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf] border-[#f3e8ff]/50', activeBg: 'bg-purple-500 text-white border-purple-500 shadow-[0_4px_12px_rgba(168,85,247,0.35)]' },
-                        { id: 'Tiendas', label: 'Tiendas 🛍️', bg: 'bg-[#f0f9ff] text-[#0369a1] border-[#e0f2fe]/50', activeBg: 'bg-sky-500 text-white border-sky-500 shadow-[0_4px_12px_rgba(14,165,233,0.35)]' },
                         { id: 'Catwalk', label: 'Catwalk 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]/50', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-[0_4px_12px_rgba(124,58,237,0.35)]' },
                         { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]/50', activeBg: 'bg-emerald-600 text-white border-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.35)]' },
                         { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48] border-[#fecdd3]/50', activeBg: 'bg-rose-500 text-white border-rose-500 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
@@ -11634,7 +11710,7 @@ export default function CastingLiveSection({
                       type="button"
                       className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
                       onClick={() => {
-                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
+                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
                         const currentIdx = order.indexOf(
                           (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory === 'BackStage' ? 'Backstage' : uploadVideoCategory === 'Investors' ? 'Jewellery' : uploadVideoCategory) as any
                         );
@@ -15504,12 +15580,12 @@ try {
               <button
                 onClick={() => {
                   setSelectedInvestorStore(null);
-                  setShopTab('tiendas');
+                  setShowTikTokShop(false);
                 }}
                 className="w-full py-1.5 bg-slate-900 hover:bg-[#fe2c55] text-white font-extrabold text-xs uppercase rounded-lg transition-all duration-150 cursor-pointer border-0 shadow-xs flex items-center justify-center gap-1.5"
                 id="btn-ver-todas-tiendas"
               >
-                <span>←</span> Ver Todas las Tiendas
+                <span>←</span> Volver al Feed
               </button>
             ) : (
               <button
@@ -17195,23 +17271,6 @@ try {
 
               <button
                 type="button"
-                onClick={() => {
-                  setShopTab('tiendas');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wide transition duration-150 text-left border cursor-pointer ${
-                  shopTab === 'tiendas'
-                    ? 'bg-rose-50/70 border-rose-200/80 text-rose-600 shadow-3xs font-black' 
-                    : 'bg-white border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Search className={`w-4 h-4 shrink-0 ${shopTab === 'tiendas' ? 'text-rose-500' : 'text-slate-400'}`} />
-                  <span>Buscador de Tiendas</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setShopTab('carrito')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wide transition duration-150 text-left border cursor-pointer ${
                   shopTab === 'carrito' 
@@ -18691,8 +18750,8 @@ try {
             </div>
           )}
 
-          {/* TAB 5: BUSCADOR DE TIENDAS */}
-          {shopTab === 'tiendas' && (
+          {/* TAB 5: BUSCADOR DE TIENDAS (ELIMINADO) */}
+          {false && (
             <div className="space-y-5 animate-fade-in text-left">
               
               {/* Header text with elegant branding */}
@@ -19320,136 +19379,6 @@ try {
                       </button>
                     </div>
 
-                  </div>
-                </div>
-
-
-                {/* TIENDAS A LAS QUE SIGO SECTION */}
-                <div className="bg-[#fffbfc] border border-pink-100 p-4 rounded-3xl space-y-3 shadow-3xs text-left relative overflow-hidden transition-all duration-300">
-                  {/* Elegant Background Glow */}
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-pink-100/10 rounded-full blur-xl pointer-events-none -mr-8 -mt-8" />
-                  
-                  <div className="flex items-center justify-between gap-4 border-b border-pink-50 pb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center text-xs shadow-xs shrink-0 border border-pink-100/50">
-                        <Heart className="w-3.5 h-3.5 text-[#fe2c55] fill-current animate-pulse" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider font-sans leading-tight">
-                          Tiendas a las que sigo
-                        </h3>
-                        <p className="text-[9.5px] text-slate-400 font-semibold mt-0.5">
-                          Tus boutiques favoritas y diseñadores de Casting Live.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Navigation Arrow controls for the slider (only shown if there are items) */}
-                    {[...customZxsStores, ...models.map((model, idx) => getBoutiqueStoreData(model, idx))].filter(store => followedStores.includes(store.id)).length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            followedStoresSliderRef.current?.scrollBy({ left: -160, behavior: 'smooth' });
-                          }}
-                          className="p-1 bg-white border border-pink-100 hover:border-pink-200 text-slate-600 hover:text-slate-800 rounded-md shadow-xs transition cursor-pointer active:scale-90"
-                          title="Anterior"
-                        >
-                          <ChevronLeft className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            followedStoresSliderRef.current?.scrollBy({ left: 160, behavior: 'smooth' });
-                          }}
-                          className="p-1 bg-white border border-pink-100 hover:border-pink-200 text-slate-600 hover:text-slate-800 rounded-md shadow-xs transition cursor-pointer active:scale-90"
-                          title="Siguiente"
-                        >
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Slider Container */}
-                  <div className="relative">
-                    {(() => {
-                      const list = [
-                        ...customZxsStores,
-                        ...models.map((model, idx) => getBoutiqueStoreData(model, idx))
-                      ].filter(store => followedStores.includes(store.id));
-
-                      if (list.length === 0) {
-                        return (
-                          <div className="py-6 px-4 text-center space-y-2.5 rounded-2xl bg-pink-50/10 border border-dashed border-pink-100/50 flex flex-col items-center justify-center">
-                            <span className="text-2xl filter drop-shadow-sm select-none animate-bounce">💖</span>
-                            <div className="space-y-0.5">
-                              <h4 className="text-[11px] font-black text-slate-700 uppercase">Aún no sigues ninguna boutique</h4>
-                              <p className="text-[9.5px] text-slate-400 font-semibold max-w-sm mx-auto leading-normal">
-                                ¡Explora el buscador de boutiques y haz clic en "Seguir Tienda" para verlas aquí!
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setShopTab('tiendas')}
-                              className="px-3.5 py-1.5 bg-slate-900 hover:bg-[#fe2c55] text-white text-[9px] font-black uppercase rounded-lg transition cursor-pointer border-0 active:scale-95"
-                            >
-                              Ir al Buscador de Tiendas
-                            </button>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div 
-                          ref={followedStoresSliderRef}
-                          className="flex items-center gap-4 overflow-x-auto scrollbar-none py-1.5 scroll-smooth"
-                          style={{ scrollSnapType: 'x mandatory' }}
-                        >
-                          {list.map((store) => (
-                            <div
-                              key={store.id}
-                              onClick={() => {
-                                setSelectedInvestorStore(store);
-                                setCameFromShopTab(shopTab);
-                                setShopTab('mi_tienda');
-                                // Reset scroll to top of any scroll container or window instantly/smoothly
-                                setTimeout(() => {
-                                  const scrollContainers = document.querySelectorAll('.overflow-y-auto, main');
-                                  scrollContainers.forEach(el => {
-                                    el.scrollTop = 0;
-                                  });
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }, 50);
-                              }}
-                              className="shrink-0 flex flex-col items-center text-center gap-1 cursor-pointer group select-none scroll-snap-align-start relative w-16 sm:w-18 transition transform hover:scale-105 active:scale-95"
-                            >
-                              {/* Instagram Stories Style Gradient Ring */}
-                              <div className="w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] rounded-full bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 p-[2px] shadow-2xs group-hover:shadow-xs transition duration-200">
-                                <div className="w-full h-full bg-white rounded-full p-[1.5px] flex items-center justify-center overflow-hidden">
-                                  {getFashionBrandLogo(store.id, store.name)}
-                                </div>
-                              </div>
-
-                              {/* Store name underneath (compact, centered, elegant font) */}
-                              <div className="w-full text-center px-0.5 min-w-0">
-                                <span className="block text-[9.5px] font-black text-slate-850 group-hover:text-[#fe2c55] transition-colors truncate leading-tight font-sans">
-                                  {store.name}
-                                </span>
-                                <span className="block text-[8px] font-bold text-slate-400 leading-none truncate mt-0.5">
-                                  @{store.username}
-                                </span>
-                              </div>
-
-                              {/* Active state highlight pill */}
-                              {selectedInvestorStore?.id === store.id && (
-                                <div className="absolute top-[42px] sm:top-[46px] right-1.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full shadow-2xs" />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
 
@@ -20599,15 +20528,15 @@ try {
                   <div className="space-y-1">
                     <h4 className="text-sm font-black text-slate-700 uppercase">Tu Carrito de Compras está vacío</h4>
                     <p className="text-xs text-slate-400 font-semibold max-w-sm mx-auto">
-                      Explora el Buscador de Tiendas para añadir a tu carrito de compras las colecciones de alta costura, calzado de pasarela y ropa casual de Isabella Dubois y otros creadores.
+                      Explora el catálogo de artículos para añadir a tu carrito de compras las colecciones y prendas disponibles.
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShopTab('tiendas')}
+                    onClick={() => setShopTab('articulos')}
                     className="px-5 py-2.5 bg-slate-900 hover:bg-[#fe2c55] text-white text-[11px] font-extrabold uppercase rounded-full transition cursor-pointer shadow-3xs"
                   >
-                    Ir al Buscador de Tiendas
+                    Explorar Artículos
                   </button>
                 </div>
               ) : (
@@ -22760,7 +22689,7 @@ try {
 
           {/* Quick inline categories bubbles */}
           <div className="flex flex-wrap items-center gap-1.5" id="explore-categories-row">
-            {(['Todos', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const).map((cat) => {
+            {(['Todos', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const).map((cat) => {
               const isSelected = selectedCategoryFilter === cat;
               return (
                 <button
@@ -22772,7 +22701,7 @@ try {
                       : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900'
                   }`}
                 >
-                  {cat === 'Todos' ? '🪐 Todos' : cat === 'Fashion' ? '✨ Fashion' : cat === 'Finanzas' ? '📈 Finanzas' : cat === 'Modelos' ? '👑 Runway' : cat === 'BackStage' ? '🎬 Backstage' : cat === 'Investors' ? '💎 Jewellery' : cat === 'Tiendas' ? '🛍️ Tiendas' : cat === 'Catwalk' ? '👠 Catwalk' : cat === 'Fitnes' ? '💪 Fitnes' : cat === 'Beauty' ? '💄 Beauty' : '📱 Influencer'}
+                  {cat === 'Todos' ? '🪐 Todos' : cat === 'Fashion' ? '✨ Fashion' : cat === 'Finanzas' ? '📈 Finanzas' : cat === 'Modelos' ? '👑 Runway' : cat === 'BackStage' ? '🎬 Backstage' : cat === 'Investors' ? '💎 Jewellery' : cat === 'Catwalk' ? '👠 Catwalk' : cat === 'Fitnes' ? '💪 Fitnes' : cat === 'Beauty' ? '💄 Beauty' : '📱 Influencer'}
                 </button>
               );
             })}
@@ -23333,76 +23262,32 @@ try {
                       Herramientas
                     </div>
 
-                    {/* Si la sesión es de Inversor (Adriana Lima), solo mostrar un botón que ponga 'Ir a Tiendas' */}
-                    {userProfile?.role === 'investor' || 
-                     userProfile?.name?.toLowerCase().includes('inversor') || 
-                     userProfile?.name?.toLowerCase().includes('adriana') || 
-                     userProfile?.username?.toLowerCase().includes('adrianalima') ||
-                     userProfile?.name === 'Ernesto vs' ||
-                     userProfile?.username === 'ernestovs' ? (
-                      <button
-                        type="button"
-                        id="btn-ir-a-tiendas"
-                        onClick={() => {
-                          setSelectedInvestorStore(null);
-                          setShowTikTokShop(true);
-                          setShopTab('tiendas');
-                          setCameFromShopTab(null);
-                          setShowMoreDropdown(false);
-                        }}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-800 hover:bg-rose-50/70 hover:text-rose-600 transition cursor-pointer border border-slate-200/90 bg-white hover:border-pink-200 shadow-3xs text-left"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Store className="w-4 h-4 text-rose-500 shrink-0" />
-                          <span>Ir a Tiendas</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                      </button>
-                    ) : (
-                      <>
-                        {/* Item: Crea efectos de TikTok */}
-                        <button
-                          onClick={() => {
-                            setShowEffectsModal(true);
-                            setShowMoreDropdown(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                        >
-                          <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
-                          <span>Crea efectos de Casting Live</span>
-                        </button>
+                    {/* Item: Crea efectos de TikTok */}
+                    <button
+                      onClick={() => {
+                        setShowEffectsModal(true);
+                        setShowMoreDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
+                    >
+                      <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span>Crea efectos de Casting Live</span>
+                    </button>
 
-                        {/* Item: Herramientas LIVE */}
-                        <button
-                          onClick={() => {
-                            setShowLiveToolsModal(true);
-                            setShowMoreDropdown(false);
-                          }}
-                          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
-                            <span>Herramientas LIVE</span>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                        </button>
-
-                        {/* Item: Panel y Herramientas de Mi Tienda */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedInvestorStore(null);
-                            setShowTikTokShop(true);
-                            setShopTab('articulos');
-                            setShowMoreDropdown(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                        >
-                          <ShoppingBag className="w-4 h-4 text-rose-500 shrink-0" />
-                          <span>Panel y Herramientas de Mi Tienda</span>
-                        </button>
-                      </>
-                    )}
+                    {/* Item: Herramientas LIVE */}
+                    <button
+                      onClick={() => {
+                        setShowLiveToolsModal(true);
+                        setShowMoreDropdown(false);
+                      }}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Herramientas LIVE</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                    </button>
                   </div>
                 </div>
               )}
@@ -23411,53 +23296,94 @@ try {
 
           {/* CUENTAS QUE SIGUES SECTION */}
           <div className="pt-2 border-t border-slate-100 space-y-2">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block px-1">Cuentas que sigues</span>
-            
-            <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {accountsQueSigues.map((acc) => {
-                const isVerified = ['kyliejenner', 'mariathattil', 'badabun', 'victoriassecret_es'].includes(acc.username);
-                const isHeart = acc.hasHeart;
-                const isVictoriaSecret = acc.username === 'victoriassecret_es' || acc.name.toLowerCase().includes('victoria');
-                
-                return (
-                  <div 
-                    key={acc.username}
-                    onClick={() => handleOpenUserChannel(acc.username, acc.name)}
-                    className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-rose-50/70 cursor-pointer active:scale-98 transition group/follow"
-                    title={`Abrir perfil de ${acc.name}`}
-                  >
-                    {isVictoriaSecret ? (
-                      <div className="w-7 h-7 rounded-full overflow-hidden border border-slate-200 group-hover/follow:scale-108 transition shrink-0 select-none">
-                        {getFashionBrandLogo('victorias_secret_spain', "Victoria's Secret Spain")}
-                      </div>
-                    ) : (
-                      <img 
-                        src={acc.username === 'victorgraciaweb' ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100' : acc.avatar} 
-                        alt={acc.name} 
-                        className="w-7 h-7 rounded-full object-cover border border-slate-200 group-hover/follow:scale-108 transition shrink-0"
-                        referrerPolicy="no-referrer"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-0.5">
-                        <p className="text-[11px] font-bold text-slate-800 truncate leading-none group-hover/follow:text-[#fe2c55] transition">
-                          {acc.name}
-                        </p>
-                        {isVerified && (
-                          <span className="text-[10px] text-sky-500 font-extrabold select-none" title="Verificado">✓</span>
-                        )}
-                        {isHeart && (
-                          <span className="text-[10px] text-rose-500 font-semibold select-none" title="Creadores">💖</span>
-                        )}
-                      </div>
-                      <p className="text-[9px] text-slate-400 truncate mt-0.5">
-                        @{acc.username}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Cuentas que sigues</span>
+              {isExpandedFollowingAccounts && (
+                <span className="text-[9px] font-mono font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-full border border-rose-100">
+                  Expandido
+                </span>
+              )}
             </div>
+            
+            {(() => {
+              const allFilteredAccounts = accountsQueSigues
+                .filter((acc) => !acc.username.includes('victoriassecret') && !acc.name.toLowerCase().includes('victoria') && !customZxsStores.some(s => s.username === acc.username || s.id === acc.username));
+              
+              const visibleAccounts = isExpandedFollowingAccounts 
+                ? allFilteredAccounts 
+                : allFilteredAccounts.slice(0, 6);
+
+              return (
+                <>
+                  <div className={`space-y-1.5 overflow-y-auto pr-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-all duration-300 ${
+                    isExpandedFollowingAccounts ? 'max-h-[520px]' : 'max-h-[300px]'
+                  }`}>
+                    {visibleAccounts.map((acc) => {
+                      const isVerified = ['kyliejenner', 'mariathattil', 'badabun', 'kendalljenner', 'gigihadid', 'bellahadid', 'jonkortajarena', 'haileybieber', 'naomicampbell'].includes(acc.username) || (acc as any).isVerified;
+                      const isHeart = acc.hasHeart;
+                      
+                      return (
+                        <div 
+                          key={acc.username}
+                          onClick={() => handleOpenUserChannel(acc.username, acc.name)}
+                          className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-rose-50/70 cursor-pointer active:scale-98 transition group/follow"
+                          title={`Abrir perfil de ${acc.name}`}
+                        >
+                          <img 
+                            src={acc.username === 'victorgraciaweb' ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100' : acc.avatar} 
+                            alt={acc.name} 
+                            className="w-7 h-7 rounded-full object-cover border border-slate-200 group-hover/follow:scale-108 transition shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-0.5">
+                              <p className="text-[11px] font-bold text-slate-800 truncate leading-none group-hover/follow:text-[#fe2c55] transition">
+                                {acc.name}
+                              </p>
+                              {isVerified && (
+                                <span className="text-[10px] text-sky-500 font-extrabold select-none" title="Verificado">✓</span>
+                              )}
+                              {isHeart && (
+                                <span className="text-[10px] text-rose-500 font-semibold select-none" title="Creadores">💖</span>
+                              )}
+                            </div>
+                            <p className="text-[9px] text-slate-400 truncate mt-0.5">
+                              @{acc.username}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Botón que sale AL FINAL cuando están desplegadas para contraerlas */}
+                    {isExpandedFollowingAccounts && (
+                      <div className="pt-2 pb-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsExpandedFollowingAccounts(false)}
+                          className="w-full py-2 px-2.5 flex items-center justify-center text-[11px] font-bold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition-all cursor-pointer group shadow-2xs active:scale-[0.98]"
+                        >
+                          <span>Contraer</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botón abajo del todo para desplegar más cuentas que sigo cuando NO está desplegado */}
+                  {!isExpandedFollowingAccounts && allFilteredAccounts.length > 6 && (
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsExpandedFollowingAccounts(true)}
+                        className="w-full py-2 px-2.5 flex items-center justify-center text-[11px] font-bold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition-all cursor-pointer group shadow-2xs active:scale-[0.98]"
+                      >
+                        <span>Desplegar más</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
         </div>
@@ -24103,7 +24029,6 @@ try {
                             { id: 'Modelos', label: 'Runway 👑' },
                             { id: 'BackStage', label: 'BackStage 🎬' },
                             { id: 'Investors', label: 'Jewellery 💎' },
-                            { id: 'Tiendas', label: 'Tiendas 🛍️' },
                             { id: 'Catwalk', label: 'Catwalk 👠' },
                             { id: 'Fitnes', label: 'Fitnes 💪' },
                             { id: 'Beauty', label: 'Beauty 💄' },

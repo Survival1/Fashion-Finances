@@ -9,7 +9,6 @@ import {
   Sparkles, 
   AlertCircle, 
   Search, 
-  Plus, 
   Users, 
   CheckCheck, 
   Check,
@@ -540,16 +539,6 @@ export default function DirectMessageChat({
               </span>
               <h3 className="font-bold text-slate-800 text-sm tracking-tight">Mensajes</h3>
             </div>
-            
-            {/* Quick action to message any custom user */}
-            <button
-              onClick={() => setShowCustomContactModal(true)}
-              className="tab-trigger p-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-650 rounded-lg transition"
-              title="Escribir a un nuevo usuario..."
-              id="btn-add-custom-contact"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
           </div>
 
           {/* Search Contacts input */}
@@ -1052,7 +1041,10 @@ export default function DirectMessageChat({
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-3 max-h-[340px] overflow-y-auto pr-0.5 scrollbar-thin">
+                          <div 
+                            className="grid grid-cols-3 gap-3 max-h-[340px] overflow-y-auto pr-0.5 scrollbar-none no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                          >
                             {EXTRA_GIFTS.map((gift, idx) => (
                               <button
                                 key={idx}

@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  X
+  X,
+  Instagram
 } from 'lucide-react';
 import { ModelProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -319,11 +320,11 @@ export default function PatrocinadosView({
         </div>
       </div>
 
-      {/* UPPER BLOCK & SHARING OPTION SPLIT LAYOUT IN HIGH CONTRAST */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* UPPER BLOCK: SPONSOR AFILIACIÓN & TU RED DE PATROCINADOS (2 EQUAL BALANCED COLUMNS) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         
-        {/* COLUMN 1: "Mi Sponsor de Afiliación" Card (z.png layout) */}
-        <div className="lg:col-span-4 bg-gradient-to-br from-[#fffbfb] to-[#fff5f7] border border-pink-250 rounded-3xl p-5 text-left shadow-xs space-y-4">
+        {/* CARD 1: "Mi Sponsor de Afiliación" Card */}
+        <div className="bg-gradient-to-br from-[#fffbfb] to-[#fff5f7] border border-pink-200 rounded-3xl p-5 sm:p-6 text-left shadow-xs flex flex-col justify-between space-y-4">
           <div>
             <h3 className="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center gap-1.5 font-mono mb-3">
               <span className="p-1 bg-pink-100 rounded-lg text-rose-500">
@@ -336,7 +337,7 @@ export default function PatrocinadosView({
               <div className="space-y-4">
                 <div 
                   onClick={() => onSelectModel?.(sponsorModel)}
-                  className="flex items-center gap-3 p-1 rounded-xl transition hover:bg-rose-50/50 cursor-pointer group"
+                  className="flex items-center gap-3.5 p-1 rounded-xl transition hover:bg-rose-50/50 cursor-pointer group"
                 >
                   <img
                     src={sponsorModel.avatar}
@@ -345,7 +346,7 @@ export default function PatrocinadosView({
                     className="w-14 h-14 rounded-2xl object-cover border border-pink-150 shadow-3xs transition-transform group-hover:scale-105"
                   />
                   <div className="min-w-0">
-                    <h4 className="font-bold text-slate-900 text-sm group-hover:text-rose-600 transition-colors leading-tight truncate">
+                    <h4 className="font-bold text-slate-900 text-base group-hover:text-rose-600 transition-colors leading-tight truncate">
                       {sponsorModel.name}
                     </h4>
                     <p className="text-xs text-rose-500 font-mono font-semibold truncate">
@@ -354,8 +355,8 @@ export default function PatrocinadosView({
                   </div>
                 </div>
                 
-                <p className="text-[11px] text-slate-600 font-medium leading-relaxed font-sans">
-                  {sponsorModel.bio || "Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes."}
+                <p className="text-xs text-slate-600 font-medium leading-relaxed font-sans">
+                  {sponsorModel.bio || "Top 1 Modelo Masculino Global. Creador oficial registrado, enfocado en optimizar ganancias de patrocinios y reinversión."}
                 </p>
 
                 {/* THE RECUADRO WITH A THIN BLACK BORDER - COMPACT WITH LIKES NEXT TO COLON */}
@@ -363,7 +364,7 @@ export default function PatrocinadosView({
                   <span className="text-pink-500 font-bold font-sans">Total Likes:</span>
                   <span className="text-pink-600 font-black flex items-center gap-1">
                     <Heart className="w-3.5 h-3.5 fill-pink-500 text-pink-500" />
-                    <span>{sponsorModel.totalLikes || 14995}</span>
+                    <span>{sponsorModel.totalLikes || 14183}</span>
                   </span>
                 </div>
               </div>
@@ -373,8 +374,8 @@ export default function PatrocinadosView({
           </div>
         </div>
 
-        {/* COLUMN 2: "Tu red de patrocinados" Dashboard Stats */}
-        <div className="lg:col-span-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-4">
+        {/* CARD 2: "Tu red de patrocinados" Dashboard Stats */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-100 shadow-2xs flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest font-sans flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
@@ -382,11 +383,9 @@ export default function PatrocinadosView({
             </h3>
           </div>
 
-
-
           <div className="space-y-2.5">
             {/* CORE STAT 1: COMISIONES ACUMULADAS */}
-            <div className="bg-[#fafbfb] hover:bg-[#f7f8f9] border border-slate-100 rounded-2xl p-3 flex justify-between items-center transition-all duration-200 text-left">
+            <div className="bg-[#fafbfb] hover:bg-[#f7f8f9] border border-slate-100 rounded-2xl p-3 sm:p-3.5 flex justify-between items-center transition-all duration-200 text-left">
               <div>
                 <span className="text-[10px] text-pink-600 font-bold uppercase tracking-wider block font-sans">
                   💰 Comisiones
@@ -394,15 +393,15 @@ export default function PatrocinadosView({
                 <span className="text-[9px] text-slate-400 font-sans block">Acumuladas</span>
               </div>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-[13px] font-sans font-bold text-slate-700 tracking-tight">
+                <span className="text-base sm:text-lg font-sans font-bold text-slate-800 tracking-tight">
                   {totalEarnings.toFixed(2)}
                 </span>
-                <span className="text-[10px] font-bold text-rose-500">€</span>
+                <span className="text-xs font-bold text-rose-500">€</span>
               </div>
             </div>
 
             {/* CORE STAT 2: INGRESOS ESTE MES */}
-            <div className="bg-[#fafbfb] hover:bg-[#f7f8f9] border border-slate-100 rounded-2xl p-3 flex justify-between items-center transition-all duration-200 text-left">
+            <div className="bg-[#fafbfb] hover:bg-[#f7f8f9] border border-slate-100 rounded-2xl p-3 sm:p-3.5 flex justify-between items-center transition-all duration-200 text-left">
               <div>
                 <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block font-sans">
                   📈 Ingresos
@@ -410,15 +409,15 @@ export default function PatrocinadosView({
                 <span className="text-[9px] text-slate-400 font-sans block">Este mes</span>
               </div>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-[13px] font-sans font-bold text-slate-700 tracking-tight">
+                <span className="text-base sm:text-lg font-sans font-bold text-slate-800 tracking-tight">
                   +{(125.50 + simulatedEarnings).toFixed(2)}
                 </span>
-                <span className="text-[10px] font-bold text-emerald-600">€</span>
+                <span className="text-xs font-bold text-emerald-600">€</span>
               </div>
             </div>
 
             {/* CORE STAT 3: PERSONAS EN TU RED */}
-            <div className="bg-[#fafbfb] hover:bg-[#f7f8f9] border border-slate-100 rounded-2xl p-3 flex justify-between items-center transition-all duration-200 text-left">
+            <div className="bg-[#fafbfb] hover:bg-[#f7f8f9] border border-slate-100 rounded-2xl p-3 sm:p-3.5 flex justify-between items-center transition-all duration-200 text-left">
               <div>
                 <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider block font-sans">
                   👥 Personas
@@ -426,7 +425,7 @@ export default function PatrocinadosView({
                 <span className="text-[9px] text-slate-400 font-sans block">En tu red</span>
               </div>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-[13px] font-sans font-bold text-slate-700 tracking-tight">
+                <span className="text-base sm:text-lg font-sans font-bold text-slate-800 tracking-tight">
                   {totalMembersCount}
                 </span>
               </div>
@@ -434,150 +433,173 @@ export default function PatrocinadosView({
           </div>
         </div>
 
-        {/* COLUMN 2: "+ Invitar nuevo inversor" Sharing Panel */}
-        <div className="lg:col-span-4 bg-gradient-to-br from-[#fff7f8] via-white to-[#fff0f2] border border-pink-200 rounded-3xl p-5 relative overflow-hidden text-left shadow-md flex flex-col justify-between">
-          <div className="space-y-3.5">
-            <div className="space-y-0.5">
-              <span className="text-[9px] font-sans font-black tracking-widest text-rose-500 uppercase block">🎁 PROGRAMA DE REGISTRO PREFERENTE</span>
-              <h3 className="text-base font-serif font-black text-rose-950 flex items-center gap-1.5 uppercase tracking-wide">
-                <span>+ Invitar nuevo inversor</span>
-              </h3>
-              <p className="text-[11px] text-slate-500 font-semibold leading-normal">
-                "Comparte tu enlace y gana el 10% de sus premios"
-              </p>
+      </div>
+
+      {/* HORIZONTAL CENTERED MODULE: INVITAR NUEVO INVERSOR & COMPARTIR EN INSTAGRAM */}
+      <div className="w-full bg-gradient-to-br from-[#fff7f8] via-white to-[#fff0f2] border border-pink-200 rounded-3xl p-6 sm:p-7 shadow-xs text-left relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+          
+          {/* LEFT SUB-COLUMN: + INVITAR NUEVO INVERSOR */}
+          <div className="lg:col-span-5 flex flex-col justify-between space-y-4 lg:border-r lg:border-pink-150/80 lg:pr-7">
+            <div className="space-y-3.5">
+              <div className="space-y-1">
+                <span className="text-[9.5px] font-sans font-black tracking-widest text-rose-500 uppercase block">
+                  🎁 PROGRAMA DE REGISTRO PREFERENTE
+                </span>
+                <h3 className="text-xl font-serif font-black text-rose-950 flex items-center gap-2 uppercase tracking-wide">
+                  <span>+ Invitar nuevo inversor</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold leading-normal">
+                  "Comparte tu enlace y gana el 10% de sus premios"
+                </p>
+              </div>
+
+              {/* Link field container */}
+              <div className="bg-white border border-pink-200 p-2 rounded-xl flex items-center justify-between gap-2 shadow-inner">
+                <input
+                  type="text"
+                  readOnly
+                  value="https://collectives.model/ref?sponsor=user"
+                  className="bg-transparent text-xs font-mono font-bold text-rose-900 select-all flex-1 px-1.5 py-0.5 min-w-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://collectives.model/ref?sponsor=user");
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2500);
+                  }}
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition shrink-0 cursor-pointer flex items-center gap-1.5 border-0 shadow-xs"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copied ? 'Copiado' : 'COPIAR'}</span>
+                </button>
+              </div>
+
+              {/* Quick action grid (WhatsApp, Telegram, Instagram) */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent('Sigue mi enlace de Haute Couture en Fashion Finances y gana el 10% de premios: https://collectives.model/ref?sponsor=user'))}
+                  className="py-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white border border-transparent rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]"
+                >
+                  <span className="text-xs">💬</span>
+                  <span>WhatsApp</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => window.open('https://t.me/share/url?url=' + encodeURIComponent('https://collectives.model/ref?sponsor=user') + '&text=' + encodeURIComponent('Únete a mi red de patrocinados de Haute Couture en Fashion Finances.'))}
+                  className="py-2.5 bg-[#0088cc] hover:bg-[#0077b5] text-white border border-transparent rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]"
+                >
+                  <span className="text-xs">✈️</span>
+                  <span>Telegram</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowInstagramKit(!showInstagramKit)}
+                  className="py-2.5 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:brightness-110 text-white border border-transparent rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]"
+                >
+                  <span className="text-xs">📸</span>
+                  <span>Instagram</span>
+                </button>
+              </div>
             </div>
 
-            {/* Link field container */}
-            <div className="bg-white border border-pink-150 p-2 rounded-xl flex items-center justify-between gap-1.5 shadow-inner">
-              <input
-                type="text"
-                readOnly
-                value="https://collectives.model/ref?sponsor=user"
-                className="bg-transparent text-[10px] font-mono font-bold text-rose-900 select-all flex-1 px-1 py-0.5 min-w-0"
-              />
+            {/* Bottom Actions */}
+            <div className="space-y-2.5 pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText("https://collectives.model/ref?sponsor=user");
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2500);
-                }}
-                className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9px] uppercase tracking-wide rounded-lg transition shrink-0 cursor-pointer flex items-center gap-1 border-0"
+                onClick={() => setShowQrModal(true)}
+                className="w-full py-2.5 bg-white hover:bg-rose-50/70 border border-pink-200 text-rose-700 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition shadow-3xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                {copied ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
-                <span>{copied ? 'Copiado' : 'Copiar'}</span>
+                <span className="w-5 h-5 rounded-full bg-pink-100 text-rose-600 flex items-center justify-center shrink-0">
+                  <QrCode className="w-3.5 h-3.5" />
+                </span>
+                <span>MOSTRAR CÓDIGO QR</span>
               </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => onOpenRegisterForm && onOpenRegisterForm()}
+                  className="text-[10.5px] font-black uppercase text-rose-600 hover:text-rose-700 underline tracking-wide bg-transparent border-0 cursor-pointer"
+                >
+                  ✍️ Registrar referido manual (+)
+                </button>
+              </div>
             </div>
+          </div>
 
-            {/* Quick action grid (WhatsApp, Telegram, Instagram) */}
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent('Sigue mi enlace de Haute Couture en Fashion Finances y gana el 10% de premios: https://collectives.model/ref?sponsor=user'))}
-                className="py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white border border-transparent rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-[0.98]"
-              >
-                <span className="text-[10px]">💬</span>
-                <span>WhatsApp</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => window.open('https://t.me/share/url?url=' + encodeURIComponent('https://collectives.model/ref?sponsor=user') + '&text=' + encodeURIComponent('Únete a mi red de patrocinados de Haute Couture en Fashion Finances.'))}
-                className="py-2 bg-[#0088cc] hover:bg-[#0077b5] text-white border border-transparent rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-[0.98]"
-              >
-                <span className="text-[10px]">✈️</span>
-                <span>Telegram</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowInstagramKit(!showInstagramKit)}
-                style={{ backgroundColor: showInstagramKit ? '#b91c1c' : '#e50914', color: '#ffffff' }}
-                className={`py-2 text-white border border-transparent rounded-xl text-[9px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-[0.98] ${
-                  showInstagramKit
-                    ? '!bg-[#b91c1c] ring-2 ring-red-300'
-                    : '!bg-[#e50914] hover:!bg-[#cc0812]'
-                }`}
-              >
-                <span className="text-[10px]">📸</span>
-                <span>Instagram</span>
-              </button>
-            </div>
-
-            {/* Instagram Share Invite Card / Message Kit */}
-            {showInstagramKit && (
-              <div className="bg-white border border-pink-100 rounded-2xl p-3 space-y-2.5 shadow-2xs animate-fade-in text-left">
-                <div className="flex items-center gap-1 text-[9.5px] font-black text-purple-600 uppercase tracking-widest">
-                  <span>📸 COMPARTIR EN INSTAGRAM</span>
+          {/* RIGHT SUB-COLUMN: COMPARTIR EN INSTAGRAM */}
+          <div className="lg:col-span-7 flex flex-col justify-between bg-white border border-pink-150 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between border-b border-pink-100/70 pb-2.5">
+                <div className="flex items-center gap-2 text-xs font-black text-rose-950 uppercase tracking-wider">
+                  <span className="p-1 rounded-md bg-pink-100 text-rose-600">
+                    <Instagram className="w-4 h-4" />
+                  </span>
+                  <span>COMPARTIR EN INSTAGRAM</span>
                 </div>
+                <span className="text-[9.5px] font-bold text-rose-500 font-mono uppercase bg-rose-50 border border-pink-150 px-2.5 py-0.5 rounded-full">
+                  Kit de Difusión
+                </span>
+              </div>
 
-                {/* Elegant fashion and finance visual cover */}
-                <div className="relative rounded-xl overflow-hidden h-24 border border-slate-100 shadow-3xs">
+              {/* Upper row: Banner + Platform text side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center">
+                <div className="sm:col-span-5 relative rounded-xl overflow-hidden h-28 border border-slate-100 shadow-3xs shrink-0">
                   <img 
                     src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600" 
                     alt="Fashion Finances" 
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-2">
-                    <span className="text-[10px] font-bold text-pink-300 uppercase tracking-wide">Fashion Finances</span>
-                    <span className="text-[8px] text-slate-200">Alta Costura & Finanzas Inteligentes</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-2.5">
+                    <span className="text-[11px] font-bold text-pink-300 uppercase tracking-wide">Fashion Finances</span>
+                    <span className="text-[9px] text-slate-200">Alta Costura & Finanzas</span>
                   </div>
                 </div>
 
-                {/* Brief description of the platform */}
-                <p className="text-[9.5px] text-slate-500 leading-normal bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  <strong>Fashion Finances</strong> es la plataforma exclusiva que unifica la elegancia de la Alta Costura con estrategias avanzadas de patrocinio, permitiendo monetizar portafolios y expandir redes de contactos.
-                </p>
-
-                {/* Invitation text area & copy block */}
-                <div className="space-y-1">
-                  <span className="text-[8px] text-slate-400 font-mono font-bold uppercase block">Mensaje de Invitación:</span>
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-2 relative">
-                    <p className="text-[9px] text-slate-600 font-medium select-all leading-relaxed max-h-16 overflow-y-auto pr-1">
-                      ✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: https://collectives.model/ref?sponsor=user #FashionFinances #ModayFinanzas #HauteCouture
-                    </p>
-                    
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText("✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: https://collectives.model/ref?sponsor=user #FashionFinances #ModayFinanzas #HauteCouture");
-                        setCopiedInstagramMsg(true);
-                        setTimeout(() => setCopiedInstagramMsg(false), 2500);
-                      }}
-                      className="w-full mt-1.5 py-1 px-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:brightness-105 text-white font-extrabold text-[8.5px] uppercase tracking-wide rounded-lg transition flex items-center justify-center gap-1 cursor-pointer border-0 shadow-3xs"
-                    >
-                      {copiedInstagramMsg ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedInstagramMsg ? '¡Copiado!' : 'Copiar Invitación para Instagram'}</span>
-                    </button>
-                  </div>
+                <div className="sm:col-span-7">
+                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/80 p-3 rounded-xl border border-slate-100 font-medium">
+                    <strong className="text-slate-900">Fashion Finances</strong> es la plataforma exclusiva que unifica la elegancia de la Alta Costura con estrategias avanzadas de patrocinio, permitiendo monetizar portafolios y expandir redes de contactos.
+                  </p>
                 </div>
               </div>
-            )}
+
+              {/* Invitation message preview & copy */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9.5px] text-slate-500 font-mono font-bold uppercase">
+                    Mensaje de Invitación:
+                  </span>
+                  <span className="text-[9.5px] text-pink-600 font-semibold">Listo para portapapeles</span>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 relative">
+                  <p className="text-xs text-slate-700 font-medium select-all leading-relaxed max-h-24 overflow-y-auto pr-1">
+                    ✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: https://collectives.model/ref?sponsor=user #FashionFinances #ModayFinanzas #HauteCouture
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <button
               type="button"
-              onClick={() => setShowQrModal(true)}
-              className="w-full py-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-105 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition shadow-3xs flex items-center justify-center gap-2 cursor-pointer border-0"
+              onClick={() => {
+                navigator.clipboard.writeText("✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: https://collectives.model/ref?sponsor=user #FashionFinances #ModayFinanzas #HauteCouture");
+                setCopiedInstagramMsg(true);
+                setTimeout(() => setCopiedInstagramMsg(false), 2500);
+              }}
+              className="w-full py-2.5 px-3 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:brightness-105 text-white font-extrabold text-[10.5px] uppercase tracking-wide rounded-xl transition flex items-center justify-center gap-2 cursor-pointer border-0 shadow-xs active:scale-[0.99]"
             >
-              <span className="w-5 h-5 rounded-full bg-white text-rose-500 flex items-center justify-center shrink-0 shadow-3xs">
-                <QrCode className="w-3 h-3" />
-              </span>
-              <span>MOSTRAR CÓDIGO QR</span>
+              {copiedInstagramMsg ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+              <span>{copiedInstagramMsg ? '¡Copiado al Portapapeles!' : 'Copiar Invitación para Instagram'}</span>
             </button>
           </div>
 
-          <div className="pt-2 border-t border-pink-100/50 mt-3.5 flex justify-center text-center">
-            <button
-              type="button"
-              onClick={() => onOpenRegisterForm && onOpenRegisterForm()}
-              className="text-[9.5px] font-black uppercase text-rose-600 hover:text-rose-700 underline tracking-wide bg-transparent border-0 cursor-pointer"
-            >
-              ✍️ Registrar referido manual (+)
-            </button>
-          </div>
         </div>
-
       </div>
 
       {/* Form: Add New Patrocinado (Simulates manually registering referrals) */}
