@@ -1785,29 +1785,6 @@ export default function VictoriaSecretRanking({
             <>
               {/* ✨ MAIN PRESTIGE TITLE CONTAINER WITH HIGH-FASHION TYPOGRAPHY */}
               <div className="text-center space-y-2 relative">
-                
-                {/* Crown Motif ontop of the title - Serious and Elegant High-Fashion Vector Crown */}
-                <div className="flex justify-center mb-1">
-                  <svg 
-                    className="w-10 h-7 text-amber-500 fill-amber-400 drop-shadow-[0_2px_4px_rgba(245,158,11,0.3)]" 
-                    viewBox="0 0 100 50" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path 
-                      d="M15,40 L20,16 L42,26 L50,9 L58,26 L80,16 L85,40 Z" 
-                      stroke="#B45309" 
-                      strokeWidth="1.8" 
-                      strokeLinejoin="round" 
-                      fill="currentColor"
-                      fillOpacity="0.85"
-                    />
-                    <rect x="12" y="40" width="76" height="3" fill="#B45309" rx="1" />
-                    <circle cx="20" cy="16" r="2.2" fill="#FFF" />
-                    <circle cx="50" cy="9" r="2.2" fill="#FFF" />
-                    <circle cx="80" cy="16" r="2.2" fill="#FFF" />
-                  </svg>
-                </div>
-
                 <h2 className="text-2xl font-light tracking-[0.35em] text-pink-900/90 uppercase font-serif">
                   THE ANGELS
                 </h2>
@@ -1905,49 +1882,7 @@ export default function VictoriaSecretRanking({
                         </button>
                       </div>
 
-                      {/* Brand Sponsors Row for 2nd place */}
-                      <div className="mt-3 w-full bg-gradient-to-tr from-stone-50/50 to-white/95 border border-pink-100/60 rounded-2xl p-2.5 shadow-xs space-y-1.5 text-center">
-                        <span className="text-[8px] font-black tracking-[0.16em] uppercase text-pink-700/90 block">
-                          💎 SPONSORS DE ÉLITE 💎
-                        </span>
-                        <div className="flex items-center justify-around gap-1.5 pt-1.5 border-t border-pink-100/50">
-                          {/* Gucci */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('gucci')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Gucci"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-[#1b3c22] border border-[#811f26] flex items-center justify-center text-[#d5af66] font-semibold text-[8px] shadow-xs group-hover/brand:shadow-md">
-                              GG
-                            </div>
-                            <span className="text-[7.5px] font-sans font-bold tracking-[0.12em] text-slate-700 mt-1 uppercase group-hover/brand:text-emerald-700">Gucci</span>
-                          </div>
-                          {/* Versace */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('versace')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Versace"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-500 p-0.5 shadow-xs group-hover/brand:shadow-md">
-                              <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center text-[#d5af66] font-serif text-[7.5px] font-bold">
-                                V
-                              </div>
-                            </div>
-                            <span className="text-[7.5px] font-serif font-bold tracking-wider text-slate-700 mt-1 uppercase group-hover/brand:text-amber-600">Versace</span>
-                          </div>
-                          {/* Balenciaga */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('balenciaga')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Balenciaga"
-                          >
-                            <div className="w-7 h-7 bg-zinc-900 border border-slate-750 flex items-center justify-center text-white font-sans font-black text-[7.5px] tracking-wide rounded shadow-xs group-hover/brand:shadow-md">
-                              BB
-                            </div>
-                            <span className="text-[7.5px] font-mono font-bold tracking-wider text-slate-700 mt-1 uppercase group-hover/brand:text-slate-900">Balen</span>
-                          </div>
-                        </div>
-                      </div>
+
 
                     </div>
                   )}
@@ -2065,48 +2000,7 @@ export default function VictoriaSecretRanking({
                         </button>
                       </div>
 
-                      {/* Brand Sponsors Row for 1st place */}
-                      <div className="mt-3 w-full bg-gradient-to-tr from-amber-50/40 via-white to-pink-50/30 border border-amber-200/70 rounded-2xl p-2.5 shadow-md space-y-1.5 text-center relative overflow-hidden">
-                        <div className="absolute -top-3 -right-3 w-8 h-8 bg-amber-400/20 rounded-full blur-md" />
-                        <span className="text-[8px] font-black tracking-[0.16em] uppercase text-amber-850 block">
-                          👑 SPONSORS DE ÉLITE 👑
-                        </span>
-                        <div className="flex items-center justify-around gap-1.5 pt-1.5 border-t border-amber-200/50">
-                          {/* Victoria's Secret Spain */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('victorias_secret_spain')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Victoria's Secret Spain"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 border border-pink-300 flex items-center justify-center text-white font-black text-[8px] tracking-tighter shadow-xs group-hover/brand:shadow-md">
-                              VS
-                            </div>
-                            <span className="text-[7.5px] font-sans font-bold tracking-tight text-slate-700 mt-1 uppercase group-hover/brand:text-pink-600">Victoria's</span>
-                          </div>
-                          {/* L'Oréal Group */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('loreal_group')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de L'Oréal Group"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-slate-950 border border-purple-400/50 flex items-center justify-center text-rose-300 font-serif italic text-[8.5px] font-black shadow-sm group-hover/brand:shadow-md">
-                              L'O
-                            </div>
-                            <span className="text-[7.5px] font-sans font-bold text-slate-700 mt-1 uppercase group-hover/brand:text-purple-600">L'Oréal</span>
-                          </div>
-                          {/* Carolina Herrera España */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('carolina_herrera_spain')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Carolina Herrera España"
-                          >
-                            <div className="w-7 h-7 bg-slate-900 flex items-center justify-center text-amber-300 font-serif font-black text-[8px] tracking-widest shadow-xs relative rounded-full border border-amber-400/50 group-hover/brand:shadow-md">
-                              CH
-                            </div>
-                            <span className="text-[7.5px] font-sans font-bold tracking-tight text-slate-700 mt-1 uppercase group-hover/brand:text-amber-600">C. Herrera</span>
-                          </div>
-                        </div>
-                      </div>
+
 
                     </div>
                   )}
@@ -2175,47 +2069,7 @@ export default function VictoriaSecretRanking({
                         </button>
                       </div>
 
-                      {/* Brand Sponsors Row for 3rd place */}
-                      <div className="mt-3 w-full bg-gradient-to-tr from-stone-50/50 to-white/95 border border-pink-100/60 rounded-2xl p-2.5 shadow-xs space-y-1.5 text-center">
-                        <span className="text-[8px] font-black tracking-[0.16em] uppercase text-pink-700/90 block">
-                          ⭐ SPONSORS DE ÉLITE ⭐
-                        </span>
-                        <div className="flex items-center justify-around gap-1.5 pt-1.5 border-t border-pink-100/50">
-                          {/* Louis Vuitton */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('louis_vuitton')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Louis Vuitton"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-[#3e2723] border border-[#a1887f]/50 flex items-center justify-center text-[#d7ccc8] font-bold text-[8px] shadow-xs group-hover/brand:shadow-md">
-                              LV
-                            </div>
-                            <span className="text-[7.5px] font-sans font-bold tracking-widest text-slate-700 mt-1 uppercase group-hover/brand:text-amber-800">L.V.</span>
-                          </div>
-                          {/* YSL */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('ysl')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Yves Saint Laurent"
-                          >
-                            <div className="w-7 h-7 bg-zinc-900 flex items-center justify-center text-[#d5af66] font-serif font-semibold text-[8px] tracking-tighter leading-none rounded-full shadow-xs group-hover/brand:shadow-md">
-                              YSL
-                            </div>
-                            <span className="text-[7.5px] font-sans font-bold tracking-wider text-slate-700 mt-1 uppercase group-hover/brand:text-yellow-600">YSL</span>
-                          </div>
-                          {/* Hermès */}
-                          <div 
-                            onClick={() => onNavigateToStore && onNavigateToStore('hermes')}
-                            className="flex flex-col items-center justify-center group/brand hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                            title="Ir a boutique de Hermès Paris"
-                          >
-                            <div className="w-7 h-7 bg-[#f4511e] rounded flex items-center justify-center text-white font-serif font-bold text-[9px] shadow-xs border border-amber-600/10 group-hover/brand:shadow-md">
-                              H
-                            </div>
-                            <span className="text-[7.5px] font-serif font-bold tracking-widest text-slate-700 mt-1 uppercase group-hover/brand:text-orange-600">Hermès</span>
-                          </div>
-                        </div>
-                      </div>
+
 
                     </div>
                   )}

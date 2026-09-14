@@ -7,6 +7,14 @@ import { purgeExpendableStorage } from './utils/safeStorage';
 
 // Suppress benign iframe websocket connection rejections
 if (typeof window !== 'undefined') {
+  // Eliminate voice narration / speech synthesis from the entire app
+  if ('speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak = () => {};
+    } catch (e) {}
+  }
+
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event?.reason?.message || String(event?.reason || '');
     if (

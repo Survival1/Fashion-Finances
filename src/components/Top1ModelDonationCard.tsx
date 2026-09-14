@@ -573,13 +573,6 @@ export default function Top1ModelDonationCard({
 
       {/* 👑 TOP HEADER: THE ANGELS RANKING (Mirroring the grand style of zz.png) */}
       <div className="text-center space-y-2 relative z-10 w-full animate-fade-in border-b border-rose-200/70 pb-6">
-        {/* Monogram Crown */}
-        <div className="flex justify-center items-center gap-2 mb-1">
-          <div className="relative inline-flex items-center justify-center">
-            <Crown className="w-5 h-5 text-amber-500 fill-amber-400 filter drop-shadow-[0_2px_6px_rgba(245,158,11,0.4)]" />
-          </div>
-        </div>
-
         {/* Brand Subtitle */}
         <span className="text-[10.5px] sm:text-xs font-serif tracking-[0.25em] text-rose-950 font-black uppercase block">
           THE ANGELS

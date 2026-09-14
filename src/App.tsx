@@ -903,6 +903,7 @@ export default function App() {
 
   const handleLoginAsRecoveredUser = () => {
     if (!recoveredUsername) return;
+    resetFinanzasExpositionsOnLogin();
     
     const cleanUsername = recoveredUsername.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -1513,8 +1514,21 @@ export default function App() {
     setAddFundsAmount('50');
   };
 
+  // Reset finanzas active session start times on login/switch so presentations start fresh with participant 1 (Lucas)
+  const resetFinanzasExpositionsOnLogin = () => {
+    try {
+      localStorage.removeItem('finanzas_active_session_start_sess-trabajadores-1');
+      localStorage.removeItem('finanzas_active_session_start_sess-emprendedores-1');
+      localStorage.removeItem('finanzas_active_session_start_sess-empresarios-1');
+      localStorage.removeItem('finanzas_presentation_queue_v11');
+      localStorage.removeItem('finanzas_presentation_queue_v10');
+      localStorage.removeItem('finanzas_presentation_queue_v9');
+    } catch (e) {}
+  };
+
   // Switching profiles to allow testing Investor, Model, or Visitor dashboards!
   const switchDefaultPersona = (role: 'investor' | 'model' | 'visitor') => {
+    resetFinanzasExpositionsOnLogin();
     setSelectedModelForExpandedView(null);
     setSelectedModelForView(null);
     if (role === 'investor') {
@@ -1786,6 +1800,7 @@ export default function App() {
   // Login handler submitting username search or simulation login profile builder
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    resetFinanzasExpositionsOnLogin();
     if (!loginUsername) return;
     const cleanUsername = loginUsername.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -3150,6 +3165,7 @@ export default function App() {
           {/* Container of Information Intro and Companies I Sponsor - Desktop view directly below Cerrar Sesión button */}
           <div className="hidden lg:block">
             <ProfileIntroAndSponsors
+              hideIntro={activeTab === 'casting_live'}
               userProfile={selectedModelForView ? {
                 id: selectedModelForView.id,
                 name: selectedModelForView.name,

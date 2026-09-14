@@ -151,7 +151,8 @@ export function ProfileIntroAndSponsors({
   onOpenRanking,
   models: propModels,
   onSelectModel,
-  friendsCount = 5
+  friendsCount = 5,
+  hideIntro = false
 }: {
   userProfile: any;
   bioText?: string;
@@ -161,6 +162,7 @@ export function ProfileIntroAndSponsors({
   models?: ModelProfile[];
   onSelectModel?: (model: ModelProfile) => void;
   friendsCount?: number;
+  hideIntro?: boolean;
 }) {
   const [signedAgreements] = useState<Record<string, any>>(() => {
     if (propSignedAgreements) return propSignedAgreements;
@@ -217,52 +219,54 @@ export function ProfileIntroAndSponsors({
   return (
     <div className="space-y-4 font-sans text-left">
       {/* Intro Information Cards (FB Intro style) */}
-      <div className="bg-gradient-to-br from-[#FCE7F3] via-[#FFF1F6] to-[#E0F2FE] rounded-2xl border border-pink-200/60 p-5 space-y-4 shadow-xs">
-        <div>
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest flex items-center gap-1">
-            <span>Información / Intro</span>
-          </h3>
-        </div>
+      {!hideIntro && (
+        <div className="bg-gradient-to-br from-[#FCE7F3] via-[#FFF1F6] to-[#E0F2FE] rounded-2xl border border-pink-200/60 p-5 space-y-4 shadow-xs" id="intro-information-card-container">
+          <div>
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest flex items-center gap-1">
+              <span>Información / Intro</span>
+            </h3>
+          </div>
 
-        {/* Custom user-editable presentation/intro text */}
-        <div className="space-y-2 text-left">
-          <p className="text-xs text-slate-700 leading-relaxed font-medium bg-white/80 backdrop-blur-xs border border-white/90 p-3.5 rounded-xl whitespace-pre-line shadow-2xs">
-            {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
-          </p>
-        </div>
+          {/* Custom user-editable presentation/intro text */}
+          <div className="space-y-2 text-left">
+            <p className="text-xs text-slate-700 leading-relaxed font-medium bg-white/80 backdrop-blur-xs border border-white/90 p-3.5 rounded-xl whitespace-pre-line shadow-2xs">
+              {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
+            </p>
+          </div>
 
-        <hr className="border-pink-200/50" />
+          <hr className="border-pink-200/50" />
 
-        {/* Status details indicators */}
-        <div className="text-xs space-y-2 text-slate-700">
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-sky-500 font-bold" />
-            <span>Espacio de Trabajo: <strong>España / Remoto</strong></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Instagram className="w-4 h-4 text-fuchsia-500 font-bold" />
-            <span>Sígueme en Instagram: <strong className="text-indigo-650">@{userProfile?.username || 'usuario'}</strong></span>
-          </div>
-          <div 
-            onClick={() => {
-              if (onOpenRanking) {
-                onOpenRanking();
-              } else if (onNavigateToTab) {
-                onNavigateToTab('casting_live');
-              }
-            }}
-            className="flex items-center gap-2 cursor-pointer hover:text-amber-600 transition-colors p-1 -m-1 rounded-lg hover:bg-white/60"
-            title="Ver Sponsoring Oficial y Ranking"
-          >
-            <Award className="w-4 h-4 text-amber-500 font-bold shrink-0" />
-            <span>Sponsoring: <strong className="text-emerald-600">Comisión 10% activa</strong></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-indigo-500 font-bold" />
-            <span>Mis amigos: <strong className="text-indigo-650">{friendsCount} amigos</strong></span>
+          {/* Status details indicators */}
+          <div className="text-xs space-y-2 text-slate-700">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-sky-500 font-bold" />
+              <span>Espacio de Trabajo: <strong>España / Remoto</strong></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Instagram className="w-4 h-4 text-fuchsia-500 font-bold" />
+              <span>Sígueme en Instagram: <strong className="text-indigo-650">@{userProfile?.username || 'usuario'}</strong></span>
+            </div>
+            <div 
+              onClick={() => {
+                if (onOpenRanking) {
+                  onOpenRanking();
+                } else if (onNavigateToTab) {
+                  onNavigateToTab('casting_live');
+                }
+              }}
+              className="flex items-center gap-2 cursor-pointer hover:text-amber-600 transition-colors p-1 -m-1 rounded-lg hover:bg-white/60"
+              title="Ver Sponsoring Oficial y Ranking"
+            >
+              <Award className="w-4 h-4 text-amber-500 font-bold shrink-0" />
+              <span>Sponsoring: <strong className="text-emerald-600">Comisión 10% activa</strong></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-indigo-500 font-bold" />
+              <span>Mis amigos: <strong className="text-indigo-650">{friendsCount} amigos</strong></span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 🏆 RANKING DE MODELOS (Debajo de Carolina Herrera España) */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs text-left" id="bloque-ranking-modelos-sidebar">
@@ -2086,13 +2090,6 @@ export default function ModelFacebookProfile({
     { emojis: ['😔'], label: 'Lo siento' }
   ];
 
-  const STICKER_PILLS = [
-    { emoji: '💖', label: 'TE QUIERO' },
-    { emoji: '🥺', label: 'TE EXTRAÑO' },
-    { emoji: '👋', label: 'HOLA' },
-    { emoji: '😔', label: 'LO SIENTO' }
-  ];
-
   const spawnScreenRain = (emojiString: string) => {
     // Correctly splits surrogate pair emojis into individual strings
     const emojis = Array.from(emojiString.trim().split(' ')[0] || emojiString.trim());
@@ -2612,42 +2609,12 @@ export default function ModelFacebookProfile({
                               </span>
                             )}
                           </div>
-                          <span className="text-[8.5px] font-extrabold text-zinc-400 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
+                            <span className="text-[8.5px] font-extrabold text-zinc-400 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
                             {sticker.label}
                           </span>
                         </button>
                       );
                     })}
-                  </div>
-
-                  {/* Text buttons list at bottom for zazas.png text-only / phrase badges in 2x2 grid */}
-                  <div className="mt-3 pt-3 border-t border-zinc-800/80 grid grid-cols-2 gap-2">
-                    {STICKER_PILLS.map((sticker, sIdx) => (
-                      <button
-                        key={`text-st-${sIdx}`}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          const isPhoto = id.startsWith('http') || id.startsWith('/') || id.includes('.');
-                          if (isPhoto) {
-                            handleStickerReactToPhoto(id, `${sticker.emoji} ${sticker.label}`, e);
-                          } else {
-                            handleStickerReactToPost(id, `${sticker.emoji} ${sticker.label}`, e);
-                          }
-                          setHoveredStickersPostId(null);
-                        }}
-                        className="px-2.5 py-1.5 rounded-full text-[9px] font-black tracking-wider bg-[#1a1f2e] hover:bg-[#252c41] text-zinc-100 border border-zinc-700/50 cursor-pointer shadow-md hover:scale-105 active:scale-95 transition flex items-center justify-center gap-1.5 select-none font-sans uppercase"
-                      >
-                        <span className="text-sm select-none">{sticker.emoji}</span>
-                        <span className="leading-none">{sticker.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Subtitle */}
-                  <div className="text-[7.5px] text-zinc-400 text-center font-mono mt-3.5 leading-none uppercase tracking-wide">
-                    Presiona un sticker para enviar al instante
                   </div>
                 </div>
               )}
@@ -2889,36 +2856,6 @@ export default function ModelFacebookProfile({
               </button>
             );
           })}
-        </div>
-
-        {/* Text buttons list at bottom for zazas.png text-only / phrase badges in 2x2 grid */}
-        <div className="mt-2.5 pt-2.5 border-t border-zinc-800/80 grid grid-cols-2 gap-2 shrink-0">
-          {STICKER_PILLS.map((sticker, sIdx) => (
-            <button
-              key={`text-st-${sIdx}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                const isPhoto = id.startsWith('http') || id.startsWith('/') || id.includes('.');
-                if (isPhoto) {
-                  handleStickerReactToPhoto(id, `${sticker.emoji} ${sticker.label}`, e);
-                } else {
-                  handleStickerReactToPost(id, `${sticker.emoji} ${sticker.label}`, e);
-                }
-                setHoveredStickersPostId(null);
-              }}
-              className="px-2.5 py-1.5 rounded-full text-[9px] font-black tracking-wider bg-[#1a1f2e] hover:bg-[#252c41] text-zinc-100 border border-zinc-700/50 cursor-pointer shadow-md hover:scale-105 active:scale-95 transition flex items-center justify-center gap-1.5 select-none font-sans uppercase"
-            >
-              <span className="text-sm select-none">{sticker.emoji}</span>
-              <span className="leading-none">{sticker.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Subtitle */}
-        <div className="text-[7.5px] text-zinc-400 text-center font-mono mt-2.5 leading-none uppercase tracking-wide shrink-0">
-          Presiona un sticker para enviar al instante
         </div>
       </div>
     );

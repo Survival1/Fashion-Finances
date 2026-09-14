@@ -50,7 +50,9 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
 
   const finalParticipants = (participantsList && participantsList.length >= 10)
     ? participantsList.slice(0, 10)
-    : DEFAULT_EMPRESARIOS;
+    : (participantsList && participantsList.length > 0)
+      ? [...participantsList, ...DEFAULT_EMPRESARIOS].slice(0, 10)
+      : DEFAULT_EMPRESARIOS;
 
   // Sound generator helper
   const playJoinChime = (count: number) => {
@@ -420,7 +422,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
         <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-800/80 relative z-10">
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-[10px] sm:text-[11px]">Bolsa de 1.000€ protegida en escrow</span>
+            <span className="text-[10px] sm:text-[11px]">Bolsa de {Math.round(10 * entryFee).toLocaleString('es-ES')}€ protegida en escrow</span>
           </div>
 
           <button

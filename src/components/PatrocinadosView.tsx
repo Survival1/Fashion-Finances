@@ -213,18 +213,7 @@ export default function PatrocinadosView({
       console.warn("Chime error:", e);
     }
 
-    try {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance('new commission');
-        utterance.lang = 'en-US';
-        utterance.volume = 1.0;
-        utterance.rate = 1.1;
-        window.speechSynthesis.speak(utterance);
-      }
-    } catch (e) {
-      console.warn("Speech synthesis error:", e);
-    }
+    // Speech synthesis removed per user request
     
     // Auto-dim notification after 4s
     setTimeout(() => {

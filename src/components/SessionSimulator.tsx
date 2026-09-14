@@ -1346,23 +1346,16 @@ export default function SessionSimulator({
       console.log("AudioContext chime not supported or blocked:", e);
     }
 
-    // Play TTS speech synthesis immediately
+    // Cancel any previous speech synthesis - voice must only start after 10 participants are gathered
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(voiceSpeechText);
-      utterance.lang = 'es-ES';
-      utterance.volume = 1;
-      utterance.rate = 0.95;
-      const voices = window.speechSynthesis.getVoices();
-      const spanishVoice = voices.find(v => v.lang.includes('es'));
-      if (spanishVoice) {
-        utterance.voice = spanishVoice;
-      }
-      window.speechSynthesis.speak(utterance);
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
     }
+    localStorage.setItem('pending_session_welcome_speech', voiceSpeechText);
 
     setGatheringSessionData(currentChannelSession);
-    setShowGatheringModal(false);
+    setShowGatheringModal(true);
 
     // Build the complete list of 6 sessions for the finance channel, with user in the chosen round
     const allSessionsList = [
@@ -1450,11 +1443,6 @@ export default function SessionSimulator({
 
     // Notify other components of storage update
     window.dispatchEvent(new Event('storage'));
-
-    // Redirigir de inmediato al canal de finanzas
-    if (onNavigateToTab) {
-      onNavigateToTab('casting_live');
-    }
   };
 
   const handleFinishGatheringInSimulator = () => {
