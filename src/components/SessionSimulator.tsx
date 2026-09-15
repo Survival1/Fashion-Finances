@@ -3942,8 +3942,11 @@ export default function SessionSimulator({
       {/* 🚀 MODAL DE ACUMULACIÓN DE 10 PARTICIPANTES EN DIRECTO */}
       <ParticipantsGatheringModal
         isOpen={showGatheringModal}
-        sessionTitle={gatheringSessionData?.title || 'Mesa de Emprendedores #1'}
-        entryFee={gatheringSessionData?.entryFee || 100}
+        sessionTitle={gatheringSessionData?.title || 'Round STREETWEAR & URBAN'}
+        entryFee={gatheringSessionData?.entryFee || 10}
+        participantsList={gatheringSessionData?.participants as any}
+        currentUserProfile={userProfile}
+        userSlotIndex={9}
         onComplete={handleFinishGatheringInSimulator}
         onClose={() => setShowGatheringModal(false)}
       />

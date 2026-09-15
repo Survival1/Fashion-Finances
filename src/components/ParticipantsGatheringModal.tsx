@@ -15,6 +15,8 @@ interface ParticipantsGatheringModalProps {
   sessionTitle?: string;
   entryFee?: number;
   participantsList?: GatheringParticipant[];
+  currentUserProfile?: any;
+  userSlotIndex?: number;
   onComplete: () => void;
   onClose?: () => void;
 }
@@ -34,9 +36,11 @@ const DEFAULT_EMPRESARIOS: GatheringParticipant[] = [
 
 export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProps> = ({
   isOpen,
-  sessionTitle = 'MESA DE EMPRESARIOS #1',
-  entryFee = 100,
+  sessionTitle = 'Round STREETWEAR & URBAN',
+  entryFee = 10,
   participantsList,
+  currentUserProfile,
+  userSlotIndex,
   onComplete,
   onClose
 }) => {
@@ -48,11 +52,96 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
   const intervalRef = useRef<any>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const finalParticipants = (participantsList && participantsList.length >= 10)
-    ? participantsList.slice(0, 10)
-    : (participantsList && participantsList.length > 0)
-      ? [...participantsList, ...DEFAULT_EMPRESARIOS].slice(0, 10)
-      : DEFAULT_EMPRESARIOS;
+  // Determine active logged-in user (defaulting to Adriana Lima)
+  const activeUser = currentUserProfile || (() => {
+    try {
+      const stored = localStorage.getItem('user_profile') || localStorage.getItem('current_user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.name) return parsed;
+      }
+    } catch (e) {}
+    return {
+      id: 'user-adriana',
+      name: 'Adriana Lima',
+      username: 'adrianalima',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      role: 'Usuario Inversor (Tú)'
+    };
+  })();
+
+  const activeUserId = activeUser?.id || 'user-adriana';
+  const activeUserName = activeUser?.name || 'Adriana Lima';
+  const activeUserAvatar = activeUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+
+  // Check if active user already exists in participantsList
+  const existingUserIndex = participantsList
+    ? participantsList.findIndex(p =>
+        p.id === activeUserId ||
+        p.id === 'user-adriana' ||
+        p.name.toLowerCase() === activeUserName.toLowerCase() ||
+        p.name.toLowerCase().includes('adriana') ||
+        (p.role && p.role.includes('(Tú)'))
+      )
+    : -1;
+
+  // Stored or provided arrival slot
+  const storedSlot = typeof window !== 'undefined' ? localStorage.getItem('finanzas_user_slot_index') : null;
+  const targetSlotIndex = existingUserIndex !== -1
+    ? existingUserIndex
+    : (userSlotIndex !== undefined
+        ? Math.max(0, Math.min(9, userSlotIndex))
+        : (storedSlot !== null && !isNaN(Number(storedSlot))
+            ? Math.max(0, Math.min(9, Number(storedSlot)))
+            : 9)); // Default to slot 10 (index 9)
+
+  const userParticipant: GatheringParticipant = {
+    id: activeUserId,
+    name: activeUserName,
+    username: activeUser.username || 'adrianalima',
+    avatar: activeUserAvatar,
+    role: `Usuario Inversor (Tú • Puesto #${targetSlotIndex + 1})`,
+    projectTitle: 'Eco-Fashion Runway'
+  };
+
+  // Base pool of peers
+  const basePool = (participantsList && participantsList.length > 0)
+    ? participantsList
+    : DEFAULT_EMPRESARIOS;
+
+  // Filter peers so user is not duplicated
+  const cleanPeers = basePool.filter(p =>
+    p.id !== activeUserId &&
+    p.id !== 'user-adriana' &&
+    p.name.toLowerCase() !== activeUserName.toLowerCase() &&
+    !p.name.toLowerCase().includes('adriana') &&
+    !(p.role && p.role.includes('(Tú)'))
+  );
+
+  // Fallback peers if cleanPeers is too short
+  const fallbackPeers = DEFAULT_EMPRESARIOS.filter(p =>
+    p.id !== activeUserId &&
+    p.id !== 'user-adriana' &&
+    p.name.toLowerCase() !== activeUserName.toLowerCase() &&
+    !p.name.toLowerCase().includes('adriana')
+  );
+
+  const fullPeers = [...cleanPeers];
+  for (const fp of fallbackPeers) {
+    if (fullPeers.length >= 9) break;
+    if (!fullPeers.some(p => p.name === fp.name)) {
+      fullPeers.push(fp);
+    }
+  }
+
+  // Insert active user strictly at targetSlotIndex
+  const peersBefore = fullPeers.slice(0, targetSlotIndex);
+  const peersAfter = fullPeers.slice(targetSlotIndex, 9);
+  const finalParticipants: GatheringParticipant[] = [
+    ...peersBefore,
+    userParticipant,
+    ...peersAfter
+  ].slice(0, 10);
 
   // Sound generator helper
   const playJoinChime = (count: number) => {
@@ -124,9 +213,18 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
 
     // Initial participant #1
     const p1 = finalParticipants[0];
+    const isP1User = p1 && (
+      p1.id === activeUserId || 
+      p1.id === 'user-adriana' || 
+      p1.name.toLowerCase().includes('adriana') || 
+      p1.name.toLowerCase() === activeUserName.toLowerCase() ||
+      (p1.role && p1.role.includes('(Tú)'))
+    );
+    const p1DisplayName = isP1User ? `${p1.name} (Tú)` : (p1 ? p1.name : 'Alexander Wright');
+
     setJoinedCount(1);
     setActivityLogs([
-      `✅ #${p1 ? p1.name : 'Alexander'} ha abonado ${entryFee},00€ y se ha unido a la mesa.`
+      `✅ #1 ${p1DisplayName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`
     ]);
     playJoinChime(1);
 
@@ -135,7 +233,14 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
       current += 1;
       if (current <= 10) {
         const p = finalParticipants[current - 1];
-        const pName = p ? p.name : `Emprendedor #${current}`;
+        const isCurrentPUser = p && (
+          p.id === activeUserId || 
+          p.id === 'user-adriana' || 
+          p.name.toLowerCase().includes('adriana') || 
+          p.name.toLowerCase() === activeUserName.toLowerCase() ||
+          (p.role && p.role.includes('(Tú)'))
+        );
+        const pName = isCurrentPUser ? `${p.name} (Tú)` : (p ? p.name : `Emprendedor #${current}`);
         setJoinedCount(current);
         setActivityLogs(prev => [
           `✅ #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
@@ -349,20 +454,29 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
             </span>
           </div>
 
-          <div className="grid grid-cols-5 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-5 gap-1.5 sm:gap-2 max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] mx-auto">
             {finalParticipants.map((p, idx) => {
               const slotNumber = idx + 1;
               const isJoined = slotNumber <= joinedCount;
               const isJustJoined = slotNumber === joinedCount;
+              const isUser = p && (
+                p.id === activeUserId ||
+                p.id === 'user-adriana' ||
+                p.name.toLowerCase().includes('adriana') ||
+                p.name.toLowerCase() === activeUserName.toLowerCase() ||
+                (p.role && p.role.includes('(Tú)'))
+              );
 
               return (
                 <div
                   key={p.id || idx}
-                  className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col justify-between p-1 shadow-md ${
+                  className={`relative aspect-square min-h-[32px] sm:min-h-[44px] rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all duration-300 flex flex-col justify-between p-0.5 sm:p-1 shadow-md ${
                     isJoined
-                      ? isJustJoined
-                        ? 'border-emerald-400 ring-2 ring-emerald-400/80 scale-105 bg-slate-900 shadow-[0_0_15px_rgba(16,185,129,0.5)]'
-                        : 'border-emerald-500/70 bg-slate-900'
+                      ? isUser
+                        ? 'border-emerald-400 ring-2 ring-emerald-400/90 scale-105 bg-slate-900 shadow-[0_0_20px_rgba(16,185,129,0.7)] z-10'
+                        : isJustJoined
+                          ? 'border-emerald-400 ring-2 ring-emerald-400/80 scale-105 bg-slate-900 shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                          : 'border-emerald-500/70 bg-slate-900'
                       : 'border-slate-800 bg-slate-950/80 opacity-40'
                   }`}
                 >
@@ -376,23 +490,33 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
                       />
                       {/* Slot number badge */}
                       <div className="relative z-10 flex items-center justify-between w-full">
-                        <span className="bg-black/80 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded font-mono">
-                          #{slotNumber}
+                        <span className={`text-[6.5px] sm:text-[8px] font-black px-1 py-0.2 rounded font-mono shadow-xs ${
+                          isUser
+                            ? 'bg-emerald-500 text-slate-950 ring-1 ring-emerald-300 font-bold flex items-center gap-0.5'
+                            : 'bg-black/85 backdrop-blur-xs text-white'
+                        }`}>
+                          #{slotNumber}{isUser ? ' TÚ' : ''}
                         </span>
-                        <span className="w-2 h-2 rounded-full bg-[#fe2c55] border border-black shadow-xs" />
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full border border-black shadow-xs ${
+                          isUser ? 'bg-emerald-400 animate-ping' : 'bg-[#fe2c55] animate-pulse'
+                        }`} />
                       </div>
 
                       {/* Name pill */}
                       <div className="relative z-10 w-full flex justify-center pb-0.5">
-                        <span className="bg-black/90 backdrop-blur-xs text-white font-black text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-md truncate max-w-full text-center">
-                          {p.name.split(' ')[0]}
+                        <span className={`font-black text-[6.5px] sm:text-[8px] px-1 py-0.2 rounded truncate max-w-full text-center ${
+                          isUser
+                            ? 'bg-slate-950/95 border border-emerald-400 text-emerald-300 shadow-md font-bold'
+                            : 'bg-black/90 backdrop-blur-xs text-white'
+                        }`}>
+                          {p.name.split(' ')[0]}{isUser ? ' (Tú)' : ''}
                         </span>
                       </div>
                     </>
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-1 text-center">
-                      <span className="text-[10px] font-mono font-bold text-slate-500">#{slotNumber}</span>
-                      <span className="text-[7.5px] font-bold text-slate-600 uppercase">Libre</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-0.5 text-center">
+                      <span className="text-[9px] font-mono font-black text-slate-500">#{slotNumber}</span>
+                      <span className="text-[6.5px] font-bold text-slate-600 uppercase">Libre</span>
                     </div>
                   )}
                 </div>

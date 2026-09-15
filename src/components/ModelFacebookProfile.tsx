@@ -284,7 +284,7 @@ export function ProfileIntroAndSponsors({
           </div>
           <span 
             onClick={onOpenRanking}
-            className="text-[10px] font-bold font-mono px-2 py-0.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100 flex items-center gap-1 cursor-pointer hover:bg-rose-100 transition-colors"
+            className="text-[10px] font-bold font-mono px-2 py-0.5 bg-white text-rose-600 rounded-full border border-rose-200 flex items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs"
             title="Abrir Ranking Completo"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
@@ -372,10 +372,10 @@ export function ProfileIntroAndSponsors({
 
                 {/* Likes / Votes */}
                 <div className="text-right shrink-0 ml-2">
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full font-mono flex items-center gap-1 ${
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full font-mono flex items-center gap-1 bg-white shadow-2xs ${
                     isFirst
-                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                      : 'bg-rose-50 text-rose-600 border border-rose-100'
+                      ? 'text-amber-800 border border-amber-300'
+                      : 'text-rose-600 border border-rose-200'
                   }`}>
                     <Heart className="w-2.5 h-2.5 fill-current text-rose-500" />
                     <span>{(model.totalLikes || 100).toLocaleString()}</span>
@@ -2509,6 +2509,160 @@ export default function ModelFacebookProfile({
     setActiveEmojiPicker(null);
   };
 
+  // Compact Stickers popup rendered right next to its icon
+  const renderCompactStickersPopup = (targetId: string, isPhoto = false) => {
+    return (
+      <div 
+        onMouseEnter={() => {
+          if (targetId) handleStickersMouseEnter(targetId);
+        }}
+        onMouseLeave={() => {
+          if (targetId) handleStickersMouseLeave();
+        }}
+        className="absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2.5 shrink-0">
+          <span className="text-[10px] sm:text-[11px] text-pink-400 font-extrabold uppercase tracking-wide font-sans flex items-center gap-1.5 select-none">
+            💝 STICKERS EXCLUSIVOS DE AMOR
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setHoveredStickersPostId(null);
+            }}
+            className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[10px] font-bold border border-zinc-800 cursor-pointer transition"
+            title="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+        
+        {/* Compact Grid of cute stickers with larger tiles */}
+        <div className="grid grid-cols-4 gap-2">
+          {STICKER_PACK.map((sticker, sIdx) => {
+            const fullEmojiStr = sticker.emojis.join('');
+            return (
+              <button
+                key={sIdx}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const isPhotoTarget = isPhoto || targetId.startsWith('http') || targetId.startsWith('/') || targetId.includes('.');
+                  if (isPhotoTarget) {
+                    handleStickerReactToPhoto(targetId, fullEmojiStr, e);
+                  } else {
+                    handleStickerReactToPost(targetId, fullEmojiStr, e);
+                  }
+                  setHoveredStickersPostId(null);
+                }}
+                className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-white hover:bg-rose-50/70 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs"
+              >
+                <div className="relative flex flex-col items-center justify-center h-7 sm:h-8 w-full">
+                  {sticker.emojis.length > 1 ? (
+                    <div className="relative h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
+                      <span className="text-base sm:text-lg absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none">
+                        {sticker.emojis[0]}
+                      </span>
+                      <span className="text-base sm:text-lg absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none">
+                        {sticker.emojis[1]}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-lg sm:text-xl select-none leading-none">
+                      {sticker.emojis[0]}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-zinc-600 tracking-tight leading-none mt-1.5 truncate max-w-full text-center uppercase">
+                  {sticker.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Compact Extra Gifts popup rendered right next to its icon
+  const renderCompactGiftsPopup = (targetId: string, isPhoto = false) => {
+    return (
+      <div 
+        onMouseEnter={() => {
+          handleGiftMouseEnter(targetId);
+        }}
+        onMouseLeave={() => {
+          handleGiftMouseLeave();
+        }}
+        className="absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-zinc-800/80 shrink-0">
+          <span className="text-yellow-400 font-extrabold text-[10px] sm:text-[11px] tracking-wide uppercase flex items-center gap-1.5 select-none font-sans">
+            🎁 REGALOS EXTRA
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9.5px] bg-zinc-800 text-yellow-350 font-black px-2 py-0.5 rounded font-mono">
+              🪙 {liveUserCoins}
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setHoveredHeartAndGiftPhotoUrl(null);
+                setActiveGiftingPhotoUrl(null);
+              }}
+              className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[10px] font-bold border border-zinc-800 cursor-pointer transition"
+              title="Cerrar"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Compact Grid with hidden scrollbar and larger tiles */}
+        <div className="grid grid-cols-3 gap-2 max-h-[220px] sm:max-h-[235px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {EXTRA_GIFTS.map((gift, gIdx) => (
+            <button
+              key={gIdx}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedGiftForConfirm(gift);
+                setGiftConfirmPhotoUrl(targetId);
+                setActiveGiftingPhotoUrl(targetId);
+                setGiftCustomMessage('');
+              }}
+              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-2 sm:p-2.5 rounded-xl aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
+            >
+              <span className="text-2xl sm:text-3xl filter drop-shadow hover:scale-110 transition transform duration-150">
+                {gift.icon}
+              </span>
+              <span className="text-[8.5px] sm:text-[9px] font-black text-slate-800 mt-1.5 truncate w-full px-0.5 leading-tight select-none uppercase">
+                {gift.name.length > 11 ? `${gift.name.substring(0, 10).toUpperCase()}..` : gift.name.toUpperCase()}
+              </span>
+              <div className="flex items-center gap-0.5 mt-0.5 select-none shrink-0 leading-none">
+                <span className="text-[8.5px] sm:text-[9px] font-extrabold text-amber-600 font-mono">
+                  🪙 {gift.cost}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+        
+        <div className="text-[8px] sm:text-[8.5px] text-zinc-400 text-center mt-2 pt-2 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider">
+          Presiona para enviar · 🪙 {liveUserCoins}
+        </div>
+      </div>
+    );
+  };
+
   // Unified Action Row mimicking image.png exactly
   const renderHighFidelityActionRow = (
     id: string,
@@ -2526,8 +2680,6 @@ export default function ModelFacebookProfile({
     onBookmarkClick: (e: React.MouseEvent) => void,
     hoverKey?: string
   ) => {
-    const hasImageContext = id.startsWith('http') || id.startsWith('/') || id.includes('.') || !!hoverKey;
-
     return (
       <div className="relative py-2.5 px-3 flex items-center justify-between bg-white select-none border-t border-slate-100 rounded-b-2xl shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
@@ -2556,68 +2708,10 @@ export default function ModelFacebookProfile({
                 <span className="text-[12px] font-extrabold text-slate-800 leading-none">{likesCount}</span>
               </div>
 
-              {/* STICKERS HOVER POPUP */}
-              {hoveredStickersPostId === id && !hasImageContext && (
-                <div 
-                  onMouseEnter={() => {
-                    if (id) handleStickersMouseEnter(id);
-                  }}
-                  onMouseLeave={() => {
-                    if (id) handleStickersMouseLeave();
-                  }}
-                  className="absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/60 shadow-2xl rounded-2xl p-3.5 z-[250] w-72 text-left animate-fade-in"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="text-[10px] text-pink-400 font-extrabold uppercase tracking-widest mb-3.5 font-sans flex items-center gap-1.5">
-                    💝 STICKERS EXCLUSIVOS DE AMOR
-                  </div>
-                  
-                  {/* Grid of cute stickers matching screenshots exactly */}
-                  <div className="grid grid-cols-4 gap-2.5">
-                    {STICKER_PACK.map((sticker, sIdx) => {
-                      const fullEmojiStr = sticker.emojis.join('');
-                      return (
-                        <button
-                          key={sIdx}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            const isPhoto = id.startsWith('http') || id.startsWith('/') || id.includes('.');
-                            if (isPhoto) {
-                              handleStickerReactToPhoto(id, fullEmojiStr, e);
-                            } else {
-                              handleStickerReactToPost(id, fullEmojiStr, e);
-                            }
-                            setHoveredStickersPostId(null);
-                          }}
-                          className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-lg bg-white hover:bg-rose-50/30 hover:border-rose-200 active:scale-95 transition border border-zinc-200/60 cursor-pointer w-full aspect-square shadow-[0_2px_4px_rgba(0,0,0,0.03)]"
-                        >
-                          <div className="relative flex flex-col items-center justify-center h-8 sm:h-10 w-full">
-                            {sticker.emojis.length > 1 ? (
-                              <div className="relative h-9 w-9 flex items-center justify-center">
-                                <span className="text-2xl absolute top-0 left-0.5 transform -rotate-12 select-none z-10">
-                                  {sticker.emojis[0]}
-                                </span>
-                                <span className="text-2xl absolute bottom-0 right-0.5 transform rotate-12 select-none z-20">
-                                  {sticker.emojis[1]}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-2xl select-none">
-                                {sticker.emojis[0]}
-                              </span>
-                            )}
-                          </div>
-                            <span className="text-[8.5px] font-extrabold text-zinc-400 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
-                            {sticker.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* STICKERS HOVER POPUP RIGHT NEXT TO 💵 REACTION ICON */}
+              {(hoveredStickersPostId === id || (hoverKey && hoveredStickersPostId === hoverKey)) && 
+                renderCompactStickersPopup(hoverKey || id)
+              }
             </div>
 
             <div className="relative">
@@ -2639,63 +2733,10 @@ export default function ModelFacebookProfile({
                 <Gift className="w-5 h-5 text-pink-500 stroke-[1.8]" />
               </button>
 
-              {/* GIFTS HOVER POPUP */}
-              {hoveredHeartAndGiftPhotoUrl === (hoverKey || id) && !hasImageContext && (
-                <div 
-                  onMouseEnter={() => {
-                    handleGiftMouseEnter(hoverKey || id);
-                  }}
-                  onMouseLeave={() => {
-                    handleGiftMouseLeave();
-                  }}
-                  className="absolute bottom-full left-[-40px] mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/60 shadow-2xl rounded-2xl p-3.5 z-[250] w-72 text-left animate-fade-in"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/80 shrink-0">
-                    <span className="text-yellow-400 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1.5 select-none font-sans">
-                      🎁 REGALOS EXTRA DEL CANAL
-                    </span>
-                    <span className="text-[9px] bg-zinc-800 text-yellow-350 font-black px-1.5 py-0.5 rounded font-mono">
-                      🪙 {liveUserCoins}
-                    </span>
-                  </div>
-
-                  {/* Grid matching image.png exactly with white rounded gift cards */}
-                  <div className="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
-                    {EXTRA_GIFTS.map((gift, gIdx) => (
-                      <button
-                        key={gIdx}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedGiftForConfirm(gift);
-                          setGiftConfirmPhotoUrl(hoverKey || id);
-                          setActiveGiftingPhotoUrl(hoverKey || id);
-                          setGiftCustomMessage('');
-                        }}
-                        className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50 border border-slate-200 hover:border-pink-500 p-2 rounded-lg aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-[0_2px_4px_rgba(0,0,0,0.04)]"
-                      >
-                        <span className="text-2xl filter drop-shadow hover:scale-115 transition transform duration-150">
-                          {gift.icon}
-                        </span>
-                        <span className="text-[8.5px] font-black text-slate-800 mt-1.5 truncate w-full px-0.5 leading-tight select-none uppercase">
-                          {gift.name.length > 10 ? `${gift.name.substring(0, 9).toUpperCase()}...` : gift.name.toUpperCase()}
-                        </span>
-                        <div className="flex items-center gap-0.5 mt-1 select-none shrink-0 leading-none">
-                          <span className="text-[8px] font-extrabold text-amber-600 font-mono">
-                            🪙 {gift.cost}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <div className="text-[8.5px] text-zinc-400 text-center mt-2.5 leading-none uppercase tracking-wide shrink-0 pt-2.5 border-t border-zinc-800/80 font-mono">
-                    Presiona para enviar instantáneamente · Tu saldo: 🪙 {liveUserCoins}
-                  </div>
-                </div>
-              )}
+              {/* GIFTS HOVER POPUP RIGHT NEXT TO GIFT ICON */}
+              {(hoveredHeartAndGiftPhotoUrl === (hoverKey || id) || hoveredHeartAndGiftPhotoUrl === id || (hoverKey && hoveredHeartAndGiftPhotoUrl === hoverKey)) && 
+                renderCompactGiftsPopup(hoverKey || id)
+              }
             </div>
           </div>
 
@@ -2779,86 +2820,9 @@ export default function ModelFacebookProfile({
     );
   };
 
-  // Renderer helper for beautiful interactive stickers popover on hover matching z.png perfectly
+  // Renderer helper for stickers popover
   const renderStickersPopover = (id: string, contextUrl: string, isLightbox = false) => {
-    return (
-      <div 
-        className={`absolute inset-0 bg-[#12151e]/98 backdrop-blur-md p-3.5 sm:p-4 shadow-2xl z-[150] flex flex-col justify-between select-none text-left animate-fade-in border border-zinc-700/60 ${
-          isLightbox ? 'rounded-none' : 'rounded-2xl'
-        }`}
-        onClick={(e) => e.stopPropagation()}
-        onMouseEnter={() => {
-          if (id) handleStickersMouseEnter(id);
-        }}
-        onMouseLeave={() => {
-          if (id) handleStickersMouseLeave();
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/80 shrink-0">
-          <span className="text-pink-400 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1.5 select-none font-sans">
-            💝 STICKERS EXCLUSIVOS DE AMOR
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setHoveredStickersPostId(null);
-            }}
-            className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-750 text-zinc-300 hover:text-white flex items-center justify-center transition cursor-pointer text-[10px] font-bold border border-zinc-800"
-            title="Cerrar"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Grid of cute stickers matching screenshots exactly with identical shapes and sizes */}
-        <div className="grid grid-cols-4 gap-2.5 grow overflow-y-auto pr-1 scrollbar-thin my-1.5">
-          {STICKER_PACK.map((sticker, sIdx) => {
-            const fullEmojiStr = sticker.emojis.join('');
-            return (
-              <button
-                key={sIdx}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  const isPhoto = id.startsWith('http') || id.startsWith('/') || id.includes('.');
-                  if (isPhoto) {
-                    handleStickerReactToPhoto(id, fullEmojiStr, e);
-                  } else {
-                    handleStickerReactToPost(id, fullEmojiStr, e);
-                  }
-                  setHoveredStickersPostId(null);
-                }}
-                className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-lg bg-white hover:bg-rose-50/30 hover:border-rose-200 active:scale-95 transition border border-zinc-200/60 cursor-pointer w-full aspect-square shadow-[0_2px_4px_rgba(0,0,0,0.03)]"
-              >
-                <div className="relative flex items-center justify-center h-6 sm:h-8 w-full">
-                  {sticker.emojis.length > 1 ? (
-                    <div className="relative h-8 w-8 flex items-center justify-center">
-                      <span className="text-xl sm:text-2xl absolute top-0 left-0.5 select-none z-10">
-                        {sticker.emojis[0]}
-                      </span>
-                      <span className="text-xl sm:text-2xl absolute bottom-0 right-0.5 select-none z-20">
-                        {sticker.emojis[1]}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-xl sm:text-2xl select-none">
-                      {sticker.emojis[0]}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[7.5px] sm:text-[8.5px] font-extrabold text-zinc-400 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
-                  {sticker.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
+    return renderCompactStickersPopup(id, isLightbox);
   };
 
   // Renderer helper for beautiful full-size share overlay matching the size of the background image card container
@@ -2971,77 +2935,9 @@ export default function ModelFacebookProfile({
     );
   };
 
-  // Renderer helper for beautiful interactive gifts popover on hover matching image.png perfectly
+  // Renderer helper for gifts popover
   const renderGiftsPopover = (photoUrl: string, isLightbox = false) => {
-    return (
-      <div 
-        className={`absolute inset-0 bg-[#12151e]/98 backdrop-blur-md p-3.5 sm:p-4 shadow-2xl z-[150] flex flex-col justify-between select-none text-left animate-fade-in border border-zinc-700/60 ${
-          isLightbox ? 'rounded-none' : 'rounded-2xl'
-        }`}
-        onClick={(e) => e.stopPropagation()}
-        onMouseEnter={() => handleGiftMouseEnter(photoUrl)}
-        onMouseLeave={handleGiftMouseLeave}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/80 shrink-0">
-          <span className="text-yellow-400 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1.5 select-none font-sans">
-            🎁 REGALOS EXTRA DEL CANAL
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[9px] bg-zinc-800 text-yellow-350 font-black px-1.5 py-0.5 rounded font-mono">
-              🪙 {liveUserCoins}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setActiveGiftingPhotoUrl(null);
-                setHoveredHeartAndGiftPhotoUrl(null);
-              }}
-              className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-750 text-zinc-300 hover:text-white flex items-center justify-center transition cursor-pointer text-[10px] font-bold border border-zinc-800"
-              title="Cerrar"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        {/* Grid matching image.png exactly with white rounded gift cards */}
-        <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1 scrollbar-thin grow h-0">
-          {EXTRA_GIFTS.map((gift, gIdx) => (
-            <button
-              key={gIdx}
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setSelectedGiftForConfirm(gift);
-                setGiftConfirmPhotoUrl(photoUrl);
-                setGiftCustomMessage('');
-              }}
-              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50 border border-slate-200 hover:border-pink-500 p-2 rounded-[18px] transition duration-150 text-center cursor-pointer select-none shadow-[0_2px_4px_rgba(0,0,0,0.04)]"
-            >
-              <span className="text-2xl filter drop-shadow hover:scale-115 transition transform duration-150">
-                {gift.icon}
-              </span>
-              <span className="text-[8.5px] font-black text-slate-800 mt-1.5 truncate w-full px-0.5 leading-tight select-none uppercase">
-                {gift.name.length > 10 ? `${gift.name.substring(0, 9).toUpperCase()}...` : gift.name.toUpperCase()}
-              </span>
-              <div className="flex items-center gap-0.5 mt-1 select-none shrink-0 leading-none">
-                <span className="text-[8px] font-extrabold text-amber-600 font-mono">
-                  🪙 {gift.cost}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-        
-        <div className="text-[8.5px] text-zinc-400 text-center mt-2.5 leading-none uppercase tracking-wide shrink-0 pt-2.5 border-t border-zinc-800/80 font-mono">
-          Presiona para enviar instantáneamente · Tu saldo: 🪙 {liveUserCoins}
-        </div>
-      </div>
-    );
+    return renderCompactGiftsPopup(photoUrl, isLightbox);
   };
 
   // Renderer helper for beautiful interactive gifts modal centered in the screen mimicking image.png perfectly
@@ -3190,7 +3086,7 @@ export default function ModelFacebookProfile({
               </div>
 
               {/* Grid matching image.png exactly with elegant items layout */}
-              <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1 scrollbar-thin">
+              <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {EXTRA_GIFTS.map((gift, gIdx) => (
                   <button
                     key={gIdx}
@@ -4171,12 +4067,6 @@ export default function ModelFacebookProfile({
                     className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300 rounded-t-2xl"
                     onClick={() => setSelectedPhotoForLightbox(post.image)}
                   />
-                  
-                  {/* 🎁 Renders Extra Channel Gifts list overlay covering the image exactly */}
-                  {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === post.image && renderGiftsPopover(post.image)}
-
-                  {/* 💝 Renders Stickers list overlay covering the image exactly */}
-                  {!selectedPhotoForLightbox && hoveredStickersPostId === post.id && renderStickersPopover(post.id, post.image)}
 
                   {!selectedPhotoForLightbox && giftConfirmPhotoUrl === post.image && renderConfirmGiftOverlay(post.image)}
 
@@ -4217,7 +4107,8 @@ export default function ModelFacebookProfile({
                 },
                 (e) => {
                   e.stopPropagation();
-                  setActiveGiftingPhotoUrl(post.image || post.id);
+                  const targetKey = post.image || post.id;
+                  setHoveredHeartAndGiftPhotoUrl(prev => prev === targetKey ? null : targetKey);
                 },
                 () => setActiveCommentsPostId(activeCommentsPostId === post.id ? null : post.id),
                 () => handleToggleRepost(post.id),
@@ -7943,12 +7834,6 @@ export default function ModelFacebookProfile({
                                   <X className="w-4.5 h-4.5 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
                                 </button>
 
-                                {/* 🎁 Renders Extra Channel Gifts list overlay covering the image exactly */}
-                                {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === ph && renderGiftsPopover(ph)}
-
-                                {/* 💝 Renders Stickers list overlay covering the image exactly */}
-                                {!selectedPhotoForLightbox && hoveredStickersPostId === ph && renderStickersPopover(ph, ph)}
-
                                 {/* 📤 Renders the custom Full-Size Share Overlay covering the image exactly */}
                                 {!selectedPhotoForLightbox && activeShareMenuPostId === ph && renderShareOverlay(ph, ph)}
                               </div>
@@ -7968,7 +7853,7 @@ export default function ModelFacebookProfile({
                                 },
                                 (e) => {
                                   e.stopPropagation();
-                                  setActiveGiftingPhotoUrl(ph);
+                                  setHoveredHeartAndGiftPhotoUrl(prev => prev === ph ? null : ph);
                                 },
                                 () => setSelectedPhotoForLightbox(ph),
                                 () => handleToggleRepost(ph),
@@ -8512,12 +8397,6 @@ export default function ModelFacebookProfile({
                   className="w-full h-full object-contain max-h-[35vh] sm:max-h-[40vh] md:max-h-[75vh] relative z-10 transition-all duration-300 group-hover/stage:scale-[1.015]"
                 />
 
-                {/* 🎁 Renders Extra Channel Gifts list overlay covering the image exactly */}
-                {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && renderGiftsPopover(selectedPhotoForLightbox, true)}
-
-                {/* 💝 Renders Stickers list overlay covering the image exactly */}
-                {hoveredStickersPostId === selectedPhotoForLightbox && renderStickersPopover(selectedPhotoForLightbox, selectedPhotoForLightbox, true)}
-
                 {giftConfirmPhotoUrl === selectedPhotoForLightbox && renderConfirmGiftOverlay(selectedPhotoForLightbox, true)}
               </div>
 
@@ -8710,50 +8589,62 @@ export default function ModelFacebookProfile({
                     className="relative flex items-center"
                     id="gifts-hover-target-lightbox"
                   >
-                    <button 
-                      onClick={(e) => handleLikePhoto(selectedPhotoForLightbox, e)}
-                      onMouseEnter={() => {
-                        if (selectedPhotoForLightbox) {
-                          handleStickersMouseEnter(selectedPhotoForLightbox);
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        if (selectedPhotoForLightbox) {
-                          handleStickersMouseLeave();
-                        }
-                      }}
-                      className={`py-1.5 px-3 rounded-lg flex items-center gap-1.5 font-bold transition cursor-pointer hover:bg-slate-50 ${
-                        hasLiked ? 'text-rose-600 bg-rose-50/30' : 'text-slate-700 hover:text-rose-600'
-                      }`}
-                      title={hasLiked ? "Quitar Me gusta" : "Dar Me gusta"}
-                    >
-                      <Heart className={`w-4 h-4 ${hasLiked ? 'fill-current text-rose-500 animate-pulse' : 'text-slate-400'}`} />
-                      <span>{activeInteraction.likeCount} Me gusta</span>
-                    </button>
+                    <div className="relative">
+                      <button 
+                        onClick={(e) => handleLikePhoto(selectedPhotoForLightbox, e)}
+                        onMouseEnter={() => {
+                          if (selectedPhotoForLightbox) {
+                            handleStickersMouseEnter(selectedPhotoForLightbox);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (selectedPhotoForLightbox) {
+                            handleStickersMouseLeave();
+                          }
+                        }}
+                        className={`py-1.5 px-3 rounded-lg flex items-center gap-1.5 font-bold transition cursor-pointer hover:bg-slate-50 ${
+                          hasLiked ? 'text-rose-600 bg-rose-50/30' : 'text-slate-700 hover:text-rose-600'
+                        }`}
+                        title={hasLiked ? "Quitar Me gusta" : "Dar Me gusta"}
+                      >
+                        <Heart className={`w-4 h-4 ${hasLiked ? 'fill-current text-rose-500 animate-pulse' : 'text-slate-400'}`} />
+                        <span>{activeInteraction.likeCount} Me gusta</span>
+                      </button>
+
+                      {hoveredStickersPostId === selectedPhotoForLightbox && (
+                        renderCompactStickersPopup(selectedPhotoForLightbox, true)
+                      )}
+                    </div>
 
                     {/* Simple bouncing Gift icon as indicator */}
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (selectedPhotoForLightbox) {
-                          setActiveGiftingPhotoUrl(selectedPhotoForLightbox);
-                        }
-                      }}
-                      onMouseEnter={() => {
-                        if (selectedPhotoForLightbox) {
-                          handleGiftMouseEnter(selectedPhotoForLightbox);
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        if (selectedPhotoForLightbox) {
-                          handleGiftMouseLeave();
-                        }
-                      }}
-                      className="text-pink-500 hover:text-rose-600 transition cursor-pointer flex items-center justify-center p-1.5 rounded-full animate-bounce shrink-0" 
-                      style={{ animationDuration: '3.5s' }} 
-                      title="Ver Regalos Extra"
-                    >
-                      <Gift className="w-3.5 h-3.5" />
+                    <div className="relative">
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (selectedPhotoForLightbox) {
+                            setHoveredHeartAndGiftPhotoUrl(prev => prev === selectedPhotoForLightbox ? null : selectedPhotoForLightbox);
+                          }
+                        }}
+                        onMouseEnter={() => {
+                          if (selectedPhotoForLightbox) {
+                            handleGiftMouseEnter(selectedPhotoForLightbox);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (selectedPhotoForLightbox) {
+                            handleGiftMouseLeave();
+                          }
+                        }}
+                        className="text-pink-500 hover:text-rose-600 transition cursor-pointer flex items-center justify-center p-1.5 rounded-full animate-bounce shrink-0" 
+                        style={{ animationDuration: '3.5s' }} 
+                        title="Ver Regalos Extra"
+                      >
+                        <Gift className="w-3.5 h-3.5" />
+                      </div>
+
+                      {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
+                        renderCompactGiftsPopup(selectedPhotoForLightbox, true)
+                      )}
                     </div>
                   </div>
 
@@ -10888,7 +10779,7 @@ function ModelStoryLightbox({
                     </div>
 
                     {/* Grid of items (Top 9 as shown in zx.png) */}
-                    <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1 scrollbar-thin grow h-0">
+                    <div className="grid grid-cols-3 gap-2 overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden grow h-0">
                       {EXTRA_GIFTS_STORY.map((gift, gIdx) => (
                         <button
                           key={gIdx}
@@ -11224,7 +11115,7 @@ function ModelStoryLightbox({
                 </div>
 
                 {/* Grid of items (Top 9 as shown in zx.png) */}
-                <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1 scrollbar-thin grow h-0">
+                <div className="grid grid-cols-3 gap-2 overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden grow h-0">
                   {EXTRA_GIFTS_STORY.map((gift, gIdx) => (
                     <button
                       key={gIdx}

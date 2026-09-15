@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import { ProjectFullscreenDossierModal } from './ProjectFullscreenDossierModal';
@@ -34,6 +34,7 @@ import {
   MessageSquare,
   Check,
   Globe,
+  Upload,
   UploadCloud,
   Send,
   ExternalLink,
@@ -1587,7 +1588,7 @@ export const TRABAJADORES_USERS = [
   { id: 'trab-7', name: 'Álvaro Díaz', username: 'alvaro_makeup', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional' },
   { id: 'trab-8', name: 'Lucía Navarro', username: 'lucia_produccion', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción' },
   { id: 'trab-9', name: 'Daniel Morales', username: 'daniel_3d_moda', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital' },
-  { id: 'trab-10', name: 'Maria Soler', username: 'maria_soler_social', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager' }
+  { id: 'trab-10', name: 'Adriana Lima', username: 'adrianalima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager' }
 ];
 
 export const EMPRESARIOS_USERS = [
@@ -2484,29 +2485,25 @@ export default function CastingLiveSection({
         const targetFeeStr = localStorage.getItem('finanzas_active_session_fee');
         const targetFee = targetFeeStr ? Number(targetFeeStr) : null;
 
-        const savedSessions = localStorage.getItem('open_finanzas_sessions_list_v37') || localStorage.getItem('open_finanzas_sessions_list_v3');
+        const savedSessions = localStorage.getItem('open_finanzas_sessions_list_v43');
         if (savedSessions) {
           try {
             const parsed = JSON.parse(savedSessions);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setOpenFinanzasSessions(prev => {
-                const merged = [...parsed, ...prev.filter(p => !parsed.some(ps => ps.id === p.id || ps.entryFee === p.entryFee))];
-                return merged;
-              });
+            if (Array.isArray(parsed) && parsed.length >= 6) {
+              setOpenFinanzasSessions(parsed);
               const targetIdx = targetSessionId 
                 ? parsed.findIndex(s => s.id === targetSessionId)
-                : (targetFee !== null ? parsed.findIndex(s => s.entryFee === targetFee) : 0);
-              setActiveFinanzasSessionIndex(targetIdx !== -1 ? targetIdx : 0);
+                : (targetFee !== null ? parsed.findIndex(s => s.entryFee === targetFee) : -1);
+              if (targetIdx !== -1) {
+                setActiveFinanzasSessionIndex(targetIdx);
+              }
             }
           } catch (e) {}
         } else if (targetSessionId || targetFee !== null) {
-          setOpenFinanzasSessions(prev => {
-            const idx = prev.findIndex(s => (targetSessionId && s.id === targetSessionId) || (targetFee !== null && s.entryFee === targetFee));
-            if (idx !== -1) {
-              setActiveFinanzasSessionIndex(idx);
-            }
-            return prev;
-          });
+          const idx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => (targetSessionId && s.id === targetSessionId) || (targetFee !== null && s.entryFee === targetFee));
+          if (idx !== -1) {
+            setActiveFinanzasSessionIndex(idx);
+          }
         }
         // If transitioning to live session, show spotlight presentation matching z.png
         const isVotingActiveSaved = localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
@@ -2885,20 +2882,46 @@ export default function CastingLiveSection({
   }>>(() => {
     // Clear old legacy keys so user only becomes participant upon triggering payment
     try {
+      localStorage.removeItem('open_finanzas_sessions_list_v42');
+      localStorage.removeItem('open_finanzas_sessions_list_v41');
       localStorage.removeItem('open_finanzas_sessions_list_v40');
       localStorage.removeItem('open_finanzas_sessions_list_v39');
       localStorage.removeItem('open_finanzas_sessions_list_v38');
       localStorage.removeItem('open_finanzas_sessions_list_v37');
+      localStorage.removeItem('open_finanzas_sessions_list_v35');
+      localStorage.removeItem('open_finanzas_sessions_list_v30');
+      localStorage.removeItem('open_finanzas_sessions_list_v16');
+      localStorage.removeItem('open_finanzas_sessions_list_v15');
+      localStorage.removeItem('open_finanzas_sessions_list_v3');
       localStorage.removeItem('finanzas_paid_sess_trabajadores_1');
       localStorage.removeItem('finanzas_user_participating');
     } catch (e) {}
 
-    const saved = localStorage.getItem('open_finanzas_sessions_list_v41');
+    const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 6) {
-          return parsed;
+          const hasStreetwear = parsed.some((s: any) => s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR'));
+          const hasCasual = parsed.some((s: any) => s.id === 'sess-emprendedores-1' || s.entryFee === 100 || s.title?.toUpperCase().includes('CASUAL'));
+          if (hasStreetwear && hasCasual) {
+            return parsed.map((sess: any) => ({
+              ...sess,
+              participants: (sess.participants || []).map((p: any) => {
+                if (p.id === 'trab-10' || p.name?.includes('Soler')) {
+                  return {
+                    ...p,
+                    id: 'trab-10',
+                    name: 'Adriana Lima',
+                    username: 'adrianalima',
+                    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                    role: p.role && !p.role.includes('Soler') ? p.role : 'Community Manager'
+                  };
+                }
+                return p;
+              })
+            }));
+          }
         }
       } catch (e) {}
     }
@@ -2907,8 +2930,14 @@ export default function CastingLiveSection({
 
   const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(() => {
     const savedTarget = localStorage.getItem('finanzas_target_session_id');
+    const savedFee = localStorage.getItem('finanzas_active_session_fee');
     if (savedTarget) {
       const idx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.id === savedTarget);
+      if (idx !== -1) return idx;
+    }
+    if (savedFee) {
+      const feeNum = Number(savedFee);
+      const idx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.entryFee === feeNum);
       if (idx !== -1) return idx;
     }
     // Default to Mesa de Emprendedores #1 or Empresarios #1 where user is participating
@@ -2919,14 +2948,108 @@ export default function CastingLiveSection({
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const sessionScrollLockRef = useRef<boolean>(false);
 
+  // States to guarantee instant reactivity when paying and joining sessions
+  const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>({});
+  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(() => {
+    return localStorage.getItem('finanzas_user_participating') === 'true';
+  });
+  const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(false);
+
+  // Position / slot assigned to user (Adriana Lima) by order of arrival (0 to 9, representing positions 1 to 10)
+  const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(() => {
+    const saved = localStorage.getItem('finanzas_user_slot_index');
+    return saved !== null ? parseInt(saved, 10) : null;
+  });
+
+  // Simulated live peer arrivals counter per session (number of peers arrived before user, from 1 to 9)
+  const [sessionArrivalMap, setSessionArrivalMap] = useState<Record<string, number>>(() => ({
+    'sess-trabajadores-1': 3,
+    'sess-emprendedores-1': 5,
+    'sess-empresarios-1': 2,
+    'sess-topmodels-1': 4,
+    'sess-inversores-1': 1,
+    'sess-millonarios-1': 2,
+  }));
+
+  // Explicit user selection of arrival position (null for live second timing, or 0-9 for explicit testing)
+  const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
+
   // Persist open sessions
   useEffect(() => {
-    localStorage.setItem('open_finanzas_sessions_list_v40', JSON.stringify(openFinanzasSessions));
+    localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(openFinanzasSessions));
   }, [openFinanzasSessions]);
 
-  // Active open sessions only
-  const activeSessionsOnly = openFinanzasSessions.filter(s => s.status === 'active');
+  // Active open sessions only: guarantee that all 6 default sessions are always present and active
+  const activeSessionsOnly = useMemo(() => {
+    const list = [...openFinanzasSessions.filter(s => s.status === 'active')];
+    DEFAULT_FINANZAS_TABLE_SESSIONS.forEach(defSess => {
+      if (!list.some(s => s.id === defSess.id || s.entryFee === defSess.entryFee)) {
+        list.push(defSess);
+      }
+    });
+    return list.sort((a, b) => a.entryFee - b.entryFee);
+  }, [openFinanzasSessions]);
   const currentFinanzasSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0] || openFinanzasSessions[0];
+
+  // Synchronized 10 participants for current session (strictly identical for central stage above and 2x5 grid below)
+  const currentSessionParticipants10 = useMemo(() => {
+    const fallbackCategoryList = currentFinanzasSession?.id?.includes('empresarios')
+      ? EMPRESARIOS_USERS
+      : (currentFinanzasSession?.id?.includes('trabajadores')
+          ? TRABAJADORES_USERS
+          : (currentFinanzasSession?.id?.includes('topmodels')
+              ? TOPMODELS_USERS
+              : (currentFinanzasSession?.id?.includes('inversores')
+                  ? INVERSORES_USERS
+                  : (currentFinanzasSession?.id?.includes('millonarios')
+                      ? MILLONARIOS_USERS
+                      : FINANZAS_USERS))));
+
+    const rawList = (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+      ? currentFinanzasSession.participants.slice(0, 10)
+      : fallbackCategoryList.slice(0, 10);
+
+    return rawList.map((p, idx) => {
+      if (p.id === 'trab-10' || p.name?.includes('Soler') || p.name === 'Maria Soler' || (idx === 9 && currentFinanzasSession?.id?.includes('trabajadores'))) {
+        return {
+          ...p,
+          id: 'trab-10',
+          name: 'Adriana Lima',
+          username: 'adrianalima',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          role: 'Community Manager'
+        };
+      }
+      return p;
+    });
+  }, [currentFinanzasSession]);
+
+  // Live simulation of participants joining over time while round is waiting for 10 members
+  useEffect(() => {
+    if (!currentFinanzasSession) return;
+    const currentSessId = currentFinanzasSession.id;
+    const isPaid = userPaidSessions[currentSessId] || isFinanzasUserParticipatingState;
+    if (isPaid) return;
+
+    const interval = setInterval(() => {
+      setSessionArrivalMap(prev => {
+        const cur = prev[currentSessId] ?? 3;
+        if (cur >= 9) return prev;
+        return {
+          ...prev,
+          [currentSessId]: cur + 1
+        };
+      });
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [currentFinanzasSession?.id, userPaidSessions, isFinanzasUserParticipatingState]);
+
+  // Dynamic slot calculation: when user clicks "Disparar Pago", slot is determined by live timing or user selection
+  const liveArrivedPeerCount = sessionArrivalMap[currentFinanzasSession?.id || 'sess-trabajadores-1'] ?? 3;
+  const targetUserArrivalSlot = selectedArrivalSlot !== null
+    ? Math.max(0, Math.min(9, selectedArrivalSlot))
+    : Math.max(0, Math.min(9, liveArrivedPeerCount));
 
   // Helper function to handle scrolling and switching sessions (TikTok style)
   const handleScrollSession = (direction: 'up' | 'down') => {
@@ -3231,18 +3354,19 @@ export default function CastingLiveSection({
   };
 
   // Handler to process inscription fee payment & join table (matching captura z.png & image.png)
-  const handleExecutePaymentAndJoinSession = (projectId?: string, explicitFee?: number) => {
+  const handleExecutePaymentAndJoinSession = (projectId?: string, explicitFee?: number, explicitArrivalSlot?: number) => {
     if (!currentFinanzasSession && openFinanzasSessions.length === 0) return;
-    const myId = userProfile?.id || "user-ernesto";
-    const myName = userProfile?.name || "Ernesto vs";
-    const myUsername = userProfile?.username || "ernestovs";
+    const myId = userProfile?.id || "user-adriana";
+    const myName = userProfile?.name || "Adriana Lima";
+    const myUsername = userProfile?.username || "adrianalima";
     const myAvatar = userProfile?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650";
 
     const activeCarouselSession = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession;
     const fee = explicitFee !== undefined ? explicitFee : (activeCarouselSession?.entryFee || currentFinanzasSession?.entryFee || 10);
 
-    let targetSession = openFinanzasSessions.find(s => s.entryFee === fee) || 
+    let targetSession = openFinanzasSessions.find(s => s.id === currentFinanzasSession?.id) ||
       (fee === 10 ? openFinanzasSessions.find(s => s.id === "sess-trabajadores-1" || s.title?.toUpperCase().includes("STREETWEAR")) : null) ||
+      openFinanzasSessions.find(s => s.entryFee === fee) || 
       (fee === 100 ? openFinanzasSessions.find(s => s.id === "sess-emprendedores-1" || s.title?.toUpperCase().includes("CASUAL")) : null) ||
       activeCarouselSession || 
       openFinanzasSessions[0];
@@ -3281,24 +3405,46 @@ export default function CastingLiveSection({
       fallbackOthers = MILLONARIOS_USERS;
     }
 
+    const targetSessionId = targetSession?.id || currentFinanzasSession?.id || 'sess-trabajadores-1';
+    const liveArrivedCount = sessionArrivalMap[targetSessionId] ?? 3;
+
+    // Determine arrival slot for Adriana Lima (0 to 9, corresponding to positions #1 to #10)
+    // Based on explicit testing parameter, user selection, or the live arrival state at the instant of clicking
+    const userSlotIndex = explicitArrivalSlot !== undefined
+      ? Math.max(0, Math.min(9, explicitArrivalSlot))
+      : (selectedArrivalSlot !== null
+          ? Math.max(0, Math.min(9, selectedArrivalSlot))
+          : Math.max(0, Math.min(9, liveArrivedCount)));
+
+    setUserParticipantSlotIndex(userSlotIndex);
+    localStorage.setItem('finanzas_user_slot_index', String(userSlotIndex));
+
+    const arrivalPositionNumber = userSlotIndex + 1;
     const userParticipant = {
       id: myId,
       name: myName,
       username: myUsername,
       avatar: myAvatar,
-      role: "Usuario Inversor (10º Participante)",
+      role: `Usuario Inversor (${arrivalPositionNumber}º por Orden de Llegada)`,
       projectId: selectedProj.id,
       projectTitle: selectedProj.title
     };
 
-    // Ensure target session has exactly 10 members (the 9 peers + user as 10th)
-    const otherNine = (targetSession?.id === 'sess-trabajadores-1' || fee === 10)
-      ? [...TRABAJADORES_USERS.slice(0, 8), TRABAJADORES_USERS[9]]
-      : fallbackOthers.filter(fu => fu.id !== myId).slice(0, 9);
-    const finalTen = [...otherNine, userParticipant];
+    // Filter peers pool so user is not duplicated
+    const cleanPeers = (targetSession?.id === 'sess-trabajadores-1' || fee === 10 || targetSession?.title?.toUpperCase().includes('STREETWEAR'))
+      ? TRABAJADORES_USERS.filter(u => u.id !== myId && u.name !== myName && u.id !== 'user-adriana')
+      : fallbackOthers.filter(fu => fu.id !== myId && fu.name !== myName && fu.id !== 'user-adriana');
+
+    // Build the 10 participants strictly according to order of arrival:
+    // 1. Peers who arrived before Adriana Lima
+    const peersBefore = cleanPeers.slice(0, userSlotIndex);
+    // 2. Peers who arrived after Adriana Lima
+    const peersAfter = cleanPeers.slice(userSlotIndex, 9);
+    // 3. Complete list of exactly 10 participants
+    const finalTen = [...peersBefore, userParticipant, ...peersAfter];
 
     const updatedSessions = openFinanzasSessions.map(s => {
-      if (s.id === targetSession?.id) {
+      if (s.id === targetSessionId || s.id === targetSession?.id || s.id === currentFinanzasSession?.id || (fee === 10 && (s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR')))) {
         return {
           ...s,
           status: 'active' as const,
@@ -3309,58 +3455,109 @@ export default function CastingLiveSection({
     });
 
     setOpenFinanzasSessions(updatedSessions);
-    if (targetSession?.id === 'sess-trabajadores-1' || fee === 10) {
-      localStorage.setItem('finanzas_paid_sess_trabajadores_1', 'true');
-    }
+    setIsFinanzasUserParticipatingState(true);
+    setUserPaidSessions(prev => ({
+      ...prev,
+      [targetSessionId]: true,
+      'sess-trabajadores-1': true,
+      ...(currentFinanzasSession?.id ? { [currentFinanzasSession.id]: true } : {})
+    }));
+    setForceShowParticipantsPanel(true);
+
+    localStorage.setItem('finanzas_paid_sess_trabajadores_1', 'true');
+    localStorage.setItem(`finanzas_paid_${targetSessionId}`, 'true');
     if (targetSession?.id) {
       localStorage.setItem(`finanzas_paid_${targetSession.id}`, 'true');
     }
+    if (currentFinanzasSession?.id) {
+      localStorage.setItem(`finanzas_paid_${currentFinanzasSession.id}`, 'true');
+    }
     localStorage.setItem("open_finanzas_sessions_list_v41", JSON.stringify(updatedSessions));
-    localStorage.setItem("finanzas_target_session_id", targetSession?.id || "sess-trabajadores-1");
+    localStorage.setItem("finanzas_target_session_id", targetSessionId);
     localStorage.setItem("finanzas_active_session_fee", String(fee));
     localStorage.setItem("finanzas_target_session_name", targetSession?.title || (fee === 10 ? 'Round STREETWEAR & URBAN' : 'Mesa de Inversión'));
     localStorage.setItem("finanzas_user_participating", "true");
 
-    // Update presentation queue so 10th spot is user
-    setFinanzasPresentationQueue(prev => {
-      const nextQueue = [...prev];
-      if (nextQueue.length >= 10) {
-        nextQueue[8] = { id: 'trab-10', name: 'Maria Soler', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager', requestTime: '11:10:00', status: 'waiting' as const };
-        nextQueue[9] = {
-          id: myId,
-          name: myName,
-          avatar: myAvatar,
-          role: 'Usuario Inversor (10º Participante)',
-          requestTime: '11:15:00',
-          status: 'waiting' as const
-        };
-      }
-      return nextQueue;
-    });
+    // Update presentation queue so participant at index userSlotIndex is Adriana Lima
+    const nowTimestamp = Date.now();
+    setFinanzasPresentationQueue(
+      finalTen.map((item, idx) => ({
+        id: item.id,
+        name: item.name,
+        avatar: item.avatar,
+        role: item.role || (idx === userSlotIndex ? `Usuario Inversor (Tú • Puesto #${arrivalPositionNumber})` : 'Emprendedor'),
+        requestTime: new Date(nowTimestamp - ((10 - idx) * 35000)).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        status: idx === 0 ? ('presenting' as const) : ('waiting' as const)
+      }))
+    );
 
     const activeList = updatedSessions.filter(s => s.status === "active");
-    const targetIdx = activeList.findIndex(s => s.id === targetSession?.id);
+    const targetIdx = activeList.findIndex(s => s.id === targetSessionId);
     if (targetIdx !== -1) {
       setActiveFinanzasSessionIndex(targetIdx);
     }
 
-    // Immediately cancel any speech so waiting room is completely silent while 10 participants enter
+    // Set first presenter in spotlight (if Adriana is at slot 0, she is in the spotlight immediately!)
+    setSelectedFinanzasUser(finalTen[0]);
+    setActiveFinanzasPopupUser(finalTen[0]);
+    setFirstPresenterRevealed(true);
+
+    // Synchronize 5-min timer for presenter #1
+    const sessionStartKey = `finanzas_active_session_start_${targetSessionId}`;
+    localStorage.setItem(sessionStartKey, String(Date.now()));
+    setFinanzasTimers({
+      [finalTen[0].id]: 300
+    });
+    setFinanzasTimerActive({
+      [finalTen[0].id]: true
+    });
+
+    // Notify user of their exact arrival position
+    setSystemVoiceNotification({
+      show: true,
+      message: `🎉 ¡Inscripción y Pago Confirmados! Adriana Lima asignada a la posición #${arrivalPositionNumber} de 10 por orden de llegada.`
+    });
+    setTimeout(() => {
+      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+    }, 8000);
+
+    // Immediately cancel any speech
     if ('speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
       } catch (e) {}
     }
-    setIsFinanzasLiveConnected(false);
 
-    // Close inscription panel
+    // Return immediately to the live channel view (captura z.png) with Adriana Lima in the participant list
+    setIsFinanzasLiveConnected(true);
     setShowFinanzasInscriptionInChannel(false);
+    setShowParticipantsGatheringModal(false);
 
-    // Open Gathering Modal (Waiting room for 10 participants before opening Finanzas live channel)
-    const sessionTitleToUse = targetSession?.title || (fee === 10 ? 'Round STREETWEAR & URBAN' : 'Mesa de Inversión');
-    setGatheringSessionTitle(sessionTitleToUse);
-    setGatheringSessionFee(fee);
-    setGatheringParticipantsList(finalTen);
-    setShowParticipantsGatheringModal(true);
+    // Audio confirmation tone
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.45);
+    } catch (e) {}
+
+    // Success notification
+    setSystemVoiceNotification({
+      show: true,
+      message: `🎉 ¡Inscripción y pago de ${feeFormatted} completados! Adriana Lima ya aparece entre los 10 participantes de la sala.`
+    });
+    setTimeout(() => {
+      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
   };
 
   // Helper function to terminate current session on results page trigger and move to next open session
@@ -3987,7 +4184,18 @@ export default function CastingLiveSection({
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 10) {
-          return parsed;
+          return parsed.map((item: any) => {
+            if (item.id === 'trab-10' || item.name?.includes('Soler')) {
+              return {
+                ...item,
+                id: 'trab-10',
+                name: 'Adriana Lima',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                role: item.role && !item.role.includes('Soler') ? item.role : 'Community Manager'
+              };
+            }
+            return item;
+          });
         }
       } catch (e) {}
     }
@@ -4001,7 +4209,7 @@ export default function CastingLiveSection({
       { id: 'trab-7', name: 'Álvaro Díaz', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional', requestTime: '11:00:00', status: 'waiting' as const },
       { id: 'trab-8', name: 'Lucía Navarro', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción', requestTime: '11:05:00', status: 'waiting' as const },
       { id: 'trab-9', name: 'Daniel Morales', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital', requestTime: '11:10:00', status: 'waiting' as const },
-      { id: 'trab-10', name: 'Maria Soler', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager', requestTime: '11:15:00', status: 'waiting' as const }
+      { id: 'trab-10', name: 'Adriana Lima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager', requestTime: '11:15:00', status: 'waiting' as const }
     ];
   });
 
@@ -4160,37 +4368,18 @@ export default function CastingLiveSection({
         // --- PHASE 1: 50 MINUTES OF EXPOSITIONS (10 participants x 5 minutes = 300 seconds each) ---
         const presenterIdx = Math.min(9, Math.floor(totalElapsed / 300));
         const remainingForPresenter = 300 - (totalElapsed % 300);
-        const rawActivePresenter = sessionParticipants[presenterIdx] || sessionParticipants[0];
-        const currentUserId = userProfile?.id || '';
-        const currentUserName = userProfile?.name || '';
-        const currentUserUsername = userProfile?.username || '';
-        const isUserParticipatingInCurrent = currentFinanzasSession?.participants?.some(
-          p => (currentUserId && p.id === currentUserId && p.id !== 'trab-10') || 
-               (currentUserUsername && p.username === currentUserUsername && p.username !== 'adrianalima' && p.username !== 'marina_social' && p.username !== 'maria_soler_social') || 
-               (currentUserName && p.name === currentUserName && p.name !== 'Adriana Lima' && p.name !== 'Marina Soler' && p.name !== 'Maria Soler' && !p.name?.includes('Soler')) ||
-               p.role?.includes('(Tú)') ||
-               p.role?.includes('(10º Participante)')
-        ) ?? false;
-
-        const isSelfPresenter = isUserParticipatingInCurrent && 
-          rawActivePresenter.id !== 'trab-10' && 
-          !rawActivePresenter.name?.includes('Soler') && (
-          (currentUserId && rawActivePresenter.id === currentUserId) ||
-          (currentUserUsername && rawActivePresenter.username === currentUserUsername) ||
-          (currentUserName && rawActivePresenter.name === currentUserName) ||
-          rawActivePresenter.role?.includes('(Tú)') ||
-          rawActivePresenter.role?.includes('(10º Participante)')
-        );
-        const activePresenter = isSelfPresenter
-          ? {
-              ...rawActivePresenter,
-              id: userProfile?.id || 'user-adriana',
-              name: userProfile?.name || 'Adriana Lima',
-              username: userProfile?.username || 'adrianalima',
-              avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
-              role: 'Usuario Inversor (10º y Última Participante)'
-            }
-          : rawActivePresenter;
+        let rawActivePresenter = sessionParticipants[presenterIdx] || sessionParticipants[0];
+        if (rawActivePresenter.id === 'trab-10' || rawActivePresenter.name?.includes('Soler')) {
+          rawActivePresenter = {
+            ...rawActivePresenter,
+            id: 'trab-10',
+            name: 'Adriana Lima',
+            username: 'adrianalima',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+            role: rawActivePresenter.role && !rawActivePresenter.role.includes('Soler') ? rawActivePresenter.role : 'Community Manager'
+          };
+        }
+        const activePresenter = rawActivePresenter;
 
         // Update timer dictionary
         setFinanzasTimers((prev) => ({
@@ -4218,11 +4407,8 @@ export default function CastingLiveSection({
           const isFemale = femaleNames.some((fn) => activePresenter.name.includes(fn));
           const welcomeWord = isFemale ? 'Bienvenida' : 'Bienvenido';
           const turnNumber = presenterIdx + 1;
-          const isErnesto = isSelfPresenter;
-          const displayName = isErnesto ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : activePresenter.name;
-          const speechMessageText = isErnesto
-            ? `Turno número 10 de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo en directo para presentar su proyecto ante la mesa de inversores.`
-            : `Turno número ${turnNumber} de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo de exposición en directo. ${welcomeWord} y suerte.`;
+          const displayName = activePresenter.name;
+          const speechMessageText = `Turno número ${turnNumber} de 10: En exposición ${displayName}, disponiendo de cinco minutos de tiempo de exposición en directo. ${welcomeWord} y suerte.`;
 
           // Play transition chime
           try {
@@ -4265,10 +4451,10 @@ export default function CastingLiveSection({
           prev.map((item) => ({ ...item, status: 'finished' as const }))
         );
 
-        // 🗳️ Automatic opening of voting projects modal (capture z.png) when Adriana Lima's (10th/last) exposition ends
+        // 🗳️ Automatic transition when Adriana Lima's (10th/last) exposition ends: display 10-minute countdown on image.png
         if (!hasOpenedVotingModalOnFinishRef.current) {
           hasOpenedVotingModalOnFinishRef.current = true;
-          setShowVotingProjectsModal(true);
+          setShowVotingProjectsModal(false);
           setVotingProjectSlideIndex(0);
           setShowProjectDetailsInPopup(false);
           setShowQueueInPopup(false);
@@ -4498,29 +4684,14 @@ export default function CastingLiveSection({
       currentIndex = 0;
     }
 
-    // Check if the current presenter is Adriana Lima (the 10th and last participant)
-    const isAdrianaLimaActive = 
-      currentIndex === 9 ||
-      selectedFinanzasUser?.id === 'trab-10' ||
-      selectedFinanzasUser?.id === 'user-adriana' ||
-      selectedFinanzasUser?.name === 'Adriana Lima' ||
-      selectedFinanzasUser?.name === 'Marina Soler' ||
-      selectedFinanzasUser?.name === 'Maria Soler' ||
-      activeFinanzasPopupUser?.id === 'trab-10' ||
-      activeFinanzasPopupUser?.id === 'user-adriana' ||
-      activeFinanzasPopupUser?.name === 'Adriana Lima' ||
-      selectedFinanzasUser?.role?.includes('10º') ||
-      activeFinanzasPopupUser?.role?.includes('10º');
-
-    if (isAdrianaLimaActive) {
-      currentIndex = 9;
-    }
+    // Check if the current presenter is at the last (10th) turn of the session
+    const isLastParticipant = currentIndex >= queue.length - 1 || currentIndex >= 9;
 
     const currentItem = queue[currentIndex];
     const currentActiveId = currentItem?.id || selectedFinanzasUser?.id || 'trab-1';
     const nextIndex = currentIndex + 1;
 
-    if (nextIndex < queue.length && !isAdrianaLimaActive) {
+    if (nextIndex < queue.length && !isLastParticipant) {
       const nextQueueItem = queue[nextIndex];
       const nextUserObj = (participantsList.find((p: any) => p.id === nextQueueItem.id || p.name === nextQueueItem.name)) || 
         TRABAJADORES_USERS.find(u => u.id === nextQueueItem.id || u.name === nextQueueItem.name) ||
@@ -4600,7 +4771,7 @@ export default function CastingLiveSection({
       setFinanzasPresentationQueue(prev => prev.map(item => ({ ...item, status: 'finished' as const })));
       setFinanzasTimerActive({});
       setIsVotingPhaseActive(true);
-      setShowVotingProjectsModal(true);
+      setShowVotingProjectsModal(false);
       setVotingProjectSlideIndex(0);
       setShowProjectDetailsInPopup(false);
       setShowQueueInPopup(false);
@@ -4627,10 +4798,9 @@ export default function CastingLiveSection({
         osc.stop(audioCtx.currentTime + 0.5);
       } catch (e) {}
 
-      // Speech synthesis removed per user request
       setSystemVoiceNotification({
         show: true,
-        message: `🗳️ ¡10/10 Exposiciones finalizadas! Abriendo mesa de votación de proyectos (z.png).`
+        message: `🗳️ Exposición de Adriana Lima finalizada. Tienen 10 minutos para votar.`
       });
       setTimeout(() => {
         setSystemVoiceNotification(prev => ({ ...prev, show: false }));
@@ -9980,7 +10150,7 @@ export default function CastingLiveSection({
                 </div>
 
                 {/* 3-column Grid of gifts matching image.png */}
-                <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-amber-500/40">
+                <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-2.5 overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   {[
                     { name: 'Certificado prof.', icon: '📜', cost: 500 },
                     { name: 'Una estrella', icon: '⭐', cost: 50 },
@@ -11128,30 +11298,6 @@ export default function CastingLiveSection({
               </span>
             </div>
 
-            {/* Contador de cuenta atrás de 10 minutos encima de Proyectos de los Participantes */}
-            <div className="flex flex-col items-start gap-1 pt-1.5 pb-0.5" id="contador-cuenta-atras-votacion">
-              <span className="text-[11px] sm:text-[12px] font-black text-slate-800 tracking-tight flex items-center gap-1">
-                Tenéis 10 minutos para votar por el mejor proyecto
-              </span>
-              <div className="flex items-center gap-2">
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-2xs transition-colors duration-300 ${
-                  votingCountdownSeconds < 60 
-                    ? 'bg-red-50 border-red-300 text-red-900 animate-pulse' 
-                    : 'bg-rose-50/90 border-rose-200 text-slate-900'
-                }`}>
-                  <span className="text-xs shrink-0 animate-pulse">⏱️</span>
-                  <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-slate-700">
-                    CUENTA ATRÁS:
-                  </span>
-                  <span className="font-mono font-black text-xs sm:text-sm text-[#fe2c55] bg-white px-2 py-0.5 rounded-md border border-rose-200 shadow-2xs">
-                    {formatMMSS(votingCountdownSeconds)}
-                  </span>
-                  <span className="text-[9.5px] font-semibold text-slate-500 hidden xs:inline">
-                    (Cierre y escrutinio automático)
-                  </span>
-                </div>
-              </div>
-            </div>
 
             <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-2 m-0 truncate">
               Proyectos de los Participantes
@@ -11283,34 +11429,34 @@ export default function CastingLiveSection({
               </div>
             </div>
 
-            {/* Action Buttons: View Full Project & Vote (Vote button only exists if user participates) */}
-            <div className="pt-1 flex flex-col sm:flex-row gap-2">
+            {/* Action Buttons: Vote for Selected Project & View Full Project */}
+            <div className="pt-1 flex flex-col gap-2">
               <button
                 type="button"
+                id="btn-votar-por-proyecto-elegido"
+                onClick={() => {
+                  handleVoteForProject(currentUser);
+                  setShowVotingProjectsModal(false);
+                }}
+                className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider"
+              >
+                <span className="text-base">🗳️</span>
+                <span>VOTAR POR ESTE PROYECTO ({currentUser.name.split(' ')[0]})</span>
+              </button>
+
+              <button
+                type="button"
+                id="btn-ver-proyecto-completo"
                 onClick={() => {
                   setDetailProjectUser(currentUser);
                   setShowProjectDetailsInPopup(true);
                   setShowVotingProjectsModal(false);
                 }}
-                className="flex-1 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black py-3 px-3 rounded-xl shadow-sm transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-slate-800 text-xs uppercase tracking-wider"
+                className="w-full bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black py-2.5 px-3 rounded-xl shadow-sm transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-slate-800 text-xs uppercase tracking-wider"
               >
                 <span>🔍</span>
                 <span>VER PROYECTO COMPLETO</span>
               </button>
-
-              {isUserParticipating && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleVoteForProject(currentUser);
-                    setShowVotingProjectsModal(false);
-                  }}
-                  className="flex-1 bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3 px-3 rounded-xl shadow-md transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs uppercase tracking-wider"
-                >
-                  <span>🗳️</span>
-                  <span>VOTAR POR ESTE PROYECTO</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -25736,6 +25882,11 @@ try {
                             setDetailProjectUser(null);
                             setShowProjectDetailsInPopup(false);
                           }}
+                          onVoteProject={(user) => {
+                            handleVoteForProject(user);
+                            setDetailProjectUser(null);
+                            setShowProjectDetailsInPopup(false);
+                          }}
                         />
                       </div>
                     ) : showVotingProjectsModal ? (
@@ -25873,148 +26024,265 @@ try {
 
                         return (
                           <div 
-                            className="absolute inset-0 z-[250] bg-slate-900/60 backdrop-blur-md flex flex-col w-full h-full overflow-y-auto text-slate-800 font-sans text-left animate-fade-in pointer-events-auto p-2 sm:p-4 md:p-6 space-y-4 select-none pb-24 scrollbar-none"
+                            className="absolute inset-0 z-[250] bg-slate-900/60 backdrop-blur-md flex flex-col items-center w-full max-w-full h-full overflow-y-auto overflow-x-hidden text-slate-800 font-sans animate-fade-in pointer-events-auto p-2 sm:p-3.5 space-y-3 sm:space-y-4 select-none pb-24 scrollbar-none box-border"
                             id="finanzas-inscription-in-channel-view"
                           >
                             {/* Top close & title bar */}
-                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                            <div className="flex items-center justify-between gap-2 w-full max-w-sm mx-auto shrink-0 px-0.5 box-border">
                               <button
                                 type="button"
                                 onClick={() => setShowFinanzasInscriptionInChannel(false)}
-                                className="bg-slate-900/90 hover:bg-slate-800 text-white font-extrabold text-[10px] sm:text-xs px-3.5 py-2 rounded-full border border-slate-700 transition flex items-center gap-1.5 shadow-lg active:scale-95 cursor-pointer"
+                                className="bg-slate-900/90 hover:bg-slate-800 text-white font-extrabold text-[10px] sm:text-xs px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full border border-slate-700 transition flex items-center gap-1.5 shadow-lg active:scale-95 cursor-pointer shrink-0"
                               >
                                 <span>✕</span>
                                 <span>Volver a la Mesa</span>
                               </button>
 
-                              <div className="bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5 shadow-lg">
-                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                                <span>Inscripción en Mesa Directo</span>
+                              <div className="bg-slate-900/90 border border-slate-700/80 px-2.5 sm:px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5 shadow-lg shrink-0">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                                <span className="truncate">Inscripción en Mesa Directo</span>
                               </div>
                             </div>
 
-                            {/* 1. TOP CAROUSEL OF SESSIONS / MESAS (Matching captura z.png) */}
-                            <div className="relative w-full flex flex-col items-center justify-center py-2">
-                              <div className="flex items-center justify-between w-full max-w-xl gap-2">
+                            {/* Quick selector tabs for all 6 rounds */}
+                            <div className="w-full max-w-sm mx-auto flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none shrink-0 px-0.5 box-border">
+                              {activeSessionsOnly.map((sess, idx) => {
+                                const isSel = idx === (activeFinanzasSessionIndex % activeSessionsOnly.length);
+                                const feeStr = sess.entryFee >= 1000000 ? '1M€' : sess.entryFee >= 1000 ? `${sess.entryFee / 1000}k€` : `${sess.entryFee}€`;
+                                const shortName = sess.entryFee === 10 ? 'Streetwear' :
+                                  sess.entryFee === 100 ? 'Casual' :
+                                  sess.entryFee === 1000 ? 'Glamour' :
+                                  sess.entryFee === 10000 ? 'Classic' : 'High Fashion';
+                                return (
+                                  <button
+                                    key={sess.id}
+                                    type="button"
+                                    onClick={() => setActiveFinanzasSessionIndex(idx)}
+                                    className={`px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold whitespace-nowrap transition cursor-pointer border shrink-0 ${
+                                      isSel
+                                        ? 'bg-amber-400 border-amber-400 text-slate-950 shadow-sm font-black'
+                                        : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800'
+                                    }`}
+                                  >
+                                    {shortName} ({feeStr})
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* 1. TOP CAROUSEL OF SESSIONS / MESAS (Matching capturas image.png, z.png & zw.png) */}
+                            <div className="relative w-full max-w-sm mx-auto flex flex-col items-center justify-center py-1 box-border">
+                              <div className="flex items-center justify-between w-full gap-1.5 sm:gap-2">
                                 {/* Left Arrow */}
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setActiveFinanzasSessionIndex(prev => (prev - 1 + activeSessionsOnly.length) % activeSessionsOnly.length);
                                   }}
-                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
+                                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
                                   title="Mesa anterior"
                                 >
-                                  <ChevronLeft className="w-5 h-5 text-slate-300" />
+                                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-300" />
                                 </button>
 
-                                {/* Active Center 3D-styled Card */}
-                                <div className="flex-1 max-w-sm mx-auto">
+                                {/* Active Center Card */}
+                                <div className="flex-1 min-w-0 max-w-full mx-auto">
                                   {(() => {
-                                    const isPinkStreetwear = (currentFinanzasSession?.entryFee === 10 || currentFinanzasSession?.category?.toUpperCase().includes('TRABAJADORES') || currentFinanzasSession?.category?.toUpperCase().includes('STREETWEAR') || currentSession?.title?.includes('Trabajad') || currentSession?.title?.includes('STREETWEAR'));
+                                    const isPinkStreetwear = activeFee === 10 || currentSession?.id === 'sess-trabajadores-1' || currentSession?.title?.toUpperCase().includes('STREETWEAR') || currentSession?.category?.toUpperCase().includes('STREETWEAR');
+                                    const isCasualLifestyle = activeFee === 100 || currentSession?.id === 'sess-emprendedores-1' || currentSession?.title?.toUpperCase().includes('CASUAL') || currentSession?.category?.toUpperCase().includes('CASUAL');
+                                    const isGlamour = activeFee === 1000 || currentSession?.id === 'sess-empresarios-1' || currentSession?.title?.toUpperCase().includes('GLAMOUR') || currentSession?.category?.toUpperCase().includes('GLAMOUR');
+                                    const isClassic = activeFee === 10000 || currentSession?.id === 'sess-topmodels-1';
+                                    const isHighFashion100k = activeFee === 100000 || currentSession?.id === 'sess-inversores-1';
+                                    const isHighFashion1m = activeFee >= 1000000 || currentSession?.id === 'sess-millonarios-1';
+
+                                    const badgeText = isPinkStreetwear ? 'ROUND STREETWEAR & URBAN' :
+                                      isCasualLifestyle ? 'ROUND CASUAL & LIFESTYLE' :
+                                      isGlamour ? 'RONDA GLAMOUR ✨' :
+                                      isClassic ? 'RONDA ELEGANT & CLASSIC 🤍' :
+                                      isHighFashion100k ? 'RONDA HIGH FASHION 👠' :
+                                      isHighFashion1m ? 'RONDA HIGH FASHION 👠' :
+                                      (currentSession?.title?.toUpperCase() || 'RONDA ACTIVA');
+
+                                    const titleText = isPinkStreetwear ? 'Round STREETWEAR & URBAN' :
+                                      isCasualLifestyle ? 'Round CASUAL & LIFESTYLE' :
+                                      isGlamour ? 'Ronda Glamour ✨' :
+                                      isClassic ? 'Ronda Elegant & Classic 🤍' :
+                                      isHighFashion100k ? 'Ronda High Fashion 👠' :
+                                      isHighFashion1m ? 'Ronda High Fashion 👠' :
+                                      (currentSession?.title || 'Mesa de Inversión');
+
+                                    const descText = isPinkStreetwear ? 'Estilo moderno, sneakers, denim y cultura street.' :
+                                      isCasualLifestyle ? 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.' :
+                                      isGlamour ? 'vestidos, belleza, eventos, alfombra roja y looks impactantes.' :
+                                      isClassic ? 'sofisticado, clásico, atemporal y refinado.' :
+                                      'alta moda, diseñadores, pasarela y tendencias.';
+
+                                    if (isPinkStreetwear) {
+                                      return (
+                                        <div className="bg-[#FDF0F5] border border-[#F7D2DE] text-slate-950 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-lg">
+                                          {/* Top badge */}
+                                          <div className="flex justify-between items-start gap-1">
+                                            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3CBD7] bg-[#FCEEF3] text-slate-900 leading-none truncate max-w-full">
+                                              {badgeText}
+                                            </span>
+                                          </div>
+
+                                          {/* Title & Entry Fee */}
+                                          <div className="space-y-1 min-w-0 text-left">
+                                            <h3 className="font-black text-xs sm:text-sm md:text-base text-slate-950 tracking-tight truncate">
+                                              {titleText}
+                                            </h3>
+                                            <p className="text-[10px] sm:text-[10.5px] font-medium leading-tight line-clamp-2 text-slate-600">
+                                              {descText}
+                                            </p>
+                                            <div className="flex items-baseline gap-1.5 pt-0.5">
+                                              <span className="text-[10px] sm:text-[11px] font-medium text-slate-600">
+                                                Monto de Entrada:
+                                              </span>
+                                              <strong className="font-mono text-xs sm:text-sm md:text-base font-black text-slate-950">
+                                                10,00€
+                                              </strong>
+                                            </div>
+                                          </div>
+
+                                          {/* Progress bar: 10/10 Miembros */}
+                                          <div className="space-y-1">
+                                            <div className="flex justify-end items-center text-[9px] sm:text-[10px] font-mono font-black text-slate-900">
+                                              10/10 Miembros
+                                            </div>
+                                            <div className="w-full h-2 rounded-full overflow-hidden bg-pink-100 border border-pink-200">
+                                              <div className="h-full w-full rounded-full bg-gradient-to-r from-pink-500 to-rose-600" />
+                                            </div>
+                                          </div>
+
+                                          {/* Card Footer */}
+                                          <div className="pt-2 border-t border-pink-200/80 flex justify-between items-center text-xs">
+                                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-600">
+                                              ESCRUTINIO
+                                            </span>
+                                            <div className="text-[10px] font-bold flex items-baseline gap-1 text-slate-700">
+                                              <span className="font-medium text-slate-600">Pool:</span>
+                                              <span className="font-mono font-black text-xs sm:text-sm text-slate-950">
+                                                100,00€
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+
+                                    if (isCasualLifestyle) {
+                                      return (
+                                        <div className="bg-[#0c1322] border border-slate-700/90 text-white rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl">
+                                          {/* Top badge */}
+                                          <div className="flex justify-between items-start gap-1">
+                                            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-amber-500/70 bg-[#161d2f] text-amber-400 leading-none truncate max-w-full">
+                                              {badgeText}
+                                            </span>
+                                          </div>
+
+                                          {/* Title & Entry Fee */}
+                                          <div className="space-y-1 min-w-0 text-left">
+                                            <h3 className="font-extrabold text-xs sm:text-sm md:text-base text-white tracking-tight truncate">
+                                              {titleText}
+                                            </h3>
+                                            <p className="text-[10px] sm:text-[10.5px] font-medium leading-tight line-clamp-2 text-amber-200/90">
+                                              {descText}
+                                            </p>
+                                            <div className="flex items-baseline gap-1.5 pt-0.5">
+                                              <span className="text-[10px] sm:text-[11px] font-medium text-slate-300">
+                                                Monto de Entrada:
+                                              </span>
+                                              <strong className="font-mono text-xs sm:text-sm md:text-base font-black text-amber-400">
+                                                100,00€
+                                              </strong>
+                                            </div>
+                                          </div>
+
+                                          {/* Progress bar: 10/10 Miembros */}
+                                          <div className="space-y-1">
+                                            <div className="flex justify-end items-center text-[9px] sm:text-[10px] font-mono font-black text-white">
+                                              10/10 Miembros
+                                            </div>
+                                            <div className="w-full h-2 rounded-full overflow-hidden bg-slate-900 border border-slate-700">
+                                              <div className="h-full w-full rounded-full bg-slate-700" />
+                                            </div>
+                                          </div>
+
+                                          {/* Card Footer */}
+                                          <div className="pt-2 border-t border-slate-700/80 flex justify-between items-center text-xs">
+                                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-500">
+                                              ESCRUTINIO
+                                            </span>
+                                            <div className="text-[10px] font-bold flex items-baseline gap-1 text-slate-300">
+                                              <span className="font-medium text-slate-300">Pool:</span>
+                                              <span className="font-mono font-black text-xs sm:text-sm text-amber-400">
+                                                1000,00€
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+
+                                    // Default / Glamour / High Fashion / Classic
                                     return (
-                                      <div className={`${isPinkStreetwear ? 'bg-gradient-to-br from-[#FFF5F8] via-[#FADCE7] to-[#F3CAD9] border border-[#E8AEC1] text-slate-950 shadow-pink-950/15' : 'bg-[#0c1322] border border-slate-700/90 text-white shadow-2xl'} rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3.5 relative overflow-hidden`}>
+                                      <div className="bg-[#0c1322] border border-slate-700/90 text-white rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl">
                                         {/* Top badge */}
-                                        <div className="flex justify-between items-start gap-2">
-                                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border leading-none ${
-                                            isPinkStreetwear ? 'bg-[#F2C9D8] border-[#DDA0B5] text-slate-950' : 'bg-slate-800/90 border-slate-600 text-slate-200'
-                                          }`}>
-                                            {currentFinanzasSession?.category?.toUpperCase().includes('BRONCE') || currentFinanzasSession?.category?.toUpperCase().includes('EMPRENDEDOR') || currentFinanzasSession?.category?.toUpperCase().includes('CASUAL') || currentFinanzasSession?.entryFee === 100 ? 'ROUND CASUAL & LIFESTYLE' :
-                                             isPinkStreetwear ? 'ROUND STREETWEAR & URBAN' :
-                                             currentFinanzasSession?.category?.toUpperCase().includes('EMPRESARIOS') || currentFinanzasSession?.category?.toUpperCase().includes('GLAMOUR') || currentFinanzasSession?.entryFee === 1000 ? 'RONDA GLAMOUR ✨' :
-                                             currentFinanzasSession?.category?.toUpperCase().includes('MODELS') || currentFinanzasSession?.category?.toUpperCase().includes('ELEGANT') || currentFinanzasSession?.entryFee === 10000 ? 'RONDA ELEGANT & CLASSIC 🤍' :
-                                             currentFinanzasSession?.category?.toUpperCase().includes('INVERSI') || currentFinanzasSession?.category?.toUpperCase().includes('FASHION') || currentFinanzasSession?.entryFee === 100000 ? 'RONDA HIGH FASHION 👠' :
-                                             currentFinanzasSession?.category?.toUpperCase().includes('MILLONARIOS') || currentFinanzasSession?.entryFee === 1000000 ? 'RONDA HIGH FASHION 👠' :
-                                             `RONDA ACTIVA • ${currentFinanzasSession?.category?.toUpperCase() || 'FINANZAS'}`}
+                                        <div className="flex justify-between items-start gap-1">
+                                          <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-600 bg-slate-800/90 text-slate-200 leading-none truncate max-w-full">
+                                            {badgeText}
                                           </span>
                                         </div>
 
                                         {/* Title & Entry Fee */}
-                                        <div className="space-y-1">
-                                          <h3 className={`font-extrabold text-sm sm:text-base tracking-tight truncate ${isPinkStreetwear ? 'text-slate-950 font-black' : 'text-white'}`}>
-                                            {isPinkStreetwear
-                                              ? 'Round STREETWEAR & URBAN'
-                                              : (currentFinanzasSession?.entryFee === 100 || currentFinanzasSession?.category?.toUpperCase().includes('BRONCE') || currentFinanzasSession?.category?.toUpperCase().includes('EMPRENDEDOR') || currentFinanzasSession?.category?.toUpperCase().includes('CASUAL') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('CASUAL'))
-                                              ? 'Round CASUAL & LIFESTYLE'
-                                              : (currentFinanzasSession?.entryFee === 1000 || currentFinanzasSession?.category?.toUpperCase().includes('EMPRESARIOS') || currentFinanzasSession?.category?.toUpperCase().includes('GLAMOUR') || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour'))
-                                              ? 'Ronda Glamour ✨'
-                                              : (currentFinanzasSession?.entryFee === 10000 || currentFinanzasSession?.category?.toUpperCase().includes('MODELS') || currentFinanzasSession?.category?.toUpperCase().includes('ELEGANT') || currentSession?.title?.includes('Model') || currentSession?.title?.includes('Classic') || currentSession?.title?.includes('Elegant'))
-                                              ? 'Ronda Elegant & Classic 🤍'
-                                              : (currentFinanzasSession?.entryFee === 100000 || currentFinanzasSession?.category?.toUpperCase().includes('INVERSI') || currentFinanzasSession?.category?.toUpperCase().includes('FASHION') || currentSession?.title?.includes('Invers') || currentSession?.title?.includes('Rosa') || currentSession?.title?.includes('Fashion'))
-                                              ? 'Ronda High Fashion 👠'
-                                              : (currentFinanzasSession?.entryFee === 1000000 || currentFinanzasSession?.category?.toUpperCase().includes('MILLONAR') || currentSession?.title?.includes('Millonar') || currentSession?.title?.includes('Platino'))
-                                              ? 'Ronda High Fashion 👠'
-                                              : (currentSession?.title?.replace('Sesión de Inversión de ', 'Mesa ') || 'Mesa de Inversión')}
+                                        <div className="space-y-1 min-w-0 text-left">
+                                          <h3 className="font-extrabold text-xs sm:text-sm md:text-base text-white tracking-tight truncate">
+                                            {titleText}
                                           </h3>
-                                          {isPinkStreetwear && (
-                                            <p className={`text-[10px] font-medium leading-tight ${isPinkStreetwear ? 'text-slate-750' : 'text-slate-300'}`}>
-                                              Estilo moderno, sneakers, denim y cultura street.
-                                            </p>
-                                          )}
-                                          {(currentFinanzasSession?.entryFee === 100 || currentFinanzasSession?.category?.toUpperCase().includes('BRONCE') || currentFinanzasSession?.category?.toUpperCase().includes('EMPRENDEDOR') || currentFinanzasSession?.category?.toUpperCase().includes('CASUAL') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('CASUAL')) && (
-                                            <p className="text-[10px] text-amber-200/90 font-medium leading-tight">
-                                              Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
-                                            </p>
-                                          )}
-                                          {(currentFinanzasSession?.entryFee === 1000 || currentFinanzasSession?.category?.toUpperCase().includes('EMPRESARIOS') || currentFinanzasSession?.category?.toUpperCase().includes('GLAMOUR') || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour')) && (
-                                            <p className="text-[10px] text-slate-200 font-medium leading-tight">
-                                              vestidos, belleza, eventos, alfombra roja y looks impactantes.
-                                            </p>
-                                          )}
-                                          {(currentFinanzasSession?.entryFee === 10000 || currentFinanzasSession?.category?.toUpperCase().includes('MODELS') || currentFinanzasSession?.category?.toUpperCase().includes('ELEGANT') || currentSession?.title?.includes('Model') || currentSession?.title?.includes('Classic') || currentSession?.title?.includes('Elegant')) && (
-                                            <p className="text-[10px] text-amber-200/90 font-medium leading-tight">
-                                              sofisticado, clásico, atemporal y refinado.
-                                            </p>
-                                          )}
-                                          {(currentFinanzasSession?.entryFee === 100000 || currentFinanzasSession?.category?.toUpperCase().includes('INVERSI') || currentFinanzasSession?.category?.toUpperCase().includes('FASHION') || currentSession?.title?.includes('Invers') || currentSession?.title?.includes('Rosa') || currentSession?.title?.includes('Fashion')) && (
-                                            <p className="text-[10px] text-rose-200/90 font-medium leading-tight">
-                                              alta moda, diseñadores, pasarela y tendencias.
-                                            </p>
-                                          )}
-                                          {(currentFinanzasSession?.entryFee === 1000000 || currentFinanzasSession?.category?.toUpperCase().includes('MILLONAR') || currentSession?.title?.includes('Millonar') || currentSession?.title?.includes('Platino')) && (
-                                            <p className="text-[10px] text-amber-200/90 font-medium leading-tight">
-                                              alta moda, diseñadores, pasarela y tendencias.
-                                            </p>
-                                          )}
-                                          <div className="flex items-baseline gap-1.5">
-                                            <span className={`text-[11px] font-medium ${isPinkStreetwear ? 'text-slate-700' : 'text-slate-300'}`}>
+                                          <p className="text-[10px] sm:text-[10.5px] font-medium leading-tight line-clamp-2 text-slate-300">
+                                            {descText}
+                                          </p>
+                                          <div className="flex items-baseline gap-1.5 pt-0.5">
+                                            <span className="text-[10px] sm:text-[11px] font-medium text-slate-300">
                                               Monto de Entrada:
                                             </span>
-                                            <strong className={`font-mono text-sm sm:text-base font-black ${isPinkStreetwear ? 'text-slate-950' : 'text-amber-400'}`}>
+                                            <strong className="font-mono text-xs sm:text-sm md:text-base font-black text-amber-400">
                                               {feeFormatted}
                                             </strong>
                                           </div>
                                         </div>
 
-                                        {/* Recruitment state indicator */}
-                                        <div className="space-y-1.5">
-                                          <div className="flex justify-end items-center text-[9.5px] font-black font-mono tracking-wide">
-                                            <span className={`font-black ${isPinkStreetwear ? 'text-slate-950' : 'text-emerald-400'}`}>
-                                              {currentSession?.participants?.length || 9}/10 Miembros
+                                        {/* Progress bar: En espera de 10 Miembros */}
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between items-center text-[9px] sm:text-[9.5px] font-black font-mono tracking-wide">
+                                            <span className="text-[8.5px] uppercase text-slate-400">
+                                              En Espera de 10 Miembros
+                                            </span>
+                                            <span className="font-black text-emerald-400">
+                                              9/10 Miembros por orden de llegada
                                             </span>
                                           </div>
-
-                                          <div className={`w-full h-2 rounded-full overflow-hidden border ${isPinkStreetwear ? 'bg-slate-900/10 border-slate-900/10' : 'bg-white/10 border-white/5'}`}>
+                                          <div className="w-full h-2 rounded-full overflow-hidden bg-white/10 border border-white/5">
                                             <div 
-                                              className={`h-full rounded-full transition-all duration-500 ${isPinkStreetwear ? 'bg-gradient-to-r from-pink-500 to-rose-600' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}
-                                              style={{ width: `${Math.min(100, ((currentSession?.participants?.length || 9) / 10) * 100)}%` }}
+                                              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400"
+                                              style={{ width: '90%' }}
                                             />
                                           </div>
                                         </div>
 
                                         {/* Card Footer */}
-                                        <div className={`pt-2.5 border-t flex justify-between items-center text-xs ${isPinkStreetwear ? 'border-slate-900/15' : 'border-white/10'}`}>
-                                          <span className={`text-[9.5px] font-black uppercase tracking-wider flex items-center gap-1.5 ${isPinkStreetwear ? 'text-rose-600' : 'text-rose-400'}`}>
-                                            <span className={`w-2 h-2 rounded-full inline-block ${isPinkStreetwear ? 'bg-rose-600 animate-ping' : 'bg-rose-500 animate-ping'}`} />
+                                        <div className="pt-2 border-t border-slate-700/80 flex justify-between items-center text-xs">
+                                          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block" />
                                             <span>ESCRUTINIO</span>
                                           </span>
-
-                                          <span className="text-[10px] font-bold flex items-baseline gap-1">
-                                            <span className={`font-medium ${isPinkStreetwear ? 'text-slate-700' : 'text-slate-300'}`}>Pool:</span>
-                                            <span className={`font-mono font-black text-xs sm:text-sm ${isPinkStreetwear ? 'text-slate-950' : 'text-amber-300'}`}>
+                                          <div className="text-[10px] font-bold flex items-baseline gap-1 text-slate-300">
+                                            <span className="font-medium text-slate-300">Pool:</span>
+                                            <span className="font-mono font-black text-xs sm:text-sm text-amber-300">
                                               {poolFormatted}
                                             </span>
-                                          </span>
+                                          </div>
                                         </div>
                                       </div>
                                     );
@@ -26027,89 +26295,70 @@ try {
                                   onClick={() => {
                                     setActiveFinanzasSessionIndex(prev => (prev + 1) % activeSessionsOnly.length);
                                   }}
-                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
+                                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
                                   title="Siguiente mesa"
                                 >
-                                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-300" />
                                 </button>
                               </div>
 
-                              {/* Pagination Dots */}
-                              <div className="flex items-center justify-center gap-1.5 mt-3">
+                              {/* Pagination Dots (all 6 rounds) */}
+                              <div className="flex items-center justify-center gap-1.5 mt-2.5">
                                 {activeSessionsOnly.map((s, idx) => (
                                   <button
                                     key={s.id}
                                     type="button"
                                     onClick={() => setActiveFinanzasSessionIndex(idx)}
-                                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                                       idx === (activeFinanzasSessionIndex % activeSessionsOnly.length)
-                                        ? 'w-6 bg-amber-400'
-                                        : 'w-2 bg-slate-600/70 hover:bg-slate-400'
+                                        ? 'w-5 bg-amber-400'
+                                        : 'w-1.5 bg-slate-600/70 hover:bg-slate-400'
                                     }`}
                                   />
                                 ))}
                               </div>
                             </div>
 
-                            {/* 2. MIDDLE CARD: VOTACIÓN ABIERTA & SIMULAR VOTACIONES IA */}
-                            <div className="w-full max-w-2xl mx-auto bg-[#0f172a] text-white p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-xl">
-                              <div className="space-y-1.5 flex-1 min-w-0">
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[9.5px] font-black uppercase text-amber-400 tracking-wider">
-                                  <span>🗳️</span>
-                                  <span>RDA VOTACIÓN ABIERTA</span>
-                                </div>
-                                <h4 className="font-extrabold text-sm sm:text-base text-white tracking-tight m-0 truncate">
-                                  {currentFinanzasSession?.entryFee === 100 || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('CASUAL')
-                                    ? 'Round CASUAL & LIFESTYLE'
-                                    : currentFinanzasSession?.entryFee === 1000 || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour')
-                                    ? 'Ronda Glamour ✨'
-                                    : (currentSession?.title || 'Sesión de Inversión')}
-                                </h4>
-                                <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed m-0">
-                                  Fondo Acumulado: <strong className="text-amber-400 font-mono">{poolFormatted}</strong> — Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el <strong className="text-emerald-400">80% del premio</strong>.
-                                </p>
-                              </div>
+                            {/* 2. BUTTON: RDA VOTACIÓN ABIERTA (Matching captura zw.png) */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowFinanzasInscriptionInChannel(false);
+                                setShowVotingProjectsModal(true);
+                              }}
+                              className="w-full max-w-sm mx-auto bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-amber-400 font-black text-[11px] sm:text-xs py-2.5 px-4 rounded-xl border border-slate-800 transition flex items-center justify-center gap-2 cursor-pointer shadow-lg tracking-wider"
+                            >
+                              <span>💼</span>
+                              <span>RDA VOTACIÓN ABIERTA</span>
+                            </button>
 
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setShowFinanzasInscriptionInChannel(false);
-                                  setShowVotingProjectsModal(true);
-                                }}
-                                className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-[11px] sm:text-xs font-extrabold px-4 py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 shrink-0 whitespace-nowrap"
-                              >
-                                <span>✨</span>
-                                <span>Simular Votaciones IA</span>
-                              </button>
-                            </div>
-
-                            {/* 3. BOTTOM CARD: PAGAR INSCRIPCIÓN DE PROPUESTA (Matching captura z.png) */}
-                            <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xl space-y-4 text-slate-800">
+                            {/* 3. BOTTOM CARD: PAGAR INSCRIPCIÓN DE PROPUESTA (Matching captura z.png & zw.png) */}
+                            <div className="w-full max-w-sm mx-auto bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xl space-y-3.5 text-slate-800 box-border min-w-0">
                               {/* Header with badge icon */}
-                              <div className="flex items-start gap-3">
-                                <div className="p-2.5 rounded-xl bg-slate-700 text-white flex items-center justify-center shadow-md shrink-0 mt-0.5">
-                                  <Award className="w-5 h-5 text-amber-300" />
+                              <div className="flex items-start gap-2.5">
+                                <div className="p-2 rounded-xl bg-slate-700 text-white flex items-center justify-center shadow-md shrink-0 mt-0.5">
+                                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
                                 </div>
-                                <div className="space-y-0.5 min-w-0">
-                                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight m-0">
+                                <div className="space-y-0.5 min-w-0 text-left">
+                                  <h3 className="font-extrabold text-xs sm:text-sm md:text-base text-slate-900 tracking-tight m-0">
                                     Pagar Inscripción de Propuesta
                                   </h3>
-                                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-normal m-0">
-                                    Para ingresar en la {currentFinanzasSession?.entryFee === 100 || currentSession?.title?.includes('Emprendedor') || currentSession?.title?.includes('Bronce') || currentSession?.title?.includes('CASUAL') ? 'Round CASUAL & LIFESTYLE' : (currentFinanzasSession?.entryFee === 1000 || currentSession?.title?.includes('Empresar') || currentSession?.title?.includes('Acero') || currentSession?.title?.includes('Glamour')) ? 'Ronda Glamour ✨' : (currentSession?.title || 'mesa de inversión')}, es obligatorio asignar uno de tus proyectos creados. Una vez asignado pulse en Disparar Pago de {feeFormatted} y Acceder a Votaciones.
+                                  <p className="text-[10.5px] sm:text-[11px] text-slate-500 font-medium leading-normal m-0">
+                                    Para ingresar en la {currentSession?.title || 'mesa de inversión'}, es obligatorio asignar uno de tus proyectos creados. Una vez asignado pulse en Disparar Pago de {feeFormatted} y Acceder a Votaciones.
                                   </p>
                                 </div>
                               </div>
 
                               {/* Form: Select user proposal */}
-                              <div className="space-y-2 pt-1">
-                                <label className="text-[10px] sm:text-[11px] font-black uppercase text-slate-700 tracking-wider block">
+                              <div className="space-y-1.5 pt-0.5 text-left">
+                                <label className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-700 tracking-wider block">
                                   SELECCIONA CUÁL DE TUS PROYECTOS VAS A INSCRIBIR:
                                 </label>
 
                                 <select
                                   value={selectedInscriptionProjectId}
                                   onChange={(e) => setSelectedInscriptionProjectId(e.target.value)}
-                                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold focus:outline-none focus:border-indigo-500 shadow-xs cursor-pointer"
+                                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-[11px] sm:text-xs text-slate-800 font-bold focus:outline-none focus:border-indigo-500 shadow-2xs cursor-pointer truncate"
                                 >
                                   {defaultInscriptionProposals.map(proj => (
                                     <option key={proj.id} value={proj.id}>
@@ -26119,7 +26368,7 @@ try {
                                 </select>
 
                                 {/* Project details summary card */}
-                                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1.5 leading-relaxed font-sans">
+                                <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200 text-[10.5px] sm:text-xs text-slate-700 space-y-1 leading-relaxed font-sans">
                                   <p className="m-0">
                                     <strong className="text-slate-900">🎯 Objetivo:</strong> {selectedProj.objective}
                                   </p>
@@ -26129,22 +26378,93 @@ try {
                                 </div>
                               </div>
 
+                              {/* Arrival Order Controller for Adriana Lima */}
+                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 sm:p-3 space-y-2 text-left">
+                                <div className="flex items-center justify-between gap-1 flex-wrap">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs">⏱️</span>
+                                    <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-slate-800 tracking-wider">
+                                      Orden de Llegada (Posiciones 1 a 10)
+                                    </span>
+                                  </div>
+                                  <span className="text-[9.5px] font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-md shadow-2xs">
+                                    Adriana Lima: Puesto #{targetUserArrivalSlot + 1} TÚ
+                                  </span>
+                                </div>
+
+                                <p className="text-[10px] text-slate-600 leading-snug m-0">
+                                  Los participantes ocupan posiciones del 1 al 10 por orden de llegada según el momento en que se hace clic en <strong>Disparar Pago</strong>. Puedes pulsar en cualquier puesto para simular ese momento exacto:
+                                </p>
+
+                                {/* Real-time indicator + 10 quick-select position pills */}
+                                <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedArrivalSlot(null)}
+                                    className={`px-2 py-1 rounded-lg text-[9px] font-black border transition cursor-pointer flex items-center gap-1 shadow-2xs ${
+                                      selectedArrivalSlot === null
+                                        ? 'bg-emerald-600 text-white border-emerald-700 ring-1 ring-emerald-400'
+                                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                                    }`}
+                                    title="Usar orden de llegada en tiempo real según el segundo del clic"
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+                                    <span>⏱️ Tiempo Real (#{liveArrivedPeerCount + 1})</span>
+                                  </button>
+
+                                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((sIdx) => {
+                                    const isSelected = targetUserArrivalSlot === sIdx;
+                                    return (
+                                      <button
+                                        key={sIdx}
+                                        type="button"
+                                        onClick={() => setSelectedArrivalSlot(sIdx)}
+                                        className={`h-6.5 px-1.5 rounded-lg text-[9px] font-black border transition cursor-pointer flex items-center justify-center font-mono ${
+                                          isSelected
+                                            ? 'bg-slate-900 text-amber-300 border-slate-900 shadow-xs ring-2 ring-amber-400 scale-105'
+                                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                                        }`}
+                                        title={`Simular clic en momento de llegada #${sIdx + 1} (Turno ${sIdx + 1} de 10)`}
+                                      >
+                                        #{sIdx + 1}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1.5 text-[9.5px]">
+                                  <img
+                                    src={userProfile?.avatar || "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650"}
+                                    alt="Adriana Lima"
+                                    className="w-5 h-5 rounded-full object-cover border border-emerald-500 shrink-0"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <div className="min-w-0 flex-1 truncate text-left">
+                                    <span className="font-bold text-slate-800">Adriana Lima (Tú)</span>
+                                    <span className="text-slate-500 ml-1">
+                                      estará en la posición <strong className="text-emerald-700 font-mono">#{targetUserArrivalSlot + 1}</strong> de la ronda (Turno {targetUserArrivalSlot + 1} de exposición).
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
                               {/* Footer Action Bar */}
-                              <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                                <div className="flex items-baseline gap-1.5 text-xs text-slate-600 font-medium">
+                              <div className="pt-2.5 border-t border-slate-200 flex flex-col gap-2 w-full">
+                                <div className="flex items-baseline justify-between w-full text-xs text-slate-600 font-medium">
                                   <span>Precio de inscripción:</span>
-                                  <strong className="text-sm sm:text-base font-black font-mono text-slate-900">
+                                  <strong className="text-xs sm:text-sm md:text-base font-black font-mono text-slate-900">
                                     {feeFormatted}
                                   </strong>
                                 </div>
 
                                 <button
                                   type="button"
-                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, activeFee)}
-                                  className="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs sm:text-sm px-5 py-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700"
+                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, activeFee, targetUserArrivalSlot)}
+                                  className="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700 text-center"
+                                  id="btn-disparar-pago-inscribir-mesa"
                                 >
-                                  <Play className="w-3.5 h-3.5 fill-current text-amber-400" />
-                                  <span>Disparar Pago de {feeFormatted} y Acceder a Votaciones</span>
+                                  <Play className="w-3.5 h-3.5 fill-current text-amber-400 shrink-0" />
+                                  <span className="truncate">Disparar Pago de {feeFormatted} • Acceder en Puesto #{targetUserArrivalSlot + 1} TÚ</span>
                                 </button>
                               </div>
                             </div>
@@ -26155,7 +26475,7 @@ try {
                       (() => {
                         const scrutinyVotesCompleted = scrutinyVotesCount;
                         return (
-                      <div className="absolute inset-0 w-full h-full bg-white p-4 sm:p-6 text-slate-800 space-y-4 font-sans text-left overflow-y-auto animate-fade-in z-[200] select-text pb-20 pointer-events-auto">
+                      <div className="absolute inset-0 w-full max-w-full h-full bg-white p-3.5 sm:p-5 text-slate-800 space-y-4 font-sans text-left overflow-y-auto overflow-x-hidden animate-fade-in z-[200] select-text pb-20 pointer-events-auto box-border">
                         {/* Notice bar */}
                         <div className="bg-rose-50 border border-rose-200 p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-rose-800">
                           <div className="flex items-center gap-2">
@@ -26546,61 +26866,49 @@ try {
                           {/* 🏢 CENTRAL STAGE: ACTIVE PARTICIPANT EXPOSITION & 5-MINUTE COUNTDOWN */}
                           <div className="w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[390px] md:max-w-[430px] mx-auto mt-[76px] bg-[#0e1628]/95 border-2 border-emerald-500/60 rounded-2xl p-3 sm:p-4 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
                             {(() => {
-                              const rawActiveUser = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || TRABAJADORES_USERS[0];
-                              const currentUserId = userProfile?.id || '';
-                              const currentUserName = userProfile?.name || '';
-                              const currentUserUsername = userProfile?.username || '';
-                              const hasPaidThisSession = (
-                                localStorage.getItem(`finanzas_paid_${currentFinanzasSession?.id}`) === 'true' ||
-                                (currentFinanzasSession?.id === 'sess-trabajadores-1' && localStorage.getItem('finanzas_paid_sess_trabajadores_1') === 'true')
-                              );
-                              const isUserInCurrentParticipants = (currentFinanzasSession?.participants || []).some(
-                                p => (currentUserId && p.id === currentUserId && p.id !== 'trab-10' && p.id !== 'trab-9') || 
-                                     (currentUserUsername && p.username === currentUserUsername && p.username !== 'marina_social' && p.username !== 'maria_soler_social' && p.username !== 'daniel_3d_moda') || 
-                                     (currentUserName && p.name === currentUserName && p.name !== 'Marina Soler' && p.name !== 'Maria Soler' && !p.name?.includes('Soler') && !p.name?.includes('Morales')) ||
-                                     p.id === 'user-adriana' ||
-                                     p.name === 'Adriana Lima' ||
-                                     (p.role && (p.role.includes('(10º Participante)') || p.role.includes('(Tú)')))
-                              );
-                              const isUserParticipatingInCurrent = hasPaidThisSession && isUserInCurrentParticipants;
+                              // Find matching active participant from currentSessionParticipants10
+                              let activeUser = currentSessionParticipants10[0];
 
-                              const sessionList = currentFinanzasSession?.participants || [];
-                              const sessionIndex = sessionList.findIndex(
-                                p => p.id === rawActiveUser.id || (p.name && p.name === rawActiveUser.name)
-                              );
-                              const presentingIndex = finanzasPresentationQueue.findIndex(
-                                item => item.id === rawActiveUser.id || (item.name && item.name === rawActiveUser.name)
-                              );
+                              if (isVotingPhaseActive && !selectedFinanzasUser) {
+                                activeUser = currentSessionParticipants10[9] || currentSessionParticipants10[currentSessionParticipants10.length - 1];
+                              } else if (selectedFinanzasUser) {
+                                const matched = currentSessionParticipants10.find(
+                                  p => p.id === selectedFinanzasUser.id || 
+                                       p.name === selectedFinanzasUser.name ||
+                                       (selectedFinanzasUser.name?.includes('Soler') && p.name === 'Adriana Lima')
+                                );
+                                if (matched) {
+                                  activeUser = matched;
+                                } else if (selectedFinanzasUser.name?.includes('Soler') || selectedFinanzasUser.id === 'trab-10') {
+                                  activeUser = currentSessionParticipants10[currentSessionParticipants10.length - 1];
+                                } else {
+                                  activeUser = selectedFinanzasUser;
+                                }
+                              } else {
+                                const presentingQueueIndex = finanzasPresentationQueue.findIndex(
+                                  item => item.status === 'presenting'
+                                );
+                                if (presentingQueueIndex !== -1 && currentSessionParticipants10[presentingQueueIndex]) {
+                                  activeUser = currentSessionParticipants10[presentingQueueIndex];
+                                }
+                              }
 
-                              const isErnestoActive = isUserParticipatingInCurrent && 
-                                rawActiveUser.id !== 'trab-10' && 
-                                !rawActiveUser.name?.includes('Soler') && (
-                                (currentUserId && (rawActiveUser.id === currentUserId || rawActiveUser.id === 'user-adriana')) ||
-                                (currentUserUsername && rawActiveUser.username === currentUserUsername) ||
-                                (currentUserName && rawActiveUser.name === currentUserName) ||
-                                rawActiveUser.id === 'user-adriana' ||
-                                rawActiveUser.name === 'Adriana Lima' ||
-                                rawActiveUser.role?.includes('(Tú)') ||
-                                rawActiveUser.role?.includes('(10º Participante)')
-                              );
+                              if (activeUser.id === 'trab-10' || activeUser.name?.includes('Soler')) {
+                                activeUser = {
+                                  ...activeUser,
+                                  id: 'trab-10',
+                                  name: 'Adriana Lima',
+                                  username: 'adrianalima',
+                                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                  role: 'Community Manager'
+                                };
+                              }
 
-                              const activeUser = isErnestoActive
-                                ? {
-                                    ...rawActiveUser,
-                                    id: userProfile?.id || 'user-adriana',
-                                    name: userProfile?.name || 'Adriana Lima',
-                                    username: userProfile?.username || 'adrianalima',
-                                    avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
-                                    role: 'Usuario Inversor (10º y Última Participante)'
-                                  }
-                                : rawActiveUser;
                               const activeId = activeUser.id;
-
-                              const currentParticipantNumber = isErnestoActive
-                                ? 10
-                                : (presentingIndex !== -1 
-                                    ? presentingIndex + 1 
-                                    : (sessionIndex !== -1 ? sessionIndex + 1 : 1));
+                              const currentParticipantIndex = currentSessionParticipants10.findIndex(
+                                p => p.id === activeUser.id || p.name === activeUser.name
+                              );
+                              const currentParticipantNumber = currentParticipantIndex !== -1 ? currentParticipantIndex + 1 : 1;
 
                               const timerVal = finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300;
                               const minutes = Math.floor(timerVal / 60);
@@ -26608,6 +26916,11 @@ try {
                               const formattedTimer = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                               const progressPercent = Math.max(0, Math.min(100, (timerVal / 300) * 100));
                               const totalVoters = simulatedUserVote ? 10 : 9;
+
+                              const votingMinutes = Math.floor(votingPhaseTimer / 60);
+                              const votingSeconds = votingPhaseTimer % 60;
+                              const formattedVotingTimer = `${String(votingMinutes).padStart(2, '0')}:${String(votingSeconds).padStart(2, '0')}`;
+                              const votingProgressPercent = Math.max(0, Math.min(100, (votingPhaseTimer / 600) * 100));
 
                               return (
                                 <>
@@ -26617,9 +26930,7 @@ try {
                                       <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 shadow-xs">
                                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
                                         <span>
-                                          {isErnestoActive 
-                                            ? '🔴 10º EN EXPOSICIÓN (TÚ • ÚLTIMO TURNO)' 
-                                            : `🔴 TURNO ${currentParticipantNumber} DE 10 • EN EXPOSICIÓN`}
+                                          {`🔴 TURNO ${currentParticipantNumber} DE 10 • EN EXPOSICIÓN`}
                                         </span>
                                       </div>
 
@@ -26660,10 +26971,10 @@ try {
                                         </div>
                                         <div className="text-left min-w-0 flex-1">
                                           <h3 className="text-white text-base sm:text-lg font-black tracking-tight leading-tight m-0 truncate">
-                                            {isErnestoActive ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : activeUser.name}
+                                            {activeUser.name}
                                           </h3>
                                           <span className="text-slate-300 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate mt-0.5">
-                                            {isErnestoActive ? 'Usuario Inversor (10º y Última Participante)' : (activeUser.role || 'Participante')}
+                                            {activeUser.role || 'Community Manager'}
                                           </span>
                                           <span className="text-emerald-400 text-[9px] sm:text-[9.5px] font-bold block mt-0.5">
                                             Exposición de 5 minutos en directo
@@ -26671,7 +26982,7 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* ⏱️ Prominent 5-Minute Countdown Marker */}
+                                      {/* ⏱️ Prominent 5-Minute Countdown Marker (image.png style with white pill timer) */}
                                       <div className="w-full bg-[#070b14] border-2 border-rose-600/70 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-1.5 shadow-[inset_0_2px_12px_rgba(0,0,0,0.8)] box-border">
                                         <div className="flex items-center justify-between gap-2">
                                           <div className="flex items-center gap-1.5 text-left">
@@ -26687,21 +26998,21 @@ try {
                                               const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
                                               const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
                                               const now = Date.now();
-                                              // Fast forward to 2998 seconds (2 seconds left in 50-minute exposition phase)
+                                              // Fast forward to 2998 seconds (2 seconds left in 50-minute exposition phase, Adriana Lima finishes in 2s)
                                               localStorage.setItem(sessionStartKey, String(now - (2998 * 1000)));
                                               setFinanzasTimers(prev => ({
                                                 ...prev,
                                                 [activeUser.id]: 2
                                               }));
                                             }}
-                                            title="Cuenta atrás (Clic para acelerar a 2s y ver apertura automática de z.png)"
-                                            className="bg-[#0b101d] hover:bg-slate-900 border border-rose-500 text-[#fe2c55] font-mono text-lg sm:text-2xl font-black px-3.5 py-1 rounded-xl tracking-wider shadow-[0_0_15px_rgba(254,44,85,0.35)] animate-pulse cursor-pointer transition active:scale-95"
+                                            title="Cuenta atrás de 5 minutos (Clic para acelerar y finalizar exposición de Adriana Lima)"
+                                            className="bg-white hover:bg-slate-100 text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 py-1 sm:py-1.5 rounded-2xl tracking-wider shadow-lg border border-white/80 animate-pulse cursor-pointer transition active:scale-95 select-none"
                                           >
                                             {formattedTimer}
                                           </button>
                                           <div className="text-right">
                                             <span className="text-[8.5px] text-slate-400 block font-bold uppercase tracking-wider">RONDA</span>
-                                            <span className="font-mono text-emerald-400 font-black text-[10px]">
+                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px]">
                                               {currentParticipantNumber}/10 (50m)
                                             </span>
                                           </div>
@@ -26779,39 +27090,119 @@ try {
                                     </>
                                   ) : (
                                     <>
-                                      {/* 🗳️ FASE FINAL DE VOTACIÓN (10 MINUTOS) */}
-                                      <div className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/60 text-amber-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 animate-pulse">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                                        <span>🗳️ FASE FINAL DE VOTACIÓN Y DECISIÓN</span>
+                                      {/* 🗳️ FASE FINAL DE VOTACIÓN (10 MINUTOS TRAS EXPOSICIÓN DE ADRIANA LIMA) */}
+                                      <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/60 text-rose-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 shadow-xs animate-pulse">
+                                        <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                                        <span>🗳️ EXPOSICIÓN FINALIZADA • FASE DE VOTACIÓN</span>
                                       </div>
 
-                                      <div className="text-center mb-1.5">
-                                        <h3 className="text-white text-sm sm:text-base font-black tracking-wide leading-tight m-0">
-                                          10 EXPOSICIONES CONCLUIDAS (50 MIN)
-                                        </h3>
-                                        <p className="text-slate-300 text-[9.5px] sm:text-[10px] font-bold mt-1 m-0">
-                                          Tiempo para deliberar y votar por el proyecto ganador:
-                                        </p>
-                                      </div>
-
-                                      {/* ⏱️ Prominent 10-minute voting countdown clock */}
-                                      <div className="mt-1 w-full bg-[#070b14] border-2 border-amber-500/70 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2 shadow-inner">
-                                        <div className="flex items-center gap-1.5 text-left">
-                                          <span className="text-base">⏳</span>
-                                          <div>
-                                            <span className="text-[8.5px] text-amber-400 font-black uppercase tracking-wider block">TIEMPO VOTACIÓN</span>
-                                            <span className="text-[10px] text-slate-200 font-bold">10 min final</span>
-                                          </div>
-                                        </div>
-                                        <div className="bg-[#0b101d] border border-amber-500 text-amber-300 font-mono text-base sm:text-xl font-black px-3.5 py-1 rounded-xl tracking-wider shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse">
-                                          {`${String(Math.floor(votingPhaseTimer / 60)).padStart(2, '0')}:${String(votingPhaseTimer % 60).padStart(2, '0')}`}
-                                        </div>
-                                        <div className="text-right">
-                                          <span className="text-[8.5px] text-slate-400 block font-bold uppercase tracking-wider">VOTOS</span>
-                                          <span className="font-mono text-emerald-400 font-black text-[10px]">
-                                            {totalVoters}/10
+                                      {/* Profile Spotlight for Adriana Lima (the 10th and last presenter who just finished) */}
+                                      <div className="flex items-center justify-center gap-3 mb-2 w-full box-border">
+                                        <div className="relative shrink-0">
+                                          <img 
+                                            src={activeUser.avatar} 
+                                            alt={activeUser.name}
+                                            className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-rose-500 shadow-xl ring-2 ring-rose-500/40"
+                                            referrerPolicy="no-referrer"
+                                          />
+                                          <span className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
+                                            VOTACIÓN
                                           </span>
                                         </div>
+                                        <div className="text-left min-w-0 flex-1">
+                                          <h3 className="text-white text-base sm:text-lg font-black tracking-tight leading-tight m-0 truncate">
+                                            {activeUser.name}
+                                          </h3>
+                                          <span className="text-slate-300 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate mt-0.5">
+                                            {activeUser.role || 'Community Manager'} (10ª y última exposición)
+                                          </span>
+                                          <span className="text-emerald-400 text-[9.5px] sm:text-[10px] font-bold block mt-0.5">
+                                            10 Exposiciones Concluidas (50 min)
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* ⏱️ EXACT IMAGE.PNG COUNTDOWN WIDGET: 10-MINUTE COUNTDOWN & FRASE SOLICITADA */}
+                                      <div className="w-full bg-[#070b14] border-2 border-rose-600 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-[0_0_20px_rgba(254,44,85,0.3)] box-border" id="countdown-card-image-png">
+                                        <div className="flex items-center justify-between gap-2">
+                                          <div className="flex items-center gap-1.5 text-left">
+                                            <span className="text-sm">⏱️</span>
+                                            <div>
+                                              <span className="text-[8.5px] text-slate-400 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
+                                              <span className="text-[10px] text-slate-200 font-extrabold">10 min votación</span>
+                                            </div>
+                                          </div>
+
+                                          {/* White pill timer display matching image.png */}
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
+                                              const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
+                                              const now = Date.now();
+                                              // Fast forward to 3598 seconds (2 seconds left in 10-minute voting phase)
+                                              localStorage.setItem(sessionStartKey, String(now - (3598 * 1000)));
+                                              setVotingPhaseTimer(2);
+                                            }}
+                                            title="Cuenta atrás de 10 minutos (Clic para acelerar a 2s para ver recuento de votos)"
+                                            className="bg-white hover:bg-slate-100 text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 py-1 sm:py-1.5 rounded-2xl tracking-wider shadow-lg border border-white/80 animate-pulse cursor-pointer transition active:scale-95 select-none"
+                                          >
+                                            {formattedVotingTimer}
+                                          </button>
+
+                                          <div className="text-right">
+                                            <span className="text-[8.5px] text-slate-400 block font-bold uppercase tracking-wider">RONDA</span>
+                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px]">
+                                              10/10 (10m)
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Frase solicitada por el usuario: Tienen 10 minutos para votar. */}
+                                        <div className="w-full text-center py-1.5 px-2 bg-rose-600/20 border border-rose-500/60 rounded-xl shadow-xs">
+                                          <span className="text-white text-xs sm:text-[13px] font-black tracking-wide uppercase font-sans drop-shadow-sm">
+                                            Tienen 10 minutos para votar.
+                                          </span>
+                                        </div>
+
+                                        {/* Visual Progress Bar matching image.png */}
+                                        <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                                          <div 
+                                            className="bg-gradient-to-r from-emerald-500 via-amber-400 to-[#fe2c55] h-full transition-all duration-1000 ease-linear rounded-full"
+                                            style={{ width: `${votingProgressPercent}%` }}
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {/* Actions during voting phase: Votar Proyectos + Ver Proyecto Adriana */}
+                                      <div className="mt-2.5 w-full grid grid-cols-2 gap-2 box-border">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setShowVotingProjectsModal(true);
+                                            setVotingProjectSlideIndex(0);
+                                          }}
+                                          className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-rose-400/80 box-border"
+                                        >
+                                          <span>🗳️</span>
+                                          <span className="truncate">Votar Proyectos</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const rawTarget = activeUser || selectedFinanzasUser || currentSessionParticipants10[9] || currentFinanzasSession?.participants?.[9] || FINANZAS_USERS[9];
+                                            setSelectedFinanzasUser(rawTarget);
+                                            setActiveFinanzasPopupUser(rawTarget);
+                                            setDetailProjectUser(rawTarget);
+                                            setShowQueueInPopup(false);
+                                            setShowProjectDetailsInPopup(true);
+                                          }}
+                                          className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 box-border"
+                                        >
+                                          <span>📋</span>
+                                          <span className="truncate">Ver Proyecto</span>
+                                        </button>
                                       </div>
                                     </>
                                   )}
@@ -26836,7 +27227,11 @@ try {
 
                           {/* Participant Grid & Action buttons panel - reveals on hover at bottom */}
                           <div 
-                            className="flex flex-col gap-1 sm:gap-1.5 w-full max-w-full min-w-0 bg-slate-950/95 backdrop-blur-md p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl border border-slate-800/90 shadow-[0_16px_50px_rgba(0,0,0,0.9)] px-1.5 sm:px-2.5 mx-auto box-border opacity-0 translate-y-3 pointer-events-none group-hover/bottom-participants:opacity-100 group-hover/bottom-participants:translate-y-0 group-hover/bottom-participants:pointer-events-auto transition-all duration-300 ease-out" 
+                            className={`flex flex-col gap-1.5 sm:gap-2 w-full max-w-[360px] xs:max-w-[420px] sm:max-w-[460px] min-w-0 bg-slate-950/95 backdrop-blur-md p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-slate-800/90 shadow-[0_16px_50px_rgba(0,0,0,0.9)] px-2 sm:px-2.5 mx-auto box-border transition-all duration-300 ease-out ${
+                              forceShowParticipantsPanel 
+                                ? 'opacity-100 translate-y-0 pointer-events-auto' 
+                                : 'opacity-0 translate-y-3 pointer-events-none group-hover/bottom-participants:opacity-100 group-hover/bottom-participants:translate-y-0 group-hover/bottom-participants:pointer-events-auto'
+                            }`}
                             id="finanzas-live-participants-panel-channel"
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -26857,108 +27252,42 @@ try {
 
                             {/* Grid of participants in current active session (10 full distinct participants in 2x5 grid) */}
                             {(() => {
-                              const currentUserId = userProfile?.id || '';
-                              const currentUserName = userProfile?.name || '';
-                              const currentUserUsername = userProfile?.username || '';
-                              const activeUserObj = {
-                                id: userProfile?.id || 'user-adriana',
-                                name: userProfile?.name || 'Adriana Lima',
-                                username: userProfile?.username || 'adrianalima',
-                                avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
-                                role: 'Usuario Inversor (10º y Última Participante)'
-                              };
-
-                              const rawParticipants = currentFinanzasSession?.participants || [];
-                              const hasPaidThisSession = (
+                              const hasPaidThisSession = Boolean(
+                                isFinanzasUserParticipatingState ||
+                                userPaidSessions[currentFinanzasSession?.id || ''] ||
+                                (currentFinanzasSession?.id === 'sess-trabajadores-1' && (userPaidSessions['sess-trabajadores-1'] || localStorage.getItem('finanzas_paid_sess_trabajadores_1') === 'true')) ||
                                 localStorage.getItem(`finanzas_paid_${currentFinanzasSession?.id}`) === 'true' ||
-                                (currentFinanzasSession?.id === 'sess-trabajadores-1' && localStorage.getItem('finanzas_paid_sess_trabajadores_1') === 'true')
+                                localStorage.getItem('finanzas_paid_sess_trabajadores_1') === 'true' ||
+                                localStorage.getItem('finanzas_user_participating') === 'true'
                               );
-                              const isUserInCurrentSessionParticipants = rawParticipants.some(
-                                p => (currentUserId && p.id === currentUserId && p.id !== 'trab-10' && p.id !== 'trab-9') || 
-                                     (currentUserUsername && p.username === currentUserUsername && p.username !== 'marina_social' && p.username !== 'maria_soler_social' && p.username !== 'daniel_3d_moda') || 
-                                     (currentUserName && p.name === currentUserName && p.name !== 'Marina Soler' && p.name !== 'Maria Soler' && !p.name?.includes('Soler') && !p.name?.includes('Morales')) ||
-                                     p.id === 'user-adriana' ||
-                                     p.name === 'Adriana Lima' ||
-                                     (p.role && (p.role.includes('(10º Participante)') || p.role.includes('(Tú)')))
-                              );
-                              const isUserParticipating = hasPaidThisSession && isUserInCurrentSessionParticipants;
-
-                              const fallbackOthers = currentFinanzasSession?.id?.includes('empresarios')
-                                ? EMPRESARIOS_USERS
-                                : (currentFinanzasSession?.id?.includes('trabajadores')
-                                    ? TRABAJADORES_USERS
-                                    : (currentFinanzasSession?.id?.includes('topmodels')
-                                        ? TOPMODELS_USERS
-                                        : (currentFinanzasSession?.id?.includes('inversores')
-                                            ? INVERSORES_USERS
-                                            : (currentFinanzasSession?.id?.includes('millonarios')
-                                                ? MILLONARIOS_USERS
-                                                : FINANZAS_USERS))));
-
-                              const rawGridList = rawParticipants.length >= 10 
-                                ? rawParticipants.slice(0, 10) 
-                                : fallbackOthers.slice(0, 10);
-
-                              const gridParticipants: Array<any> = rawGridList.map((p: any, pIdx: number) => {
-                                // In Streetwear & Urban: slot 8 (#9) is Maria Soler, and slot 9 (#10) is Adriana Lima (Tú) ONLY when user has paid and is participating
-                                if (currentFinanzasSession?.id === 'sess-trabajadores-1') {
-                                  if (isUserParticipating) {
-                                    if (pIdx === 8) {
-                                      return TRABAJADORES_USERS[9]; // Maria Soler
-                                    }
-                                    if (pIdx === 9) {
-                                      return activeUserObj; // Adriana Lima (Tú)
-                                    }
-                                  } else {
-                                    return TRABAJADORES_USERS[pIdx] || p;
-                                  }
-                                } else {
-                                  if (isUserParticipating && (pIdx === 9 || (currentUserId && p.id === currentUserId))) {
-                                    return activeUserObj;
-                                  }
-                                }
-                                return p;
-                              });
+                              const isUserParticipating = hasPaidThisSession;
+                              const gridParticipants = currentSessionParticipants10;
 
                               return (
                                 <>
-                                  <div className="grid grid-cols-5 gap-1 xs:gap-1.5 pb-0.5 pt-0.5 select-none w-full max-w-full min-w-0 box-border items-stretch" id="finanzas-live-grid-2x5-channel">
-                                    {gridParticipants.map((user, idx) => {
-                                      const isErnesto = isUserParticipating && 
-                                        user.id !== 'trab-10' && 
-                                        !user.name?.includes('Soler') && (
-                                        (currentUserId && user.id === currentUserId) ||
-                                        (currentUserName && user.name === currentUserName) ||
-                                        user.id === 'user-adriana' ||
-                                        user.name === 'Adriana Lima' ||
-                                        user.role?.includes('(Tú)') ||
-                                        user.role?.includes('(10º Participante)') ||
-                                        idx === 9
-                                      );
-                                      const userObj = isErnesto ? activeUserObj : user;
+                                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2 pb-1 pt-1 select-none w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] mx-auto box-border items-center justify-center" id="finanzas-live-grid-2x5-channel">
+                                    {gridParticipants.map((userObj, idx) => {
                                       const isChosenInSpotlight = (
                                         (selectedFinanzasUser && (
                                           selectedFinanzasUser.id === userObj.id || 
                                           selectedFinanzasUser.name === userObj.name || 
-                                          (isErnesto && (selectedFinanzasUser.id === 'user-adriana' || selectedFinanzasUser.id === currentUserId || selectedFinanzasUser.name === 'Adriana Lima' || selectedFinanzasUser.name === userProfile?.name))
+                                          (selectedFinanzasUser.name?.includes('Soler') && userObj.name === 'Adriana Lima')
                                         )) ||
                                         (activeFinanzasPopupUser && (
                                           activeFinanzasPopupUser.id === userObj.id || 
                                           activeFinanzasPopupUser.name === userObj.name || 
-                                          (isErnesto && (activeFinanzasPopupUser.id === 'user-adriana' || activeFinanzasPopupUser.id === currentUserId || activeFinanzasPopupUser.name === 'Adriana Lima' || activeFinanzasPopupUser.name === userProfile?.name))
+                                          (activeFinanzasPopupUser.name?.includes('Soler') && userObj.name === 'Adriana Lima')
                                         )) ||
                                         (idx === 0 && !selectedFinanzasUser && !activeFinanzasPopupUser)
                                       );
 
                                       return (
                                         <div
-                                          key={(userObj.id || user.id) + '-' + idx}
+                                          key={(userObj.id) + '-' + idx}
                                           onClick={() => {
                                             const turnIdx = idx;
-                                            const isErnestoTarget = isErnesto;
-                                            const targetUserObj = isErnestoTarget ? activeUserObj : userObj;
-                                            setSelectedFinanzasUser(targetUserObj);
-                                            setActiveFinanzasPopupUser(targetUserObj);
+                                            setSelectedFinanzasUser(userObj);
+                                            setActiveFinanzasPopupUser(userObj);
                                             setFirstPresenterRevealed(true);
                                             setIsSpeakingPresenterIntro(false);
                                             setIsVoiceIntroPlaying(false);
@@ -26972,22 +27301,22 @@ try {
                                             // Update timers for this presenter (5min = 300s)
                                             setFinanzasTimers(prev => ({
                                               ...prev,
-                                              [targetUserObj.id]: 300
+                                              [userObj.id]: 300
                                             }));
                                             setFinanzasTimerActive({
-                                              [targetUserObj.id]: true
+                                              [userObj.id]: true
                                             });
 
                                             // Update presentation queue statuses
                                             setFinanzasPresentationQueue(prev => {
                                               return prev.map((item, qIdx) => {
                                                 if (qIdx < turnIdx) return { ...item, status: 'finished' as const };
-                                                if (qIdx === turnIdx || item.id === targetUserObj.id) return { ...item, status: 'presenting' as const };
+                                                if (qIdx === turnIdx || item.id === userObj.id) return { ...item, status: 'presenting' as const };
                                                 return { ...item, status: 'waiting' as const };
                                               });
                                             });
 
-                                            const displayName = isErnestoTarget ? `${userProfile?.name || 'Adriana Lima'} (Tú)` : targetUserObj.name;
+                                            const displayName = userObj.name;
                                             const turnNumber = turnIdx + 1;
 
                                             setSystemVoiceNotification({
@@ -27008,20 +27337,16 @@ try {
                                               osc.start();
                                               osc.stop(audioCtx.currentTime + 0.35);
                                             } catch (e) {}
-
-                                            // Speech synthesis removed per user request
                                           }}
-                                          className="relative group/participant-item w-full min-w-0 max-w-full cursor-pointer flex flex-col items-stretch box-border"
+                                          className="relative group/participant-item w-full min-w-0 max-w-full cursor-pointer flex flex-col items-center justify-center box-border"
                                         >
                                           <div
-                                            className={`w-full max-w-full min-w-0 aspect-[4/3] xs:aspect-[1/1] sm:aspect-square rounded-md xs:rounded-lg sm:rounded-xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-end box-border ${
+                                            className={`w-full max-w-full min-w-0 aspect-square min-h-[32px] xs:min-h-[38px] sm:min-h-[46px] md:min-h-[52px] rounded-lg sm:rounded-xl overflow-hidden relative border-2 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-between p-0.5 sm:p-1 box-border ${
                                               isChosenInSpotlight 
-                                                ? 'border-[#fe2c55] ring-2 ring-[#fe2c55]/80 shadow-[0_0_10px_rgba(254,44,85,0.9)]' 
-                                                : isErnesto
-                                                  ? 'border-emerald-400 ring-1 ring-emerald-400/60 hover:border-emerald-300'
-                                                  : 'border-slate-700/70 hover:border-white/80'
+                                                ? 'border-[#fe2c55] ring-2 ring-[#fe2c55]/80 shadow-[0_0_12px_rgba(254,44,85,0.9)]' 
+                                                : 'border-slate-700/70 hover:border-white/80'
                                             }`}
-                                            title={`Ver detalles de ${userObj.name}${isErnesto ? ' (Tú - 10º Participante)' : ''}`}
+                                            title={`Ver detalles de ${userObj.name}`}
                                           >
                                             <img
                                               src={userObj.avatar}
@@ -27029,21 +27354,15 @@ try {
                                               className="absolute inset-0 w-full h-full object-cover"
                                               referrerPolicy="no-referrer"
                                             />
-                                            <span className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full border border-black/50 shadow-sm animate-pulse z-10 ${isErnesto ? 'bg-emerald-400' : 'bg-[#fe2c55]'}`} />
+                                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full border border-black/50 shadow-sm animate-pulse z-10 bg-[#fe2c55]" />
                                             
-                                            {isErnesto ? (
-                                              <span className="absolute top-0.5 left-0.5 bg-emerald-500 text-slate-950 font-black text-[5.5px] xs:text-[6px] sm:text-[7px] px-1 py-0.2 rounded font-mono uppercase tracking-tight shadow z-10">
-                                                #10 TÚ
-                                              </span>
-                                            ) : (
-                                              <span className="absolute top-0.5 left-0.5 bg-black/80 text-white font-black text-[5.5px] xs:text-[6px] sm:text-[7px] px-1 py-0.2 rounded font-mono uppercase tracking-tight z-10">
-                                                #{idx + 1}
-                                              </span>
-                                            )}
+                                            <span className="absolute top-0.5 left-0.5 bg-black/85 text-white font-black text-[6px] xs:text-[7px] sm:text-[8px] px-1 py-0.2 rounded font-mono uppercase tracking-tight z-10 shadow-md">
+                                              #{idx + 1}
+                                            </span>
 
-                                            <div className="relative z-10 w-full bg-slate-950/92 backdrop-blur-xs text-center py-0.5 px-0.5 min-w-0 max-w-full overflow-hidden box-border">
-                                              <span className={`text-[6.5px] xs:text-[7.5px] sm:text-[9px] font-black block truncate leading-tight min-w-0 ${isErnesto ? 'text-emerald-300' : 'text-white'}`}>
-                                                {isErnesto ? (userProfile?.name ? userProfile.name.split(' ')[0] : 'Adriana') : userObj.name.split(' ')[0]}
+                                            <div className="relative z-10 w-full bg-slate-950/92 backdrop-blur-xs text-center py-0.2 sm:py-0.5 px-0.5 min-w-0 max-w-full overflow-hidden rounded box-border">
+                                              <span className="text-[6.5px] xs:text-[7.5px] sm:text-[8.5px] font-black block truncate leading-tight min-w-0 text-white">
+                                                {userObj.name.split(' ')[0]}
                                               </span>
                                             </div>
                                           </div>
@@ -27052,24 +27371,26 @@ try {
                                     })}
                                   </div>
 
-                                  {/* Action buttons: 'Pagar Inscripción' si no participa o badge de participación si participa */}
+                                  {/* Action buttons: Botón para inscribirse en esta sesión (abre la pantalla de inscripción de la captura z.png) y ver proyectos */}
                                   <div className="w-full flex flex-wrap items-center justify-center gap-1.5 mt-0.5 box-border" id="miembros-de-la-sala-btn-container-channel">
-                                    {isUserParticipating ? (
-                                      <div className="bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 font-extrabold text-[8px] xs:text-[8.5px] sm:text-[10px] px-2.5 py-1 rounded-full flex items-center justify-center gap-1 uppercase tracking-wider shadow-sm box-border">
-                                        <span>✅ ESTÁS PARTICIPANDO EN ESTA SESIÓN</span>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={handleUserJoinCurrentSession}
-                                        className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 active:scale-95 text-white font-black text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border border-pink-400 flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider font-sans shadow-md max-w-full truncate box-border animate-pulse"
-                                        id="btn-pagar-inscripcion-round-streetwear"
-                                        title={`Pagar inscripción de ${currentFinanzasSession?.entryFee || 10}€ para participar en esta sesión`}
-                                      >
-                                        <span className="text-xs shrink-0">💳</span>
-                                        <span className="truncate min-w-0 font-extrabold">PAGAR INSCRIPCIÓN ({currentFinanzasSession?.entryFee || 10}€)</span>
-                                      </button>
-                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (currentFinanzasSession) {
+                                          const idx = activeSessionsOnly.findIndex(s => s.id === currentFinanzasSession.id);
+                                          if (idx !== -1) {
+                                            setActiveFinanzasSessionIndex(idx);
+                                          }
+                                        }
+                                        setShowFinanzasInscriptionInChannel(true);
+                                      }}
+                                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-black text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border border-emerald-400 flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans shadow-md max-w-full truncate box-border animate-pulse"
+                                      id="btn-inscribirse-en-esta-sesion"
+                                      title={`Inscribirse en esta sesión (${currentFinanzasSession?.entryFee || 100}€)`}
+                                    >
+                                      <span className="text-xs shrink-0">✍️</span>
+                                      <span className="truncate min-w-0 font-extrabold">INSCRIBIRSE EN ESTA SESIÓN ({currentFinanzasSession?.entryFee || 100}€)</span>
+                                    </button>
 
                                     <button
                                       type="button"
@@ -29237,64 +29558,68 @@ try {
                                 </div>
                               </div>
 
-                              {/* 📷 IMÁGENES O VIDEOS DE REFERENCIA (MATCHING image.png) */}
-                              <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-2xs">
+                              {/* 📷 IMÁGENES Y VÍDEOS */}
+                              <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 shadow-2xs">
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-sm">📷</span>
-                                    <span className="text-[10.5px] font-black text-slate-900 uppercase tracking-wider">
-                                      IMÁGENES O VIDEOS DE REFERENCIA
+                                    <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                                      IMÁGENES Y VÍDEOS
                                     </span>
                                   </div>
-                                  <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                  <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
                                     {(customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.length || 0} Archivos
                                   </span>
                                 </div>
 
-                                <p className="text-[10px] text-slate-500 leading-normal m-0 font-medium">
-                                  Sube o enlaza imágenes inspiracionales, bocetos, vídeos de desfiles anteriores o books para que los inversionistas analicen la estética visual.
+                                <p className="text-[11px] text-slate-600 leading-normal m-0 font-medium">
+                                  Fotografías y vídeos del proyecto para los inversores y patrocinadores de la sesión.
                                 </p>
 
-                                {/* Media Thumbnails Grid */}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                                  {(customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.map((item) => (
-                                    <div key={item.id} className="relative group rounded-xl overflow-hidden border border-slate-300 bg-slate-900 aspect-square shadow-2xs">
-                                      {item.type === 'video' ? (
-                                        <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
-                                          <video src={item.url} className="w-full h-full object-cover opacity-85" muted loop autoPlay playsInline />
-                                          <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5">
-                                            <span className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow-md">▶</span>
-                                            <span className="text-[8.5px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded uppercase">{item.title}</span>
+                                {/* Media Thumbnails Grid - Fotografías en tamaño mayor */}
+                                {((customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.length || 0) > 0 && (
+                                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                                    {(customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.map((item) => (
+                                      <div key={item.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 hover:border-slate-300 bg-slate-900 w-28 h-28 sm:w-36 sm:h-36 shrink-0 aspect-square shadow-sm">
+                                        {item.type === 'video' ? (
+                                          <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
+                                            <video src={item.url} className="w-full h-full object-cover opacity-85" muted loop autoPlay playsInline />
+                                            <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5">
+                                              <span className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow-md">▶</span>
+                                              <span className="text-[8.5px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded uppercase">{item.title}</span>
+                                            </div>
                                           </div>
-                                        </div>
-                                      ) : (
-                                        <div className="relative w-full h-full">
-                                          <img src={item.url} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                          <div className="absolute bottom-0 inset-x-0 p-1 bg-gradient-to-t from-black/80 to-transparent">
-                                            <span className="text-[8.5px] font-black text-white truncate block">{item.title}</span>
+                                        ) : (
+                                          <div className="relative w-full h-full">
+                                            <img src={item.url} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                            <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                                              <span className="text-[9px] font-black text-white truncate block">{item.title}</span>
+                                            </div>
                                           </div>
-                                        </div>
-                                      )}
+                                        )}
 
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                          setCustomProjectMedia(prev => ({
-                                            ...prev,
-                                            [curKey]: (prev[curKey] || []).filter(m => m.id !== item.id)
-                                          }));
-                                        }}
-                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center text-[9px] transition cursor-pointer z-10"
-                                        title="Eliminar"
-                                      >
-                                        ✕
-                                      </button>
-                                    </div>
-                                  ))}
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
+                                            setCustomProjectMedia(prev => ({
+                                              ...prev,
+                                              [curKey]: (prev[curKey] || []).filter(m => m.id !== item.id)
+                                            }));
+                                          }}
+                                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] transition cursor-pointer z-10"
+                                          title="Eliminar"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
 
-                                  {/* Desktop File Upload Dropzone (Matching image.png) */}
-                                  <label className="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-xl p-2.5 flex flex-col items-center justify-center text-center cursor-pointer transition aspect-square group">
+                                {/* Botón de subir archivo desde el equipo debajo de las fotos con diseño cuadrado */}
+                                <div className="pt-2">
+                                  <label className="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-2xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition w-32 h-32 sm:w-36 sm:h-36 aspect-square group shadow-2xs">
                                     <input 
                                       type="file" 
                                       accept="image/*,video/*" 
@@ -29315,14 +29640,14 @@ try {
                                         }
                                       }}
                                     />
-                                    <span className="w-7 h-7 rounded-full bg-white group-hover:bg-rose-100 text-slate-600 group-hover:text-rose-600 flex items-center justify-center text-xs mb-1 transition shadow-2xs">
-                                      ☁️
+                                    <span className="w-9 h-9 rounded-full bg-white group-hover:bg-rose-100 text-slate-700 group-hover:text-rose-600 flex items-center justify-center text-sm mb-1.5 transition shadow-2xs">
+                                      <Upload className="w-4 h-4" />
                                     </span>
-                                    <span className="text-[9.5px] font-black text-slate-800 leading-tight">
-                                      Subir archivo desde el escritorio
+                                    <span className="text-[10.5px] font-black text-slate-900 leading-tight">
+                                      Subir archivo desde el equipo
                                     </span>
-                                    <span className="text-[8px] text-slate-400 mt-0.5">
-                                      Imágenes (.jpg, .png) y videos (.mp4)
+                                    <span className="text-[8.5px] text-slate-400 mt-1 leading-tight">
+                                      Fotos (.jpg, .png) o vídeos (.mp4)
                                     </span>
                                   </label>
                                 </div>
@@ -29484,21 +29809,21 @@ try {
                                 </p>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs">
+                              <div className="flex flex-col gap-2 w-full">
+                                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs w-full min-w-0 box-border">
                                   <span className="text-[9px] font-bold text-slate-400 uppercase block">Plazo de Ejecución</span>
-                                  <span className="font-extrabold text-slate-800">
+                                  <span className="font-extrabold text-slate-800 break-words">
                                     {getFinanzasProjectDetails(activeFinanzasPopupUser.id).timeline || '6 meses (Q3-Q4 2026)'}
                                   </span>
                                 </div>
-                                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs flex items-center justify-between">
-                                  <div>
+                                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs flex items-center justify-between gap-2 w-full min-w-0 box-border">
+                                  <div className="min-w-0 flex-1">
                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">Documento Adjunto</span>
-                                    <span className="font-extrabold text-slate-800 text-[11px] truncate block max-w-[150px]">
+                                    <span className="font-extrabold text-slate-800 text-[11px] truncate block" title={getFinanzasProjectDetails(activeFinanzasPopupUser.id).documentation || 'Plan-de-Viabilidad-Sostenible.pdf'}>
                                       {getFinanzasProjectDetails(activeFinanzasPopupUser.id).documentation || 'Plan-de-Viabilidad-Sostenible.pdf'}
                                     </span>
                                   </div>
-                                  <span className="text-xs bg-red-50 text-red-700 font-black px-2 py-1 rounded border border-red-100">
+                                  <span className="text-xs bg-red-50 text-red-700 font-black px-2 py-1 rounded border border-red-100 shrink-0">
                                     PDF 📄
                                   </span>
                                 </div>
@@ -29508,52 +29833,41 @@ try {
 
                           {/* SECTION 3: EQUIPO HUMANO / PRESENTADOR */}
                           {(detailModalStep === 'all' || detailModalStep === 'team') && (
-                            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-left animate-fade-in">
-                              <div className="flex items-center gap-3">
+                            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2.5 text-left animate-fade-in w-full min-w-0 box-border">
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                 <img 
                                   src={activeFinanzasPopupUser.avatar} 
                                   alt={activeFinanzasPopupUser.name} 
-                                  className="w-12 h-12 rounded-full object-cover border-2 border-slate-200 shadow-xs shrink-0"
+                                  className="w-11 h-11 rounded-full object-cover border-2 border-slate-200 shadow-xs shrink-0"
                                   referrerPolicy="no-referrer"
                                 />
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider">3. Equipo Humano · Creador/a</span>
-                                  <span className="text-sm font-black text-slate-900">{activeFinanzasPopupUser.name}</span>
-                                  <span className="text-xs font-semibold text-slate-500">@{activeFinanzasPopupUser.username} · {activeFinanzasPopupUser.role}</span>
+                                <div className="flex flex-col text-left min-w-0 flex-1">
+                                  <span className="text-[9.5px] font-black uppercase text-amber-700 tracking-wider truncate">3. Equipo Humano · Creador/a</span>
+                                  <span className="text-sm font-black text-slate-900 truncate leading-tight">{activeFinanzasPopupUser.name}</span>
+                                  <span className="text-xs font-semibold text-slate-500 truncate">@{activeFinanzasPopupUser.username} · {activeFinanzasPopupUser.role}</span>
                                 </div>
                               </div>
-                              <span className="text-[10px] bg-slate-900 text-white font-black px-2.5 py-1 rounded-lg shrink-0">
+                              <span className="text-[9.5px] sm:text-[10px] bg-slate-900 text-white font-black px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
                                 Líder Creativo
                               </span>
                             </div>
                           )}
                         </div>
 
-                        {/* Vote Button at bottom of Project Details (Only exists if user is participating) */}
+                        {/* Vote Button at bottom of Project Details */}
                         {(() => {
-                          const rawParticipants = currentFinanzasSession?.participants || [];
-                          const activeUserObj = {
-                            id: userProfile?.id || 'user-ernesto',
-                            name: userProfile?.name || 'Adriana Lima',
-                            username: userProfile?.username || 'ernestovs',
-                          };
-                          const isUserParticipating = rawParticipants.some(
-                            p => p.id === activeUserObj.id || p.username === activeUserObj.username || p.name === 'Ernesto vs' || p.name === activeUserObj.name
-                          );
-
-                          if (!isUserParticipating) return null;
-
+                          const targetUser = activeFinanzasPopupUser || detailProjectUser || FINANZAS_USERS[0];
                           return (
                             <div className="pt-2 shrink-0">
                               <button
                                 type="button"
                                 onClick={() => {
-                                  handleVoteForProject(activeFinanzasPopupUser);
+                                  handleVoteForProject(targetUser);
                                 }}
                                 className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3 px-4 rounded-full text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition shadow-lg border-0"
                               >
                                 <span className="text-sm">🗳️</span>
-                                <span>VOTAR POR ESTE PROYECTO ({activeFinanzasPopupUser.name.split(' ')[0]})</span>
+                                <span>VOTAR POR ESTE PROYECTO ({targetUser.name?.split(' ')[0] || ''})</span>
                               </button>
                             </div>
                           );
@@ -30126,7 +30440,7 @@ try {
                   </div>
 
                   {/* 3-column Grid of gifts matching image.png */}
-                  <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-amber-500/40">
+                  <div className="flex-1 grid grid-cols-3 gap-2 sm:gap-2.5 overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     {[
                       { name: 'Certificado prof.', icon: '📜', cost: 500 },
                       { name: 'Una estrella', icon: '⭐', cost: 50 },
@@ -31484,6 +31798,8 @@ try {
         sessionTitle={gatheringSessionTitle || "Round STREETWEAR & URBAN"}
         entryFee={gatheringSessionFee || 10}
         participantsList={gatheringParticipantsList || TRABAJADORES_USERS}
+        currentUserProfile={userProfile}
+        userSlotIndex={targetUserArrivalSlot}
         onComplete={handleGatheringComplete}
         onClose={() => setShowParticipantsGatheringModal(false)}
       />
@@ -32249,64 +32565,68 @@ try {
                   </div>
                 </div>
 
-                {/* 📷 IMÁGENES O VIDEOS DE REFERENCIA (MATCHING image.png & z.png) */}
-                <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-2xs">
+                {/* 📷 IMÁGENES Y VÍDEOS */}
+                <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 shadow-2xs">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm">📷</span>
-                      <span className="text-[10.5px] font-black text-slate-900 uppercase tracking-wider">
-                        IMÁGENES O VIDEOS DE REFERENCIA
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                        IMÁGENES Y VÍDEOS
                       </span>
                     </div>
-                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                    <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
                       {(customProjectMedia[detailProjectUser.id] || customProjectMedia['default'])?.length || 0} Archivos
                     </span>
                   </div>
 
-                  <p className="text-[10px] text-slate-500 leading-normal m-0 font-medium">
-                    Sube o enlaza imágenes inspiracionales, bocetos, vídeos de desfiles anteriores o books para que los inversionistas analicen la estética visual.
+                  <p className="text-[11px] text-slate-600 leading-normal m-0 font-medium">
+                    Fotografías y vídeos del proyecto para los inversores y patrocinadores de la sesión.
                   </p>
 
-                  {/* Media Thumbnails Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                    {(customProjectMedia[detailProjectUser.id] || customProjectMedia['default'])?.map((item) => (
-                      <div key={item.id} className="relative group rounded-xl overflow-hidden border border-slate-300 bg-slate-900 aspect-square shadow-2xs">
-                        {item.type === 'video' ? (
-                          <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
-                            <video src={item.url} className="w-full h-full object-cover opacity-85" muted loop autoPlay playsInline />
-                            <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5">
-                              <span className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow-md">▶</span>
-                              <span className="text-[8.5px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded uppercase">{item.title}</span>
+                  {/* Media Thumbnails Grid - Fotografías en tamaño mayor */}
+                  {((customProjectMedia[detailProjectUser.id] || customProjectMedia['default'])?.length || 0) > 0 && (
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                      {(customProjectMedia[detailProjectUser.id] || customProjectMedia['default'])?.map((item) => (
+                        <div key={item.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 hover:border-slate-300 bg-slate-900 w-28 h-28 sm:w-36 sm:h-36 shrink-0 aspect-square shadow-sm">
+                          {item.type === 'video' ? (
+                            <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
+                              <video src={item.url} className="w-full h-full object-cover opacity-85" muted loop autoPlay playsInline />
+                              <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5">
+                                <span className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow-md">▶</span>
+                                <span className="text-[8.5px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded uppercase">{item.title}</span>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="relative w-full h-full">
-                            <img src={item.url} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            <div className="absolute bottom-0 inset-x-0 p-1 bg-gradient-to-t from-black/80 to-transparent">
-                              <span className="text-[8.5px] font-black text-white truncate block">{item.title}</span>
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <img src={item.url} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                                <span className="text-[9px] font-black text-white truncate block">{item.title}</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const curKey = customProjectMedia[detailProjectUser.id] ? detailProjectUser.id : 'default';
-                            setCustomProjectMedia(prev => ({
-                              ...prev,
-                              [curKey]: (prev[curKey] || []).filter(m => m.id !== item.id)
-                            }));
-                          }}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center text-[9px] transition cursor-pointer z-10"
-                          title="Eliminar"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const curKey = customProjectMedia[detailProjectUser.id] ? detailProjectUser.id : 'default';
+                              setCustomProjectMedia(prev => ({
+                                ...prev,
+                                [curKey]: (prev[curKey] || []).filter(m => m.id !== item.id)
+                              }));
+                            }}
+                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] transition cursor-pointer z-10"
+                            title="Eliminar"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                    {/* Desktop File Upload Dropzone (Matching image.png) */}
-                    <label className="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-xl p-2.5 flex flex-col items-center justify-center text-center cursor-pointer transition aspect-square group">
+                  {/* Botón de subir archivo desde el equipo debajo de las fotos con diseño cuadrado */}
+                  <div className="pt-2">
+                    <label className="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-2xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition w-32 h-32 sm:w-36 sm:h-36 aspect-square group shadow-2xs">
                       <input 
                         type="file" 
                         accept="image/*,video/*" 
@@ -32327,14 +32647,14 @@ try {
                           }
                         }}
                       />
-                      <span className="w-7 h-7 rounded-full bg-white group-hover:bg-rose-100 text-slate-600 group-hover:text-rose-600 flex items-center justify-center text-xs mb-1 transition shadow-2xs">
-                        ☁️
+                      <span className="w-9 h-9 rounded-full bg-white group-hover:bg-rose-100 text-slate-700 group-hover:text-rose-600 flex items-center justify-center text-sm mb-1.5 transition shadow-2xs">
+                        <Upload className="w-4 h-4" />
                       </span>
-                      <span className="text-[9.5px] font-black text-slate-800 leading-tight">
-                        Subir archivo desde el escritorio
+                      <span className="text-[10.5px] font-black text-slate-900 leading-tight">
+                        Subir archivo desde el equipo
                       </span>
-                      <span className="text-[8px] text-slate-400 mt-0.5">
-                        Imágenes (.jpg, .png) y videos (.mp4)
+                      <span className="text-[8.5px] text-slate-400 mt-1 leading-tight">
+                        Fotos (.jpg, .png) o vídeos (.mp4)
                       </span>
                     </label>
                   </div>
@@ -32496,21 +32816,21 @@ try {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs">
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs w-full min-w-0 box-border">
                     <span className="text-[9px] font-bold text-slate-400 uppercase block">Plazo de Ejecución</span>
-                    <span className="font-extrabold text-slate-800">
+                    <span className="font-extrabold text-slate-800 break-words">
                       {getFinanzasProjectDetails(detailProjectUser.id).timeline || '6 meses (Fase 1 y 2)'}
                     </span>
                   </div>
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs flex items-center justify-between">
-                    <div>
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs flex items-center justify-between gap-2 w-full min-w-0 box-border">
+                    <div className="min-w-0 flex-1">
                       <span className="text-[9px] font-bold text-slate-400 uppercase block">Documento Adjunto</span>
-                      <span className="font-extrabold text-slate-800 text-[11px] truncate block max-w-[150px]">
+                      <span className="font-extrabold text-slate-800 text-[11px] truncate block" title={getFinanzasProjectDetails(detailProjectUser.id).documentation || 'Plan-Viabilidad-Sostenible.pdf'}>
                         {getFinanzasProjectDetails(detailProjectUser.id).documentation || 'Plan-Viabilidad-Sostenible.pdf'}
                       </span>
                     </div>
-                    <span className="text-xs bg-red-50 text-red-700 font-black px-2 py-1 rounded border border-red-100">
+                    <span className="text-xs bg-red-50 text-red-700 font-black px-2 py-1 rounded border border-red-100 shrink-0">
                       PDF 📄
                     </span>
                   </div>
@@ -32520,21 +32840,21 @@ try {
 
             {/* SECTION 3: EQUIPO HUMANO / PRESENTADOR */}
             {(detailModalStep === 'all' || detailModalStep === 'team') && (
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-left animate-fade-in">
-                <div className="flex items-center gap-3">
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2.5 text-left animate-fade-in w-full min-w-0 box-border">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <img 
                     src={detailProjectUser.avatar} 
                     alt={detailProjectUser.name} 
-                    className="w-12 h-12 rounded-full object-cover border-2 border-slate-200 shadow-xs shrink-0"
+                    className="w-11 h-11 rounded-full object-cover border-2 border-slate-200 shadow-xs shrink-0"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider">3. Equipo Humano · Creador/a</span>
-                    <span className="text-sm font-black text-slate-900">{detailProjectUser.name}</span>
-                    <span className="text-xs font-semibold text-slate-500">@{detailProjectUser.username} · {detailProjectUser.role}</span>
+                  <div className="flex flex-col text-left min-w-0 flex-1">
+                    <span className="text-[9.5px] font-black uppercase text-amber-700 tracking-wider truncate">3. Equipo Humano · Creador/a</span>
+                    <span className="text-sm font-black text-slate-900 truncate leading-tight">{detailProjectUser.name}</span>
+                    <span className="text-xs font-semibold text-slate-500 truncate">@{detailProjectUser.username} · {detailProjectUser.role}</span>
                   </div>
                 </div>
-                <span className="text-[10px] bg-slate-900 text-white font-black px-2.5 py-1 rounded-lg shrink-0">
+                <span className="text-[9.5px] sm:text-[10px] bg-slate-900 text-white font-black px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
                   Líder Creativo
                 </span>
               </div>
@@ -32745,7 +33065,6 @@ function CastingLiveStoryLightbox({
   const [touchStart, setTouchStart] = React.useState<number | null>(null);
   const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
   const lastScrollTime = React.useRef<number>(0);
-  const [isPeekMode, setIsPeekMode] = React.useState(false);
 
   // Close on Escape key to quickly return to background page
   React.useEffect(() => {
@@ -32853,32 +33172,6 @@ function CastingLiveStoryLightbox({
         title="Haz clic en cualquier parte fuera de la historia para ver la página de fondo"
       />
 
-      {/* Top Floating Control Bar to view background or close */}
-      <div className="fixed top-3 sm:top-5 inset-x-0 z-[3030] flex items-center justify-center gap-2.5 pointer-events-auto px-4">
-        <button 
-          type="button"
-          onClick={() => setSelectedCastingLiveStory(null)}
-          className="bg-slate-900/90 hover:bg-black text-white font-semibold text-xs px-4 py-2 rounded-full border border-white/30 backdrop-blur-md shadow-2xl flex items-center gap-2 cursor-pointer transition hover:scale-105 active:scale-95"
-          title="Cerrar historia y ver la página de fondo completa"
-        >
-          <X className="w-4 h-4 text-rose-400 stroke-[2.5]" />
-          <span>Cerrar historia · Ver página de fondo</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsPeekMode(!isPeekMode)}
-          className={`text-xs font-semibold px-3.5 py-2 rounded-full border backdrop-blur-md shadow-2xl flex items-center gap-1.5 cursor-pointer transition hover:scale-105 active:scale-95 ${
-            isPeekMode 
-              ? 'bg-amber-400 text-slate-950 border-amber-300 font-bold shadow-amber-500/30' 
-              : 'bg-black/75 hover:bg-black text-white border-white/30'
-          }`}
-          title="Alternar transparencia para inspeccionar la página de fondo"
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>{isPeekMode ? '👀 Fondo visible (Clic para restaurar)' : '👁️ Ver fondo sin cerrar'}</span>
-        </button>
-      </div>
-
       {/* Top right close button */}
       <button 
         onClick={() => setSelectedCastingLiveStory(null)}
@@ -32904,9 +33197,7 @@ function CastingLiveStoryLightbox({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className={`relative w-[300px] sm:w-[335px] md:w-[345px] h-[490px] sm:h-[540px] md:h-[570px] max-h-[74vh] max-w-[90vw] bg-black rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)] flex flex-col border border-white/20 animate-scale-up shrink-0 select-none pointer-events-auto mx-auto transition-all duration-300 ${
-            isPeekMode ? 'opacity-10 pointer-events-none' : 'opacity-100'
-          }`}
+          className="relative w-[300px] sm:w-[335px] md:w-[345px] h-[490px] sm:h-[540px] md:h-[570px] max-h-[74vh] max-w-[90vw] bg-black rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)] flex flex-col border border-white/20 animate-scale-up shrink-0 select-none pointer-events-auto mx-auto transition-all duration-300 opacity-100"
         >
           <div className="absolute top-3 inset-x-3 z-30 flex gap-1.5 select-none">
             {finalPubStories.map((subItem: any, idx: number) => {
