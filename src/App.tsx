@@ -4213,6 +4213,7 @@ export default function App() {
                 setActiveTabTab(tab);
               }}
               onUpdateUserProfile={handleUpdateProfile}
+              onAddMovement={handleAddMovement}
               onGiftTransaction={handleGiftTransaction}
             />
           </div>

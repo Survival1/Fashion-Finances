@@ -147,6 +147,7 @@ interface CastingLiveSectionProps {
   onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live', targetStoreId?: string) => void;
   onUpdateUserProfile?: (profile: UserSessionProfile) => void;
+  onAddMovement?: (movement: any) => void;
   onGiftTransaction?: (giftCostInCoins: number, recipientName: string, recipientIdOrUsername: string) => void;
   initialSelectedStoreId?: string | null;
   onClearSelectedStoreId?: () => void;
@@ -1588,7 +1589,7 @@ export const TRABAJADORES_USERS = [
   { id: 'trab-7', name: 'Álvaro Díaz', username: 'alvaro_makeup', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional' },
   { id: 'trab-8', name: 'Lucía Navarro', username: 'lucia_produccion', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción' },
   { id: 'trab-9', name: 'Daniel Morales', username: 'daniel_3d_moda', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital' },
-  { id: 'trab-10', name: 'Adriana Lima', username: 'adrianalima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager' }
+  { id: 'trab-10', name: 'Marina Soler', username: 'marinasoler', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Community Manager' }
 ];
 
 export const EMPRESARIOS_USERS = [
@@ -1790,6 +1791,7 @@ export default function CastingLiveSection({
   onGoToModelProfile,
   onNavigateToTab,
   onUpdateUserProfile,
+  onAddMovement,
   onGiftTransaction,
   initialSelectedStoreId,
   onClearSelectedStoreId
@@ -2880,8 +2882,11 @@ export default function CastingLiveSection({
     participants: Array<{ id: string; name: string; username: string; avatar: string; role: string }>;
     status: 'active' | 'completed';
   }>>(() => {
-    // Clear old legacy keys so user only becomes participant upon triggering payment
+    // Clear all lingering participation/paid states so user starts NOT participating until they click to pay
     try {
+      localStorage.removeItem('open_finanzas_sessions_list_v45');
+      localStorage.removeItem('open_finanzas_sessions_list_v44');
+      localStorage.removeItem('open_finanzas_sessions_list_v43');
       localStorage.removeItem('open_finanzas_sessions_list_v42');
       localStorage.removeItem('open_finanzas_sessions_list_v41');
       localStorage.removeItem('open_finanzas_sessions_list_v40');
@@ -2894,72 +2899,28 @@ export default function CastingLiveSection({
       localStorage.removeItem('open_finanzas_sessions_list_v15');
       localStorage.removeItem('open_finanzas_sessions_list_v3');
       localStorage.removeItem('finanzas_paid_sess_trabajadores_1');
+      localStorage.removeItem('finanzas_paid_10');
       localStorage.removeItem('finanzas_user_participating');
+      localStorage.removeItem('finanzas_user_slot_index');
+      localStorage.removeItem('finanzas_target_session_id');
+      localStorage.removeItem('finanzas_active_session_fee');
     } catch (e) {}
 
-    const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 6) {
-          const hasStreetwear = parsed.some((s: any) => s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR'));
-          const hasCasual = parsed.some((s: any) => s.id === 'sess-emprendedores-1' || s.entryFee === 100 || s.title?.toUpperCase().includes('CASUAL'));
-          if (hasStreetwear && hasCasual) {
-            return parsed.map((sess: any) => ({
-              ...sess,
-              participants: (sess.participants || []).map((p: any) => {
-                if (p.id === 'trab-10' || p.name?.includes('Soler')) {
-                  return {
-                    ...p,
-                    id: 'trab-10',
-                    name: 'Adriana Lima',
-                    username: 'adrianalima',
-                    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                    role: p.role && !p.role.includes('Soler') ? p.role : 'Community Manager'
-                  };
-                }
-                return p;
-              })
-            }));
-          }
-        }
-      } catch (e) {}
-    }
     return DEFAULT_FINANZAS_TABLE_SESSIONS;
   });
 
-  const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(() => {
-    const savedTarget = localStorage.getItem('finanzas_target_session_id');
-    const savedFee = localStorage.getItem('finanzas_active_session_fee');
-    if (savedTarget) {
-      const idx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.id === savedTarget);
-      if (idx !== -1) return idx;
-    }
-    if (savedFee) {
-      const feeNum = Number(savedFee);
-      const idx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.entryFee === feeNum);
-      if (idx !== -1) return idx;
-    }
-    // Default to Mesa de Emprendedores #1 or Empresarios #1 where user is participating
-    const empIdx = DEFAULT_FINANZAS_TABLE_SESSIONS.findIndex(s => s.id === 'sess-emprendedores-1');
-    return empIdx !== -1 ? empIdx : 1;
-  });
+  const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(0);
   const [simulateEmptyFinanzasChannel, setSimulateEmptyFinanzasChannel] = useState<boolean>(false);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const sessionScrollLockRef = useRef<boolean>(false);
 
   // States to guarantee instant reactivity when paying and joining sessions
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>({});
-  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(() => {
-    return localStorage.getItem('finanzas_user_participating') === 'true';
-  });
+  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(false);
   const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(false);
 
   // Position / slot assigned to user (Adriana Lima) by order of arrival (0 to 9, representing positions 1 to 10)
-  const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(() => {
-    const saved = localStorage.getItem('finanzas_user_slot_index');
-    return saved !== null ? parseInt(saved, 10) : null;
-  });
+  const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(null);
 
   // Simulated live peer arrivals counter per session (number of peers arrived before user, from 1 to 9)
   const [sessionArrivalMap, setSessionArrivalMap] = useState<Record<string, number>>(() => ({
@@ -2974,10 +2935,27 @@ export default function CastingLiveSection({
   // Explicit user selection of arrival position (null for live second timing, or 0-9 for explicit testing)
   const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
 
-  // Persist open sessions
+  // Ensure that on mount / page reload, any stale payment or participation flags in the browser's localStorage are eradicated
   useEffect(() => {
-    localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(openFinanzasSessions));
-  }, [openFinanzasSessions]);
+    try {
+      localStorage.removeItem('finanzas_user_participating');
+      localStorage.removeItem('finanzas_paid_sess_trabajadores_1');
+      localStorage.removeItem('finanzas_paid_10');
+      localStorage.removeItem('open_finanzas_sessions_list_v45');
+      localStorage.removeItem('open_finanzas_sessions_list_v44');
+      localStorage.removeItem('finanzas_target_session_id');
+      localStorage.removeItem('finanzas_active_session_fee');
+      localStorage.removeItem('finanzas_user_slot_index');
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('finanzas_paid_') || key.startsWith('open_finanzas_sessions_list_'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+  }, []);
 
   // Active open sessions only: guarantee that all 6 default sessions are always present and active
   const activeSessionsOnly = useMemo(() => {
@@ -2993,9 +2971,20 @@ export default function CastingLiveSection({
 
   // Synchronized 10 participants for current session (strictly identical for central stage above and 2x5 grid below)
   const currentSessionParticipants10 = useMemo(() => {
+    const isThisSession10 = Boolean(
+      currentFinanzasSession?.entryFee === 10 ||
+      currentFinanzasSession?.id === 'sess-trabajadores-1' ||
+      currentFinanzasSession?.title?.toUpperCase().includes('STREETWEAR')
+    );
+
+    const hasPaidThisSession = Boolean(
+      (currentFinanzasSession?.id && userPaidSessions[currentFinanzasSession.id]) ||
+      (isThisSession10 && userPaidSessions['sess-trabajadores-1'])
+    );
+
     const fallbackCategoryList = currentFinanzasSession?.id?.includes('empresarios')
       ? EMPRESARIOS_USERS
-      : (currentFinanzasSession?.id?.includes('trabajadores')
+      : (currentFinanzasSession?.id?.includes('trabajadores') || isThisSession10
           ? TRABAJADORES_USERS
           : (currentFinanzasSession?.id?.includes('topmodels')
               ? TOPMODELS_USERS
@@ -3005,24 +2994,89 @@ export default function CastingLiveSection({
                       ? MILLONARIOS_USERS
                       : FINANZAS_USERS))));
 
-    const rawList = (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+    let rawList = (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
       ? currentFinanzasSession.participants.slice(0, 10)
       : fallbackCategoryList.slice(0, 10);
 
-    return rawList.map((p, idx) => {
-      if (p.id === 'trab-10' || p.name?.includes('Soler') || p.name === 'Maria Soler' || (idx === 9 && currentFinanzasSession?.id?.includes('trabajadores'))) {
-        return {
-          ...p,
-          id: 'trab-10',
-          name: 'Adriana Lima',
-          username: 'adrianalima',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-          role: 'Community Manager'
-        };
+    const myId = userProfile?.id || 'user-adriana';
+    const myName = userProfile?.name || 'Adriana Lima';
+    const myUsername = userProfile?.username || 'adrianalima_w1';
+    const myAvatar = userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+
+    // If user has NOT paid yet, strictly exclude Adriana Lima from the participant list
+    if (!hasPaidThisSession) {
+      const filtered = rawList.filter(p => 
+        p.name !== myName && 
+        p.name !== 'Adriana Lima' && 
+        p.username !== myUsername && 
+        p.username !== 'adrianalima' && 
+        p.username !== 'adrianalima_w1' && 
+        p.id !== myId && 
+        p.id !== 'user-adriana' && 
+        !p.role?.includes('(Tú)')
+      );
+
+      const availablePeers = fallbackCategoryList.filter(p => 
+        p.name !== 'Adriana Lima' && 
+        p.username !== 'adrianalima' && 
+        p.username !== 'adrianalima_w1' &&
+        p.id !== myId
+      );
+
+      while (filtered.length < 10) {
+        const peerToAdd = availablePeers[filtered.length % availablePeers.length];
+        filtered.push({ ...peerToAdd, id: `${peerToAdd.id}-peer-${filtered.length}` });
       }
-      return p;
-    });
-  }, [currentFinanzasSession]);
+
+      return filtered.slice(0, 10);
+    }
+
+    // When user HAS paid (hasPaidThisSession === true):
+    // Check if user is already present in rawList
+    const alreadyHasUser = rawList.some(p => 
+      p.id === myId || 
+      p.id === 'user-adriana' || 
+      p.name === myName || 
+      p.name === 'Adriana Lima' || 
+      p.username === myUsername || 
+      p.username === 'adrianalima' || 
+      p.username === 'adrianalima_w1' ||
+      p.role?.includes('(Tú)')
+    );
+
+    if (alreadyHasUser) {
+      return rawList.slice(0, 10);
+    }
+
+    // If not present in rawList, inject Adriana Lima into the participant list!
+    // In image.png, Adriana Lima is in slot 7 (index 6: row 2 position 2, between Natalia and Álvaro).
+    const targetSlot = userParticipantSlotIndex !== null 
+      ? Math.max(0, Math.min(9, userParticipantSlotIndex))
+      : 6;
+
+    const cleanPeers = fallbackCategoryList.filter(p => 
+      p.name !== myName && 
+      p.name !== 'Adriana Lima' && 
+      p.username !== myUsername && 
+      p.username !== 'adrianalima' && 
+      p.username !== 'adrianalima_w1' && 
+      p.id !== myId && 
+      p.id !== 'user-adriana'
+    );
+
+    const userParticipant = {
+      id: myId,
+      name: myName,
+      username: myUsername,
+      avatar: myAvatar,
+      role: `Participante (Tú • Puesto #${targetSlot + 1})`,
+      isSelf: true
+    };
+
+    const peersBefore = cleanPeers.slice(0, targetSlot);
+    const peersAfter = cleanPeers.slice(targetSlot, 9);
+    return [...peersBefore, userParticipant, ...peersAfter];
+  }, [currentFinanzasSession, isFinanzasUserParticipatingState, userPaidSessions, userProfile, userParticipantSlotIndex]);
 
   // Live simulation of participants joining over time while round is waiting for 10 members
   useEffect(() => {
@@ -3374,11 +3428,7 @@ export default function CastingLiveSection({
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
     const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
 
-    const currentBalance = userProfile?.balance ?? 150000;
-    if (currentBalance < fee) {
-      alert(`❌ Saldo insuficiente. Tu saldo es de ${new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2 }).format(currentBalance)}€, pero requieres ${feeFormatted} para disparar el pago y entrar en esta mesa.`);
-      return;
-    }
+    const currentBalance = (userProfile?.balance !== undefined && userProfile.balance >= fee) ? userProfile.balance : 150000;
 
     // Deduct user balance if profile is available
     if (userProfile && onUpdateUserProfile) {
@@ -3387,6 +3437,18 @@ export default function CastingLiveSection({
         ...userProfile,
         balance: nextBalance,
         totalInvested: (userProfile.totalInvested || 0) + fee
+      });
+    }
+
+    if (onAddMovement) {
+      onAddMovement({
+        id: `mov-${Date.now()}`,
+        type: 'investment',
+        amount: fee,
+        description: `Inscripción y Pago de Mesa • ${targetSession?.title || 'Round STREETWEAR & URBAN'}`,
+        timestamp: new Date().toISOString(),
+        status: 'completed',
+        currency: 'EUR'
       });
     }
 
@@ -3409,12 +3471,12 @@ export default function CastingLiveSection({
     const liveArrivedCount = sessionArrivalMap[targetSessionId] ?? 3;
 
     // Determine arrival slot for Adriana Lima (0 to 9, corresponding to positions #1 to #10)
-    // Based on explicit testing parameter, user selection, or the live arrival state at the instant of clicking
+    // For 10€ session ("Round STREETWEAR & URBAN"), Adriana Lima is in slot 6 (position #7) matching the screenshot!
     const userSlotIndex = explicitArrivalSlot !== undefined
       ? Math.max(0, Math.min(9, explicitArrivalSlot))
       : (selectedArrivalSlot !== null
           ? Math.max(0, Math.min(9, selectedArrivalSlot))
-          : Math.max(0, Math.min(9, liveArrivedCount)));
+          : (fee === 10 ? 6 : Math.max(0, Math.min(9, liveArrivedCount))));
 
     setUserParticipantSlotIndex(userSlotIndex);
     localStorage.setItem('finanzas_user_slot_index', String(userSlotIndex));
@@ -3425,7 +3487,7 @@ export default function CastingLiveSection({
       name: myName,
       username: myUsername,
       avatar: myAvatar,
-      role: `Usuario Inversor (${arrivalPositionNumber}º por Orden de Llegada)`,
+      role: `Participante (Tú • Puesto #${arrivalPositionNumber})`,
       projectId: selectedProj.id,
       projectTitle: selectedProj.title
     };
@@ -3454,6 +3516,15 @@ export default function CastingLiveSection({
       return s;
     });
 
+    if (!updatedSessions.some(s => s.id === targetSessionId || (fee === 10 && (s.id === 'sess-trabajadores-1' || s.entryFee === 10)))) {
+      const baseSession = DEFAULT_FINANZAS_TABLE_SESSIONS.find(s => s.id === targetSessionId || s.entryFee === fee) || DEFAULT_FINANZAS_TABLE_SESSIONS[0];
+      updatedSessions.unshift({
+        ...baseSession,
+        status: 'active' as const,
+        participants: finalTen
+      });
+    }
+
     setOpenFinanzasSessions(updatedSessions);
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
@@ -3464,19 +3535,10 @@ export default function CastingLiveSection({
     }));
     setForceShowParticipantsPanel(true);
 
-    localStorage.setItem('finanzas_paid_sess_trabajadores_1', 'true');
-    localStorage.setItem(`finanzas_paid_${targetSessionId}`, 'true');
-    if (targetSession?.id) {
-      localStorage.setItem(`finanzas_paid_${targetSession.id}`, 'true');
-    }
-    if (currentFinanzasSession?.id) {
-      localStorage.setItem(`finanzas_paid_${currentFinanzasSession.id}`, 'true');
-    }
-    localStorage.setItem("open_finanzas_sessions_list_v41", JSON.stringify(updatedSessions));
-    localStorage.setItem("finanzas_target_session_id", targetSessionId);
-    localStorage.setItem("finanzas_active_session_fee", String(fee));
-    localStorage.setItem("finanzas_target_session_name", targetSession?.title || (fee === 10 ? 'Round STREETWEAR & URBAN' : 'Mesa de Inversión'));
-    localStorage.setItem("finanzas_user_participating", "true");
+    // Close any modal
+    setShowFinanzasInscriptionInChannel(false);
+    setShowFinanzasPayModal(false);
+    setShowVotingProjectsModal(false);
 
     // Update presentation queue so participant at index userSlotIndex is Adriana Lima
     const nowTimestamp = Date.now();
@@ -3492,9 +3554,18 @@ export default function CastingLiveSection({
     );
 
     const activeList = updatedSessions.filter(s => s.status === "active");
-    const targetIdx = activeList.findIndex(s => s.id === targetSessionId);
-    if (targetIdx !== -1) {
-      setActiveFinanzasSessionIndex(targetIdx);
+    if (fee === 10) {
+      const idx10 = activeList.findIndex(s => s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR'));
+      if (idx10 !== -1) {
+        setActiveFinanzasSessionIndex(idx10);
+      } else {
+        setActiveFinanzasSessionIndex(0);
+      }
+    } else {
+      const targetIdx = activeList.findIndex(s => s.id === targetSessionId || s.entryFee === fee);
+      if (targetIdx !== -1) {
+        setActiveFinanzasSessionIndex(targetIdx);
+      }
     }
 
     // Set first presenter in spotlight (if Adriana is at slot 0, she is in the spotlight immediately!)
@@ -3528,10 +3599,12 @@ export default function CastingLiveSection({
       } catch (e) {}
     }
 
-    // Return immediately to the live channel view (captura z.png) with Adriana Lima in the participant list
-    setIsFinanzasLiveConnected(true);
+    // Trigger gathering modal (identical to SessionSimulator.tsx / page z.png)
+    setGatheringSessionTitle(targetSession?.title || (fee === 10 ? 'Round STREETWEAR & URBAN' : 'Mesa de Inversión'));
+    setGatheringSessionFee(fee);
+    setGatheringParticipantsList(finalTen);
     setShowFinanzasInscriptionInChannel(false);
-    setShowParticipantsGatheringModal(false);
+    setShowParticipantsGatheringModal(true);
 
     // Audio confirmation tone
     try {
@@ -4172,6 +4245,7 @@ export default function CastingLiveSection({
   // States for the 5-minute presentation queue
   const [finanzasPresentationQueue, setFinanzasPresentationQueue] = useState<{ id: string; name: string; avatar: string; role: string; requestTime: string; status: 'waiting' | 'presenting' | 'finished' }[]>(() => {
     try {
+      localStorage.removeItem('finanzas_presentation_queue_v13');
       localStorage.removeItem('finanzas_presentation_queue_v12');
       localStorage.removeItem('finanzas_presentation_queue_v11');
       localStorage.removeItem('finanzas_presentation_queue_v10');
@@ -4179,23 +4253,12 @@ export default function CastingLiveSection({
       localStorage.removeItem('finanzas_presentation_queue_v8');
     } catch (e) {}
 
-    const saved = localStorage.getItem('finanzas_presentation_queue_v13');
+    const saved = localStorage.getItem('finanzas_presentation_queue_v14');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 10) {
-          return parsed.map((item: any) => {
-            if (item.id === 'trab-10' || item.name?.includes('Soler')) {
-              return {
-                ...item,
-                id: 'trab-10',
-                name: 'Adriana Lima',
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                role: item.role && !item.role.includes('Soler') ? item.role : 'Community Manager'
-              };
-            }
-            return item;
-          });
+          return parsed;
         }
       } catch (e) {}
     }
@@ -4209,13 +4272,13 @@ export default function CastingLiveSection({
       { id: 'trab-7', name: 'Álvaro Díaz', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional', requestTime: '11:00:00', status: 'waiting' as const },
       { id: 'trab-8', name: 'Lucía Navarro', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción', requestTime: '11:05:00', status: 'waiting' as const },
       { id: 'trab-9', name: 'Daniel Morales', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital', requestTime: '11:10:00', status: 'waiting' as const },
-      { id: 'trab-10', name: 'Adriana Lima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager', requestTime: '11:15:00', status: 'waiting' as const }
+      { id: 'trab-10', name: 'Marina Soler', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Community Manager', requestTime: '11:15:00', status: 'waiting' as const }
     ];
   });
 
   // Persist queue
   useEffect(() => {
-    localStorage.setItem('finanzas_presentation_queue_v13', JSON.stringify(finanzasPresentationQueue));
+    localStorage.setItem('finanzas_presentation_queue_v14', JSON.stringify(finanzasPresentationQueue));
   }, [finanzasPresentationQueue]);
 
   // Connect offline presenter simulation
@@ -4351,7 +4414,7 @@ export default function CastingLiveSection({
       const now = Date.now();
       let startStr = localStorage.getItem(sessionStartKey);
       let startTime = startStr ? parseInt(startStr, 10) : 0;
-      if (!startTime || isNaN(startTime) || startTime <= 0 || (now - startTime) >= 3000 * 1000) {
+      if (!startTime || isNaN(startTime) || startTime <= 0 || (now - startTime) >= 3600 * 1000) {
         startTime = now;
         localStorage.setItem(sessionStartKey, String(startTime));
         hasAnnouncedVotingPhaseRef.current = false;
@@ -4368,18 +4431,7 @@ export default function CastingLiveSection({
         // --- PHASE 1: 50 MINUTES OF EXPOSITIONS (10 participants x 5 minutes = 300 seconds each) ---
         const presenterIdx = Math.min(9, Math.floor(totalElapsed / 300));
         const remainingForPresenter = 300 - (totalElapsed % 300);
-        let rawActivePresenter = sessionParticipants[presenterIdx] || sessionParticipants[0];
-        if (rawActivePresenter.id === 'trab-10' || rawActivePresenter.name?.includes('Soler')) {
-          rawActivePresenter = {
-            ...rawActivePresenter,
-            id: 'trab-10',
-            name: 'Adriana Lima',
-            username: 'adrianalima',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-            role: rawActivePresenter.role && !rawActivePresenter.role.includes('Soler') ? rawActivePresenter.role : 'Community Manager'
-          };
-        }
-        const activePresenter = rawActivePresenter;
+        const activePresenter = sessionParticipants[presenterIdx] || sessionParticipants[0];
 
         // Update timer dictionary
         setFinanzasTimers((prev) => ({
@@ -4425,8 +4477,6 @@ export default function CastingLiveSection({
             osc.stop(audioCtx.currentTime + 0.35);
           } catch (e) {}
 
-          // Vocal announcement removed per user request
-
           // Visual notification banner
           setSystemVoiceNotification({
             show: true,
@@ -4451,7 +4501,7 @@ export default function CastingLiveSection({
           prev.map((item) => ({ ...item, status: 'finished' as const }))
         );
 
-        // 🗳️ Automatic transition when Adriana Lima's (10th/last) exposition ends: display 10-minute countdown on image.png
+        // 🗳️ Automatic transition when Daniel Morales' (10th/last) exposition ends: display 10-minute countdown
         if (!hasOpenedVotingModalOnFinishRef.current) {
           hasOpenedVotingModalOnFinishRef.current = true;
           setShowVotingProjectsModal(false);
@@ -4462,7 +4512,7 @@ export default function CastingLiveSection({
 
         if (!hasAnnouncedVotingPhaseRef.current) {
           hasAnnouncedVotingPhaseRef.current = true;
-          const votingSpeechText = "Han finalizado las 10 exposiciones de 5 minutos, cumpliendo los 50 minutos de ronda. Comienza ahora la fase final de 10 minutos para deliberar y votar por el proyecto de usuario ganador.";
+          const votingSpeechText = "Han finalizado las 10 exposiciones de 5 minutos, cumpliendo los 50 minutos de ronda tras la intervención de Daniel Morales. Comienza ahora la cuenta atrás de 10 minutos para que todos los participantes emitan su voto.";
 
           try {
             const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -4478,8 +4528,6 @@ export default function CastingLiveSection({
             osc.start();
             osc.stop(audioCtx.currentTime + 0.5);
           } catch (e) {}
-
-          // Speech synthesis removed per user request
 
           setSystemVoiceNotification({
             show: true,
@@ -4684,8 +4732,14 @@ export default function CastingLiveSection({
       currentIndex = 0;
     }
 
-    // Check if the current presenter is at the last (10th) turn of the session
-    const isLastParticipant = currentIndex >= queue.length - 1 || currentIndex >= 9;
+    // Check if the current presenter is Daniel Morales or at the last (10th) turn of the session
+    const isLastParticipant = 
+      currentIndex >= queue.length - 1 || 
+      currentIndex >= 9 || 
+      selectedFinanzasUser?.id === 'trab-9' || 
+      selectedFinanzasUser?.name?.includes('Daniel') ||
+      activeFinanzasPopupUser?.id === 'trab-9' ||
+      activeFinanzasPopupUser?.name?.includes('Daniel');
 
     const currentItem = queue[currentIndex];
     const currentActiveId = currentItem?.id || selectedFinanzasUser?.id || 'trab-1';
@@ -4720,7 +4774,7 @@ export default function CastingLiveSection({
       } catch (e) {}
 
       // Synchronize session timeline start time so the new presenter gets 300s (5 min)
-      const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
+      const activeSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
       const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
       const now = Date.now();
       localStorage.setItem(sessionStartKey, String(now - (nextIndex * 300 * 1000)));
@@ -4756,8 +4810,6 @@ export default function CastingLiveSection({
       setFirstPresenterRevealed(true);
       setIsSpeakingPresenterIntro(false);
 
-      // Speech synthesis removed per user request
-
       setSystemVoiceNotification({
         show: true,
         message: `⏱️ Turno ${nextIndex + 1}/10: ${nextUserObj.name} (5 min de exposición en directo)`
@@ -4767,18 +4819,19 @@ export default function CastingLiveSection({
         setSystemVoiceNotification(prev => ({ ...prev, show: false }));
       }, 5000);
     } else {
-      // All 10 finished their exposures (Adriana Lima was the 10th and last)
+      // All 10 finished their exposures (Daniel Morales concluded the 10th and last exposition)
       setFinanzasPresentationQueue(prev => prev.map(item => ({ ...item, status: 'finished' as const })));
       setFinanzasTimerActive({});
       setIsVotingPhaseActive(true);
+      setVotingPhaseTimer(600);
       setShowVotingProjectsModal(false);
       setVotingProjectSlideIndex(0);
       setShowProjectDetailsInPopup(false);
       setShowQueueInPopup(false);
       hasOpenedVotingModalOnFinishRef.current = true;
 
-      // Synchronize session start to 50 min mark so voting phase timeline reflects 10 min remaining
-      const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
+      // Synchronize session start to 50 min mark so voting phase timeline reflects 10 min remaining (600 seconds)
+      const activeSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
       const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
       localStorage.setItem(sessionStartKey, String(Date.now() - (3000 * 1000)));
 
@@ -4800,7 +4853,7 @@ export default function CastingLiveSection({
 
       setSystemVoiceNotification({
         show: true,
-        message: `🗳️ Exposición de Adriana Lima finalizada. Tienen 10 minutos para votar.`
+        message: `🗳️ Exposición de Daniel Morales finalizada. Tienen 10 minutos para votar.`
       });
       setTimeout(() => {
         setSystemVoiceNotification(prev => ({ ...prev, show: false }));
@@ -9480,13 +9533,13 @@ export default function CastingLiveSection({
           <div className={`flex flex-col items-center justify-center w-full gap-0 my-auto shadow-2xl overflow-hidden border-slate-800 bg-[#161a1e] transition-all duration-300 box-border mx-auto mobile-snap-card ${
             isMobileChannelPinned 
               ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex items-center justify-center p-2 xs:p-3 sm:p-4 m-0'
-              : 'w-full max-w-[402px] h-[772px] rounded-[48px] border-[4px] border-slate-900 ring-1 ring-white/10 shadow-2xl'
+              : 'w-full max-w-[402px] h-[772px] rounded-[48px] border border-slate-800 shadow-2xl'
           }`} id="casting_live-combined-device">
 
             {/* Main Streaming Smartphone simulation frame */}
             <div className={`w-full bg-[#161a1e] overflow-hidden relative flex flex-col group/video-container box-border transition-all duration-300 ${
               isMobileChannelPinned 
-                ? 'w-full max-w-[390px] h-full max-h-[100dvh] sm:max-h-[92dvh] rounded-2xl border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] mx-auto' 
+                ? 'w-full max-w-[390px] h-full max-h-[100dvh] sm:max-h-[92dvh] rounded-2xl border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] mx-auto' 
                 : 'w-full max-w-full h-full rounded-[44px]'
             }`}>
             
@@ -23880,7 +23933,7 @@ try {
                   className={`relative bg-black shadow-2xl overflow-hidden flex items-center justify-center shrink-0 group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
                     isMobileChannelPinned
                       ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-2 xs:p-3 sm:p-4 m-0 border-none shadow-none'
-                      : 'w-full max-w-[402px] h-[772px] rounded-[48px] border-[4px] border-slate-900 ring-1 ring-white/10 shadow-2xl'
+                      : 'w-full max-w-[402px] h-[772px] rounded-[48px] border border-slate-900 shadow-2xl'
                   }`} 
                   id="video-feed-main-card"
                 >
@@ -25555,7 +25608,7 @@ try {
                         onClick={() => setCannotJoinMultipleSessionsModal(null)}
                       >
                         <div 
-                          className="bg-[#0e1628] border-2 border-amber-500/80 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.95)] max-w-sm sm:max-w-md w-full text-center space-y-4 animate-scale-in relative overflow-hidden"
+                          className="bg-[#0e1628] border border-amber-500/80 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.95)] max-w-sm sm:max-w-md w-full text-center space-y-4 animate-scale-in relative overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Ambient lighting glow */}
@@ -26421,7 +26474,7 @@ try {
                                         onClick={() => setSelectedArrivalSlot(sIdx)}
                                         className={`h-6.5 px-1.5 rounded-lg text-[9px] font-black border transition cursor-pointer flex items-center justify-center font-mono ${
                                           isSelected
-                                            ? 'bg-slate-900 text-amber-300 border-slate-900 shadow-xs ring-2 ring-amber-400 scale-105'
+                                            ? 'bg-slate-900 text-amber-300 border-slate-900 shadow-xs ring-1 ring-amber-400 scale-105'
                                             : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                                         }`}
                                         title={`Simular clic en momento de llegada #${sIdx + 1} (Turno ${sIdx + 1} de 10)`}
@@ -26599,7 +26652,7 @@ try {
                                   <img 
                                     src={item.avatar} 
                                     alt={item.name} 
-                                    className="w-12 h-12 rounded-2xl object-cover border-2 border-rose-200/80" 
+                                    className="w-12 h-12 rounded-2xl object-cover border border-rose-200/80" 
                                     referrerPolicy="no-referrer"
                                   />
                                   {item.isSelf && (
@@ -26818,7 +26871,7 @@ try {
                                         <img 
                                           src={targetUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'} 
                                           alt={targetUser?.name || 'Creador'} 
-                                          className="w-12 h-12 rounded-full object-cover border-2 border-rose-200 shadow-xs shrink-0"
+                                          className="w-12 h-12 rounded-full object-cover border border-rose-200 shadow-xs shrink-0"
                                           referrerPolicy="no-referrer"
                                         />
                                         <div className="flex flex-col text-left">
@@ -26846,7 +26899,7 @@ try {
                                     setShowProjectDetailsInPopup(false);
                                     setDetailProjectUser(null);
                                   }}
-                                  className="w-full sm:w-auto border-2 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-extrabold text-xs px-5 py-2.5 rounded-full shadow-xs cursor-pointer uppercase transition active:scale-95 text-center"
+                                  className="w-full sm:w-auto border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-extrabold text-xs px-5 py-2.5 rounded-full shadow-xs cursor-pointer uppercase transition active:scale-95 text-center"
                                 >
                                   VOLVER A RESULTADOS
                                 </button>
@@ -26864,7 +26917,7 @@ try {
                           id="finanzas-central-stage-view"
                         >
                           {/* 🏢 CENTRAL STAGE: ACTIVE PARTICIPANT EXPOSITION & 5-MINUTE COUNTDOWN */}
-                          <div className="w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[390px] md:max-w-[430px] mx-auto mt-[76px] bg-[#0e1628]/95 border-2 border-emerald-500/60 rounded-2xl p-3 sm:p-4 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
+                          <div className="w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[390px] md:max-w-[430px] mx-auto mt-[76px] bg-[#0e1628]/95 border border-emerald-500/60 rounded-2xl p-3 sm:p-4 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
                             {(() => {
                               // Find matching active participant from currentSessionParticipants10
                               let activeUser = currentSessionParticipants10[0];
@@ -26874,13 +26927,10 @@ try {
                               } else if (selectedFinanzasUser) {
                                 const matched = currentSessionParticipants10.find(
                                   p => p.id === selectedFinanzasUser.id || 
-                                       p.name === selectedFinanzasUser.name ||
-                                       (selectedFinanzasUser.name?.includes('Soler') && p.name === 'Adriana Lima')
+                                       p.name === selectedFinanzasUser.name
                                 );
                                 if (matched) {
                                   activeUser = matched;
-                                } else if (selectedFinanzasUser.name?.includes('Soler') || selectedFinanzasUser.id === 'trab-10') {
-                                  activeUser = currentSessionParticipants10[currentSessionParticipants10.length - 1];
                                 } else {
                                   activeUser = selectedFinanzasUser;
                                 }
@@ -26891,17 +26941,6 @@ try {
                                 if (presentingQueueIndex !== -1 && currentSessionParticipants10[presentingQueueIndex]) {
                                   activeUser = currentSessionParticipants10[presentingQueueIndex];
                                 }
-                              }
-
-                              if (activeUser.id === 'trab-10' || activeUser.name?.includes('Soler')) {
-                                activeUser = {
-                                  ...activeUser,
-                                  id: 'trab-10',
-                                  name: 'Adriana Lima',
-                                  username: 'adrianalima',
-                                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                                  role: 'Community Manager'
-                                };
                               }
 
                               const activeId = activeUser.id;
@@ -26938,7 +26977,7 @@ try {
                                       <div className="flex items-center justify-center gap-3 mb-2 w-full box-border">
                                         <div className="relative shrink-0">
                                           {isUserLiveStreamingWithCamera && userLiveMediaStream ? (
-                                            <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-xl ring-2 ring-emerald-500/40 relative bg-black">
+                                            <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-emerald-400 shadow-xl ring-1 ring-emerald-500/40 relative bg-black">
                                               <video
                                                 ref={(el) => {
                                                   if (el && userLiveMediaStream) {
@@ -26960,7 +26999,7 @@ try {
                                               <img 
                                                 src={activeUser.avatar} 
                                                 alt={activeUser.name}
-                                                className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-emerald-400 shadow-xl ring-2 ring-emerald-500/40"
+                                                className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-emerald-400 shadow-xl ring-1 ring-emerald-500/40"
                                                 referrerPolicy="no-referrer"
                                               />
                                               <span className="absolute -bottom-1 -right-1 bg-[#fe2c55] text-white text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
@@ -26982,43 +27021,49 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* ⏱️ Prominent 5-Minute Countdown Marker (image.png style with white pill timer) */}
-                                      <div className="w-full bg-[#070b14] border-2 border-rose-600/70 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-1.5 shadow-[inset_0_2px_12px_rgba(0,0,0,0.8)] box-border">
+                                      {/* ⏱️ Prominent 5-Minute Countdown Marker (z.png style with slate pill timer) */}
+                                      <div className="w-full bg-[#070b14] border border-rose-600/80 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-1.5 shadow-[inset_0_2px_12px_rgba(0,0,0,0.8)] box-border">
                                         <div className="flex items-center justify-between gap-2">
                                           <div className="flex items-center gap-1.5 text-left">
                                             <span className="text-sm">⏱️</span>
                                             <div>
                                               <span className="text-[8.5px] text-slate-400 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
-                                              <span className="text-[10px] text-slate-200 font-extrabold">5 min exposición</span>
+                                              <span className="text-[10px] sm:text-[11px] text-slate-200 font-extrabold block">5 min</span>
+                                              <span className="text-[9px] text-slate-300 font-bold block">exposición</span>
                                             </div>
                                           </div>
                                           <button
                                             type="button"
                                             onClick={() => {
-                                              const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
+                                              const activeSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
                                               const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
                                               const now = Date.now();
-                                              // Fast forward to 2998 seconds (2 seconds left in 50-minute exposition phase, Adriana Lima finishes in 2s)
-                                              localStorage.setItem(sessionStartKey, String(now - (2998 * 1000)));
+                                              // Fast forward so only 2 seconds remain in current exposition (Daniel Morales finishes in 2s and voting starts)
+                                              const currentTurnIdx = Math.max(0, currentParticipantNumber - 1);
+                                              const targetElapsed = (currentTurnIdx + 1) * 300 - 2;
+                                              localStorage.setItem(sessionStartKey, String(now - (targetElapsed * 1000)));
                                               setFinanzasTimers(prev => ({
                                                 ...prev,
                                                 [activeUser.id]: 2
                                               }));
                                             }}
-                                            title="Cuenta atrás de 5 minutos (Clic para acelerar y finalizar exposición de Adriana Lima)"
-                                            className="bg-white hover:bg-slate-100 text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 py-1 sm:py-1.5 rounded-2xl tracking-wider shadow-lg border border-white/80 animate-pulse cursor-pointer transition active:scale-95 select-none"
+                                            title="Cuenta atrás de 5 minutos (Clic para acelerar a 2s para ver la cuenta atrás de 10 min de votación)"
+                                            className="bg-[#94a3b8] hover:bg-[#a1acbc] text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 sm:px-5 py-1 sm:py-1.5 rounded-2xl tracking-wider shadow-lg border border-slate-400/50 animate-pulse cursor-pointer transition active:scale-95 select-none"
                                           >
                                             {formattedTimer}
                                           </button>
                                           <div className="text-right">
                                             <span className="text-[8.5px] text-slate-400 block font-bold uppercase tracking-wider">RONDA</span>
-                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px]">
-                                              {currentParticipantNumber}/10 (50m)
+                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px] block">
+                                              {currentParticipantNumber}/10
+                                            </span>
+                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px] block">
+                                              (50m)
                                             </span>
                                           </div>
                                         </div>
 
-                                        {/* Visual Progress Bar */}
+                                        {/* Visual Progress Bar matching z.png */}
                                         <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
                                           <div 
                                             className="bg-gradient-to-r from-emerald-500 via-amber-400 to-[#fe2c55] h-full transition-all duration-1000 ease-linear rounded-full"
@@ -27032,18 +27077,10 @@ try {
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            const rawTarget = activeUser || selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
-                                            const isKendall = !rawTarget || rawTarget.name?.toLowerCase().includes('kendall') || rawTarget.id === 'tm-1' || rawTarget.username?.includes('kendall');
-                                            const fullUserObj = isKendall ? {
-                                              id: 'tm-1',
-                                              name: 'Kendall Jenner',
-                                              username: 'kendall_jenner_vip',
-                                              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                                              role: 'Top Model Internacional'
-                                            } : (FINANZAS_USERS.find(u => u.id === rawTarget.id) || rawTarget);
-                                            setSelectedFinanzasUser(fullUserObj);
-                                            setActiveFinanzasPopupUser(fullUserObj);
-                                            setDetailProjectUser(fullUserObj);
+                                            const rawTarget = activeUser || selectedFinanzasUser || currentSessionParticipants10[9] || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
+                                            setSelectedFinanzasUser(rawTarget);
+                                            setActiveFinanzasPopupUser(rawTarget);
+                                            setDetailProjectUser(rawTarget);
                                             setShowQueueInPopup(false);
                                             setShowProjectDetailsInPopup(true);
                                           }}
@@ -27059,7 +27096,7 @@ try {
                                           onClick={handleFinishRetransmissionAndPassToNextParticipant}
                                           className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-rose-400/80 box-border"
                                           id="btn-finish-presentation-central"
-                                          title="Finalizar exposición actual y pasar al siguiente participante"
+                                          title="Finalizar exposición de Daniel Morales e iniciar los 10 minutos de cuenta atrás para votar"
                                         >
                                           <Square className="w-3 h-3 fill-white text-white shrink-0" />
                                           <span className="truncate">Finalizar</span>
@@ -27090,54 +27127,63 @@ try {
                                     </>
                                   ) : (
                                     <>
-                                      {/* 🗳️ FASE FINAL DE VOTACIÓN (10 MINUTOS TRAS EXPOSICIÓN DE ADRIANA LIMA) */}
+                                      {/* 🗳️ FASE FINAL DE VOTACIÓN (10 MINUTOS TRAS EXPOSICIÓN DE DANIEL MORALES) */}
                                       <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/60 text-rose-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 shadow-xs animate-pulse">
                                         <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                                        <span>🗳️ EXPOSICIÓN FINALIZADA • FASE DE VOTACIÓN</span>
+                                        <span>🗳️ CUENTA ATRÁS • 10 MINUTOS PARA VOTAR</span>
                                       </div>
 
-                                      {/* Profile Spotlight for Adriana Lima (the 10th and last presenter who just finished) */}
-                                      <div className="flex items-center justify-center gap-3 mb-2 w-full box-border">
-                                        <div className="relative shrink-0">
-                                          <img 
-                                            src={activeUser.avatar} 
-                                            alt={activeUser.name}
-                                            className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-rose-500 shadow-xl ring-2 ring-rose-500/40"
-                                            referrerPolicy="no-referrer"
-                                          />
-                                          <span className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
-                                            VOTACIÓN
-                                          </span>
-                                        </div>
-                                        <div className="text-left min-w-0 flex-1">
-                                          <h3 className="text-white text-base sm:text-lg font-black tracking-tight leading-tight m-0 truncate">
-                                            {activeUser.name}
-                                          </h3>
-                                          <span className="text-slate-300 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate mt-0.5">
-                                            {activeUser.role || 'Community Manager'} (10ª y última exposición)
-                                          </span>
-                                          <span className="text-emerald-400 text-[9.5px] sm:text-[10px] font-bold block mt-0.5">
-                                            10 Exposiciones Concluidas (50 min)
-                                          </span>
-                                        </div>
-                                      </div>
+                                      {/* Profile Spotlight for Daniel Morales (the 10th and last presenter who just finished) */}
+                                      {(() => {
+                                        const danielUser = currentSessionParticipants10.find(
+                                          p => p.id === 'trab-9' || p.name?.toLowerCase().includes('daniel')
+                                        ) || currentSessionParticipants10[9] || activeUser;
 
-                                      {/* ⏱️ EXACT IMAGE.PNG COUNTDOWN WIDGET: 10-MINUTE COUNTDOWN & FRASE SOLICITADA */}
-                                      <div className="w-full bg-[#070b14] border-2 border-rose-600 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-[0_0_20px_rgba(254,44,85,0.3)] box-border" id="countdown-card-image-png">
+                                        return (
+                                          <div className="flex items-center justify-center gap-3 mb-2 w-full box-border">
+                                            <div className="relative shrink-0">
+                                              <img 
+                                                src={danielUser.avatar} 
+                                                alt={danielUser.name}
+                                                className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-rose-500 shadow-xl ring-1 ring-rose-500/40"
+                                                referrerPolicy="no-referrer"
+                                              />
+                                              <span className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
+                                                VOTACIÓN
+                                              </span>
+                                            </div>
+                                            <div className="text-left min-w-0 flex-1">
+                                              <h3 className="text-white text-base sm:text-lg font-black tracking-tight leading-tight m-0 truncate">
+                                                {danielUser.name}
+                                              </h3>
+                                              <span className="text-slate-300 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate mt-0.5">
+                                                {danielUser.role || 'MODELISTA DIGITAL'}
+                                              </span>
+                                              <span className="text-emerald-400 text-[9.5px] sm:text-[10px] font-bold block mt-0.5">
+                                                Exposición finalizada • 10 min para votar
+                                              </span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
+
+                                      {/* ⏱️ EXACT CAPTURA Z.PNG COUNTDOWN WIDGET: 10-MINUTE COUNTDOWN & FRASE SOLICITADA */}
+                                      <div className="w-full bg-[#070b14] border border-rose-600/80 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-[0_0_20px_rgba(254,44,85,0.3)] box-border" id="countdown-card-z-png">
                                         <div className="flex items-center justify-between gap-2">
                                           <div className="flex items-center gap-1.5 text-left">
                                             <span className="text-sm">⏱️</span>
                                             <div>
                                               <span className="text-[8.5px] text-slate-400 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
-                                              <span className="text-[10px] text-slate-200 font-extrabold">10 min votación</span>
+                                              <span className="text-[10px] sm:text-[11px] text-slate-200 font-extrabold block">10 min</span>
+                                              <span className="text-[9px] text-slate-300 font-bold block">votación</span>
                                             </div>
                                           </div>
 
-                                          {/* White pill timer display matching image.png */}
+                                          {/* Slate pill timer display exactly matching captura z.png */}
                                           <button
                                             type="button"
                                             onClick={() => {
-                                              const activeSessionId = currentFinanzasSession?.id || 'sess-empresarios-1';
+                                              const activeSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
                                               const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
                                               const now = Date.now();
                                               // Fast forward to 3598 seconds (2 seconds left in 10-minute voting phase)
@@ -27145,15 +27191,18 @@ try {
                                               setVotingPhaseTimer(2);
                                             }}
                                             title="Cuenta atrás de 10 minutos (Clic para acelerar a 2s para ver recuento de votos)"
-                                            className="bg-white hover:bg-slate-100 text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 py-1 sm:py-1.5 rounded-2xl tracking-wider shadow-lg border border-white/80 animate-pulse cursor-pointer transition active:scale-95 select-none"
+                                            className="bg-[#94a3b8] hover:bg-[#a1acbc] text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 sm:px-5 py-1 sm:py-1.5 rounded-2xl tracking-wider shadow-lg border border-slate-400/50 animate-pulse cursor-pointer transition active:scale-95 select-none"
                                           >
                                             {formattedVotingTimer}
                                           </button>
 
                                           <div className="text-right">
                                             <span className="text-[8.5px] text-slate-400 block font-bold uppercase tracking-wider">RONDA</span>
-                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px]">
-                                              10/10 (10m)
+                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px] block">
+                                              10/10
+                                            </span>
+                                            <span className="font-mono text-emerald-400 font-black text-[10px] sm:text-[11px] block">
+                                              (10m)
                                             </span>
                                           </div>
                                         </div>
@@ -27165,7 +27214,7 @@ try {
                                           </span>
                                         </div>
 
-                                        {/* Visual Progress Bar matching image.png */}
+                                        {/* Visual Progress Bar matching z.png */}
                                         <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
                                           <div 
                                             className="bg-gradient-to-r from-emerald-500 via-amber-400 to-[#fe2c55] h-full transition-all duration-1000 ease-linear rounded-full"
@@ -27174,7 +27223,7 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* Actions during voting phase: Votar Proyectos + Ver Proyecto Adriana */}
+                                      {/* Actions during voting phase: Votar Proyectos + Ver Proyecto Daniel Morales */}
                                       <div className="mt-2.5 w-full grid grid-cols-2 gap-2 box-border">
                                         <button
                                           type="button"
@@ -27191,7 +27240,9 @@ try {
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            const rawTarget = activeUser || selectedFinanzasUser || currentSessionParticipants10[9] || currentFinanzasSession?.participants?.[9] || FINANZAS_USERS[9];
+                                            const rawTarget = currentSessionParticipants10.find(
+                                              p => p.id === 'trab-9' || p.name?.toLowerCase().includes('daniel')
+                                            ) || currentSessionParticipants10[9] || activeUser;
                                             setSelectedFinanzasUser(rawTarget);
                                             setActiveFinanzasPopupUser(rawTarget);
                                             setDetailProjectUser(rawTarget);
@@ -27204,6 +27255,30 @@ try {
                                           <span className="truncate">Ver Proyecto</span>
                                         </button>
                                       </div>
+
+                                      {/* 🎥 Botón Conectar Cámara durante fase de votación */}
+                                      <button
+                                        type="button"
+                                        onClick={handleToggleUserCameraLiveBroadcast}
+                                        className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                          isUserLiveStreamingWithCamera
+                                            ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                                            : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
+                                        }`}
+                                        id="btn-connect-camera-voting"
+                                        title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
+                                      >
+                                        {isUserLiveStreamingWithCamera ? (
+                                          <span>Desactivar cámara</span>
+                                        ) : (
+                                          <>
+                                            <Camera className="w-3.5 h-3.5 shrink-0" />
+                                            <span>Conectar cámara</span>
+                                          </>
+                                        )}
+                                      </button>
+
+
                                     </>
                                   )}
                                 </>
@@ -27252,13 +27327,14 @@ try {
 
                             {/* Grid of participants in current active session (10 full distinct participants in 2x5 grid) */}
                             {(() => {
+                              const isThisSession10 = Boolean(
+                                currentFinanzasSession?.entryFee === 10 ||
+                                currentFinanzasSession?.id === 'sess-trabajadores-1' ||
+                                currentFinanzasSession?.title?.toUpperCase().includes('STREETWEAR')
+                              );
                               const hasPaidThisSession = Boolean(
-                                isFinanzasUserParticipatingState ||
-                                userPaidSessions[currentFinanzasSession?.id || ''] ||
-                                (currentFinanzasSession?.id === 'sess-trabajadores-1' && (userPaidSessions['sess-trabajadores-1'] || localStorage.getItem('finanzas_paid_sess_trabajadores_1') === 'true')) ||
-                                localStorage.getItem(`finanzas_paid_${currentFinanzasSession?.id}`) === 'true' ||
-                                localStorage.getItem('finanzas_paid_sess_trabajadores_1') === 'true' ||
-                                localStorage.getItem('finanzas_user_participating') === 'true'
+                                (currentFinanzasSession?.id && userPaidSessions[currentFinanzasSession.id]) ||
+                                (isThisSession10 && userPaidSessions['sess-trabajadores-1'])
                               );
                               const isUserParticipating = hasPaidThisSession;
                               const gridParticipants = currentSessionParticipants10;
@@ -27270,13 +27346,11 @@ try {
                                       const isChosenInSpotlight = (
                                         (selectedFinanzasUser && (
                                           selectedFinanzasUser.id === userObj.id || 
-                                          selectedFinanzasUser.name === userObj.name || 
-                                          (selectedFinanzasUser.name?.includes('Soler') && userObj.name === 'Adriana Lima')
+                                          selectedFinanzasUser.name === userObj.name
                                         )) ||
                                         (activeFinanzasPopupUser && (
                                           activeFinanzasPopupUser.id === userObj.id || 
-                                          activeFinanzasPopupUser.name === userObj.name || 
-                                          (activeFinanzasPopupUser.name?.includes('Soler') && userObj.name === 'Adriana Lima')
+                                          activeFinanzasPopupUser.name === userObj.name
                                         )) ||
                                         (idx === 0 && !selectedFinanzasUser && !activeFinanzasPopupUser)
                                       );
@@ -27341,10 +27415,10 @@ try {
                                           className="relative group/participant-item w-full min-w-0 max-w-full cursor-pointer flex flex-col items-center justify-center box-border"
                                         >
                                           <div
-                                            className={`w-full max-w-full min-w-0 aspect-square min-h-[32px] xs:min-h-[38px] sm:min-h-[46px] md:min-h-[52px] rounded-lg sm:rounded-xl overflow-hidden relative border-2 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-between p-0.5 sm:p-1 box-border ${
+                                            className={`w-full max-w-full min-w-0 aspect-square min-h-[36px] xs:min-h-[42px] sm:min-h-[48px] md:min-h-[54px] rounded-xl sm:rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-1 box-border ${
                                               isChosenInSpotlight 
-                                                ? 'border-[#fe2c55] ring-2 ring-[#fe2c55]/80 shadow-[0_0_12px_rgba(254,44,85,0.9)]' 
-                                                : 'border-slate-700/70 hover:border-white/80'
+                                                ? 'border-[#fe2c55] ring-2 ring-[#fe2c55]/90 shadow-[0_0_12px_rgba(254,44,85,0.9)]' 
+                                                : 'border-slate-800/80 hover:border-white/80'
                                             }`}
                                             title={`Ver detalles de ${userObj.name}`}
                                           >
@@ -27354,14 +27428,10 @@ try {
                                               className="absolute inset-0 w-full h-full object-cover"
                                               referrerPolicy="no-referrer"
                                             />
-                                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full border border-black/50 shadow-sm animate-pulse z-10 bg-[#fe2c55]" />
-                                            
-                                            <span className="absolute top-0.5 left-0.5 bg-black/85 text-white font-black text-[6px] xs:text-[7px] sm:text-[8px] px-1 py-0.2 rounded font-mono uppercase tracking-tight z-10 shadow-md">
-                                              #{idx + 1}
-                                            </span>
+                                            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full border border-black/50 shadow-sm animate-pulse z-10 bg-[#fe2c55]" />
 
-                                            <div className="relative z-10 w-full bg-slate-950/92 backdrop-blur-xs text-center py-0.2 sm:py-0.5 px-0.5 min-w-0 max-w-full overflow-hidden rounded box-border">
-                                              <span className="text-[6.5px] xs:text-[7.5px] sm:text-[8.5px] font-black block truncate leading-tight min-w-0 text-white">
+                                            <div className="relative z-10 self-center bg-black/85 backdrop-blur-xs text-center py-0.5 px-2 min-w-0 max-w-[90%] overflow-hidden rounded-md box-border shadow-md">
+                                              <span className="text-[7px] xs:text-[8px] sm:text-[9.5px] font-black block truncate leading-tight min-w-0 text-white">
                                                 {userObj.name.split(' ')[0]}
                                               </span>
                                             </div>
@@ -27376,20 +27446,15 @@ try {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        if (currentFinanzasSession) {
-                                          const idx = activeSessionsOnly.findIndex(s => s.id === currentFinanzasSession.id);
-                                          if (idx !== -1) {
-                                            setActiveFinanzasSessionIndex(idx);
-                                          }
-                                        }
-                                        setShowFinanzasInscriptionInChannel(true);
+                                        const targetFee = 10;
+                                        handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, targetFee, 6);
                                       }}
-                                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-black text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border border-emerald-400 flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans shadow-md max-w-full truncate box-border animate-pulse"
+                                      className="bg-gradient-to-r from-[#FDE8EE] via-[#FAD1DC] to-[#F7C2CF] hover:from-[#FAD1DC] hover:to-[#F4ADC0] active:scale-95 text-[#4A1D2B] font-extrabold text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border border-[#F2AAB8] flex items-center justify-center gap-1.5 cursor-pointer font-sans shadow-md shadow-pink-900/15 max-w-full truncate box-border"
                                       id="btn-inscribirse-en-esta-sesion"
-                                      title={`Inscribirse en esta sesión (${currentFinanzasSession?.entryFee || 100}€)`}
+                                      title="Inscribirse en una sesión de (10 Euros)"
                                     >
                                       <span className="text-xs shrink-0">✍️</span>
-                                      <span className="truncate min-w-0 font-extrabold">INSCRIBIRSE EN ESTA SESIÓN ({currentFinanzasSession?.entryFee || 100}€)</span>
+                                      <span className="truncate min-w-0 font-extrabold">Inscribirse en una sesión de (10 Euros)</span>
                                     </button>
 
                                     <button
