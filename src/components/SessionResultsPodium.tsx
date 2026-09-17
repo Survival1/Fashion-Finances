@@ -1300,6 +1300,13 @@ export default function SessionResultsPodium({
         <button
           type="button"
           onClick={() => {
+            try {
+              localStorage.removeItem('finanzas_user_participating');
+              localStorage.removeItem('user_paid_finanzas_session');
+              localStorage.removeItem('finanzas_target_session_id');
+              localStorage.removeItem('finanzas_user_slot_index');
+              localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+            } catch (e) {}
             if (onFinishParticipationSession) {
               onFinishParticipationSession();
             } else if (setCompletedSessionToDisplay) {
@@ -2082,6 +2089,40 @@ export default function SessionResultsPodium({
         
         <button
            onClick={() => {
+             // Clear all participation state so the user is no longer enrolled as a participant
+             try {
+               localStorage.removeItem('finanzas_user_participating');
+               localStorage.removeItem('user_paid_finanzas_session');
+               localStorage.removeItem('finanzas_target_session_id');
+               localStorage.removeItem('finanzas_user_slot_index');
+               localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+               localStorage.removeItem('user_paid_session_sess-emprendedores-1');
+               localStorage.removeItem('user_paid_session_sess-empresarios-1');
+               localStorage.removeItem('user_paid_session_sess-topmodels-1');
+               localStorage.removeItem('user_paid_session_sess-inversores-1');
+               localStorage.removeItem('user_paid_session_sess-millonarios-1');
+
+               const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
+               if (saved) {
+                 const parsed = JSON.parse(saved);
+                 if (Array.isArray(parsed)) {
+                   const cleaned = parsed.map((sess: any) => ({
+                     ...sess,
+                     participants: Array.isArray(sess.participants)
+                       ? sess.participants.filter((p: any) =>
+                           !p.name?.includes('Adriana') &&
+                           !p.name?.includes('(Tú)') &&
+                           p.id !== 'user-adriana' &&
+                           p.id !== userProfile?.id &&
+                           !p.isSelf
+                         )
+                       : sess.participants
+                   }));
+                   localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(cleaned));
+                 }
+               }
+             } catch (e) {}
+
              if (onFinishParticipationSession) {
                onFinishParticipationSession();
              } else {

@@ -3165,7 +3165,7 @@ export default function App() {
           {/* Container of Information Intro and Companies I Sponsor - Desktop view directly below Cerrar Sesión button */}
           <div className="hidden lg:block">
             <ProfileIntroAndSponsors
-              hideIntro={activeTab === 'casting_live'}
+              hideIntro={activeTab !== 'home'}
               userProfile={selectedModelForView ? {
                 id: selectedModelForView.id,
                 name: selectedModelForView.name,

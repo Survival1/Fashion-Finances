@@ -1431,9 +1431,10 @@ export default function SessionSimulator({
     localStorage.setItem('finanzas_target_session_id', targetId);
     localStorage.setItem('finanzas_active_session_fee', String(fee));
     localStorage.setItem('finanzas_target_session_name', targetTitle);
-    localStorage.setItem('finanzas_scenario', 'scenario_c');
-    localStorage.setItem('finanzas_is_voting_phase_active', 'true');
-    localStorage.setItem('finanzas_voting_phase_timer', '0');
+    localStorage.setItem('finanzas_scenario', 'present');
+    localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+    localStorage.setItem('finanzas_voting_phase_timer', '600');
+    localStorage.setItem(`finanzas_active_session_start_${targetId}`, String(Date.now()));
     localStorage.setItem('finanzas_user_participating', 'true');
     localStorage.setItem('user_paid_finanzas_session', 'true');
     localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
@@ -1445,23 +1446,36 @@ export default function SessionSimulator({
     window.dispatchEvent(new Event('storage'));
   };
 
-  const handleFinishGatheringInSimulator = () => {
+  const handleFinishGatheringInSimulator = (completedParticipants?: any[]) => {
     if (!gatheringSessionData) return;
     setShowGatheringModal(false);
 
-    localStorage.setItem('open_finanzas_sessions_list_v37', JSON.stringify([gatheringSessionData]));
-    localStorage.setItem('open_finanzas_sessions_list_v35', JSON.stringify([gatheringSessionData]));
-    localStorage.setItem('open_finanzas_sessions_list_v30', JSON.stringify([gatheringSessionData]));
-    localStorage.setItem('open_finanzas_sessions_list_v16', JSON.stringify([gatheringSessionData]));
-    localStorage.setItem('open_finanzas_sessions_list_v15', JSON.stringify([gatheringSessionData]));
-    localStorage.setItem('open_finanzas_sessions_list_v3', JSON.stringify([gatheringSessionData]));
+    const participantsToSave = (completedParticipants && completedParticipants.length >= 10)
+      ? completedParticipants
+      : gatheringSessionData.participants;
+
+    const sessionWithParticipants = {
+      ...gatheringSessionData,
+      participants: participantsToSave
+    };
+
+    localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify([sessionWithParticipants]));
+    localStorage.setItem('open_finanzas_sessions_list_v37', JSON.stringify([sessionWithParticipants]));
+    localStorage.setItem('open_finanzas_sessions_list_v35', JSON.stringify([sessionWithParticipants]));
+    localStorage.setItem('open_finanzas_sessions_list_v30', JSON.stringify([sessionWithParticipants]));
+    localStorage.setItem('open_finanzas_sessions_list_v16', JSON.stringify([sessionWithParticipants]));
+    localStorage.setItem('open_finanzas_sessions_list_v15', JSON.stringify([sessionWithParticipants]));
+    localStorage.setItem('open_finanzas_sessions_list_v3', JSON.stringify([sessionWithParticipants]));
     localStorage.setItem('finanzas_target_session_id', gatheringSessionData.id);
     localStorage.setItem('finanzas_active_session_fee', String(gatheringSessionData.entryFee));
     localStorage.setItem('finanzas_target_session_name', gatheringSessionData.title);
-    localStorage.setItem('finanzas_scenario', 'scenario_c');
-    localStorage.setItem('finanzas_is_voting_phase_active', 'true');
-    localStorage.setItem('finanzas_voting_phase_timer', '0');
+    localStorage.setItem('finanzas_scenario', 'present');
+    localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+    localStorage.setItem('finanzas_voting_phase_timer', '600');
+    localStorage.setItem(`finanzas_active_session_start_${gatheringSessionData.id}`, String(Date.now()));
     localStorage.setItem('finanzas_user_participating', 'true');
+    localStorage.setItem('user_paid_finanzas_session', 'true');
+    localStorage.setItem('finanzas_user_slot_index', '6');
     localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
     window.dispatchEvent(new Event('storage'));
 
@@ -2948,6 +2962,40 @@ export default function SessionSimulator({
             {/* Cerrar Concurso Button */}
             <button
                onClick={() => {
+                 // Clear all participation state so the user is no longer enrolled as a participant
+                 try {
+                   localStorage.removeItem('finanzas_user_participating');
+                   localStorage.removeItem('user_paid_finanzas_session');
+                   localStorage.removeItem('finanzas_target_session_id');
+                   localStorage.removeItem('finanzas_user_slot_index');
+                   localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+                   localStorage.removeItem('user_paid_session_sess-emprendedores-1');
+                   localStorage.removeItem('user_paid_session_sess-empresarios-1');
+                   localStorage.removeItem('user_paid_session_sess-topmodels-1');
+                   localStorage.removeItem('user_paid_session_sess-inversores-1');
+                   localStorage.removeItem('user_paid_session_sess-millonarios-1');
+
+                   const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
+                   if (saved) {
+                     const parsed = JSON.parse(saved);
+                     if (Array.isArray(parsed)) {
+                       const cleaned = parsed.map((sess: any) => ({
+                         ...sess,
+                         participants: Array.isArray(sess.participants)
+                           ? sess.participants.filter((p: any) =>
+                               !p.name?.includes('Adriana') &&
+                               !p.name?.includes('(Tú)') &&
+                               p.id !== 'user-adriana' &&
+                               p.id !== userProfile?.id &&
+                               !p.isSelf
+                             )
+                           : sess.participants
+                       }));
+                       localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(cleaned));
+                     }
+                   }
+                 } catch (e) {}
+
                  if (onFinishParticipationSession) {
                    onFinishParticipationSession();
                  } else {
@@ -3946,7 +3994,7 @@ export default function SessionSimulator({
         entryFee={gatheringSessionData?.entryFee || 10}
         participantsList={gatheringSessionData?.participants as any}
         currentUserProfile={userProfile}
-        userSlotIndex={9}
+        userSlotIndex={6}
         onComplete={handleFinishGatheringInSimulator}
         onClose={() => setShowGatheringModal(false)}
       />

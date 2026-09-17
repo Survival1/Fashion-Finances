@@ -17,9 +17,22 @@ interface ParticipantsGatheringModalProps {
   participantsList?: GatheringParticipant[];
   currentUserProfile?: any;
   userSlotIndex?: number;
-  onComplete: () => void;
+  onComplete: (participants?: GatheringParticipant[]) => void;
   onClose?: () => void;
 }
+
+const DEFAULT_TRABAJADORES: GatheringParticipant[] = [
+  { id: 'trab-1', name: 'Lucas Torres', username: 'lucas_torres_design', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Diseñador Gráfico', projectTitle: 'Urban Streetwear Collection' },
+  { id: 'trab-2', name: 'Clara Vega', username: 'clara_patronaje', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Patronista Textil', projectTitle: 'Eco-Textile Patterning' },
+  { id: 'trab-3', name: 'Mateo Ruiz', username: 'mateo_fotografo', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Fotógrafo de Moda', projectTitle: 'Digital Lookbook Studio' },
+  { id: 'trab-4', name: 'Paula Gómez', username: 'paula_estilista', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Estilista Senior', projectTitle: 'Sustainable Styling AI' },
+  { id: 'trab-5', name: 'Hugo Silva', username: 'hugo_luces', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Técnico Iluminación', projectTitle: 'Smart Runway Lighting' },
+  { id: 'trab-6', name: 'Natalia Cruz', username: 'natalia_costura', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Costurera Alta Costura', projectTitle: 'Zero-Waste Garment Craft' },
+  { id: 'trab-7', name: 'Álvaro Díaz', username: 'alvaro_makeup', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional', projectTitle: 'Organic Glow Cosmetics' },
+  { id: 'trab-8', name: 'Lucía Navarro', username: 'lucia_produccion', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción', projectTitle: 'Fashion Event Engine' },
+  { id: 'trab-9', name: 'Daniel Morales', username: 'daniel_3d_moda', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital', projectTitle: 'Metaverse 3D Avatar Fashion' },
+  { id: 'trab-10', name: 'Marina Soler', username: 'marinasoler', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Community Manager', projectTitle: 'Fashion Community Hub' }
+];
 
 const DEFAULT_EMPRESARIOS: GatheringParticipant[] = [
   { id: 'emp-1', name: 'Alexander Wright', username: 'alex_wright_ceo', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'CEO Haute Couture', projectTitle: 'EcoCouture Sustainable Runway' },
@@ -44,7 +57,8 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
   onComplete,
   onClose
 }) => {
-  const [joinedCount, setJoinedCount] = useState<number>(1);
+  const is10EuroSession = Boolean(entryFee === 10 || sessionTitle.toUpperCase().includes('STREETWEAR'));
+  const [joinedCount, setJoinedCount] = useState<number>(is10EuroSession ? 7 : 1);
   const [activityLogs, setActivityLogs] = useState<string[]>([]);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isTransparentMode, setIsTransparentMode] = useState<boolean>(false);
@@ -85,7 +99,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
       )
     : -1;
 
-  // Stored or provided arrival slot
+  // Stored or provided arrival slot (for 10€ session, slot is 7 which corresponds to Puesto #8 as shown in z.png)
   const storedSlot = typeof window !== 'undefined' ? localStorage.getItem('finanzas_user_slot_index') : null;
   const targetSlotIndex = existingUserIndex !== -1
     ? existingUserIndex
@@ -93,21 +107,23 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
         ? Math.max(0, Math.min(9, userSlotIndex))
         : (storedSlot !== null && !isNaN(Number(storedSlot))
             ? Math.max(0, Math.min(9, Number(storedSlot)))
-            : 9)); // Default to slot 10 (index 9)
+            : (is10EuroSession ? 7 : 9)));
 
-  const userParticipant: GatheringParticipant = {
+  const userParticipant: any = {
     id: activeUserId,
-    name: activeUserName,
+    name: `${activeUserName} (Tú)`,
     username: activeUser.username || 'adrianalima',
     avatar: activeUserAvatar,
     role: `Usuario Inversor (Tú • Puesto #${targetSlotIndex + 1})`,
-    projectTitle: 'Eco-Fashion Runway'
+    projectTitle: 'Eco-Fashion Runway',
+    isSelf: true
   };
 
-  // Base pool of peers
+  // Base pool of peers (Trabajadores for 10€ Streetwear round, Empresarios otherwise)
+  const defaultCategoryList = is10EuroSession ? DEFAULT_TRABAJADORES : DEFAULT_EMPRESARIOS;
   const basePool = (participantsList && participantsList.length > 0)
     ? participantsList
-    : DEFAULT_EMPRESARIOS;
+    : defaultCategoryList;
 
   // Filter peers so user is not duplicated
   const cleanPeers = basePool.filter(p =>
@@ -119,7 +135,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
   );
 
   // Fallback peers if cleanPeers is too short
-  const fallbackPeers = DEFAULT_EMPRESARIOS.filter(p =>
+  const fallbackPeers = defaultCategoryList.filter(p =>
     p.id !== activeUserId &&
     p.id !== 'user-adriana' &&
     p.name.toLowerCase() !== activeUserName.toLowerCase() &&
@@ -211,7 +227,54 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
       return;
     }
 
-    // Initial participant #1
+    // Start simulation of joining entrepreneurs
+    if (is10EuroSession) {
+      setJoinedCount(7);
+      setActivityLogs([
+        `✅ #7 Álvaro Díaz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+        `✅ #6 Natalia Cruz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+        `✅ #5 Hugo Silva ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+        `✅ #4 Paula Gómez ha abonado ${entryFee},00€ y se ha unido a la mesa.`
+      ]);
+      playJoinChime(7);
+
+      let current = 7;
+      intervalRef.current = setInterval(() => {
+        current += 1;
+        if (current <= 10) {
+          const p = finalParticipants[current - 1];
+          const isCurrentPUser = p && (
+            p.id === activeUserId || 
+            p.id === 'user-adriana' || 
+            p.name.toLowerCase().includes('adriana') || 
+            p.name.toLowerCase() === activeUserName.toLowerCase() ||
+            (p.role && p.role.includes('(Tú)'))
+          );
+          const pName = isCurrentPUser ? `${p.name} (Tú)` : (p ? p.name : `Emprendedor #${current}`);
+          setJoinedCount(current);
+          setActivityLogs(prev => [
+            `✅ #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+            ...prev.slice(0, 4)
+          ]);
+          playJoinChime(current);
+
+          if (current === 10) {
+            setIsCompleted(true);
+            playFanfare();
+            clearInterval(intervalRef.current);
+            setTimeout(() => {
+              onComplete(finalParticipants);
+            }, 1200);
+          }
+        }
+      }, 1600);
+
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
+    }
+
+    // Initial participant #1 for general sessions
     const p1 = finalParticipants[0];
     const isP1User = p1 && (
       p1.id === activeUserId || 
@@ -253,7 +316,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           playFanfare();
           clearInterval(intervalRef.current);
           setTimeout(() => {
-            onComplete();
+            onComplete(finalParticipants);
           }, 1400);
         }
       }
@@ -556,7 +619,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
               setIsCompleted(true);
               playFanfare();
               setTimeout(() => {
-                onComplete();
+                onComplete(finalParticipants);
               }, 400);
             }}
             className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/30 border border-emerald-400"
