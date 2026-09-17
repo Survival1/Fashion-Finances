@@ -297,22 +297,50 @@ async function startServer() {
     }
   });
 
-  // --- VITE MIDDLEWARE SETUP ---
-  if (process.env.NODE_ENV !== "production") {
+  // --- STATIC SERVING & SPA FALLBACK SETUP ---
+  const distPath = path.join(process.cwd(), "dist");
+  const distIndexHtml = path.join(distPath, "index.html");
+  const hasCompiledDist = fs.existsSync(distIndexHtml);
+
+  if (hasCompiledDist || process.env.NODE_ENV === "production") {
+    // Serve static files from compiled dist folder (preventing Vite HMR client from injecting)
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith(".html")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          }
+        },
+      })
+    );
+
+    // SPA fallback: send compiled dist/index.html for all non-API routes
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) {
+        return res.status(404).json({ error: "API endpoint not found" });
+      }
+      res.sendFile(distIndexHtml, (err) => {
+        if (err && !res.headersSent) {
+          next(err);
+        }
+      });
+    });
+  } else {
+    // Vite middleware for development when dist is not yet compiled
+    const isHmrDisabled = process.env.DISABLE_HMR === "true";
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
+        hmr: isHmrDisabled ? false : { clientPort: 443 },
+        watch: isHmrDisabled ? null : {},
       },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
   }
+
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
 
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server fully running on http://localhost:${PORT}`);

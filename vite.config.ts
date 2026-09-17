@@ -4,6 +4,8 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const isHmrDisabled = process.env.DISABLE_HMR === 'true';
+
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -12,8 +14,14 @@ export default defineConfig(() => {
       },
     },
     server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      host: '0.0.0.0',
+      port: 3000,
+      hmr: isHmrDisabled
+        ? false
+        : {
+            clientPort: 443,
+          },
+      watch: isHmrDisabled ? null : {},
     },
     build: {
       chunkSizeWarningLimit: 5000,
