@@ -2453,14 +2453,22 @@ export default function CastingLiveSection({
     if (initialSelectedStoreId === 'fashion' || initialSelectedStoreId === 'Fashion' || initialSelectedStoreId === 'canal_fashion') {
       return 'Fashion';
     }
-    const cached = localStorage.getItem('casting_live_default_category_filter');
-    if (cached && ['Todos', 'Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cached)) {
+    const cached = typeof window !== 'undefined' ? localStorage.getItem('casting_live_default_category_filter') : null;
+    if (cached && ['Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cached)) {
       localStorage.removeItem('casting_live_default_category_filter');
       return cached as any;
     }
-    const isPaid = typeof window !== 'undefined' && localStorage.getItem('user_paid_finanzas_session') === 'true';
-    return isPaid ? 'Finanzas' : 'Todos';
+    return 'Finanzas';
   });
+
+  // Ensure user lands on Canal de Finanzas
+  useEffect(() => {
+    const hasExplicitCategory = typeof window !== 'undefined' ? sessionStorage.getItem('explicit_category_set_by_user') : null;
+    if (!hasExplicitCategory) {
+      setSelectedCategoryFilter('Finanzas');
+      setSelectedLiveCategory('Finanzas');
+    }
+  }, []);
 
   useEffect(() => {
     const checkCategory = () => {
@@ -2507,8 +2515,13 @@ export default function CastingLiveSection({
             setActiveFinanzasSessionIndex(idx);
           }
         }
-        // If transitioning to live session, show spotlight presentation matching z.png
-        const isVotingActiveSaved = localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
+        // If transitioning to live session, only show voting countdown if the user is actively participating
+        const isUserParticipatingInit = Boolean(
+          localStorage.getItem('finanzas_user_participating') === 'true' ||
+          localStorage.getItem('user_paid_finanzas_session') === 'true' ||
+          localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true'
+        );
+        const isVotingActiveSaved = isUserParticipatingInit && localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
         const savedVotingTimer = localStorage.getItem('finanzas_voting_phase_timer');
         const parsedVotingTimer = savedVotingTimer ? parseInt(savedVotingTimer, 10) : 600;
         if (isVotingActiveSaved && parsedVotingTimer > 0) {
@@ -2516,7 +2529,7 @@ export default function CastingLiveSection({
           setVotingPhaseTimer(parsedVotingTimer);
           setIsSpeakingPresenterIntro(false);
           setFirstPresenterRevealed(true);
-        } else if (!isVotingActiveSaved) {
+        } else {
           setIsVotingPhaseActive(false);
           setVotingPhaseTimer(600);
           setIsSpeakingPresenterIntro(false);
@@ -2963,6 +2976,29 @@ export default function CastingLiveSection({
   }, [openFinanzasSessions]);
   const currentFinanzasSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0] || openFinanzasSessions[0];
 
+  // Determine whether current authenticated user is formally participating/enrolled in this session
+  const isCurrentUserParticipatingInCurrentSession = useMemo(() => {
+    const isThisSession10 = Boolean(
+      currentFinanzasSession?.entryFee === 10 ||
+      currentFinanzasSession?.id === 'sess-trabajadores-1' ||
+      currentFinanzasSession?.title?.toUpperCase().includes('STREETWEAR')
+    );
+    const sessId = currentFinanzasSession?.id || 'sess-trabajadores-1';
+
+    return Boolean(
+      isFinanzasUserParticipatingState ||
+      (currentFinanzasSession?.id && userPaidSessions[currentFinanzasSession.id]) ||
+      userPaidSessions['sess-trabajadores-1'] ||
+      userPaidSessions['sess-trabajadores-1_explicitly_enrolled'] ||
+      (typeof window !== 'undefined' && (
+        localStorage.getItem('finanzas_user_participating') === 'true' ||
+        localStorage.getItem('user_paid_finanzas_session') === 'true' ||
+        (isThisSession10 && localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true') ||
+        localStorage.getItem(`user_paid_session_${sessId}`) === 'true'
+      ))
+    );
+  }, [currentFinanzasSession, isFinanzasUserParticipatingState, userPaidSessions]);
+
   // Synchronized 10 participants for current session (strictly identical for central stage above and 2x5 grid below)
   const currentSessionParticipants10 = useMemo(() => {
     const isThisSession10 = Boolean(
@@ -2971,17 +3007,7 @@ export default function CastingLiveSection({
       currentFinanzasSession?.title?.toUpperCase().includes('STREETWEAR')
     );
 
-    const hasPaidThisSession = Boolean(
-      isFinanzasUserParticipatingState ||
-      (currentFinanzasSession?.id && userPaidSessions[currentFinanzasSession.id]) ||
-      userPaidSessions['sess-trabajadores-1'] ||
-      userPaidSessions['sess-trabajadores-1_explicitly_enrolled'] ||
-      (typeof window !== 'undefined' && (
-        localStorage.getItem('finanzas_user_participating') === 'true' ||
-        localStorage.getItem('user_paid_finanzas_session') === 'true' ||
-        (isThisSession10 && localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true')
-      ))
-    );
+    const hasPaidThisSession = isCurrentUserParticipatingInCurrentSession;
 
     const fallbackCategoryList = currentFinanzasSession?.id?.includes('empresarios')
       ? EMPRESARIOS_USERS
@@ -3134,6 +3160,55 @@ export default function CastingLiveSection({
     setFullscreenFinanzasUser(null);
     setShowProjectDetailsInPopup(false);
     setDetailProjectUser(null);
+    setShowRondaNotice(true);
+  };
+
+  // Open another funding round in which other users are participating
+  const handleOpenOtherFinancingRound = () => {
+    // 1. Ensure modal from image.png is closed / never opened
+    setShowVotingProjectsModal(false);
+    setShowProjectDetailsInPopup(false);
+    setDetailProjectUser(null);
+    setSelectedFinanzasUser(null);
+    setActiveFinanzasPopupUser(null);
+    setFullscreenFinanzasUser(null);
+
+    // 2. Select another funding round where other users are participating
+    const currentIdx = activeFinanzasSessionIndex;
+    let nextIdx = (currentIdx + 1) % activeSessionsOnly.length;
+    // If currently on index 0 (10€ Round STREETWEAR & URBAN), switch to index 1 (100€ Round CASUAL & LIFESTYLE)
+    if (currentIdx === 0 && activeSessionsOnly.length > 1) {
+      nextIdx = 1;
+    }
+
+    const targetSession = activeSessionsOnly[nextIdx] || activeSessionsOnly[0];
+    const targetFirstPresenter = targetSession?.participants?.[0] || FINANZAS_USERS[0];
+
+    // 3. Switch to that session
+    setSlideDirection('up');
+    setActiveFinanzasSessionIndex(nextIdx);
+    setSelectedFinanzasUser(targetFirstPresenter);
+
+    // 4. Ensure it's in the active live exhibition phase of other participants
+    setIsVotingPhaseActive(false);
+    setVotingPhaseTimer(600);
+    try {
+      localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+      localStorage.setItem('finanzas_voting_phase_timer', '600');
+    } catch (e) {}
+
+    // Initialize timers and presentation queue for the target session
+    if (targetFirstPresenter) {
+      setFinanzasTimers(prev => ({
+        ...prev,
+        [targetFirstPresenter.id]: 300
+      }));
+      setFinanzasTimerActive({
+        [targetFirstPresenter.id]: true
+      });
+    }
+
+    // Show the session notice banner
     setShowRondaNotice(true);
   };
 
@@ -4766,7 +4841,7 @@ export default function CastingLiveSection({
           setShowQueueInPopup(false);
         }
 
-        if (!hasAnnouncedVotingPhaseRef.current) {
+        if (!hasAnnouncedVotingPhaseRef.current && isCurrentUserParticipatingInCurrentSession) {
           hasAnnouncedVotingPhaseRef.current = true;
           const votingSpeechText = "Han finalizado las 10 exposiciones de 5 minutos, cumpliendo los 50 minutos de ronda tras la intervención de Marina Soler. Comienza ahora la cuenta atrás de 10 minutos para que todos los participantes emitan su voto.";
 
@@ -4798,7 +4873,9 @@ export default function CastingLiveSection({
         // --- PHASE 3: 60 MINUTES COMPLETED (10-minute voting countdown finished!) ---
         setIsVotingPhaseActive(true);
         setVotingPhaseTimer(0);
-        triggerScrutinyAndRecount();
+        if (isCurrentUserParticipatingInCurrentSession) {
+          triggerScrutinyAndRecount();
+        }
       }
     };
 
@@ -4806,14 +4883,14 @@ export default function CastingLiveSection({
     updateSessionTimeline();
     const interval = setInterval(updateSessionTimeline, 1000);
     return () => clearInterval(interval);
-  }, [currentFinanzasSession?.id, showFinanzasResults, showFinanzasRecount, finanzasMuted, finanzasVolume]);
+  }, [currentFinanzasSession?.id, showFinanzasResults, showFinanzasRecount, finanzasMuted, finanzasVolume, isCurrentUserParticipatingInCurrentSession]);
 
   // Watcher: automatically redirect to scrutiny & vote recount page when voting timer hits 0
   useEffect(() => {
-    if (isVotingPhaseActive && votingPhaseTimer <= 0 && !showFinanzasRecount && !showFinanzasResults) {
+    if (isVotingPhaseActive && isCurrentUserParticipatingInCurrentSession && votingPhaseTimer <= 0 && !showFinanzasRecount && !showFinanzasResults) {
       triggerScrutinyAndRecount();
     }
-  }, [isVotingPhaseActive, votingPhaseTimer, showFinanzasRecount, showFinanzasResults]);
+  }, [isVotingPhaseActive, isCurrentUserParticipatingInCurrentSession, votingPhaseTimer, showFinanzasRecount, showFinanzasResults]);
 
   // 10-minute countdown timer for voting modal; when reaching 0, redirects to scrutiny and recount page
   useEffect(() => {
@@ -8641,6 +8718,9 @@ export default function CastingLiveSection({
   };
 
   const handleCategoryFilterChange = (cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer') => {
+    try {
+      sessionStorage.setItem('explicit_category_set_by_user', cat);
+    } catch (e) {}
     setShowTikTokShop(false);
     setSelectedInvestorStore(null);
     setSelectedCategoryFilter(cat);
@@ -8648,12 +8728,7 @@ export default function CastingLiveSection({
     setActiveVideoIndex(0);
     setSearchTerm('');
     setActiveSubTab('para-ti');
-    if (cat === 'Finanzas') {
-      const isPaid = typeof window !== 'undefined' && localStorage.getItem('user_paid_finanzas_session') === 'true';
-      if (!isPaid) {
-        setShowFinanzasPayModal(true);
-      }
-    } else {
+    if (cat !== 'Finanzas') {
       setActiveFinanzasPopupUser(null);
       setIsFinanzasLiveConnected(false);
     }
@@ -11568,15 +11643,7 @@ export default function CastingLiveSection({
 
   // --- Single Project Slider & Voting Projects View ---
   const renderSingleProjectSlider = () => {
-    const rawParticipants = currentFinanzasSession?.participants || [];
-    const activeUserObj = {
-      id: userProfile?.id || 'user-ernesto',
-      name: userProfile?.name || 'Adriana Lima',
-      username: userProfile?.username || 'ernestovs',
-    };
-    const isUserParticipating = rawParticipants.some(
-      p => p.id === activeUserObj.id || p.username === activeUserObj.username || p.name === 'Ernesto vs' || p.name === activeUserObj.name
-    );
+    const isUserParticipating = isCurrentUserParticipatingInCurrentSession;
 
     const currentUser = FINANZAS_USERS[votingProjectSlideIndex] || FINANZAS_USERS[0];
     const proj = getFinanzasProjectDetails(currentUser.id);
@@ -11745,20 +11812,22 @@ export default function CastingLiveSection({
               </div>
             </div>
 
-            {/* Action Buttons: Vote for Selected Project & View Full Project */}
+            {/* Action Buttons: Vote for Selected Project (only for participants) & View Full Project */}
             <div className="pt-1 flex flex-col gap-2">
-              <button
-                type="button"
-                id="btn-votar-por-proyecto-elegido"
-                onClick={() => {
-                  handleVoteForProject(currentUser);
-                  setShowVotingProjectsModal(false);
-                }}
-                className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider"
-              >
-                <span className="text-base">🗳️</span>
-                <span>VOTAR POR ESTE PROYECTO ({currentUser.name.split(' ')[0]})</span>
-              </button>
+              {isUserParticipating && (
+                <button
+                  type="button"
+                  id="btn-votar-por-proyecto-elegido"
+                  onClick={() => {
+                    handleVoteForProject(currentUser);
+                    setShowVotingProjectsModal(false);
+                  }}
+                  className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider"
+                >
+                  <span className="text-base">🗳️</span>
+                  <span>VOTAR POR ESTE PROYECTO ({currentUser.name.split(' ')[0]})</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -26101,7 +26170,7 @@ try {
                                 </div>
                                 <div className="flex items-center gap-1.5 bg-[#fe2c55] text-white px-2 sm:px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider font-mono shrink-0 shadow-sm shadow-[#fe2c55]/40 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                  <span>{isVotingPhaseActive ? `VOTACIÓN ${formattedVotingTimer}` : `DIRECTO ${formattedTimer}`}</span>
+                                  <span>{(isVotingPhaseActive && isCurrentUserParticipatingInCurrentSession) ? `VOTACIÓN ${formattedVotingTimer}` : `DIRECTO ${formattedTimer}`}</span>
                                 </div>
                               </div>
 
@@ -26161,11 +26230,11 @@ try {
                             setDetailProjectUser(null);
                             setShowProjectDetailsInPopup(false);
                           }}
-                          onVoteProject={(user) => {
+                          onVoteProject={isCurrentUserParticipatingInCurrentSession ? ((user) => {
                             handleVoteForProject(user);
                             setDetailProjectUser(null);
                             setShowProjectDetailsInPopup(false);
-                          }}
+                          }) : undefined}
                         />
                       </div>
                     ) : showVotingProjectsModal ? (
@@ -27187,10 +27256,21 @@ try {
                               // Use sessionCurrentActiveUser as the single, guaranteed source of truth for active presenter
                               const activeUser = sessionCurrentActiveUser;
                               const activeId = activeUser.id;
+                              const isPresenterUser = Boolean(
+                                activeUser.isSelf ||
+                                activeUser.id === (userProfile?.id || 'user-adriana') ||
+                                activeUser.id === 'user-adriana' ||
+                                activeUser.name === (userProfile?.name || 'Adriana Lima') ||
+                                activeUser.name?.includes('Adriana') ||
+                                activeUser.name?.includes('(Tú)') ||
+                                activeUser.role?.includes('(Tú)') ||
+                                activeUser.username === (userProfile?.username || 'adrianalima')
+                              );
                               const currentParticipantIndex = currentSessionParticipants10.findIndex(
                                 p => p.id === activeUser.id || p.name === activeUser.name
                               );
-                              const currentParticipantNumber = currentParticipantIndex !== -1 ? currentParticipantIndex + 1 : (isVotingPhaseActive ? 10 : 1);
+                              const shouldShowVotingCountdownCard = Boolean(isVotingPhaseActive && isCurrentUserParticipatingInCurrentSession);
+                              const currentParticipantNumber = currentParticipantIndex !== -1 ? currentParticipantIndex + 1 : (shouldShowVotingCountdownCard ? 10 : 1);
 
                               const timerVal = finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300;
                               const minutes = Math.floor(timerVal / 60);
@@ -27206,7 +27286,7 @@ try {
 
                               return (
                                 <>
-                                  {!isVotingPhaseActive ? (
+                                  {!shouldShowVotingCountdownCard ? (
                                     <>
                                       {/* Header Turn Badge */}
                                       <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 shadow-xs">
@@ -27346,27 +27426,29 @@ try {
                                         </button>
                                       </div>
 
-                                      {/* 🎥 Botón Conectar Cámara debajo de Ver Proyecto y de Finalizar */}
-                                      <button
-                                        type="button"
-                                        onClick={handleToggleUserCameraLiveBroadcast}
-                                        className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
-                                          isUserLiveStreamingWithCamera
-                                            ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
-                                            : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
-                                        }`}
-                                        id="btn-connect-camera-central"
-                                        title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
-                                      >
-                                        {isUserLiveStreamingWithCamera ? (
-                                          <span>Desactivar cámara</span>
-                                        ) : (
-                                          <>
-                                            <Camera className="w-3.5 h-3.5 shrink-0" />
-                                            <span>Conectar cámara</span>
-                                          </>
-                                        )}
-                                      </button>
+                                      {/* 🎥 Botón Conectar Cámara debajo de Ver Proyecto y de Finalizar - SOLO APARECE EN LA EXPOSICIÓN DE ADRIANA LIMA (MÍA) */}
+                                      {isPresenterUser && (
+                                        <button
+                                          type="button"
+                                          onClick={handleToggleUserCameraLiveBroadcast}
+                                          className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                            isUserLiveStreamingWithCamera
+                                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
+                                          }`}
+                                          id="btn-connect-camera-central"
+                                          title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
+                                        >
+                                          {isUserLiveStreamingWithCamera ? (
+                                            <span>Desactivar cámara</span>
+                                          ) : (
+                                            <>
+                                              <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
+                                              <span>CONECTAR CÁMARA</span>
+                                            </>
+                                          )}
+                                        </button>
+                                      )}
                                     </>
                                   ) : (
                                     <>
@@ -27375,38 +27457,6 @@ try {
                                         <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                                         <span>🗳️ CUENTA ATRÁS • 10 MINUTOS PARA VOTAR</span>
                                       </div>
-
-                                      {/* Profile Spotlight for the active presenter in voting phase */}
-                                      {(() => {
-                                        const solerUser = activeUser;
-
-                                        return (
-                                          <div className="flex items-center justify-center gap-3 mb-2 w-full box-border">
-                                            <div className="relative shrink-0">
-                                              <img 
-                                                src={solerUser.avatar} 
-                                                alt={solerUser.name}
-                                                className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-rose-500 shadow-xl ring-1 ring-rose-500/40"
-                                                referrerPolicy="no-referrer"
-                                              />
-                                              <span className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
-                                                VOTACIÓN
-                                              </span>
-                                            </div>
-                                            <div className="text-left min-w-0 flex-1">
-                                              <h3 className="text-white text-base sm:text-lg font-black tracking-tight leading-tight m-0 truncate">
-                                                {solerUser.name}
-                                              </h3>
-                                              <span className="text-slate-300 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate mt-0.5">
-                                                {solerUser.role || 'COMMUNITY MANAGER'}
-                                              </span>
-                                              <span className="text-emerald-400 text-[9.5px] sm:text-[10px] font-bold block mt-0.5">
-                                                Exposición finalizada • 10 min para votar
-                                              </span>
-                                            </div>
-                                          </div>
-                                        );
-                                      })()}
 
                                       {/* ⏱️ EXACT CAPTURA IMAGE.PNG COUNTDOWN WIDGET: 10-MINUTE COUNTDOWN & REDIRECT TO SCRUTINY */}
                                       <div className="w-full bg-[#0c0d14] border border-rose-600/90 rounded-3xl p-3 sm:p-3.5 flex flex-col gap-2.5 shadow-[0_0_24px_rgba(254,44,85,0.35)] box-border" id="countdown-card-z-png">
@@ -27475,58 +27525,45 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* Actions during voting phase: Votar Proyectos + Ver Proyecto Marina Soler */}
-                                      <div className="mt-2.5 w-full grid grid-cols-2 gap-2 box-border">
+                                      {/* Actions during voting phase: Votar Proyectos -> Redirige a la Mesa de Votación (captura z.png) */}
+                                      <div className="mt-2.5 w-full box-border">
                                         <button
                                           type="button"
                                           onClick={() => {
                                             setShowVotingProjectsModal(true);
                                             setVotingProjectSlideIndex(0);
                                           }}
-                                          className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-rose-400/80 box-border"
+                                          className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10.5px] sm:text-[11.5px] py-2.5 px-3 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-rose-400/80 box-border"
+                                          id="btn-votar-proyectos-countdown-z"
                                         >
                                           <span>🗳️</span>
                                           <span className="truncate">Votar Proyectos</span>
                                         </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const rawTarget = activeUser;
-                                            setSelectedFinanzasUser(rawTarget);
-                                            setActiveFinanzasPopupUser(rawTarget);
-                                            setDetailProjectUser(rawTarget);
-                                            setShowQueueInPopup(false);
-                                            setShowProjectDetailsInPopup(true);
-                                          }}
-                                          className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 box-border"
-                                        >
-                                          <span>📋</span>
-                                          <span className="truncate">Ver Proyecto</span>
-                                        </button>
                                       </div>
 
-                                      {/* 🎥 Botón Conectar Cámara durante fase de votación */}
-                                      <button
-                                        type="button"
-                                        onClick={handleToggleUserCameraLiveBroadcast}
-                                        className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
-                                          isUserLiveStreamingWithCamera
-                                            ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
-                                            : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
-                                        }`}
-                                        id="btn-connect-camera-voting"
-                                        title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
-                                      >
-                                        {isUserLiveStreamingWithCamera ? (
-                                          <span>Desactivar cámara</span>
-                                        ) : (
-                                          <>
-                                            <Camera className="w-3.5 h-3.5 shrink-0" />
-                                            <span>Conectar cámara</span>
-                                          </>
-                                        )}
-                                      </button>
+                                      {/* 🎥 Botón Conectar Cámara durante fase de votación - SOLO SI EL PRESENTADOR ES ADRIANA LIMA */}
+                                      {isPresenterUser && (
+                                        <button
+                                          type="button"
+                                          onClick={handleToggleUserCameraLiveBroadcast}
+                                          className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                            isUserLiveStreamingWithCamera
+                                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
+                                          }`}
+                                          id="btn-connect-camera-voting"
+                                          title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
+                                        >
+                                          {isUserLiveStreamingWithCamera ? (
+                                            <span>Desactivar cámara</span>
+                                          ) : (
+                                            <>
+                                              <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
+                                              <span>CONECTAR CÁMARA</span>
+                                            </>
+                                          )}
+                                        </button>
+                                      )}
 
 
                                     </>
@@ -27577,23 +27614,7 @@ try {
 
                             {/* Grid of participants in current active session (10 full distinct participants in 2x5 grid) */}
                             {(() => {
-                              const isThisSession10 = Boolean(
-                                currentFinanzasSession?.entryFee === 10 ||
-                                currentFinanzasSession?.id === 'sess-trabajadores-1' ||
-                                currentFinanzasSession?.title?.toUpperCase().includes('STREETWEAR')
-                              );
-                              const hasPaidThisSession = Boolean(
-                                isFinanzasUserParticipatingState ||
-                                (currentFinanzasSession?.id && userPaidSessions[currentFinanzasSession.id]) ||
-                                userPaidSessions['sess-trabajadores-1'] ||
-                                userPaidSessions['sess-trabajadores-1_explicitly_enrolled'] ||
-                                (typeof window !== 'undefined' && (
-                                  localStorage.getItem('finanzas_user_participating') === 'true' ||
-                                  localStorage.getItem('user_paid_finanzas_session') === 'true' ||
-                                  (isThisSession10 && localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true')
-                                ))
-                              );
-                              const isUserParticipating = hasPaidThisSession;
+                              const isUserParticipating = isCurrentUserParticipatingInCurrentSession;
                               const gridParticipants = currentSessionParticipants10;
 
                               return (
@@ -28043,7 +28064,7 @@ try {
                       </div>
                     )}
 
-                    {/* Top Badge: Retransmisión Activa with option to stop/disconnect (no mostrar en el canal de Modelos que es feed directo de vídeos guardados) */}
+                    {/* Top Badge: Retransmisión Activa with option to stop/disconnect */}
                     {selectedCategoryFilter !== 'Modelos' && (
                       <div className="absolute top-3.5 left-3.5 z-40 bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-full border border-rose-500/40 flex items-center gap-2 shadow-xl">
                         <span className="relative flex h-2 w-2">
@@ -28053,6 +28074,17 @@ try {
                         <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans">
                           CANAL {selectedCategoryFilter === 'BackStage' ? 'BACKSTAGE' : selectedCategoryFilter.toUpperCase()} EN VIVO
                         </span>
+                        {selectedCategoryFilter !== 'Finanzas' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCategoryFilterChange('Finanzas')}
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider transition cursor-pointer shadow-xs ml-1 flex items-center gap-1 border border-emerald-400/40"
+                            title="Ir al Canal de Finanzas"
+                            id="btn-switch-to-finanzas-from-badge"
+                          >
+                            <span>📈 Ir a Finanzas</span>
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
@@ -28061,9 +28093,10 @@ try {
                               localStorage.setItem('category_live_connected_map', JSON.stringify(next));
                               return next;
                             });
+                            handleCategoryFilterChange('Finanzas');
                           }}
                           className="bg-slate-800/90 hover:bg-rose-600 text-slate-200 hover:text-white px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider transition cursor-pointer border border-slate-700 ml-1"
-                          title="Detener retransmisión y volver a logo"
+                          title="Detener retransmisión e ir a Finanzas"
                         >
                           Detener ✕
                         </button>
@@ -30188,8 +30221,9 @@ try {
                           )}
                         </div>
 
-                        {/* Vote Button at bottom of Project Details */}
+                        {/* Vote Button at bottom of Project Details (only for participants) */}
                         {(() => {
+                          if (!isCurrentUserParticipatingInCurrentSession) return null;
                           const targetUser = activeFinanzasPopupUser || detailProjectUser || FINANZAS_USERS[0];
                           return (
                             <div className="pt-2 shrink-0">

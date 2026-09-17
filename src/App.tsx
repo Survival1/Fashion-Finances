@@ -3123,6 +3123,10 @@ export default function App() {
                   localStorage.removeItem('selectedLiveModelId');
                   setSelectedLiveModelId(undefined);
                   localStorage.setItem('casting_live_active_subtab', 'para-ti');
+                  localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
+                  try {
+                    sessionStorage.removeItem('explicit_category_set_by_user');
+                  } catch (e) {}
                   setActiveTabTab('casting_live');
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${

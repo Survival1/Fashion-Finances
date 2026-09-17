@@ -87,7 +87,9 @@ async function startServer() {
         order.status = "executed";
         order.executedAt = now.toISOString();
         hasChanges = true;
-        console.log(`[Auto-Investor Queue] Executing Order id: ${order.id} for amount: ${order.entryFee}€`);
+        if (process.env.DEBUG_INVESTOR) {
+          console.log(`[Auto-Investor Queue] Executing Order id: ${order.id} for amount: ${order.entryFee}€`);
+        }
 
         // If it was a recurring order, spawn the next execution task automatically
         if (order.recurrence !== "none") {
@@ -113,7 +115,9 @@ async function startServer() {
             status: "pending"
           };
           orders.push(nextOrder);
-          console.log(`[Auto-Investor Queue] Automatically created next recurring execution set for ${nextOrder.dateTime}`);
+          if (process.env.DEBUG_INVESTOR) {
+            console.log(`[Auto-Investor Queue] Automatically created next recurring execution set for ${nextOrder.dateTime}`);
+          }
         }
       }
     });
@@ -298,7 +302,6 @@ async function startServer() {
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
-        hmr: { server },
       },
       appType: "spa",
     });
