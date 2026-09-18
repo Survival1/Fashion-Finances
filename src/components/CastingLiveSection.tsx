@@ -95,7 +95,8 @@ import {
   Star,
   Award,
   AlertCircle,
-  Square
+  Square,
+  Power
 } from 'lucide-react';
 import { ModelProfile, UserSessionProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
@@ -2273,6 +2274,27 @@ export default function CastingLiveSection({
     }, 280);
   };
 
+  // 👥 Finanzas 10-Participants bottom panel hover state (only visible when hovering bottom margin of channel)
+  const [isBottomParticipantsHovered, setIsBottomParticipantsHovered] = useState<boolean>(false);
+  const bottomParticipantsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleBottomParticipantsMouseEnter = () => {
+    if (bottomParticipantsTimeoutRef.current) {
+      clearTimeout(bottomParticipantsTimeoutRef.current);
+      bottomParticipantsTimeoutRef.current = null;
+    }
+    setIsBottomParticipantsHovered(true);
+  };
+
+  const handleBottomParticipantsMouseLeave = () => {
+    if (bottomParticipantsTimeoutRef.current) {
+      clearTimeout(bottomParticipantsTimeoutRef.current);
+    }
+    bottomParticipantsTimeoutRef.current = setTimeout(() => {
+      setIsBottomParticipantsHovered(false);
+    }, 280);
+  };
+
   const [showTouchTableOverlay, setShowTouchTableOverlay] = useState<boolean>(false);
   const [showTouchRightSidebar, setShowTouchRightSidebar] = useState<boolean>(false);
   const [isExpandedFollowingAccounts, setIsExpandedFollowingAccounts] = useState<boolean>(false);
@@ -3941,7 +3963,7 @@ export default function CastingLiveSection({
   });
 
   // 📐 SPLIT SCREEN & MULTI-PRESENTER SCREEN SHARE STATES
-  const [screenSplitLayout, setScreenSplitLayout] = useState<'single' | '50-50' | 'pip' | 'grid-3' | 'grid-4' | 'presentation'>('single');
+  const [screenSplitLayout, setScreenSplitLayout] = useState<'single' | '50-50' | 'pip' | 'grid-3' | 'grid-4' | 'presentation' | 'grid' | 'grid-10'>('single');
   const [showSplitScreenMenu, setShowSplitScreenMenu] = useState<boolean>(false);
   const [showScreenShareMenu, setShowScreenShareMenu] = useState<boolean>(false);
   const [showDuoMenu, setShowDuoMenu] = useState<boolean>(false);
@@ -3981,18 +4003,26 @@ export default function CastingLiveSection({
   const handleStartSpecificScreenShare = async (mode: 'full' | 'window' | 'tab' | 'presentation') => {
     setScreenShareMode(mode);
     setShowScreenShareMenu(false);
+    setShowSplitScreenMenu(false);
+
+    if (mode === 'window') {
+      // 🪟 VENTANA DE APP: DIVISIÓN EN 10 VENTANAS
+      setScreenSplitLayout('grid-10');
+      setIsScreenSharingActive(true);
+      setActiveScreenSharer('host');
+      return;
+    }
 
     if (mode === 'presentation') {
       setScreenSplitLayout('presentation');
       setIsScreenSharingActive(true);
       setActiveScreenSharer('host');
-      alert('📽️ ¡Modo Presentación de Diapositivas / Diapositivas de Moda activado!');
       return;
     }
 
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-        const displaySurface = mode === 'full' ? 'monitor' : mode === 'window' ? 'window' : 'browser';
+        const displaySurface = mode === 'full' ? 'monitor' : 'browser';
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: { displaySurface: displaySurface as any },
           audio: true,
@@ -4000,7 +4030,7 @@ export default function CastingLiveSection({
         setScreenShareStream(stream);
         setIsScreenSharingActive(true);
         setActiveScreenSharer('host');
-        const modeLabel = mode === 'full' ? 'Toda la Pantalla' : mode === 'window' ? 'Ventana de Aplicación' : 'Pestaña del Navegador';
+        const modeLabel = mode === 'full' ? 'Toda la Pantalla' : 'Pestaña del Navegador';
         alert(`🖥️ Transmitiendo: ${modeLabel} en vivo en el directo.`);
         stream.getVideoTracks()[0].onended = () => {
           setIsScreenSharingActive(false);
@@ -4009,13 +4039,13 @@ export default function CastingLiveSection({
       } else {
         setIsScreenSharingActive(true);
         setActiveScreenSharer('host');
-        const modeLabel = mode === 'full' ? 'Toda la Pantalla' : mode === 'window' ? 'Ventana de Aplicación' : 'Pestaña del Navegador';
+        const modeLabel = mode === 'full' ? 'Toda la Pantalla' : 'Pestaña del Navegador';
         alert(`🖥️ Transmitiendo ${modeLabel} en directo.`);
       }
     } catch (err) {
       setIsScreenSharingActive(true);
       setActiveScreenSharer('host');
-      const modeLabel = mode === 'full' ? 'Toda la Pantalla' : mode === 'window' ? 'Ventana de Aplicación' : 'Pestaña del Navegador';
+      const modeLabel = mode === 'full' ? 'Toda la Pantalla' : 'Pestaña del Navegador';
       alert(`🖥️ Transmitiendo: ${modeLabel} (Modo Transmisión Activo).`);
     }
   };
@@ -4241,6 +4271,44 @@ export default function CastingLiveSection({
       });
       setIsLiveStreamAudioMuted(!isLiveStreamAudioMuted);
     }
+  };
+
+  const [liveCameraFilter, setLiveCameraFilter] = useState<'normal' | 'beauty' | 'gold' | 'party'>('normal');
+  const [isCameraOptionsOpen, setIsCameraOptionsOpen] = useState<boolean>(true);
+  const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
+
+  const playCelebrateChime = () => {
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtxClass) return;
+      const audioCtx = new AudioCtxClass();
+      const now = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 (fanfare)
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+        gain.gain.setValueAtTime(0, now + idx * 0.12);
+        gain.gain.linearRampToValueAtTime(0.25, now + idx * 0.12 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.45);
+      });
+    } catch (e) {
+      console.warn('Audio celebration chime error:', e);
+    }
+  };
+
+  const handleCelebrateWinners = () => {
+    playCelebrateChime();
+    setLiveCameraFilter('gold');
+    setCelebrationBanner('🎉 ¡FELICIDADES A LOS GANADORES! RETRANSMISIÓN EN DIRECTO ACTIVA 🏆');
+    setTimeout(() => {
+      setCelebrationBanner(null);
+    }, 5500);
   };
 
   useEffect(() => {
@@ -9864,23 +9932,38 @@ export default function CastingLiveSection({
 
         {/* 2. CENTER PANEL: Live Stream stage with exact TikTok mobile proportions */}
         <main className={`flex-1 bg-white flex flex-col justify-center items-center relative min-w-0 border-r border-[#e2e8f0] w-full max-w-full box-border mobile-snap-container ${
-          isMobileChannelPinned ? 'p-0 min-h-0' : 'p-2 sm:p-4 md:p-6 min-h-[680px]'
+          isMobileChannelPinned ? 'p-0 min-h-0' : 'p-0 sm:py-2 min-h-[680px]'
         }`} id="casting_live-center-panel">
 
-          {/* Combined vertical smartphone mockup matching TikTok mobile screen dimensions */}
+          {/* Combined vertical smartphone mockup matching iPhone 17 Pro Max dimensions (edge-to-edge on mobile) */}
           <div className={`flex flex-col items-center justify-center w-full gap-0 my-auto shadow-2xl overflow-hidden border-slate-800 bg-[#161a1e] transition-all duration-300 box-border mx-auto mobile-snap-card ${
             isMobileChannelPinned 
-              ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex items-center justify-center p-2 xs:p-3 sm:p-4 m-0'
-              : 'w-full max-w-[402px] h-[772px] rounded-[48px] border border-slate-800 shadow-2xl'
+              ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex items-center justify-center p-0 m-0'
+              : 'w-full max-w-full sm:max-w-[460px] md:max-w-[480px] h-[880px] sm:h-[956px] max-h-[100dvh] sm:max-h-[956px] rounded-none sm:rounded-[55px] border-x-0 sm:border-x-[3.5px] border-y-0 sm:border-y-[3.5px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
           }`} id="casting_live-combined-device">
 
             {/* Main Streaming Smartphone simulation frame */}
             <div className={`w-full bg-[#161a1e] overflow-hidden relative flex flex-col group/video-container box-border transition-all duration-300 ${
               isMobileChannelPinned 
-                ? 'w-full max-w-[390px] h-full max-h-[100dvh] sm:max-h-[92dvh] rounded-2xl border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] mx-auto' 
-                : 'w-full max-w-full h-full rounded-[44px]'
+                ? 'w-full max-w-full h-full max-h-[100dvh] sm:max-h-[956px] rounded-2xl border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] mx-auto' 
+                : 'w-full max-w-full h-full rounded-none sm:rounded-[50px]'
             }`}>
             
+              {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de captura image.png al pasar el puntero) */}
+              <div 
+                className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[48] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/desktop-top-sensor select-none"
+                id="desktop-video-top-margin-hover-sensor"
+                onMouseEnter={handleTopMenuMouseEnter}
+                onMouseLeave={handleTopMenuMouseLeave}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsTopControlsMenuHovered(prev => !prev);
+                }}
+                title="Pasa el puntero por el margen superior para abrir opciones y canales"
+              >
+                <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/desktop-top-sensor:bg-white/80 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+              </div>
+
               {/* 🎛️ TOP HOVER ZONE & EMBEDDED CONTROL OVERLAY INSIDE CHANNEL (image.png options) */}
               <div 
                 className={`absolute top-0 inset-x-0 h-auto max-h-[92vh] z-50 flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-all duration-300 ${
@@ -24018,7 +24101,7 @@ try {
       {/* 🎬 CENTER COLUMN: Standard vertical Video Wall with playback, overlays, and controls */}
       <main 
         ref={feedContainerRef}
-        className="flex-1 bg-white flex flex-col items-center justify-start p-2 sm:p-4 pb-16 md:pb-32 relative min-h-[680px] w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container"
+        className="flex-1 bg-white flex flex-col items-center justify-start p-0 px-0 pb-16 md:pb-32 relative min-h-[680px] w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container"
       >
 
         {viewingTikTokProfileUsername ? (
@@ -24027,7 +24110,7 @@ try {
           renderExploreGrid()
         ) : (
           /* Main vertically centered container holding Stories at the top and Smartphone Video + Sidebar at the bottom */
-          <div className="flex flex-col items-center justify-center gap-2 w-full max-w-[380px] xs:max-w-[420px] sm:max-w-[480px] md:max-w-[560px] lg:max-w-[620px] animate-fade-in self-center px-2 xs:px-3 sm:px-4 select-none min-w-0 mx-auto box-border" id="main-feed-column-container">
+          <div className="flex flex-col items-center justify-center gap-2 w-full max-w-full sm:max-w-[480px] md:max-w-[540px] animate-fade-in self-center px-0 select-none min-w-0 mx-auto box-border" id="main-feed-column-container">
             
 
 
@@ -24264,8 +24347,8 @@ try {
                   }}
                   className={`relative bg-black shadow-2xl overflow-hidden flex items-center justify-center shrink-0 group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
                     isMobileChannelPinned
-                      ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-2 xs:p-3 sm:p-4 m-0 border-none shadow-none'
-                      : 'w-full max-w-[402px] h-[772px] rounded-[48px] border border-slate-900 shadow-2xl'
+                      ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-0 m-0 border-none shadow-none'
+                      : 'w-full max-w-full sm:max-w-[460px] md:max-w-[480px] h-[880px] sm:h-[956px] max-h-[100dvh] sm:max-h-[956px] rounded-none sm:rounded-[55px] border-0 sm:border-[3.5px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
                   }`} 
                   id="video-feed-main-card"
                 >
@@ -24416,27 +24499,42 @@ try {
                   </div>
                 )}
                 
-                {/* 🎛️ EMBEDDED BROADCAST CONTROL OVERLAY AT TOP OF VIDEO FRAME (Captura z.png / image.png) */}
-                {/* 🎛️ TOP HOVER ZONE & EMBEDDED BROADCAST CONTROL OVERLAY (Captura z.png) */}
+                {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de la captura image.png al pasar el puntero sobre z.png) */}
+                <div 
+                  className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[98] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
+                  id="video-top-margin-hover-sensor"
+                  onMouseEnter={handleTopMenuMouseEnter}
+                  onMouseLeave={handleTopMenuMouseLeave}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsTopControlsMenuHovered(prev => !prev);
+                  }}
+                  title="Pasa el puntero por el margen superior para abrir opciones y canales"
+                >
+                  {/* Subtle top indicator bar */}
+                  <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+                </div>
+
+                {/* 🎛️ EMBEDDED BROADCAST CONTROL OVERLAY AT TOP OF VIDEO FRAME (Captura image.png) */}
                 <div 
                   className={`absolute top-0 inset-x-0 h-auto max-h-[92vh] z-[100] flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-all duration-300 w-full max-w-full min-w-0 ${
                     (isShortVideoGiftPanelOpen || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showFinanzasInscriptionInChannel || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
                       ? 'pointer-events-none opacity-0 hidden'
                       : (isTopControlsMenuHovered || mobileChannelControlsVisible)
-                        ? 'pointer-events-auto'
-                        : 'pointer-events-none'
+                        ? 'pointer-events-auto opacity-100'
+                        : 'pointer-events-none opacity-0'
                   }`} 
                   id="video-top-hover-zone"
                   onClick={(e) => e.stopPropagation()}
                   onMouseEnter={handleTopMenuMouseEnter}
                   onMouseLeave={handleTopMenuMouseLeave}
                 >
-                  {/* Subtle top indicator bar when not hovered */}
+                  {/* Subtle top indicator bar */}
                   <div className="w-16 h-1 bg-white/40 rounded-full transition-all duration-300 pointer-events-none mb-1 opacity-80" />
 
-                  {/* Complete Control Panel from z.png */}
+                  {/* Complete Control Panel from image.png */}
                   <div 
-                    className={`w-full max-w-full min-w-0 bg-[#0e1019]/95 backdrop-blur-md text-white p-2 sm:p-2.5 rounded-2xl border border-slate-700/80 shadow-2xl flex flex-col gap-1.5 transition-all duration-300 select-none ${
+                    className={`w-full max-w-full min-w-0 bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-4 rounded-3xl border border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 sm:gap-3 transition-all duration-300 select-none ${
                       isTopControlsMenuHovered || mobileChannelControlsVisible
                         ? 'opacity-100 translate-y-0 pointer-events-auto'
                         : 'opacity-0 -translate-y-4 pointer-events-none'
@@ -24445,10 +24543,10 @@ try {
                     onMouseEnter={handleTopMenuMouseEnter}
                     onMouseLeave={handleTopMenuMouseLeave}
                   >
-                    {/* Top Row: Volver, Finalizar & CREAR RETRANSMISION */}
-                    <div className="flex items-center justify-between gap-1 xs:gap-1.5 w-full max-w-full min-w-0">
-                      <div className="flex items-center gap-1 xs:gap-1.5 w-full justify-between min-w-0">
-                        {/* BOTÓN VOLVER */}
+                    {/* Top Row: Volver & Retransmitir */}
+                    <div className="flex items-center justify-between gap-1.5 w-full max-w-full min-w-0">
+                      <div className="flex items-center gap-1.5 w-full justify-between min-w-0">
+                        {/* BOTÓN VOLVER (Estilo píldora como en captura image.png) */}
                         <button
                           type="button"
                           onClick={() => {
@@ -24464,11 +24562,11 @@ try {
                               setShopTab('escaparate');
                             }
                           }}
-                          className="flex items-center justify-center gap-1 px-1.5 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 bg-[#1b2030] hover:bg-[#262c42] text-white text-[9px] xs:text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-xs shrink min-w-0"
+                          className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 bg-[#181d2a] hover:bg-[#22293b] text-white text-[11px] sm:text-xs font-black rounded-full transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-md shrink min-w-0"
                           title="Volver"
                           id="btn-back-inside-video-overlay"
                         >
-                          <ArrowLeft className="w-3 xs:w-3.5 h-3 xs:h-3.5 text-rose-500 stroke-[3] shrink-0" />
+                          <ArrowLeft className="w-3.5 h-3.5 text-[#fe2c55] stroke-[3] shrink-0" />
                           <span className="truncate font-black whitespace-nowrap">Volver</span>
                         </button>
 
@@ -24477,15 +24575,15 @@ try {
                           <button
                             type="button"
                             onClick={handleToggleUserCameraLiveBroadcast}
-                            className={`flex items-center justify-center gap-1 px-1.5 xs:px-2 sm:px-2.5 py-1 xs:py-1.5 text-[9px] xs:text-[10px] sm:text-xs font-black rounded-xl transition cursor-pointer border active:scale-95 shadow-xs shrink min-w-0 ${
+                            className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-xs font-black rounded-full transition cursor-pointer border active:scale-95 shadow-xs shrink min-w-0 ${
                               isUserLiveStreamingWithCamera
                                 ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.7)] animate-pulse'
-                                : 'bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border-slate-700/60'
+                                : 'bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border-slate-700/60'
                             }`}
                             title={isUserLiveStreamingWithCamera ? "Detener retransmisión en vivo" : "Retransmitir en vivo grabándote con tu propia cámara del móvil"}
                             id="btn-retransmit-live-top-2"
                           >
-                            <Radio className={`w-2.5 xs:w-3 sm:w-3.5 h-2.5 xs:h-3 sm:h-3.5 shrink-0 ${isUserLiveStreamingWithCamera ? 'text-white' : 'text-rose-500'}`} />
+                            <Radio className={`w-3.5 h-3.5 shrink-0 ${isUserLiveStreamingWithCamera ? 'text-white' : 'text-rose-500'}`} />
                             <span className="truncate font-black whitespace-nowrap">
                               {isUserLiveStreamingWithCamera ? `En Vivo (${formatLiveStreamDuration(liveStreamTimerSeconds)})` : 'Retransmitir'}
                             </span>
@@ -24494,8 +24592,8 @@ try {
                       </div>
                     </div>
 
-                    {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3), [Retransmitir en Tiendas]) */}
-                    <div className={`grid ${selectedCategoryFilter === 'Tiendas' ? 'grid-cols-5' : 'grid-cols-4'} gap-1.5 sm:gap-2 py-1.5 border-t border-slate-700/60 text-center w-full max-w-full min-w-0`}>
+                    {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3)) */}
+                    <div className={`grid ${selectedCategoryFilter === 'Tiendas' ? 'grid-cols-5' : 'grid-cols-4'} gap-2 sm:gap-2.5 pt-1 text-center w-full max-w-full min-w-0`}>
                       {/* 🎥 Cámara ON */}
                       <button
                         type="button"
@@ -24503,15 +24601,15 @@ try {
                           setIsBroadcastCamOn(!isBroadcastCamOn);
                           alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
                         }}
-                        className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
+                        className={`py-2.5 sm:py-3 px-1.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md ${
                           isBroadcastCamOn
-                            ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-black shadow-emerald-950/40'
-                            : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
+                            ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
+                            : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
                         }`}
                         title="Configurar Cámara"
                       >
-                        <Camera className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#10b981] shrink-0" />
-                        <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
+                        <Camera className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-[#10b981] shrink-0" />
+                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
                       </button>
 
                       {/* 🎙️ Mic ON */}
@@ -24522,30 +24620,30 @@ try {
                           setIsBroadcastMicOn(isMuted);
                           alert(isMuted ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.');
                         }}
-                        className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
+                        className={`py-2.5 sm:py-3 px-1.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md ${
                           !isMuted && isBroadcastMicOn
-                            ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-black shadow-emerald-950/40'
-                            : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
+                            ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
+                            : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
                         }`}
                         title="Configurar Micrófono"
                       >
-                        <Mic className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#10b981] shrink-0" />
-                        <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">{!isMuted ? 'Mic ON' : 'Mute'}</span>
+                        <Mic className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-[#10b981] shrink-0" />
+                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">{!isMuted ? 'Mic ON' : 'Mute'}</span>
                       </button>
 
                       {/* 🖥️ Pantalla */}
                       <button
                         type="button"
                         onClick={handleToggleScreenShare}
-                        className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
+                        className={`py-2.5 sm:py-3 px-1.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md ${
                           isScreenSharingActive
-                            ? 'bg-indigo-950/70 text-indigo-300 border-indigo-500 font-black shadow-xs animate-pulse ring-1 ring-indigo-400'
-                            : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
+                            ? 'bg-indigo-950/70 text-indigo-300 border-2 border-indigo-500 font-black shadow-xs animate-pulse ring-1 ring-indigo-400'
+                            : 'bg-[#181d2a] text-slate-200 border border-slate-700/70 hover:bg-[#22293b] font-bold'
                         }`}
                         title="Compartir Pantalla"
                       >
-                        <Monitor className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-200 shrink-0" />
-                        <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
+                        <Monitor className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-slate-200 shrink-0" />
+                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
                       </button>
 
                       {/* 👥 Invitados (3) */}
@@ -24561,11 +24659,11 @@ try {
                             setFinanzasDuoSubTool('invitar');
                           }
                         }}
-                        className="py-2 sm:py-2.5 px-1 sm:px-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm"
+                        className="py-2.5 sm:py-3 px-1.5 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md"
                         title="Invitar Invitados"
                       >
-                        <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-amber-400 shrink-0" />
-                        <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">Invitados ({broadcastGuests.length || 3})</span>
+                        <Users className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-amber-400 shrink-0" />
+                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">Invitados ({broadcastGuests.length || 3})</span>
                       </button>
 
                       {/* 🌐 Retransmitir (Solo en canal Tiendas) */}
@@ -24576,31 +24674,31 @@ try {
                             setShowCreateBroadcastModal(true);
                             setBroadcastModalTab('multistream');
                           }}
-                          className="py-2 sm:py-2.5 px-1 sm:px-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm"
+                          className="py-2.5 sm:py-3 px-1.5 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md"
                           title="Retransmitir en otras plataformas"
                         >
-                          <Globe className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-rose-400 shrink-0" />
-                          <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">Retransmitir</span>
+                          <Globe className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-rose-400 shrink-0" />
+                          <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">Retransmitir</span>
                         </button>
                       )}
                     </div>
 
-                    {/* Bottom Row: Channels in 2 Horizontal Columns (No arrows, slightly reduced size) */}
-                    <div className="pt-1.5 border-t border-slate-700/60 w-full max-w-full min-w-0">
-                      <div className="flex flex-col gap-1 w-full">
+                    {/* Bottom Row: Channels in 2 Columns (Captura image.png) */}
+                    <div className="pt-2 border-t border-slate-800/80 w-full max-w-full min-w-0">
+                      <div className="flex flex-col gap-2 w-full">
                         {/* Section Header */}
                         <div className="flex items-center justify-between px-1">
-                          <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400">
-                            Canales en Directo
+                          <span className="text-[11px] sm:text-[12px] font-black uppercase tracking-wider text-white">
+                            CANALES EN DIRECTO
                           </span>
-                          <span className="text-[9px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
+                          <span className="text-[10px] sm:text-[11px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-3 py-0.5 rounded-full border border-[#fe2c55]/60">
                             {selectedCategoryFilter}
                           </span>
                         </div>
 
                         {/* 2-Column Grid of Channels */}
                         <div 
-                          className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full max-h-[44vh] overflow-y-auto p-1 rounded-2xl bg-[#0e1019]/90 border border-slate-700/60 shadow-inner scrollbar-none"
+                          className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full max-h-[44vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/80 border border-slate-800 shadow-inner scrollbar-none"
                           id="embedded-channel-categories-2cols-grid"
                         >
                           {[
@@ -24621,10 +24719,10 @@ try {
                                 key={cat.id}
                                 type="button"
                                 onClick={() => handleCategoryFilterChange(cat.id as any)}
-                                className={`py-1.5 sm:py-2 px-2 sm:px-2.5 rounded-xl text-[10px] sm:text-[11px] font-black transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1 min-h-[32px] sm:min-h-[36px] shadow-sm ${
+                                className={`py-3 sm:py-3.5 px-3 rounded-2xl text-[11px] sm:text-[12px] font-black transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm ${
                                   isActive 
-                                    ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 text-white font-black shadow-md shadow-rose-600/40 border border-rose-400 ring-2 ring-rose-400/40' 
-                                    : 'bg-[#1b2030] hover:bg-[#252a3a] text-slate-200 hover:text-white border border-slate-700/70 hover:border-slate-500'
+                                    ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 text-white font-black shadow-lg shadow-rose-600/40 border-2 border-pink-400 ring-2 ring-rose-400/40' 
+                                    : 'bg-[#181d2a] hover:bg-[#22293b] text-white border border-slate-700/70 hover:border-slate-500'
                                 }`}
                                 id={`embedded-cat-btn-${cat.id}`}
                               >
@@ -24759,10 +24857,10 @@ try {
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-xs sm:text-sm md:text-base font-black uppercase text-slate-900 tracking-wider truncate m-0">
-                            Opciones de Compartir Pantalla
+                            Distribución de Pantalla
                           </h4>
                           <span className="text-[11px] sm:text-xs text-indigo-700 font-bold block truncate mt-0.5">
-                            Elige la fuente de pantalla que deseas transmitir en directo
+                            Elige entre 10 ventanas en 2 columnas o pantalla completa
                           </span>
                         </div>
                       </div>
@@ -24777,97 +24875,74 @@ try {
                       </button>
                     </div>
 
-                    {/* Opciones directas de Compartir Pantalla */}
+                    {/* Opciones directas de Pantalla: 10 Ventanas (2 Columnas) y Pantalla Completa */}
                     <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                      {/* 1. Toda la pantalla */}
+                      {/* 1. Botón para dividir la pantalla en 10 ventanas de usuarios en dos columnas en horizontal */}
                       <button
                         type="button"
-                        onClick={() => handleStartSpecificScreenShare('full')}
+                        onClick={() => {
+                          setScreenSplitLayout('grid-10');
+                          setScreenShareMode('window');
+                          setIsScreenSharingActive(true);
+                          setActiveScreenSharer('host');
+                          setShowScreenShareMenu(false);
+                        }}
                         className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                          isScreenSharingActive && screenShareMode === 'full' && activeScreenSharer === 'host'
-                            ? 'bg-indigo-100 border-indigo-600 text-indigo-950 font-black ring-2 ring-indigo-400 shadow-md'
-                            : 'bg-slate-50 hover:bg-indigo-50/70 border-slate-200 hover:border-indigo-300 text-slate-900 font-bold shadow-2xs'
-                        }`}
-                        id="btn-share-full-screen"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xl sm:text-2xl">🖥️</span>
-                          {isScreenSharingActive && screenShareMode === 'full' && (
-                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-ping" />
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Toda la Pantalla</span>
-                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Monitor completo o escritorio</span>
-                        </div>
-                      </button>
-
-                      {/* 2. Ventana de Aplicación */}
-                      <button
-                        type="button"
-                        onClick={() => handleStartSpecificScreenShare('window')}
-                        className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                          isScreenSharingActive && screenShareMode === 'window' && activeScreenSharer === 'host'
+                          isScreenSharingActive && screenSplitLayout === 'grid-10'
                             ? 'bg-purple-100 border-purple-600 text-purple-950 font-black ring-2 ring-purple-400 shadow-md'
                             : 'bg-slate-50 hover:bg-purple-50/70 border-slate-200 hover:border-purple-300 text-slate-900 font-bold shadow-2xs'
                         }`}
-                        id="btn-share-window"
+                        id="btn-split-10-windows"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-xl sm:text-2xl">🪟</span>
-                          {isScreenSharingActive && screenShareMode === 'window' && (
+                          <span className="text-xl sm:text-2xl">👥</span>
+                          {isScreenSharingActive && screenSplitLayout === 'grid-10' && (
                             <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-ping" />
                           )}
                         </div>
                         <div>
-                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Ventana de App</span>
-                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Aplicación o software</span>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">10 Ventanas</span>
+                          <span className="text-[10px] sm:text-[11px] md:text-xs text-purple-700 font-bold block leading-snug mt-0.5">2 columnas en horizontal</span>
                         </div>
                       </button>
 
-                      {/* 3. Pestaña del Navegador */}
+                      {/* 2. Botón para ponerla en pantalla completa */}
                       <button
                         type="button"
-                        onClick={() => handleStartSpecificScreenShare('tab')}
+                        onClick={() => {
+                          setScreenSplitLayout('single');
+                          setIsScreenSharingActive(false);
+                          setActiveScreenSharer('host');
+                          if (screenShareStream) {
+                            try {
+                              screenShareStream.getTracks().forEach(t => t.stop());
+                            } catch (e) {}
+                            setScreenShareStream(null);
+                          }
+                          setShowScreenShareMenu(false);
+                          try {
+                            const videoElem = document.getElementById('main-live-video-player') || document.documentElement;
+                            if (videoElem && !document.fullscreenElement) {
+                              videoElem.requestFullscreen?.().catch(() => {});
+                            }
+                          } catch (e) {}
+                        }}
                         className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                          isScreenSharingActive && screenShareMode === 'tab' && activeScreenSharer === 'host'
-                            ? 'bg-rose-100 border-rose-600 text-rose-950 font-black ring-2 ring-rose-400 shadow-md'
-                            : 'bg-slate-50 hover:bg-rose-50/70 border-slate-200 hover:border-rose-300 text-slate-900 font-bold shadow-2xs'
+                          screenSplitLayout === 'single' && !isScreenSharingActive
+                            ? 'bg-indigo-100 border-indigo-600 text-indigo-950 font-black ring-2 ring-indigo-400 shadow-md'
+                            : 'bg-slate-50 hover:bg-indigo-50/70 border-slate-200 hover:border-indigo-300 text-slate-900 font-bold shadow-2xs'
                         }`}
-                        id="btn-share-tab"
+                        id="btn-full-screen"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-xl sm:text-2xl">🌐</span>
-                          {isScreenSharingActive && screenShareMode === 'tab' && (
-                            <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
+                          <span className="text-xl sm:text-2xl">🖥️</span>
+                          {screenSplitLayout === 'single' && !isScreenSharingActive && (
+                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-ping" />
                           )}
                         </div>
                         <div>
-                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Pestaña Web</span>
-                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Navegador con audio</span>
-                        </div>
-                      </button>
-
-                      {/* 4. Presentation / Slides */}
-                      <button
-                        type="button"
-                        onClick={() => handleStartSpecificScreenShare('presentation')}
-                        className={`p-3 sm:p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1.5 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                          isScreenSharingActive && screenSplitLayout === 'presentation'
-                            ? 'bg-amber-100 border-amber-600 text-amber-950 font-black ring-2 ring-amber-400 shadow-md'
-                            : 'bg-amber-50/70 hover:bg-amber-100 border-amber-200 hover:border-amber-400 text-slate-900 font-bold shadow-2xs'
-                        }`}
-                        id="btn-share-slides"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xl sm:text-2xl">📊</span>
-                          {isScreenSharingActive && screenSplitLayout === 'presentation' && (
-                            <span className="w-2.5 h-2.5 rounded-full bg-amber-600 animate-ping" />
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Diapositivas</span>
-                          <span className="text-[10px] sm:text-[11px] md:text-xs text-slate-600 font-medium block leading-snug mt-0.5">Presentación de catálogo</span>
+                          <span className="text-xs sm:text-[13px] md:text-sm font-black text-slate-900 block leading-tight">Pantalla Completa</span>
+                          <span className="text-[10px] sm:text-[11px] md:text-xs text-indigo-700 font-bold block leading-snug mt-0.5">Modo completo único</span>
                         </div>
                       </button>
                     </div>
@@ -25720,31 +25795,39 @@ try {
                     className="absolute inset-0 w-full h-full bg-black z-35 overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
                     id="channel-fullscreen-camera-broadcast"
                   >
-                    {/* Vídeo en directo ocupando el 100% de la pantalla del canal */}
-                    <video
-                      ref={(el) => {
-                        fullscreenChannelVideoRef.current = el;
-                        if (el && userLiveMediaStream) {
-                          if (el.srcObject !== userLiveMediaStream) {
-                            el.srcObject = userLiveMediaStream;
+                    {/* Vídeo en directo ocupando el 100% de la pantalla del canal (cuando no esté dividido en 10 ventanas) */}
+                    {(screenSplitLayout !== 'grid-10' && screenSplitLayout !== 'grid') && (
+                      <video
+                        ref={(el) => {
+                          fullscreenChannelVideoRef.current = el;
+                          if (el && userLiveMediaStream) {
+                            if (el.srcObject !== userLiveMediaStream) {
+                              el.srcObject = userLiveMediaStream;
+                            }
+                            el.play().catch(() => {});
                           }
-                          el.play().catch(() => {});
-                        }
-                      }}
-                      autoPlay
-                      playsInline
-                      muted
-                      className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${
-                        liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
-                      }`}
-                    />
+                        }}
+                        autoPlay
+                        playsInline
+                        muted
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${
+                          liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
+                        }`}
+                      />
+                    )}
 
                     {/* Viñetas degradadas para máxima legibilidad de los textos y botones */}
                     <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/85 via-black/40 to-transparent pointer-events-none z-10" />
                     <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
 
-                    {/* 🔝 Barra Superior: Indicador En Directo y Duración */}
-                    <div className="relative z-20 flex flex-col gap-2 p-3 sm:p-4">
+                    {/* 🔝 Barra Superior: Indicador En Directo y Duración (Al pasar el cursor se abre la ventana de la captura image.png) */}
+                    <div 
+                      className="relative z-20 flex flex-col gap-2 p-3 sm:p-4 cursor-pointer shrink-0"
+                      onMouseEnter={handleTopMenuMouseEnter}
+                      onMouseLeave={handleTopMenuMouseLeave}
+                      onClick={() => setIsTopControlsMenuHovered(prev => !prev)}
+                      title="Pasa el puntero por el margen superior para abrir la ventana de control y canales"
+                    >
                       <div className="flex items-center justify-between gap-2">
                         {/* Live Badge & Duración */}
                         <div className="flex items-center gap-2 min-w-0">
@@ -25757,37 +25840,113 @@ try {
                           </span>
                         </div>
                       </div>
+                    </div>
 
-                      {/* En Finanzas: Píldora con Turno de Exposición y Cuenta Atrás de 5 Minutos */}
-                      {selectedCategoryFilter === 'Finanzas' && (
-                        <div className="flex items-center justify-between gap-2 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-emerald-500/50 shadow-md">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
-                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-emerald-300 tracking-wider truncate">
-                              {(() => {
-                                const rawUser = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
-                                const sList = currentFinanzasSession?.participants || [];
-                                const sIdx = sList.findIndex(p => p.id === rawUser.id || (p.name && p.name === rawUser.name));
-                                const pIdx = finanzasPresentationQueue.findIndex(item => item.id === rawUser.id || (item.name && item.name === rawUser.name));
-                                const num = pIdx !== -1 ? pIdx + 1 : (sIdx !== -1 ? sIdx + 1 : 6);
-                                return `TURNO ${num} DE 10 • EN EXPOSICIÓN`;
-                              })()}
-                            </span>
+                    {/* 👥 10 VENTANAS DE USUARIOS EN DOS COLUMNAS EN HORIZONTAL EN EL CANAL DE Z.PNG */}
+                    {(screenSplitLayout === 'grid-10' || screenSplitLayout === 'grid') && (() => {
+                      const activePresenter = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
+                      const otherNine = FINANZAS_USERS.filter(u => u.id !== activePresenter.id).slice(0, 9);
+                      const displayTenUsers = [activePresenter, ...otherNine];
+
+                      return (
+                        <div className="relative z-20 flex-1 w-full min-h-0 px-2 sm:px-3 overflow-y-auto custom-scrollbar flex flex-col gap-2 my-1 pointer-events-auto" id="channel-fullscreen-10-windows">
+                          {/* Top Header Banner */}
+                          <div className="bg-slate-900/95 border border-purple-500/80 px-2.5 py-1.5 rounded-xl text-white flex items-center justify-between text-[10px] font-black shrink-0 shadow-xl">
+                            <div className="flex items-center gap-1.5 text-purple-300 min-w-0">
+                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0" />
+                              <span className="uppercase tracking-wider truncate font-black">
+                                👥 10 Ventanas de Usuarios • 2 Columnas en Horizontal
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="bg-purple-600 text-white text-[8.5px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider shadow-xs">
+                                10 / 10 En Vivo
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setScreenSplitLayout('single');
+                                  setIsScreenSharingActive(false);
+                                }}
+                                className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[8px] font-bold px-1.5 py-0.5 rounded border border-slate-600 cursor-pointer"
+                                title="Volver a pantalla completa"
+                              >
+                                ✕ Pantalla Completa
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-1 shrink-0 bg-white/10 px-2 py-0.5 rounded-md border border-white/15">
-                            <span className="text-[10px] text-slate-300 font-bold">⏱️</span>
-                            <span className="font-mono font-black text-xs sm:text-sm text-white">
-                              {(() => {
-                                const rawUser = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
-                                const tVal = finanzasTimers[rawUser.id] !== undefined ? finanzasTimers[rawUser.id] : 300;
-                                return `${String(Math.floor(tVal / 60)).padStart(2, '0')}:${String(tVal % 60).padStart(2, '0')}`;
-                              })()}
-                            </span>
+                          {/* 10 Ventanas organizadas en 2 columnas en horizontal */}
+                          <div className="grid grid-cols-2 gap-2 w-full pb-2">
+                            {displayTenUsers.map((u, i) => {
+                              const isHost = i === 0;
+                              const ctrl = financeControlsList.find(c => c.id === u.id);
+                              const micOn = ctrl ? ctrl.micOn : true;
+
+                              return (
+                                <div
+                                  key={u.id || i}
+                                  onClick={() => {
+                                    setSelectedFinanzasUser(u);
+                                    setActiveFinanzasPopupUser(u);
+                                    setDetailProjectUser(u);
+                                    setShowProjectDetailsInPopup(true);
+                                    setShowQueueInPopup(false);
+                                  }}
+                                  className="relative flex flex-col bg-slate-900 rounded-xl overflow-hidden border-2 border-purple-500/60 hover:border-purple-400 shadow-md group transition cursor-pointer min-h-[115px] sm:min-h-[135px]"
+                                  id={`channel-user-window-${i + 1}`}
+                                >
+                                  {/* Window Live Content */}
+                                  <div className="relative flex-1 w-full min-h-[110px] bg-slate-950 overflow-hidden">
+                                    {isHost && userLiveMediaStream ? (
+                                      <video
+                                        ref={(el) => {
+                                          if (el && userLiveMediaStream && el.srcObject !== userLiveMediaStream) {
+                                            el.srcObject = userLiveMediaStream;
+                                            el.play().catch(() => {});
+                                          }
+                                        }}
+                                        autoPlay
+                                        playsInline
+                                        muted
+                                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                                          liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
+                                        }`}
+                                      />
+                                    ) : (
+                                      <img
+                                        src={u.avatar}
+                                        alt={u.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    )}
+
+                                    {/* Live Badge */}
+                                    <div className="absolute top-1 left-1 z-10">
+                                      <span className="bg-black/80 backdrop-blur-xs text-[6.5px] font-black text-emerald-400 px-1 py-0.2 rounded flex items-center gap-0.5 border border-emerald-500/40 leading-none shadow-xs">
+                                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping inline-block" />
+                                        EN VIVO
+                                      </span>
+                                    </div>
+
+                                    {/* Bottom Info Bar */}
+                                    <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-1 sm:p-1.5 flex flex-col justify-end">
+                                      <p className="text-[8px] sm:text-[9px] font-black text-white truncate leading-tight m-0">{u.name}</p>
+                                      <p className="text-[6.5px] sm:text-[7px] text-purple-300 font-bold truncate leading-none mt-0.5 flex items-center gap-0.5 m-0">
+                                        <span className="w-1 h-1 rounded-full bg-purple-400 inline-block shrink-0" />
+                                        <span>{u.role}</span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     {/* 🔻 Barra Inferior: Ficha del Presentador, Acciones y Botón Desactivar */}
                     <div className="relative z-20 flex flex-col gap-2 p-3 sm:p-4 mt-auto">
@@ -27247,11 +27406,19 @@ try {
                         {/* 🏢 CENTRAL STAGE: VOICE PRESENTATION & 5-MINUTE COUNTDOWN */}
                         <div 
                           key={currentFinanzasSession?.id || activeFinanzasSessionIndex}
-                          className={`flex-1 flex flex-col items-center justify-center text-center px-2 sm:px-3 py-1 my-auto select-none z-20 min-h-0 w-full max-w-full box-border ${slideDirection === 'up' ? 'animate-slide-up-tiktok' : 'animate-slide-down-tiktok'}`} 
+                          className={`flex-1 flex flex-col items-center justify-center text-center px-1.5 sm:px-2 py-1 my-auto select-none z-20 min-h-0 w-full max-w-full box-border ${slideDirection === 'up' ? 'animate-slide-up-tiktok' : 'animate-slide-down-tiktok'}`} 
                           id="finanzas-central-stage-view"
                         >
+                          {/* 🎉 Banner Flotante de Celebración para Ganadores */}
+                          {celebrationBanner && (
+                            <div className="w-[calc(100%-8px)] sm:w-[calc(100%-12px)] max-w-[440px] mx-auto mt-16 mb-[-64px] z-30 bg-gradient-to-r from-amber-500 via-rose-600 to-amber-500 text-white font-black text-xs sm:text-sm p-3 rounded-2xl shadow-[0_0_24px_rgba(254,44,85,0.7)] border border-amber-300 flex items-center justify-center gap-2 animate-bounce select-none">
+                              <Sparkles className="w-4 h-4 text-amber-200 fill-current animate-spin shrink-0" />
+                              <span className="leading-tight">{celebrationBanner}</span>
+                            </div>
+                          )}
+
                           {/* 🏢 CENTRAL STAGE: ACTIVE PARTICIPANT EXPOSITION & 5-MINUTE COUNTDOWN */}
-                          <div className="w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[390px] md:max-w-[430px] mx-auto mt-[76px] bg-[#0e1628]/95 border border-emerald-500/60 rounded-2xl p-3 sm:p-4 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
+                          <div className="w-[calc(100%-8px)] sm:w-[calc(100%-12px)] max-w-[440px] mx-auto mt-[76px] bg-[#0e1628]/95 border border-emerald-500/60 rounded-2xl p-3 sm:p-4 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center animate-scale-in text-center box-border">
                             {(() => {
                               // Use sessionCurrentActiveUser as the single, guaranteed source of truth for active presenter
                               const activeUser = sessionCurrentActiveUser;
@@ -27311,7 +27478,11 @@ try {
                                                 autoPlay
                                                 playsInline
                                                 muted
-                                                className={`w-full h-full object-cover ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                                                className={`w-full h-full object-cover ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''} ${
+                                                  liveCameraFilter === 'gold' ? 'sepia-[0.35] brightness-110 contrast-110 saturate-150 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' :
+                                                  liveCameraFilter === 'beauty' ? 'contrast-105 brightness-105 saturate-110' :
+                                                  liveCameraFilter === 'party' ? 'saturate-200 hue-rotate-15 contrast-115' : ''
+                                                }`}
                                               />
                                               <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
                                                 CÁMARA
@@ -27395,23 +27566,24 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* Actions: Ver Proyecto + Finalizar Exposición */}
+                                      {/* Actions: MICRO ON/OFF + Finalizar Exposición (Matching image.png) */}
                                       <div className="mt-2.5 w-full grid grid-cols-2 gap-2 box-border">
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            const rawTarget = activeUser || selectedFinanzasUser || currentSessionParticipants10[9] || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
-                                            setSelectedFinanzasUser(rawTarget);
-                                            setActiveFinanzasPopupUser(rawTarget);
-                                            setDetailProjectUser(rawTarget);
-                                            setShowQueueInPopup(false);
-                                            setShowProjectDetailsInPopup(true);
+                                            setIsBroadcastMicOn(!isBroadcastMicOn || isMuted);
+                                            setIsMuted(isBroadcastMicOn && !isMuted);
                                           }}
-                                          className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 box-border"
-                                          id="btn-view-project-active"
+                                          className={`w-full font-black text-[10.5px] sm:text-[11.5px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border box-border ${
+                                            isBroadcastMicOn && !isMuted
+                                              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
+                                              : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                                          }`}
+                                          id="btn-toggle-mic-active"
+                                          title={isBroadcastMicOn && !isMuted ? "Silenciar micrófono" : "Encender micrófono"}
                                         >
-                                          <span>📋</span>
-                                          <span className="truncate">Ver Proyecto</span>
+                                          <Mic className="w-3.5 h-3.5 shrink-0 text-white" />
+                                          <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
                                         </button>
 
                                         <button
@@ -27422,33 +27594,31 @@ try {
                                           title={`Finalizar exposición de ${activeUser?.name || 'participante'}`}
                                         >
                                           <Square className="w-3 h-3 fill-white text-white shrink-0" />
-                                          <span className="truncate">Finalizar</span>
+                                          <span className="truncate">FINALIZAR</span>
                                         </button>
                                       </div>
 
-                                      {/* 🎥 Botón Conectar Cámara debajo de Ver Proyecto y de Finalizar - SOLO APARECE EN LA EXPOSICIÓN DE ADRIANA LIMA (MÍA) */}
-                                      {isPresenterUser && (
-                                        <button
-                                          type="button"
-                                          onClick={handleToggleUserCameraLiveBroadcast}
-                                          className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
-                                            isUserLiveStreamingWithCamera
-                                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
-                                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
-                                          }`}
-                                          id="btn-connect-camera-central"
-                                          title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
-                                        >
-                                          {isUserLiveStreamingWithCamera ? (
-                                            <span>Desactivar cámara</span>
-                                          ) : (
-                                            <>
-                                              <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
-                                              <span>CONECTAR CÁMARA</span>
-                                            </>
-                                          )}
-                                        </button>
-                                      )}
+                                      {/* 🎥 Botón Cámara debajo de Ver Proyecto y de Finalizar */}
+                                      <button
+                                        type="button"
+                                        onClick={handleToggleUserCameraLiveBroadcast}
+                                        className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                          isUserLiveStreamingWithCamera
+                                            ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                                            : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
+                                        }`}
+                                        id="btn-connect-camera-central"
+                                        title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
+                                      >
+                                        {isUserLiveStreamingWithCamera ? (
+                                          <span>Desactivar cámara</span>
+                                        ) : (
+                                          <>
+                                            <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
+                                            <span>CÁMARA</span>
+                                          </>
+                                        )}
+                                      </button>
                                     </>
                                   ) : (
                                     <>
@@ -27541,29 +27711,28 @@ try {
                                         </button>
                                       </div>
 
-                                      {/* 🎥 Botón Conectar Cámara durante fase de votación - SOLO SI EL PRESENTADOR ES ADRIANA LIMA */}
-                                      {isPresenterUser && (
+                                      {/* 🎥 Botón Cámara para retransmitir en directo */}
+                                      <div className="mt-2 w-full box-border">
                                         <button
                                           type="button"
                                           onClick={handleToggleUserCameraLiveBroadcast}
-                                          className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                          className={`w-full py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-lg box-border ${
                                             isUserLiveStreamingWithCamera
-                                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.55)] animate-pulse'
                                               : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
                                           }`}
-                                          id="btn-connect-camera-voting"
-                                          title={isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo"}
+                                          id="btn-camara-voting"
+                                          title={isUserLiveStreamingWithCamera ? "Desconectar cámara en directo" : "Conectar cámara en directo"}
                                         >
-                                          {isUserLiveStreamingWithCamera ? (
-                                            <span>Desactivar cámara</span>
-                                          ) : (
-                                            <>
-                                              <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
-                                              <span>CONECTAR CÁMARA</span>
-                                            </>
+                                          <Camera className="w-4 h-4 shrink-0 text-current" />
+                                          <span>CÁMARA</span>
+                                          {isUserLiveStreamingWithCamera && (
+                                            <span className="ml-1.5 px-2 py-0.5 bg-red-950/90 text-white text-[9px] font-mono rounded-full border border-red-400/80 animate-pulse">
+                                              🔴 EN DIRECTO
+                                            </span>
                                           )}
                                         </button>
-                                      )}
+                                      </div>
 
 
                                     </>
@@ -27574,39 +27743,70 @@ try {
                           </div>
                         </div>
 
+                        {/* 🎛️ SENSOR DEL MARGEN INFERIOR DEL CANAL (Abre la ventana de la captura image.png al pasar el ratón) */}
+                        <div 
+                          className="absolute bottom-0 inset-x-0 h-16 sm:h-20 z-[28] pointer-events-auto cursor-pointer flex justify-center items-end pb-2 group/bottom-margin-sensor select-none"
+                          id="video-bottom-margin-hover-sensor"
+                          onMouseEnter={handleBottomParticipantsMouseEnter}
+                          onMouseLeave={handleBottomParticipantsMouseLeave}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsBottomParticipantsHovered(prev => !prev);
+                          }}
+                          title="Pasa el puntero por el margen inferior para abrir la ventana de participantes"
+                        />
+
                         {/* Hover-Triggerable Participants Table & Buttons for Finanzas Session (Appears on hover at the bottom of the channel) */}
                         <div 
-                          className="group/bottom-participants relative w-full mt-auto pt-4 pb-1 z-30 select-none shrink-0 box-border cursor-default"
+                          className="relative w-full mt-auto pb-1 z-30 select-none shrink-0 box-border cursor-default"
                           onClick={(e) => e.stopPropagation()}
+                          onMouseEnter={handleBottomParticipantsMouseEnter}
+                          onMouseLeave={handleBottomParticipantsMouseLeave}
                         >
                           {/* Subtle Peek Indicator Tab at the very bottom when collapsed */}
-                          <div className="flex items-center justify-center -mb-1 pb-1 transition-opacity duration-300 group-hover/bottom-participants:opacity-0 pointer-events-none">
-                            <div className="bg-slate-900/80 hover:bg-slate-800 text-slate-400 border border-slate-700/60 px-3 py-0.5 rounded-full text-[9px] font-bold tracking-wider flex items-center gap-1.5 shadow-md">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <div 
+                            className={`flex items-center justify-center transition-all duration-300 cursor-pointer ${
+                              isBottomParticipantsHovered || forceShowParticipantsPanel ? 'opacity-0 h-0 overflow-hidden pointer-events-none' : 'opacity-100 py-1'
+                            }`}
+                            onMouseEnter={handleBottomParticipantsMouseEnter}
+                            onMouseLeave={handleBottomParticipantsMouseLeave}
+                            onClick={() => setIsBottomParticipantsHovered(prev => !prev)}
+                            title="Pasa el puntero por el margen inferior para abrir la ventana de participantes"
+                          >
+                            <div className="bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 hover:border-emerald-500/60 px-3.5 py-1 rounded-full text-[9.5px] font-black tracking-wider flex items-center gap-2 shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                               <span>👥 10 PARTICIPANTES • Pasa el ratón aquí</span>
                             </div>
                           </div>
 
-                          {/* Participant Grid & Action buttons panel - reveals on hover at bottom */}
+                          {/* Participant Grid & Action buttons panel - reveals at bottom ONLY when hovering bottom margin */}
                           <div 
-                            className={`flex flex-col gap-1.5 sm:gap-2 w-full max-w-[360px] xs:max-w-[420px] sm:max-w-[460px] min-w-0 bg-slate-950/95 backdrop-blur-md p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-slate-800/90 shadow-[0_16px_50px_rgba(0,0,0,0.9)] px-2 sm:px-2.5 mx-auto box-border transition-all duration-300 ease-out ${
-                              forceShowParticipantsPanel 
-                                ? 'opacity-100 translate-y-0 pointer-events-auto' 
-                                : 'opacity-0 translate-y-3 pointer-events-none group-hover/bottom-participants:opacity-100 group-hover/bottom-participants:translate-y-0 group-hover/bottom-participants:pointer-events-auto'
+                            className={`transition-all duration-300 ease-out origin-bottom w-full ${
+                              isBottomParticipantsHovered || forceShowParticipantsPanel
+                                ? 'opacity-100 translate-y-0 pointer-events-auto max-h-[850px]' 
+                                : 'opacity-0 translate-y-6 pointer-events-none max-h-0 overflow-hidden'
                             }`}
-                            id="finanzas-live-participants-panel-channel"
-                            onClick={(e) => e.stopPropagation()}
+                            id="finanzas-live-participants-panel-channel-wrapper"
+                            onMouseEnter={handleBottomParticipantsMouseEnter}
+                            onMouseLeave={handleBottomParticipantsMouseLeave}
                           >
+                            <div 
+                              className="flex flex-col gap-2 sm:gap-3 w-full max-w-[420px] sm:max-w-[460px] min-w-0 bg-[#0B0F19]/95 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-slate-800/90 shadow-[0_20px_60px_rgba(0,0,0,0.95)] px-3 sm:px-4 mx-auto box-border"
+                              id="finanzas-live-participants-panel-channel"
+                              onClick={(e) => e.stopPropagation()}
+                              onMouseEnter={handleBottomParticipantsMouseEnter}
+                              onMouseLeave={handleBottomParticipantsMouseLeave}
+                            >
                             {/* Header matching current session title and active count */}
-                            <div className="flex items-center justify-between px-0.5 w-full max-w-full min-w-0 gap-1 box-border">
-                              <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 overflow-hidden">
-                                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-500/50 shrink-0" />
-                                <span className="text-[8.5px] xs:text-[9.5px] sm:text-[11px] font-sans font-black uppercase tracking-wider text-white drop-shadow-sm truncate min-w-0">
-                                  {currentFinanzasSession?.title || 'MESA DE INVERSIÓN • VERSACE RUNWAY'}
+                            <div className="flex items-center justify-between px-1 w-full max-w-full min-w-0 gap-2 box-border">
+                              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-hidden">
+                                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-500/50 shrink-0" />
+                                <span className="text-[9.5px] xs:text-[10.5px] sm:text-[12px] font-sans font-black uppercase tracking-wider text-white drop-shadow-sm truncate min-w-0">
+                                  {currentFinanzasSession?.title || 'RONDA ELEGANT & CLASSIC 🤍'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-[7px] xs:text-[8px] sm:text-[9.5px] bg-[#fe2c55] text-white px-1.5 sm:px-2 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm animate-bounce whitespace-nowrap">
+                                <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-[#fe2c55] text-white px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap">
                                   10 ONLINE
                                 </span>
                               </div>
@@ -27619,7 +27819,7 @@ try {
 
                               return (
                                 <>
-                                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2 pb-1 pt-1 select-none w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] mx-auto box-border items-center justify-center" id="finanzas-live-grid-2x5-channel">
+                                  <div className="grid grid-cols-5 gap-2 sm:gap-2.5 pb-2 pt-1.5 select-none w-full max-w-full mx-auto box-border items-center justify-center" id="finanzas-live-grid-2x5-channel">
                                     {gridParticipants.map((userObj, idx) => {
                                       const isChosenInSpotlight = (
                                         userObj.id === sessionCurrentActiveUser.id || 
@@ -27663,7 +27863,6 @@ try {
 
                                             const displayName = userObj.name;
                                             const turnNumber = turnIdx + 1;
-
                                             setSystemVoiceNotification({
                                               show: true,
                                               message: `⏱️ Turno ${turnNumber} de 10: ${displayName} (5 min de exposición)`
@@ -27697,14 +27896,17 @@ try {
                                               )
                                             );
 
+                                            const rawName = isSelf ? 'Adriana' : userObj.name.split(' ')[0];
+                                            const displayName = rawName.length > 5 ? rawName.slice(0, 4) + '...' : rawName;
+
                                             return (
                                               <div
-                                                className={`w-full max-w-full min-w-0 aspect-square min-h-[36px] xs:min-h-[42px] sm:min-h-[48px] md:min-h-[54px] rounded-xl sm:rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-1 box-border ${
+                                                className={`w-full max-w-full min-w-0 aspect-square min-h-[58px] xs:min-h-[66px] sm:min-h-[74px] rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-1 box-border ${
                                                   isChosenInSpotlight 
-                                                    ? 'border-[#fe2c55] ring-2 ring-[#fe2c55]/90 shadow-[0_0_12px_rgba(254,44,85,0.9)]' 
+                                                    ? 'border-2 border-[#fe2c55] ring-2 ring-[#fe2c55]/90 shadow-[0_0_14px_rgba(254,44,85,0.9)]' 
                                                     : isSelf
-                                                      ? 'border-pink-400 ring-2 ring-pink-500/80 shadow-[0_0_10px_rgba(244,114,182,0.8)]'
-                                                      : 'border-slate-800/80 hover:border-white/80'
+                                                      ? 'border-2 border-pink-400 ring-2 ring-pink-500/80 shadow-[0_0_10px_rgba(244,114,182,0.8)]'
+                                                      : 'border border-slate-700/80 hover:border-white/80'
                                                 }`}
                                                 title={`Ver detalles de ${userObj.name}`}
                                               >
@@ -27714,18 +27916,18 @@ try {
                                                   className="absolute inset-0 w-full h-full object-cover"
                                                   referrerPolicy="no-referrer"
                                                 />
-                                                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full border border-black/50 shadow-sm animate-pulse z-10 bg-[#fe2c55]" />
+                                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-black/50 shadow-sm animate-pulse z-10 bg-[#fe2c55]" />
                                                 {isSelf && (
-                                                  <span className="absolute top-1 left-1 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-[6.5px] xs:text-[7.5px] font-black px-1 py-0.2 rounded shadow-sm z-10 uppercase tracking-tighter">
+                                                  <span className="absolute top-1.5 left-1.5 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-[7px] xs:text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm z-10 uppercase tracking-tighter">
                                                     Tú
                                                   </span>
                                                 )}
 
-                                                <div className={`relative z-10 self-center backdrop-blur-xs text-center py-0.5 px-1.5 min-w-0 max-w-[95%] overflow-hidden rounded-md box-border shadow-md ${
+                                                <div className={`relative z-10 self-center backdrop-blur-xs text-center py-0.5 px-2 min-w-0 max-w-[92%] overflow-hidden rounded-md box-border shadow-md ${
                                                   isSelf ? 'bg-pink-950/90 border border-pink-400/60' : 'bg-black/85'
                                                 }`}>
-                                                  <span className={`text-[7px] xs:text-[8px] sm:text-[9.5px] font-black block truncate leading-tight min-w-0 ${isSelf ? 'text-pink-200' : 'text-white'}`}>
-                                                    {isSelf ? 'Adriana (Tú)' : userObj.name.split(' ')[0]}
+                                                  <span className={`text-[8.5px] xs:text-[9.5px] sm:text-[10.5px] font-black block truncate leading-tight min-w-0 ${isSelf ? 'text-pink-200' : 'text-white'}`}>
+                                                    {displayName}
                                                   </span>
                                                 </div>
                                               </div>
@@ -27736,8 +27938,8 @@ try {
                                     })}
                                   </div>
 
-                                  {/* Action buttons: Botón para inscribirse en esta sesión (abre la pantalla de inscripción de la captura z.png) y ver proyectos */}
-                                  <div className="w-full flex flex-wrap items-center justify-center gap-1.5 mt-0.5 box-border" id="miembros-de-la-sala-btn-container-channel">
+                                  {/* Action buttons: Botón para inscribirse en esta sesión y ver proyectos (Mayor tamaño como en imagen.png) */}
+                                  <div className="w-full flex flex-col items-center justify-center gap-2.5 sm:gap-3 mt-2 sm:mt-2.5 box-border" id="miembros-de-la-sala-btn-container-channel">
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -27755,16 +27957,16 @@ try {
                                         // Open the project selection page
                                         setShowFinanzasInscriptionInChannel(true);
                                       }}
-                                      className={`font-extrabold text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border flex items-center justify-center gap-1.5 cursor-pointer font-sans shadow-md max-w-full truncate box-border active:scale-95 ${
+                                      className={`w-full max-w-[400px] font-black text-[12px] xs:text-[13px] sm:text-[14px] px-5 sm:px-6 py-3 sm:py-3.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
                                         isUserParticipating
-                                          ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white border-emerald-400 shadow-emerald-900/20'
-                                          : 'bg-gradient-to-r from-[#FDE8EE] via-[#FAD1DC] to-[#F7C2CF] hover:from-[#FAD1DC] hover:to-[#F4ADC0] text-[#4A1D2B] border-[#F2AAB8] shadow-pink-900/15'
+                                          ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white border-emerald-400 shadow-emerald-900/30'
+                                          : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
                                       title={isUserParticipating ? "Participando como Adriana Lima" : "Inscribirse en una sesión de (10 Euros)"}
                                     >
-                                      <span className="text-xs shrink-0">{isUserParticipating ? '✅' : '✍️'}</span>
-                                      <span className="truncate min-w-0 font-extrabold">
+                                      <span className="text-base shrink-0">{isUserParticipating ? '✅' : '✍️'}</span>
+                                      <span className="truncate min-w-0 font-black tracking-tight">
                                         {isUserParticipating ? 'Estás inscrita como participante (10€)' : 'Inscribirse en una sesión de (10 Euros)'}
                                       </span>
                                     </button>
@@ -27774,16 +27976,17 @@ try {
                                       onClick={() => {
                                         setShowVotingProjectsModal(true);
                                       }}
-                                      className="bg-white hover:bg-slate-100 active:scale-95 text-slate-950 font-black text-[8px] xs:text-[8.5px] sm:text-[10px] px-3.5 sm:px-4 py-1.5 rounded-full transition duration-200 border border-slate-200/80 flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider font-sans shadow-md max-w-full truncate box-border"
+                                      className="w-auto min-w-[220px] sm:min-w-[250px] bg-white hover:bg-slate-100 active:scale-95 text-slate-950 font-black text-[11.5px] xs:text-[12.5px] sm:text-[13px] px-8 sm:px-10 py-2.5 sm:py-3 rounded-full transition duration-200 border border-slate-200/90 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
                                       id="btn-votar-mejor-proyecto-channel"
                                     >
-                                      <span className="text-xs shrink-0">📋</span>
-                                      <span className="truncate min-w-0">VER PROYECTOS</span>
+                                      <span className="text-base shrink-0">📋</span>
+                                      <span className="truncate min-w-0 font-black">VER PROYECTOS</span>
                                     </button>
                                   </div>
                                 </>
                               );
                             })()}
+                            </div>
                           </div>
                         </div>
                       </>
@@ -28001,10 +28204,22 @@ try {
                           autoPlay
                           playsInline
                           muted={true}
-                          className={`w-full h-full object-cover transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                          className={`w-full h-full object-cover transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''} ${
+                            liveCameraFilter === 'gold' ? 'sepia-[0.35] brightness-110 contrast-110 saturate-150 drop-shadow-[0_0_12px_rgba(234,179,8,0.5)]' :
+                            liveCameraFilter === 'beauty' ? 'contrast-105 brightness-105 saturate-110' :
+                            liveCameraFilter === 'party' ? 'saturate-200 hue-rotate-15 contrast-115' : ''
+                          }`}
                         />
                         {/* Live Floating Camera Tools */}
                         <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/15">
+                          <button
+                            type="button"
+                            onClick={handleCelebrateWinners}
+                            className="p-1.5 hover:bg-white/20 text-amber-300 rounded-xl transition cursor-pointer"
+                            title="Celebrar / Felicitar a los ganadores"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 fill-current animate-pulse" />
+                          </button>
                           <button
                             type="button"
                             onClick={handleFlipLiveCamera}
@@ -28072,34 +28287,8 @@ try {
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fe2c55]"></span>
                         </span>
                         <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider font-sans">
-                          CANAL {selectedCategoryFilter === 'BackStage' ? 'BACKSTAGE' : selectedCategoryFilter.toUpperCase()} EN VIVO
+                          CANAL {selectedCategoryFilter === 'BackStage' ? 'BACKSTAGE' : selectedCategoryFilter.toUpperCase()}
                         </span>
-                        {selectedCategoryFilter !== 'Finanzas' && (
-                          <button
-                            type="button"
-                            onClick={() => handleCategoryFilterChange('Finanzas')}
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider transition cursor-pointer shadow-xs ml-1 flex items-center gap-1 border border-emerald-400/40"
-                            title="Ir al Canal de Finanzas"
-                            id="btn-switch-to-finanzas-from-badge"
-                          >
-                            <span>📈 Ir a Finanzas</span>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryLiveConnectedMap((prev) => {
-                              const next = { ...prev, [selectedCategoryFilter]: false };
-                              localStorage.setItem('category_live_connected_map', JSON.stringify(next));
-                              return next;
-                            });
-                            handleCategoryFilterChange('Finanzas');
-                          }}
-                          className="bg-slate-800/90 hover:bg-rose-600 text-slate-200 hover:text-white px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider transition cursor-pointer border border-slate-700 ml-1"
-                          title="Detener retransmisión e ir a Finanzas"
-                        >
-                          Detener ✕
-                        </button>
                       </div>
                     )}
                   {/* 📐 SPLIT SCREEN & COMPANION SCREEN SHARE VISUAL OVERLAY CONTAINER */}
@@ -28113,7 +28302,9 @@ try {
                         <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-purple-300 truncate">
                           {selectedCategoryFilter === 'Tiendas'
                             ? '👯 DÚO LIVE SHOPPING • VENDEDOR + INFLUENCER/MODELO PRESENTANDO PRODUCTO'
-                            : `📐 MODO PANTALLA: ${screenSplitLayout.toUpperCase()} • COMPARTIDO EN DIRECTO`}
+                            : (screenSplitLayout === 'grid-10' || screenShareMode === 'window')
+                              ? '👥 10 VENTANAS DE USUARIOS • 2 COLUMNAS EN HORIZONTAL'
+                              : `📐 MODO PANTALLA: ${screenSplitLayout.toUpperCase()} • COMPARTIDO EN DIRECTO`}
                         </span>
                       </div>
 
@@ -28326,82 +28517,27 @@ try {
                     )}
 
                     {(screenSplitLayout === 'grid' || screenSplitLayout === 'grid-10') && (
-                      <div className="flex flex-col flex-1 w-full h-full min-h-0 space-y-1.5 pointer-events-auto p-1 overflow-y-auto custom-scrollbar">
+                      <div className="flex flex-col flex-1 w-full h-full min-h-0 space-y-2 pointer-events-auto p-1.5 overflow-y-auto custom-scrollbar" id="split-screen-10-windows">
                         {/* Grid Header Banner */}
-                        <div className="bg-slate-900/95 border border-rose-500/80 px-2.5 py-1.5 rounded-xl text-white flex items-center justify-between text-[10px] font-black shrink-0 shadow-xl">
-                          <div className="flex items-center gap-1.5 text-rose-300 min-w-0">
-                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
-                            <span className="uppercase tracking-wider truncate">👨‍👩‍👧‍👦 Cuadrícula Multianfitrión (10 Ponentes)</span>
+                        <div className="bg-slate-900/95 border border-purple-500/80 px-3 py-1.5 rounded-xl text-white flex items-center justify-between text-[10px] font-black shrink-0 shadow-xl">
+                          <div className="flex items-center gap-1.5 text-purple-300 min-w-0">
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0" />
+                            <span className="uppercase tracking-wider truncate font-black">
+                              👥 10 Ventanas de Usuarios • 2 Columnas en Horizontal
+                            </span>
                           </div>
-                          <span className="bg-rose-600 text-white text-[8.5px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider shrink-0 shadow-xs">
-                            10 / 10 En Vivo
+                          <span className="bg-purple-600 text-white text-[9px] px-2.5 py-0.5 rounded-md font-black uppercase tracking-wider shrink-0 shadow-xs">
+                            10 / 10 Usuarios (2 Columnas)
                           </span>
                         </div>
 
-                        {/* ROW 1: Host "Adriana Lima" (Larger, Centered) */}
-                        {(() => {
-                          const host = FINANZAS_USERS[0];
-                          const ctrl = financeControlsList.find(c => c.id === host.id);
-                          const micOn = ctrl ? ctrl.micOn : true;
-                          const camOn = ctrl ? ctrl.camOn : true;
-
-                          return (
-                            <div className="flex justify-center w-full shrink-0 my-0.5">
-                              <div 
-                                onClick={() => {
-                                  setSelectedFinanzasUser(host);
-                                  setActiveFinanzasPopupUser(host);
-                                  setDetailProjectUser(host);
-                                  setShowProjectDetailsInPopup(true);
-                                  setShowQueueInPopup(false);
-                                  setIsVoiceIntroPlaying(false);
-                                }}
-                                className="relative aspect-square w-24 sm:w-28 bg-slate-900 rounded-xl overflow-hidden border-2 border-rose-500 flex flex-col justify-between p-1 sm:p-1.5 shadow-lg group hover:border-rose-400 transition cursor-pointer"
-                              >
-                                {camOn ? (
-                                  <img
-                                    src={host.avatar}
-                                    alt={host.name}
-                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                ) : (
-                                  <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-1 text-center">
-                                    <img src={host.avatar} alt={host.name} className="w-7 h-7 rounded-full object-cover border border-slate-700 opacity-40 mb-0.5" />
-                                    <span className="text-[7.5px] font-extrabold text-slate-400">📷 Off</span>
-                                  </div>
-                                )}
-
-                                {/* Top Slot Badge & Mic Status */}
-                                <div className="relative z-10 flex items-center justify-between w-full gap-1">
-                                  <span className="bg-rose-600 text-white font-black text-[7.5px] sm:text-[8.5px] uppercase px-1.5 py-0.2 rounded border border-rose-400 shadow-xs">
-                                    ★ Tú (Anfitrión)
-                                  </span>
-                                  <span className={`text-[7px] sm:text-[8px] font-black px-1 py-0.2 rounded backdrop-blur-md border ${
-                                    micOn ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60' : 'bg-rose-950/90 text-rose-300 border-rose-500/60'
-                                  }`}>
-                                    {micOn ? '🎙️ ON' : '🔇 MUTE'}
-                                  </span>
-                                </div>
-
-                                {/* Bottom Overlay */}
-                                <div className="relative z-10 bg-black/85 backdrop-blur-md p-1 rounded-md border border-slate-700/80 w-full">
-                                  <p className="text-[8.5px] sm:text-[9.5px] font-black text-white truncate m-0 leading-tight">{host.name}</p>
-                                  <p className="text-[7px] sm:text-[7.5px] text-emerald-400 font-extrabold truncate m-0 leading-none flex items-center gap-0.5 mt-0.5">
-                                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping inline-block shrink-0"></span>
-                                    <span>{host.role}</span>
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {/* 3 ROWS OF 3 USERS EACH (9 Co-hosts) */}
-                        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 w-full flex-1 min-h-0 place-items-center justify-center">
-                          {FINANZAS_USERS.slice(1, 10).map((u, i) => {
+                        {/* 10 Application Windows Grid (Strictly 2 Columns horizontally) */}
+                        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full flex-1 min-h-0">
+                          {FINANZAS_USERS.slice(0, 10).map((u, i) => {
                             const ctrl = financeControlsList.find(c => c.id === u.id);
                             const micOn = ctrl ? ctrl.micOn : true;
                             const camOn = ctrl ? ctrl.camOn : true;
+                            const isHost = i === 0;
 
                             return (
                               <div
@@ -28414,40 +28550,40 @@ try {
                                   setShowQueueInPopup(false);
                                   setIsVoiceIntroPlaying(false);
                                 }}
-                                className="relative aspect-square w-full bg-slate-900 rounded-lg sm:rounded-xl overflow-hidden border-2 border-emerald-500/70 flex flex-col justify-between p-1 shadow-md group hover:border-rose-400 transition cursor-pointer"
+                                className="relative flex flex-col bg-slate-900 rounded-xl overflow-hidden border-2 border-purple-500/60 hover:border-purple-400 shadow-lg group transition cursor-pointer min-h-[120px] sm:min-h-[135px]"
+                                id={`app-window-${i + 1}`}
                               >
-                                {camOn ? (
-                                  <img
-                                    src={u.avatar}
-                                    alt={u.name}
-                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                ) : (
-                                  <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-1 text-center">
-                                    <img src={u.avatar} alt={u.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-slate-700 opacity-40 mb-0.5" />
-                                    <span className="text-[7px] font-extrabold text-slate-400 leading-none">📷 Off</span>
+                                {/* Window Body & Live Content */}
+                                <div className="relative flex-1 w-full min-h-[105px] bg-slate-950 overflow-hidden">
+                                  {camOn ? (
+                                    <img
+                                      src={u.avatar}
+                                      alt={u.name}
+                                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  ) : (
+                                    <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-1 text-center">
+                                      <img src={u.avatar} alt={u.name} className="w-6 h-6 rounded-full object-cover border border-slate-700 opacity-40 mb-0.5" />
+                                      <span className="text-[7px] font-extrabold text-slate-400 leading-none">📷 Off</span>
+                                    </div>
+                                  )}
+
+                                  {/* Window Live Tag */}
+                                  <div className="absolute top-1 left-1 z-10">
+                                    <span className="bg-black/80 backdrop-blur-xs text-[7px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
+                                      <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping inline-block" />
+                                      EN VIVO
+                                    </span>
                                   </div>
-                                )}
 
-                                {/* Top Slot Badge & Mic Status */}
-                                <div className="relative z-10 flex items-center justify-between w-full gap-0.5">
-                                  <span className="bg-slate-950/90 backdrop-blur-md text-white font-black text-[7px] sm:text-[7.5px] uppercase px-1 py-0.2 rounded border border-slate-700 leading-none">
-                                    #{i + 2}
-                                  </span>
-                                  <span className={`text-[6.5px] sm:text-[7.5px] font-black px-1 py-0.2 rounded backdrop-blur-md border leading-none ${
-                                    micOn ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60' : 'bg-rose-950/90 text-rose-300 border-rose-500/60'
-                                  }`}>
-                                    {micOn ? '🎙️' : '🔇'}
-                                  </span>
-                                </div>
-
-                                {/* Bottom Name & Role Overlay */}
-                                <div className="relative z-10 bg-black/85 backdrop-blur-md p-0.5 sm:p-1 rounded-md border border-slate-700/80 w-full">
-                                  <p className="text-[7.5px] sm:text-[8.5px] font-black text-white truncate m-0 leading-tight">{u.name.split(' ')[0]}</p>
-                                  <p className="text-[6.5px] sm:text-[7px] text-emerald-400 font-extrabold truncate m-0 leading-none flex items-center gap-0.5">
-                                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping inline-block shrink-0"></span>
-                                    <span>{u.role.split(' ')[0]}</span>
-                                  </p>
+                                  {/* Bottom Window Info Bar */}
+                                  <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-1.5 flex flex-col justify-end">
+                                    <p className="text-[8.5px] sm:text-[9.5px] font-black text-white truncate leading-tight m-0">{u.name}</p>
+                                    <p className="text-[7px] sm:text-[7.5px] text-purple-300 font-bold truncate leading-none mt-0.5 flex items-center gap-1 m-0">
+                                      <span className="w-1 h-1 rounded-full bg-purple-400 inline-block shrink-0" />
+                                      <span>{u.role}</span>
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -28958,54 +29094,43 @@ try {
                             <div className="grid grid-cols-2 gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleStartSpecificScreenShare('full')}
+                                onClick={() => {
+                                  setScreenSplitLayout('grid-10');
+                                  setScreenShareMode('window');
+                                  setIsScreenSharingActive(true);
+                                  setActiveScreenSharer('host');
+                                }}
                                 className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                                  isScreenSharingActive && screenShareMode === 'full' && activeScreenSharer === 'host'
-                                    ? 'bg-indigo-600 text-white border-indigo-700 font-black shadow-xs'
-                                    : 'bg-white hover:bg-indigo-50 text-slate-900 border-slate-200'
-                                }`}
-                              >
-                                <span className="text-xs font-black">🖥️ Toda la Pantalla</span>
-                                <span className="text-[8.5px] opacity-80 font-medium">Monitor completo o escritorio</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleStartSpecificScreenShare('window')}
-                                className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                                  isScreenSharingActive && screenShareMode === 'window' && activeScreenSharer === 'host'
+                                  isScreenSharingActive && screenSplitLayout === 'grid-10'
                                     ? 'bg-purple-600 text-white border-purple-700 font-black shadow-xs'
                                     : 'bg-white hover:bg-purple-50 text-slate-900 border-slate-200'
                                 }`}
                               >
-                                <span className="text-xs font-black">🪟 Ventana de App</span>
-                                <span className="text-[8.5px] opacity-80 font-medium">Software o ventana abierta</span>
+                                <span className="text-xs font-black">👥 10 Ventanas</span>
+                                <span className="text-[8.5px] opacity-80 font-medium">2 columnas en horizontal</span>
                               </button>
 
                               <button
                                 type="button"
-                                onClick={() => handleStartSpecificScreenShare('tab')}
+                                onClick={() => {
+                                  setScreenSplitLayout('single');
+                                  setIsScreenSharingActive(false);
+                                  setActiveScreenSharer('host');
+                                  if (screenShareStream) {
+                                    try {
+                                      screenShareStream.getTracks().forEach(t => t.stop());
+                                    } catch (e) {}
+                                    setScreenShareStream(null);
+                                  }
+                                }}
                                 className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                                  isScreenSharingActive && screenShareMode === 'tab' && activeScreenSharer === 'host'
-                                    ? 'bg-rose-600 text-white border-rose-700 font-black shadow-xs'
-                                    : 'bg-white hover:bg-rose-50 text-slate-900 border-slate-200'
+                                  screenSplitLayout === 'single' && !isScreenSharingActive
+                                    ? 'bg-indigo-600 text-white border-indigo-700 font-black shadow-xs'
+                                    : 'bg-white hover:bg-indigo-50 text-slate-900 border-slate-200'
                                 }`}
                               >
-                                <span className="text-xs font-black">🌐 Pestaña Web</span>
-                                <span className="text-[8.5px] opacity-80 font-medium">Pestaña de Chrome con audio</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleStartSpecificScreenShare('presentation')}
-                                className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                                  isScreenSharingActive && screenSplitLayout === 'presentation'
-                                    ? 'bg-amber-600 text-white border-amber-700 font-black shadow-xs'
-                                    : 'bg-white hover:bg-amber-50 text-slate-900 border-slate-200'
-                                }`}
-                              >
-                                <span className="text-xs font-black">📊 Diapositivas</span>
-                                <span className="text-[8.5px] opacity-80 font-medium">Modo presentación & métricas</span>
+                                <span className="text-xs font-black">🖥️ Pantalla Completa</span>
+                                <span className="text-[8.5px] opacity-80 font-medium">Transmisión completa</span>
                               </button>
                             </div>
 

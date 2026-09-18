@@ -24,6 +24,7 @@ import FashionsFinanceLogo from './components/FashionsFinanceLogo';
 import FashionRankingSlider from './components/FashionRankingSlider';
 import GlobalMobileImageLightbox from './components/GlobalMobileImageLightbox';
 import MobileNavigationMenu from './components/MobileNavigationMenu';
+import { ModelFullscreenExpandedView } from './components/ModelFullscreenExpandedView';
 import { 
   Sparkles, 
   Home, 
@@ -38,6 +39,7 @@ import {
   Info, 
   Lock, 
   ArrowRight, 
+  ArrowLeft,
   UserPlus2, 
   Heart, 
   Landmark, 
@@ -82,7 +84,7 @@ const DEFAULT_TOP_10_PHOTOS = [
   'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600',
 ];
 
-function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
+function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; fullscreen?: boolean }) {
   const photosList = useMemo(() => {
     const list: string[] = [];
     if (model.avatar) list.push(model.avatar);
@@ -112,11 +114,13 @@ function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
   };
 
   return (
-    <div className="w-full flex-1 bg-slate-950 rounded-2xl flex items-center justify-center p-3 sm:p-4 relative min-h-[220px] sm:min-h-[260px] md:min-h-[300px] overflow-hidden shadow-inner group">
+    <div className={`w-full flex-1 bg-slate-950 rounded-2xl sm:rounded-3xl flex items-center justify-center p-3 sm:p-6 relative overflow-hidden shadow-2xl group border border-white/10 ${
+      fullscreen ? 'min-h-[380px] sm:min-h-[460px] md:min-h-[520px] lg:min-h-[580px] h-full' : 'min-h-[220px] sm:min-h-[260px] md:min-h-[300px]'
+    }`}>
       {/* Photo counter badge */}
-      <div className="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[10px] font-mono font-bold flex items-center gap-1.5 border border-white/15 shadow-md select-none">
-        <Camera className="w-3 h-3 text-rose-400" />
-        <span>{currentIndex + 1} / {photosList.length}</span>
+      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 bg-slate-900/85 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-[11px] sm:text-xs font-mono font-bold flex items-center gap-2 border border-white/15 shadow-xl select-none">
+        <Camera className="w-3.5 h-3.5 text-rose-400" />
+        <span>{currentIndex + 1} / {photosList.length} FOTOS</span>
       </div>
 
       {/* Main image */}
@@ -126,7 +130,9 @@ function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
         alt={`${model.name} photo ${currentIndex + 1}`}
         referrerPolicy="no-referrer"
         onClick={nextPhoto}
-        className="max-w-full max-h-[26vh] sm:max-h-[30vh] md:max-h-[34vh] lg:max-h-[38vh] object-contain rounded-xl shadow-2xl border border-slate-900/60 transition-all duration-300 animate-fade-in cursor-pointer select-none"
+        className={`max-w-full object-contain rounded-xl sm:rounded-2xl shadow-2xl border border-slate-900/60 transition-all duration-300 animate-fade-in cursor-pointer select-none ${
+          fullscreen ? 'max-h-[50vh] sm:max-h-[56vh] md:max-h-[62vh] lg:max-h-[66vh]' : 'max-h-[26vh] sm:max-h-[30vh] md:max-h-[34vh] lg:max-h-[38vh]'
+        }`}
         title="Haz clic para siguiente foto"
       />
 
@@ -135,10 +141,10 @@ function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
         <button
           type="button"
           onClick={prevPhoto}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8.5 h-8.5 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
+          className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-xl cursor-pointer hover:scale-110 active:scale-95"
           title="Foto anterior"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
 
@@ -147,16 +153,16 @@ function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
         <button
           type="button"
           onClick={nextPhoto}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8.5 h-8.5 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
+          className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-xl cursor-pointer hover:scale-110 active:scale-95"
           title="Siguiente foto"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
 
       {/* Bottom pagination dots */}
       {photosList.length > 1 && (
-        <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/15">
+        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2 bg-slate-900/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-white/20 shadow-lg">
           {photosList.map((_, idx) => (
             <button
               key={idx}
@@ -165,8 +171,8 @@ function ExpandedModelPhotoSlider({ model }: { model: ModelProfile }) {
                 e.stopPropagation();
                 setCurrentIndex(idx);
               }}
-              className={`h-1.5 rounded-full transition-all duration-200 cursor-pointer ${
-                idx === currentIndex ? 'w-4 bg-rose-500' : 'w-1.5 bg-white/40 hover:bg-white/80'
+              className={`h-1.5 sm:h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                idx === currentIndex ? 'w-5 sm:w-6 bg-rose-500 shadow-xs' : 'w-1.5 sm:w-2 bg-white/40 hover:bg-white/80'
               }`}
               title={`Ver foto ${idx + 1}`}
             />
@@ -2732,170 +2738,18 @@ export default function App() {
           </div>
         )}
 
-        {/* 🖼️ INTERACTIVE PHOTO LIGHTBOX MODEL FOR GUEST USERS */}
+        {/* 🖼️ INTERACTIVE PHOTO LIGHTBOX MODEL FOR GUEST USERS (PANTALLA COMPLETA) */}
         {selectedModelForExpandedView && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-2 sm:p-4 animate-fade-in">
-            {/* Click backdrop to close */}
-            <div 
-              className="absolute inset-0 cursor-zoom-out" 
-              onClick={() => setSelectedModelForExpandedView(null)} 
-            />
-
-            {/* Lightbox Container */}
-            <div className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] md:max-h-[80vh] shadow-2xl border border-slate-200 relative z-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-150">
-              
-              {/* Close Button on Mobile */}
-              <button 
-                onClick={() => setSelectedModelForExpandedView(null)}
-                className="absolute top-4 right-4 md:hidden z-25 bg-slate-950/60 hover:bg-slate-950/80 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition duration-150 shadow-md cursor-pointer"
-              >
-                ✕
-              </button>
-
-              {/* LEFT: Image Stage (Vignette container) */}
-              <div className="md:w-[55%] bg-slate-50 flex flex-col justify-between items-center p-5 relative min-h-[300px] sm:min-h-[360px] md:h-[450px] lg:h-[550px] overflow-y-auto">
-                <ExpandedModelPhotoSlider model={selectedModelForExpandedView} />
-
-                {/* Redes Sociales outside the image area (in the light area) */}
-                <div className="w-full mt-4 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm z-10">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-sans text-left mb-2">Redes Sociales Oficiales</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {/* Instagram Light Card */}
-                    <div className="bg-slate-50 border border-slate-150 p-2 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="bg-gradient-to-tr from-pink-500 via-rose-500 to-amber-500 p-1.5 rounded-lg text-white shrink-0">
-                          <Instagram className="w-3.5 h-3.5 text-white" />
-                        </div>
-                        <div className="text-left min-w-0">
-                          <span className="block text-[10px] font-bold text-slate-800 leading-tight">Instagram</span>
-                          <span className="block text-[8px] text-slate-500 font-mono leading-none truncate">
-                            {selectedModelForExpandedView.socials?.instagram || `@${selectedModelForExpandedView.username}`}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="block text-xs font-black text-rose-600 font-mono">
-                          {((selectedModelForExpandedView.socials?.instagramFollowers) || Math.floor(selectedModelForExpandedView.followersCount * 0.58 + 450)).toLocaleString()}
-                        </span>
-                        <span className="block text-[7px] font-bold uppercase text-slate-400 tracking-wider">Amigos</span>
-                      </div>
-                    </div>
-
-                    {/* TikTok Light Card */}
-                    <div className="bg-slate-50 border border-slate-150 p-2 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="bg-slate-800 p-1.5 rounded-lg text-white flex items-center justify-center shrink-0">
-                          <svg className="w-3.5 h-3.5 text-cyan-400 fill-current" viewBox="0 0 24 24">
-                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.01 1.62 4.14.94 1.07 2.22 1.81 3.59 2.15v3.91c-1.34-.07-2.65-.58-3.72-1.39-.77-.58-1.38-1.38-1.78-2.29-.01 1.94-.01 3.88-.01 5.8 0 1.02-.19 2.05-.59 3.01-.76 1.83-2.39 3.23-4.32 3.69-1.51.37-3.14.21-4.54-.46-2.02-.95-3.35-3.08-3.41-5.33-.08-2.56 1.76-4.95 4.25-5.51.68-.16 1.38-.21 2.08-.14v3.9c-.89-.15-1.84.13-2.48.78-.65.65-.89 1.63-.6 2.5.34.93 1.25 1.57 2.24 1.56 1.15.02 2.12-.91 2.14-2.06.01-4.22.01-8.44.01-12.66-.02-.32-.01-.65-.01-.97z" />
-                          </svg>
-                        </div>
-                        <div className="text-left min-w-0">
-                          <span className="block text-[10px] font-bold text-slate-800 leading-tight">TikTok</span>
-                          <span className="block text-[8px] text-slate-500 font-mono leading-none truncate">
-                            {selectedModelForExpandedView.socials?.tiktok || `@${selectedModelForExpandedView.username}_tok`}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="block text-xs font-black text-cyan-600 font-mono">
-                          {((selectedModelForExpandedView.socials?.tiktokFollowers) || Math.floor(selectedModelForExpandedView.followersCount * 0.72 + 820)).toLocaleString()}
-                        </span>
-                        <span className="block text-[7px] font-bold uppercase text-slate-400 tracking-wider">Amigos</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Call to action: Elegir como Patrocinador (Located below Official Social Media) */}
-                <div className="w-full mt-4 flex flex-col items-center gap-2 z-10 pt-3 border-t border-slate-200/80">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRegSponsorId(selectedModelForExpandedView.id);
-                      setSelectedModelForExpandedView(null);
-                      setShowRegisterModal(true);
-                    }}
-                    className="w-full max-w-md py-2.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-extrabold text-xs uppercase tracking-widest rounded-2xl shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <UserPlus2 className="w-4 h-4 text-rose-500" />
-                    <span>Elegir como Patrocinador</span>
-                  </button>
-                  <p className="text-[9.5px] text-slate-400 text-center font-sans max-w-sm leading-tight">
-                    Al elegir a {selectedModelForExpandedView.name}, se pre-seleccionará automáticamente en tu formulario de registro.
-                  </p>
-                </div>
-              </div>
-
-              {/* RIGHT: Info and Sponsor Selection */}
-              <div className="md:w-[45%] flex flex-col h-[48vh] md:h-full justify-between bg-white">
-                
-                {/* Header (Model profile badge) */}
-                <div className="p-4 border-b border-slate-150 flex justify-between items-center bg-slate-50/50">
-                  <div className="flex items-center gap-2.5">
-                    <img 
-                      src={selectedModelForExpandedView.avatar} 
-                      alt={selectedModelForExpandedView.name} 
-                      referrerPolicy="no-referrer"
-                      className="w-9 h-9 rounded-full object-cover border border-slate-200"
-                    />
-                    <div className="text-left">
-                      <span className="font-bold text-slate-800 text-xs block leading-tight">{selectedModelForExpandedView.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">@{selectedModelForExpandedView.username}</span>
-                    </div>
-                  </div>
-
-                  {/* Desktop close button */}
-                  <button 
-                    onClick={() => setSelectedModelForExpandedView(null)}
-                    className="hidden md:flex text-slate-400 hover:text-slate-800 p-1.5 hover:bg-slate-100 rounded-lg transition duration-155 font-bold text-sm cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Scrollable Welcome + Description Panel */}
-                <div className="flex-1 p-5 overflow-y-auto space-y-4 text-left">
-                  {/* Welcome Message Card */}
-                  <div className="space-y-1.5">
-                    <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest block font-sans">Mensaje de Bienvenida</span>
-                    <div className="bg-indigo-50/50 border border-indigo-100/30 rounded-2xl p-4 relative font-sans">
-                      <span className="absolute top-2 right-3 text-indigo-200 font-serif text-3xl select-none leading-none">“</span>
-                      <p className="text-slate-700 text-xs font-semibold leading-relaxed font-sans italic pr-2">
-                        {(() => {
-                          const welcomes: Record<string, string> = {
-                            'valentinarossi0': '¡Hola! Es un placer saludarte. Formar parte de mi red en Fashion Finances significa sumergirse en lo mejor de la alta costura sostenible. Te acompañará paso a paso para que logremos consolidar tus proyectos de moda más ambiciosos. ¡Trabajemos en equipo!',
-                            'alexandervance1': '¡Hola! Bienvenido. Soy Alexander y me apasiona la fusión del diseño urbano creativo y las finanzas descentralizadas. Al elegirme como tu patrocinador, contarás con toda mi experiencia de marca y el apoyo de mi comunidad para impulsar tus proyectos en las mesas. ¡Hagamos historia juntos!',
-                          };
-                          return welcomes[selectedModelForExpandedView.username.toLowerCase()] || `¡Hola! Bienvenido a mi espacio oficial en Fashion Finances. Como tu patrocinadora de moda, mi objetivo es empoderar tu creatividad, ayudándote a financiar y difundir tus propuestas en el ecosistema. ¡Únete hoy a mi equipo de referidos y alcancemos el éxito juntos!`;
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Biography */}
-                  <div className="space-y-1.5">
-                    <span className="text-[9px] font-bold text-pink-600 uppercase tracking-widest block font-sans">Sobre mí</span>
-                    <p className="text-slate-600 text-xs leading-relaxed font-sans font-medium pl-1">
-                      {selectedModelForExpandedView.bio}
-                    </p>
-                  </div>
-
-                  {/* Stats indicators (like Likes, Referidos) */}
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                      <span className="block text-[8px] uppercase tracking-wider font-bold text-slate-400 font-sans">Patrocinios</span>
-                      <span className="block text-xs font-bold text-slate-800 font-mono mt-0.5">{selectedModelForExpandedView.referidosCount} activos</span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                      <span className="block text-[8px] uppercase tracking-wider font-bold text-slate-400 font-sans">Popularidad</span>
-                      <span className="block text-xs font-bold text-slate-800 font-mono mt-0.5">{(selectedModelForExpandedView.totalLikes).toLocaleString()} votos</span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
+          <ModelFullscreenExpandedView
+            model={selectedModelForExpandedView}
+            onClose={() => setSelectedModelForExpandedView(null)}
+            onSelectSponsor={(model) => {
+              setRegSponsorId(model.id);
+              setSelectedModelForExpandedView(null);
+              setShowRegisterModal(true);
+            }}
+            sliderComponent={<ExpandedModelPhotoSlider model={selectedModelForExpandedView} fullscreen />}
+          />
         )}
       </div>
     );
@@ -2997,7 +2851,11 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER TABS WRAPPER */}
-      <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 max-md:p-3 flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+      <main className={`max-w-7xl w-full mx-auto flex-1 flex flex-col lg:flex-row gap-6 min-h-0 ${
+        activeTab === 'casting_live'
+          ? 'p-0 max-md:p-0 sm:px-0 md:px-0 lg:p-4'
+          : 'p-4 sm:p-6 max-md:p-3'
+      }`}>
         {/* LEFT NAV PANEL - Styled with high contrast and desktop responsiveness */}
         <aside className="lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden">
           {/* User profile segment */}
@@ -5733,6 +5591,20 @@ export default function App() {
           <p className="text-slate-450 font-medium">© 2026 Fashion Finances Platform. Licencia Pública de Distribución Tecnológica.</p>
         </div>
       </footer>
+
+      {/* 🖼️ MODAL PANTALLA COMPLETA DE MODELO EXPANDIDO */}
+      {selectedModelForExpandedView && (
+        <ModelFullscreenExpandedView
+          model={selectedModelForExpandedView}
+          onClose={() => setSelectedModelForExpandedView(null)}
+          onSelectSponsor={(model) => {
+            setSelectedModelForExpandedView(null);
+            setSelectedModelForView(model);
+            setActiveTabTab('home');
+          }}
+          sliderComponent={<ExpandedModelPhotoSlider model={selectedModelForExpandedView} fullscreen />}
+        />
+      )}
 
       {/* 📱 VENTANA AMPLIADA GLOBAL PARA IMÁGENES EN VISTA MÓVIL */}
       <GlobalMobileImageLightbox />

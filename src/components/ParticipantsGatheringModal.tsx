@@ -231,10 +231,10 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
     if (is10EuroSession) {
       setJoinedCount(7);
       setActivityLogs([
-        `✅ #7 Álvaro Díaz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-        `✅ #6 Natalia Cruz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-        `✅ #5 Hugo Silva ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-        `✅ #4 Paula Gómez ha abonado ${entryFee},00€ y se ha unido a la mesa.`
+        `🌸 #7 Álvaro Díaz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+        `🌸 #6 Natalia Cruz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+        `🌸 #5 Hugo Silva ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+        `🌸 #4 Paula Gómez ha abonado ${entryFee},00€ y se ha unido a la mesa.`
       ]);
       playJoinChime(7);
 
@@ -250,10 +250,12 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
             p.name.toLowerCase() === activeUserName.toLowerCase() ||
             (p.role && p.role.includes('(Tú)'))
           );
-          const pName = isCurrentPUser ? `${p.name} (Tú)` : (p ? p.name : `Emprendedor #${current}`);
+          const pName = isCurrentPUser 
+            ? (p.name.includes('(Tú)') ? p.name : `${p.name} (Tú)`) 
+            : (p ? p.name : `Emprendedor #${current}`);
           setJoinedCount(current);
           setActivityLogs(prev => [
-            `✅ #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+            `🌸 #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
             ...prev.slice(0, 4)
           ]);
           playJoinChime(current);
@@ -283,11 +285,13 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
       p1.name.toLowerCase() === activeUserName.toLowerCase() ||
       (p1.role && p1.role.includes('(Tú)'))
     );
-    const p1DisplayName = isP1User ? `${p1.name} (Tú)` : (p1 ? p1.name : 'Alexander Wright');
+    const p1DisplayName = isP1User 
+      ? (p1.name.includes('(Tú)') ? p1.name : `${p1.name} (Tú)`) 
+      : (p1 ? p1.name : 'Alexander Wright');
 
     setJoinedCount(1);
     setActivityLogs([
-      `✅ #1 ${p1DisplayName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`
+      `🌸 #1 ${p1DisplayName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`
     ]);
     playJoinChime(1);
 
@@ -303,10 +307,12 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           p.name.toLowerCase() === activeUserName.toLowerCase() ||
           (p.role && p.role.includes('(Tú)'))
         );
-        const pName = isCurrentPUser ? `${p.name} (Tú)` : (p ? p.name : `Emprendedor #${current}`);
+        const pName = isCurrentPUser 
+          ? (p.name.includes('(Tú)') ? p.name : `${p.name} (Tú)`) 
+          : (p ? p.name : `Emprendedor #${current}`);
         setJoinedCount(current);
         setActivityLogs(prev => [
-          `✅ #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+          `🌸 #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
           ...prev.slice(0, 4)
         ]);
         playJoinChime(current);
@@ -337,20 +343,20 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
   if (isMinimized) {
     return (
       <div className="fixed bottom-4 right-4 z-[99999] animate-fade-in font-sans select-none pointer-events-auto">
-        <div className="bg-[#0c1322]/95 backdrop-blur-xl border-2 border-emerald-500/90 rounded-2xl p-3 shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center gap-3 text-white">
+        <div className="bg-white border-2 border-[#F4A8B9] rounded-2xl p-3 shadow-[0_10px_30px_rgba(244,168,185,0.4)] flex items-center gap-3 text-slate-800">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#fe2c55] animate-pulse shrink-0" />
             <div>
-              <span className="text-[9px] font-black uppercase text-emerald-400 block tracking-wider">
+              <span className="text-[9px] font-black uppercase text-[#C23B65] block tracking-wider">
                 SALA DE ESPERA ({joinedCount}/10)
               </span>
-              <span className="text-xs font-black text-white block truncate max-w-[160px]">
+              <span className="text-xs font-black text-slate-900 block truncate max-w-[160px]">
                 {sessionTitle}
               </span>
             </div>
           </div>
 
-          <div className="bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-mono font-black text-xs px-2 py-1 rounded-lg">
+          <div className="bg-gradient-to-r from-[#FFF0F3] to-[#FFE4E8] border border-[#F4A8B9] text-[#9E2A4B] font-mono font-black text-xs px-2 py-1 rounded-lg">
             {totalGathered.toFixed(0)}€ / {targetTotal.toFixed(0)}€
           </div>
 
@@ -358,7 +364,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
             <button
               type="button"
               onClick={() => setIsMinimized(false)}
-              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 hover:text-white rounded-lg transition cursor-pointer"
+              className="p-1.5 bg-slate-100 hover:bg-rose-100 text-[#9E2A4B] rounded-lg transition cursor-pointer border border-slate-200"
               title="Expandir Sala de Espera"
             >
               <Maximize2 className="w-4 h-4" />
@@ -367,7 +373,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition cursor-pointer"
+                className="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-[#9E2A4B] rounded-lg transition cursor-pointer border border-slate-200"
                 title="Cerrar"
               >
                 <X className="w-4 h-4" />
@@ -384,7 +390,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
       className={`fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 transition-all duration-300 font-sans select-none ${
         isTransparentMode
           ? 'bg-black/15 backdrop-blur-[1px] pointer-events-none'
-          : 'bg-black/40 backdrop-blur-[2px] pointer-events-auto'
+          : 'bg-slate-900/40 backdrop-blur-[3px] pointer-events-auto'
       }`}
       id="modal-participants-gathering-overlay"
       onClick={(e) => {
@@ -394,75 +400,37 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
       }}
     >
       <div
-        className={`w-full max-w-[540px] border-2 rounded-3xl p-4 sm:p-6 shadow-[0_0_50px_rgba(16,185,129,0.3)] flex flex-col gap-4 text-white animate-scale-in relative overflow-hidden pointer-events-auto transition-all duration-300 ${
-          isTransparentMode
-            ? 'bg-[#0c1322]/75 backdrop-blur-md border-emerald-400/90 ring-2 ring-emerald-400/40 shadow-2xl'
-            : 'bg-[#0c1322]/95 backdrop-blur-2xl border-emerald-500/80'
-        }`}
+        className="w-full max-w-[540px] border-2 border-[#F4A8B9]/80 rounded-3xl p-4 sm:p-6 shadow-[0_25px_70px_rgba(0,0,0,0.18),0_0_40px_rgba(244,168,185,0.3)] flex flex-col gap-4 text-slate-800 animate-scale-in relative overflow-hidden pointer-events-auto transition-all duration-300 bg-white"
         id="modal-participants-gathering-container"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ambient Top Glow */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-24 bg-emerald-500/20 blur-3xl pointer-events-none rounded-full" />
+        {/* Ambient Top Glow (Rosa Perla) */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-24 bg-[#FFD1DC]/40 blur-3xl pointer-events-none rounded-full" />
 
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3 relative z-10">
+        <div className="flex items-center justify-between gap-2 border-b border-rose-100 pb-3 relative z-10">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#fe2c55] animate-pulse shrink-0" />
             <div className="flex flex-col text-left">
-              <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+              <span className="text-[10px] font-black uppercase text-[#D85A7F] tracking-wider">
                 SALA DE ESPERA EN DIRECTO
               </span>
-              <h3 className="text-sm sm:text-base font-black text-white m-0 tracking-wide">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 m-0 tracking-wide">
                 {sessionTitle}
               </h3>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 font-mono font-black text-xs sm:text-sm px-2.5 py-1 rounded-xl shadow-inner">
+            <span className="bg-gradient-to-r from-[#FFF0F3] to-[#FFE4E8] border border-[#F4A8B9] text-[#9E2A4B] font-mono font-black text-xs sm:text-sm px-2.5 py-1 rounded-xl shadow-xs">
               {totalGathered.toFixed(2).replace('.', ',')} € / {targetTotal.toFixed(2).replace('.', ',')} €
             </span>
-
-            {/* Ver Fondo / Fondo Transparente Button */}
-            <button
-              type="button"
-              onClick={() => setIsTransparentMode(!isTransparentMode)}
-              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-xl border flex items-center gap-1 text-[11px] font-extrabold transition cursor-pointer active:scale-95 ${
-                isTransparentMode
-                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm'
-                  : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700 hover:border-slate-500'
-              }`}
-              title={isTransparentMode ? "Restaurar fondo opaco" : "Ver el fondo de la página en directo"}
-            >
-              {isTransparentMode ? (
-                <>
-                  <EyeOff className="w-3.5 h-3.5 text-white" />
-                  <span className="hidden sm:inline">Opaco</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="hidden sm:inline">Ver Fondo</span>
-                </>
-              )}
-            </button>
-
-            {/* Minimize button */}
-            <button
-              type="button"
-              onClick={() => setIsMinimized(true)}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition border border-slate-700 cursor-pointer"
-              title="Minimizar a esquina para ver toda la página"
-            >
-              <Minimize2 className="w-3.5 h-3.5" />
-            </button>
 
             {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800/90 hover:bg-rose-950 text-slate-400 hover:text-rose-400 flex items-center justify-center transition border border-slate-700 cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100 hover:bg-rose-100/70 text-slate-400 hover:text-[#9E2A4B] flex items-center justify-center transition border border-slate-200 cursor-pointer"
                 title="Cerrar y ver página"
               >
                 <X className="w-4 h-4" />
@@ -471,35 +439,35 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           </div>
         </div>
 
-        {/* Status Callout & Progress Bar */}
-        <div className="bg-[#070b14]/85 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-2.5 relative z-10 text-left backdrop-blur-xs">
+        {/* Status Callout & Progress Bar (Rosa Perla & Fondo Blanco) */}
+        <div className="bg-[#FFF8FA] border border-[#F8D2DC] rounded-2xl p-3 sm:p-4 space-y-2.5 relative z-10 text-left shadow-xs">
           <div className="flex items-center justify-between text-xs font-bold">
-            <div className="flex items-center gap-2 text-emerald-400">
-              <Users className="w-4 h-4 animate-bounce" />
-              <span className="font-extrabold uppercase tracking-wider text-[11px] sm:text-xs">
+            <div className="flex items-center gap-2 text-[#C23B65]">
+              <Users className="w-4 h-4 text-[#D85A7F] animate-bounce" />
+              <span className="font-extrabold uppercase tracking-wider text-[11px] sm:text-xs text-[#C23B65]">
                 {isCompleted
                   ? '🎉 ¡10/10 PARTICIPANTES COMPLETADOS!'
                   : `SUMANDO PARTICIPANTES (${joinedCount}/10)`}
               </span>
             </div>
-            <span className="font-mono text-xs sm:text-sm font-black text-emerald-300">
+            <span className="font-mono text-xs sm:text-sm font-black text-[#9E2A4B]">
               {Math.round(progressPercent)}%
             </span>
           </div>
 
-          {/* Animated Glowing Progress Bar */}
-          <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800 p-0.5 relative">
+          {/* Animated Glowing Progress Bar (Rosa Perla) */}
+          <div className="w-full bg-[#FFE9EE] rounded-full h-2.5 overflow-hidden border border-[#F8D2DC] p-0.5 relative">
             <div
-              className="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 h-full rounded-full transition-all duration-300 relative shadow-[0_0_12px_rgba(16,185,129,0.8)]"
+              className="bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] h-full rounded-full transition-all duration-300 relative shadow-[0_0_12px_rgba(244,168,185,0.9)]"
               style={{ width: `${progressPercent}%` }}
             >
-              <div className="absolute inset-0 bg-white/20 animate-pulse" />
+              <div className="absolute inset-0 bg-white/40 animate-pulse" />
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
             <span>Cuota por participante: {entryFee},00 €</span>
-            <span className="text-emerald-400 font-bold">
+            <span className="text-[#C23B65] font-bold">
               {isCompleted ? 'Mesa Completa • Abriendo Canal' : `Faltan ${10 - joinedCount} por entrar`}
             </span>
           </div>
@@ -508,10 +476,10 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
         {/* 10-Participants Visual Grid (2 Rows of 5) */}
         <div className="space-y-1.5 relative z-10">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
               ESTADO DE LOS 10 EMPRENDEDORES:
             </span>
-            <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
+            <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1">
               <Zap className="w-3 h-3 fill-current" />
               <span>Verificación de Pago Instantánea</span>
             </span>
@@ -533,14 +501,14 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
               return (
                 <div
                   key={p.id || idx}
-                  className={`relative aspect-square min-h-[32px] sm:min-h-[44px] rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all duration-300 flex flex-col justify-between p-0.5 sm:p-1 shadow-md ${
+                  className={`relative aspect-square min-h-[32px] sm:min-h-[44px] rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all duration-300 flex flex-col justify-between p-0.5 sm:p-1 shadow-sm ${
                     isJoined
                       ? isUser
-                        ? 'border-emerald-400 ring-2 ring-emerald-400/90 scale-105 bg-slate-900 shadow-[0_0_20px_rgba(16,185,129,0.7)] z-10'
+                        ? 'border-[#D85A7F] ring-2 ring-[#F4A8B9] scale-105 bg-white shadow-[0_0_15px_rgba(244,168,185,0.7)] z-10'
                         : isJustJoined
-                          ? 'border-emerald-400 ring-2 ring-emerald-400/80 scale-105 bg-slate-900 shadow-[0_0_15px_rgba(16,185,129,0.5)]'
-                          : 'border-emerald-500/70 bg-slate-900'
-                      : 'border-slate-800 bg-slate-950/80 opacity-40'
+                          ? 'border-[#F4A8B9] ring-2 ring-[#FCC2D0] scale-105 bg-white shadow-[0_0_10px_rgba(244,168,185,0.5)]'
+                          : 'border-[#F4A8B9] bg-white'
+                      : 'border-slate-200 bg-slate-100/70 opacity-40'
                   }`}
                 >
                   {isJoined ? (
@@ -555,13 +523,13 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
                       <div className="relative z-10 flex items-center justify-between w-full">
                         <span className={`text-[6.5px] sm:text-[8px] font-black px-1 py-0.2 rounded font-mono shadow-xs ${
                           isUser
-                            ? 'bg-emerald-500 text-slate-950 ring-1 ring-emerald-300 font-bold flex items-center gap-0.5'
-                            : 'bg-black/85 backdrop-blur-xs text-white'
+                            ? 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] text-[#4A1525] ring-1 ring-[#F4A8B9] font-black flex items-center gap-0.5'
+                            : 'bg-black/80 backdrop-blur-xs text-white'
                         }`}>
                           #{slotNumber}{isUser ? ' TÚ' : ''}
                         </span>
-                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full border border-black shadow-xs ${
-                          isUser ? 'bg-emerald-400 animate-ping' : 'bg-[#fe2c55] animate-pulse'
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full border border-white/60 shadow-xs ${
+                          isUser ? 'bg-[#D85A7F] animate-ping' : 'bg-[#fe2c55] animate-pulse'
                         }`} />
                       </div>
 
@@ -569,8 +537,8 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
                       <div className="relative z-10 w-full flex justify-center pb-0.5">
                         <span className={`font-black text-[6.5px] sm:text-[8px] px-1 py-0.2 rounded truncate max-w-full text-center ${
                           isUser
-                            ? 'bg-slate-950/95 border border-emerald-400 text-emerald-300 shadow-md font-bold'
-                            : 'bg-black/90 backdrop-blur-xs text-white'
+                            ? 'bg-white/95 border border-[#F4A8B9] text-[#9E2A4B] shadow-xs font-bold'
+                            : 'bg-black/85 backdrop-blur-xs text-white'
                         }`}>
                           {p.name.split(' ')[0]}{isUser ? ' (Tú)' : ''}
                         </span>
@@ -578,8 +546,8 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
                     </>
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-0.5 text-center">
-                      <span className="text-[9px] font-mono font-black text-slate-500">#{slotNumber}</span>
-                      <span className="text-[6.5px] font-bold text-slate-600 uppercase">Libre</span>
+                      <span className="text-[9px] font-mono font-black text-slate-400">#{slotNumber}</span>
+                      <span className="text-[6.5px] font-bold text-slate-400 uppercase">Libre</span>
                     </div>
                   )}
                 </div>
@@ -588,45 +556,29 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           </div>
         </div>
 
-        {/* Live Feed Ticker */}
-        <div className="bg-[#070b14]/85 border border-slate-800 rounded-xl px-3 py-2 text-left relative z-10 overflow-hidden backdrop-blur-xs">
+        {/* Live Feed Ticker (Rosa Perla & Fondo Claro) */}
+        <div className="bg-[#FFF8FA] border border-[#F8D2DC] rounded-xl px-3 py-2 text-left relative z-10 overflow-hidden shadow-xs">
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-            <span className="text-[9px] font-black uppercase text-emerald-400 tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D85A7F] animate-ping shrink-0" />
+            <span className="text-[9px] font-black uppercase text-[#C23B65] tracking-wider">
               REGISTRO EN TIEMPO REAL
             </span>
           </div>
-          <div className="space-y-0.5 text-[10px] sm:text-[11px] font-semibold text-slate-300 max-h-12 overflow-y-auto">
+          <div className="space-y-0.5 text-[10px] sm:text-[11px] font-semibold text-slate-700 max-h-12 overflow-y-auto">
             {activityLogs.map((log, lIdx) => (
-              <p key={lIdx} className="m-0 truncate leading-tight text-slate-300">
+              <p key={lIdx} className="m-0 truncate leading-tight text-slate-700">
                 {log}
               </p>
             ))}
           </div>
         </div>
 
-        {/* Footer Action */}
-        <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-800/80 relative z-10">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-[10px] sm:text-[11px]">Bolsa de {Math.round(10 * entryFee).toLocaleString('es-ES')}€ protegida en escrow</span>
+        {/* Footer Action (Sin botón accediendo) */}
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-rose-100 relative z-10">
+          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+            <ShieldCheck className="w-4 h-4 text-[#D85A7F]" />
+            <span className="text-[10px] sm:text-[11px] font-medium">Bolsa de {Math.round(10 * entryFee).toLocaleString('es-ES')}€ protegida en escrow</span>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setJoinedCount(10);
-              setIsCompleted(true);
-              playFanfare();
-              setTimeout(() => {
-                onComplete(finalParticipants);
-              }, 400);
-            }}
-            className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/30 border border-emerald-400"
-          >
-            <span>{isCompleted ? 'Accediendo...' : 'Acelerar / Entrar ya'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
     </div>
