@@ -346,6 +346,8 @@ export function seedInitialData() {
   // 1. Sesión Round STREETWEAR & URBAN - Monto 10€
   const session1: InvestmentSession = {
     id: 'sess-workers',
+    reference: 'Ref:1',
+    roundNumber: 1,
     title: 'Round STREETWEAR & URBAN',
     entryFee: 10,
     status: 'voting',
@@ -369,6 +371,8 @@ export function seedInitialData() {
   // 2. Sesión Round CASUAL & LIFESTYLE - Monto 100€
   const session2: InvestmentSession = {
     id: 'sess-entrepreneurs',
+    reference: 'Ref:2',
+    roundNumber: 2,
     title: 'Round CASUAL & LIFESTYLE',
     entryFee: 100,
     status: 'filling',
@@ -388,6 +392,8 @@ export function seedInitialData() {
   // 3. Ronda Glamour ✨ - Monto 1,000€
   const session3: InvestmentSession = {
     id: 'sess-businessmen',
+    reference: 'Ref:3',
+    roundNumber: 3,
     title: 'Ronda Glamour ✨',
     entryFee: 1000,
     status: 'filling',
@@ -405,6 +411,8 @@ export function seedInitialData() {
   // 4. Ronda Elegant & Classic 🤍 - Monto 10,000€
   const session4: InvestmentSession = {
     id: 'sess-topmodels',
+    reference: 'Ref:4',
+    roundNumber: 4,
     title: 'Ronda Elegant & Classic 🤍',
     entryFee: 10000,
     status: 'filling',
@@ -425,6 +433,8 @@ export function seedInitialData() {
   // 5. Ronda High Fashion 👠 - Monto 100,000€
   const session5: InvestmentSession = {
     id: 'sess-investors',
+    reference: 'Ref:5',
+    roundNumber: 5,
     title: 'Ronda High Fashion 👠',
     entryFee: 100000,
     status: 'filling',
@@ -445,6 +455,8 @@ export function seedInitialData() {
   // 6. Sesión de inversión High Fashion - Monto 1,000,000€
   const session6: InvestmentSession = {
     id: 'sess-millionaires',
+    reference: 'Ref:6',
+    roundNumber: 6,
     title: 'Ronda High Fashion 👠',
     entryFee: 1000000,
     status: 'filling',

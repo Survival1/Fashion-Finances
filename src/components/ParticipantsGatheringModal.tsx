@@ -13,6 +13,7 @@ export interface GatheringParticipant {
 interface ParticipantsGatheringModalProps {
   isOpen: boolean;
   sessionTitle?: string;
+  roundRef?: string;
   entryFee?: number;
   participantsList?: GatheringParticipant[];
   currentUserProfile?: any;
@@ -50,6 +51,7 @@ const DEFAULT_EMPRESARIOS: GatheringParticipant[] = [
 export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProps> = ({
   isOpen,
   sessionTitle = 'Round STREETWEAR & URBAN',
+  roundRef,
   entryFee = 10,
   participantsList,
   currentUserProfile,
@@ -58,6 +60,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
   onClose
 }) => {
   const is10EuroSession = Boolean(entryFee === 10 || sessionTitle.toUpperCase().includes('STREETWEAR'));
+  const effectiveRoundRef = roundRef || (is10EuroSession ? 'Ref:1' : entryFee === 100 ? 'Ref:2' : entryFee === 1000 ? 'Ref:3' : entryFee === 10000 ? 'Ref:4' : entryFee === 100000 ? 'Ref:5' : 'Ref:6');
   const [joinedCount, setJoinedCount] = useState<number>(is10EuroSession ? 7 : 1);
   const [activityLogs, setActivityLogs] = useState<string[]>([]);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -347,9 +350,14 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#fe2c55] animate-pulse shrink-0" />
             <div>
-              <span className="text-[9px] font-black uppercase text-[#C23B65] block tracking-wider">
-                SALA DE ESPERA ({joinedCount}/10)
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase text-[#C23B65] block tracking-wider">
+                  SALA DE ESPERA ({joinedCount}/10)
+                </span>
+                <span className="text-[8px] font-mono font-bold bg-[#FFE4E8] text-[#9E2A4B] border border-[#F4A8B9] px-1 py-0.2 rounded-md">
+                  {effectiveRoundRef}
+                </span>
+              </div>
               <span className="text-xs font-black text-slate-900 block truncate max-w-[160px]">
                 {sessionTitle}
               </span>
@@ -412,9 +420,14 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#fe2c55] animate-pulse shrink-0" />
             <div className="flex flex-col text-left">
-              <span className="text-[10px] font-black uppercase text-[#D85A7F] tracking-wider">
-                SALA DE ESPERA EN DIRECTO
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-black uppercase text-[#D85A7F] tracking-wider">
+                  SALA DE ESPERA EN DIRECTO
+                </span>
+                <span className="text-[9px] font-mono font-bold bg-[#FFE4E8] text-[#9E2A4B] border border-[#F4A8B9] px-1.5 py-0.2 rounded-md">
+                  {effectiveRoundRef}
+                </span>
+              </div>
               <h3 className="text-sm sm:text-base font-black text-slate-900 m-0 tracking-wide">
                 {sessionTitle}
               </h3>

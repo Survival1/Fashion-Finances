@@ -146,6 +146,25 @@ export default function HeartRainOverlay() {
     }
   };
 
+  const playEmojiPopSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1040, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) {}
+  };
+
   useEffect(() => {
     const heartColors = [
       '#ef4444', // red-500
@@ -184,15 +203,19 @@ export default function HeartRainOverlay() {
       const customEvent = event as CustomEvent;
       const clickX = customEvent?.detail?.x;
       const clickY = customEvent?.detail?.y;
-      const customIcon = customEvent?.detail?.icon;
+      const customIcon = customEvent?.detail?.icon || customEvent?.detail?.emoji;
       const giftName = customEvent?.detail?.name;
       const giftCost = customEvent?.detail?.cost;
       const recipientName = customEvent?.detail?.recipientName;
       const senderName = customEvent?.detail?.senderName;
       const channelSelector = customEvent?.detail?.channelSelector;
+      const isPureEmoji = Boolean(customEvent?.detail?.pureEmoji || customEvent?.detail?.emojiRain || (!giftName && !recipientName && customIcon));
 
-      // If full gift details provided, show animated banner and chime
-      if (giftName || recipientName || customIcon) {
+      // If pure emoji reaction, play crisp pop sound
+      if (isPureEmoji) {
+        playEmojiPopSound();
+      } else if (giftName || recipientName || customIcon) {
+        // If full gift details provided, show animated banner and chime
         playCelebrationSound();
         if (giftName || recipientName) {
           const initialCoords = getChannelCenterPosition(channelSelector);
@@ -217,12 +240,12 @@ export default function HeartRainOverlay() {
       const newElements: FloatingElement[] = [];
       const baseId = Date.now() + Math.random();
 
-      // Retrieve current click sequence index (0: Hearts, 1: Diamonds, 2: Roses, 3: Blue Pearls, 4: Custom Gift)
+      // Retrieve current click sequence index (0: Hearts, 1: Diamonds, 2: Roses, 3: Blue Pearls, 4: Custom Gift, 5: Pure Emoji)
       const forceHearts = customEvent?.detail?.forceHearts || customEvent?.detail?.forceMode === 'hearts';
       const currentSequence = clickCounterRef.current;
       let sequenceMode = forceHearts ? 0 : (currentSequence % 4);
       
-      if (!forceHearts) {
+      if (!forceHearts && !isPureEmoji) {
         // Advance click sequence for the next tap
         clickCounterRef.current += 1;
       }
@@ -231,7 +254,11 @@ export default function HeartRainOverlay() {
       let emojiPool = ['❤️', '💖', '💕', '💓', '💗'];
       let colorPool = heartColors;
 
-      if (customIcon) {
+      if (isPureEmoji && customIcon) {
+        sequenceMode = 5;
+        emojiPool = [customIcon];
+        colorPool = ['#ffffff'];
+      } else if (customIcon) {
         sequenceMode = 4;
         emojiPool = [customIcon, '✨', customIcon, '💖', customIcon, '🌟'];
         colorPool = ['#f43f5e', '#ec4899', '#f59e0b', '#fbbf24', '#a855f7'];
@@ -247,14 +274,14 @@ export default function HeartRainOverlay() {
       }
 
       // 1. ALWAYS spawn standard falling rain elements from the top
-      const rainCount = customIcon ? 24 : 18;
+      const rainCount = isPureEmoji ? 36 : (customIcon ? 24 : 18);
       for (let i = 0; i < rainCount; i++) {
-        const x = Math.random() * 100; // 0% to 100% width
-        const size = Math.floor(Math.random() * 24) + 18; // 18px to 42px
-        const delay = Math.random() * 600; // stagger starting time
-        const duration = Math.random() * 3.0 + 4.5; 
+        const x = Math.random() * 96 + 2; // 2% to 98% width
+        const size = isPureEmoji ? (Math.floor(Math.random() * 26) + 24) : (Math.floor(Math.random() * 24) + 18); // larger and crisp for emoji rain
+        const delay = Math.random() * 900; // stagger starting time for a continuous cascade
+        const duration = Math.random() * 2.6 + 3.2; 
         const color = colorPool[Math.floor(Math.random() * colorPool.length)];
-        const rotation = Math.floor(Math.random() * 60) - 30; // -30deg to 30deg
+        const rotation = Math.floor(Math.random() * 50) - 25; // -25deg to 25deg
         const emojiChar = emojiPool[Math.floor(Math.random() * emojiPool.length)];
 
         newElements.push({
@@ -262,7 +289,7 @@ export default function HeartRainOverlay() {
           type: 'fall',
           sequenceMode,
           x,
-          y: -10,
+          y: -12,
           size,
           delay,
           duration,
@@ -273,42 +300,43 @@ export default function HeartRainOverlay() {
       }
 
       // 2. Spawn beautiful popping elements directly from the icon clicked!
-      if (clickX !== undefined && clickY !== undefined) {
-        const popCount = 16;
-        for (let i = 0; i < popCount; i++) {
-          const size = Math.floor(Math.random() * 16) + 18;
-          const delay = Math.random() * 200;
-          const duration = Math.random() * 0.9 + 1.2;
-          const color = colorPool[Math.floor(Math.random() * colorPool.length)];
-          const rotation = Math.floor(Math.random() * 80) - 40;
-          const emojiChar = emojiPool[Math.floor(Math.random() * emojiPool.length)];
-          
-          const tx = Math.floor(Math.random() * 180) - 90;
-          const ty = -(Math.floor(Math.random() * 200) + 120);
+      const finalOriginX = clickX !== undefined ? clickX : (typeof window !== 'undefined' ? window.innerWidth / 2 : 200);
+      const finalOriginY = clickY !== undefined ? clickY : (typeof window !== 'undefined' ? window.innerHeight * 0.75 : 400);
 
-          newElements.push({
-            id: baseId + rainCount + i,
-            type: 'pop',
-            sequenceMode,
-            originX: clickX,
-            originY: clickY,
-            size,
-            delay,
-            duration,
-            color,
-            rotation,
-            tx,
-            ty,
-            emojiChar
-          });
-        }
+      const popCount = isPureEmoji ? 20 : (clickX !== undefined && clickY !== undefined ? 16 : 0);
+      for (let i = 0; i < popCount; i++) {
+        const size = isPureEmoji ? (Math.floor(Math.random() * 18) + 22) : (Math.floor(Math.random() * 16) + 18);
+        const delay = Math.random() * 180;
+        const duration = Math.random() * 0.9 + 1.2;
+        const color = colorPool[Math.floor(Math.random() * colorPool.length)];
+        const rotation = Math.floor(Math.random() * 80) - 40;
+        const emojiChar = emojiPool[Math.floor(Math.random() * emojiPool.length)];
+        
+        const tx = Math.floor(Math.random() * 260) - 130;
+        const ty = -(Math.floor(Math.random() * 220) + 110);
+
+        newElements.push({
+          id: baseId + rainCount + i,
+          type: 'pop',
+          sequenceMode,
+          originX: finalOriginX,
+          originY: finalOriginY,
+          size,
+          delay,
+          duration,
+          color,
+          rotation,
+          tx,
+          ty,
+          emojiChar
+        });
       }
 
       setElements(prev => [...prev, ...newElements]);
 
       // Prune after they finish animating
       setTimeout(() => {
-        setElements(prev => prev.filter(el => el.id < baseId || el.id >= baseId + rainCount + 25));
+        setElements(prev => prev.filter(el => el.id < baseId || el.id >= baseId + rainCount + 30));
       }, 8500);
     };
 
@@ -378,7 +406,7 @@ export default function HeartRainOverlay() {
       )}
 
       {elements.length > 0 && (
-        <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden">
+        <div className="fixed inset-0 pointer-events-none z-[9999999] overflow-hidden">
           <style>{`
             @keyframes customElementFall {
               0% {
@@ -431,7 +459,9 @@ export default function HeartRainOverlay() {
             let filterStyle = 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))';
             let customContent: React.ReactNode = el.emojiChar;
 
-            if (el.sequenceMode === 0 || el.sequenceMode === 4) {
+            if (el.sequenceMode === 5) {
+              filterStyle = 'drop-shadow(0 4px 10px rgba(0,0,0,0.35))';
+            } else if (el.sequenceMode === 0 || el.sequenceMode === 4) {
               filterStyle = 'drop-shadow(0 0 8px rgba(244,63,94,0.75)) saturate(1.3)';
             } else if (el.sequenceMode === 1) {
               filterStyle = 'drop-shadow(0 0 10px rgba(56,189,248,0.9)) brightness(1.2) contrast(1.1); font-weight: 900';

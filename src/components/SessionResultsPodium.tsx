@@ -80,6 +80,8 @@ interface ModelProfile {
 interface SessionResultsPodiumProps {
   completedSessionToDisplay: {
     id: string;
+    reference?: string;
+    roundNumber?: number;
     title: string;
     participants: Participant[];
   };
@@ -1356,7 +1358,7 @@ export default function SessionResultsPodium({
             <div className="text-left">
               <strong className="text-rose-600 font-extrabold text-xs block">PUBLICADO EN CASTING LIVE</strong>
               <p className="text-[11px] text-slate-600 font-medium leading-relaxed mt-0.5 font-semibold">
-                ¡Resultados oficiales de la mesa '{completedSessionToDisplay.title}' transmitidos con éxito y anclados de forma descentralizada para el público general!
+                ¡Resultados oficiales de la mesa '{completedSessionToDisplay.title}' {completedSessionToDisplay.reference ? `(${completedSessionToDisplay.reference})` : ''} transmitidos con éxito y anclados de forma descentralizada para el público general!
               </p>
             </div>
           </div>

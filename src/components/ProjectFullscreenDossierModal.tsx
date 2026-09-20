@@ -68,18 +68,6 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
             <ArrowLeft className="w-4 h-4" />
             <span className="font-extrabold text-[11px] sm:text-xs">Volver al Directo</span>
           </button>
-
-          <div className="h-4 w-px bg-slate-700 hidden xs:block" />
-
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              EN CANAL
-            </span>
-            <span className="text-xs font-black text-slate-200 truncate hidden md:inline">
-              {proj.title}
-            </span>
-          </div>
         </div>
 
         {/* Presenter info pill */}

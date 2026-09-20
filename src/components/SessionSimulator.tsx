@@ -3841,6 +3841,9 @@ export default function SessionSimulator({
                     ? 'Ronda High Fashion 👠'
                     : currentSession.title}
                 </span>
+                <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full">
+                  {currentSession.reference || (currentSession.entryFee === 10 ? 'Ref:1' : currentSession.entryFee === 100 ? 'Ref:2' : currentSession.entryFee === 1000 ? 'Ref:3' : currentSession.entryFee === 10000 ? 'Ref:4' : currentSession.entryFee === 100000 ? 'Ref:5' : 'Ref:6')}
+                </span>
               </h3>
               {(currentSession.entryFee === 10 || currentSession.id === 'sess-workers' || currentSession.title?.includes('Trabajad') || currentSession.title?.includes('STREETWEAR')) && (
                 <p className="text-xs text-slate-300 font-medium">

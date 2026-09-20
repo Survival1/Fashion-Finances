@@ -4184,6 +4184,15 @@ export default function ModelFacebookProfile({
                                     ...newCommentInput,
                                     [post.id]: currentVal + emoji
                                   });
+                                  window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                    detail: {
+                                      emoji: emoji,
+                                      icon: emoji,
+                                      pureEmoji: true,
+                                      x: e.clientX,
+                                      y: e.clientY
+                                    }
+                                  }));
                                 }}
                                 className="text-lg hover:scale-125 hover:bg-slate-50 rounded p-1 transition-transform cursor-pointer flex items-center justify-center"
                               >
@@ -4323,6 +4332,15 @@ export default function ModelFacebookProfile({
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setReplyInputText(prev => prev + emoji);
+                                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                              detail: {
+                                                emoji: emoji,
+                                                icon: emoji,
+                                                pureEmoji: true,
+                                                x: e.clientX,
+                                                y: e.clientY
+                                              }
+                                            }));
                                           }}
                                           className="text-lg hover:scale-125 hover:bg-slate-50 rounded p-1 transition-transform cursor-pointer flex items-center justify-center"
                                         >
@@ -8559,6 +8577,15 @@ export default function ModelFacebookProfile({
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setReplyInputText(prev => prev + emoji);
+                                          window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                            detail: {
+                                              emoji: emoji,
+                                              icon: emoji,
+                                              pureEmoji: true,
+                                              x: e.clientX,
+                                              y: e.clientY
+                                            }
+                                          }));
                                         }}
                                         className="text-lg hover:scale-125 hover:bg-slate-50 rounded p-1 transition-transform cursor-pointer flex items-center justify-center"
                                       >
@@ -8717,6 +8744,15 @@ export default function ModelFacebookProfile({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setLightboxCommentText(prev => prev + emoji);
+                                window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                  detail: {
+                                    emoji: emoji,
+                                    icon: emoji,
+                                    pureEmoji: true,
+                                    x: e.clientX,
+                                    y: e.clientY
+                                  }
+                                }));
                               }}
                               className="text-lg hover:scale-125 hover:bg-slate-50 rounded p-1 transition-transform cursor-pointer flex items-center justify-center"
                             >

@@ -115,6 +115,8 @@ export interface ParticipantState {
 
 export interface InvestmentSession {
   id: string;
+  reference?: string;
+  roundNumber?: number;
   title: string;
   entryFee: number;
   status: 'filling' | 'voting' | 'completed';

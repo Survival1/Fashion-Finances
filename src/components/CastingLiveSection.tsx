@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import { ProjectFullscreenDossierModal } from './ProjectFullscreenDossierModal';
+import { TikTokFinanzasFeed } from './TikTokFinanzasFeed';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
 import { saveLuxuryWatchGift, playLuxuryWatchSoundEffect } from './LuxuryWatchAnimation';
 import { openImageLightbox } from './GlobalMobileImageLightbox';
@@ -2522,10 +2523,39 @@ export default function CastingLiveSection({
           try {
             const parsed = JSON.parse(savedSessions);
             if (Array.isArray(parsed) && parsed.length >= 6) {
-              setOpenFinanzasSessions(parsed);
+              const cleaned = parsed.map((sess: any, idx: number) => {
+                const defaultParticipants = (
+                  sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
+                  sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
+                  sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? EMPRESARIOS_USERS.slice(0, 10) :
+                  sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 ? TOPMODELS_USERS.slice(0, 10) :
+                  sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? INVERSORES_USERS.slice(0, 10) :
+                  sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? MILLONARIOS_USERS.slice(0, 10) :
+                  DEFAULT_FINANZAS_TABLE_SESSIONS[idx % DEFAULT_FINANZAS_TABLE_SESSIONS.length]?.participants || TRABAJADORES_USERS.slice(0, 10)
+                );
+                return {
+                  ...sess,
+                  participants: Array.isArray(sess.participants)
+                    ? sess.participants.filter((p: any) =>
+                        !p.name?.includes('Adriana') &&
+                        !p.name?.includes('(Tú)') &&
+                        p.id !== 'user-adriana' &&
+                        !p.isSelf
+                      ).length >= 10
+                      ? sess.participants.filter((p: any) =>
+                          !p.name?.includes('Adriana') &&
+                          !p.name?.includes('(Tú)') &&
+                          p.id !== 'user-adriana' &&
+                          !p.isSelf
+                        ).slice(0, 10)
+                      : defaultParticipants
+                    : defaultParticipants
+                };
+              });
+              setOpenFinanzasSessions(cleaned);
               const targetIdx = targetSessionId 
-                ? parsed.findIndex(s => s.id === targetSessionId)
-                : (targetFee !== null ? parsed.findIndex(s => s.entryFee === targetFee) : -1);
+                ? cleaned.findIndex(s => s.id === targetSessionId)
+                : (targetFee !== null ? cleaned.findIndex(s => s.entryFee === targetFee) : -1);
               if (targetIdx !== -1) {
                 setActiveFinanzasSessionIndex(targetIdx);
               }
@@ -2539,9 +2569,9 @@ export default function CastingLiveSection({
         }
         // If transitioning to live session, only show voting countdown if the user is actively participating
         const isUserParticipatingInit = Boolean(
+          (targetSessionId && localStorage.getItem(`user_paid_session_${targetSessionId}`) === 'true') ||
           localStorage.getItem('finanzas_user_participating') === 'true' ||
-          localStorage.getItem('user_paid_finanzas_session') === 'true' ||
-          localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true'
+          localStorage.getItem('user_paid_finanzas_session') === 'true'
         );
         const isVotingActiveSaved = isUserParticipatingInit && localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
         const savedVotingTimer = localStorage.getItem('finanzas_voting_phase_timer');
@@ -2852,6 +2882,8 @@ export default function CastingLiveSection({
   const DEFAULT_FINANZAS_TABLE_SESSIONS = [
     {
       id: 'sess-trabajadores-1',
+      reference: 'Ref:1',
+      roundNumber: 1,
       title: 'Round STREETWEAR & URBAN',
       brand: 'Estilo moderno, sneakers, denim y cultura street.',
       category: 'Round STREETWEAR & URBAN',
@@ -2864,6 +2896,8 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-emprendedores-1',
+      reference: 'Ref:2',
+      roundNumber: 2,
       title: 'Round CASUAL & LIFESTYLE',
       brand: 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.',
       category: 'Round CASUAL & LIFESTYLE',
@@ -2876,6 +2910,8 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-empresarios-1',
+      reference: 'Ref:3',
+      roundNumber: 3,
       title: 'Ronda Glamour ✨',
       brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
       category: 'Ronda Glamour ✨',
@@ -2888,6 +2924,8 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-topmodels-1',
+      reference: 'Ref:4',
+      roundNumber: 4,
       title: 'Ronda Elegant & Classic 🤍',
       brand: 'sofisticado, clásico, atemporal y refinado.',
       category: 'Ronda Elegant & Classic 🤍',
@@ -2900,6 +2938,8 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-inversores-1',
+      reference: 'Ref:5',
+      roundNumber: 5,
       title: 'Ronda High Fashion 👠',
       brand: 'alta moda, diseñadores, pasarela y tendencias.',
       category: 'Ronda High Fashion 👠',
@@ -2912,6 +2952,8 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-millonarios-1',
+      reference: 'Ref:6',
+      roundNumber: 6,
       title: 'Ronda High Fashion 👠',
       brand: 'alta moda, diseñadores, pasarela y tendencias.',
       category: 'Ronda High Fashion 👠',
@@ -2926,6 +2968,8 @@ export default function CastingLiveSection({
 
   const [openFinanzasSessions, setOpenFinanzasSessions] = useState<Array<{
     id: string;
+    reference?: string;
+    roundNumber?: number;
     title: string;
     brand: string;
     category: string;
@@ -2939,15 +2983,45 @@ export default function CastingLiveSection({
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Strictly ensure Adriana Lima is NOT in Round STREETWEAR & URBAN (sess-trabajadores-1)
-          const cleaned = parsed.map((sess: any) => {
-            if (sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 || sess.title?.toUpperCase().includes('STREETWEAR')) {
-              return {
-                ...sess,
-                participants: TRABAJADORES_USERS.slice(0, 10)
-              };
-            }
-            return sess;
+          // Strictly ensure user (Adriana Lima) is NOT enrolled by default in ANY round
+          const cleaned = parsed.map((sess: any, idx: number) => {
+            const ref = sess.reference || (
+              sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 || sess.title?.toUpperCase().includes('STREETWEAR') ? 'Ref:1' :
+              sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 || sess.title?.toUpperCase().includes('CASUAL') ? 'Ref:2' :
+              sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 || sess.title?.toUpperCase().includes('GLAMOUR') ? 'Ref:3' :
+              sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 || sess.title?.toUpperCase().includes('ELEGANT') ? 'Ref:4' :
+              sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? 'Ref:5' :
+              sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? 'Ref:6' :
+              `Ref:${idx + 1}`
+            );
+            const defaultParticipants = (
+              sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
+              sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
+              sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? EMPRESARIOS_USERS.slice(0, 10) :
+              sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 ? TOPMODELS_USERS.slice(0, 10) :
+              sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? INVERSORES_USERS.slice(0, 10) :
+              sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? MILLONARIOS_USERS.slice(0, 10) :
+              DEFAULT_FINANZAS_TABLE_SESSIONS[idx % DEFAULT_FINANZAS_TABLE_SESSIONS.length]?.participants || TRABAJADORES_USERS.slice(0, 10)
+            );
+            return {
+              ...sess,
+              reference: ref,
+              participants: Array.isArray(sess.participants)
+                ? sess.participants.filter((p: any) =>
+                    !p.name?.includes('Adriana') &&
+                    !p.name?.includes('(Tú)') &&
+                    p.id !== 'user-adriana' &&
+                    !p.isSelf
+                  ).length >= 10
+                  ? sess.participants.filter((p: any) =>
+                      !p.name?.includes('Adriana') &&
+                      !p.name?.includes('(Tú)') &&
+                      p.id !== 'user-adriana' &&
+                      !p.isSelf
+                    ).slice(0, 10)
+                  : defaultParticipants
+                : defaultParticipants
+            };
           });
           return cleaned;
         }
@@ -2958,6 +3032,96 @@ export default function CastingLiveSection({
   });
 
   const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(0);
+
+  // Helper to obtain the reference for each round celebrated, starting from Ronda 1 (Ref:1) onward
+  const getFinanzasRoundRef = (session?: any, index?: number): string => {
+    if (session?.reference) return session.reference;
+    const sId = session?.id || '';
+    const fee = session?.entryFee;
+    const cat = (session?.category || session?.title || '').toUpperCase();
+    
+    if (sId === 'sess-trabajadores-1' || sId === 'sess-workers' || fee === 10 || cat.includes('STREETWEAR') || cat.includes('TRABAJADORES')) {
+      return 'Ref:1';
+    }
+    if (sId === 'sess-emprendedores-1' || sId === 'sess-entrepreneurs' || fee === 100 || cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || cat.includes('LIFESTYLE')) {
+      return 'Ref:2';
+    }
+    if (sId === 'sess-empresarios-1' || sId === 'sess-businessmen' || fee === 1000 || cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS')) {
+      return 'Ref:3';
+    }
+    if (sId === 'sess-topmodels-1' || sId === 'sess-topmodels' || fee === 10000 || cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS')) {
+      return 'Ref:4';
+    }
+    if (sId === 'sess-inversores-1' || sId === 'sess-investors' || fee === 100000 || cat.includes('HIGH FASHION 100K')) {
+      return 'Ref:5';
+    }
+    if (sId === 'sess-millonarios-1' || sId === 'sess-millionaires' || fee === 1000000 || cat.includes('MILLONAR')) {
+      return 'Ref:6';
+    }
+
+    if (typeof index === 'number' && index >= 0) {
+      return `Ref:${index + 1}`;
+    }
+
+    const listIndex = openFinanzasSessions.findIndex(s => s.id === sId);
+    if (listIndex !== -1) {
+      return `Ref:${listIndex + 1}`;
+    }
+
+    return 'Ref:1';
+  };
+
+  // Helper to format the session inscription fee in words and short format
+  // Round Streetwear & Urban: 10 Euros
+  // Round Casual & Lifestyle: 100 Euros
+  // Ronda Glamour: 1.000 Euros
+  // Ronda Elegant & Classic: 10.000 Euros
+  // Ronda High Fashion (100k): 100.000 Euros
+  // Ronda High Fashion (1M): 1.000.000 Euros
+  const getSessionInscriptionFeeFormatted = (session?: any): { fee: number; feeInWords: string; feeShort: string } => {
+    const fee = session?.entryFee;
+    let resolvedFee = 10;
+    if (typeof fee === 'number' && fee > 0) {
+      resolvedFee = fee;
+    } else {
+      const cat = (session?.category || session?.title || '').toUpperCase();
+      if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES')) resolvedFee = 10;
+      else if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || cat.includes('LIFESTYLE')) resolvedFee = 100;
+      else if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS')) resolvedFee = 1000;
+      else if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS')) resolvedFee = 10000;
+      else if (cat.includes('MILLONAR') || session?.id?.includes('millonarios')) resolvedFee = 1000000;
+      else if (cat.includes('HIGH FASHION') || cat.includes('INVERSI')) resolvedFee = 100000;
+      else resolvedFee = 10;
+    }
+
+    let feeInWords = `${resolvedFee} Euros`;
+    let feeShort = `${resolvedFee}€`;
+    if (resolvedFee === 10) {
+      feeInWords = '10 Euros';
+      feeShort = '10€';
+    } else if (resolvedFee === 100) {
+      feeInWords = '100 Euros';
+      feeShort = '100€';
+    } else if (resolvedFee === 1000) {
+      feeInWords = '1.000 Euros';
+      feeShort = '1.000€';
+    } else if (resolvedFee === 10000) {
+      feeInWords = '10.000 Euros';
+      feeShort = '10.000€';
+    } else if (resolvedFee === 100000) {
+      feeInWords = '100.000 Euros';
+      feeShort = '100.000€';
+    } else if (resolvedFee === 1000000) {
+      feeInWords = '1.000.000 Euros';
+      feeShort = '1.000.000€';
+    } else {
+      const formattedNum = new Intl.NumberFormat('es-ES').format(resolvedFee);
+      feeInWords = `${formattedNum} Euros`;
+      feeShort = `${formattedNum}€`;
+    }
+
+    return { fee: resolvedFee, feeInWords, feeShort };
+  };
   const [simulateEmptyFinanzasChannel, setSimulateEmptyFinanzasChannel] = useState<boolean>(false);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const sessionScrollLockRef = useRef<boolean>(false);
@@ -2989,13 +3153,29 @@ export default function CastingLiveSection({
   // Explicit user selection of arrival position (null for live second timing, or 0-9 for explicit testing)
   const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
 
-  // Clear any previous forced participation for Round STREETWEAR & URBAN so Adriana Lima is not inscribed in this round
+  // Clear any previous participation for all rounds on mount so user is strictly not participating by default in any round upon application restart.
+  // Every participant must pay and enroll in each round individually.
   useEffect(() => {
     try {
       localStorage.removeItem('finanzas_user_participating');
       localStorage.removeItem('user_paid_finanzas_session');
+      localStorage.removeItem('finanzas_target_session_id');
+      localStorage.removeItem('finanzas_user_slot_index');
       localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+      localStorage.removeItem('user_paid_session_sess-emprendedores-1');
+      localStorage.removeItem('user_paid_session_sess-empresarios-1');
+      localStorage.removeItem('user_paid_session_sess-topmodels-1');
+      localStorage.removeItem('user_paid_session_sess-inversores-1');
+      localStorage.removeItem('user_paid_session_sess-millonarios-1');
+      // Also clean any arbitrary session payment key stored in localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('user_paid_session_')) {
+          localStorage.removeItem(key);
+        }
+      }
       setIsFinanzasUserParticipatingState(false);
+      setUserPaidSessions({});
     } catch (e) {}
   }, []);
 
@@ -3012,27 +3192,22 @@ export default function CastingLiveSection({
   const currentFinanzasSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0] || openFinanzasSessions[0];
 
   // Determine whether current authenticated user is formally participating/enrolled in this session
+  // By default, the user is NOT enrolled in ANY round upon opening the app.
+  // Every participant must pay and enroll in each round individually.
   const isCurrentUserParticipatingInCurrentSession = useMemo(() => {
-    const isThisSession10 = Boolean(
-      currentFinanzasSession?.entryFee === 10 ||
-      currentFinanzasSession?.id === 'sess-trabajadores-1' ||
-      currentFinanzasSession?.title?.toUpperCase().includes('STREETWEAR')
-    );
-    const sessId = currentFinanzasSession?.id || 'sess-trabajadores-1';
+    if (!currentFinanzasSession?.id) return false;
+    const sessId = currentFinanzasSession.id;
 
-    return Boolean(
-      isFinanzasUserParticipatingState ||
-      (currentFinanzasSession?.id && userPaidSessions[currentFinanzasSession.id]) ||
-      userPaidSessions['sess-trabajadores-1'] ||
-      userPaidSessions['sess-trabajadores-1_explicitly_enrolled'] ||
-      (typeof window !== 'undefined' && (
-        localStorage.getItem('finanzas_user_participating') === 'true' ||
-        localStorage.getItem('user_paid_finanzas_session') === 'true' ||
-        (isThisSession10 && localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true') ||
-        localStorage.getItem(`user_paid_session_${sessId}`) === 'true'
-      ))
-    );
-  }, [currentFinanzasSession, isFinanzasUserParticipatingState, userPaidSessions]);
+    if (userPaidSessions[sessId]) {
+      return true;
+    }
+
+    if (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${sessId}`) === 'true') {
+      return true;
+    }
+
+    return false;
+  }, [currentFinanzasSession?.id, userPaidSessions]);
 
   // Synchronized 10 participants for current session (strictly identical for central stage above and 2x5 grid below)
   const currentSessionParticipants10 = useMemo(() => {
@@ -3119,12 +3294,14 @@ export default function CastingLiveSection({
     }
 
     // If not present in rawList, inject Adriana Lima into the participant list!
-    // In image.png / z.png / za.png, Adriana Lima is in slot 7 (index 6) or slot 8 (index 7).
-    const targetSlot = userParticipantSlotIndex !== null 
-      ? Math.max(0, Math.min(9, userParticipantSlotIndex))
-      : (typeof window !== 'undefined' && localStorage.getItem('finanzas_user_slot_index') !== null
-          ? Math.max(0, Math.min(9, Number(localStorage.getItem('finanzas_user_slot_index'))))
-          : (isThisSession10 ? 7 : 6));
+    // In image.png, Adriana Lima is in slot 10 (index 9).
+    const targetSlot = isThisSession10
+      ? 9
+      : (userParticipantSlotIndex !== null 
+          ? Math.max(0, Math.min(9, userParticipantSlotIndex))
+          : (typeof window !== 'undefined' && localStorage.getItem('finanzas_user_slot_index') !== null
+              ? Math.max(0, Math.min(9, Number(localStorage.getItem('finanzas_user_slot_index'))))
+              : 6));
 
     const cleanPeers = fallbackCategoryList.filter(p => 
       p.name !== myName && 
@@ -3155,7 +3332,7 @@ export default function CastingLiveSection({
   useEffect(() => {
     if (!currentFinanzasSession) return;
     const currentSessId = currentFinanzasSession.id;
-    const isPaid = userPaidSessions[currentSessId] || isFinanzasUserParticipatingState;
+    const isPaid = isCurrentUserParticipatingInCurrentSession;
     if (isPaid) return;
 
     const interval = setInterval(() => {
@@ -3479,20 +3656,17 @@ export default function CastingLiveSection({
       sessionParticipants = copy.slice(0, 10);
     }
 
+    const enrolledId = targetSessionId || activeSess?.id || 'sess-trabajadores-1';
     setJoinedPresenterIds(sessionParticipants.map((p: any) => p.id));
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
       ...prev,
-      [activeSess?.id || 'sess-trabajadores-1']: true,
-      'sess-trabajadores-1': true,
-      'sess-trabajadores-1_explicitly_enrolled': true,
-      ...(targetSessionId ? { [targetSessionId]: true } : {})
+      [enrolledId]: true
     }));
     try {
-      localStorage.setItem('user_paid_session_sess-trabajadores-1', 'true');
+      localStorage.setItem(`user_paid_session_${enrolledId}`, 'true');
       localStorage.setItem('finanzas_user_participating', 'true');
-      localStorage.setItem('user_paid_finanzas_session', 'true');
-      localStorage.setItem('finanzas_user_slot_index', String(userParticipantSlotIndex ?? 7));
+      localStorage.setItem('finanzas_user_slot_index', String(userParticipantSlotIndex ?? 9));
     } catch (e) {}
     setForceShowParticipantsPanel(true);
 
@@ -3729,11 +3903,13 @@ export default function CastingLiveSection({
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
       ...prev,
-      [targetSessionId]: true,
-      'sess-trabajadores-1': true,
-      'sess-trabajadores-1_explicitly_enrolled': true,
-      ...(currentFinanzasSession?.id ? { [currentFinanzasSession.id]: true } : {})
+      [targetSessionId]: true
     }));
+    try {
+      localStorage.setItem(`user_paid_session_${targetSessionId}`, 'true');
+      localStorage.setItem('finanzas_user_participating', 'true');
+      localStorage.setItem('finanzas_user_slot_index', String(userSlotIndex));
+    } catch (e) {}
     setForceShowParticipantsPanel(true);
 
     // Close any modal
@@ -3892,8 +4068,16 @@ export default function CastingLiveSection({
         const fees = [10, 20, 50, 100];
         const randomFee = fees[Math.floor(Math.random() * fees.length)];
 
+        const existingNumbers = updated.map(s => {
+          const m = (s.reference || '').match(/Ref:(\d+)/i);
+          return m ? parseInt(m[1], 10) : 0;
+        });
+        const nextNum = (existingNumbers.length > 0 ? Math.max(...existingNumbers) : 6) + 1;
+
         const freshSession = {
           id: `sess-open-${Date.now()}`,
+          reference: `Ref:${nextNum}`,
+          roundNumber: nextNum,
           title: `Mesa de Inversión • ${randomBrand}`,
           brand: randomBrand,
           category: randomCat,
@@ -11473,9 +11657,18 @@ export default function CastingLiveSection({
                       <button
                         key={em}
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
                           setLiveCommentInput(prev => prev + em);
                           setShowSmilePopover(false);
+                          window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                            detail: {
+                              emoji: em,
+                              icon: em,
+                              pureEmoji: true,
+                              x: e.clientX,
+                              y: e.clientY
+                            }
+                          }));
                         }}
                         className="w-8 h-8 text-lg flex items-center justify-center hover:bg-rose-50 hover:scale-125 rounded-xl active:scale-95 transition cursor-pointer bg-transparent border-0"
                       >
@@ -24751,6 +24944,65 @@ try {
                     Ver todos los vídeos
                   </button>
                 </div>
+              ) : (selectedCategoryFilter === 'Finanzas' && !(
+                showFinanzasInscriptionInChannel ||
+                showVotingProjectsModal ||
+                showFinanzasResults ||
+                showFinanzasRecount ||
+                detailProjectUser ||
+                showProjectDetailsInPopup
+              )) ? (
+                /* 📱 TIKTOK-STYLE VERTICAL FEED FOR FINANZAS ROUNDS (image.png & z.png) */
+                <TikTokFinanzasFeed
+                  activeSessionsOnly={activeSessionsOnly}
+                  activeFinanzasSessionIndex={activeFinanzasSessionIndex}
+                  setActiveFinanzasSessionIndex={setActiveFinanzasSessionIndex}
+                  userPaidSessions={userPaidSessions}
+                  finanzasTimers={finanzasTimers}
+                  isSpeakingPresenterIntro={isSpeakingPresenterIntro}
+                  isVotingPhaseActive={isVotingPhaseActive}
+                  votingPhaseTimer={votingPhaseTimer}
+                  formattedVotingTimer={`${Math.floor(votingPhaseTimer / 60)}:${(votingPhaseTimer % 60).toString().padStart(2, '0')}`}
+                  triggerScrutinyAndRecount={triggerScrutinyAndRecount}
+                  setVotingPhaseTimer={setVotingPhaseTimer}
+                  setSystemVoiceNotification={setSystemVoiceNotification}
+                  getFinanzasRoundRef={getFinanzasRoundRef}
+                  handleFinishRetransmissionAndPassToNextParticipant={handleFinishRetransmissionAndPassToNextParticipant}
+                  isBroadcastMicOn={isBroadcastMicOn}
+                  isMuted={isMuted}
+                  toggleBroadcastMic={() => {
+                    setIsBroadcastMicOn(!isBroadcastMicOn || isMuted);
+                    setIsMuted(isBroadcastMicOn && !isMuted);
+                  }}
+                  isUserLiveStreamingWithCamera={isUserLiveStreamingWithCamera}
+                  isWatchingPresenterCamera={isWatchingPresenterCamera}
+                  handleToggleUserCameraLiveBroadcast={handleToggleUserCameraLiveBroadcast}
+                  setIsWatchingPresenterCamera={setIsWatchingPresenterCamera}
+                  setIsPresenterCameraFullscreen={setIsPresenterCameraFullscreen}
+                  userProfile={userProfile}
+                  setShowFinanzasInscriptionInChannel={setShowFinanzasInscriptionInChannel}
+                  setShowVotingProjectsModal={setShowVotingProjectsModal}
+                  setShowParticipantsGatheringModal={setShowParticipantsGatheringModal}
+                  setDetailProjectUser={setDetailProjectUser}
+                  setActiveFinanzasPopupUser={setActiveFinanzasPopupUser}
+                  setShowProjectDetailsInPopup={setShowProjectDetailsInPopup}
+                  setShowFinanzasResults={setShowFinanzasResults}
+                  setShowFinanzasRecount={setShowFinanzasRecount}
+                  onOpenComments={() => setIsCommentsOpen(true)}
+                  onShare={() => handleShareChannel()}
+                  activePresenterUser={sessionCurrentActiveUser}
+                  onCategoryFilterChange={handleCategoryFilterChange}
+                  selectedCategoryFilter={selectedCategoryFilter}
+                  isBroadcastCamOn={isBroadcastCamOn}
+                  toggleBroadcastCam={() => setIsBroadcastCamOn(!isBroadcastCamOn)}
+                  onToggleScreenShare={handleToggleScreenShare}
+                  isScreenSharingActive={isScreenSharingActive}
+                  broadcastGuestsCount={broadcastGuests.length}
+                  onOpenGuestsModal={() => {
+                    setShowCreateBroadcastModal(true);
+                    setBroadcastModalTab('guests');
+                  }}
+                />
               ) : (
                 /* 📱 Smartphone video frame container styled with width 100%, max-width, and centered flexbox */
                 <div 
@@ -27016,8 +27268,17 @@ try {
                                 <button
                                   key={em}
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(e) => {
                                     setBroadcastBottomCommentText(prev => prev + em);
+                                    window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                      detail: {
+                                        emoji: em,
+                                        icon: em,
+                                        pureEmoji: true,
+                                        x: e.clientX,
+                                        y: e.clientY
+                                      }
+                                    }));
                                   }}
                                   className="w-9 h-9 text-xl flex items-center justify-center hover:bg-white/15 hover:scale-125 rounded-xl active:scale-95 transition cursor-pointer bg-transparent border-0 select-none"
                                   title={`Añadir ${em}`}
@@ -27279,27 +27540,36 @@ try {
 
                           {/* 🌟 Nombre de la Ronda en el espacio en negro (tamaño reducido a la mitad) */}
                           <div className="mt-3 flex flex-col items-center justify-center text-center max-w-md px-4 animate-fade-in" id="finanzas-empty-round-title">
-                            <div className="inline-flex items-center gap-1 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                              <span>Ronda en la que estás participando</span>
+                            <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                              <span>{isCurrentUserParticipatingInCurrentSession ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
+                              <span className="text-white/40">•</span>
+                              <span className="text-amber-300 font-mono font-black tracking-wider">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                             </div>
-                            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0">
-                              {(() => {
-                                const fee = currentFinanzasSession?.entryFee;
-                                const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
-                                if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
-                                if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
-                                if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
-                                if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
-                                if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
-                                if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
-                                return currentFinanzasSession?.title || 'Round Streetwear & Urban';
-                              })()}
+                            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0 flex items-center justify-center gap-2 flex-wrap">
+                              <span>
+                                {(() => {
+                                  const fee = currentFinanzasSession?.entryFee;
+                                  const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
+                                  if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
+                                  if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
+                                  if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
+                                  if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
+                                  if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
+                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
+                                  return currentFinanzasSession?.title || 'Round Streetwear & Urban';
+                                })()}
+                              </span>
+                              <span className="text-[10px] sm:text-xs text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono font-bold tracking-normal normal-case shrink-0">
+                                {getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
+                              </span>
                             </h3>
                             <div className="flex items-center justify-center gap-1.5 mt-1">
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
-                              <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase">
-                                {currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'}
+                              <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
+                                <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'}</span>
+                                <span className="text-slate-500">•</span>
+                                <span className="text-amber-300 font-black">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                               </span>
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                             </div>
@@ -27432,27 +27702,6 @@ try {
                                 </div>
                               </div>
 
-                              {/* ⏱️ 5-Second Ronda Notice Overlay directly under Presenter badge */}
-                              {showRondaNotice && (
-                                <div 
-                                  className="absolute top-11 sm:top-12 left-2 sm:left-3 z-40 bg-black/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-slate-700/80 shadow-2xl text-white flex items-center font-sans animate-fade-in pointer-events-none select-none transition-all duration-300"
-                                  id="ronda-plata-5s-notice-1"
-                                >
-                                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-100">
-                                    <span>{(() => {
-                                      const fee = currentFinanzasSession?.entryFee;
-                                      const cat = currentFinanzasSession?.category?.toUpperCase() || '';
-                                      if (cat.includes('TRABAJADORES') || cat.includes('STREETWEAR') || fee === 10) return 'Ref: 1';
-                                      if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Ref: 2';
-                                      if (cat.includes('EMPRESARIOS') || cat.includes('GLAMOUR') || fee === 1000) return 'Ref: 3';
-                                      if (cat.includes('MODELS') || cat.includes('ELEGANT') || cat.includes('CLASSIC') || fee === 10000) return 'Ref: 4';
-                                      if (cat.includes('INVERSI') || cat.includes('HIGH') || cat.includes('FASHION') || fee === 100000) return 'Ref: 5';
-                                      if (cat.includes('MILLONAR') || fee === 1000000) return 'Ref: 6';
-                                      return 'Ref: 1';
-                                    })()}</span>
-                                  </div>
-                                </div>
-                              )}
                             </>
                           );
                         })()}
@@ -28576,27 +28825,36 @@ try {
                             className="w-full max-w-xl mx-auto flex flex-col items-center justify-center text-center mt-10 sm:mt-11 mb-1 sm:mb-1.5 px-3 select-none animate-fade-in" 
                             id="finanzas-round-title-banner"
                           >
-                            <div className="inline-flex items-center gap-1 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
+                            <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse shrink-0" />
                               <span>{isCurrentUserParticipatingInCurrentSession ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
+                              <span className="text-white/40">•</span>
+                              <span className="text-amber-300 font-mono font-black tracking-wider" id="finanzas-round-ref-badge-top">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                             </div>
-                            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-black text-white uppercase tracking-wider font-sans drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] leading-tight m-0">
-                              {(() => {
-                                const fee = currentFinanzasSession?.entryFee;
-                                const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
-                                if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
-                                if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
-                                if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
-                                if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
-                                if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
-                                if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
-                                return currentFinanzasSession?.title || 'Round Streetwear & Urban';
-                              })()}
+                            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-black text-white uppercase tracking-wider font-sans drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] leading-tight m-0 flex items-center justify-center gap-2 flex-wrap">
+                              <span>
+                                {(() => {
+                                  const fee = currentFinanzasSession?.entryFee;
+                                  const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
+                                  if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
+                                  if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
+                                  if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
+                                  if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
+                                  if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
+                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
+                                  return currentFinanzasSession?.title || 'Round Streetwear & Urban';
+                                })()}
+                              </span>
+                              <span className="text-[10px] sm:text-xs text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono font-bold tracking-normal normal-case shrink-0">
+                                {getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
+                              </span>
                             </h1>
                             <div className="flex items-center justify-center gap-1.5 mt-1">
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
-                              <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-300 font-mono tracking-wider uppercase bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-700/80">
-                                {currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes
+                              <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-300 font-mono tracking-wider uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-700/80 flex items-center gap-1.5">
+                                <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes</span>
+                                <span className="text-slate-500">•</span>
+                                <span className="text-amber-300 font-black tracking-wider" id="finanzas-round-ref-badge-bottom">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                               </span>
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                             </div>
@@ -28661,20 +28919,23 @@ try {
                                         title="Clic para salir de pantalla completa"
                                       />
 
-                                      {/* Botón flotante discreto de salida rápida */}
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setIsWatchingPresenterCamera(false);
-                                          setIsPresenterCameraFullscreen(false);
-                                          setIsPresenterCameraBrowserFullscreen(false);
-                                        }}
-                                        className="absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-black/40 hover:bg-black/80 text-white/80 hover:text-white transition flex items-center justify-center backdrop-blur-xs cursor-pointer border border-white/10 shadow-lg"
-                                        title="Salir de la cámara en directo"
-                                        aria-label="Cerrar"
-                                      >
-                                        <X className="w-5 h-5" />
-                                      </button>
+                                      {/* Botón abajo del todo para desactivar la cámara y volver atrás */}
+                                      <div className="absolute bottom-5 inset-x-4 z-30 flex justify-center pointer-events-auto">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setIsWatchingPresenterCamera(false);
+                                            setIsPresenterCameraFullscreen(false);
+                                            setIsPresenterCameraBrowserFullscreen(false);
+                                          }}
+                                          id="btn-deactivate-presenter-camera-bottom"
+                                          className="w-full max-w-xs sm:max-w-sm py-3 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_4px_25px_rgba(239,68,68,0.55)] border border-red-400/80 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                                          title="Desactivar cámara y volver atrás"
+                                        >
+                                          <CameraOff className="w-4 h-4 text-white shrink-0" />
+                                          <span>Desactivar Cámara</span>
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
 
@@ -28796,6 +29057,23 @@ try {
                                           </div>
 
                                           {/* Floating Controls */}
+                                      {/* Botón abajo del todo para desactivar la cámara y volver atrás */}
+                                      <div className="absolute bottom-5 inset-x-4 z-30 flex justify-center pointer-events-auto">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setIsWatchingPresenterCamera(false);
+                                            setIsPresenterCameraFullscreen(false);
+                                            setIsPresenterCameraBrowserFullscreen(false);
+                                          }}
+                                          id="btn-deactivate-presenter-camera-bottom"
+                                          className="w-full max-w-xs sm:max-w-sm py-3 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_4px_25px_rgba(239,68,68,0.55)] border border-red-400/80 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                                          title="Desactivar cámara y volver atrás"
+                                        >
+                                          <CameraOff className="w-4 h-4 text-white shrink-0" />
+                                          <span>Desactivar Cámara</span>
+                                        </button>
+                                      </div>
                                           <div className="absolute top-2 right-2 flex items-center gap-1.5">
                                             <button
                                               type="button"
@@ -29173,6 +29451,7 @@ try {
                             {(() => {
                               const isUserParticipating = isCurrentUserParticipatingInCurrentSession;
                               const gridParticipants = currentSessionParticipants10;
+                              const currentSessionFeeInfo = getSessionInscriptionFeeFormatted(currentFinanzasSession);
 
                               return (
                                 <>
@@ -29300,10 +29579,11 @@ try {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        // Ensure the 10 Euros session is selected
-                                        const idx10 = activeSessionsOnly.findIndex(s => s.entryFee === 10 || s.id === 'sess-trabajadores-1');
-                                        if (idx10 !== -1) {
-                                          setActiveFinanzasSessionIndex(idx10);
+                                        // Ensure the current session is selected
+                                        const currentSessionId = currentFinanzasSession?.id;
+                                        const currIdx = activeSessionsOnly.findIndex(s => s.id === currentSessionId || s.entryFee === currentSessionFeeInfo.fee);
+                                        if (currIdx !== -1) {
+                                          setActiveFinanzasSessionIndex(currIdx);
                                         }
                                         setShowVotingProjectsModal(false);
                                         setShowProjectDetailsInPopup(false);
@@ -29320,11 +29600,13 @@ try {
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
-                                      title={isUserParticipating ? "Participando como Adriana Lima" : "Inscribirse en una sesión de (10 Euros)"}
+                                      title={isUserParticipating ? "Participando como Adriana Lima" : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
                                     >
                                       <span className="text-base shrink-0">{isUserParticipating ? '✅' : '✍️'}</span>
                                       <span className="truncate min-w-0 font-black tracking-tight">
-                                        {isUserParticipating ? 'Estás inscrita como participante (10€)' : 'Inscribirse en una sesión de (10 Euros)'}
+                                        {isUserParticipating 
+                                          ? `Estás inscrita como participante (${currentSessionFeeInfo.feeShort})` 
+                                          : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
                                       </span>
                                     </button>
 
@@ -29420,28 +29702,6 @@ try {
                               <span>DIRECTO {formattedTimer}</span>
                             </div>
                           </div>
-
-                          {/* ⏱️ Ronda de Emprendedores en Curso Overlay directly under Presenter badge */}
-                          {showRondaNotice && (
-                            <div 
-                              className="absolute top-13 left-3.5 z-40 bg-black/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-slate-700/80 shadow-2xl text-white flex items-center font-sans animate-fade-in pointer-events-none select-none transition-all duration-300"
-                              id="ronda-plata-5s-notice-2"
-                            >
-                              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-100">
-                                <span>{(() => {
-                                  const fee = currentFinanzasSession?.entryFee;
-                                  const cat = currentFinanzasSession?.category?.toUpperCase() || '';
-                                  if (cat.includes('TRABAJADORES') || cat.includes('STREETWEAR') || fee === 10) return 'Ref: 1';
-                                  if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Ref: 2';
-                                  if (cat.includes('EMPRESARIOS') || cat.includes('GLAMOUR') || fee === 1000) return 'Ref: 3';
-                                  if (cat.includes('MODELS') || cat.includes('ELEGANT') || cat.includes('CLASSIC') || fee === 10000) return 'Ref: 4';
-                                  if (cat.includes('INVERSI') || cat.includes('HIGH') || cat.includes('FASHION') || fee === 100000) return 'Ref: 5';
-                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Ref: 6';
-                                  return 'Ref: 1';
-                                })()}</span>
-                              </div>
-                            </div>
-                          )}
                         </>
                       );
                     })()}
@@ -29471,27 +29731,36 @@ try {
 
                       {/* 🌟 Nombre de la Ronda en el espacio en negro (tamaño reducido a la mitad) */}
                       <div className="mt-4 flex flex-col items-center justify-center text-center max-w-md px-4 animate-fade-in" id="category-offline-round-title">
-                        <div className="inline-flex items-center gap-1 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                          <span>Ronda en la que estás participando</span>
+                        <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                          <span>{isCurrentUserParticipatingInCurrentSession ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
+                          <span className="text-white/40">•</span>
+                          <span className="text-amber-300 font-mono font-black tracking-wider">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                         </div>
-                        <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0">
-                          {(() => {
-                            const fee = currentFinanzasSession?.entryFee;
-                            const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
-                            if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
-                            if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
-                            if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
-                            if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
-                            if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
-                            if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
-                            return currentFinanzasSession?.title || 'Round Streetwear & Urban';
-                          })()}
+                        <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0 flex items-center justify-center gap-2 flex-wrap">
+                          <span>
+                            {(() => {
+                              const fee = currentFinanzasSession?.entryFee;
+                              const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
+                              if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
+                              if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
+                              if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
+                              if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
+                              if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
+                              if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
+                              return currentFinanzasSession?.title || 'Round Streetwear & Urban';
+                            })()}
+                          </span>
+                          <span className="text-[10px] sm:text-xs text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono font-bold tracking-normal normal-case shrink-0">
+                            {getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
+                          </span>
                         </h3>
                         <div className="flex items-center justify-center gap-1.5 mt-1">
                           <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
-                          <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase">
-                            {currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'}
+                          <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
+                            <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'}</span>
+                            <span className="text-slate-500">•</span>
+                            <span className="text-amber-300 font-black">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                           </span>
                           <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                         </div>
@@ -32192,9 +32461,18 @@ try {
                         <button
                           key={emoji}
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
                             setNewCommentText(prev => prev + emoji);
                             mobileCommentInputRef.current?.focus();
+                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                              detail: {
+                                emoji: emoji,
+                                icon: emoji,
+                                pureEmoji: true,
+                                x: e.clientX,
+                                y: e.clientY
+                              }
+                            }));
                           }}
                           className="w-7.5 h-7.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-125 transition-transform flex items-center justify-center text-sm cursor-pointer border-0 shrink-0"
                           title={`Reaccionar con ${emoji}`}
@@ -32330,6 +32608,15 @@ try {
                                         e.stopPropagation();
                                         setNewCommentText(prev => prev + emoji);
                                         mobileCommentInputRef.current?.focus();
+                                        window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                          detail: {
+                                            emoji: emoji,
+                                            icon: emoji,
+                                            pureEmoji: true,
+                                            x: e.clientX,
+                                            y: e.clientY
+                                          }
+                                        }));
                                       }}
                                       className="text-xl hover:scale-130 active:scale-95 transition-transform cursor-pointer p-1 hover:bg-white/15 rounded-lg border-0 flex items-center justify-center"
                                       title={`Añadir ${emoji}`}
@@ -33501,9 +33788,18 @@ try {
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
                           setNewCommentText(prev => prev + emoji);
                           commentInputRef.current?.focus();
+                          window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                            detail: {
+                              emoji: emoji,
+                              icon: emoji,
+                              pureEmoji: true,
+                              x: e.clientX,
+                              y: e.clientY
+                            }
+                          }));
                         }}
                         className="text-xl hover:scale-130 transition active:scale-95 duration-100 flex items-center justify-center p-0.5 rounded-lg hover:bg-rose-50/70 cursor-pointer"
                       >
@@ -33801,6 +34097,7 @@ try {
         isOpen={showParticipantsGatheringModal}
         sessionTitle={gatheringSessionTitle || "Round STREETWEAR & URBAN"}
         entryFee={gatheringSessionFee || 10}
+        roundRef={getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
         participantsList={gatheringParticipantsList || TRABAJADORES_USERS}
         currentUserProfile={userProfile}
         userSlotIndex={targetUserArrivalSlot}
