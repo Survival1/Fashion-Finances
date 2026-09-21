@@ -161,7 +161,8 @@ export const accountsQueSigues = [
     name: 'victorgraciaweb',
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=260',
     hasHeart: false,
-    bio: 'Desarrollador Blockchain 🧘‍♀️ con +12 años en TI 👇 MI MASTERCLASS GRATUITA 👇 victorgraciaweb.com/newslet...',
+    bio: 'Desarrollador Blockchain 🙏 con +12 años en TI 👇\nMI MASTERCLASS GRATUITA\n👇',
+    website: 'victorgraciaweb.com/newslet...',
     seguidores: '1632',
     meGusta: '10.5K',
     videos: [
@@ -182,217 +183,306 @@ export const accountsQueSigues = [
   {
     username: 'adrianalima_w1',
     name: 'Adriana Lima',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '✨ Modelo digital internacional. Pasarelas Milán, París y Nueva York. #style #fashionadvisor',
+    bio: 'Top Model internacional & Fashion Ambassador ✨\nPasarelas de Milán, París y Nueva York 👠\n👇 COLECCIÓN & MASTERCLASS 👇',
+    website: 'adrianalima.com/runway-vip...',
     seguidores: '210.4K',
     meGusta: '1.2M',
     videos: [
-      { id: 'val-v1', title: 'OUTFIT EN MILÁN', views: '45.2K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' }
+      { id: 'val-v1', title: 'DESFILE EN MILÁN', views: '120 mil', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'val-v2', title: 'BACKSTAGE PARÍS', views: '45.2K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'val-v3', title: 'RUTINA DE GLOW', views: '89.4K', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'val-v4', title: 'OUTFIT ALTA COSTURA', views: '64.1K', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'val-v5', title: 'FASHION WEEK VIBES', views: '110K', img: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600' },
+      { id: 'val-v6', title: 'SECRETOS PASARELA', views: '75K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' },
+      { id: 'val-v7', title: 'SESIÓN EDITORIAL', views: '52K', img: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=600' },
+      { id: 'val-v8', title: 'COUTURE DIARY', views: '43K', img: 'https://images.unsplash.com/photo-1512413911192-275185af3eed?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'alessandraambrosio_w2',
     name: 'Alessandra Ambrosio',
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '👑 Empoderando a modelos en finanzas descentralizadas. #DeFi #FashionCommerce',
+    bio: 'Supermodelo & Emprendedora DeFi 👑\nInversiones en Moda Sostenible & Colecciones Exclusivas ✨\n👇 ACCESO EXCLUSIVO 👇',
+    website: 'alessandraambrosio.com/vip...',
     seguidores: '98.5K',
     meGusta: '542K',
     videos: [
-      { id: 'is-v1', title: 'NEGOCIAR TU CONTRATO VIP', views: '12.5K', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600' }
+      { id: 'is-v1', title: 'CONTRATO VIP', views: '85 mil', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'is-v2', title: 'SESIÓN EN CANNES', views: '32.5K', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600' },
+      { id: 'is-v3', title: 'ESTILO BRASIL CHIC', views: '54K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'is-v4', title: 'INVERSIÓN EN MODA', views: '41K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
+      { id: 'is-v5', title: 'SUMMER CAPSULE', views: '92K', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'is-v6', title: 'DESFILE DE CLAUSURA', views: '68K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'sophialoren_w3',
     name: 'Sophia Loren',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '🌟 Streetwear francés, desfiles urbanos y comerciales parisinos.',
+    bio: 'Streetwear francés & Icono Cinematográfico 🌟\nDesfiles urbanos, arte y alta costura parisina ✨\n👇 DESFILE Y LOOKS 👇',
+    website: 'sophialoren.paris/collection...',
     seguidores: '150K',
     meGusta: '890K',
     videos: [
-      { id: 'so-v1', title: 'FOTOS BAJO LLUVIA EN PARÍS', views: '32K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' }
+      { id: 'so-v1', title: 'LLUVIA EN PARÍS', views: '95 mil', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'so-v2', title: 'STREETWEAR CHIC', views: '48K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' },
+      { id: 'so-v3', title: 'PASARELA NOCTURNA', views: '71K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'so-v4', title: 'DETRÁS DE CÁMARAS', views: '36K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
+      { id: 'so-v5', title: 'COUTURE VINTAGE', views: '84K', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'so-v6', title: 'MONTMARTRE WALK', views: '63K', img: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'alexandervance_m1',
     name: 'Alexander Vance',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '💼 Embajador de alta costura e inversor estratégico en marcas emergentes.',
+    bio: 'Embajador de Alta Costura Masculina 💼\nInversor en Marcas de Lujo y Diseñadores Emergentes 📈\n👇 MASTERCLASS INVERSIÓN 👇',
+    website: 'alexandervance.luxury/invest...',
     seguidores: '89.2K',
     meGusta: '412K',
     videos: [
-      { id: 'al-v1', title: 'DESFILE OTOÑO-INVIERNO MILÁN', views: '15.1K', img: 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=600' }
+      { id: 'al-v1', title: 'MILÁN OTOÑO-INVIERNO', views: '62 mil', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'al-v2', title: 'SASTRERÍA A MEDIDA', views: '29K', img: 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=600' },
+      { id: 'al-v3', title: 'CLAVES DE INVERSIÓN', views: '45K', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600' },
+      { id: 'al-v4', title: 'RELOJES Y ESTILO', views: '38K', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600' },
+      { id: 'al-v5', title: 'LONDON RUNWAY', views: '51K', img: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600' },
+      { id: 'al-v6', title: 'BUSINESS LIFESTYLE', views: '77K', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'ssoftblooms',
     name: 'ssoftblooms',
-    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=260',
     hasHeart: false,
-    bio: '🌸 Flores y estética cinematográfica suave para inspirar tus finanzas de arte.',
-    seguidores: '12K',
+    bio: 'Flores, Arte & Estética Cinematográfica Suave 🌸\nInspiración visual para coleccionistas y finanzas creativas ✨\n👇 GALERÍA Y PRINTS 👇',
+    website: 'ssoftblooms.art/prints...',
+    seguidores: '12.4K',
     meGusta: '89K',
     videos: [
-      { id: 'sf-v1', title: 'FLORES Y HORTENSIAS', views: '4.5K', img: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=600' }
+      { id: 'sf-v1', title: 'FLORES Y HORTENSIAS', views: '34 mil', img: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'sf-v2', title: 'PALETA COLOR CHIC', views: '18K', img: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'sf-v3', title: 'BOUQUET PRIMAVERA', views: '22K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'sf-v4', title: 'ESTÉTICA PASTEL', views: '15K', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'mariathattil',
     name: 'mariathattil',
-    avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '✨ Ex Miss Universe Australia | Presentadora de TV y creadora Web3.',
+    isVerified: true,
+    bio: 'Ex Miss Universe Australia 👑 | Autora & Host de TV ✨\nEmpoderamiento, belleza y presencia escénica 👇\n👇 MI PODCAST & MASTERCLASS 👇',
+    website: 'mariathattil.com/podcast...',
     seguidores: '350K',
-    meGusta: '4M',
+    meGusta: '4.2M',
     videos: [
-      { id: 'ma-v1', title: 'MI SKINCARE DIARIO', views: '120K', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600' }
+      { id: 'ma-v1', title: 'MI SKINCARE DIARIO', views: '180 mil', img: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'ma-v2', title: 'RED CARPET GALA', views: '94K', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ma-v3', title: 'CONFIANZA EN CÁMARA', views: '67K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ma-v4', title: 'MAKEUP MINIMALISTA', views: '112K', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'm1ella',
     name: 'Miellamarie',
-    avatar: 'https://images.unsplash.com/photo-1512413911192-275185af3eed?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
     hasHeart: false,
-    bio: 'Daily fashion and digital-creator lifestyle inspiration. ✨',
-    seguidores: '64K',
+    bio: 'Daily fashion, aesthetic routines & creator lifestyle 🍯\nTips de edición y estilismo para desfiles ✨\n👇 LOOKBOOK DIARIO 👇',
+    website: 'miellamarie.style/lookbook...',
+    seguidores: '64.2K',
     meGusta: '312K',
     videos: [
-      { id: 'ml-v1', title: 'MY ROOM TOUR DE REINA', views: '18K', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=600' }
+      { id: 'ml-v1', title: 'ROOM TOUR DE REINA', views: '42 mil', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'ml-v2', title: 'GRWM PARA PASARELA', views: '28K', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ml-v3', title: 'OUTFITS VINTAGE 90S', views: '35K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ml-v4', title: 'ACCESORIOS TENDENCIA', views: '19K', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'badabun',
     name: 'Badabun',
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '🔥 El canal más viral de redes sociales. ¿Desarrollamos código hoy?',
-    seguidores: '25M',
+    isVerified: true,
+    bio: 'El canal de entretenimiento y tecnología más viral 🔥\nEntrevistas exclusivas a creadores e inversores 🎬\n👇 NUEVO EPISODIO 👇',
+    website: 'badabun.tv/exclusivo...',
+    seguidores: '25.3M',
     meGusta: '450M',
     videos: [
-      { id: 'ba-v1', title: 'ENTREVISTA CON PROGRAMADORES BLOCKCHAIN', views: '1.2M', img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=600' }
+      { id: 'ba-v1', title: 'PROGRAMADORES Y MODA', views: '1.2M', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'ba-v2', title: '¿CUÁNTO CUESTA TU LOOK?', views: '890K', img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ba-v3', title: 'DESAFÍO INVERSORES', views: '640K', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ba-v4', title: 'DETRÁS DEL CATWALK', views: '780K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'kyliejenner',
     name: 'Kylie Jenner',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-    hasHeart: false,
-    bio: '👑 Kylie Cosmetics & Kylie Skin. Fashion and business. Creator of looks. ✨',
-    seguidores: '400M',
-    meGusta: '5.2B',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true,
+    bio: 'Founder Kylie Cosmetics 💄 & Khy Fashion 🖤\nBeauty, style, backstage and creative business.\n👇 NEW LIP OIL DROP 👇',
+    website: 'kyliecosmetics.com/shop...',
+    seguidores: '398M',
+    meGusta: '4.8B',
     videos: [
-      { id: 'ky-v1', title: 'GLITTER MAKEUP SHOW', views: '3.2M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=600' }
+      { id: 'kj-v1', title: 'PARIS COUTURE GLAM', views: '4.5M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'kj-v2', title: 'KHY DROP 004 FIT CHECK', views: '2.8M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'kj-v3', title: 'MY EVERYDAY LIP COMBO', views: '3.1M', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'kj-v4', title: 'MET GALA RECAP', views: '5.2M', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'kendalljenner',
     name: 'Kendall Jenner',
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '✨ Runway & editorial high fashion. Global ambassador. 🍸 #818',
-    seguidores: '290M',
-    meGusta: '3.8B',
+    isVerified: true,
+    bio: 'Runway model & Founder 818 Tequila 🍸\nEquitation, high fashion catwalks and street aesthetic.\n👇 RECENT HIGHLIGHTS 👇',
+    website: 'drink818.com/experience...',
+    seguidores: '294M',
+    meGusta: '3.2B',
     videos: [
-      { id: 'kj-v1', title: 'PARIS COUTURE WEEK WALK', views: '1.8M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' }
+      { id: 'ken-v1', title: 'VERSACE RUNWAY CATWALK', views: '3.8M', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'ken-v2', title: 'AFTER HOURS IN NYC', views: '1.9M', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ken-v3', title: 'HORSE RIDING MORNING', views: '2.4M', img: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600' },
+      { id: 'ken-v4', title: 'BACKSTAGE FASHION WEEK', views: '2.7M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'gigihadid',
     name: 'Gigi Hadid',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '🌟 Guest in Residence founder. High fashion & creative director.',
-    seguidores: '78M',
-    meGusta: '890M',
+    isVerified: true,
+    bio: 'Founder & Creative Director @guestinresidence 🧶\nRunways across the globe. Mom & Creator.\n👇 EXPLORE KNITWEAR 👇',
+    website: 'guestinresidence.com/drops...',
+    seguidores: '79.2M',
+    meGusta: '1.4B',
     videos: [
-      { id: 'gh-v1', title: 'MILAN BACKSTAGE FASHION', views: '950K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' }
+      { id: 'gigi-v1', title: 'CHANEL IN THE GRAND PALAIS', views: '2.2M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'gigi-v2', title: 'CASHMERE DESIGN DIARIES', views: '980K', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'gigi-v3', title: 'STREET STYLE ESSENTIALS', views: '1.4M', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' },
+      { id: 'gigi-v4', title: 'FASHION AWARDS RED CARPET', views: '1.6M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'bellahadid',
     name: 'Bella Hadid',
-    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=150',
-    hasHeart: false,
-    bio: '💎 Orebella alchemy of scent. Editorial muse & equestrian.',
-    seguidores: '60M',
-    meGusta: '720M',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true,
+    bio: 'Co-founder @oreb_wellness 🌿 & Fashion Muse\nEquestrian life, vintage archives & high fashion.\n👇 WELLNESS & ALCHEMY 👇',
+    website: 'orebella.com/alchemy...',
+    seguidores: '61.5M',
+    meGusta: '990M',
     videos: [
-      { id: 'bh-v1', title: 'CANNES RED CARPET LOOK', views: '1.1M', img: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=600' }
+      { id: 'bella-v1', title: 'PARIS VINTAGE ARCHIVE TOUR', views: '3.1M', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'bella-v2', title: 'COWBOY BOOTS & LEATHER', views: '1.7M', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'bella-v3', title: 'CANNES SCENE HIGHLIGHT', views: '2.5M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'bella-v4', title: 'MINDFUL MORNING RITUAL', views: '1.2M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'jonkortajarena',
     name: 'Jon Kortajarena',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '🕶️ Top model internacional & actor. Pasarelas de Tom Ford, Armani y Versace.',
-    seguidores: '3.9M',
+    bio: 'Actor & International Top Model 🇪🇸\nGreenpeace ambassador, cinema and Mediterranean lifestyle.\n👇 PROYECTOS & CINE 👇',
+    website: 'kortajarena.actor/projects...',
+    seguidores: '3.8M',
     meGusta: '45M',
     videos: [
-      { id: 'jk-v1', title: 'TOM FORD MILANO CATWALK', views: '420K', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600' }
+      { id: 'jk-v1', title: 'RODAJE EN MADRID', views: '450 mil', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'jk-v2', title: 'TOM FORD RETROSPECTIVE', views: '280K', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600' },
+      { id: 'jk-v3', title: 'ATARDECER EN LANZAROTE', views: '390K', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600' },
+      { id: 'jk-v4', title: 'PASARELA DE MILÁN', views: '310K', img: 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'haileybieber',
     name: 'Hailey Bieber',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
-    hasHeart: false,
-    bio: '✨ Rhode skincare & glazed lip trendsetter. Streetwear elegance.',
-    seguidores: '53M',
-    meGusta: '610M',
+    avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true,
+    bio: 'Founder @rhode 🫧\nGlazed skin, oversized tailoring, timeless chic.\n👇 THE PEPTIDE LIP TINT 👇',
+    website: 'rhodeskin.com/glazed...',
+    seguidores: '53.4M',
+    meGusta: '890M',
     videos: [
-      { id: 'hb-v1', title: 'GLAZED DONUT SKINCARE ROUTINE', views: '2.4M', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600' }
+      { id: 'hb-v1', title: 'GLAZED DONUT SKINCARE', views: '2.9M', img: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'hb-v2', title: 'GET READY WITH ME RHODE', views: '1.8M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
+      { id: 'hb-v3', title: 'STREET STYLE OVERSIZED', views: '2.1M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
+      { id: 'hb-v4', title: 'SUMMER NAILS INSPO', views: '1.4M', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'naomicampbell',
     name: 'Naomi Campbell',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '👑 Supermodel Icon & Philanthropist. Redefining fashion history.',
-    seguidores: '16M',
+    bio: 'Cultural innovator & Runway icon 👑\nFounder Fashion For Relief. Haute couture legend.\n👇 MASTERCLASS DE PASARELA 👇',
+    website: 'naomicampbell.com/runway...',
+    seguidores: '16.5M',
     meGusta: '210M',
     videos: [
-      { id: 'nc-v1', title: 'MASTERING THE LEGENDARY CATWALK', views: '3.8M', img: 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&q=80&w=600' }
+      { id: 'nc-v1', title: 'THE SIGNATURE WALK', views: '1.8M', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'nc-v2', title: 'VOGUE COVER ANNIVERSARY', views: '920K', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'nc-v3', title: 'PARIS COUTURE FINALE', views: '1.3M', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
+      { id: 'nc-v4', title: 'FASHION FOR RELIEF GALA', views: '840K', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'irinashayk',
     name: 'Irina Shayk',
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '🌹 Top Model internacional, pasarelas de Milán, París y Nueva York. Embajadora de Alta Costura.',
+    bio: '🌹 Top Model internacional, pasarelas de Milán, París y Nueva York.\nEmbajadora de Alta Costura y Moda.\n👇 CATWALK HIGHLIGHTS 👇',
+    website: 'irinashayk.fashion/vip...',
     seguidores: '24.5M',
     meGusta: '320M',
     videos: [
-      { id: 'is-v1', title: 'MILAN FASHION WEEK HIGHLIGHTS', views: '2.1M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' }
+      { id: 'is2-v1', title: 'MILAN FASHION WEEK HIGHLIGHTS', views: '2.1M', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'is2-v2', title: 'AFTER HOURS IN CANNES', views: '870K', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'is2-v3', title: 'STREET STYLE IN TRIBECA', views: '1.2M', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'is2-v4', title: 'BACKSTAGE READY', views: '950K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'caradelevingne',
     name: 'Cara Delevingne',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '⚡ Modelo británica, actriz y creadora de tendencias audaces en moda urbana.',
+    bio: '⚡ Modelo británica, actriz y creadora de tendencias audaces en moda urbana.\nLondon vibes & cinematic moments.\n👇 PROYECTOS & LOOKS 👇',
+    website: 'caradelevingne.co.uk/art...',
     seguidores: '42M',
     meGusta: '580M',
     videos: [
-      { id: 'cd-v1', title: 'LONDON STREET STYLE & BACKSTAGE', views: '1.9M', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600' }
+      { id: 'cd-v1', title: 'LONDON STREET STYLE & BACKSTAGE', views: '1.9M', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'cd-v2', title: 'BURBERRY SHOW RECAP', views: '1.1M', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' },
+      { id: 'cd-v3', title: 'PUNK COUTURE EDITORIAL', views: '1.4M', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'cd-v4', title: 'FILM SET SNEAK PEEK', views: '980K', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' }
     ]
   },
   {
     username: 'rosiehw',
     name: 'Rosie H-Whiteley',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
     hasHeart: true,
-    bio: '💎 Rose Inc founder. Elegancia contemporánea, belleza y estilo atemporal.',
+    bio: '💎 Rose Inc founder. Elegancia contemporánea, belleza y estilo atemporal.\nMinimalist beauty & quiet luxury.\n👇 QUIET LUXURY ESSENTIALS 👇',
+    website: 'roseinc.com/essentials...',
     seguidores: '19.8M',
     meGusta: '260M',
     videos: [
-      { id: 'rhw-v1', title: 'TIMELESS LUXURY ESSENTIALS', views: '1.4M', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600' }
+      { id: 'rhw-v1', title: 'TIMELESS LUXURY ESSENTIALS', views: '1.4M', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'rhw-v2', title: 'CLEAN GIRL MAKEUP TUTORIAL', views: '920K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
+      { id: 'rhw-v3', title: 'CAPSULE WARDROBE STYLING', views: '1.1M', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
+      { id: 'rhw-v4', title: 'CHIC SUITING FOR EVENINGS', views: '780K', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600' }
     ]
   }
 ];
@@ -1898,6 +1988,69 @@ export default function CastingLiveSection({
       videoCategory: 'BackStage'
     },
     {
+      id: 'vid-backstage-2',
+      modelId: 'model-1',
+      username: 'sofia_sensations',
+      name: 'Sophia Loren',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 2420,
+      comments: [
+        { id: 'c-bs-1', user: 'camerino_pro', text: '¡Ese maquillaje plateado en el backstage quedó increíble! 🎬💄', date: 'Hace 45 min', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 63,
+      favorites: 210,
+      description: 'Detrás de escena en el camerino de Pasarela Madrid. Últimos retoques de peinado y purpurina antes de salir a la pasarela. 🎬✨ #backstage #camerino #runwayprep',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: true,
+      music: 'Backstage Vibe - Chill Beat LoFi',
+      category: 'para-ti',
+      videoCategory: 'BackStage'
+    },
+    {
+      id: 'vid-backstage-3',
+      modelId: 'model-5',
+      username: 'oliver_art',
+      name: 'Oliver Finch',
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+      likes: 1890,
+      comments: [
+        { id: 'c-bs-2', user: 'foto_master', text: '¡Qué buen set de luces estroboscópicas tras bambalinas! 📽️⚡', date: 'Hace 2 horas', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 41,
+      favorites: 175,
+      description: 'Entre bastidores con el equipo técnico de iluminación. Pruebas de destellos estroboscópicos para la sesión editorial. 📽️📸 #backstage #lighting #shooting',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Behind The Scenes LoFi - Studio Mix',
+      category: 'para-ti',
+      videoCategory: 'BackStage'
+    },
+    {
+      id: 'vid-backstage-4',
+      modelId: 'model-4',
+      username: 'sofia_martinezz',
+      name: 'Elena Rostova',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
+      likes: 3150,
+      comments: [
+        { id: 'c-bs-3', user: 'backstage_pass', text: '¡La energía previa a la salida es contagiosa! 🎬💃', date: 'Hace 1 hora', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 88,
+      favorites: 390,
+      description: 'Bailando y calentando en el backstage 2 minutos antes de la llamada a pasarela. Cero nervios y pura diversión. 💃🎬 #backstage #fashionweek #backstagesecrets',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Warmup Groove - Backstage Sound',
+      category: 'para-ti',
+      videoCategory: 'BackStage'
+    },
+    {
       id: 'vid-3',
       modelId: 'model-3',
       username: 'marcus_sterling_real',
@@ -2344,14 +2497,22 @@ export default function CastingLiveSection({
         finanzas: 'Finanzas',
         models: 'Modelos',
         modelos: 'Modelos',
+        runway: 'Modelos',
         backstage: 'BackStage',
         investors: 'Investors',
+        jewellery: 'Investors',
         tiendas: 'Tiendas',
-        catwalk: 'Catwalk'
+        catwalk: 'Catwalk',
+        fitnes: 'Fitnes',
+        fitness: 'Fitnes',
+        beauty: 'Beauty',
+        influencer: 'Influencer',
+        reels: 'Reels'
       };
       return map[cat.toLowerCase()] || cat;
     };
     
+    const initialCatMap = new Map(initialVideos.map(v => [v.id, v.videoCategory]));
     const initialVideosMapped = initialVideos.map(v => ({
       ...v,
       videoCategory: parseCategory(v.videoCategory)
@@ -2363,7 +2524,7 @@ export default function CastingLiveSection({
         if (Array.isArray(parsed) && parsed.length > 0) {
           const parsedMapped = parsed.map(v => ({
             ...v,
-            videoCategory: parseCategory(v.videoCategory)
+            videoCategory: initialCatMap.get(v.id) || parseCategory(v.videoCategory)
           }));
           
           // Merge keeping cached ones (uploaded ones) at the top, appending initial ones
@@ -2407,14 +2568,22 @@ export default function CastingLiveSection({
         finanzas: 'Finanzas',
         models: 'Modelos',
         modelos: 'Modelos',
+        runway: 'Modelos',
         backstage: 'BackStage',
         investors: 'Investors',
+        jewellery: 'Investors',
         tiendas: 'Tiendas',
-        catwalk: 'Catwalk'
+        catwalk: 'Catwalk',
+        fitnes: 'Fitnes',
+        fitness: 'Fitnes',
+        beauty: 'Beauty',
+        influencer: 'Influencer',
+        reels: 'Reels'
       };
       return map[cat.toLowerCase()] || cat;
     };
     
+    const initialCatMap = new Map(initialVideos.map(v => [v.id, v.videoCategory]));
     const initialVideosMapped = initialVideos.map(v => ({
       ...v,
       videoCategory: parseCategory(v.videoCategory)
@@ -2426,7 +2595,7 @@ export default function CastingLiveSection({
         if (Array.isArray(parsed) && parsed.length > 0) {
           const parsedMapped = parsed.map(v => ({
             ...v,
-            videoCategory: parseCategory(v.videoCategory)
+            videoCategory: initialCatMap.get(v.id) || parseCategory(v.videoCategory)
           }));
           
           const merged = [...parsedMapped];
@@ -4290,39 +4459,16 @@ export default function CastingLiveSection({
 
   // Track live broadcast connection for categories (Catwalk, Investors, Backstage, Modelos, Fashion, Reels, Todos, etc.)
   const [categoryLiveConnectedMap, setCategoryLiveConnectedMap] = useState<Record<string, boolean>>(() => {
-    try {
-      const saved = localStorage.getItem('category_live_connected_map');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const mapObj: Record<string, boolean> = {
-          Catwalk: false,
-          Fitnes: false,
-          Beauty: false,
-          Influencer: false,
-          Investors: false,
-          BackStage: false,
-          Modelos: false,
-          Fashion: false,
-          Reels: false,
-          Todos: true,
-          Finanzas: true,
-          Tiendas: true,
-          ...parsed,
-        };
-        mapObj.Reels = false;
-        return mapObj;
-      }
-    } catch (e) {}
     return {
-      Catwalk: false,
-      Fitnes: false,
-      Beauty: false,
-      Influencer: false,
-      Investors: false,
-      BackStage: false,
-      Modelos: false,
-      Fashion: false,
-      Reels: false,
+      Catwalk: true,
+      Fitnes: true,
+      Beauty: true,
+      Influencer: true,
+      Investors: true,
+      BackStage: true,
+      Modelos: true,
+      Fashion: true,
+      Reels: true,
       Todos: true,
       Tiendas: true,
       Finanzas: true,
@@ -5827,8 +5973,20 @@ export default function CastingLiveSection({
   const [profileVideoLikes, setProfileVideoLikes] = useState<Record<string, number>>({});
   const [profileVideoComments, setProfileVideoComments] = useState<Record<string, any[]>>({});
   const [profileActiveTab, setProfileActiveTab] = useState<'videos' | 'likes'>('videos');
-  const [filterOption, setFilterOption] = useState<'recientes' | 'popular' | 'antiguos'>('recientes');
+  const [filterOption, setFilterOption] = useState<'recientes' | 'populares' | 'antiguos'>('recientes');
   const [translatedVideoIds, setTranslatedVideoIds] = useState<Record<string, boolean>>({});
+  const [showShareProfileModal, setShowShareProfileModal] = useState<boolean>(false);
+  const [showMoreProfileOptions, setShowMoreProfileOptions] = useState<boolean>(false);
+  const [showSuggestedFriendsModal, setShowSuggestedFriendsModal] = useState<boolean>(false);
+  const [showStatsInfoModal, setShowStatsInfoModal] = useState<null | 'following' | 'followers' | 'likes'>(null);
+  const [showBioLinkModal, setShowBioLinkModal] = useState<boolean>(false);
+  const [isProfileFavorite, setIsProfileFavorite] = useState<Record<string, boolean>>({});
+  const [isProfileBlocked, setIsProfileBlocked] = useState<Record<string, boolean>>({});
+  const [isProfileMuted, setIsProfileMuted] = useState<Record<string, boolean>>({});
+  const [profileToastMessage, setProfileToastMessage] = useState<string | null>(null);
+  const [profileReportSubmitted, setProfileReportSubmitted] = useState<boolean>(false);
+  const [copiedLinkSuccess, setCopiedLinkSuccess] = useState<boolean>(false);
+  const [unlockedLikedVideosDemo, setUnlockedLikedVideosDemo] = useState<boolean>(false);
 
   const [webRTCPodiumData, setWebRTCPodiumData] = useState<any>(() => {
     const cached = localStorage.getItem('liveSharePodiumData');
@@ -6014,6 +6172,7 @@ export default function CastingLiveSection({
   }, [selectedCategoryFilter, searchTerm]);
 
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [isVideoBuffering, setIsVideoBuffering] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState<number>(() => {
     const saved = localStorage.getItem('video_volume');
@@ -6549,12 +6708,7 @@ export default function CastingLiveSection({
   });
 
   // TikTok Shop Seller & Strategy Dashboard states
-  const [showTikTokShop, setShowTikTokShop] = useState(() => {
-    if (initialSelectedStoreId === 'fashion' || initialSelectedStoreId === 'Fashion' || initialSelectedStoreId === 'canal_fashion') return false;
-    if (initialSelectedStoreId) return true;
-    const activeModelId = localStorage.getItem('selectedLiveModelId');
-    return !!activeModelId;
-  });
+  const [showTikTokShop, setShowTikTokShop] = useState(false);
   const [shopTab, setShopTab] = useState<'vender' | 'articulos' | 'ofertas' | 'analisis' | 'tiendas' | 'mi_tienda' | 'carrito'>(() => {
     if (initialSelectedStoreId === 'mi_escaparate' || initialSelectedStoreId === 'articulos' || initialSelectedStoreId === 'tienda' || initialSelectedStoreId === 'own_store_articulos') {
       return 'articulos';
@@ -6635,9 +6789,6 @@ export default function CastingLiveSection({
       ];
       const foundStore = allStores.find(st => st.id === storeToOpen || (st.id && st.id.toLowerCase().includes(storeToOpen.toLowerCase())) || (st.name && st.name.toLowerCase().includes(storeToOpen.toLowerCase())));
       if (foundStore) {
-        setShowTikTokShop(true);
-        setShopTab('mi_tienda');
-        setSelectedInvestorStore(foundStore);
         setViewingTikTokProfileUsername(null);
         setShowFinanzasResults(false);
         setCompletedSessionToDisplay(null);
@@ -7391,29 +7542,11 @@ export default function CastingLiveSection({
     };
   };
 
+  // Clean up shop redirection keys on mount and unmount
   useEffect(() => {
-    const activeModelId = selectedLiveModelId || localStorage.getItem('selectedLiveModelId');
     localStorage.removeItem('selectedLiveModel_shopTiendasOnly');
-
-    if (activeModelId && models.length > 0) {
-      const idx = models.findIndex(m => m.id === activeModelId);
-      if (idx !== -1) {
-        const model = models[idx];
-        setSelectedInvestorStore(getBoutiqueStoreData(model, idx));
-        setShowTikTokShop(true);
-        setCameFromShopTab('articulos');
-        setShopTab('mi_tienda');
-      }
-    }
-  }, [selectedLiveModelId, models, userProfile]);
-
-  // Clean up shop redirection keys on unmount
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem('selectedLiveModel_shopTiendasOnly');
-      localStorage.removeItem('selectedLiveModelId');
-      localStorage.removeItem('selectedLiveModel_shopDirect');
-    };
+    localStorage.removeItem('selectedLiveModel_shopDirect');
+    localStorage.removeItem('initial_selected_store_id');
   }, []);
 
   const [investorPurchaseSuccessMessage, setInvestorPurchaseSuccessMessage] = useState<string | null>(null);
@@ -8606,14 +8739,7 @@ export default function CastingLiveSection({
     return () => clearTimeout(delayDebounceFn);
   }, [locationSearchQuery]);
   const [selectedCoverIndex, setSelectedCoverIndex] = useState(0);
-  const [coverFrames, setCoverFrames] = useState<string[]>([
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-    'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=120&h=160&crop=faces'
-  ]);
+  const [coverFrames, setCoverFrames] = useState<string[]>([]);
   const COVER_FRAMES = coverFrames;
   const [uploadVideoFileName, setUploadVideoFileName] = useState<string>('');
   const [showHashtagPicker, setShowHashtagPicker] = useState<boolean>(false);
@@ -8856,9 +8982,9 @@ export default function CastingLiveSection({
 
   // Clean / Filter videos depending on subtab and search term
   const rawFilteredVideos = videosList.filter(vid => {
-    // Stage 0: Interest category filter (Finanzas, Fashion, Models, Backstage)
+    // Stage 0: Interest category filter (Finanzas, Fashion, Models, Backstage, etc.)
     if (selectedCategoryFilter === 'Todos') {
-      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'];
+      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer', 'Fashion', 'Investors', 'Tiendas'];
       const vidCat = vid.videoCategory || vid.category;
       if (vidCat && !allowedCategoriesForTodos.includes(vidCat)) {
         return false;
@@ -8872,9 +8998,23 @@ export default function CastingLiveSection({
         (userProfile && vid.username && userProfile.username && vid.username.toLowerCase().trim() === userProfile.username.toLowerCase().trim()) ||
         (userProfile && vid.name && userProfile.name && vid.name.toLowerCase().trim() === userProfile.name.toLowerCase().trim())
       );
-      const isMatch = vid.videoCategory === selectedCategoryFilter || 
-                      vid.category === selectedCategoryFilter ||
-                      (selectedCategoryFilter === 'Modelos' && (!vid.videoCategory || vid.videoCategory === 'Todos') && isUploaded);
+      
+      const targetCat = selectedCategoryFilter.toLowerCase();
+      const vidCat = (vid.videoCategory || '').toLowerCase();
+      
+      let isMatch = false;
+      if (targetCat === 'modelos') {
+        isMatch = vidCat === 'modelos' || vidCat === 'runway' || ((!vidCat || vidCat === 'todos') && isUploaded);
+      } else if (targetCat === 'backstage') {
+        isMatch = vidCat === 'backstage' || String(vid.id || '').includes('backstage');
+      } else if (targetCat === 'investors') {
+        isMatch = vidCat === 'investors' || vidCat === 'jewellery';
+      } else if (targetCat === 'tiendas') {
+        isMatch = vidCat === 'tiendas' || !!vid.pinnedProduct;
+      } else {
+        isMatch = vidCat === targetCat;
+      }
+      
       if (!isMatch) {
         return false;
       }
@@ -8910,9 +9050,22 @@ export default function CastingLiveSection({
 
   // Interleave Modelos videos round-robin by creator so contiguous videos belong to different users
   const filteredVideos = React.useMemo(() => {
-    if (selectedCategoryFilter !== 'Modelos') return rawFilteredVideos;
+    let list = rawFilteredVideos;
+    // Strict channel isolation guarantee: NEVER fall back to other categories (e.g. Fashion)
+    if (list.length === 0 && selectedCategoryFilter !== 'Todos') {
+      const targetCat = selectedCategoryFilter.toLowerCase();
+      list = videosList.filter(v => {
+        const c = (v.videoCategory || '').toLowerCase();
+        if (targetCat === 'backstage') return c === 'backstage' || String(v.id || '').includes('backstage');
+        if (targetCat === 'modelos') return c === 'modelos' || c === 'runway';
+        if (targetCat === 'investors') return c === 'investors' || c === 'jewellery';
+        if (targetCat === 'tiendas') return c === 'tiendas' || !!v.pinnedProduct;
+        return c === targetCat;
+      });
+    }
+    if (selectedCategoryFilter !== 'Modelos') return list;
     const groups = new Map<string, CastingLiveVideo[]>();
-    for (const v of rawFilteredVideos) {
+    for (const v of list) {
       const key = String(v.username || v.name || v.uploaderId || v.modelId || v.id).toLowerCase().trim();
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(v);
@@ -8933,7 +9086,7 @@ export default function CastingLiveSection({
       idx++;
     }
     return result;
-  }, [rawFilteredVideos, selectedCategoryFilter]);
+  }, [rawFilteredVideos, selectedCategoryFilter, videosList]);
 
   // Handle Play/Pause when entering or switching videos
   useEffect(() => {
@@ -8950,7 +9103,7 @@ export default function CastingLiveSection({
         }
       }
     });
-  }, [activeVideoIndex, filteredVideos.length, autoPlayEnabled, showUploadModal, activeSubTab, filteredVideos[activeVideoIndex]?.id]);
+  }, [activeVideoIndex, filteredVideos.length, autoPlayEnabled, showUploadModal, activeSubTab, filteredVideos[activeVideoIndex]?.id, selectedCategoryFilter]);
 
   // Synchronize volume and mute states to HTML5 video elements
   useEffect(() => {
@@ -9017,6 +9170,22 @@ export default function CastingLiveSection({
     setShowCreatorStudio(false);
     setShowMoreDropdown(false);
 
+    // FIRST PRIORITY: If user belongs to accountsQueSigues (all accounts followed from sidebar z.png),
+    // always open the exact TikTok creator profile (renderTikTokProfile) just like victorgraciaweb (image.png)
+    const followedAccount = accountsQueSigues.find(
+      a => a.username.toLowerCase() === formattedUsername ||
+           a.name.toLowerCase() === fullName.toLowerCase() ||
+           a.username.toLowerCase() === formattedUsername.replace('@', '') ||
+           formattedUsername.includes(a.username.toLowerCase()) ||
+           a.username.toLowerCase().includes(formattedUsername)
+    );
+    if (followedAccount) {
+      setProfileActiveTab('videos');
+      setFilterOption('recientes');
+      setViewingTikTokProfileUsername(followedAccount.username);
+      return;
+    }
+
     // Check if user is Victoria's Secret Spain store
     if (
       formattedUsername.includes('victoriassecret') || 
@@ -9024,12 +9193,9 @@ export default function CastingLiveSection({
       formattedUsername.includes('victoria') || 
       fullName.toLowerCase().includes("victoria")
     ) {
-      const vsStore = customZxsStores.find(s => s.id === 'victorias_secret_spain' || s.username === 'victoriassecret_es') || customZxsStores[0];
-      setCameFromAccountsQueSigues(true);
-      setShowTikTokShop(true);
-      setSelectedInvestorStore(vsStore);
-      setShopTab('mi_tienda');
-      setCameFromShopTab('tiendas');
+      setProfileActiveTab('videos');
+      setFilterOption('recientes');
+      setViewingTikTokProfileUsername(formattedUsername);
       return;
     }
 
@@ -9142,6 +9308,24 @@ export default function CastingLiveSection({
     try {
       sessionStorage.setItem('explicit_category_set_by_user', cat);
     } catch (e) {}
+
+    // CRITICAL: Immediately pause and mute ANY active HTML5 video elements across the whole DOM
+    document.querySelectorAll('video').forEach(v => {
+      try {
+        v.pause();
+        v.currentTime = 0;
+      } catch (e) {}
+    });
+    videoRefs.current.forEach(v => {
+      try {
+        if (v) {
+          v.pause();
+          v.currentTime = 0;
+        }
+      } catch (e) {}
+    });
+    videoRefs.current = [];
+
     setShowTikTokShop(false);
     setSelectedInvestorStore(null);
     setSelectedCategoryFilter(cat);
@@ -9153,15 +9337,13 @@ export default function CastingLiveSection({
       setActiveFinanzasPopupUser(null);
       setIsFinanzasLiveConnected(false);
     }
-    if (['Reels', 'Fashion', 'Modelos', 'BackStage', 'Investors', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cat)) {
-      setCategoryLiveConnectedMap((prev) => {
-        const next = { ...prev, [cat]: false };
-        localStorage.setItem('category_live_connected_map', JSON.stringify(next));
-        return next;
-      });
-    }
+    setCategoryLiveConnectedMap((prev) => {
+      const next = { ...prev, [cat]: true };
+      localStorage.setItem('category_live_connected_map', JSON.stringify(next));
+      return next;
+    });
     const matchingModel = cat === 'Todos'
-      ? models.find(m => ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(getModelCategory(m)))
+      ? models.find(m => ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer', 'Fashion'].includes(getModelCategory(m)))
       : models.find(m => getModelCategory(m) === cat);
     if (matchingModel) {
       setLocalLiveModelId(matchingModel.id);
@@ -9172,6 +9354,21 @@ export default function CastingLiveSection({
     if (container) {
       container.scrollTop = 0;
     }
+    // Trigger video playback immediately on channel change
+    setAutoPlayEnabled(true);
+    setTimeout(() => {
+      const vid = videoRefs.current[0];
+      if (vid) {
+        vid.currentTime = 0;
+        const playPromise = vid.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
+        }
+      }
+    }, 40);
   };
 
   const getVideoUserKey = (vid: CastingLiveVideo | undefined | null): string => {
@@ -9355,7 +9552,7 @@ export default function CastingLiveSection({
         isFollowing: false,
         music: isTiendas ? 'Shopping Spree Chill - Live Store Beat' : 'Música interactiva - Live Casting App',
         category: 'para-ti',
-        videoCategory: isTiendas ? 'Tiendas' : (Math.random() > 0.5 ? 'Fashion' : 'Finanzas'),
+        videoCategory: isTiendas ? 'Tiendas' : (selectedCategoryFilter === 'Todos' ? (Math.random() > 0.5 ? 'Fashion' : 'Modelos') : selectedCategoryFilter),
         pinnedProduct: isTiendas ? { ...prod, id: `shop-item-inf-${i}` } : undefined,
         uploaderId: randomUser.modelId ? undefined : 'investor-id'
       });
@@ -9673,9 +9870,9 @@ export default function CastingLiveSection({
       name: finalName,
       avatar: selectedModel?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
       videoUrl: mediaUrl,
-      coverUrl: COVER_FRAMES[selectedCoverIndex] || COVER_FRAMES[0] || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300',
-      poster: COVER_FRAMES[selectedCoverIndex] || COVER_FRAMES[0] || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300',
-      thumbnailUrl: COVER_FRAMES[selectedCoverIndex] || COVER_FRAMES[0] || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300',
+      coverUrl: undefined,
+      poster: undefined,
+      thumbnailUrl: undefined,
       likes: Math.floor(Math.random() * 50) + 10,
       comments: [],
       shares: Math.floor(Math.random() * 5),
@@ -9851,8 +10048,6 @@ export default function CastingLiveSection({
     setUploadDescription('');
     setUploadMusic('');
     setUploadVideoCategory('');
-
-    alert('🎉 ¡Vídeo publicado con éxito! Ahora puedes verlo en el feed "Para Ti".');
   };
 
   const handleDeleteModalVideo = (videoId: string) => {
@@ -9917,25 +10112,28 @@ export default function CastingLiveSection({
   );
   const wishlistProductsInfo = uniqueSystemProductsForWishlist.filter(p => (wishlistedProducts || []).includes(p.id));
 
-  const activeVideo = filteredVideos[activeVideoIndex] || filteredVideos[0] || videosList[0] || {
-    id: 'fallback-vid',
-    modelId: 'model-1',
-    username: 'modelo_casting',
-    name: 'Modelo Casting',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-    videoUrl: PRESET_VIDEOS[0]?.url || '',
-    likes: 120,
-    comments: [],
-    shares: 10,
-    favorites: 15,
-    description: 'Vídeo interactivo',
-    isLiked: false,
-    isFavorited: false,
-    isFollowing: false,
-    music: 'Música interactiva',
-    category: 'para-ti',
-    videoCategory: 'Modelos'
-  };
+  const activeVideo = React.useMemo(() => {
+    if (filteredVideos.length > 0) {
+      return filteredVideos[activeVideoIndex] || filteredVideos[0];
+    }
+    // Strict category guarantee: search videosList strictly for a video matching this channel only
+    if (selectedCategoryFilter !== 'Todos') {
+      const targetCat = selectedCategoryFilter.toLowerCase();
+      const match = videosList.find(v => {
+        const c = (v.videoCategory || '').toLowerCase();
+        if (targetCat === 'backstage') return c === 'backstage' || String(v.id || '').includes('backstage');
+        if (targetCat === 'modelos') return c === 'modelos' || c === 'runway';
+        if (targetCat === 'investors') return c === 'investors' || c === 'jewellery';
+        if (targetCat === 'tiendas') return c === 'tiendas' || !!v.pinnedProduct;
+        return c === targetCat;
+      });
+      if (match) return match;
+      return null;
+    }
+    return videosList[0] || null;
+  }, [filteredVideos, activeVideoIndex, selectedCategoryFilter, videosList]);
+
+  const hasChannelVideos = Boolean(activeVideo && activeVideo.videoUrl && filteredVideos.length > 0);
 
   if (activeSubTab === 'live') {
     const recommendedCreators = [
@@ -10303,19 +10501,21 @@ export default function CastingLiveSection({
             }`}>
             
               {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de captura image.png al pasar el puntero) */}
-              <div 
-                className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[48] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/desktop-top-sensor select-none"
-                id="desktop-video-top-margin-hover-sensor"
-                onMouseEnter={handleTopMenuMouseEnter}
-                onMouseLeave={handleTopMenuMouseLeave}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsTopControlsMenuHovered(prev => !prev);
-                }}
-                title="Pasa el puntero por el margen superior para abrir opciones y canales"
-              >
-                <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/desktop-top-sensor:bg-white/80 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
-              </div>
+              {!(showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
+                <div 
+                  className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[48] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/desktop-top-sensor select-none"
+                  id="desktop-video-top-margin-hover-sensor"
+                  onMouseEnter={handleTopMenuMouseEnter}
+                  onMouseLeave={handleTopMenuMouseLeave}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsTopControlsMenuHovered(prev => !prev);
+                  }}
+                  title="Pasa el puntero por el margen superior para abrir opciones y canales"
+                >
+                  <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/desktop-top-sensor:bg-white/80 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+                </div>
+              )}
 
               {/* 🎛️ TOP HOVER ZONE & EMBEDDED CONTROL OVERLAY INSIDE CHANNEL (image.png options) */}
               <div 
@@ -12115,9 +12315,10 @@ export default function CastingLiveSection({
     return (
       <div className="w-full h-full bg-white flex flex-col justify-between overflow-hidden text-slate-800 font-sans text-left select-none relative z-30">
         {/* Header */}
-        <div className="p-3 sm:p-4 border-b border-slate-200 bg-white text-slate-900 flex items-center justify-between gap-2 shrink-0">
-          <div className="space-y-0.5 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
+        <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white text-slate-900 shrink-0 select-none relative z-50">
+          {/* Top row: Badges on the left, Close X button on the right (matching image.png) */}
+          <div className="flex items-center justify-between gap-2 w-full">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[#fe2c55] text-[10px] font-black uppercase tracking-wider font-mono">
                 <span>💼 MESA DE VOTACIÓN FINANCIERA</span>
               </div>
@@ -12126,20 +12327,32 @@ export default function CastingLiveSection({
               </span>
             </div>
 
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowVotingProjectsModal(false);
+                setShowProjectDetailsInPopup(false);
+                setDetailProjectUser(null);
+                setActiveFinanzasPopupUser(null);
+                setShowFinanzasInscriptionInChannel(false);
+              }}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 shadow-xs pointer-events-auto"
+              title="Cerrar ventana y volver al directo"
+              aria-label="Cerrar ventana"
+              id="btn-close-voting-projects-modal"
+            >
+              <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
+            </button>
+          </div>
 
-            <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-2 m-0 truncate">
+          {/* Centered phrase with clear separation from the contents above */}
+          <div className="mt-4 sm:mt-5 mb-1 w-full flex justify-center text-center">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight text-center m-0">
               Proyectos de los Participantes
             </h3>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowVotingProjectsModal(false)}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 text-xs font-bold"
-            title="Volver al Directo"
-          >
-            ✕
-          </button>
         </div>
 
         {/* Dos filas horizontales de 5 participantes en tamaño mayor */}
@@ -12322,9 +12535,9 @@ export default function CastingLiveSection({
                   setShowProjectDetailsInPopup(true);
                   setShowVotingProjectsModal(false);
                 }}
-                className="w-full bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black py-2.5 px-3 rounded-xl shadow-sm transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-slate-800 text-xs uppercase tracking-wider"
+                className="w-full bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-white font-black py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider font-sans"
               >
-                <span>🔍</span>
+                <span className="text-sm">🔍</span>
                 <span>VER PROYECTO COMPLETO</span>
               </button>
             </div>
@@ -12938,7 +13151,6 @@ export default function CastingLiveSection({
                             <div className="w-16 h-20 bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center shrink-0 border border-slate-200 shadow-xs">
                               <video
                                 src={uploadVideoUrl || undefined}
-                                poster={COVER_FRAMES[selectedCoverIndex] || undefined}
                                 className="w-full h-full object-cover"
                                 muted
                                 playsInline
@@ -13429,120 +13641,6 @@ export default function CastingLiveSection({
                             Mencionar @
                           </button>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Portada Cover Image Custom Row Selection */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <label className="block text-xs font-black text-slate-800">Portada</label>
-                      <span className="text-slate-400 text-xs cursor-default">ⓘ</span>
-                    </div>
-                    
-                    {/* Add new cover image picker */}
-                    <div className="flex items-center gap-2">
-                      <label className="cursor-pointer text-[10px] font-black text-[#fe2c55] hover:text-rose-600 transition flex items-center gap-1">
-                        <span>➕ Añadir Foto</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const objectUrl = URL.createObjectURL(file);
-                              setCoverFrames(prev => {
-                                const updated = [...prev, objectUrl];
-                                setSelectedCoverIndex(updated.length - 1);
-                                return updated;
-                              });
-                            }
-                          }}
-                        />
-                      </label>
-                      {coverFrames.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm('¿Quieres restablecer las portadas originales?')) {
-                              setCoverFrames([
-                                'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                                'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                                'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                                'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                                'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=120&h=160&crop=faces'
-                              ]);
-                              setSelectedCoverIndex(0);
-                            }
-                          }}
-                          className="text-[10px] text-slate-400 hover:text-slate-650 font-semibold bg-transparent border-0 cursor-pointer"
-                        >
-                          Restablecer
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-6 gap-2">
-                    {COVER_FRAMES.map((frameImg, idx) => {
-                      const isActive = selectedCoverIndex === idx;
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => setSelectedCoverIndex(idx)}
-                          className={`relative aspect-[3/4] rounded-lg overflow-hidden border-2 cursor-pointer transition-all group ${
-                            isActive 
-                              ? 'border-[#fe2c55] scale-[1.03] shadow-md shadow-rose-500/10' 
-                              : 'border-transparent hover:border-slate-350 opacity-85 hover:opacity-100'
-                          }`}
-                        >
-                          <img 
-                            src={frameImg} 
-                            alt={`Frame ${idx + 1}`} 
-                            className="w-full h-full object-cover pointer-events-none" 
-                            referrerPolicy="no-referrer"
-                          />
-                          
-                          {/* Top Right "X" Delete button visible on hover */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const updatedFrames = coverFrames.filter((_, i) => i !== idx);
-                              setCoverFrames(updatedFrames);
-                              if (selectedCoverIndex >= updatedFrames.length) {
-                                setSelectedCoverIndex(Math.max(0, updatedFrames.length - 1));
-                              }
-                            }}
-                            className="absolute top-1 right-1 w-5 h-5 bg-slate-950/70 hover:bg-rose-600 text-white rounded-full flex items-center justify-center text-[10px] font-black opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 border-0 cursor-pointer shadow-xs"
-                            title="Eliminar portada"
-                          >
-                            ✕
-                          </button>
-
-                          {isActive && (
-                            <div className="absolute inset-x-0 bottom-0 bg-[#fe2c55]/95 text-white text-[7px] sm:text-[8px] py-1 font-black uppercase text-center tracking-wide leading-none select-none">
-                              Editar portada
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {COVER_FRAMES.length === 0 && (
-                      <div className="col-span-6 py-6 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-semibold">
-                        No hay imágenes de portada. <button type="button" onClick={() => setCoverFrames([
-                          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=120&h=160&crop=faces',
-                          'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=120&h=160&crop=faces'
-                        ])} className="text-[#fe2c55] hover:underline font-bold bg-transparent border-0 cursor-pointer">Restaurar portadas predeterminadas</button>
                       </div>
                     )}
                   </div>
@@ -14109,8 +14207,8 @@ export default function CastingLiveSection({
                     <h5 className="text-[11px] font-black">@{selectedModel?.username || userProfile?.username || 'shambali'}</h5>
                     <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase">Mis publicaciones</p>
                     <div className="grid grid-cols-3 gap-1 w-full mt-3">
-                      <div className="aspect-[3/4] bg-slate-200 border border-slate-300 rounded-md overflow-hidden relative">
-                        <img src={COVER_FRAMES[selectedCoverIndex] || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=120&h=160&crop=faces'} className="w-full h-full object-cover" />
+                      <div className="aspect-[3/4] bg-slate-900 border border-slate-700 rounded-md overflow-hidden relative flex items-center justify-center">
+                        <video src={currentVideoSrc} className="w-full h-full object-cover" muted playsInline />
                         <span className="absolute bottom-1 right-1 text-[7px] text-white font-black bg-black/40 px-1 py-0.2 rounded">Nuevo</span>
                       </div>
                       <div className="aspect-[3/4] bg-slate-100 border border-slate-200 rounded-md" />
@@ -14126,7 +14224,9 @@ export default function CastingLiveSection({
                       <h5 className="font-extrabold text-slate-800">{uploadDescription || 'Sin descripción'}</h5>
                       <p className="text-slate-400 text-[9px] leading-relaxed">Vídeo asignado a la web oficial en el feed de sponsors con categoría: <strong className="text-[#fe2c55]">{uploadVideoCategory}</strong></p>
                     </div>
-                    <img src={COVER_FRAMES[selectedCoverIndex] || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=120&h=160&crop=faces'} className="w-full h-24 object-cover rounded-lg border" />
+                    <div className="w-full h-24 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-700">
+                      <video src={currentVideoSrc} className="w-full h-full object-cover" muted playsInline />
+                    </div>
                   </div>
                 )}
 
@@ -14690,7 +14790,6 @@ export default function CastingLiveSection({
                 <video
                   ref={previewVideoRef}
                   src={currentVideoSrc}
-                  poster={COVER_FRAMES[selectedCoverIndex] || undefined}
                   className="absolute inset-0 w-full h-full object-cover z-10"
                   loop
                   muted={originalSoundVolume === 0}
@@ -16929,1146 +17028,8 @@ try {
     }
   };
 
-  // TikTok Shop Investor Dashboard with Search and Purchase Functionality
-  const renderTikTokShopInvestorDashboard = () => {
-    const investorStores = [
-      ...customZxsStores,
-      ...models.map((model, idx) => getBoutiqueStoreData(model, idx))
-    ];
-
-    const filteredStores = investorStores.filter((store) => {
-      const term = investorSearchTerm.toLowerCase().trim();
-      if (!term) return true;
-      return (
-        store.name.toLowerCase().includes(term) ||
-        store.username.toLowerCase().includes(term) ||
-        store.style.toLowerCase().includes(term)
-      );
-    });
-
-    return (
-      <div className="bg-[#fffbfc] min-h-[750px] p-4 md:p-6 rounded-2xl border border-pink-100 shadow-xs flex flex-col gap-6 text-slate-800 animate-fade-in w-full max-w-full min-w-0 overflow-x-hidden" id="investor-shop-dashboard">
-        
-        {/* TOP SECTION: HORIZONTAL RECS / METRICS (TABLET & DESKTOP ROW-BASED ACCORDING TO USER REQ) */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full" id="investor-top-metrics-grid">
-          
-          {/* 3. BOTÓN NAVEGACIÓN */}
-          <div className="bg-white p-4 rounded-xl border border-pink-100 shadow-3xs flex flex-col justify-center gap-2 text-left" id="card-navegacion-opciones">
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">NAVEGACIÓN</span>
-            {selectedInvestorStore ? (
-              <button
-                onClick={() => {
-                  setSelectedInvestorStore(null);
-                  setShowTikTokShop(false);
-                }}
-                className="w-full py-1.5 bg-slate-900 hover:bg-[#fe2c55] text-white font-extrabold text-xs uppercase rounded-lg transition-all duration-150 cursor-pointer border-0 shadow-xs flex items-center justify-center gap-1.5"
-                id="btn-ver-todas-tiendas"
-              >
-                <span>←</span> Volver al Feed
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (handleReturnFromStore()) return;
-                  setSelectedInvestorStore(null);
-                  setShowTikTokShop(false);
-                }}
-                className="w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase rounded-lg transition-all duration-150 cursor-pointer border-0 shadow-xs flex items-center justify-center gap-1.5"
-                id="btn-volver-al-feed"
-              >
-                <span>←</span> Volver al Feed
-              </button>
-            )}
-          </div>
-
-          {/* 4. MIS ADQUISICIONES */}
-          <div className="bg-white p-4 rounded-xl border border-pink-100 shadow-3xs flex flex-col justify-between text-left" id="card-mis-adquisiciones">
-            <div className="flex justify-between items-center pb-2 border-b border-pink-50">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">MIS ADQUISICIONES ({investorPurchases.length})</span>
-              {investorPurchases.length > 0 && (
-                <button 
-                  onClick={() => {
-                    if (window.confirm('¿Quieres vaciar el historial de adquisiciones?')) {
-                      setInvestorPurchases([]);
-                    }
-                  }} 
-                  className="text-[9px] text-slate-400 hover:text-rose-600 font-bold border-0 bg-transparent cursor-pointer"
-                >
-                  Limpiar
-                </button>
-              )}
-            </div>
-            
-            <div className="mt-2 flex-grow overflow-y-auto max-h-[82px] scrollbar-none [&::-webkit-scrollbar]:hidden">
-              {investorPurchases.length === 0 ? (
-                <div className="text-center py-2 text-[10px] text-slate-400 font-semibold leading-normal font-sans">
-                  🛍️ Sin prendas adquiridas.
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {investorPurchases.map((pur, i) => (
-                    <div key={pur.id || i} className="flex gap-2 p-1.5 bg-slate-50 hover:bg-pink-50/10 rounded-lg border border-slate-100 animate-fade-in">
-                      <img src={pur.image} alt={pur.productName} className="w-6 h-6 rounded object-cover border border-pink-100 shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[9px] font-bold text-slate-800 truncate leading-none">{pur.productName}</p>
-                        <div className="flex justify-between items-center mt-0.5">
-                          <span className="text-[8.5px] font-bold text-rose-500 truncate max-w-[55px]">{pur.storeName}</span>
-                          <span className="text-[9.5px] font-black text-slate-900 font-mono">{pur.price.toFixed(2)}€</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-        </section>
-
-        {/* RIGHT DISPLAY VIEWPORT - Store Explorer & Products Showcase */}
-        <main className="w-full bg-white p-4 md:p-5 rounded-xl border border-pink-100/70 shadow-2xs flex flex-col justify-start overflow-y-auto min-h-[500px]">
-          
-          {/* Success messages */}
-          {investorPurchaseSuccessMessage && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl shadow-2xs flex items-center gap-2.5 animate-bounce">
-              <span className="text-base">🎉</span>
-              <p className="leading-tight">{investorPurchaseSuccessMessage}</p>
-            </div>
-          )}
-
-          {/* DYNAMIC SCENE 1: STORE DETAIL VIEW */}
-          {selectedInvestorStore ? (
-            <div className="space-y-5 animate-fade-in">
-              {/* Boutique Header Block with Premium Banner */}
-              <div 
-                className="relative w-full rounded-2xl overflow-hidden bg-cover bg-center border border-slate-200/20 p-5 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5 min-h-[180px] shadow-sm"
-                style={{ 
-                  backgroundImage: `url(${selectedInvestorStore.bannerUrl || (selectedInvestorStore.id === userProfile?.id ? customShopBanner : undefined) || customShopBanner || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200'})` 
-                }}
-              >
-                {/* Luxury Dark Gradient Overlay for optimal readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-900/15 z-0" />
-
-                {/* Botón arriba a la derecha para cambiar el fondo de esta imagen: solamente el icono de una cámara de foto con letras/trazo blanco y sin fondo */}
-                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
-                  <label
-                    htmlFor="boutique-header-banner-upload-input"
-                    className="p-2 sm:p-2.5 rounded-xl bg-transparent hover:bg-white/15 active:scale-95 text-white transition-all duration-150 cursor-pointer flex items-center justify-center border-0 shadow-none focus:outline-none"
-                    title="Cambiar fondo de la imagen"
-                    aria-label="Cambiar fondo de la imagen"
-                  >
-                    <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-md" />
-                    <input
-                      id="boutique-header-banner-upload-input"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const file = e.target.files[0];
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            if (event.target?.result) {
-                              const newBanner = event.target.result as string;
-                              setCustomShopBanner(newBanner);
-                              localStorage.setItem('coll_shop_custom_banner', newBanner);
-                              if (selectedInvestorStore) {
-                                setSelectedInvestorStore((prev: any) => prev ? { ...prev, bannerUrl: newBanner } : null);
-                                if (selectedInvestorStore.id) {
-                                  localStorage.setItem(`coll_shop_banner_${selectedInvestorStore.id}`, newBanner);
-                                }
-                              }
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </label>
-                </div>
-
-                <div className="relative z-10 flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden shadow-xs shrink-0 select-none relative bg-white">
-                    {selectedInvestorStore.id === userProfile?.id && customShopLogo ? (
-                      <img 
-                        src={customShopLogo || COUTURE_ELITE_LOGO_DATA_URL} 
-                        alt={selectedInvestorStore.name} 
-                        className="w-full h-full object-cover scale-[1.02] transition duration-200" 
-                        onError={(e) => {
-                          e.currentTarget.src = COUTURE_ELITE_LOGO_DATA_URL;
-                        }}
-                      />
-                    ) : (
-                      getFashionBrandLogo(selectedInvestorStore.id, selectedInvestorStore.name)
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="text-base font-serif font-bold text-white leading-tight drop-shadow-sm">
-                        {((selectedInvestorStore.id === userProfile?.id ? customShopName : selectedInvestorStore.name) || '').replace(/\s*Adriana Lima\s*/gi, ' ').trim()}
-                      </h3>
-                      <span className="bg-rose-600 text-white font-black text-[8.5px] px-2 py-0.5 rounded-full border border-rose-500/20 shadow-sm">
-                        ⭐ {selectedInvestorStore.rating}
-                      </span>
-                    </div>
-                    <p className="text-xs font-semibold text-slate-300 mt-0.5 drop-shadow-sm">
-                      Diseñado por @{selectedInvestorStore.username} • {selectedInvestorStore.style}
-                    </p>
-                    <p className="text-[10px] text-slate-200 font-bold mt-1.5 flex items-center gap-1 drop-shadow-sm">
-                      <span className="text-rose-400 font-extrabold">📍 Dirección:</span>
-                      <span className="text-white bg-white/15 px-2 py-0.5 rounded-lg border border-white/10 backdrop-blur-xs font-semibold">
-                        {selectedInvestorStore.id === userProfile?.id ? customShopAddress : (selectedInvestorStore.direccion || 'Calle de la Moda 123, Madrid, España')}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="relative z-10 shrink-0">
-                  <button
-                    onClick={() => {
-                      if (handleReturnFromStore()) return;
-                      setSelectedInvestorStore(null);
-                      setInvestorSearchTerm('');
-                      setSelectedMainCategory('Todos');
-                      setSelectedSubcategory('Todos');
-                    }}
-                    className="px-3.5 py-1.5 bg-white hover:bg-rose-650 hover:text-white text-slate-900 font-black text-[9.5px] uppercase rounded-xl transition duration-150 cursor-pointer shadow-md border-0"
-                  >
-                    ← Volver
-                  </button>
-                </div>
-              </div>
-
-              {/* Store description */}
-              <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl text-xs text-slate-600 leading-relaxed font-semibold">
-                👗 {selectedInvestorStore.description} Todas las compras de la colección benefician directamente la reputación y comisiones de la modelo asociada en Casting Live. Adquiere estas prendas exclusivas con cargo a tus fondos de portafolio para patrocinar sus siguientes desfiles presenciales.
-              </div>
-
-              {/* INTERACTIVE FASHION CATEGORIES BROWSER */}
-              <div className="bg-[#fffbfc] border border-pink-100 p-4 rounded-xl space-y-3.5 shadow-3xs text-left">
-                <span className="text-[11px] font-black uppercase text-rose-500 tracking-wider flex items-center gap-1.5 font-sans">
-                  <span>👗</span> Categorías de Moda Boutique
-                </span>
-                
-                {/* Main Categories horizontal slider */}
-                <div className="relative flex items-center group">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      categoriesSliderRef1.current?.scrollBy({ left: -200, behavior: 'smooth' });
-                    }}
-                    className="absolute -left-2 z-10 p-1 bg-white border border-pink-100 hover:border-pink-300 text-rose-500 hover:text-rose-600 rounded-full shadow-xs transition cursor-pointer md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 duration-150"
-                    title="Anterior"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div 
-                    ref={categoriesSliderRef1}
-                    className="flex gap-2 overflow-x-auto pb-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full scroll-smooth"
-                  >
-                    <button
-                      onClick={() => {
-                        setSelectedMainCategory('Todos');
-                        setSelectedSubcategory('Todos');
-                      }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-                        selectedMainCategory === 'Todos'
-                          ? 'bg-slate-900 text-white shadow-2xs'
-                          : 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-707'
-                      }`}
-                    >
-                      <span>🛍️</span> Todos
-                    </button>
-
-                    {FASHION_HIERARCHY.map((cat, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setSelectedMainCategory(cat.name);
-                          setSelectedSubcategory('Todos');
-                        }}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-                          selectedMainCategory === cat.name
-                            ? 'bg-[#fe2c55] text-white shadow-xs'
-                            : 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-707'
-                        }`}
-                      >
-                        <span className="text-sm">{cat.emoji}</span> {cat.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      categoriesSliderRef1.current?.scrollBy({ left: 200, behavior: 'smooth' });
-                    }}
-                    className="absolute -right-2 z-10 p-1 bg-white border border-pink-100 hover:border-pink-300 text-rose-500 hover:text-rose-600 rounded-full shadow-xs transition cursor-pointer md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 duration-150"
-                    title="Siguiente"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Nested Subcategories strip */}
-                {selectedMainCategory !== 'Todos' && (
-                  <div className="pt-2.5 border-t border-pink-100/50 animate-fade-in">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-sans">
-                      Secciones de {selectedMainCategory}:
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        onClick={() => setSelectedSubcategory('Todos')}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                          selectedSubcategory === 'Todos'
-                            ? 'bg-pink-100 text-pink-700 border border-pink-200'
-                            : 'bg-slate-50 hover:bg-slate-100 border border-slate-150 text-slate-600'
-                        }`}
-                      >
-                        Ver Todo en {selectedMainCategory}
-                      </button>
-
-                      {(FASHION_HIERARCHY.find(h => h.name === selectedMainCategory)?.subcategories || []).map((sub: string, i: number) => (
-                        <button
-                          key={i}
-                          onClick={() => setSelectedSubcategory(sub)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                            selectedSubcategory === sub
-                              ? 'bg-[#fe2c55]/10 text-[#fe2c55] border border-[#fe2c55]/30'
-                              : 'bg-slate-50 hover:bg-slate-100 border border-slate-150 text-slate-600'
-                          }`}
-                        >
-                          {sub}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Product list showcase with category filters */}
-              {(() => {
-                const displayedProducts = (selectedInvestorStore.products || []).filter((prod: any) => {
-                  // Category filters
-                  if (selectedMainCategory !== 'Todos' && prod.category !== selectedMainCategory) {
-                    return false;
-                  }
-                  if (selectedSubcategory !== 'Todos' && prod.subcategory !== selectedSubcategory) {
-                    return false;
-                  }
-
-                  // Sizing filters
-                  if (selectedSizes.length > 0) {
-                    const matches = prod.sizes?.some((s: string) => selectedSizes.includes(s));
-                    if (!matches) return false;
-                  }
-
-                  // Colors filters
-                  if (selectedColors.length > 0) {
-                    const matches = prod.colors?.some((c: string) => selectedColors.includes(c));
-                    if (!matches) return false;
-                  }
-
-                  // Fabric filters
-                  if (selectedFabrics.length > 0) {
-                    if (!selectedFabrics.includes(prod.fabric)) {
-                      return false;
-                    }
-                  }
-
-                  // Support filters
-                  if (selectedSupports.length > 0) {
-                    if (!selectedSupports.includes(prod.support)) {
-                      return false;
-                    }
-                  }
-
-                  // Length filters
-                  if (selectedLengths.length > 0) {
-                    if (!selectedLengths.includes(prod.length)) {
-                      return false;
-                    }
-                  }
-
-                  // New Arrival filter
-                  if (onlyNewArrivals && !prod.isNewArrival) {
-                    return false;
-                  }
-
-                  // Discount filters
-                  if (selectedDiscountRange !== 'Todos') {
-                    if (selectedDiscountRange === 'sin_descuento' && prod.discount > 0) {
-                      return false;
-                    }
-                    if (selectedDiscountRange === 'con_descuento' && (prod.discount === undefined || prod.discount === 0)) {
-                      return false;
-                    }
-                    if (selectedDiscountRange === '10' && (prod.discount === undefined || prod.discount < 10)) {
-                      return false;
-                    }
-                    if (selectedDiscountRange === '25' && (prod.discount === undefined || prod.discount < 25)) {
-                      return false;
-                    }
-                    if (selectedDiscountRange === '50' && (prod.discount === undefined || prod.discount < 50)) {
-                      return false;
-                    }
-                  }
-
-                  return true;
-                });
-
-                return (
-                  <div className="space-y-4">
-                    {/* Header bar */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-pink-100 pb-2.5 gap-2">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-                          <span>🏷️</span> Artículos Disponibles ({displayedProducts.length})
-                        </h4>
-                        
-                        {/* Botón contraer/expandir filtros */}
-                        <button
-                          type="button"
-                          onClick={() => setShowShopFilters(!showShopFilters)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-rose-600 font-black text-[9.5px] uppercase rounded-xl border border-pink-200 transition duration-150 cursor-pointer select-none"
-                        >
-                          <span>🎛️</span> {showShopFilters ? 'Ocultar Filtros' : 'Filtrar Colección'}
-                          {(selectedSizes.length > 0 || selectedColors.length > 0 || selectedFabrics.length > 0 || selectedDiscountRange !== 'Todos' || selectedSupports.length > 0 || selectedLengths.length > 0 || onlyNewArrivals) && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Active categories info */}
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="text-[10px] text-rose-500 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 font-extrabold uppercase">
-                          {selectedMainCategory} {selectedSubcategory !== 'Todos' ? ` > ${selectedSubcategory}` : ''}
-                        </span>
-                        {(selectedSizes.length > 0 || selectedColors.length > 0 || selectedFabrics.length > 0 || selectedDiscountRange !== 'Todos' || selectedSupports.length > 0 || selectedLengths.length > 0 || onlyNewArrivals) && (
-                          <span className="text-[10px] bg-slate-100 text-slate-650 px-2 py-0.5 rounded border border-slate-200 font-semibold">
-                            Filtros activos
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-                      {/* Left: FILTROS Accordion Sidebar */}
-                      {showShopFilters && (
-                        <div className="lg:col-span-1 bg-[#fffdfd] p-4 rounded-xl border border-pink-100 shadow-3xs space-y-4 text-left">
-                        <div className="flex items-center justify-between pb-2.5 border-b border-pink-100">
-                          <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-                            <span>🎛️</span> FILTROS
-                          </h4>
-                          {(selectedSizes.length > 0 || selectedColors.length > 0 || selectedFabrics.length > 0 || selectedDiscountRange !== 'Todos' || selectedSupports.length > 0 || selectedLengths.length > 0 || onlyNewArrivals) && (
-                            <button
-                              onClick={() => {
-                                setSelectedSizes([]);
-                                setSelectedColors([]);
-                                setSelectedFabrics([]);
-                                setSelectedDiscountRange('Todos');
-                                setSelectedSupports([]);
-                                setSelectedLengths([]);
-                                setOnlyNewArrivals(false);
-                              }}
-                              className="text-[9.5px] text-rose-500 hover:text-rose-700 font-extrabold cursor-pointer border-0 bg-transparent underline"
-                            >
-                              Limpiar
-                            </button>
-                          )}
-                        </div>
-
-                        {/* 1. TALLA Accordion */}
-                        <div className="space-y-1.5 border-b border-slate-100/60 pb-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, talla: !prev.talla }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>📏 Talla / Medidas</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.talla ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.talla && (
-                            <div className="flex flex-wrap gap-1 pt-1">
-                              {['XS', 'S', 'M', 'L', 'XL', 'XXL', '36', '37', '38', '39', '40', '41', '42', 'Única', 'A medida'].map((sz) => {
-                                const isSel = selectedSizes.includes(sz);
-                                return (
-                                  <button
-                                    key={sz}
-                                    onClick={() => {
-                                      if (isSel) {
-                                        setSelectedSizes(selectedSizes.filter(s => s !== sz));
-                                      } else {
-                                        setSelectedSizes([...selectedSizes, sz]);
-                                      }
-                                    }}
-                                    className={`px-2 py-1 rounded text-[9.5px] font-black transition duration-100 cursor-pointer ${
-                                      isSel 
-                                        ? 'bg-[#fe2c55] text-white border border-[#fe2c55]' 
-                                        : 'bg-white text-slate-650 hover:bg-slate-50 border border-slate-200'
-                                    }`}
-                                  >
-                                    {sz}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 2. COLOR Accordion */}
-                        <div className="space-y-1.5 border-b border-slate-100/60 pb-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, color: !prev.color }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>🎨 GAMA DE COLORES</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.color ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.color && (
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                              {[
-                                { name: 'Rojo', hex: '#821323' },
-                                { name: 'Blanco', hex: '#ffffff', border: true },
-                                { name: 'Negro', hex: '#000000' },
-                                { name: 'Amarillo', hex: '#e2ec8b' },
-                                { name: 'Beige', hex: '#d3b185' },
-                                { name: 'Azul', hex: '#1e3a8a' },
-                                { name: 'Verde', hex: '#15803d' },
-                                { name: 'Rosa', hex: '#ec4899' },
-                                { name: 'Oro', hex: '#fbbf24' }
-                              ].map((col) => {
-                                const isSel = selectedColors.includes(col.name);
-                                return (
-                                  <button
-                                    key={col.name}
-                                    onClick={() => {
-                                      if (isSel) {
-                                        setSelectedColors(selectedColors.filter(c => c !== col.name));
-                                      } else {
-                                        setSelectedColors([...selectedColors, col.name]);
-                                      }
-                                    }}
-                                    className={`w-6.5 h-6.5 rounded-full flex items-center justify-center transition p-0 relative border-0 cursor-pointer ${
-                                      isSel 
-                                        ? 'ring-2 ring-rose-500 scale-110 shadow-xs' 
-                                        : 'hover:scale-105'
-                                    }`}
-                                    style={{ 
-                                      backgroundColor: col.hex,
-                                      border: col.border ? '1px solid #ddd' : 'none'
-                                    }}
-                                    title={col.name}
-                                  >
-                                    {isSel && (
-                                      <span className={`text-[9px] font-black ${col.name === 'Blanco' || col.name === 'Amarillo' ? 'text-black' : 'text-white'}`}>
-                                        ✓
-                                      </span>
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 3. TEJIDO Accordion */}
-                        <div className="space-y-1.5 border-b border-slate-100/60 pb-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, tejido: !prev.tejido }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>🧵 Tejido / Composición</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.tejido ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.tejido && (
-                            <div className="space-y-1 pt-1 max-h-36 overflow-y-auto">
-                              {['Algodón', 'Lino', 'Seda', 'Terciopelo', 'Lana', 'Cuero', 'Encaje', 'Sintético', 'Metal Precioso'].map((t) => {
-                                const isSel = selectedFabrics.includes(t);
-                                return (
-                                  <label key={t} className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-650 cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={isSel}
-                                      onChange={() => {
-                                        if (isSel) {
-                                          setSelectedFabrics(selectedFabrics.filter(f => f !== t));
-                                        } else {
-                                          setSelectedFabrics([...selectedFabrics, t]);
-                                        }
-                                      }}
-                                      className="rounded text-rose-500 focus:ring-rose-500 w-3.5 h-3.5"
-                                    />
-                                    <span>{t}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 4. DESCUENTOS Accordion */}
-                        <div className="space-y-1.5 border-b border-slate-100/60 pb-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, descuento: !prev.descuento }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>🏷️ DESCUENTOS RELÁMPAGO</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.descuento ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.descuento && (
-                            <div className="space-y-1 pt-1">
-                              {[
-                                { val: 'Todos', label: 'Todos los Precios' },
-                                { val: 'sin_descuento', label: 'Sin Descuento' },
-                                { val: 'con_descuento', label: 'Con Descuento Activo' },
-                                { val: '10', label: '10% dto o superior' },
-                                { val: '25', label: '25% dto o superior' },
-                                { val: '50', label: '50% liquidaciones' }
-                              ].map((opt) => (
-                                <label key={opt.val} className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-655 cursor-pointer select-none">
-                                  <input
-                                    type="radio"
-                                    name="discountGroup"
-                                    checked={selectedDiscountRange === opt.val}
-                                    onChange={() => setSelectedDiscountRange(opt.val)}
-                                    className="text-rose-500 focus:ring-rose-500 w-3.5 h-3.5 cursor-pointer"
-                                  />
-                                  <span>{opt.label}</span>
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 5. SUJECIÓN Accordion */}
-                        <div className="space-y-1.5 border-b border-slate-100/60 pb-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, sujecion: !prev.sujecion }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>🧘 Sujeción / Estructura</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.sujecion ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.sujecion && (
-                            <div className="space-y-1 pt-1">
-                              {['N/A', 'Baja', 'Media', 'Alta', 'Sin costuras'].map((s) => {
-                                const isSel = selectedSupports.includes(s);
-                                return (
-                                  <label key={s} className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-650 cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={isSel}
-                                      onChange={() => {
-                                        if (isSel) {
-                                          setSelectedSupports(selectedSupports.filter(x => x !== s));
-                                        } else {
-                                          setSelectedSupports([...selectedSupports, s]);
-                                        }
-                                      }}
-                                      className="rounded text-rose-500 focus:ring-rose-500 w-3.5 h-3.5"
-                                    />
-                                    <span>{s === 'N/A' ? 'No requiere' : s}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 6. LARGO Accordion */}
-                        <div className="space-y-1.5 border-b border-slate-100/60 pb-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, largo: !prev.largo }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>🧵 Corte / Estilos Largo</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.largo ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.largo && (
-                            <div className="space-y-1 pt-1">
-                              {['N/A', 'Corto', 'Midi', 'Largo', 'Cropped'].map((l) => {
-                                const isSel = selectedLengths.includes(l);
-                                return (
-                                  <label key={l} className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-650 cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={isSel}
-                                      onChange={() => {
-                                        if (isSel) {
-                                          setSelectedLengths(selectedLengths.filter(x => x !== l));
-                                        } else {
-                                          setSelectedLengths([...selectedLengths, l]);
-                                        }
-                                      }}
-                                      className="rounded text-rose-500 focus:ring-rose-500 w-3.5 h-3.5"
-                                    />
-                                    <span>{l === 'N/A' ? 'Sin medida estándar' : l}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 7. NUEVOS Accordion */}
-                        <div className="space-y-1.5 pb-1">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterBlocks(prev => ({ ...prev, nuevos: !prev.nuevos }))}
-                            className="w-full flex items-center justify-between text-[10px] font-black text-slate-700 uppercase tracking-wider bg-transparent border-0 cursor-pointer py-1 font-sans"
-                          >
-                            <span>⭐ COUTURIER STAGE</span>
-                            <span className="text-slate-400 text-[8px]">{openFilterBlocks.nuevos ? '▼' : '▶'}</span>
-                          </button>
-                          {openFilterBlocks.nuevos && (
-                            <div className="pt-1">
-                              <label className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-650 cursor-pointer select-none">
-                                <input
-                                  type="checkbox"
-                                  checked={onlyNewArrivals}
-                                  onChange={(e) => setOnlyNewArrivals(e.target.checked)}
-                                  className="rounded text-rose-500 focus:ring-rose-500 w-3.5 h-3.5"
-                                />
-                                <span>Solo Colección Estreno ✨</span>
-                              </label>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      )}
-
-                      {/* Right: Products Area */}
-                      <div className={showShopFilters ? "lg:col-span-3" : "lg:col-span-4"}>
-                        {displayedProducts.length === 0 ? (
-                          <div className="py-20 text-center text-slate-400 font-bold text-xs bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                            ☕ No hay artículos que coincidan con los filtros seleccionados. {showShopFilters ? 'Intenta restablecerlos en la barra lateral o pulsa "Ocultar Filtros".' : 'Intenta restablecerlos pulsando "Filtrar Colección" para abrir el panel de filtros.'}
-                          </div>
-                        ) : (
-                          <div className={`grid grid-cols-1 md:grid-cols-2 ${showShopFilters ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
-                            {displayedProducts.map((prod: any) => {
-                              // Get active catalog color for this product card
-                              const activeColor = productSelectedColors[prod.id] || prod.colors?.[0] || 'Rojo';
-                              const isWish = wishlistedProducts.includes(prod.id);
-                              const isSelected = investorPurchases.some(p => p.productName === prod.name && p.storeName === selectedInvestorStore.name);
-
-                              return (
-                                <div 
-                                  key={prod.id} 
-                                  className={`bg-white rounded-2xl border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-pink-100 hover:border-pink-300'} flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 relative group text-left`}
-                                >
-                                  {/* Image container aspect-square */}
-                                  <div 
-                                    className="aspect-square w-full overflow-hidden bg-slate-50 relative cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const catalogImages = displayedProducts.map((p: any) => ({
-                                        src: p.image,
-                                        alt: p.name,
-                                        title: p.name,
-                                        price: `${(p.price * (1 - (p.discount || 0) / 100)).toFixed(2)}€`,
-                                        badge: p.isNewArrival ? 'ESTRENO 💫' : 'SUPERVENTAS'
-                                      }));
-                                      const currentIdx = displayedProducts.findIndex((p: any) => p.id === prod.id);
-                                      openImageLightbox({
-                                        src: prod.image,
-                                        alt: prod.name,
-                                        title: prod.name,
-                                        price: `${(prod.price * (1 - (prod.discount || 0) / 100)).toFixed(2)}€`,
-                                        badge: prod.isNewArrival ? 'ESTRENO 💫' : 'SUPERVENTAS',
-                                        images: catalogImages,
-                                        currentIndex: currentIdx >= 0 ? currentIdx : 0
-                                      });
-                                    }}
-                                  >
-                                    <img 
-                                      src={prod.image} 
-                                      alt={prod.name} 
-                                      referrerPolicy="no-referrer"
-                                      onError={(e) => {
-                                        (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=800';
-                                      }}
-                                      className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300" 
-                                    />
-                                    
-                                    {/* Checkmark removed */}
-
-                                    {/* Wishlist toggle heart button on card */}
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (isWish) {
-                                          setWishlistedProducts(wishlistedProducts.filter(id => id !== prod.id));
-                                        } else {
-                                          setWishlistedProducts([...wishlistedProducts, prod.id]);
-                                        }
-                                      }}
-                                      className="absolute top-2.5 right-2.5 w-7.5 h-7.5 rounded-full bg-white/95 text-slate-650 hover:text-rose-600 hover:scale-[1.12] flex items-center justify-center shadow-xs transition-all border-0 cursor-pointer z-10"
-                                      title="Añadir a mi Lista"
-                                    >
-                                      <Heart 
-                                        className={`w-4 h-4 transition duration-150 ${
-                                          isWish 
-                                            ? 'text-[#fe2c55] fill-[#fe2c55]' 
-                                            : 'text-slate-400'
-                                        }`} 
-                                      />
-                                    </button>
-
-                                    {/* Superventas badge or New / Estreno badge */}
-                                    <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-                                      {prod.isNewArrival && (
-                                        <div className="bg-slate-900/90 backdrop-blur-3xs text-white font-extrabold text-[8px] uppercase tracking-widest px-2 py-0.8 rounded shadow-xs">
-                                          ESTRENO 💫
-                                        </div>
-                                      )}
-                                      {/* Grey "SUPERVENTAS" badge like in image.png */}
-                                      <div className="bg-slate-500/80 backdrop-blur-3xs text-white font-bold text-[8.5px] uppercase tracking-wider px-2 py-0.5 rounded shadow-xs max-w-max">
-                                        SUPERVENTAS
-                                      </div>
-                                    </div>
-
-                                    {/* Price and discount label */}
-                                    <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
-                                      {prod.discount > 0 && (
-                                        <div className="bg-rose-500 text-white font-mono font-black text-[9px] px-1.5 py-0.5 rounded shadow-xs">
-                                          -{prod.discount}%
-                                        </div>
-                                      )}
-                                      <div className="bg-slate-900/95 text-white font-black text-xs font-mono px-2.5 py-1 rounded-lg shadow-md border border-white/10">
-                                        {(prod.price * (1 - (prod.discount || 0) / 100)).toFixed(2)}€
-                                      </div>
-                                    </div>
-
-                                    {/* Main category category label */}
-                                    {prod.category && (
-                                      <div className="absolute bottom-2.5 left-2.5 bg-[#fe2c55]/95 text-white font-extrabold text-[8px] uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
-                                        {prod.category} • {prod.subcategory}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Detailed body info with customizable tags */}
-                                  <div className="p-3.5 space-y-3 flex-grow flex flex-col justify-between bg-[#fffefe]">
-                                    <div className="space-y-1.5">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-[8.5px] bg-[#fe2c55]/10 text-[#fe2c55] font-extrabold uppercase tracking-widest px-1.5 py-0.3 rounded border border-[#fe2c55]/20">
-                                          👗 {prod.fabric || 'Algodón Peinado'}
-                                        </span>
-                                        {prod.support && prod.support !== 'N/A' && (
-                                          <span className="text-[8.5px] bg-slate-100 text-slate-650 font-extrabold uppercase px-1.5 py-0.3 rounded border border-slate-200">
-                                            🧘 {prod.support}
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      <h5 className="text-xs font-black text-slate-800 leading-tight line-clamp-2">{prod.name}</h5>
-                                      <p className="text-[10px] text-slate-500 font-semibold leading-normal line-clamp-2">
-                                        "{prod.description || "Inspirado en la elegancia de la alta costura parisina, confeccionado con tejidos orgánicos de edición de coleccionista."}"
-                                      </p>
-                                    </div>
-
-                                    {/* COLOR DOTS BUBBLES below card (exactly as in image.png) */}
-                                    <div className="space-y-1 pt-1 border-t border-slate-100/70">
-                                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Colores del modelo / Elige:</p>
-                                      <div className="flex items-center gap-2">
-                                        {(prod.colors || ['Negro', 'Blanco', 'Rojo']).map((cn: string) => {
-                                          let hexColor = '#000000';
-                                          if (cn === 'Rojo') hexColor = '#821323';
-                                          else if (cn === 'Blanco') hexColor = '#ffffff';
-                                          else if (cn === 'Amarillo') hexColor = '#e2ec8b';
-                                          else if (cn === 'Beige') hexColor = '#d3b185';
-                                          else if (cn === 'Azul') hexColor = '#1e3a8a';
-                                          else if (cn === 'Verde') hexColor = '#15803d';
-                                          else if (cn === 'Rosa') hexColor = '#ec4899';
-                                          else if (cn === 'Oro') hexColor = '#fbbf24';
-
-                                          const isDotActive = activeColor === cn;
-                                          return (
-                                            <button
-                                              key={cn}
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setProductSelectedColors(prev => ({
-                                                  ...prev,
-                                                  [prod.id]: cn
-                                                }));
-                                              }}
-                                              className={`w-4 h-4 rounded-full p-0 flex items-center justify-center transition cursor-pointer border-0 ${
-                                                isDotActive 
-                                                  ? 'ring-1.5 ring-rose-500 ring-offset-1 scale-110 shadow-3xs' 
-                                                  : 'hover:scale-105 opacity-80 hover:opacity-100'
-                                              }`}
-                                              style={{ 
-                                                backgroundColor: hexColor,
-                                                border: cn === 'Blanco' ? '1px solid #ddd' : 'none'
-                                              }}
-                                              title={`Ver en color ${cn}`}
-                                            />
-                                          );
-                                        })}
-                                        <span className="text-[10px] text-slate-500 font-extrabold ml-auto">
-                                          Var: {activeColor}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    {/* Creative info block */}
-                                    <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100 space-y-1.5 text-[9.5px] font-medium text-slate-500">
-                                      <div className="flex justify-between">
-                                        <span>Atelier:</span>
-                                        <span className="font-extrabold text-slate-800">@{selectedInvestorStore.username}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Tallas disponibles:</span>
-                                        <span className="font-extrabold text-slate-800">{(prod.sizes || ['S', 'M', 'L']).slice(0, 4).join(', ')}{(prod.sizes?.length > 4) ? '...' : ''}</span>
-                                      </div>
-                                    </div>
-
-                                    {/* Action buttons */}
-                                    <div className="flex gap-2 pt-1">
-                                      <button
-                                        onClick={() => {
-                                          const finalColor = activeColor;
-                                          const finalSize = prod.sizes?.[0] || 'M';
-                                          const finalPrice = prod.price * (1 - (prod.discount || 0) / 100);
-                                          handleBuyProduct(
-                                            {
-                                              ...prod,
-                                              price: finalPrice,
-                                              selectedColorChoice: finalColor,
-                                              selectedSizeChoice: finalSize,
-                                              customBust: 90,
-                                              customWaist: 70,
-                                              customHips: 95,
-                                              customHeight: 170,
-                                              isCustomFit: false
-                                            },
-                                            selectedInvestorStore.name
-                                          );
-                                        }}
-                                        className="flex-1 py-2 bg-slate-900 hover:bg-[#fe2c55] text-white font-extrabold text-[10px] uppercase rounded-xl transition duration-150 border-0 cursor-pointer flex items-center justify-center gap-1 shadow-3xs active:scale-98"
-                                      >
-                                        Comprar
-                                      </button>
-
-                                      <button
-                                        onClick={() => {
-                                          const finalColor = activeColor;
-                                          const finalSize = prod.sizes?.[0] || 'M';
-                                          handleAddToCart(
-                                            {
-                                              ...prod,
-                                              selectedColorChoice: finalColor,
-                                              selectedSizeChoice: finalSize,
-                                              customBust: 90,
-                                              customWaist: 70,
-                                              customHips: 95,
-                                              customHeight: 170,
-                                              isCustomFit: false
-                                            },
-                                            selectedInvestorStore.name
-                                          );
-                                        }}
-                                        className="flex-1 py-2 bg-rose-50 border border-[#fe2c55]/30 hover:bg-[#fe2c55]/10 text-[#fe2c55] font-extrabold text-[10px] uppercase rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-3xs active:scale-98"
-                                      >
-                                        <span>🛒</span> Al Carrito
-                                      </button>
-                                    </div>
-
-                                    {/* Botón Presentar en directo debajo de comprar y carrito */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const finalColor = activeColor;
-                                        const finalSize = prod.sizes?.[0] || 'M';
-                                        const finalPrice = prod.price * (1 - (prod.discount || 0) / 100);
-                                        const prodToPin = {
-                                          ...prod,
-                                          price: finalPrice,
-                                          originalPrice: prod.price,
-                                          description: prod.description || `Prenda de alta costura de ${selectedInvestorStore?.name || 'la boutique'}.`,
-                                          atelier: prod.atelier || selectedInvestorStore?.name || '@adrianalima_w1',
-                                          selectedColorChoice: finalColor,
-                                          selectedSizeChoice: finalSize
-                                        };
-                                        setPinnedShopProduct(prodToPin);
-                                        handleCategoryFilterChange('Tiendas');
-                                        setShowCreateBroadcastModal(true);
-                                      }}
-                                      className="w-full mt-2 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/20 active:scale-98"
-                                    >
-                                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                                      <span>🔴</span> Presentar en directo
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          ) : (
-            // DYNAMIC SCENE 2: DIRECTORY GALLERY OF STORES
-            <div className="space-y-5 animate-fade-in">
-              
-              {/* Header text with elegant branding */}
-              <div className="border-b border-pink-100 pb-3">
-                <h3 className="text-lg font-serif font-bold text-slate-900 flex items-center gap-2">
-                  <span>🏪🛒</span> Directorio de Tiendas Casting Live Shop (Socios e Inversores)
-                </h3>
-              </div>
-
-              {/* Large Search Bar specifically built as requested */}
-              <div className="bg-[#fffcfd] p-3.5 rounded-xl border border-pink-100/30 shadow-2xs space-y-2">
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                  🔍 Búsqueda Inteligente de Boutiques Reales
-                </label>
-                <div className="relative">
-                  <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3.5 top-3" />
-                  <input 
-                    type="text" 
-                    value={investorSearchTerm}
-                    onChange={(e) => setInvestorSearchTerm(e.target.value)}
-                    placeholder="Busca tienda por Nombre (Ej. Atelier Valentina), Estilo (Ej. Alta Costura) o por Nombre de Usuario (Ej. chloe)..."
-                    className="w-full text-xs text-slate-800 bg-white border border-pink-100 p-2.5 pl-11 rounded-xl focus:outline-none focus:ring-1 focus:ring-rose-200 transition font-bold"
-                  />
-                  {investorSearchTerm && (
-                    <button 
-                      onClick={() => setInvestorSearchTerm('')}
-                      className="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs font-black border-0 bg-transparent cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest flex items-center">Sugerencias:</span>
-                  {['Alta Costura', 'Casual', 'Calzado', 'Atelier', 'vale_rossi'].map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => setInvestorSearchTerm(tag)}
-                      className="text-[9px] bg-slate-50 hover:bg-pink-50 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold transition cursor-pointer"
-                    >
-                      #{tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Examples of stores from other users */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                    Ejemplos de Tiendas de Creadores y Modelos Asociados ({filteredStores.length})
-                  </h4>
-                  {investorSearchTerm && (
-                    <span className="text-[11px] text-pink-600 font-bold">Filtrado activo</span>
-                  )}
-                </div>
-
-                {filteredStores.length === 0 ? (
-                  <div className="py-12 text-center space-y-2 border border-dashed border-pink-100 rounded-xl bg-slate-50/10 p-6">
-                    <p className="text-3xl text-rose-300">🕵️‍♂️</p>
-                    <p className="text-xs font-black text-slate-700">No se encontraron boutiques que coincidan con tu búsqueda</p>
-                    <p className="text-[11px] text-slate-400 max-w-sm mx-auto">Prueba buscando conceptos más amplios como 'Alta Costura', 'Atelier' o simplemente borra el filtro para ver todos los creadores.</p>
-                    <button 
-                      onClick={() => setInvestorSearchTerm('')}
-                      className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-lg transition border-0 cursor-pointer"
-                    >
-                      Mostrar Todos
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="investor-boutiques-grid">
-                    {filteredStores.map((store) => (
-                      <div 
-                        key={store.id}
-                        onClick={() => setSelectedInvestorStore(store)}
-                        className="bg-white rounded-2xl border border-pink-100 hover:border-pink-300 p-6 shadow-xs hover:shadow-md hover:scale-[1.01] transition-all duration-350 flex flex-col justify-between gap-5 relative group font-sans text-left cursor-pointer"
-                        id={`boutique-card-${store.id}`}
-                      >
-                        {/* Rating floating badge */}
-                        <span className="absolute top-4 right-4 bg-rose-50 text-rose-600 font-bold text-[10px] px-2 py-0.5 rounded-full border border-rose-100">
-                          ⭐️ {store.rating}
-                        </span>
-
-                        <div className="flex gap-4">
-                          <div className="w-16 h-16 shrink-0 group-hover:scale-105 transition duration-200 select-none">
-                            {getFashionBrandLogo(store.id, store.name)}
-                          </div>
-                          <div className="min-w-0 flex-1 pr-12">
-                            <h5 
-                              className="text-base font-extrabold text-slate-800 truncate leading-tight group-hover:text-rose-600 transition-colors"
-                            >
-                              {store.name}
-                            </h5>
-                            <p className="text-xs font-bold text-rose-500 mt-1 truncate">@{store.username}</p>
-                            <span className="inline-block mt-2 text-[10px] bg-slate-50 px-2.5 py-1 border border-slate-150 rounded-lg font-bold text-slate-500">
-                              Estilo: {store.style}
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-1 line-clamp-2">
-                          {store.description}
-                        </p>
-
-                        {/* Sample products thumbnails preview */}
-                        <div className="space-y-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Avance de Productos:</span>
-                          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                            {store.products.map((p: any, i: number) => (
-                              <div key={i} className="flex items-center gap-3 shrink-0 select-none py-1">
-                                <img src={p.image} alt={p.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
-                                <div className="text-[11px] font-bold text-slate-800 max-w-[110px] leading-snug">
-                                  <p className="truncate text-slate-700">{p.name}</p>
-                                  <span className="block text-[10px] font-mono text-[#fe2c55] font-black mt-0.5">{p.price.toFixed(2)}€</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Enter Store button */}
-                        <button
-                          className="w-fit mt-1 py-1 px-2.5 bg-slate-900 group-hover:bg-[#fe2c55] text-white font-extrabold text-[9px] uppercase rounded-md transition duration-155 border-0 cursor-pointer flex items-center justify-center shadow-xs self-start"
-                        >
-                          Entrar a la Boutique
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-          )}
-
-          {/* FOOTER SANDBOX */}
-          <div className="pt-4 border-t border-pink-50 flex justify-between items-center text-[9px] text-slate-400 mt-6 font-mono font-bold">
-            <span>Investments & Couture Sandbox</span>
-            <span className="text-rose-500">Fashions Finance VIP Lounge</span>
-          </div>
-
-        </main>
-      </div>
-    );
-  };
+  // TikTok Shop Investor Dashboard (Eliminada permanentemente)
+  const renderTikTokShopInvestorDashboard = () => null;
 
   // TikTok Shop Seller & Strategy Dashboard Renderer
   const renderTikTokShopSellerDashboard = () => {
@@ -23144,55 +22105,158 @@ try {
   };
 
   const renderTikTokProfile = (profileUsername: string) => {
-    const profile = accountsQueSigues.find(p => p.username === profileUsername) || accountsQueSigues[0];
-    const isFollowing = !!isProfileFollowing[profileUsername];
-    const baseFollowers = parseInt(profile.seguidores.replace(/[^0-9]/g, '')) || 1632;
-    const currentFollowers = isFollowing ? baseFollowers + 1 : baseFollowers;
+    const target = (profileUsername || '').toLowerCase().trim();
+    const profile = accountsQueSigues.find(p => p.username.toLowerCase() === target || p.name.toLowerCase() === target) || accountsQueSigues[0];
+    const isFollowing = !!isProfileFollowing[profile.username];
+    const isFavorite = !!isProfileFavorite[profile.username];
+    const isBlocked = !!isProfileBlocked[profile.username];
+    const isMuted = !!isProfileMuted[profile.username];
+
+    const triggerToast = (msg: string) => {
+      setProfileToastMessage(msg);
+      setTimeout(() => {
+        setProfileToastMessage(prev => (prev === msg ? null : prev));
+      }, 3500);
+    };
 
     const handleToggleFollowProfile = () => {
+      const willFollow = !isFollowing;
       setIsProfileFollowing(prev => ({
         ...prev,
-        [profileUsername]: !prev[profileUsername]
+        [profile.username]: willFollow
       }));
+      triggerToast(willFollow ? `¡Ahora sigues a ${profile.name}! (@${profile.username})` : `Has dejado de seguir a ${profile.name}`);
+    };
+
+    // Follower count dynamic calculation
+    const baseFollowers = parseInt(profile.seguidores.replace(/[^0-9]/g, ''), 10) || 150;
+    const isK = profile.seguidores.toUpperCase().includes('K');
+    const isM = profile.seguidores.toUpperCase().includes('M');
+    
+    let followersDisplay = profile.seguidores;
+    if (isFollowing) {
+      if (isK) {
+        followersDisplay = `${baseFollowers + 0.1}K`;
+      } else if (isM) {
+        followersDisplay = `${baseFollowers}M`;
+      } else {
+        followersDisplay = `${baseFollowers + 1}`;
+      }
+    }
+
+    // Sort videos according to filterOption
+    const sortedVideos = [...(profile.videos || [])].sort((a: any, b: any) => {
+      if (filterOption === 'populares') {
+        const parseV = (v: string) => {
+          if (!v) return 0;
+          const clean = v.toLowerCase().replace(/\s+/g, '');
+          if (clean.includes('m') || clean.includes('mill')) return (parseFloat(clean) || 0) * 1000000;
+          if (clean.includes('mil') || clean.includes('k')) return (parseFloat(clean) || 0) * 1000;
+          return parseFloat(clean) || 0;
+        };
+        return parseV(b.views) - parseV(a.views);
+      }
+      if (filterOption === 'antiguos') {
+        const idxA = profile.videos.indexOf(a);
+        const idxB = profile.videos.indexOf(b);
+        return idxB - idxA;
+      }
+      // 'recientes': pinned first, then original order
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    });
+
+    const handleCopyLink = () => {
+      const url = `https://castinglive.app/@${profile.username}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).catch(() => {});
+      }
+      setCopiedLinkSuccess(true);
+      triggerToast(`📋 Enlace copiado al portapapeles: ${url}`);
+      setTimeout(() => setCopiedLinkSuccess(false), 2500);
+    };
+
+    const handleOpenMessage = () => {
+      const targetUsername = profile.username;
+      const matchedModel = models.find(m => m.username.toLowerCase() === targetUsername.toLowerCase()) ||
+                           accountsQueSigues.find(p => p.username.toLowerCase() === targetUsername.toLowerCase());
+      const targetId = matchedModel ? ('id' in matchedModel ? matchedModel.id : matchedModel.username) : targetUsername;
+      triggerToast(`💬 Abriendo conversación directa con ${profile.name}...`);
+      if (onOpenChatWithModel) {
+        onOpenChatWithModel(targetId);
+      } else if (onNavigateToTab) {
+        onNavigateToTab('chat');
+      }
+      setViewingTikTokProfileUsername(null);
     };
 
     return (
-      <div className="w-full bg-white text-slate-900 select-none animate-fade-in font-sans p-3 sm:p-5 min-h-[750px] pb-36 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-rose-200/50 scrollbar-track-transparent rounded-2xl max-w-full" id={`tiktok-profile-${profileUsername}`}>
+      <div className="w-full bg-white text-slate-900 select-none animate-fade-in font-sans p-3 sm:p-5 min-h-[750px] pb-36 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-rose-200/50 scrollbar-track-transparent rounded-2xl max-w-full relative" id={`tiktok-profile-${profile.username}`}>
         
-        {/* Back Button and Navigation Title */}
+        {/* Floating Feedback Toast Notification */}
+        {profileToastMessage && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-2.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-2.5 text-xs font-bold border border-white/20 animate-fade-in">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>{profileToastMessage}</span>
+          </div>
+        )}
+
+        {/* Back Button and Navigation Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-rose-50/60 select-none max-w-full">
           <button
             onClick={() => setViewingTikTokProfileUsername(null)}
-            className="flex items-center gap-2 text-xs font-extrabold text-white bg-slate-900 hover:bg-[#fe2c55] px-4.5 py-2.5 rounded-full shadow-md transition-all border-0 cursor-pointer"
+            className="flex items-center gap-2 text-xs font-extrabold text-white bg-slate-900 hover:bg-[#fe2c55] px-4.5 py-2.5 rounded-full shadow-md transition-all border-0 cursor-pointer active:scale-95"
             id="back-to-feed-btn"
           >
             <ArrowLeft className="w-4 h-4 shrink-0 text-white" />
             <span>Volver atrás</span>
           </button>
           
-          <button
-            onClick={() => setViewingTikTokProfileUsername('sophialoren_w3')}
-            className="text-[10px] text-slate-450 font-extrabold uppercase tracking-widest bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-full px-3 py-1 cursor-pointer transition-all"
-            id="perfil-creador-badge-btn"
-          >
-            Perfil de Creador
-          </button>
+          <div className="flex items-center gap-2">
+            {isBlocked && (
+              <span className="text-[10px] text-red-600 font-extrabold uppercase tracking-widest bg-red-50 border border-red-200 rounded-full px-3 py-1 select-none">
+                CUENTA BLOQUEADA
+              </span>
+            )}
+            {isFavorite && (
+              <span className="text-[10px] text-amber-700 font-extrabold uppercase tracking-widest bg-amber-50 border border-amber-200 rounded-full px-3 py-1 select-none flex items-center gap-1">
+                ⭐ CREADOR FAVORITO
+              </span>
+            )}
+            <span
+              className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest bg-slate-100 border border-slate-200 rounded-full px-3.5 py-1 select-none"
+              id="perfil-creador-badge-btn"
+            >
+              PERFIL DE CREADOR
+            </span>
+          </div>
         </div>
 
-        {/* Profile Header Details */}
+        {/* Profile Header Details (Matching image.png) */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-7 pb-6 border-b border-slate-100 max-w-full">
-          <img 
-            src={profileUsername === 'victorgraciaweb' ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=260' : profile.avatar} 
-            alt={profile.name} 
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-slate-50 shadow-md bg-neutral-100 shrink-0 select-none pointer-events-none"
-            referrerPolicy="no-referrer"
-          />
+          <div className="relative shrink-0">
+            <img 
+              src={profile.avatar} 
+              alt={profile.name} 
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-slate-50 shadow-md bg-neutral-100 cursor-pointer hover:opacity-95 transition"
+              referrerPolicy="no-referrer"
+              onClick={() => openImageLightbox({ src: profile.avatar, alt: profile.name, title: profile.name })}
+              title="Clic para ver foto en grande"
+            />
+            {isFavorite && (
+              <span className="absolute bottom-0 right-0 bg-amber-400 text-slate-900 rounded-full p-1 shadow-md text-xs" title="En lista de favoritos">
+                ⭐
+              </span>
+            )}
+          </div>
           
           <div className="flex-1 text-center sm:text-left space-y-3.5 max-w-full min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap max-w-full">
+              {/* Username and Name with Badges */}
               <h1 className="text-lg sm:text-2xl font-black text-slate-800 tracking-tight leading-none flex flex-wrap items-center justify-center sm:justify-start gap-1.5 max-w-full">
                 <span className="truncate">{profile.username}</span>
-                {(profile.username === 'kyliejenner' || profile.username === 'mariathattil' || profile.username === 'badabun') && (
+                {((profile as any).isVerified || profile.username === 'kyliejenner' || profile.username === 'mariathattil' || profile.username === 'badabun' || profile.username === 'kendalljenner' || profile.username === 'gigihadid' || profile.username === 'bellahadid' || profile.username === 'haileybieber') && (
                   <span className="text-sky-500 font-extrabold text-xs sm:text-sm select-none" title="Cuenta verificada">✓</span>
                 )}
                 {profile.hasHeart && (
@@ -23203,128 +22267,393 @@ try {
                 </span>
               </h1>
               
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1.5 sm:pt-0 max-w-full">
-                {!(userProfile && (
-                  (profileUsername && userProfile.username && profileUsername.toLowerCase().trim() === userProfile.username.toLowerCase().trim()) ||
-                  (profile?.username && userProfile.username && profile.username.toLowerCase().trim() === userProfile.username.toLowerCase().trim()) ||
-                  (profile?.name && userProfile.name && profile.name.toLowerCase().trim() === userProfile.name.toLowerCase().trim())
-                )) && (
-                  isFollowing ? (
-                    <button 
-                      onClick={handleToggleFollowProfile}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-5 py-1.5 rounded-md border border-slate-200 transition active:scale-95 cursor-pointer flex items-center gap-1 shrink-0"
-                    >
-                      <span>Siguiendo</span>
-                      <span>✓</span>
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={handleToggleFollowProfile}
-                      className="bg-[#fe2c55] hover:bg-rose-600 text-white font-black text-xs px-6 py-1.5 rounded-md transition active:scale-95 cursor-pointer shrink-0 shadow-sm"
-                    >
-                      Seguir
-                    </button>
-                  )
+              {/* Primary Profile Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1.5 sm:pt-0 max-w-full relative">
+                {/* 1. SEGUIR / SIGUIENDO BUTTON */}
+                {isFollowing ? (
+                  <button 
+                    onClick={handleToggleFollowProfile}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-5 py-1.5 rounded-md border border-slate-200 transition active:scale-95 cursor-pointer flex items-center gap-1.5 shrink-0 shadow-xs"
+                    id="btn-following-profile"
+                    title="Clic para dejar de seguir"
+                  >
+                    <span>Siguiendo</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleToggleFollowProfile}
+                    className="bg-[#fe2c55] hover:bg-rose-600 text-white font-black text-xs px-6 py-1.5 rounded-md transition active:scale-95 cursor-pointer shrink-0 shadow-sm"
+                    id="btn-follow-profile"
+                    title="Seguir a esta creadora"
+                  >
+                    Seguir
+                  </button>
                 )}
 
+                {/* 2. MENSAJE BUTTON */}
                 <button 
-                  onClick={() => {
-                    const targetUsername = profileUsername || profile.username;
-                    const matchedModel = models.find(m => m.username.toLowerCase() === targetUsername.toLowerCase()) ||
-                                         accountsQueSigues.find(p => p.username.toLowerCase() === targetUsername.toLowerCase());
-                    const targetId = matchedModel ? ('id' in matchedModel ? matchedModel.id : matchedModel.username) : targetUsername;
-                    if (onOpenChatWithModel) {
-                      onOpenChatWithModel(targetId);
-                    } else if (onNavigateToTab) {
-                      onNavigateToTab('chat');
-                    }
-                  }}
-                  className="bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold text-xs px-5 py-1.5 rounded-md border border-slate-200 transition active:scale-95 cursor-pointer shrink-0"
+                  onClick={handleOpenMessage}
+                  className="bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold text-xs px-5 py-1.5 rounded-md border border-slate-200 transition active:scale-95 cursor-pointer shrink-0 uppercase tracking-wider flex items-center gap-1.5 shadow-xs"
                   id="btn-mensaje-creator-profile"
+                  title="Enviar mensaje directo"
                 >
-                  Mensaje
+                  <MessageCircle className="w-3.5 h-3.5 text-slate-600" />
+                  <span>MENSAJE</span>
                 </button>
 
-                {/* Additional utility buttons from zzz.png */}
-                <div className="flex items-center gap-1.5 ml-1">
-                  <button className="p-2 bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 rounded-md border border-slate-200 transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center">
+                {/* 3. USER PLUS BUTTON (Sugerencias & Favoritos) */}
+                <div className="relative">
+                  <button 
+                    onClick={() => {
+                      setShowSuggestedFriendsModal(prev => !prev);
+                      setShowShareProfileModal(false);
+                      setShowMoreProfileOptions(false);
+                    }}
+                    className={`p-2 rounded-md border transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center ${
+                      showSuggestedFriendsModal || isFavorite
+                        ? 'bg-rose-50 text-[#fe2c55] border-rose-200 font-black' 
+                        : 'bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 border-slate-200'
+                    }`}
+                    id="btn-suggested-friends"
+                    title="Cuentas sugeridas & opciones de amistad"
+                  >
                     <UserPlus className="w-4 h-4" />
                   </button>
-                  <button className="p-2 bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 rounded-md border border-slate-200 transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center">
+
+                  {/* Popover Drawer for UserPlus */}
+                  {showSuggestedFriendsModal && (
+                    <div className="absolute top-9 left-0 sm:right-0 sm:left-auto w-72 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 animate-fade-in text-left">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2.5">
+                        <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-rose-500" />
+                          Conexión con Creador
+                        </span>
+                        <button 
+                          onClick={() => setShowSuggestedFriendsModal(false)}
+                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Favorite Toggle Button */}
+                      <button
+                        onClick={() => {
+                          const nextFav = !isFavorite;
+                          setIsProfileFavorite(prev => ({ ...prev, [profile.username]: nextFav }));
+                          triggerToast(nextFav ? `⭐ ${profile.name} añadida a tus creadores favoritos` : `${profile.name} eliminada de favoritos`);
+                        }}
+                        className={`w-full text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-between mb-2 transition ${
+                          isFavorite ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Star className={`w-3.5 h-3.5 ${isFavorite ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
+                          <span>{isFavorite ? 'En tus creadores favoritos' : 'Añadir a favoritos'}</span>
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-slate-400">{isFavorite ? 'ACTIVO' : 'AÑADIR'}</span>
+                      </button>
+
+                      {/* Notification Priority Toggle */}
+                      <button
+                        onClick={() => {
+                          const nextMute = !isMuted;
+                          setIsProfileMuted(prev => ({ ...prev, [profile.username]: nextMute }));
+                          triggerToast(nextMute ? `🔕 Notificaciones silenciadas para @${profile.username}` : `🔔 Notificaciones activadas para @${profile.username}`);
+                        }}
+                        className="w-full text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-between mb-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Bell className={`w-3.5 h-3.5 ${!isMuted ? 'text-rose-500' : 'text-slate-400'}`} />
+                          <span>{!isMuted ? 'Notificaciones activas' : 'Notificaciones en silencio'}</span>
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-slate-400">{!isMuted ? 'ON' : 'OFF'}</span>
+                      </button>
+
+                      {/* Suggested Similar Creators */}
+                      <div className="pt-1 border-t border-slate-100">
+                        <span className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-2">
+                          Creadores sugeridos para ti
+                        </span>
+                        <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                          {accountsQueSigues
+                            .filter(acc => acc.username !== profile.username)
+                            .slice(0, 3)
+                            .map(acc => {
+                              const followingThis = !!isProfileFollowing[acc.username];
+                              return (
+                                <div key={acc.username} className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-slate-50">
+                                  <div 
+                                    className="flex items-center gap-2 cursor-pointer min-w-0"
+                                    onClick={() => {
+                                      setViewingTikTokProfileUsername(acc.username);
+                                      setShowSuggestedFriendsModal(false);
+                                    }}
+                                  >
+                                    <img src={acc.avatar} alt={acc.name} className="w-7 h-7 rounded-full object-cover" />
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-slate-800 truncate">{acc.name}</p>
+                                      <p className="text-[10px] text-slate-400 truncate">@{acc.username}</p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      setIsProfileFollowing(prev => ({ ...prev, [acc.username]: !prev[acc.username] }));
+                                      triggerToast(followingThis ? `Dejaste de seguir a ${acc.name}` : `¡Ahora sigues a ${acc.name}!`);
+                                    }}
+                                    className={`text-[10px] font-bold px-2.5 py-1 rounded transition ${
+                                      followingThis ? 'bg-slate-100 text-slate-600' : 'bg-[#fe2c55] text-white hover:bg-rose-600'
+                                    }`}
+                                  >
+                                    {followingThis ? 'Siguiendo' : 'Seguir'}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. SHARE BUTTON (Compartir Perfil) */}
+                <div className="relative">
+                  <button 
+                    onClick={() => {
+                      setShowShareProfileModal(prev => !prev);
+                      setShowSuggestedFriendsModal(false);
+                      setShowMoreProfileOptions(false);
+                    }}
+                    className={`p-2 rounded-md border transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center ${
+                      showShareProfileModal 
+                        ? 'bg-rose-50 text-[#fe2c55] border-rose-200 font-black' 
+                        : 'bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 border-slate-200'
+                    }`}
+                    id="btn-share-profile"
+                    title="Compartir perfil"
+                  >
                     <Share2 className="w-3.5 h-3.5" />
                   </button>
-                  <button className="p-2 bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 rounded-md border border-slate-200 transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center">
+
+                  {/* Share Options Dropdown */}
+                  {showShareProfileModal && (
+                    <div className="absolute top-9 left-0 sm:right-0 sm:left-auto w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 animate-fade-in text-left">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+                        <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                          <Share2 className="w-3.5 h-3.5 text-rose-500" />
+                          Compartir perfil
+                        </span>
+                        <button 
+                          onClick={() => setShowShareProfileModal(false)}
+                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <button
+                          onClick={handleCopyLink}
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center justify-between transition"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Copy className="w-3.5 h-3.5 text-slate-500" />
+                            <span>{copiedLinkSuccess ? '¡Enlace copiado! ✓' : 'Copiar enlace'}</span>
+                          </span>
+                          {copiedLinkSuccess && <span className="text-[10px] text-emerald-600 font-bold">COPIADO</span>}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent(`¡Mira el perfil oficial de ${profile.name} (@${profile.username}) en Casting Live!`);
+                            const url = encodeURIComponent(`https://castinglive.app/@${profile.username}`);
+                            window.open(`https://api.whatsapp.com/send?text=${text}%20${url}`, '_blank');
+                            setShowShareProfileModal(false);
+                          }}
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-emerald-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
+                        >
+                          <span className="w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[9px] font-black">W</span>
+                          <span>Compartir en WhatsApp</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent(`Perfil oficial de ${profile.name} (@${profile.username})`);
+                            const url = encodeURIComponent(`https://castinglive.app/@${profile.username}`);
+                            window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+                            setShowShareProfileModal(false);
+                          }}
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-sky-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
+                        >
+                          <span className="w-4 h-4 bg-sky-500 text-white rounded-full flex items-center justify-center text-[9px] font-black">T</span>
+                          <span>Compartir en Telegram</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent(`Descubre a ${profile.name} en @CastingLive: https://castinglive.app/@${profile.username}`);
+                            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+                            setShowShareProfileModal(false);
+                          }}
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-100 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
+                        >
+                          <span className="w-4 h-4 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-black">𝕏</span>
+                          <span>Compartir en X (Twitter)</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setShowShareProfileModal(false);
+                            handleOpenMessage();
+                          }}
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-rose-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
+                        >
+                          <Send className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Enviar por mensaje privado</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. MORE OPTIONS BUTTON (Opciones adicionales) */}
+                <div className="relative">
+                  <button 
+                    onClick={() => {
+                      setShowMoreProfileOptions(prev => !prev);
+                      setShowShareProfileModal(false);
+                      setShowSuggestedFriendsModal(false);
+                    }}
+                    className={`p-2 rounded-md border transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center ${
+                      showMoreProfileOptions 
+                        ? 'bg-rose-50 text-[#fe2c55] border-rose-200 font-black' 
+                        : 'bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 border-slate-200'
+                    }`}
+                    id="btn-more-options"
+                    title="Más opciones de cuenta"
+                  >
                     <MoreHorizontal className="w-4 h-4" />
                   </button>
+
+                  {/* More Options Dropdown */}
+                  {showMoreProfileOptions && (
+                    <div className="absolute top-9 left-0 sm:right-0 sm:left-auto w-56 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 z-50 animate-fade-in text-left">
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => {
+                            const nextMute = !isMuted;
+                            setIsProfileMuted(prev => ({ ...prev, [profile.username]: nextMute }));
+                            triggerToast(nextMute ? `🔕 Notificaciones silenciadas` : `🔔 Notificaciones activadas`);
+                            setShowMoreProfileOptions(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
+                        >
+                          <Bell className="w-3.5 h-3.5 text-slate-500" />
+                          <span>{isMuted ? 'Activar notificaciones' : 'Silenciar notificaciones'}</span>
+                        </button>
+
+                        <button
+                          onClick={handleCopyLink}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Copiar enlace del perfil</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const nextBlock = !isBlocked;
+                            setIsProfileBlocked(prev => ({ ...prev, [profile.username]: nextBlock }));
+                            triggerToast(nextBlock ? `🚫 Cuenta @${profile.username} bloqueada` : `Cuenta @${profile.username} desbloqueada`);
+                            setShowMoreProfileOptions(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-xs font-bold text-red-600 flex items-center gap-2 transition"
+                        >
+                          <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                          <span>{isBlocked ? 'Desbloquear cuenta' : 'Bloquear cuenta'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setProfileReportSubmitted(false);
+                            setShowMoreProfileOptions(false);
+                            triggerToast(`🛡️ Reporte enviado para revisión: @${profile.username}`);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-rose-50 text-xs font-bold text-rose-600 flex items-center gap-2 transition"
+                        >
+                          <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Denunciar perfil</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
               </div>
             </div>
             
-            {/* Stats row with following, followers, and likes counts */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-5 text-sm select-none max-w-full">
-              <span className="text-slate-500 font-medium whitespace-nowrap">
+            {/* 6. STATS ROW (0 Seguir, 150K Seguidores, 890K Me gusta) */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-5 text-sm select-none max-w-full">
+              {/* Seguir / Siguiendo Stat */}
+              <button 
+                onClick={() => setShowStatsInfoModal('following')}
+                className="text-slate-500 font-medium whitespace-nowrap hover:bg-slate-100 px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 border-0 bg-transparent"
+                title="Ver cuentas que sigue"
+              >
                 <strong className="text-slate-800 font-extrabold pr-0.5">0</strong> Seguir
-              </span>
-              <span className="text-slate-500 font-medium whitespace-nowrap">
-                <strong className="text-slate-800 font-extrabold pr-0.5">{profileUsername === 'victorgraciaweb' ? currentFollowers : profile.seguidores}</strong> Seguidores
-              </span>
-              <span className="text-slate-500 font-medium whitespace-nowrap">
+              </button>
+
+              {/* Seguidores Stat */}
+              <button 
+                onClick={() => setShowStatsInfoModal('followers')}
+                className="text-slate-500 font-medium whitespace-nowrap hover:bg-slate-100 px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 border-0 bg-transparent"
+                title="Ver seguidores"
+              >
+                <strong className="text-slate-800 font-extrabold pr-0.5">
+                  {followersDisplay}
+                </strong> Seguidores
+              </button>
+
+              {/* Me Gusta Stat */}
+              <button 
+                onClick={() => setShowStatsInfoModal('likes')}
+                className="text-slate-500 font-medium whitespace-nowrap hover:bg-slate-100 px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 border-0 bg-transparent"
+                title="Ver detalle de 'Me gusta'"
+              >
                 <strong className="text-slate-800 font-extrabold pr-0.5">{profile.meGusta}</strong> Me gusta
-              </span>
+              </button>
             </div>
 
-            {/* Custom Paragraph formatted bio */}
+            {/* 7. CUSTOM BIO & OFFICIAL BIO LINK */}
             <div className="space-y-1 text-xs text-slate-700 font-medium leading-relaxed max-w-lg">
-              {profile.username === 'victorgraciaweb' ? (
-                <>
-                  <p>Desarrollador Blockchain 🧘‍♀️ con +12 años en TI 👇</p>
-                  <p>MI MASTERCLASS GRATUITA</p>
-                  <p>👇</p>
-                  <a 
-                    href="https://victorgraciaweb.com/newsletter-masterclass" 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="text-[#fe2c55] hover:underline font-bold flex items-center gap-1 pt-0.5 cursor-pointer max-w-max"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert('🔗 Abriendo masterclass de @victorgraciaweb: "victorgraciaweb.com/newsletter-masterclass"');
-                    }}
-                  >
-                    <Link className="w-3.5 h-3.5 text-[#fe2c55]" />
-                    <span>victorgraciaweb.com/newslet...</span>
-                  </a>
-                </>
-              ) : (
-                <>
-                  <p>{profile.bio}</p>
-                  <a 
-                    href={`https://${profile.username}.com/co-investment`} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="text-[#fe2c55] hover:underline font-bold flex items-center gap-1 pt-0.5 cursor-pointer max-w-max"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert(`🔗 Abriendo sitio de @${profile.username}: "${profile.username}.com/co-investment"`);
-                    }}
-                  >
-                    <Link className="w-3.5 h-3.5 text-[#fe2c55]" />
-                    <span>{profile.username}.com/co-investment</span>
-                  </a>
-                </>
-              )}
+              {profile.bio.split('\n').map((line: string, idx: number) => (
+                <p key={idx}>{line}</p>
+              ))}
+              <button 
+                onClick={() => setShowBioLinkModal(true)}
+                className="text-[#fe2c55] hover:underline font-bold flex items-center gap-1 pt-0.5 cursor-pointer max-w-max border-0 bg-transparent p-0"
+                id="btn-bio-link"
+                title="Abrir enlace de la biografía"
+              >
+                <Link className="w-3.5 h-3.5 text-[#fe2c55]" />
+                <span>{(profile as any).website || `${profile.username}.com/...`}</span>
+              </button>
             </div>
 
           </div>
         </div>
 
-        {/* Tabs Row containing Videos, Likes, and Right Grid Filter selectors */}
+        {/* 8. TABS ROW: VÍDEOS / ME GUSTA & FILTERS: MÁS RECIENTES | MÁS POPULARES | MÁS ANTIGUOS */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 select-none mt-4 pb-0.5 font-sans max-w-full overflow-x-hidden">
+          {/* Main Category Tabs */}
           <div className="flex items-center gap-8 text-sm pt-1.5">
             <button 
               onClick={() => setProfileActiveTab('videos')}
               className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent ${
                 profileActiveTab === 'videos' ? 'text-slate-950 font-black' : 'text-slate-400 font-semibold hover:text-slate-600'
               }`}
+              id="tab-videos-btn"
             >
               <span>Vídeos</span>
               {profileActiveTab === 'videos' && (
@@ -23335,8 +22664,9 @@ try {
             <button 
               onClick={() => setProfileActiveTab('likes')}
               className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent ${
-                profileActiveTab === 'likes' ? 'text-slate-950 font-black' : 'text-slate-400 font-semibold'
+                profileActiveTab === 'likes' ? 'text-slate-950 font-black' : 'text-slate-400 font-semibold hover:text-slate-600'
               }`}
+              id="tab-likes-btn"
             >
               <Lock className="w-3 h-3 text-slate-400" />
               <span>Me gusta</span>
@@ -23346,49 +22676,111 @@ try {
             </button>
           </div>
 
-          {/* Grid filter selectors right side on wider desktop views matching zzz.png */}
-          <div className="hidden sm:flex items-center gap-3.5 text-xs text-slate-400 select-none">
+          {/* Video Sorting Filter Selectors (Matching screenshot) */}
+          <div className="flex items-center gap-2 sm:gap-4 text-xs select-none">
             <button 
-              onClick={() => setFilterOption('recientes')}
-              className={`hover:text-slate-800 transition font-bold ${filterOption === 'recientes' ? 'text-slate-900 font-extrabold' : ''}`}
+              onClick={() => {
+                setFilterOption('recientes');
+                triggerToast('Mostrando vídeos más recientes');
+              }}
+              className={`transition cursor-pointer border-0 bg-transparent py-1 ${
+                filterOption === 'recientes' 
+                  ? 'text-slate-950 font-black underline underline-offset-4 decoration-2' 
+                  : 'text-slate-400 font-bold hover:text-slate-700'
+              }`}
+              id="filter-recientes-btn"
             >
-              Recientes
+              MÁS RECIENTES
             </button>
-            <span className="text-slate-200">|</span>
+            <span className="text-slate-300">|</span>
             <button 
-              onClick={() => setFilterOption('popular')}
-              className={`hover:text-slate-800 transition font-bold ${filterOption === 'popular' ? 'text-slate-900 font-extrabold' : ''}`}
+              onClick={() => {
+                setFilterOption('populares');
+                triggerToast('Ordenando por mayor número de reproducciones');
+              }}
+              className={`transition cursor-pointer border-0 bg-transparent py-1 ${
+                filterOption === 'populares' 
+                  ? 'text-slate-950 font-black underline underline-offset-4 decoration-2' 
+                  : 'text-slate-400 font-bold hover:text-slate-700'
+              }`}
+              id="filter-populares-btn"
             >
-              Popular
+              MÁS POPULARES
             </button>
-            <span className="text-slate-200">|</span>
+            <span className="text-slate-300">|</span>
             <button 
-              onClick={() => setFilterOption('antiguos')}
-              className={`hover:text-slate-800 transition font-bold ${filterOption === 'antiguos' ? 'text-slate-900 font-extrabold' : ''}`}
+              onClick={() => {
+                setFilterOption('antiguos');
+                triggerToast('Mostrando vídeos más antiguos primero');
+              }}
+              className={`transition cursor-pointer border-0 bg-transparent py-1 ${
+                filterOption === 'antiguos' 
+                  ? 'text-slate-950 font-black underline underline-offset-4 decoration-2' 
+                  : 'text-slate-400 font-bold hover:text-slate-700'
+              }`}
+              id="filter-antiguos-btn"
             >
-              Más antiguos
+              MÁS ANTIGUOS
             </button>
           </div>
         </div>
 
-        {/* Main interactive dynamic Video / Likes Panel content */}
+        {/* 9. MAIN CONTENT: VIDEOS GRID OR LIKES PANEL */}
         {profileActiveTab === 'likes' ? (
-          <div className="py-24 text-center space-y-3.5 text-slate-400">
-            <div className="text-4xl">🔒</div>
-            <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider">Los videos con "Me gusta" de este usuario están ocultos</h4>
-            <p className="text-xs text-slate-400 max-w-xs mx-auto">
-              Las configuraciones de privacidad de @{profile.username} ocultan su historial de likes al público.
-            </p>
+          <div className="py-20 text-center space-y-4 text-slate-400 animate-fade-in">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-3xl text-slate-500 shadow-inner">
+              🔒
+            </div>
+            <div className="space-y-1 max-w-sm mx-auto">
+              <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider">
+                Los videos con "Me gusta" de este usuario están ocultos
+              </h4>
+              <p className="text-xs text-slate-400">
+                Las configuraciones de privacidad de @{profile.username} ocultan su historial de likes al público.
+              </p>
+            </div>
+
+            {/* Toggle demo button for previewing creator likes */}
+            <div className="pt-2">
+              <button
+                onClick={() => setUnlockedLikedVideosDemo(prev => !prev)}
+                className="text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-full border border-rose-200 transition active:scale-95 cursor-pointer"
+              >
+                {unlockedLikedVideosDemo ? 'Ocultar vídeos de prueba' : '👁️ Ver vista previa de vídeos que le gustan (VIP)'}
+              </button>
+            </div>
+
+            {unlockedLikedVideosDemo && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-6 max-w-4xl mx-auto text-left">
+                {profile.videos.slice(0, 3).map((vid: any) => (
+                  <div
+                    key={`liked-${vid.id}`}
+                    onClick={() => setSelectedProfileVideo({ ...vid, uploader: profile })}
+                    className="group relative aspect-[3/4.5] bg-black rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-all cursor-pointer border border-slate-100"
+                  >
+                    <img src={vid.img} alt={vid.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute top-2 right-2 bg-rose-600 text-white rounded-full p-1 shadow-sm">
+                      <Heart className="w-3 h-3 fill-white" />
+                    </div>
+                    <div className="absolute bottom-2 inset-x-2 text-white text-[11px] font-bold truncate">
+                      {vid.title}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-6">
-            {profile.videos.map((vid: any) => {
-              const countVal = profileVideoLikes[`${vid.id}-likes`] || (parseInt(vid.views) * 12) || 1200;
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-6 animate-fade-in">
+            {sortedVideos.map((vid: any) => {
               return (
                 <div 
                   key={vid.id}
                   onClick={() => setSelectedProfileVideo({ ...vid, uploader: profile })}
                   className="group relative aspect-[3/4.5] bg-black rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-all duration-200 cursor-pointer border border-slate-100"
+                  id={`video-card-${vid.id}`}
+                  title="Clic para reproducir vídeo"
                 >
                   <img 
                     src={vid.img} 
@@ -23402,7 +22794,7 @@ try {
                   
                   {/* Red Pinned tag for Pinned videos */}
                   {vid.isPinned && (
-                    <div className="absolute top-2 left-2 bg-red-550 text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider scale-95 origin-left">
+                    <div className="absolute top-2 left-2 bg-[#fe2c55] text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider scale-95 origin-left">
                       Anclado
                     </div>
                   )}
@@ -23413,7 +22805,7 @@ try {
                     <span>{vid.views}</span>
                   </div>
 
-                  {/* Highlight text subtitles from zzz.png */}
+                  {/* Highlight text subtitles */}
                   <div className="absolute inset-x-2 bottom-3.5 text-center pointer-events-none select-none">
                     <span className="block text-white font-bold leading-tight font-sans text-[11px] sm:text-xs uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] whitespace-normal tracking-wide">
                       {vid.title}
@@ -23426,11 +22818,160 @@ try {
           </div>
         )}
 
+        {/* 10. STATS MODAL (Following, Followers, Likes info) */}
+        {showStatsInfoModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 relative text-left">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-sm font-black text-slate-800">
+                  {showStatsInfoModal === 'following' && `Siguiendo (0)`}
+                  {showStatsInfoModal === 'followers' && `Seguidores (${followersDisplay})`}
+                  {showStatsInfoModal === 'likes' && `Total de Me gusta (${profile.meGusta})`}
+                </h3>
+                <button 
+                  onClick={() => setShowStatsInfoModal(null)}
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="py-4">
+                {showStatsInfoModal === 'following' && (
+                  <div className="space-y-3 text-center py-4">
+                    <div className="text-3xl">👥</div>
+                    <p className="text-xs text-slate-600 font-medium">
+                      @{profile.username} aún no sigue a otros usuarios públicamente en la plataforma.
+                    </p>
+                  </div>
+                )}
+
+                {showStatsInfoModal === 'followers' && (
+                  <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                    <p className="text-xs text-slate-500 font-medium mb-3">
+                      Comunidad de seguidores activos de {profile.name}:
+                    </p>
+                    {[
+                      { name: 'Elena Rostova', user: 'elenarostova', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
+                      { name: 'Marcus Vance', user: 'marcus_v', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' },
+                      { name: 'Paris Haute Studio', user: 'parisfashion', img: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=150' },
+                      { name: 'Carlos Morales', user: 'carlos_realty', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150' },
+                    ].map(foll => (
+                      <div key={foll.user} className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img src={foll.img} alt={foll.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{foll.name}</p>
+                            <p className="text-[10px] text-slate-400 truncate">@{foll.user}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => triggerToast(`Conectado con @${foll.user}`)}
+                          className="text-xs font-bold px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-md transition"
+                        >
+                          Seguir
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {showStatsInfoModal === 'likes' && (
+                  <div className="space-y-3 py-2 text-center">
+                    <div className="text-4xl text-rose-500">❤️</div>
+                    <h4 className="text-base font-black text-slate-800">{profile.meGusta} Me gusta acumulados</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
+                      Esta cifra refleja el impacto global y los "Me gusta" recibidos por {profile.name} a través de todos sus contenidos, pases de moda y directos emitidos.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-end">
+                <button
+                  onClick={() => setShowStatsInfoModal(null)}
+                  className="px-4 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 11. BIO LINK PREVIEW MODAL */}
+        {showBioLinkModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 relative text-left">
+              {/* Browser-like Mock Header */}
+              <div className="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200 truncate max-w-[280px]">
+                  <Lock className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="truncate">https://{(profile as any).website || `${profile.username}.paris/collection`}</span>
+                </div>
+                <button 
+                  onClick={() => setShowBioLinkModal(false)}
+                  className="text-slate-400 hover:text-slate-700 p-1 rounded-full cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-rose-50 text-[#fe2c55] flex items-center justify-center font-black text-xl shadow-xs shrink-0">
+                    SL
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800">
+                      Colección Oficial de {profile.name}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Tienda oficial de moda, desfiles y colecciones cápsula en París.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-rose-50/50 p-3 rounded-xl border border-rose-100 space-y-1.5 text-xs text-slate-700">
+                  <p className="font-bold text-[#fe2c55]">✨ Contenido exclusivo en este enlace:</p>
+                  <p>• Catálogo completo de Streetwear París 2026</p>
+                  <p>• Acceso preferente a pasarelas privadas</p>
+                  <p>• Contacto directo para colaboraciones de marcas</p>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      const url = `https://${(profile as any).website || `${profile.username}.paris/collection`}`;
+                      window.open(url, '_blank');
+                      setShowBioLinkModal(false);
+                    }}
+                    className="flex-1 bg-[#fe2c55] hover:bg-rose-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Visitar sitio oficial</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = `https://${(profile as any).website || `${profile.username}.paris/collection`}`;
+                      if (navigator.clipboard) navigator.clipboard.writeText(url);
+                      triggerToast('Enlace web copiado');
+                      setShowBioLinkModal(false);
+                    }}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 px-3.5 rounded-xl transition flex items-center justify-center cursor-pointer"
+                    title="Copiar enlace"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     );
-  };
-
-  const renderProfileVideoLightbox = () => {
+  };  const renderProfileVideoLightbox = () => {
     if (!selectedProfileVideo) return null;
     const vid = selectedProfileVideo;
     const profile = vid.uploader;
@@ -24193,13 +23734,10 @@ try {
     );
   };
 
-  if (showTikTokShop) {
+  if (showTikTokShop && userProfile?.role === 'model') {
     return (
       <div className="relative w-full max-w-full min-w-0 overflow-x-hidden" id="casting_live-tiktok-shop-view">
-        {userProfile?.role === 'model' || !selectedInvestorStore
-          ? renderTikTokShopSellerDashboard() 
-          : renderTikTokShopInvestorDashboard()
-        }
+        {renderTikTokShopSellerDashboard()}
         {showUploadModal && renderUploadModal()}
       </div>
     );
@@ -24950,7 +24488,10 @@ try {
                 showFinanzasResults ||
                 showFinanzasRecount ||
                 detailProjectUser ||
-                showProjectDetailsInPopup
+                showProjectDetailsInPopup ||
+                isWatchingPresenterCamera ||
+                isUserLiveStreamingWithCamera ||
+                isPresenterCameraFullscreen
               )) ? (
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR FINANZAS ROUNDS (image.png & z.png) */
                 <TikTokFinanzasFeed
@@ -24980,6 +24521,7 @@ try {
                   setIsWatchingPresenterCamera={setIsWatchingPresenterCamera}
                   setIsPresenterCameraFullscreen={setIsPresenterCameraFullscreen}
                   userProfile={userProfile}
+                  setSelectedFinanzasUser={setSelectedFinanzasUser}
                   setShowFinanzasInscriptionInChannel={setShowFinanzasInscriptionInChannel}
                   setShowVotingProjectsModal={setShowVotingProjectsModal}
                   setShowParticipantsGatheringModal={setShowParticipantsGatheringModal}
@@ -25067,7 +24609,7 @@ try {
                 >
                 
                 {/* 📱 RIGHT SIDEBAR ELEMENTS BAR (Captura aa.png) - Visible on hover or touch tap */}
-                {!(showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showProjectDetailsInPopup || detailProjectUser || showFinanzasInscriptionInChannel || (isUserLiveStreamingWithCamera && userLiveMediaStream)) && (
+                {(selectedCategoryFilter === 'Finanzas' || (hasChannelVideos && activeVideo)) && !(showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showProjectDetailsInPopup || detailProjectUser || showFinanzasInscriptionInChannel || (isUserLiveStreamingWithCamera && userLiveMediaStream)) && (
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-[58px] xs:w-[66px] sm:w-[76px] z-[90] flex items-center justify-end pr-1 xs:pr-1.5 sm:pr-2 pointer-events-auto group/channel-right-hover box-border"
                     id="channel-right-hover-zone"
@@ -25213,20 +24755,22 @@ try {
                 )}
                 
                 {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de la captura image.png al pasar el puntero sobre z.png) */}
-                <div 
-                  className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[98] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
-                  id="video-top-margin-hover-sensor"
-                  onMouseEnter={handleTopMenuMouseEnter}
-                  onMouseLeave={handleTopMenuMouseLeave}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsTopControlsMenuHovered(prev => !prev);
-                  }}
-                  title="Pasa el puntero por el margen superior para abrir opciones y canales"
-                >
-                  {/* Subtle top indicator bar */}
-                  <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
-                </div>
+                {!(showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
+                  <div 
+                    className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[98] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
+                    id="video-top-margin-hover-sensor"
+                    onMouseEnter={handleTopMenuMouseEnter}
+                    onMouseLeave={handleTopMenuMouseLeave}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsTopControlsMenuHovered(prev => !prev);
+                    }}
+                    title="Pasa el puntero por el margen superior para abrir opciones y canales"
+                  >
+                    {/* Subtle top indicator bar */}
+                    <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+                  </div>
+                )}
 
                 {/* 🎛️ EMBEDDED BROADCAST CONTROL OVERLAY AT TOP OF VIDEO FRAME (Captura image.png) */}
                 <div 
@@ -27746,7 +27290,7 @@ try {
                         onWheel={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
                         onTouchEnd={(e) => e.stopPropagation()}
-                        className="absolute inset-0 z-50 bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none"
+                        className="absolute inset-0 z-[320] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto"
                       >
                         {renderSingleProjectSlider()}
                       </div>
@@ -29615,7 +29159,7 @@ try {
                                       onClick={() => {
                                         setShowVotingProjectsModal(true);
                                       }}
-                                      className="w-auto min-w-[220px] sm:min-w-[250px] bg-white hover:bg-slate-100 active:scale-95 text-slate-950 font-black text-[11.5px] xs:text-[12.5px] sm:text-[13px] px-8 sm:px-10 py-2.5 sm:py-3 rounded-full transition duration-200 border border-slate-200/90 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
+                                      className="w-auto min-w-[220px] sm:min-w-[250px] bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-white font-black text-[11.5px] xs:text-[12.5px] sm:text-[13px] px-8 sm:px-10 py-2.5 sm:py-3 rounded-full transition duration-200 border border-slate-700/80 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
                                       id="btn-votar-mejor-proyecto-channel"
                                     >
                                       <span className="text-base shrink-0">📋</span>
@@ -29708,108 +29252,8 @@ try {
                   </div>
                 )}
 
-                {/* 🌌 CANAL SIN RETRANSMISIÓN EN DIRECTO: FONDO NEGRO CON LOGOTIPO EN EL CENTRO (Modelos, Backstage, Inversores, Catwalk, Fashion, Reels, etc. EXCEPTO Finanzas) */}
-                {selectedCategoryFilter !== 'Finanzas' && !categoryLiveConnectedMap[selectedCategoryFilter] && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090d16] sm:bg-[#0a0e1a] z-0 animate-fade-in p-6 select-none" id="category-offline-logo-view">
-                    <div className="flex flex-col items-center justify-center text-center animate-scale-in">
-                      {/* Dark Logo Icon Card matching z.png */}
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl p-3 bg-[#0e1628] border border-slate-800/80 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center justify-center mb-3 sm:mb-4 transition-transform hover:scale-105">
-                        <FashionsFinanceLogo 
-                          mode="dark" 
-                          withText={false} 
-                          className="w-full h-full border-0 bg-transparent shadow-none p-0" 
-                        />
-                      </div>
-                      
-                      {/* Title & Subtitle matching z.png */}
-                      <h1 className="font-display font-black text-base sm:text-lg text-white tracking-[0.25em] leading-none uppercase drop-shadow-md">
-                        FASHIONS
-                      </h1>
-                      <h2 className="font-display font-bold text-[10px] sm:text-[11px] text-[#f43f5e] tracking-[0.35em] leading-none uppercase mt-2 drop-shadow-xs">
-                        FINANCE
-                      </h2>
-
-                      {/* 🌟 Nombre de la Ronda en el espacio en negro (tamaño reducido a la mitad) */}
-                      <div className="mt-4 flex flex-col items-center justify-center text-center max-w-md px-4 animate-fade-in" id="category-offline-round-title">
-                        <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
-                          <span>{isCurrentUserParticipatingInCurrentSession ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
-                          <span className="text-white/40">•</span>
-                          <span className="text-amber-300 font-mono font-black tracking-wider">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
-                        </div>
-                        <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0 flex items-center justify-center gap-2 flex-wrap">
-                          <span>
-                            {(() => {
-                              const fee = currentFinanzasSession?.entryFee;
-                              const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
-                              if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
-                              if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
-                              if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
-                              if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
-                              if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
-                              if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
-                              return currentFinanzasSession?.title || 'Round Streetwear & Urban';
-                            })()}
-                          </span>
-                          <span className="text-[10px] sm:text-xs text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono font-bold tracking-normal normal-case shrink-0">
-                            {getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
-                          </span>
-                        </h3>
-                        <div className="flex items-center justify-center gap-1.5 mt-1">
-                          <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
-                          <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
-                            <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'}</span>
-                            <span className="text-slate-500">•</span>
-                            <span className="text-amber-300 font-black">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
-                          </span>
-                          <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
-                        </div>
-                      </div>
-
-                      {/* Action Buttons to start retransmisión or view reels in direct channel */}
-                      <div className="mt-8 flex flex-col items-center gap-2.5 w-full max-w-[220px]">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryLiveConnectedMap((prev) => {
-                              const next = { ...prev, [selectedCategoryFilter]: true };
-                              localStorage.setItem('category_live_connected_map', JSON.stringify(next));
-                              return next;
-                            });
-                          }}
-                          className="w-full px-5 py-2.5 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white rounded-full font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 transition cursor-pointer border border-rose-400/30 flex items-center justify-center gap-2"
-                          id="start-category-retransmision-btn"
-                        >
-                          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                          <span>Iniciar Retransmisión en Directo</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryLiveConnectedMap((prev) => {
-                              const next = { ...prev, [selectedCategoryFilter]: true };
-                              localStorage.setItem('category_live_connected_map', JSON.stringify(next));
-                              return next;
-                            });
-                          }}
-                          className="w-full px-5 py-2.5 bg-[#141b2d] hover:bg-[#1d273f] text-white rounded-full font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition cursor-pointer border border-slate-700/80 flex items-center justify-center gap-2"
-                          id="view-reels-btn"
-                        >
-                          <span className="text-xs">🎬</span>
-                          <span>Ver Reels</span>
-                        </button>
-
-                        <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                          CANAL {selectedCategoryFilter === 'BackStage' ? 'BACKSTAGE' : selectedCategoryFilter === 'Investors' ? 'JEWELLERY' : selectedCategoryFilter === 'Modelos' ? 'RUNWAY' : selectedCategoryFilter.toUpperCase()} • SIN EMISIÓN
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 🎥 FEED DE VÍDEOS DE CANALES: MOSTRAR VÍDEOS DE RETRANSMISIÓN DE CATEGORÍAS CUANDO RETRANSMISIÓN O REELS ESTÉ ACTIVA */}
-                {selectedCategoryFilter !== 'Finanzas' && categoryLiveConnectedMap[selectedCategoryFilter] && activeVideo && (
+                {/* 🎥 FEED DE VÍDEOS DE CANALES: REPRODUCCIÓN AUTOMÁTICA AL CAMBIAR DE CANAL */}
+                {selectedCategoryFilter !== 'Finanzas' && (
                   <>
                     <style>{`
                       @keyframes slideUpVideo {
@@ -29820,6 +29264,16 @@ try {
                         0% { transform: translateY(-100%); opacity: 0.85; }
                         100% { transform: translateY(0%); opacity: 1; }
                       }
+                      @keyframes dotBounce {
+                        0%, 80%, 100% {
+                          transform: scale(0.65) translateY(0);
+                          opacity: 0.35;
+                        }
+                        40% {
+                          transform: scale(1.22) translateY(-8px);
+                          opacity: 1;
+                        }
+                      }
                       .animate-slide-up-video {
                         animation: slideUpVideo 0.32s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                         will-change: transform, opacity;
@@ -29827,6 +29281,18 @@ try {
                       .animate-slide-down-video {
                         animation: slideDownVideo 0.32s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                         will-change: transform, opacity;
+                      }
+                      .animate-dot-bounce-1 {
+                        animation: dotBounce 1.2s infinite ease-in-out;
+                        animation-delay: 0s;
+                      }
+                      .animate-dot-bounce-2 {
+                        animation: dotBounce 1.2s infinite ease-in-out;
+                        animation-delay: 0.2s;
+                      }
+                      .animate-dot-bounce-3 {
+                        animation: dotBounce 1.2s infinite ease-in-out;
+                        animation-delay: 0.4s;
                       }
                     `}</style>
 
@@ -29914,9 +29380,9 @@ try {
                           </button>
                         </div>
                       </div>
-                    ) : (
+                    ) : hasChannelVideos && activeVideo ? (
                       <div 
-                        key={`${activeVideo.id}-${activeVideoIndex}`}
+                        key={`${selectedCategoryFilter}-${activeVideo.id}-${activeVideoIndex}`}
                         onAnimationEnd={() => setSlideDirection(null)}
                         className={`absolute inset-0 w-full h-full bg-black z-0 overflow-hidden ${
                           slideDirection === 'up'
@@ -29927,19 +29393,46 @@ try {
                         }`}
                       >
                         <video
+                          key={`channel-active-video-${selectedCategoryFilter}-${activeVideo.id}`}
                           ref={(el) => {
                             if (el) videoRefs.current[activeVideoIndex] = el;
                           }}
                           src={activeVideo.videoUrl}
-                          poster={activeVideo.coverUrl || activeVideo.poster || activeVideo.avatar}
                           className="w-full h-full object-cover"
                           autoPlay
                           loop
                           muted={isMuted}
                           playsInline
+                          onWaiting={() => setIsVideoBuffering(true)}
+                          onPlaying={() => setIsVideoBuffering(false)}
+                          onCanPlay={() => setIsVideoBuffering(false)}
+                          onLoadedData={() => setIsVideoBuffering(false)}
                         />
                         {/* Dark gradient overlay for text readability */}
                         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75 pointer-events-none" />
+
+                        {/* Three-dots Loading Indicator while buffering video in channel */}
+                        {isVideoBuffering && (
+                          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-xs animate-fade-in">
+                            <div className="flex items-center justify-center gap-2.5 sm:gap-3" aria-label="Cargando vídeo...">
+                              <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#fe2c55] shadow-[0_0_12px_rgba(254,44,85,0.7)] animate-dot-bounce-1" />
+                              <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.75)] animate-dot-bounce-2" />
+                              <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#25f4ee] shadow-[0_0_12px_rgba(37,244,238,0.7)] animate-dot-bounce-3" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* ⏳ THREE-DOTS LOADING INDICATOR / DOT LOADER EN EL CENTRO DEL CANAL (MIENTRAS NO EXISTAN VÍDEOS EN EL CANAL) */
+                      <div 
+                        className="absolute inset-0 w-full h-full bg-[#070a13] z-0 overflow-hidden flex flex-col items-center justify-center p-6 text-center select-none animate-fade-in"
+                        id="channel-empty-dots-loader"
+                      >
+                        <div className="flex items-center justify-center gap-3 sm:gap-3.5" aria-label="Esperando vídeos del canal...">
+                          <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#fe2c55] shadow-[0_0_14px_rgba(254,44,85,0.75)] animate-dot-bounce-1" />
+                          <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.8)] animate-dot-bounce-2" />
+                          <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#25f4ee] shadow-[0_0_14px_rgba(37,244,238,0.75)] animate-dot-bounce-3" />
+                        </div>
                       </div>
                     )}
 
@@ -32814,7 +32307,7 @@ try {
                     : 'pointer-events-none opacity-0 group-hover/lower-video-hover:opacity-100 group-hover/lower-video-hover:pointer-events-auto group-hover/video-container:opacity-100 group-hover/video-container:pointer-events-auto focus-within:opacity-100'
                 }`}>
                 
-                {selectedCategoryFilter === 'Finanzas' ? null : (
+                {selectedCategoryFilter === 'Finanzas' || !hasChannelVideos || !activeVideo ? null : (
                   <>
                     {/* Creator details with Model Profiles Integration */}
                     <div className="flex items-center gap-1.5 pointer-events-auto flex-wrap" id="creator-details-header">
@@ -33030,7 +32523,7 @@ try {
               </div>
 
               {/* 💖 High-fidelity Sidebar INSIDE the video container, centered vertically on the right margin (appears only on mouse hover) */}
-              {!Boolean(
+              {(selectedCategoryFilter === 'Finanzas' || (hasChannelVideos && activeVideo)) && !Boolean(
                 activeFinanzasPopupUser ||
                 detailProjectUser ||
                 showProjectDetailsInPopup ||

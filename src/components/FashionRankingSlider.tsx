@@ -362,7 +362,6 @@ function ModelRankingCard({
           <video
             ref={videoRef}
             src={modelVideo || undefined}
-            poster={displayImage}
             autoPlay
             loop
             muted={isMuted}

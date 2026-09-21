@@ -9,8 +9,6 @@ import {
   Square, 
   Camera, 
   Users, 
-  ChevronUp, 
-  ChevronDown,
   Sparkles,
   ArrowLeft,
   Monitor,
@@ -62,6 +60,7 @@ interface TikTokFinanzasFeedProps {
   setIsWatchingPresenterCamera: React.Dispatch<React.SetStateAction<boolean>>;
   setIsPresenterCameraFullscreen: (val: boolean) => void;
   userProfile: any;
+  setSelectedFinanzasUser?: (user: any) => void;
   setShowFinanzasInscriptionInChannel: (show: boolean) => void;
   setShowVotingProjectsModal: (show: boolean) => void;
   setShowParticipantsGatheringModal?: (show: boolean) => void;
@@ -107,6 +106,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   setIsWatchingPresenterCamera,
   setIsPresenterCameraFullscreen,
   userProfile,
+  setSelectedFinanzasUser,
   setShowFinanzasInscriptionInChannel,
   setShowVotingProjectsModal,
   setShowParticipantsGatheringModal,
@@ -714,25 +714,58 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     </div>
 
                     {/* LIVE CAMERA BUTTON */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana');
-                        if (isPresenter) {
-                          handleToggleUserCameraLiveBroadcast();
-                        } else {
-                          setIsWatchingPresenterCamera(prev => {
-                            const next = !prev;
-                            if (next) setIsPresenterCameraFullscreen(true);
-                            return next;
-                          });
-                        }
-                      }}
-                      className="w-full py-2 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 bg-white hover:bg-slate-100 text-slate-950 border border-slate-200 shadow-md"
-                    >
-                      <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
-                      <span>Live</span>
-                    </button>
+                    {(() => {
+                      const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana');
+                      const isLiveActive = Boolean(isPresenter ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera);
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveFinanzasSessionIndex(index);
+                            if (setSelectedFinanzasUser) {
+                              setSelectedFinanzasUser(presenter);
+                            }
+                            if (isPresenter) {
+                              handleToggleUserCameraLiveBroadcast();
+                            } else {
+                              setIsWatchingPresenterCamera(prev => {
+                                const next = !prev;
+                                if (next) {
+                                  setIsPresenterCameraFullscreen(true);
+                                } else {
+                                  setIsPresenterCameraFullscreen(false);
+                                }
+                                return next;
+                              });
+                            }
+                          }}
+                          className={`w-full py-2 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border shadow-md ${
+                            isLiveActive
+                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
+                          }`}
+                          id={`btn-live-camera-${session.id}`}
+                          title={
+                            isPresenter
+                              ? (isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo")
+                              : (isWatchingPresenterCamera ? `Detener visualización de cámara de ${presenter.name}` : `Ver cámara en directo de ${presenter.name}`)
+                          }
+                        >
+                          {isLiveActive ? (
+                            <>
+                              <Camera className="w-3.5 h-3.5 shrink-0 text-white" />
+                              <span>Detener Live</span>
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="w-3.5 h-3.5 shrink-0 text-slate-950" />
+                              <span>Live</span>
+                            </>
+                          )}
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -817,7 +850,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         if (setShowFinanzasRecount) setShowFinanzasRecount(false);
                         setShowVotingProjectsModal(true);
                       }}
-                      className="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-950 font-black text-[11px] sm:text-[12px] py-2 px-6 rounded-full transition duration-200 border border-slate-200/90 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-md"
+                      className="w-full bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-white font-black text-[11px] sm:text-[12px] py-2.5 px-6 rounded-full transition duration-200 border border-slate-700/80 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-md"
                       id={`btn-ver-proyectos-ronda-${session.id}`}
                     >
                       <span>📋</span>
@@ -827,51 +860,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 </div>
               </div>
 
-              {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT (Strictly matching image.png) */}
+              {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT */}
               <div 
                 className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto"
                 id={`tiktok-actions-sidebar-${session.id}`}
               >
-                {/* 🧭 ROUND NAVIGATION PILL (ChevronUp, 1/6, ChevronDown - Matching image.png) */}
-                <div className="flex flex-col items-center bg-[#1e2433] border border-slate-700/80 rounded-full py-1.5 px-1.5 shadow-xl mb-0.5">
-                  <button
-                    type="button"
-                    onClick={() => scrollToRound(index - 1)}
-                    disabled={index === 0}
-                    className="w-7 h-7 rounded-full hover:bg-slate-700 disabled:opacity-25 text-slate-300 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer disabled:cursor-not-allowed"
-                    title="Ronda Anterior"
-                  >
-                    <ChevronUp className="w-4 h-4 stroke-[2.5]" />
-                  </button>
-
-                  <span className="text-[11px] font-mono font-black text-amber-400 py-0.5 select-none">
-                    {index + 1}/{activeSessionsOnly.length}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => scrollToRound(index + 1)}
-                    disabled={index === activeSessionsOnly.length - 1}
-                    className="w-7 h-7 rounded-full hover:bg-slate-700 disabled:opacity-25 text-slate-300 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer disabled:cursor-not-allowed"
-                    title="Siguiente Ronda"
-                  >
-                    <ChevronDown className="w-4 h-4 stroke-[2.5]" />
-                  </button>
-                </div>
-
-                {/* Creator Avatar with red '+' follow button */}
-                <div className="relative cursor-pointer group flex items-center justify-center">
-                  <img
-                    src={presenter.avatar}
-                    alt={presenter.name}
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white shadow-lg transition-transform group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4.5 h-4.5 rounded-full bg-[#fe2c55] text-white flex items-center justify-center text-[11px] font-black border border-black shadow-sm">
-                    +
-                  </div>
-                </div>
-
                 {/* Like button with count (e.g. 43.2K) */}
                 <div className="flex flex-col items-center">
                   <button

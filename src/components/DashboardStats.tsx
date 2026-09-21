@@ -11,7 +11,6 @@ import {
   GoldenMannequinGraphic,
   GoldenSpoolPearlsGraphic,
   GoldRibbonSGraphic,
-  BoutiqueStorefrontGraphic,
   GoldPerfumeGraphic,
   FashionFriendsGraphic,
   PaparazziCrowdGraphic,
@@ -161,7 +160,7 @@ export default function DashboardStats({
                       SALDO BACKOFFICE
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {(balance > 0 ? (balance === 45.5 ? 1500 : balance) : 1500).toFixed(2)}€
                   </h3>
                 </div>
@@ -201,7 +200,7 @@ export default function DashboardStats({
                       PREMIOS GANADOS (80%)
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalEarnings.toFixed(2)}€
                   </h3>
                 </div>
@@ -237,7 +236,7 @@ export default function DashboardStats({
                       INVERSIÓN RONDAS
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalInvested.toFixed(2)}€
                   </h3>
                 </div>
@@ -273,7 +272,7 @@ export default function DashboardStats({
                       SPONSOR COMISIONES (10%)
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalCommissions.toFixed(2)}€
                   </h3>
                 </div>
@@ -292,41 +291,6 @@ export default function DashboardStats({
               </div>
             </div>
 
-            {/* Card 5: VENTAS DE LAS TIENDAS (Champagne Silk) */}
-            <div
-              className="p-5 sm:p-6 rounded-[24px] border border-[#dcd3c4]/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
-              style={{
-                background: 'linear-gradient(135deg, #fdfbf8 0%, #ece5da 38%, #fbf9f5 62%, #e5ddcf 100%)',
-                boxShadow: '0 10px 25px -5px rgba(160, 140, 120, 0.18), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(195, 175, 155, 0.2)'
-              }}
-            >
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/70 to-transparent rounded-full blur-xl pointer-events-none" />
-              <div className="flex justify-between items-start relative z-10">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0 shadow-xs" />
-                    <p className="text-[11px] sm:text-[11.5px] text-[#554d43] font-bold tracking-[0.14em] uppercase font-mono">
-                      VENTAS DE LAS TIENDAS
-                    </p>
-                  </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
-                    430.00€
-                  </h3>
-                </div>
-                <div className="shrink-0 pl-2">
-                  <BoutiqueStorefrontGraphic className="w-16 h-16 sm:w-18 sm:h-18" />
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-[#dcd3c4]/80 flex items-center justify-between relative z-10">
-                <span className="text-[11px] sm:text-[11.5px] text-[#6b6256] font-medium truncate">
-                  Boutique y alta costura
-                </span>
-                <span className="bg-[#ded5c6]/90 text-[#2c2824] border border-[#c2b5a1] text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase">
-                  BOUTIQUE
-                </span>
-              </div>
-            </div>
 
             {/* Card 6: REGALOS DE USUARIOS (Champagne Silk) */}
             <div
@@ -345,7 +309,7 @@ export default function DashboardStats({
                       REGALOS DE USUARIOS
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {totalUserGifts > 0 ? totalUserGifts.toFixed(2) : '180.00'}€
                   </h3>
                 </div>
@@ -381,7 +345,7 @@ export default function DashboardStats({
                       AMIGOS
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {friendsCount > 0 ? friendsCount : 5}
                   </h3>
                 </div>
@@ -417,7 +381,7 @@ export default function DashboardStats({
                       SEGUIDORES
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {followersCount > 0 ? followersCount : 4}
                   </h3>
                 </div>
@@ -453,7 +417,7 @@ export default function DashboardStats({
                       SEGUIDOS
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {followingCount > 0 ? followingCount : 1}
                   </h3>
                 </div>
@@ -489,7 +453,7 @@ export default function DashboardStats({
                       REFERIDOS ONLINE
                     </p>
                   </div>
-                  <h3 className="text-3xl sm:text-[36px] font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#151518] mt-1.5 font-serif tracking-tight leading-none">
                     {referralsOnlineCount > 0 ? referralsOnlineCount : 7}
                   </h3>
                 </div>

@@ -1350,28 +1350,6 @@ export default function SessionResultsPodium({
         </p>
       </div>
 
-      {/* CASTING LIVE PUBLISH NOTIFICATION SUCCESS */}
-      {isCastingPublished && (
-        <div className="p-4 rounded-2xl bg-white border border-rose-300 flex items-start justify-between gap-3 animate-bounce shadow-md relative z-10" id="toast-casting-success">
-          <div className="flex items-start gap-2.5">
-            <span className="text-lg bg-pink-50 p-1.5 rounded-lg border border-pink-100">🚀</span>
-            <div className="text-left">
-              <strong className="text-rose-600 font-extrabold text-xs block">PUBLICADO EN CASTING LIVE</strong>
-              <p className="text-[11px] text-slate-600 font-medium leading-relaxed mt-0.5 font-semibold">
-                ¡Resultados oficiales de la mesa '{completedSessionToDisplay.title}' {completedSessionToDisplay.reference ? `(${completedSessionToDisplay.reference})` : ''} transmitidos con éxito y anclados de forma descentralizada para el público general!
-              </p>
-            </div>
-          </div>
-          <button 
-            type="button"
-            onClick={() => setIsCastingPublished(false)}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
       {/* 🧪 TESTING CONTROLLER FOR MULTI-WINNER SCENARIOS */}
       <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/5 to-amber-500/10 border border-amber-300/40 p-5 rounded-3xl relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-fade-in">
         <div className="space-y-1 text-center md:text-left">
@@ -2270,7 +2248,6 @@ export default function SessionResultsPodium({
                           controls 
                           muted 
                           className="w-full h-full object-cover" 
-                          poster="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=800"
                         />
                       </div>
                     </div>

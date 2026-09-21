@@ -2258,28 +2258,6 @@ export default function SessionSimulator({
           </p>
         </div>
 
-        {/* CASTING LIVE PUBLISH NOTIFICATION SUCCESS */}
-        {isCastingPublished && (
-          <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/80 flex items-start justify-between gap-3 animate-bounce shadow-lg shadow-amber-500/10 relative z-10" id="toast-casting-success">
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg bg-slate-950 p-1 rounded-lg border border-slate-800">🚀</span>
-              <div className="text-left">
-                <strong className="text-amber-400 font-extrabold text-xs block">PUBLICADO EN CASTING LIVE</strong>
-                <p className="text-[11px] text-slate-300 font-medium leading-relaxed mt-0.5">
-                  ¡Resultados oficiales e históricos de la mesa '{completedSessionToDisplay.title}' transmitidos con éxito y anclados de forma descentralizada para el público general!
-                </p>
-              </div>
-            </div>
-            <button 
-              type="button"
-              onClick={() => setIsCastingPublished(false)}
-              className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
         {/* MAIN BODY GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 items-start">
           {/* LEFT COLUMN (8/12 OF SCREEN WIDTH): THE MAIN BLOCKS */}
