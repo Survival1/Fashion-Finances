@@ -61,7 +61,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
 }) => {
   const is10EuroSession = Boolean(entryFee === 10 || sessionTitle.toUpperCase().includes('STREETWEAR'));
   const effectiveRoundRef = roundRef || (is10EuroSession ? 'Ref:1' : entryFee === 100 ? 'Ref:2' : entryFee === 1000 ? 'Ref:3' : entryFee === 10000 ? 'Ref:4' : entryFee === 100000 ? 'Ref:5' : 'Ref:6');
-  const [joinedCount, setJoinedCount] = useState<number>(is10EuroSession ? 7 : 1);
+  const [joinedCount, setJoinedCount] = useState<number>(userSlotIndex !== undefined ? userSlotIndex : (is10EuroSession ? 7 : 1));
   const [activityLogs, setActivityLogs] = useState<string[]>([]);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isTransparentMode, setIsTransparentMode] = useState<boolean>(false);
@@ -220,85 +220,44 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
     }
   };
 
-  // Start simulation of joining entrepreneurs
+  // Start simulation of joining entrepreneurs following arrival order
   useEffect(() => {
     if (!isOpen) {
-      setJoinedCount(1);
+      setJoinedCount(targetSlotIndex !== undefined ? targetSlotIndex : 1);
       setActivityLogs([]);
       setIsCompleted(false);
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
 
-    // Start simulation of joining entrepreneurs
-    if (is10EuroSession) {
-      setJoinedCount(7);
-      setActivityLogs([
-        `🌸 #7 Álvaro Díaz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-        `🌸 #6 Natalia Cruz ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-        `🌸 #5 Hugo Silva ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-        `🌸 #4 Paula Gómez ha abonado ${entryFee},00€ y se ha unido a la mesa.`
-      ]);
-      playJoinChime(7);
+    // Determine initial participants who arrived before the user
+    const initialCount = Math.max(0, Math.min(9, targetSlotIndex));
+    setJoinedCount(initialCount);
 
-      let current = 7;
-      intervalRef.current = setInterval(() => {
-        current += 1;
-        if (current <= 10) {
-          const p = finalParticipants[current - 1];
-          const isCurrentPUser = p && (
-            p.id === activeUserId || 
-            p.id === 'user-adriana' || 
-            p.name.toLowerCase().includes('adriana') || 
-            p.name.toLowerCase() === activeUserName.toLowerCase() ||
-            (p.role && p.role.includes('(Tú)'))
-          );
-          const pName = isCurrentPUser 
-            ? (p.name.includes('(Tú)') ? p.name : `${p.name} (Tú)`) 
-            : (p ? p.name : `Emprendedor #${current}`);
-          setJoinedCount(current);
-          setActivityLogs(prev => [
-            `🌸 #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
-            ...prev.slice(0, 4)
-          ]);
-          playJoinChime(current);
-
-          if (current === 10) {
-            setIsCompleted(true);
-            playFanfare();
-            clearInterval(intervalRef.current);
-            setTimeout(() => {
-              onComplete(finalParticipants);
-            }, 1200);
-          }
-        }
-      }, 1600);
-
-      return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      };
+    const initialLogs: string[] = [];
+    for (let i = initialCount; i >= 1 && initialLogs.length < 4; i--) {
+      const p = finalParticipants[i - 1];
+      const isCurrentPUser = p && (
+        p.id === activeUserId || 
+        p.id === 'user-adriana' || 
+        p.name.toLowerCase().includes('adriana') || 
+        p.name.toLowerCase() === activeUserName.toLowerCase() ||
+        (p.role && p.role.includes('(Tú)'))
+      );
+      const pName = isCurrentPUser 
+        ? (p.name.includes('(Tú)') ? p.name : `${p.name} (Tú)`) 
+        : (p ? p.name : `Emprendedor #${i}`);
+      initialLogs.push(`🌸 #${i} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`);
     }
 
-    // Initial participant #1 for general sessions
-    const p1 = finalParticipants[0];
-    const isP1User = p1 && (
-      p1.id === activeUserId || 
-      p1.id === 'user-adriana' || 
-      p1.name.toLowerCase().includes('adriana') || 
-      p1.name.toLowerCase() === activeUserName.toLowerCase() ||
-      (p1.role && p1.role.includes('(Tú)'))
-    );
-    const p1DisplayName = isP1User 
-      ? (p1.name.includes('(Tú)') ? p1.name : `${p1.name} (Tú)`) 
-      : (p1 ? p1.name : 'Alexander Wright');
+    if (initialLogs.length > 0) {
+      setActivityLogs(initialLogs);
+      playJoinChime(initialCount);
+    } else {
+      setActivityLogs([]);
+    }
 
-    setJoinedCount(1);
-    setActivityLogs([
-      `🌸 #1 ${p1DisplayName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`
-    ]);
-    playJoinChime(1);
-
-    let current = 1;
+    let current = initialCount;
     intervalRef.current = setInterval(() => {
       current += 1;
       if (current <= 10) {
@@ -315,7 +274,9 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           : (p ? p.name : `Emprendedor #${current}`);
         setJoinedCount(current);
         setActivityLogs(prev => [
-          `🌸 #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
+          isCurrentPUser
+            ? `🎉 #${current} ${pName} ha disparado el pago de ${entryFee},00€ y se ha unido a la ronda.`
+            : `🌸 #${current} ${pName} ha abonado ${entryFee},00€ y se ha unido a la mesa.`,
           ...prev.slice(0, 4)
         ]);
         playJoinChime(current);
@@ -329,12 +290,12 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
           }, 1400);
         }
       }
-    }, 1800);
+    }, 1500);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isOpen]);
+  }, [isOpen, targetSlotIndex, entryFee, sessionTitle]);
 
   if (!isOpen) return null;
 

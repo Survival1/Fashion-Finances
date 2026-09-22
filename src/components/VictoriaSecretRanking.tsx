@@ -1542,8 +1542,6 @@ export default function VictoriaSecretRanking({
     }));
   };
 
-  if (!isOpen) return null;
-
   // Retrieve and sort top 3 models by likes/popularity descending
   const sortedModels = [...models]
     .sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0))
@@ -1557,7 +1555,7 @@ export default function VictoriaSecretRanking({
   // Pick a legendary model: search for Adriana Lima (who is #1) or fallback to first place
   const legendModel = models.find(m => m.name.toLowerCase().includes('lima')) || firstPlace;
 
-  // Master sorted list of exactly 100 items
+  // Master sorted list of exactly 100 items (Hooks declared at the top before any early return)
   const masterSortedRanking = React.useMemo(() => {
     const list = [...models].sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0));
     
@@ -1637,6 +1635,8 @@ export default function VictoriaSecretRanking({
       }
     });
   }, [masterSortedRanking, rankingSearchQuery, genderFilter, FEMALE_NAMES]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[999] flex items-start justify-center bg-[#fdf2f8]/70 backdrop-blur-xl overflow-y-auto p-0 sm:px-2 md:px-4 pt-0 animate-fade-in font-sans">

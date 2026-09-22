@@ -97,7 +97,8 @@ import {
   Award,
   AlertCircle,
   Square,
-  Power
+  Power,
+  FileText
 } from 'lucide-react';
 import { ModelProfile, UserSessionProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
@@ -1681,7 +1682,7 @@ export const TRABAJADORES_USERS = [
   { id: 'trab-7', name: 'Álvaro Díaz', username: 'alvaro_makeup', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional' },
   { id: 'trab-8', name: 'Lucía Navarro', username: 'lucia_produccion', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción' },
   { id: 'trab-9', name: 'Daniel Morales', username: 'daniel_3d_moda', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital' },
-  { id: 'trab-10', name: 'Marina Soler', username: 'marinasoler', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Community Manager' }
+  { id: 'user-adriana', name: 'Adriana Lima', username: 'adrianalima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Participante Activa (Tú)', isSelf: true }
 ];
 
 export const EMPRESARIOS_USERS = [
@@ -2848,6 +2849,7 @@ export default function CastingLiveSection({
   const [showParticipantsGatheringModal, setShowParticipantsGatheringModal] = useState<boolean>(false);
   const [gatheringSessionTitle, setGatheringSessionTitle] = useState<string>('Round STREETWEAR & URBAN');
   const [gatheringSessionFee, setGatheringSessionFee] = useState<number>(10);
+  const [gatheringSessionRef, setGatheringSessionRef] = useState<string>('Ref:1');
   const [gatheringParticipantsList, setGatheringParticipantsList] = useState<any[]>(TRABAJADORES_USERS);
   const [selectedInscriptionProjectId, setSelectedInscriptionProjectId] = useState<string>('proj-eco-fashion');
   const [completedSessionToDisplay, setCompletedSessionToDisplay] = useState<any | null>(null);
@@ -3297,21 +3299,23 @@ export default function CastingLiveSection({
 
   // States to guarantee instant reactivity when paying and joining sessions
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>(() => {
-    return {};
+    return {
+      'sess-trabajadores-1': true
+    };
   });
-  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(false);
+  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(true);
   const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(false);
 
-  // Position / slot assigned to user (Adriana Lima) by order of arrival (0 to 9, representing positions 1 to 10)
+  // Position / slot assigned to user (Adriana Lima) by order of arrival (slot 10, index 9, as last participant)
   const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return 6;
+    if (typeof window === 'undefined') return 9;
     const stored = localStorage.getItem('finanzas_user_slot_index');
-    return stored !== null && !isNaN(Number(stored)) ? Number(stored) : 6;
+    return stored !== null && !isNaN(Number(stored)) ? Number(stored) : 9;
   });
 
   // Simulated live peer arrivals counter per session (number of peers arrived before user, from 1 to 9)
   const [sessionArrivalMap, setSessionArrivalMap] = useState<Record<string, number>>(() => ({
-    'sess-trabajadores-1': 3,
+    'sess-trabajadores-1': 9,
     'sess-emprendedores-1': 5,
     'sess-empresarios-1': 2,
     'sess-topmodels-1': 4,
@@ -3320,31 +3324,19 @@ export default function CastingLiveSection({
   }));
 
   // Explicit user selection of arrival position (null for live second timing, or 0-9 for explicit testing)
-  const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
+  const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(9);
 
-  // Clear any previous participation for all rounds on mount so user is strictly not participating by default in any round upon application restart.
-  // Every participant must pay and enroll in each round individually.
+  // Ensure Adriana Lima is enrolled in the 10 Euro round (sess-trabajadores-1) as she just made the payment
   useEffect(() => {
     try {
-      localStorage.removeItem('finanzas_user_participating');
-      localStorage.removeItem('user_paid_finanzas_session');
-      localStorage.removeItem('finanzas_target_session_id');
-      localStorage.removeItem('finanzas_user_slot_index');
-      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-      localStorage.removeItem('user_paid_session_sess-emprendedores-1');
-      localStorage.removeItem('user_paid_session_sess-empresarios-1');
-      localStorage.removeItem('user_paid_session_sess-topmodels-1');
-      localStorage.removeItem('user_paid_session_sess-inversores-1');
-      localStorage.removeItem('user_paid_session_sess-millonarios-1');
-      // Also clean any arbitrary session payment key stored in localStorage
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('user_paid_session_')) {
-          localStorage.removeItem(key);
-        }
-      }
-      setIsFinanzasUserParticipatingState(false);
-      setUserPaidSessions({});
+      localStorage.setItem('user_paid_session_sess-trabajadores-1', 'true');
+      localStorage.setItem('finanzas_user_participating', 'true');
+      localStorage.setItem('finanzas_user_slot_index', '9');
+      setIsFinanzasUserParticipatingState(true);
+      setUserPaidSessions(prev => ({
+        ...prev,
+        'sess-trabajadores-1': true
+      }));
     } catch (e) {}
   }, []);
 
@@ -3939,7 +3931,7 @@ export default function CastingLiveSection({
   };
 
   // Handler to process inscription fee payment & join table (matching captura z.png & image.png)
-  const handleExecutePaymentAndJoinSession = (projectId?: string, explicitFee?: number, explicitArrivalSlot?: number) => {
+  const handleExecutePaymentAndJoinSession = (projectId?: string, explicitFee?: number, explicitArrivalSlot?: number, explicitSession?: any) => {
     if (!currentFinanzasSession && openFinanzasSessions.length === 0) return;
     const myId = userProfile?.id || "user-adriana";
     const myName = userProfile?.name || "Adriana Lima";
@@ -3947,14 +3939,13 @@ export default function CastingLiveSection({
     const myAvatar = userProfile?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650";
 
     const activeCarouselSession = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession;
-    const fee = explicitFee !== undefined ? explicitFee : (activeCarouselSession?.entryFee || currentFinanzasSession?.entryFee || 10);
-
-    let targetSession = openFinanzasSessions.find(s => s.id === currentFinanzasSession?.id) ||
-      (fee === 10 ? openFinanzasSessions.find(s => s.id === "sess-trabajadores-1" || s.title?.toUpperCase().includes("STREETWEAR")) : null) ||
-      openFinanzasSessions.find(s => s.entryFee === fee) || 
-      (fee === 100 ? openFinanzasSessions.find(s => s.id === "sess-emprendedores-1" || s.title?.toUpperCase().includes("CASUAL")) : null) ||
-      activeCarouselSession || 
+    let targetSession = explicitSession ||
+      activeCarouselSession ||
+      currentFinanzasSession ||
+      (explicitFee ? openFinanzasSessions.find(s => s.entryFee === explicitFee) : null) ||
       openFinanzasSessions[0];
+
+    const fee = explicitFee !== undefined ? explicitFee : (targetSession?.entryFee || 10);
 
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
     const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
@@ -4148,6 +4139,7 @@ export default function CastingLiveSection({
     // Trigger gathering modal (identical to SessionSimulator.tsx / page z.png)
     setGatheringSessionTitle(targetSession?.title || (fee === 10 ? 'Round STREETWEAR & URBAN' : 'Mesa de Inversión'));
     setGatheringSessionFee(fee);
+    setGatheringSessionRef(getFinanzasRoundRef(targetSession, activeFinanzasSessionIndex));
     setGatheringParticipantsList(finalTen);
     setShowFinanzasInscriptionInChannel(false);
     setShowParticipantsGatheringModal(true);
@@ -4489,8 +4481,9 @@ export default function CastingLiveSection({
   // 🎥 WATCH OTHER PARTICIPANT LIVE CAMERA FEED (CUANDO NO ES EL TURNO DE ADRIANA LIMA)
   const [isWatchingPresenterCamera, setIsWatchingPresenterCamera] = useState<boolean>(false);
   const [isPresenterCameraAudioMuted, setIsPresenterCameraAudioMuted] = useState<boolean>(true);
-  const [isPresenterCameraFullscreen, setIsPresenterCameraFullscreen] = useState<boolean>(true);
+  const [isPresenterCameraFullscreen, setIsPresenterCameraFullscreen] = useState<boolean>(false);
   const [isPresenterCameraBrowserFullscreen, setIsPresenterCameraBrowserFullscreen] = useState<boolean>(false);
+  const [showLivePresenterControls, setShowLivePresenterControls] = useState<boolean>(false);
 
   const getParticipantLiveCameraVideo = (user: any) => {
     if (user?.videoUrl) return user.videoUrl;
@@ -5146,6 +5139,14 @@ export default function CastingLiveSection({
       if (matched) return matched;
     }
 
+    // 2.b In trabajadores / 10€ round, Adriana Lima is the default presenter giving her exposition in Turn 10 of 10
+    if (currentFinanzasSession?.id === 'sess-trabajadores-1' || currentFinanzasSession?.entryFee === 10) {
+      const adriana = currentSessionParticipants10.find(
+        p => p.id === 'user-adriana' || p.id === userProfile?.id || p.name?.includes('Adriana') || p.isSelf
+      );
+      if (adriana) return adriana;
+    }
+
     // 3. Check presenting item in presentation queue
     const presentingQueueIndex = finanzasPresentationQueue.findIndex(
       item => item.status === 'presenting'
@@ -5326,7 +5327,7 @@ export default function CastingLiveSection({
           prev.map((item) => ({ ...item, status: 'finished' as const }))
         );
 
-        // 🗳️ Automatic transition when Marina Soler's (10th/last) exposition ends: display 10-minute countdown
+        // 🗳️ Automatic transition when Adriana Lima's (10th/last) exposition ends: show 10-minute countdown (zq.png) on screen
         if (!hasOpenedVotingModalOnFinishRef.current) {
           hasOpenedVotingModalOnFinishRef.current = true;
           setShowVotingProjectsModal(false);
@@ -5337,7 +5338,7 @@ export default function CastingLiveSection({
 
         if (!hasAnnouncedVotingPhaseRef.current && isCurrentUserParticipatingInCurrentSession) {
           hasAnnouncedVotingPhaseRef.current = true;
-          const votingSpeechText = "Han finalizado las 10 exposiciones de 5 minutos, cumpliendo los 50 minutos de ronda tras la intervención de Marina Soler. Comienza ahora la cuenta atrás de 10 minutos para que todos los participantes emitan su voto.";
+          const votingSpeechText = "Han finalizado las 10 exposiciones de 5 minutos, cumpliendo los 50 minutos de ronda tras la intervención de Adriana Lima. Se abre la ventana de votaciones con 10 minutos para que todos los participantes emitan su voto.";
 
           try {
             const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -5514,26 +5515,23 @@ export default function CastingLiveSection({
     }
 
     // Find currently presenting index
-    let currentIndex = queue.findIndex(item => item.status === 'presenting');
+    const activeUserId = selectedFinanzasUser?.id || activeFinanzasPopupUser?.id;
+    let currentIndex = -1;
+    if (activeUserId) {
+      currentIndex = participantsList.findIndex((p: any) => p.id === activeUserId || p.name === selectedFinanzasUser?.name);
+    }
     if (currentIndex === -1) {
-      const activeId = selectedFinanzasUser?.id || activeFinanzasPopupUser?.id;
-      currentIndex = queue.findIndex(item => item.id === activeId);
+      currentIndex = queue.findIndex(item => item.status === 'presenting');
     }
     if (currentIndex === -1) {
       currentIndex = 0;
     }
 
-    // Check if the current presenter is Marina Soler (the 10th and last presenter) or at the last turn of the session
-    const isLastParticipant = 
-      currentIndex >= queue.length - 1 || 
-      currentIndex >= 9 || 
-      selectedFinanzasUser?.id === 'trab-10' || 
-      selectedFinanzasUser?.name?.toLowerCase().includes('soler') ||
-      activeFinanzasPopupUser?.id === 'trab-10' ||
-      activeFinanzasPopupUser?.name?.toLowerCase().includes('soler');
+    // Check if the current presenter is indeed at the last turn (10th participant)
+    const isLastParticipant = currentIndex >= participantsList.length - 1 || currentIndex >= 9;
 
-    const currentItem = queue[currentIndex];
-    const currentActiveId = currentItem?.id || selectedFinanzasUser?.id || 'trab-1';
+    const currentItem = queue[currentIndex] || { id: activeUserId || 'trab-1' };
+    const currentActiveId = currentItem?.id || activeUserId || 'trab-1';
     const nextIndex = currentIndex + 1;
 
     if (nextIndex < queue.length && !isLastParticipant) {
@@ -5610,7 +5608,7 @@ export default function CastingLiveSection({
         setSystemVoiceNotification(prev => ({ ...prev, show: false }));
       }, 5000);
     } else {
-      // All 10 finished their exposures (Marina Soler concluded the 10th and last exposition)
+      // All 10 finished their exposures (Adriana Lima concluded the 10th and last exposition)
       setFinanzasPresentationQueue(prev => prev.map(item => ({ ...item, status: 'finished' as const })));
       setFinanzasTimerActive({});
       setIsVotingPhaseActive(true);
@@ -5619,11 +5617,11 @@ export default function CastingLiveSection({
       setVotingProjectSlideIndex(0);
       setShowProjectDetailsInPopup(false);
       setShowQueueInPopup(false);
-      hasOpenedVotingModalOnFinishRef.current = true;
+      hasOpenedVotingModalOnFinishRef.current = false;
 
-      // Select Marina Soler as the finished presenter
+      // Select Adriana Lima as the finished 10th presenter
       const lastPresenter = currentSessionParticipants10.find(
-        p => p.id === 'trab-10' || p.name?.toLowerCase().includes('soler') || p.name?.toLowerCase().includes('marina') || p.name?.toLowerCase().includes('maria')
+        p => p.id === 'user-adriana' || p.name?.toLowerCase().includes('adriana') || p.role?.includes('(Tú)')
       ) || currentSessionParticipants10[9] || selectedFinanzasUser || participantsList[9];
       setSelectedFinanzasUser(lastPresenter);
       setActiveFinanzasPopupUser(lastPresenter);
@@ -5651,11 +5649,11 @@ export default function CastingLiveSection({
 
       setSystemVoiceNotification({
         show: true,
-        message: `🗳️ Exposición de ${lastPresenter?.name || 'Marina Soler'} finalizada. Tienen 10 minutos para votar.`
+        message: `🗳️ Exposición de ${lastPresenter?.name || 'Adriana Lima'} finalizada. ¡Se ha abierto la ventana de votaciones con 10 minutos para votar todos los participantes!`
       });
       setTimeout(() => {
         setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-      }, 6000);
+      }, 7000);
     }
   };
 
@@ -5909,6 +5907,153 @@ export default function CastingLiveSection({
           timeline: "5 meses",
           documentation: "Dossier-Daniel-Morales-3D-Fashion.pdf"
         };
+      case 'user-adriana':
+      case 'adrianalima':
+      case 'adrianalima_w1':
+      case 'adriana':
+      case 'adriana_lima':
+        return {
+          title: "Victoria's Secret Runway & Eco-Couture Sostenible",
+          category: "Alta Costura & Lencería de Lujo",
+          description: "Colección exclusiva y pasarela internacional presentada por Adriana Lima. Fusión pionera de seda orgánica certificada, artesanía de residuo cero y modelos de inversión directa para el empoderamiento femenino en la moda.",
+          metrics: "Meta: 100.000€ • Recaudado: 85.000€ • Patrocinadores: 920 • Alcance: Global",
+          roi: "Retorno Estimado: 18% anual + pases VIP a primera fila en desfiles internacionales y acceso preferente a piezas exclusivas de la colección.",
+          tagline: "Elegancia icónica, empoderamiento femenino y moda circular de proyección mundial.",
+          contactEmail: "adriana.lima@victoriassecret.com",
+          contactPhone: "+1 (305) 555-0199",
+          fundingGoal: "100.000 €",
+          fundUsage: "50% Producción Textil & Lencería Sostenible • 30% Runway Fashion Week • 20% Marketing & Distribución",
+          timeline: "6 meses (Lanzamiento Temporada 2026)",
+          documentation: "Dossier-Adriana-Lima-Eco-Couture-2026.pdf"
+        };
+      case 'trab-1':
+      case 'lucas':
+        return {
+          title: "Colección Denim Upcycling Urbano",
+          category: "Streetwear & Upcycling",
+          description: "Transformación de excedentes vaqueros postconsumo en piezas de alta gama urbana para la nueva generación, reduciendo el consumo hídrico.",
+          metrics: "Meta: 35.000€ • Recaudado: 24.000€ • Patrocinadores: 190",
+          roi: "Retorno Estimado: 14% anual con dividendos de ventas directas.",
+          tagline: "Denim regenerativo para un streetwear consciente y de vanguardia.",
+          contactEmail: "lucas.torres@fashionsfinances.com",
+          contactPhone: "+34 610 112 233",
+          fundingGoal: "35.000 €",
+          fundUsage: "50% Selección y Lavado Ecológico • 30% Confección Artesanal • 20% Distribución",
+          timeline: "4 meses",
+          documentation: "Dossier-Lucas-Torres-Denim.pdf"
+        };
+      case 'trab-2':
+      case 'clara':
+        return {
+          title: "Atelier de Tintes Botánicos y Fibras Vivas",
+          category: "Biotextiles & Tintes Naturales",
+          description: "Investigación y desarrollo de colorantes naturales extraídos de desechos agrícolas para tintar fibras de lino y cáñamo sin químicos nocivos.",
+          metrics: "Meta: 38.000€ • Recaudado: 29.500€ • Patrocinadores: 210",
+          roi: "Retorno Estimado: 15% anual mediante licencias de biotintes.",
+          tagline: "Colores vivos nacidos de la tierra sin una sola gota de toxinas.",
+          contactEmail: "clara.vega@fashionsfinances.com",
+          contactPhone: "+34 620 223 344",
+          fundingGoal: "38.000 €",
+          fundUsage: "55% I+D en Laboratorio Botánico • 25% Telas Orgánicas • 20% Certificación GOTS",
+          timeline: "5 meses",
+          documentation: "Dossier-Clara-Vega-Tintes.pdf"
+        };
+      case 'trab-3':
+      case 'mateo':
+        return {
+          title: "Sneakers Circulares & Suelas Regenerativas",
+          category: "Calzado & Materiales Circulares",
+          description: "Zapatillas urbanas fabricadas con caucho natural reciclado, micelio de hongos y adhesivos al agua completamente desmontables y reciclables.",
+          metrics: "Meta: 50.000€ • Recaudado: 41.000€ • Patrocinadores: 340",
+          roi: "Retorno Estimado: 17% anual por venta directa D2C.",
+          tagline: "El calzado del futuro: pisada ligera con huella de carbono cero.",
+          contactEmail: "mateo.ruiz@fashionsfinances.com",
+          contactPhone: "+34 630 334 455",
+          fundingGoal: "50.000 €",
+          fundUsage: "45% Moldes y Maquinaria • 35% Micelio y Caucho Circular • 20% Ecommerce",
+          timeline: "6 meses",
+          documentation: "Dossier-Mateo-Ruiz-Sneakers.pdf"
+        };
+      case 'trab-4':
+      case 'paula':
+        return {
+          title: "Intimates Orgánicos & Diseño Ergonómico",
+          category: "Lencería & Confort Sostenible",
+          description: "Prendas íntimas elaboradas con algodón regenerativo y bambú antibacteriano sin aros metálicos, priorizando el bienestar y la circularidad.",
+          metrics: "Meta: 30.000€ • Recaudado: 22.000€ • Patrocinadores: 180",
+          roi: "Retorno Estimado: 13% anual.",
+          tagline: "Segunda piel pura y libre de microplásticos.",
+          contactEmail: "paula.gomez@fashionsfinances.com",
+          contactPhone: "+34 640 445 566",
+          fundingGoal: "30.000 €",
+          fundUsage: "50% Algodón Certificado • 30% Patronaje Ergonómico • 20% Packaging Compostable",
+          timeline: "4 meses",
+          documentation: "Dossier-Paula-Gomez-Intimates.pdf"
+        };
+      case 'trab-5':
+      case 'hugo':
+        return {
+          title: "Sastrería Contemporánea Zero Waste",
+          category: "Tailoring & Patronaje Cero Residuos",
+          description: "Trajes y americanas de corte moderno diseñados con geometrías de patronaje encajado al milímetro para no desechar ningún retal textil.",
+          metrics: "Meta: 42.000€ • Recaudado: 31.000€ • Patrocinadores: 205",
+          roi: "Retorno Estimado: 15% anual.",
+          tagline: "Elegancia geométrica donde cada centímetro de lana cuenta.",
+          contactEmail: "hugo.silva@fashionsfinances.com",
+          contactPhone: "+34 650 556 677",
+          fundingGoal: "42.000 €",
+          fundUsage: "55% Lana Reciclada • 25% Confección en Taller Local • 20% Showroom",
+          timeline: "5 meses",
+          documentation: "Dossier-Hugo-Silva-Tailoring.pdf"
+        };
+      case 'trab-6':
+      case 'natalia':
+        return {
+          title: "Joyería Textil & Accesorios Upcycled",
+          category: "Accesorios & Artesanía Contemporánea",
+          description: "Collares, pendientes y bolsos creados con sobrantes de sedas de alta costura y metales nobles reciclados, fusionando orfebrería y costura.",
+          metrics: "Meta: 28.000€ • Recaudado: 20.500€ • Patrocinadores: 160",
+          roi: "Retorno Estimado: 14% anual.",
+          tagline: "Metales nobles y sedas rescatadas convertidos en piezas de museo.",
+          contactEmail: "natalia.cruz@fashionsfinances.com",
+          contactPhone: "+34 660 667 788",
+          fundingGoal: "28.000 €",
+          fundUsage: "50% Metales Reciclados y Rescate Textil • 30% Orfebrería • 20% Exposición",
+          timeline: "3 meses",
+          documentation: "Dossier-Natalia-Cruz-Joyeria.pdf"
+        };
+      case 'trab-7':
+      case 'alvaro':
+        return {
+          title: "Pasaporte Digital & Trazabilidad Blockchain",
+          category: "FashionTech & Trazabilidad",
+          description: "Chips NFC cosidos en etiquetas para certificar la historia, huella de carbono y autenticidad de cada prenda desde la fibra hasta el armario.",
+          metrics: "Meta: 55.000€ • Recaudado: 46.000€ • Patrocinadores: 380",
+          roi: "Retorno Estimado: 19% anual por suscripción SaaS a marcas.",
+          tagline: "Transparencia absoluta: la historia de tu ropa en un toque de móvil.",
+          contactEmail: "alvaro.diaz@fashionsfinances.com",
+          contactPhone: "+34 670 778 899",
+          fundingGoal: "55.000 €",
+          fundUsage: "60% Desarrollo Software y Contratos Inteligentes • 25% Chips NFC • 15% Seguridad",
+          timeline: "6 meses",
+          documentation: "Dossier-Alvaro-Diaz-Blockchain.pdf"
+        };
+      case 'trab-8':
+      case 'lucia':
+        return {
+          title: "Prendas Modulares y Longevidad Textil",
+          category: "Diseño Modular & Slow Fashion",
+          description: "Prendas multifunción con cierres magnéticos y cremalleras modulares que se transforman de abrigo a chaleco o chaqueta, multiplicando su vida útil.",
+          metrics: "Meta: 36.000€ • Recaudado: 26.000€ • Patrocinadores: 195",
+          roi: "Retorno Estimado: 13% anual.",
+          tagline: "Una sola prenda, tres estaciones, infinitas posibilidades.",
+          contactEmail: "lucia.navarro@fashionsfinances.com",
+          contactPhone: "+34 680 889 900",
+          fundingGoal: "36.000 €",
+          fundUsage: "50% Tejidos Técnicos Reciclados • 30% Cierres y Ensayos • 20% Producción",
+          timeline: "4 meses",
+          documentation: "Dossier-Lucia-Navarro-Modular.pdf"
+        };
       case 'f-extra':
         return {
           title: "Inversión y Retransmisión de Finanzas",
@@ -5972,6 +6117,7 @@ export default function CastingLiveSection({
   const [selectedProfileVideo, setSelectedProfileVideo] = useState<any | null>(null);
   const [profileVideoLikes, setProfileVideoLikes] = useState<Record<string, number>>({});
   const [profileVideoComments, setProfileVideoComments] = useState<Record<string, any[]>>({});
+  const [profileVideoNewCommentInput, setProfileVideoNewCommentInput] = useState<string>('');
   const [profileActiveTab, setProfileActiveTab] = useState<'videos' | 'likes'>('videos');
   const [filterOption, setFilterOption] = useState<'recientes' | 'populares' | 'antiguos'>('recientes');
   const [translatedVideoIds, setTranslatedVideoIds] = useState<Record<string, boolean>>({});
@@ -6734,6 +6880,15 @@ export default function CastingLiveSection({
   }, [shopTab]);
 
   useEffect(() => {
+    const forceContainers = localStorage.getItem('casting_live_force_containers_view');
+    if (forceContainers) {
+      localStorage.removeItem('casting_live_force_containers_view');
+      setIsPresenterCameraFullscreen(false);
+      setViewingTikTokProfileUsername(null);
+      setIsWatchingPresenterCamera(true);
+      setShowLivePresenterControls(false);
+    }
+
     const storeToOpen = initialSelectedStoreId || localStorage.getItem('initial_selected_store_id');
     if (storeToOpen) {
       localStorage.removeItem('initial_selected_store_id');
@@ -9172,13 +9327,24 @@ export default function CastingLiveSection({
 
     // FIRST PRIORITY: If user belongs to accountsQueSigues (all accounts followed from sidebar z.png),
     // always open the exact TikTok creator profile (renderTikTokProfile) just like victorgraciaweb (image.png)
-    const followedAccount = accountsQueSigues.find(
-      a => a.username.toLowerCase() === formattedUsername ||
-           a.name.toLowerCase() === fullName.toLowerCase() ||
-           a.username.toLowerCase() === formattedUsername.replace('@', '') ||
-           formattedUsername.includes(a.username.toLowerCase()) ||
-           a.username.toLowerCase().includes(formattedUsername)
-    );
+    const cleanTarget = formattedUsername.replace(/^@/, '').replace(/_w\d+|_m\d+$/, '');
+    const followedAccount = accountsQueSigues.find(a => {
+      const aUser = a.username.toLowerCase();
+      const aName = a.name.toLowerCase();
+      const aCleanUser = aUser.replace(/_w\d+|_m\d+$/, '');
+      const targetUser = formattedUsername;
+      const targetName = fullName.toLowerCase();
+      
+      return aUser === targetUser ||
+             aName === targetName ||
+             aCleanUser === cleanTarget ||
+             aUser.includes(targetUser) ||
+             targetUser.includes(aUser) ||
+             aName.includes(targetName) ||
+             targetName.includes(aName) ||
+             (cleanTarget && aCleanUser.includes(cleanTarget));
+    });
+
     if (followedAccount) {
       setProfileActiveTab('videos');
       setFilterOption('recientes');
@@ -9199,34 +9365,16 @@ export default function CastingLiveSection({
       return;
     }
 
-    // Check if user is a model account (like Adriana Lima, Alessandra Ambrosio, Sophia Loren, Alexander Vance, etc.)
-    const modelAccount = accountsQueSigues.find(a => a.username === formattedUsername);
-    const isModelAccount = (modelAccount && modelAccount.hasHeart) || 
-      formattedUsername.includes('adrianalima') || 
-      formattedUsername.includes('alessandra') || 
-      formattedUsername.includes('sophia') || 
-      formattedUsername.includes('alexander') ||
-      formattedUsername.endsWith('_w1') || 
-      formattedUsername.endsWith('_w2') || 
-      formattedUsername.endsWith('_w3') || 
-      formattedUsername.endsWith('_m1');
-
-    if (onGoToModelProfile && (isModelAccount || models?.some(m => m.username?.toLowerCase() === formattedUsername || m.name.toLowerCase().includes(formattedUsername)))) {
+    // If an external model not in accountsQueSigues is clicked, navigate to model profile
+    if (onGoToModelProfile && models?.some(m => m.username?.toLowerCase() === formattedUsername || m.name.toLowerCase().includes(formattedUsername))) {
       let matchedModel = models?.find(m => 
         m.id.toLowerCase() === formattedUsername || 
         m.name.toLowerCase().trim() === formattedUsername || 
-        (m.username && m.username.toLowerCase().trim() === formattedUsername) ||
-        (m.name.toLowerCase().includes('adriana') && (formattedUsername.includes('adriana') || fullName.toLowerCase().includes('adriana'))) ||
-        (m.name.toLowerCase().includes('alessandra') && (formattedUsername.includes('alessandra') || fullName.toLowerCase().includes('alessandra'))) ||
-        (m.name.toLowerCase().includes('sophia') && (formattedUsername.includes('sophia') || fullName.toLowerCase().includes('sophia'))) ||
-        (m.name.toLowerCase().includes('alexander') && (formattedUsername.includes('alexander') || fullName.toLowerCase().includes('alexander')))
+        (m.username && m.username.toLowerCase().trim() === formattedUsername)
       );
 
       if (matchedModel) {
         onGoToModelProfile(matchedModel.id);
-        return;
-      } else if (isModelAccount) {
-        onGoToModelProfile(formattedUsername);
         return;
       }
     }
@@ -12290,10 +12438,20 @@ export default function CastingLiveSection({
   const renderSingleProjectSlider = () => {
     const isUserParticipating = isCurrentUserParticipatingInCurrentSession;
 
-    const currentUser = FINANZAS_USERS[votingProjectSlideIndex] || FINANZAS_USERS[0];
+    const participantsList = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
+      ? currentSessionParticipants10
+      : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+        ? currentFinanzasSession.participants
+        : TRABAJADORES_USERS;
+
+    const currentUser = participantsList[votingProjectSlideIndex] || participantsList[0];
     const proj = getFinanzasProjectDetails(currentUser.id);
-    const initialDefault = currentUser.id === 'f-1' ? 3 : currentUser.id === 'f-2' ? 2 : (currentUser.id === 'f-3' || currentUser.id === 'f-4' || currentUser.id === 'f-5' || currentUser.id === 'f-10' || currentUser.id === 'user') ? 1 : 0;
+    const initialDefault = currentUser.id === 'f-1' ? 3 : currentUser.id === 'f-2' ? 2 : (currentUser.id === 'f-3' || currentUser.id === 'f-4' || currentUser.id === 'f-5' || currentUser.id === 'f-10' || currentUser.id === 'user' || currentUser.id === 'user-adriana') ? 1 : 0;
     const votesCount = finanzasVotes[currentUser.id] ?? initialDefault;
+
+    const votingMinutes = Math.floor(votingPhaseTimer / 60);
+    const votingSeconds = votingPhaseTimer % 60;
+    const formattedVotingTimer = `${String(votingMinutes).padStart(2, '0')}:${String(votingSeconds).padStart(2, '0')}`;
 
     const handleTouchStart = (e: React.TouchEvent) => {
       setProjectTouchStartX(e.touches[0].clientX);
@@ -12304,7 +12462,7 @@ export default function CastingLiveSection({
       const diffX = projectTouchStartX - e.changedTouches[0].clientX;
       if (diffX > 40) {
         // Swipe Left -> Next Project
-        setVotingProjectSlideIndex(prev => Math.min(prev + 1, FINANZAS_USERS.length - 1));
+        setVotingProjectSlideIndex(prev => Math.min(prev + 1, participantsList.length - 1));
       } else if (diffX < -40) {
         // Swipe Right -> Previous Project
         setVotingProjectSlideIndex(prev => Math.max(prev - 1, 0));
@@ -12321,6 +12479,11 @@ export default function CastingLiveSection({
             <div className="flex items-center gap-2 flex-wrap min-w-0">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[#fe2c55] text-[10px] font-black uppercase tracking-wider font-mono">
                 <span>💼 MESA DE VOTACIÓN FINANCIERA</span>
+              </div>
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 border border-rose-500/80 text-white font-mono text-[10.5px] font-black shadow-xs">
+                <span className="text-rose-400">⏱️</span>
+                <span className="text-[9.5px] text-slate-300 uppercase font-sans font-bold">Votación (10 min):</span>
+                <span className="text-emerald-400 font-black">{formattedVotingTimer}</span>
               </div>
               <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded-full text-[9.5px] font-black font-mono">
                 {finanzasVotedVoterIds.length}/10 votos emitidos
@@ -12348,18 +12511,21 @@ export default function CastingLiveSection({
           </div>
 
           {/* Centered phrase with clear separation from the contents above */}
-          <div className="mt-4 sm:mt-5 mb-1 w-full flex justify-center text-center">
+          <div className="mt-3.5 sm:mt-4 mb-1 w-full flex flex-col items-center justify-center text-center gap-1">
             <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight text-center m-0">
               Proyectos de los Participantes
             </h3>
+            <span className="text-[11px] sm:text-xs font-bold text-[#fe2c55] uppercase tracking-wide">
+              🗳️ Tienen 10 minutos para votar todos los participantes
+            </span>
           </div>
         </div>
 
-        {/* Dos filas horizontales de 5 participantes en tamaño mayor */}
-        <div className="bg-slate-50 border-b border-slate-200/80 p-2 sm:p-2.5 shrink-0 space-y-1.5">
+        {/* Dos filas horizontales de 5 participantes en tamaño adaptado al canal */}
+        <div className="bg-slate-50 border-b border-slate-200/80 p-1.5 sm:p-2.5 shrink-0 space-y-1">
           {/* Fila 1: primeros 5 participantes */}
-          <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full">
-            {FINANZAS_USERS.slice(0, 5).map((user, i) => {
+          <div className="grid grid-cols-5 gap-1 sm:gap-1.5 w-full">
+            {participantsList.slice(0, 5).map((user, i) => {
               const idx = i;
               const isSelected = idx === votingProjectSlideIndex;
               return (
@@ -12367,7 +12533,7 @@ export default function CastingLiveSection({
                   key={user.id}
                   type="button"
                   onClick={() => setVotingProjectSlideIndex(idx)}
-                  className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:py-2.5 sm:px-2 rounded-xl border text-xs sm:text-[13px] transition cursor-pointer active:scale-95 min-h-[46px] sm:min-h-[50px] shadow-2xs ${
+                  className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1.5 px-0.5 sm:py-2 sm:px-1 rounded-xl border text-[10px] sm:text-xs transition cursor-pointer active:scale-95 min-h-[40px] sm:min-h-[46px] shadow-2xs ${
                     isSelected
                       ? 'bg-white border-[#fe2c55] text-[#fe2c55] shadow-md font-black ring-2 ring-rose-300 scale-[1.02]'
                       : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 font-bold hover:border-slate-300'
@@ -12378,10 +12544,10 @@ export default function CastingLiveSection({
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 border border-slate-300 shadow-2xs"
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover shrink-0 border border-slate-300 shadow-2xs"
                     referrerPolicy="no-referrer"
                   />
-                  <span className="truncate max-w-[55px] sm:max-w-[75px] md:max-w-[90px] leading-tight font-black text-[11px] sm:text-xs">
+                  <span className="truncate max-w-[42px] xs:max-w-[50px] sm:max-w-[70px] leading-tight font-black text-[9.5px] sm:text-[11px]">
                     {user.name.split(' ')[0]}
                   </span>
                 </button>
@@ -12390,8 +12556,8 @@ export default function CastingLiveSection({
           </div>
 
           {/* Fila 2: siguientes 5 participantes */}
-          <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full">
-            {FINANZAS_USERS.slice(5, 10).map((user, i) => {
+          <div className="grid grid-cols-5 gap-1 sm:gap-1.5 w-full">
+            {participantsList.slice(5, 10).map((user, i) => {
               const idx = i + 5;
               const isSelected = idx === votingProjectSlideIndex;
               return (
@@ -12399,7 +12565,7 @@ export default function CastingLiveSection({
                   key={user.id}
                   type="button"
                   onClick={() => setVotingProjectSlideIndex(idx)}
-                  className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:py-2.5 sm:px-2 rounded-xl border text-xs sm:text-[13px] transition cursor-pointer active:scale-95 min-h-[46px] sm:min-h-[50px] shadow-2xs ${
+                  className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1.5 px-0.5 sm:py-2 sm:px-1 rounded-xl border text-[10px] sm:text-xs transition cursor-pointer active:scale-95 min-h-[40px] sm:min-h-[46px] shadow-2xs ${
                     isSelected
                       ? 'bg-white border-[#fe2c55] text-[#fe2c55] shadow-md font-black ring-2 ring-rose-300 scale-[1.02]'
                       : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 font-bold hover:border-slate-300'
@@ -12410,10 +12576,10 @@ export default function CastingLiveSection({
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 border border-slate-300 shadow-2xs"
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover shrink-0 border border-slate-300 shadow-2xs"
                     referrerPolicy="no-referrer"
                   />
-                  <span className="truncate max-w-[55px] sm:max-w-[75px] md:max-w-[90px] leading-tight font-black text-[11px] sm:text-xs">
+                  <span className="truncate max-w-[42px] xs:max-w-[50px] sm:max-w-[70px] leading-tight font-black text-[9.5px] sm:text-[11px]">
                     {user.name.split(' ')[0]}
                   </span>
                 </button>
@@ -12426,7 +12592,7 @@ export default function CastingLiveSection({
         <div className="bg-rose-50/80 border-b border-rose-100 px-3 py-1.5 text-center flex items-center justify-between text-[10.5px] sm:text-[11px] font-extrabold text-[#fe2c55] shrink-0">
           <span className="opacity-80">👈 Desliza para cambiar</span>
           <span className="bg-white px-2.5 py-0.5 rounded-full border border-rose-200 shadow-2xs font-mono text-[10px] text-slate-900">
-            {votingProjectSlideIndex + 1} / {FINANZAS_USERS.length}
+            {votingProjectSlideIndex + 1} / {participantsList.length}
           </span>
           <span className="opacity-80">Siguiente 👉</span>
         </div>
@@ -12560,12 +12726,12 @@ export default function CastingLiveSection({
 
           {/* Dots */}
           <div className="flex items-center justify-center gap-1 sm:gap-1.5 px-0.5 sm:px-1 shrink-0 overflow-x-hidden">
-            {FINANZAS_USERS.map((_, i) => (
+            {participantsList.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setVotingProjectSlideIndex(i)}
-                title={`Ver proyecto ${i + 1} de ${FINANZAS_USERS.length}`}
+                title={`Ver proyecto ${i + 1} de ${participantsList.length}`}
                 aria-label={`Proyecto ${i + 1}`}
                 className={`h-1.5 sm:h-2 rounded-full transition-all cursor-pointer ${
                   i === votingProjectSlideIndex ? 'w-3.5 sm:w-4 bg-[#fe2c55]' : 'w-1.5 sm:w-2 bg-slate-300 hover:bg-slate-400'
@@ -12576,8 +12742,8 @@ export default function CastingLiveSection({
 
           <button
             type="button"
-            disabled={votingProjectSlideIndex === FINANZAS_USERS.length - 1}
-            onClick={() => setVotingProjectSlideIndex(prev => Math.min(prev + 1, FINANZAS_USERS.length - 1))}
+            disabled={votingProjectSlideIndex === participantsList.length - 1}
+            onClick={() => setVotingProjectSlideIndex(prev => Math.min(prev + 1, participantsList.length - 1))}
             className="flex-1 min-w-0 max-w-[110px] xs:max-w-[125px] sm:max-w-[140px] py-2 px-2 sm:px-3 rounded-xl bg-[#fe2c55] hover:bg-[#df2046] disabled:opacity-30 disabled:cursor-not-allowed text-white font-extrabold text-[10px] sm:text-[11px] uppercase transition flex items-center justify-center gap-1 border border-rose-600 cursor-pointer shadow-xs shrink whitespace-nowrap"
             title="Siguiente proyecto"
             aria-label="Siguiente proyecto"
@@ -22106,7 +22272,20 @@ try {
 
   const renderTikTokProfile = (profileUsername: string) => {
     const target = (profileUsername || '').toLowerCase().trim();
-    const profile = accountsQueSigues.find(p => p.username.toLowerCase() === target || p.name.toLowerCase() === target) || accountsQueSigues[0];
+    const targetClean = target.replace(/^@/, '').replace(/_w\d+|_m\d+$/, '');
+    const profile = accountsQueSigues.find(p => {
+      const pUser = p.username.toLowerCase();
+      const pName = p.name.toLowerCase();
+      const pCleanUser = pUser.replace(/_w\d+|_m\d+$/, '');
+      return pUser === target ||
+             pName === target ||
+             pCleanUser === targetClean ||
+             pUser.includes(target) ||
+             target.includes(pUser) ||
+             pName.includes(target) ||
+             target.includes(pName) ||
+             (targetClean && pCleanUser.includes(targetClean));
+    }) || accountsQueSigues[0];
     const isFollowing = !!isProfileFollowing[profile.username];
     const isFavorite = !!isProfileFavorite[profile.username];
     const isBlocked = !!isProfileBlocked[profile.username];
@@ -22204,14 +22383,33 @@ try {
 
         {/* Back Button and Navigation Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-rose-50/60 select-none max-w-full">
-          <button
-            onClick={() => setViewingTikTokProfileUsername(null)}
-            className="flex items-center gap-2 text-xs font-extrabold text-white bg-slate-900 hover:bg-[#fe2c55] px-4.5 py-2.5 rounded-full shadow-md transition-all border-0 cursor-pointer active:scale-95"
-            id="back-to-feed-btn"
-          >
-            <ArrowLeft className="w-4 h-4 shrink-0 text-white" />
-            <span>Volver atrás</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setViewingTikTokProfileUsername(null)}
+              className="flex items-center gap-2 text-xs font-extrabold text-white bg-slate-900 hover:bg-[#fe2c55] px-4.5 py-2.5 rounded-full shadow-md transition-all border-0 cursor-pointer active:scale-95"
+              id="back-to-feed-btn"
+            >
+              <ArrowLeft className="w-4 h-4 shrink-0 text-white" />
+              <span>Volver atrás</span>
+            </button>
+
+            {/* 🎥 Botón Casting Live en barra superior */}
+            <button
+              type="button"
+              onClick={() => {
+                setViewingTikTokProfileUsername(null);
+                setIsWatchingPresenterCamera(true);
+                setIsPresenterCameraFullscreen(false);
+                setShowLivePresenterControls(false);
+              }}
+              className="flex items-center gap-2 text-xs font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-[#fe2c55] hover:from-red-500 hover:to-rose-500 px-4 py-2.5 rounded-full shadow-md transition-all border-0 cursor-pointer active:scale-95"
+              id="btn-casting-live-top-bar"
+              title="Ir a Casting Live (Ver emisión en directo manteniendo contenedores del canal)"
+            >
+              <Camera className="w-4 h-4 shrink-0 text-white" />
+              <span>Casting Live</span>
+            </button>
+          </div>
           
           <div className="flex items-center gap-2">
             {isBlocked && (
@@ -22300,6 +22498,23 @@ try {
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-slate-600" />
                   <span>MENSAJE</span>
+                </button>
+
+                {/* 🎥 BOTÓN CASTING LIVE */}
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setViewingTikTokProfileUsername(null);
+                    setIsWatchingPresenterCamera(true);
+                    setIsPresenterCameraFullscreen(false);
+                    setShowLivePresenterControls(false);
+                  }}
+                  className="bg-gradient-to-r from-red-600 via-rose-600 to-[#fe2c55] hover:from-red-500 hover:to-rose-500 text-white font-black text-xs px-4 py-1.5 rounded-md transition active:scale-95 cursor-pointer shrink-0 uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                  id="btn-casting-live-creator-profile"
+                  title="Ver emisión en directo dentro de los contenedores del canal"
+                >
+                  <Camera className="w-3.5 h-3.5 text-white" />
+                  <span>Casting Live</span>
                 </button>
 
                 {/* 3. USER PLUS BUTTON (Sugerencias & Favoritos) */}
@@ -22982,9 +23197,6 @@ try {
       { id: 'pc-3', user: 'carlos_realty', text: 'Explicado súper claro Víctor, ¡crack total! 🤝', date: 'Hace 4 horas', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150' }
     ];
 
-    const [newCommentInput, setNewCommentInput] = useState('');
-    const [lightboxComments, setLightboxComments] = useState<any[]>(comments);
-
     // Dynamic video like click tracker
     const hasLiked = !!profileVideoLikes[`${vid.id}-liked`];
     const likesCount = profileVideoLikes[`${vid.id}-likes`] || (parseInt(vid.views) * 12) || 1200;
@@ -23033,7 +23245,7 @@ try {
 
     const handleAddProfileVideoComment = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!newCommentInput.trim()) return;
+      if (!profileVideoNewCommentInput.trim()) return;
 
       const userAvatar = userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
       const userDisplayName = userProfile?.name || 'InversorInvitado';
@@ -23041,18 +23253,17 @@ try {
       const newComm = {
         id: `pc-user-${Date.now()}`,
         user: userDisplayName,
-        text: newCommentInput.trim(),
+        text: profileVideoNewCommentInput.trim(),
         date: 'Hace un momento',
         avatar: userAvatar
       };
 
-      const updated = [...lightboxComments, newComm];
-      setLightboxComments(updated);
+      const updated = [...comments, newComm];
       setProfileVideoComments(prev => ({
         ...prev,
         [commentsKey]: updated
       }));
-      setNewCommentInput('');
+      setProfileVideoNewCommentInput('');
     };
 
     // Selecting a mock looping video clip
@@ -23175,7 +23386,7 @@ try {
 
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 px-2.5 py-1.5 rounded-lg bg-slate-50 select-none">
                 <MessageCircle className="w-4 h-4 text-slate-500" />
-                <span>{lightboxComments.length}</span>
+                <span>{comments.length}</span>
               </div>
 
               <button 
@@ -23192,7 +23403,7 @@ try {
 
             {/* Bottom-Center: Scrolling Comments stack */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
-              {lightboxComments.map((comm) => (
+              {comments.map((comm) => (
                 <div key={comm.id} className="flex gap-2.5 text-xs text-slate-850 select-text">
                   <img 
                     src={comm.avatar} 
@@ -23218,13 +23429,13 @@ try {
               <input 
                 type="text" 
                 placeholder="Añadir comentario..."
-                value={newCommentInput}
-                onChange={(e) => setNewCommentInput(e.target.value)}
+                value={profileVideoNewCommentInput}
+                onChange={(e) => setProfileVideoNewCommentInput(e.target.value)}
                 className="flex-1 border bg-slate-50 hover:bg-slate-100/50 focus:bg-white focus:ring-1 focus:ring-rose-500 border-slate-200 outline-none px-3.5 py-2 rounded-xl text-xs font-semibold leading-none placeholder-slate-400"
               />
               <button 
                 type="submit"
-                disabled={!newCommentInput.trim()}
+                disabled={!profileVideoNewCommentInput.trim()}
                 className="p-2.5 rounded-xl bg-slate-900 hover:bg-[#fe2c55] disabled:bg-slate-100 disabled:text-slate-350 active:scale-95 transition text-white flex items-center justify-center cursor-pointer border-0"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -24484,7 +24695,6 @@ try {
                 </div>
               ) : (selectedCategoryFilter === 'Finanzas' && !(
                 showFinanzasInscriptionInChannel ||
-                showVotingProjectsModal ||
                 showFinanzasResults ||
                 showFinanzasRecount ||
                 detailProjectUser ||
@@ -24521,10 +24731,14 @@ try {
                   setIsWatchingPresenterCamera={setIsWatchingPresenterCamera}
                   setIsPresenterCameraFullscreen={setIsPresenterCameraFullscreen}
                   userProfile={userProfile}
+                  selectedFinanzasUser={selectedFinanzasUser}
                   setSelectedFinanzasUser={setSelectedFinanzasUser}
                   setShowFinanzasInscriptionInChannel={setShowFinanzasInscriptionInChannel}
+                  showVotingProjectsModal={showVotingProjectsModal}
+                  renderVotingProjectsContent={renderSingleProjectSlider}
                   setShowVotingProjectsModal={setShowVotingProjectsModal}
                   setShowParticipantsGatheringModal={setShowParticipantsGatheringModal}
+                  onExecutePaymentAndJoinSession={(session: any) => handleExecutePaymentAndJoinSession(undefined, session?.entryFee || 10, targetUserArrivalSlot, session)}
                   setDetailProjectUser={setDetailProjectUser}
                   setActiveFinanzasPopupUser={setActiveFinanzasPopupUser}
                   setShowProjectDetailsInPopup={setShowProjectDetailsInPopup}
@@ -27208,7 +27422,7 @@ try {
                                 }}
                                 onMouseEnter={handleTopMenuMouseEnter}
                                 onMouseLeave={handleTopMenuMouseLeave}
-                                className={`absolute top-2 inset-x-2 sm:inset-x-3.5 z-40 bg-black/90 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-[#fe2c55]/60 flex items-center justify-between gap-2 shadow-2xl transition-all select-none ${isVotingPhaseActive ? 'cursor-default' : 'cursor-pointer hover:bg-black/95 hover:border-[#fe2c55] active:scale-[0.99]'}`} 
+                                className={`absolute top-2 inset-x-2 sm:inset-x-3.5 z-50 bg-black/90 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-[#fe2c55]/60 flex items-center justify-between gap-2 shadow-2xl transition-all select-none ${isVotingPhaseActive ? 'cursor-default' : 'cursor-pointer hover:bg-black/95 hover:border-[#fe2c55] active:scale-[0.99]'}`} 
                                 id="finanzas-presenter-online-badge-channel"
                                 title={isVotingPhaseActive ? "Fase final de votación - 10 participantes online" : `Ver detalles del proyecto de ${activePresenterName}`}
                               >
@@ -27942,12 +28156,12 @@ try {
 
                                 <button
                                   type="button"
-                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, activeFee, targetUserArrivalSlot)}
+                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, activeFee, targetUserArrivalSlot, currentSession)}
                                   className="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700 text-center"
                                   id="btn-disparar-pago-inscribir-mesa"
                                 >
                                   <Play className="w-3.5 h-3.5 fill-current text-white shrink-0" />
-                                  <span className="truncate">Disparar Pago de {activeFee || 10}€ y Acceder a Votaciones</span>
+                                  <span className="truncate">Disparar Pago de {activeFee || 10}€ y Acceder a Sala de Espera</span>
                                 </button>
 
                                 <button
@@ -28424,7 +28638,7 @@ try {
                                 p => p.id === activeUser.id || p.name === activeUser.name
                               );
                               const shouldShowVotingCountdownCard = Boolean(isVotingPhaseActive && isCurrentUserParticipatingInCurrentSession);
-                              const currentParticipantNumber = currentParticipantIndex !== -1 ? currentParticipantIndex + 1 : (shouldShowVotingCountdownCard ? 10 : 1);
+                              const currentParticipantNumber = isPresenterUser ? 10 : (currentParticipantIndex !== -1 ? currentParticipantIndex + 1 : (shouldShowVotingCountdownCard ? 10 : 1));
 
                               const timerVal = finanzasTimers[activeId] !== undefined ? finanzasTimers[activeId] : 300;
                               const minutes = Math.floor(timerVal / 60);
@@ -28440,49 +28654,6 @@ try {
 
                               return (
                                 <>
-                                  {/* 🎥 FULLSCREEN PRESENTER LIVE CAMERA STAGE (LIMPIO, SIN CONTENEDORES SUPERPUESTOS) */}
-                                  {isWatchingPresenterCamera && !isPresenterUser && isPresenterCameraFullscreen && (
-                                    <div 
-                                      className={`${
-                                        isPresenterCameraBrowserFullscreen 
-                                          ? 'fixed inset-0 z-[999999] w-full h-[100dvh] max-w-full max-h-[100dvh]' 
-                                          : 'absolute inset-0 z-50 w-full h-full'
-                                      } bg-black overflow-hidden select-none animate-fade-in`}
-                                      id="presenter-live-camera-fullscreen-stage"
-                                    >
-                                      {/* Full Screen Live Video */}
-                                      <video
-                                        src={getParticipantLiveCameraVideo(activeUser)}
-                                        onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
-                                        autoPlay
-                                        loop
-                                        playsInline
-                                        muted={isPresenterCameraAudioMuted}
-                                        className="w-full h-full object-cover absolute inset-0 z-0 cursor-pointer"
-                                        onClick={() => setIsPresenterCameraFullscreen(false)}
-                                        title="Clic para salir de pantalla completa"
-                                      />
-
-                                      {/* Botón abajo del todo para desactivar la cámara y volver atrás */}
-                                      <div className="absolute bottom-5 inset-x-4 z-30 flex justify-center pointer-events-auto">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setIsWatchingPresenterCamera(false);
-                                            setIsPresenterCameraFullscreen(false);
-                                            setIsPresenterCameraBrowserFullscreen(false);
-                                          }}
-                                          id="btn-deactivate-presenter-camera-bottom"
-                                          className="w-full max-w-xs sm:max-w-sm py-3 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_4px_25px_rgba(239,68,68,0.55)] border border-red-400/80 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-                                          title="Desactivar cámara y volver atrás"
-                                        >
-                                          <CameraOff className="w-4 h-4 text-white shrink-0" />
-                                          <span>Desactivar Cámara</span>
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )}
-
                                   {!shouldShowVotingCountdownCard ? (
                                     <>
                                       {/* Header Turn Badge */}
@@ -28767,9 +28938,7 @@ try {
                                           } else {
                                             setIsWatchingPresenterCamera(prev => {
                                               const next = !prev;
-                                              if (next) {
-                                                setIsPresenterCameraFullscreen(true);
-                                              }
+                                              setIsPresenterCameraFullscreen(false);
                                               return next;
                                             });
                                           }
@@ -28942,7 +29111,7 @@ try {
                           onMouseEnter={handleBottomParticipantsMouseEnter}
                           onMouseLeave={handleBottomParticipantsMouseLeave}
                         >
-                          {/* Subtle Peek Indicator Tab at the very bottom when collapsed */}
+                          {/* Peek Indicator Tab at the very bottom when collapsed - magnifies prominently on hover */}
                           <div 
                             className={`flex items-center justify-center transition-all duration-300 cursor-pointer ${
                               isBottomParticipantsHovered || forceShowParticipantsPanel ? 'opacity-0 h-0 overflow-hidden pointer-events-none' : 'opacity-100 py-1'
@@ -28950,11 +29119,14 @@ try {
                             onMouseEnter={handleBottomParticipantsMouseEnter}
                             onMouseLeave={handleBottomParticipantsMouseLeave}
                             onClick={() => setIsBottomParticipantsHovered(prev => !prev)}
-                            title="Pasa el puntero por el margen inferior para abrir la ventana de participantes"
+                            title="Pasa el puntero por el botón inferior para abrir la ventana de los 10 participantes"
                           >
-                            <div className="bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 hover:border-emerald-500/60 px-3.5 py-1 rounded-full text-[9.5px] font-black tracking-wider flex items-center gap-2 shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                              <span>👥 10 PARTICIPANTES • Pasa el ratón aquí</span>
+                            <div className="bg-slate-950/95 hover:bg-slate-900 text-slate-100 hover:text-white border border-emerald-500/80 hover:border-emerald-400 px-3 py-1 sm:py-1.5 rounded-full text-[9.5px] sm:text-[10px] font-black tracking-normal flex items-center gap-1.5 shadow-md transition-all duration-200 ease-out hover:scale-102 active:scale-95 group">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399] shrink-0" />
+                              <Users className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
+                              <span className="uppercase font-black text-white group-hover:text-emerald-300 transition-colors whitespace-nowrap">
+                                10 PARTICIPANTES • Pasa el ratón aquí
+                              </span>
                             </div>
                           </div>
 
@@ -29135,8 +29307,17 @@ try {
                                         setActiveFinanzasPopupUser(null);
                                         setShowFinanzasResults(false);
                                         setShowFinanzasRecount(false);
-                                        // Open the project selection page
-                                        setShowFinanzasInscriptionInChannel(true);
+
+                                        if (isUserParticipating) {
+                                          // Directly open waiting room (sala de espera) for this round
+                                          setGatheringSessionTitle(currentFinanzasSession?.title || 'Round STREETWEAR & URBAN');
+                                          setGatheringSessionFee(currentSessionFeeInfo.fee);
+                                          setGatheringSessionRef(getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex));
+                                          setShowParticipantsGatheringModal(true);
+                                        } else {
+                                          // Disparar Pago directly from z.png and redirect to sala de espera
+                                          handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
+                                        }
                                       }}
                                       className={`w-full max-w-[400px] font-black text-[12px] xs:text-[13px] sm:text-[14px] px-5 sm:px-6 py-3 sm:py-3.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
                                         isUserParticipating
@@ -29144,13 +29325,13 @@ try {
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
-                                      title={isUserParticipating ? "Participando como Adriana Lima" : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
+                                      title={isUserParticipating ? "Ver sala de espera de la ronda" : `Disparar Pago de ${currentSessionFeeInfo.feeShort} y acceder a sala de espera`}
                                     >
-                                      <span className="text-base shrink-0">{isUserParticipating ? '✅' : '✍️'}</span>
+                                      <span className="text-base shrink-0">{isUserParticipating ? '✅' : '⚡'}</span>
                                       <span className="truncate min-w-0 font-black tracking-tight">
                                         {isUserParticipating 
                                           ? `Estás inscrita como participante (${currentSessionFeeInfo.feeShort})` 
-                                          : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
+                                          : `Disparar Pago de ${currentSessionFeeInfo.feeShort}`}
                                       </span>
                                     </button>
 
@@ -29379,6 +29560,24 @@ try {
                             Finalizar
                           </button>
                         </div>
+                      </div>
+                    ) : isWatchingPresenterCamera ? (
+                      <div 
+                        className="absolute inset-0 w-full h-full bg-black z-0 overflow-hidden flex items-center justify-center select-none animate-fade-in cursor-pointer" 
+                        id="presenter-live-camera-channel-stage"
+                        onClick={() => setShowLivePresenterControls(prev => !prev)}
+                        title="Clic para mostrar u ocultar panel de controles"
+                      >
+                        <video
+                          src={getParticipantLiveCameraVideo(sessionCurrentActiveUser)}
+                          onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
+                          autoPlay
+                          loop
+                          playsInline
+                          muted={isPresenterCameraAudioMuted}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none" />
                       </div>
                     ) : hasChannelVideos && activeVideo ? (
                       <div 
@@ -33482,7 +33681,7 @@ try {
       {/* ✨ CREATION CHOICE MODAL (Historia vs Reel) */}
       {showCreationTypeModal && renderCreationTypeModal()}
 
-      {/* 🗳️ VOTING PROJECTS MODAL (Votar por el mejor proyecto) */}
+      {/* 🗳️ VOTING PROJECTS MODAL (Votar por el mejor proyecto) - En Finanzas se muestra directamente dentro del canal a pantalla completa */}
       {showVotingProjectsModal && selectedCategoryFilter !== 'Finanzas' && renderVotingProjectsModal()}
 
       {/* 📤 UPLOAD MODEL CLIP ("Cargar") POPUP MODAL */}
@@ -33590,10 +33789,10 @@ try {
         isOpen={showParticipantsGatheringModal}
         sessionTitle={gatheringSessionTitle || "Round STREETWEAR & URBAN"}
         entryFee={gatheringSessionFee || 10}
-        roundRef={getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
+        roundRef={gatheringSessionRef || getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
         participantsList={gatheringParticipantsList || TRABAJADORES_USERS}
         currentUserProfile={userProfile}
-        userSlotIndex={targetUserArrivalSlot}
+        userSlotIndex={userParticipantSlotIndex !== null ? userParticipantSlotIndex : targetUserArrivalSlot}
         onComplete={handleGatheringComplete}
         onClose={() => setShowParticipantsGatheringModal(false)}
       />
@@ -34695,6 +34894,32 @@ function CastingLiveStoryLightbox({
   setShowLiveGiftsPopover = () => {},
   onGoToModelProfile
 }: CastingLiveStoryLightboxProps) {
+  // Touch states & Scroll wheel cooldowns for gestures (All hooks declared at top of component)
+  const [touchStart, setTouchStart] = React.useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
+  const lastScrollTime = React.useRef<number>(0);
+
+  // Close on Escape key to quickly return to background page
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedCastingLiveStory(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setSelectedCastingLiveStory]);
+
+  // Clean particles event-handler
+  React.useEffect(() => {
+    if (floatingParticles.length > 0) {
+      const timer = setTimeout(() => {
+        setFloatingParticles(p => p.filter(item => Date.now() - parseFloat(item.id.split('-')[1]) < 3000));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [floatingParticles, setFloatingParticles]);
+
   // Custom timer for story progression
   React.useEffect(() => {
     const pubStories = activeStories.filter((s: any) => s.userId === selectedCastingLiveStory.userId);
@@ -34832,16 +35057,6 @@ function CastingLiveStoryLightbox({
     }
   };
 
-  // Clean particles event-handler
-  React.useEffect(() => {
-    if (floatingParticles.length > 0) {
-      const timer = setTimeout(() => {
-        setFloatingParticles(p => p.filter(item => Date.now() - parseFloat(item.id.split('-')[1]) < 3000));
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [floatingParticles]);
-
   const spawnEmojiParticles = (emoji: string) => {
     const newParticles = Array.from({ length: 14 }).map((_, i) => ({
       id: `part-${Date.now()}-${i}-${Math.random()}`,
@@ -34854,22 +35069,6 @@ function CastingLiveStoryLightbox({
     }));
     setFloatingParticles(prev => [...prev, ...newParticles]);
   };
-
-  // Touch states & Scroll wheel cooldowns for gestures
-  const [touchStart, setTouchStart] = React.useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
-  const lastScrollTime = React.useRef<number>(0);
-
-  // Close on Escape key to quickly return to background page
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedCastingLiveStory(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setSelectedCastingLiveStory]);
 
   const handleWheel = (e: React.WheelEvent) => {
     const now = Date.now();

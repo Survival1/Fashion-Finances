@@ -327,12 +327,11 @@ async function startServer() {
     });
   } else {
     // Vite middleware for development when dist is not yet compiled
-    const isHmrDisabled = process.env.DISABLE_HMR === "true";
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
-        hmr: isHmrDisabled ? false : { clientPort: 443 },
-        watch: isHmrDisabled ? null : {},
+        hmr: false,
+        watch: null,
       },
       appType: "spa",
     });
