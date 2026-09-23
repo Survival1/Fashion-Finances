@@ -447,3 +447,58 @@ body {
   animation: royalShineSweep 4.8s ease-in-out infinite;
 }
 
+/* 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA */
+@keyframes heartRainFall {
+  0% {
+    transform: translateY(-90px) translateX(0) rotate(0deg) scale(0.6);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(12vh) translateX(var(--drift-1, -12px)) rotate(var(--rot-1, -15deg)) scale(1.18);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(50vh) translateX(var(--drift-2, 16px)) rotate(var(--rot-2, 18deg)) scale(1);
+  }
+  85% {
+    opacity: 0.85;
+    transform: translateY(85vh) translateX(var(--drift-3, -8px)) rotate(var(--rot-3, -10deg)) scale(0.95);
+  }
+  100% {
+    transform: translateY(106vh) translateX(var(--drift-4, 20px)) rotate(var(--rot-4, 25deg)) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes heartRainRise {
+  0% {
+    transform: translateY(105vh) translateX(0) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(80vh) translateX(var(--drift-1, 15px)) rotate(var(--rot-1, 12deg)) scale(1.2);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(45vh) translateX(var(--drift-2, -18px)) rotate(var(--rot-2, -15deg)) scale(1.05);
+  }
+  85% {
+    opacity: 0.85;
+    transform: translateY(15vh) translateX(var(--drift-3, 10px)) rotate(var(--rot-3, 15deg)) scale(0.9);
+  }
+  100% {
+    transform: translateY(-80px) translateX(var(--drift-4, -12px)) rotate(var(--rot-4, -20deg)) scale(0.6);
+    opacity: 0;
+  }
+}
+
+.animate-heart-rain-fall {
+  animation: heartRainFall var(--dur, 2.4s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-heart-rain-rise {
+  animation: heartRainRise var(--dur, 2.6s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+

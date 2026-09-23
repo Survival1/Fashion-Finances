@@ -1876,6 +1876,45 @@ const CANONICAL_CHANNELS = [
   'Influencer'
 ] as const;
 
+export const getParticipantLiveCameraVideo = (user: any) => {
+  if (user?.videoUrl) return user.videoUrl;
+  const name = (user?.name || '').toLowerCase();
+  const id = (user?.id || '').toLowerCase();
+
+  const femaleVideos = [
+    'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-studio-39868-large.mp4'
+  ];
+
+  const maleVideos = [
+    'https://assets.mixkit.co/videos/preview/mixkit-man-posing-in-trendy-fashion-clothes-40491-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-young-man-wearing-black-and-posing-40495-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-man-with-sunglasses-posing-in-creative-light-40496-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-man-with-neon-makeup-posing-with-red-light-40490-large.mp4'
+  ];
+
+  const isFemale = name.includes('clara') || name.includes('paula') || name.includes('natalia') || 
+                   name.includes('lucía') || name.includes('lucia') || name.includes('marina') || 
+                   name.includes('victoria') || name.includes('isabella') || name.includes('claudia') || 
+                   name.includes('valeria') || name.includes('adriana') || name.includes('elena') || 
+                   name.includes('sophia') || name.includes('mia');
+
+  let charSum = 0;
+  const key = name || id || 'user';
+  for (let i = 0; i < key.length; i++) {
+    charSum += key.charCodeAt(i);
+  }
+
+  if (isFemale) {
+    return femaleVideos[charSum % femaleVideos.length];
+  } else {
+    return maleVideos[charSum % maleVideos.length];
+  }
+};
+
 export default function CastingLiveSection({ 
   models, 
   userProfile, 
@@ -2743,29 +2782,49 @@ export default function CastingLiveSection({
           localStorage.getItem('finanzas_user_participating') === 'true' ||
           localStorage.getItem('user_paid_finanzas_session') === 'true'
         );
-        const isVotingActiveSaved = isUserParticipatingInit && localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
-        const savedVotingTimer = localStorage.getItem('finanzas_voting_phase_timer');
-        const parsedVotingTimer = savedVotingTimer ? parseInt(savedVotingTimer, 10) : 600;
-        if (isVotingActiveSaved && parsedVotingTimer > 0) {
-          setIsVotingPhaseActive(true);
-          setVotingPhaseTimer(parsedVotingTimer);
-          setIsSpeakingPresenterIntro(false);
-          setFirstPresenterRevealed(true);
-        } else {
-          setIsVotingPhaseActive(false);
-          setVotingPhaseTimer(600);
-          setIsSpeakingPresenterIntro(false);
-          setFirstPresenterRevealed(true);
-        }
+        setIsVotingPhaseActive(false);
+        setVotingPhaseTimer(600);
+        setIsSpeakingPresenterIntro(false);
+        setFirstPresenterRevealed(true);
+        setFinanzasScenario('present');
+        setJoinedPresenterIds(['f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9', 'f-10']);
+        setForceShowParticipantsPanel(true);
+        setShowVotingProjectsModal(false);
+        setShowFinanzasRecount(false);
+        setShowFinanzasResults(false);
+        setShowProjectDetailsInPopup(false);
+        setDetailProjectUser(null);
+        setActiveFinanzasPopupUser(null);
+        const firstPresenter = TRABAJADORES_USERS[0];
+        setSelectedFinanzasUser(firstPresenter);
+        setFinanzasTimers({ [firstPresenter.id]: 300 });
+        setFinanzasTimerActive({ [firstPresenter.id]: true });
+        setFinanzasPresentationQueue(
+          TRABAJADORES_USERS.map((p, idx) => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar,
+            role: p.role,
+            requestTime: '10:30:00',
+            status: idx === 0 ? ('presenting' as const) : ('waiting' as const)
+          }))
+        );
+        const resetSessionId = targetSessionId || 'sess-trabajadores-1';
+        localStorage.setItem(`finanzas_active_session_start_${resetSessionId}`, String(Date.now()));
+        localStorage.setItem('finanzas_scenario', 'present');
+        localStorage.removeItem('finanzas_is_voting_phase_active');
+        localStorage.removeItem('finanzas_session_voting_phase_map');
         localStorage.removeItem('casting_live_default_category_filter');
         localStorage.removeItem('finanzas_active_session_fee');
       }
     };
     checkCategory();
     window.addEventListener('storage', checkCategory);
+    window.addEventListener('nav_to_casting_live', checkCategory);
     const timer = setInterval(checkCategory, 300);
     return () => {
       window.removeEventListener('storage', checkCategory);
+      window.removeEventListener('nav_to_casting_live', checkCategory);
       clearInterval(timer);
     };
   }, []);
@@ -2965,7 +3024,7 @@ export default function CastingLiveSection({
   // 'scenario_c' = 9 participants have voted and completed their live transmission (only user pending)
   const [finanzasScenario, setFinanzasScenario] = useState<'not_present' | 'present' | 'scenario_c'>(() => {
     const saved = localStorage.getItem('finanzas_scenario');
-    return (saved === 'present' || saved === 'not_present' || saved === 'scenario_c') ? saved : 'not_present';
+    return (saved === 'present' || saved === 'not_present' || saved === 'scenario_c') ? saved : 'present';
   });
 
   // States for presenters joined (online in session) vs empty slots
@@ -3304,7 +3363,7 @@ export default function CastingLiveSection({
     };
   });
   const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(true);
-  const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(false);
+  const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(true);
 
   // Position / slot assigned to user (Adriana Lima) by order of arrival (slot 10, index 9, as last participant)
   const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(() => {
@@ -4485,45 +4544,6 @@ export default function CastingLiveSection({
   const [isPresenterCameraBrowserFullscreen, setIsPresenterCameraBrowserFullscreen] = useState<boolean>(false);
   const [showLivePresenterControls, setShowLivePresenterControls] = useState<boolean>(false);
 
-  const getParticipantLiveCameraVideo = (user: any) => {
-    if (user?.videoUrl) return user.videoUrl;
-    const name = (user?.name || '').toLowerCase();
-    const id = (user?.id || '').toLowerCase();
-
-    const femaleVideos = [
-      'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-studio-39868-large.mp4'
-    ];
-
-    const maleVideos = [
-      'https://assets.mixkit.co/videos/preview/mixkit-man-posing-in-trendy-fashion-clothes-40491-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-young-man-wearing-black-and-posing-40495-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-man-with-sunglasses-posing-in-creative-light-40496-large.mp4',
-      'https://assets.mixkit.co/videos/preview/mixkit-man-with-neon-makeup-posing-with-red-light-40490-large.mp4'
-    ];
-
-    const isFemale = name.includes('clara') || name.includes('paula') || name.includes('natalia') || 
-                     name.includes('lucía') || name.includes('lucia') || name.includes('marina') || 
-                     name.includes('victoria') || name.includes('isabella') || name.includes('claudia') || 
-                     name.includes('valeria') || name.includes('adriana') || name.includes('elena') || 
-                     name.includes('sophia') || name.includes('mia');
-
-    let charSum = 0;
-    const key = name || id || 'user';
-    for (let i = 0; i < key.length; i++) {
-      charSum += key.charCodeAt(i);
-    }
-
-    if (isFemale) {
-      return femaleVideos[charSum % femaleVideos.length];
-    } else {
-      return maleVideos[charSum % maleVideos.length];
-    }
-  };
-
   useEffect(() => {
     let interval: any;
     if (isUserLiveStreamingWithCamera) {
@@ -5021,7 +5041,7 @@ export default function CastingLiveSection({
     const now = Date.now();
     const elapsed = startTime > 0 ? (now - startTime) / 1000 : 0;
     
-    if (!startTime || elapsed >= 2700 || elapsed < 0) {
+    if (!startTime || elapsed >= 3600 || elapsed < 0) {
       localStorage.setItem(sessionStartKey, String(now));
       const firstUser = currentFinanzasSession?.participants?.[0] || TRABAJADORES_USERS[0];
       setSelectedFinanzasUser(firstUser);
@@ -12751,6 +12771,287 @@ export default function CastingLiveSection({
             <span className="truncate">Siguiente</span>
             <span className="shrink-0 text-[10px] sm:text-xs leading-none">▶</span>
           </button>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 📊 Finanzas Recount Content (captura imagen.png) styled in za.png format ---
+  const renderFinanzasRecountContent = () => {
+    const scrutinyVotesCompleted = scrutinyVotesCount;
+    const participantsList = [
+      { name: 'Sophia Loren', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Mia Kincaid', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Oliver Finch', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Amara Okafor', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Dante Moretti', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Kenji Sato', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300' },
+      { name: userProfile?.name || 'Adriana Lima', role: 'Inversor Principal', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300', isSelf: true },
+      { name: 'Isabella Dubois', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Marcus Sterling', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Liam Alvarez', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300' }
+    ];
+
+    return (
+      <div className="w-full h-full bg-[#070b14] text-white p-3 sm:p-4 space-y-3 font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border">
+        {/* Notice bar */}
+        <div className="bg-[#0e1628]/95 border border-rose-500/40 p-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-rose-200 shadow-md">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="animate-spin text-base shrink-0">⏳</span>
+            <span className="truncate text-[11px]">
+              {scrutinyVotesCompleted < 10
+                ? `Tabulando firmas... ${formatMMSS(scrutinySeconds)} (${scrutinyVotesCompleted}/10 Votaron)`
+                : `Escrutinio completado. Redirigiendo a Resultados Finales...`}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (!completedSessionToDisplay) {
+                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
+                setCompletedSessionToDisplay(sessionData);
+              }
+              setSelectedCategoryFilter('Finanzas');
+              setShowFinanzasRecount(false);
+              setShowFinanzasResults(true);
+            }}
+            className="bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white px-2.5 py-1 rounded-xl font-black text-[9.5px] uppercase tracking-wider cursor-pointer transition shadow-md border border-rose-400/50 active:scale-95 shrink-0"
+          >
+            VER RESULTADOS
+          </button>
+        </div>
+
+        {/* Gauge panel matching za.png dark luxury styling */}
+        <div className="bg-[#0e1628]/95 border border-slate-800/80 rounded-3xl p-4 space-y-3 text-center shadow-xl">
+          {/* Circle gauge showing countdown and votes */}
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-rose-500/70 flex items-center justify-center relative bg-[#070b14] shadow-[0_0_25px_rgba(254,44,85,0.25)] mx-auto">
+            <div className="space-y-0.5 text-center">
+              <span className="text-2xl sm:text-3xl font-extrabold font-mono text-[#fe2c55] block leading-none">{scrutinyVotesCompleted}</span>
+              <span className="text-[8.5px] font-mono font-bold text-slate-400 uppercase tracking-wider block">DE 10 VOTOS</span>
+              <span className="text-[9.5px] font-mono font-black text-rose-400 block pt-0.5 animate-pulse">⏳ {formatMMSS(scrutinySeconds)}</span>
+            </div>
+          </div>
+
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-black text-white tracking-tight m-0">Escrutinio Descentralizado</h3>
+            <p className="text-[10px] text-slate-400 font-medium m-0">Computando resultados instantáneos al completar las firmas.</p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-1 max-w-xl mx-auto pt-0.5">
+            <div className="flex justify-between items-center text-[11px] font-mono font-bold">
+              <span className="text-slate-300">Progreso de la Votación</span>
+              <span className="text-[#fe2c55] font-extrabold">{scrutinyVotesCompleted * 10}% completado</span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-slate-900 border border-slate-800 p-0.5 overflow-hidden">
+              <div 
+                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-[#fe2c55] to-rose-700 transition-all duration-500 shadow-[0_0_10px_rgba(254,44,85,0.5)]" 
+                style={{ width: `${scrutinyVotesCompleted * 10}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Cierre Banner */}
+          <div className="bg-[#070b14]/90 border border-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between gap-2 text-xs shadow-md">
+            <div className="text-left flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <div className="min-w-0">
+                <span className="text-[9px] font-black uppercase text-emerald-400 block tracking-wider">
+                  {scrutinyVotesCompleted === 10 ? '● CIERRE Y TABULACIÓN COMPLETA' : '● ESCRUTINIO EN CURSO'}
+                </span>
+                <span className="font-extrabold text-white text-[10.5px] truncate block">
+                  {scrutinyVotesCompleted === 10
+                    ? 'Todos los participantes han emitido su voto.'
+                    : `Procesando firmas y recuento... Votaron ${scrutinyVotesCompleted} de 10.`}
+                </span>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-[8.5px] text-slate-400 font-mono font-bold block uppercase">Consenso</span>
+              <span className="text-[11px] font-extrabold text-rose-400 font-mono">
+                {10 - scrutinyVotesCompleted} en cola
+              </span>
+            </div>
+          </div>
+
+          {/* Action button to view final results and winners */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!completedSessionToDisplay) {
+                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
+                setCompletedSessionToDisplay(sessionData);
+              }
+              setSelectedCategoryFilter('Finanzas');
+              setShowFinanzasRecount(false);
+              setShowFinanzasResults(true);
+            }}
+            className="w-full py-2.5 px-3 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition shadow-lg shadow-rose-950/60 cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 border border-rose-500/40 mt-1"
+          >
+            <span>🏆</span>
+            <span>VER RESULTADOS FINALES Y GANADORES</span>
+          </button>
+        </div>
+
+        {/* Participant Grid */}
+        <div className="space-y-1.5">
+          <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-300 m-0">
+            ESTADO DE PARTICIPANTES ({scrutinyVotesCompleted}/10 VOTARON)
+          </h4>
+
+          <div className="grid grid-cols-3 gap-2">
+            {participantsList.map((item, idx) => (
+              <div key={idx} className="bg-[#0e1628]/90 border border-slate-800/80 rounded-2xl p-2 flex flex-col items-center text-center gap-1 shadow-md relative w-full min-w-0 overflow-hidden">
+                <div className="relative">
+                  <img 
+                    src={item.avatar} 
+                    alt={item.name} 
+                    className="w-10 h-10 rounded-xl object-cover border border-slate-700" 
+                    referrerPolicy="no-referrer"
+                  />
+                  {item.isSelf && (
+                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[7px] font-black px-1 py-0.5 rounded-full shadow-xs">
+                      TÚ
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0 w-full">
+                  <h5 className="text-[10.5px] font-black text-white truncate m-0 leading-tight">{item.name}</h5>
+                  <span className="text-[8px] text-slate-400 font-semibold block truncate">{item.role}</span>
+                </div>
+
+                {idx < scrutinyVotesCompleted ? (
+                  <div className="w-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-[8px] font-black py-0.5 px-1 rounded-md text-center uppercase tracking-wider mt-0.5 truncate">
+                    ✓ VOTO CARGADO
+                  </div>
+                ) : (
+                  <div className="w-full bg-amber-950/80 border border-amber-500/50 text-amber-300 text-[8px] font-bold py-0.5 px-1 rounded-md text-center uppercase tracking-wider mt-0.5 animate-pulse truncate">
+                    ⏳ REGISTRANDO...
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bitácora de Consenso y Auditoría Distribuida */}
+        <div className="bg-[#0e1628]/80 border border-slate-800/80 rounded-2xl p-2.5 space-y-1 text-left">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold text-rose-400 font-mono flex items-center gap-1">
+              <span>&gt;_</span> Bitácora de Consenso
+            </span>
+            <span className="bg-rose-950/80 text-rose-300 border border-rose-500/40 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-mono">
+              NODO_CONECTADO
+            </span>
+          </div>
+          <p className="text-[9.5px] font-mono text-slate-300 m-0 leading-relaxed">
+            🔑 Protocolo de custodia encriptado activado con éxito. Computando orden final de votaciones...
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 🏆 Finanzas Results Content (captura zr.png) styled in za.png format ---
+  const renderFinanzasResultsContent = () => {
+    const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
+    return (
+      <div className="w-full h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border" id="finanzas-results-in-channel">
+        {/* Fixed Header bar inside phone container matching zr.png */}
+        <div className="bg-[#0e1628]/95 border-b border-slate-800/80 p-2.5 sm:p-3 shrink-0 shadow-lg z-20 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2 w-full">
+            <button
+              type="button"
+              onClick={() => {
+                setShowFinanzasResults(false);
+                setCompletedSessionToDisplay(null);
+                setShowFinanzasRecount(false);
+                setFinanzasVotes({});
+                setScrutinyVotesCount(0);
+                setVotingCountdownSeconds(600);
+                setShowProjectDetailsInPopup(false);
+                setDetailProjectUser(null);
+                setActiveFinanzasPopupUser(null);
+                handleFinishCurrentSessionAndNext();
+              }}
+              className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] px-3 py-1.5 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-1.5 border border-rose-500/40 active:scale-95"
+            >
+              <span>🛑</span>
+              <span>Sesión Finalizada</span>
+            </button>
+            <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Directo Finalizado
+            </span>
+          </div>
+
+          <div className="flex items-start gap-1.5 pt-1 border-t border-slate-800/80">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0 mt-0.5" />
+            <div>
+              <h2 className="text-[10.5px] sm:text-[11px] font-black uppercase text-amber-400 tracking-wider font-sans leading-snug m-0">
+                🏆 RESULTADOS FINALES Y RECUENTO DE VOTACIONES
+              </h2>
+              <p className="text-[8.5px] text-slate-400 font-medium font-sans m-0 mt-0.5 leading-tight">
+                Canal de Finanzas • Todos los participantes pueden ver la retransmisión en directo
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Podium content in dark luxury styling */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-0 scrollbar-none no-scrollbar w-full max-w-full">
+          <SessionResultsPodium
+            completedSessionToDisplay={activeSessionToDisplay}
+            userProfile={{
+              id: userProfile?.id || 'user',
+              name: userProfile?.name || 'TÚ (Inversor)',
+              balance: userProfile?.balance || 150000,
+              patrocinadorId: userProfile?.patrocinadorId
+            }}
+            userProjects={FINANZAS_USERS.map(fu => {
+              const details = getFinanzasProjectDetails(fu.id);
+              return {
+                id: fu.id,
+                userId: fu.id,
+                title: details.title,
+                description: details.description,
+                metrics: details.metrics,
+                roi: details.roi,
+                tagline: details.tagline,
+                images: [
+                  fu.avatar,
+                  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
+                  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
+                ]
+              };
+            })}
+            models={models}
+            onSelectModel={(m) => onGoToModelProfile?.(m.id || m.name)}
+            onNavigateToTab={onNavigateToTab}
+            setCompletedSessionToDisplay={(session) => {
+              setCompletedSessionToDisplay(session);
+              if (!session) {
+                setShowFinanzasResults(false);
+                setShowFinanzasRecount(false);
+                setShowProjectDetailsInPopup(false);
+                setDetailProjectUser(null);
+                setActiveFinanzasPopupUser(null);
+                handleFinishCurrentSessionAndNext();
+              }
+            }}
+            onFinishParticipationSession={() => {
+              setShowFinanzasResults(false);
+              setCompletedSessionToDisplay(null);
+              setShowFinanzasRecount(false);
+              setFinanzasVotes({});
+              setScrutinyVotesCount(0);
+              setVotingCountdownSeconds(600);
+              setShowProjectDetailsInPopup(false);
+              setDetailProjectUser(null);
+              setActiveFinanzasPopupUser(null);
+              handleFinishCurrentSessionAndNext();
+            }}
+          />
         </div>
       </div>
     );
@@ -24695,13 +24996,9 @@ try {
                 </div>
               ) : (selectedCategoryFilter === 'Finanzas' && !(
                 showFinanzasInscriptionInChannel ||
-                showFinanzasResults ||
-                showFinanzasRecount ||
                 detailProjectUser ||
                 showProjectDetailsInPopup ||
-                isWatchingPresenterCamera ||
-                isUserLiveStreamingWithCamera ||
-                isPresenterCameraFullscreen
+                isUserLiveStreamingWithCamera
               )) ? (
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR FINANZAS ROUNDS (image.png & z.png) */
                 <TikTokFinanzasFeed
@@ -24729,7 +25026,10 @@ try {
                   isWatchingPresenterCamera={isWatchingPresenterCamera}
                   handleToggleUserCameraLiveBroadcast={handleToggleUserCameraLiveBroadcast}
                   setIsWatchingPresenterCamera={setIsWatchingPresenterCamera}
+                  isPresenterCameraFullscreen={isPresenterCameraFullscreen}
                   setIsPresenterCameraFullscreen={setIsPresenterCameraFullscreen}
+                  isPresenterCameraAudioMuted={isPresenterCameraAudioMuted}
+                  setIsPresenterCameraAudioMuted={setIsPresenterCameraAudioMuted}
                   userProfile={userProfile}
                   selectedFinanzasUser={selectedFinanzasUser}
                   setSelectedFinanzasUser={setSelectedFinanzasUser}
@@ -24742,6 +25042,10 @@ try {
                   setDetailProjectUser={setDetailProjectUser}
                   setActiveFinanzasPopupUser={setActiveFinanzasPopupUser}
                   setShowProjectDetailsInPopup={setShowProjectDetailsInPopup}
+                  showFinanzasRecount={showFinanzasRecount}
+                  renderFinanzasRecountContent={renderFinanzasRecountContent}
+                  showFinanzasResults={showFinanzasResults}
+                  renderFinanzasResultsContent={renderFinanzasResultsContent}
                   setShowFinanzasResults={setShowFinanzasResults}
                   setShowFinanzasRecount={setShowFinanzasRecount}
                   onOpenComments={() => setIsCommentsOpen(true)}
@@ -27301,8 +27605,6 @@ try {
                             <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
                               <span>{isCurrentUserParticipatingInCurrentSession ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
-                              <span className="text-white/40">•</span>
-                              <span className="text-amber-300 font-mono font-black tracking-wider">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                             </div>
                             <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0 flex items-center justify-center gap-2 flex-wrap">
                               <span>
@@ -27318,14 +27620,11 @@ try {
                                   return currentFinanzasSession?.title || 'Round Streetwear & Urban';
                                 })()}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono font-bold tracking-normal normal-case shrink-0">
-                                {getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
-                              </span>
                             </h3>
                             <div className="flex items-center justify-center gap-1.5 mt-1">
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                               <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
-                                <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'}</span>
+                                <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes</span>
                                 <span className="text-slate-500">•</span>
                                 <span className="text-amber-300 font-black">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                               </span>
@@ -27509,121 +27808,7 @@ try {
                         {renderSingleProjectSlider()}
                       </div>
                     ) : showFinanzasResults ? (
-                      (() => {
-                        const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
-                        return (
-                          <div className="absolute inset-0 z-[300] bg-slate-950 flex flex-col text-white rounded-none w-full max-w-full h-full font-sans overflow-x-hidden overflow-y-hidden animate-fade-in pointer-events-auto" id="finanzas-results-overlay">
-                            {/* Fixed Header bar pinned at the very top */}
-                            <div className="bg-slate-900 border-b border-slate-800 p-3 sm:p-4 shrink-0 shadow-2xl z-50 flex flex-col gap-2.5">
-                              {/* Top Row: Directo Finalizado badge & Finish Session Button */}
-                              <div className="flex flex-wrap items-center justify-between gap-2 w-full">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setShowFinanzasResults(false);
-                                    setCompletedSessionToDisplay(null);
-                                    setShowFinanzasRecount(false);
-                                    setFinanzasVotes({});
-                                    setScrutinyVotesCount(0);
-                                    setVotingCountdownSeconds(600);
-                                    setShowProjectDetailsInPopup(false);
-                                    setDetailProjectUser(null);
-                                    setActiveFinanzasPopupUser(null);
-                                    handleFinishCurrentSessionAndNext();
-                                  }}
-                                  className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-2 border border-rose-500 active:scale-95"
-                                >
-                                  <span>🛑</span>
-                                  <span>Sesión Finalizada</span>
-                                </button>
-                                <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Directo Finalizado
-                                </span>
-                              </div>
-
-                              {/* Header Title & Information */}
-                              <div className="flex items-start gap-2 pt-1.5 border-t border-slate-800/80">
-                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0 mt-1" />
-                                <div>
-                                  <h2 className="text-xs sm:text-sm font-black uppercase text-amber-400 tracking-wider font-sans leading-snug m-0">
-                                    🏆 RESULTADOS FINALES Y RECUENTO DE VOTACIONES DE LA MESA
-                                  </h2>
-                                  <p className="text-[10px] text-slate-400 font-medium font-sans m-0 mt-0.5">
-                                    Canal de Finanzas y Modaparati Directo • Todos los participantes pueden ver la retransmisión en directo en la página principal
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Scrollable results body without visible scrollbar */}
-                            <div 
-                              className="flex-1 overflow-y-auto overflow-x-hidden p-0 scrollbar-none no-scrollbar w-full max-w-full h-full select-none"
-                              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-                            >
-                              {/* The complete SessionResultsPodium component */}
-                              <SessionResultsPodium
-                                completedSessionToDisplay={activeSessionToDisplay}
-                                userProfile={{
-                                  id: userProfile?.id || 'user',
-                                  name: userProfile?.name || 'TÚ (Inversor)',
-                                  balance: userProfile?.balance || 150000,
-                                  patrocinadorId: userProfile?.patrocinadorId
-                                }}
-                                userProjects={FINANZAS_USERS.map(fu => {
-                                  const details = getFinanzasProjectDetails(fu.id);
-                                  return {
-                                    id: fu.id,
-                                    userId: fu.id,
-                                    title: details.title,
-                                    description: details.description,
-                                    metrics: details.metrics,
-                                    roi: details.roi,
-                                    tagline: details.tagline,
-                                    images: [
-                                      fu.avatar,
-                                      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
-                                      'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
-                                    ]
-                                  };
-                                })}
-                                models={models}
-                                onSelectModel={(m) => onGoToModelProfile?.(m.id || m.name)}
-                                onNavigateToTab={onNavigateToTab}
-                                setCompletedSessionToDisplay={(session) => {
-                                  setCompletedSessionToDisplay(session);
-                                  if (!session) {
-                                    setShowFinanzasResults(false);
-                                    setShowFinanzasRecount(false);
-                                    setShowProjectDetailsInPopup(false);
-                                    setDetailProjectUser(null);
-                                    setActiveFinanzasPopupUser(null);
-                                    handleFinishCurrentSessionAndNext();
-                                  }
-                                }}
-                                onFinishParticipationSession={() => {
-                                  setShowFinanzasResults(false);
-                                  setCompletedSessionToDisplay(null);
-                                  setShowFinanzasRecount(false);
-                                  setFinanzasVotes({});
-                                  setScrutinyVotesCount(0);
-                                  setShowProjectDetailsInPopup(false);
-                                  setDetailProjectUser(null);
-                                  setActiveFinanzasPopupUser(null);
-                                  handleFinishCurrentSessionAndNext();
-                                }}
-                                setSimulationLogs={() => {}}
-                                setIsCastingPublished={setIsCastingPublished}
-                                isCastingPublished={isCastingPublished}
-                                pool={activeSessionToDisplay.poolTotal || 100}
-                                prizePerWinner={((activeSessionToDisplay.poolTotal || 100) * 0.8) / (activeSessionToDisplay.winners?.length || 1)}
-                                isTie={(activeSessionToDisplay.winners?.length || 1) > 1}
-                                winnersToDisplay={getWinnersToDisplay(activeSessionToDisplay)}
-                                maxVotes={getMaxVotes(activeSessionToDisplay)}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })()
+                      renderFinanzasResultsContent()
                     ) : showFinanzasInscriptionInChannel ? (
                       (() => {
                         const currentSession = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession || activeSessionsOnly[0];
@@ -28179,388 +28364,36 @@ try {
                         );
                       })()
                     ) : (showFinanzasRecount && selectedCategoryFilter === 'Finanzas') ? (
-                      (() => {
-                        const scrutinyVotesCompleted = scrutinyVotesCount;
-                        return (
-                      <div className="absolute inset-0 w-full max-w-full h-full bg-white p-3.5 sm:p-5 text-slate-800 space-y-4 font-sans text-left overflow-y-auto overflow-x-hidden animate-fade-in z-[200] select-text pb-20 pointer-events-auto box-border">
-                        {/* Notice bar */}
-                        <div className="bg-rose-50 border border-rose-200 p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-rose-800">
-                          <div className="flex items-center gap-2">
-                            <span className="animate-spin text-base">⏳</span>
-                            <span>
-                              {scrutinyVotesCompleted < 10
-                                ? `Tabulando firmas y registrando escrutinio... Tiempo restante: ${formatMMSS(scrutinySeconds)} (${scrutinyVotesCompleted}/10 Votaron)`
-                                : `Escrutinio completado (00:00). Redirigiendo a Resultados Finales...`}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (!completedSessionToDisplay) {
-                                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
-                                setCompletedSessionToDisplay(sessionData);
-                              }
-                              setSelectedCategoryFilter('Finanzas');
-                              setShowFinanzasRecount(false);
-                              setShowFinanzasResults(true);
-                            }}
-                            className="bg-[#fe2c55] hover:bg-[#df2046] text-white px-3.5 py-1.5 rounded-xl font-black text-[10.5px] uppercase tracking-wider cursor-pointer transition shadow-xs border-0 active:scale-95 shrink-0"
-                          >
-                            VER RESULTADOS
-                          </button>
-                        </div>
-
-                        {/* Gauge panel matching captura zxcv.png */}
-                        <div className="bg-[#fff9fa] border border-rose-100 rounded-2xl p-4 sm:p-6 space-y-4 text-center">
-                          {/* Circle gauge showing countdown and votes */}
-                          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-rose-200/70 flex items-center justify-center relative bg-white shadow-xs mx-auto">
-                            <div className="space-y-0.5 text-center">
-                              <span className="text-3xl sm:text-4xl font-extrabold font-mono text-[#fe2c55] block leading-none">{scrutinyVotesCompleted}</span>
-                              <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wider block">DE 10 VOTOS</span>
-                              <span className="text-[9px] font-mono font-black text-rose-600 block pt-0.5 animate-pulse">⏳ {formatMMSS(scrutinySeconds)}</span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight m-0">Escrutinio Descentralizado</h3>
-                            <p className="text-[11px] text-slate-500 font-medium m-0">Computando resultados instantáneos al completar las firmas.</p>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="space-y-1.5 max-w-xl mx-auto pt-1">
-                            <div className="flex justify-between items-center text-xs font-mono font-bold">
-                              <span className="text-slate-700">Progreso de la Votación</span>
-                              <span className="text-[#fe2c55] font-extrabold">{scrutinyVotesCompleted * 10}% completado</span>
-                            </div>
-                            <div className="w-full h-3 rounded-full bg-slate-100 border border-rose-200 p-0.5 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-[#fe2c55] to-rose-700 transition-all duration-500" 
-                                style={{ width: `${scrutinyVotesCompleted * 10}%` }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Cierre Banner */}
-                          <div className="bg-white border border-rose-100 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-2xs max-w-xl mx-auto">
-                            <div className="text-left flex items-center gap-2 w-full sm:w-auto">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                              <div>
-                                <span className="text-[9.5px] font-black uppercase text-emerald-600 block">
-                                  {scrutinyVotesCompleted === 10 ? '● CIERRE Y TABULACIÓN COMPLETA' : '● ESCRUTINIO EN CURSO'}
-                                </span>
-                                <span className="font-extrabold text-slate-800 text-[11.5px]">
-                                  {scrutinyVotesCompleted === 10
-                                    ? 'Todos los participantes han emitido su voto. Tabulando resultados...'
-                                    : `Procesando firmas y recuento de votos... Votaron ${scrutinyVotesCompleted} de 10.`}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0 w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
-                              <span className="text-[9px] text-slate-400 font-mono font-bold block uppercase">Consenso</span>
-                              <span className="text-xs font-extrabold text-rose-600 font-mono">
-                                {10 - scrutinyVotesCompleted} en cola
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Action button to view final results and winners */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (!completedSessionToDisplay) {
-                                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
-                                setCompletedSessionToDisplay(sessionData);
-                              }
-                              setSelectedCategoryFilter('Finanzas');
-                              setShowFinanzasRecount(false);
-                              setShowFinanzasResults(true);
-                            }}
-                            className="w-full max-w-xl mx-auto py-3 px-4 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg cursor-pointer active:scale-95 flex items-center justify-center gap-2 border-0 mt-2"
-                          >
-                            <span>🏆</span>
-                            <span>VER RESULTADOS FINALES Y GANADORES</span>
-                          </button>
-                        </div>
-
-                        {/* Participant Grid */}
-                        <div className="space-y-2.5">
-                          <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-600 m-0">
-                            ESTADO DE PARTICIPANTES ({scrutinyVotesCompleted}/10 VOTARON)
-                          </h4>
-
-                          <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-                            {[
-                              { name: 'Sophia Loren', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Mia Kincaid', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Oliver Finch', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Amara Okafor', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Dante Moretti', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Kenji Sato', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300' },
-                              { name: userProfile?.name || 'Adriana Lima', role: 'Inversor Principal', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300', isSelf: true },
-                              { name: 'Isabella Dub...', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Marcus Sterl...', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=300' },
-                              { name: 'Liam Alvarez', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300' }
-                            ].map((item, idx) => (
-                              <div key={idx} className="bg-[#fffdfd] border border-rose-100 rounded-2xl p-2.5 flex flex-col items-center text-center gap-1.5 shadow-2xs relative w-full min-w-0 overflow-hidden">
-                                <div className="relative">
-                                  <img 
-                                    src={item.avatar} 
-                                    alt={item.name} 
-                                    className="w-12 h-12 rounded-2xl object-cover border border-rose-200/80" 
-                                    referrerPolicy="no-referrer"
-                                  />
-                                  {item.isSelf && (
-                                    <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
-                                      TÚ
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="min-w-0 w-full">
-                                  <h5 className="text-xs font-black text-slate-900 truncate m-0 leading-tight">{item.name}</h5>
-                                  <span className="text-[9px] text-slate-400 font-semibold block truncate">{item.role}</span>
-                                </div>
-
-                                {idx < scrutinyVotesCompleted ? (
-                                  <div className="w-full bg-[#e6f4ea] border border-[#ceead6] text-[#137333] text-[9px] sm:text-[9.5px] font-extrabold py-1 px-1 rounded-lg text-center uppercase tracking-wider mt-1 truncate">
-                                    ✓ VOTO CARGADO
-                                  </div>
-                                ) : (
-                                  <div className="w-full bg-amber-50 border border-amber-200 text-amber-700 text-[9px] sm:text-[9.5px] font-bold py-1 px-1 rounded-lg text-center uppercase tracking-wider mt-1 animate-pulse truncate">
-                                    ⏳ REGISTRANDO...
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Bitácora de Consenso y Auditoría Distribuida */}
-                        <div className="bg-[#fff8f9] border border-rose-100 rounded-2xl p-3.5 space-y-1.5 text-left">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-extrabold text-[#d93025] font-mono flex items-center gap-1">
-                              <span>&gt;_</span> Bitácora de Consenso y Auditoría Distribuida
-                            </span>
-                            <span className="bg-rose-100/80 text-rose-700 text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
-                              NODO_CONECTADO
-                            </span>
-                          </div>
-                          <p className="text-[10.5px] font-mono text-slate-600 m-0 leading-relaxed">
-                            🔑 Protocolo de custodia encriptado activado con éxito. Computando orden final de votaciones y tabulando ganadores...
-                          </p>
-                        </div>
-                      </div>
-                      );
-                      })()
+                      renderFinanzasRecountContent()
                     ) : (showProjectDetailsInPopup || detailProjectUser) ? (
                       <div 
                         onWheel={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
                         onTouchEnd={(e) => e.stopPropagation()}
-                        className="absolute inset-0 w-full h-full bg-white p-4 sm:p-6 text-slate-800 font-sans text-left overflow-y-auto animate-fade-in z-[200] select-text pb-20 pointer-events-auto flex flex-col justify-between" 
+                        className="absolute inset-0 z-[350] bg-[#070b14] flex flex-col w-full h-full overflow-hidden text-white font-sans text-left animate-fade-in select-none pointer-events-auto"
                         id="channel-embedded-dossier-window"
                       >
-                        {(() => {
-                          const targetUser = detailProjectUser || activeFinanzasPopupUser || selectedFinanzasUser || FINANZAS_USERS[0];
-                          const proj = getFinanzasProjectDetails(targetUser?.id || 'f-1');
-
-                          return (
-                            <div className="flex flex-col justify-between h-full min-h-full space-y-4">
-                              <div className="space-y-3 sm:space-y-4">
-                                
-                                {/* Header matching screenshot */}
-                                <div className="flex items-start justify-between gap-3 text-left">
-                                  <div className="flex flex-col text-left">
-                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider flex items-center gap-1.5">
-                                      <span>📄</span> DOSSIER DE REGISTRO OFICIAL - PORTAL DE PROYECTOS
-                                    </span>
-                                    <h1 className="text-xl sm:text-2xl font-serif font-extrabold text-slate-900 tracking-tight leading-snug mt-1 m-0">
-                                      {proj.title}
-                                    </h1>
-                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider mt-1">
-                                      CATEGORÍA REGISTRADA: {proj.category ? proj.category.toUpperCase() : 'MODAS CIRCULARES'}
-                                    </span>
-                                  </div>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setShowProjectDetailsInPopup(false);
-                                      setDetailProjectUser(null);
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center font-bold text-sm transition cursor-pointer shrink-0 mt-0.5"
-                                    title="Cerrar ventana"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-
-                                {/* Step Navigation Pills matching screenshot */}
-                                <div className="flex items-center gap-2 sm:gap-3 pt-1 border-b border-slate-100 pb-3 flex-wrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => setDetailModalStep('basic')}
-                                    className={`py-2 px-4 sm:px-5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer ${
-                                      detailModalStep === 'basic' || detailModalStep === 'all'
-                                        ? 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e] text-white shadow-sm'
-                                        : 'bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900'
-                                    }`}
-                                  >
-                                    <span>ⓘ</span>
-                                    <span>Paso 1: Información Básica</span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => setDetailModalStep('finance')}
-                                    className={`py-2 px-4 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer ${
-                                      detailModalStep === 'finance'
-                                        ? 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e] text-white shadow-sm'
-                                        : 'bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900'
-                                    }`}
-                                  >
-                                    <span>🔗</span>
-                                    <span>Paso 2: Estructura Financiera</span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => setDetailModalStep('team')}
-                                    className={`py-2 px-4 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer ${
-                                      detailModalStep === 'team'
-                                        ? 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e] text-white shadow-sm'
-                                        : 'bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900'
-                                    }`}
-                                  >
-                                    <span>👥</span>
-                                    <span>Paso 3: Equipo Creativo</span>
-                                  </button>
-                                </div>
-
-                                {/* Step 1: Información Básica Body */}
-                                {(detailModalStep === 'all' || detailModalStep === 'basic') && (
-                                  <div className="space-y-4 animate-fade-in text-left">
-                                    {/* Resumen de la propuesta / estilo */}
-                                    <div className="space-y-1.5">
-                                      <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider flex items-center gap-1">
-                                        <span>🥞</span> RESUMEN DE LA PROPUESTA / ESTILO
-                                      </span>
-                                      <div className="bg-amber-50/30 border border-amber-100/80 rounded-2xl p-4 sm:p-5 text-left shadow-2xs">
-                                        <p className="font-serif italic font-bold text-slate-800 text-xs sm:text-sm leading-relaxed m-0">
-                                          "{proj.tagline || 'Fórmula de diseño ecológico, optimización textil y proyección cruzada de marca.'}"
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {/* Descripción extendida */}
-                                    <div className="space-y-1.5 pt-1">
-                                      <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider block">
-                                        DESCRIPCIÓN EXTENDIDA (DOSSIER COMPLETO DE MARCA)
-                                      </span>
-                                      <div className="bg-slate-50/80 border border-slate-200/60 rounded-2xl p-4 sm:p-5 text-left shadow-2xs">
-                                        <p className="font-medium text-slate-700 text-xs sm:text-sm leading-relaxed m-0">
-                                          {proj.description || 'Este proyecto estratégico busca mitigar la generación de desechos textiles mediante metodologías de confección de residuo cero con siluetas versátiles y minimalistas.'}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {/* Correo y Teléfono side-by-side */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                      <div className="border border-slate-800/80 rounded-2xl p-3.5 sm:p-4 bg-white flex flex-col justify-center gap-1 shadow-2xs">
-                                        <span className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                                          CORREO ELECTRÓNICO OFICIAL
-                                        </span>
-                                        <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                                          <span className="text-[#e11d48]">✉</span>
-                                          <span className="truncate">{proj.contactEmail || 'adriana.lima@fashionfinances.net'}</span>
-                                        </div>
-                                      </div>
-
-                                      <div className="border border-slate-800/80 rounded-2xl p-3.5 sm:p-4 bg-white flex flex-col justify-center gap-1 shadow-2xs">
-                                        <span className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                                          TELÉFONO DE CONTACTO OFICIAL
-                                        </span>
-                                        <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                                          <span className="text-[#e11d48]">📞</span>
-                                          <span className="truncate">{proj.contactPhone || '+34 600 555 123'}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Step 2: Estructura Financiera */}
-                                {detailModalStep === 'finance' && (
-                                  <div className="space-y-3 animate-fade-in text-left pt-2">
-                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider block">
-                                      ESTRUCTURA FINANCIERA & PLAN DE INVERSIÓN
-                                    </span>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 flex flex-col gap-0.5">
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase">Meta / Presupuesto</span>
-                                        <span className="text-base font-black text-slate-900">{proj.fundingGoal || '50.000 €'}</span>
-                                        <span className="text-[10px] text-slate-500 mt-1">{proj.metrics}</span>
-                                      </div>
-                                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 flex flex-col gap-0.5">
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase">Retorno Estimado (ROI)</span>
-                                        <span className="text-xs font-black text-emerald-700">{proj.roi}</span>
-                                      </div>
-                                    </div>
-
-                                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 text-xs space-y-1">
-                                      <span className="text-[9px] font-bold text-slate-400 uppercase block">Desglose de Gastos</span>
-                                      <p className="font-semibold text-slate-800 leading-snug m-0">{proj.fundUsage}</p>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Step 3: Equipo Creativo */}
-                                {detailModalStep === 'team' && (
-                                  <div className="space-y-3 animate-fade-in text-left pt-2">
-                                    <span className="text-[10px] sm:text-[11px] font-bold text-[#e11d48] uppercase tracking-wider block">
-                                      EQUIPO CREATIVO Y LÍDER DE PROYECTO
-                                    </span>
-                                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-left">
-                                      <div className="flex items-center gap-3">
-                                        <img 
-                                          src={targetUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'} 
-                                          alt={targetUser?.name || 'Creador'} 
-                                          className="w-12 h-12 rounded-full object-cover border border-rose-200 shadow-xs shrink-0"
-                                          referrerPolicy="no-referrer"
-                                        />
-                                        <div className="flex flex-col text-left">
-                                          <span className="text-[10px] font-black uppercase text-[#e11d48] tracking-wider">Creador/a Principal</span>
-                                          <span className="text-sm font-black text-slate-900">{targetUser?.name || 'Adriana Lima'}</span>
-                                          <span className="text-xs font-semibold text-slate-500">@{targetUser?.username || 'adriana'} · {targetUser?.role || 'Diseñadora'}</span>
-                                        </div>
-                                      </div>
-                                      <span className="text-[10px] bg-slate-900 text-white font-black px-3 py-1.5 rounded-xl shrink-0">
-                                        Líder Creativo
-                                      </span>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Footer Bar matching screenshot */}
-                              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 mt-6 shrink-0">
-                                <span className="text-[9.5px] sm:text-[10.5px] font-bold uppercase tracking-wider text-slate-400 text-center sm:text-left">
-                                  REGISTRADO SECRETAMENTE EN PASARELAS DE ALTA COSTURA
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setShowProjectDetailsInPopup(false);
-                                    setDetailProjectUser(null);
-                                  }}
-                                  className="w-full sm:w-auto border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-extrabold text-xs px-5 py-2.5 rounded-full shadow-xs cursor-pointer uppercase transition active:scale-95 text-center"
-                                >
-                                  VOLVER A RESULTADOS
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })()}
+                        <ProjectFullscreenDossierModal
+                          detailProjectUser={detailProjectUser}
+                          showProjectDetailsInPopup={showProjectDetailsInPopup}
+                          activeFinanzasPopupUser={activeFinanzasPopupUser}
+                          selectedFinanzasUser={selectedFinanzasUser}
+                          currentFinanzasSession={currentFinanzasSession}
+                          getFinanzasProjectDetails={getFinanzasProjectDetails}
+                          customProjectMedia={customProjectMedia}
+                          setCustomProjectMedia={setCustomProjectMedia}
+                          newMediaImageUrl={newMediaImageUrl}
+                          setNewMediaImageUrl={setNewMediaImageUrl}
+                          newMediaVideoUrl={newMediaVideoUrl}
+                          setNewMediaVideoUrl={setNewMediaVideoUrl}
+                          detailModalStep={detailModalStep}
+                          setDetailModalStep={setDetailModalStep}
+                          onClose={() => {
+                            setShowProjectDetailsInPopup(false);
+                            setDetailProjectUser(null);
+                            setActiveFinanzasPopupUser(null);
+                          }}
+                        />
                       </div>
                     ) : (
                       <>
@@ -28586,8 +28419,6 @@ try {
                             <div className="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs">
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse shrink-0" />
                               <span>{isCurrentUserParticipatingInCurrentSession ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
-                              <span className="text-white/40">•</span>
-                              <span className="text-amber-300 font-mono font-black tracking-wider" id="finanzas-round-ref-badge-top">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
                             </div>
                             <h1 className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-black text-white uppercase tracking-wider font-sans drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] leading-tight m-0 flex items-center justify-center gap-2 flex-wrap">
                               <span>
@@ -28602,9 +28433,6 @@ try {
                                   if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
                                   return currentFinanzasSession?.title || 'Round Streetwear & Urban';
                                 })()}
-                              </span>
-                              <span className="text-[10px] sm:text-xs text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono font-bold tracking-normal normal-case shrink-0">
-                                {getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}
                               </span>
                             </h1>
                             <div className="flex items-center justify-center gap-1.5 mt-1">
@@ -28936,11 +28764,13 @@ try {
                                           if (isPresenterUser) {
                                             handleToggleUserCameraLiveBroadcast();
                                           } else {
-                                            setIsWatchingPresenterCamera(prev => {
-                                              const next = !prev;
+                                            if (isPresenterCameraFullscreen) {
                                               setIsPresenterCameraFullscreen(false);
-                                              return next;
-                                            });
+                                              setIsWatchingPresenterCamera(false);
+                                            } else {
+                                              setIsWatchingPresenterCamera(true);
+                                              setIsPresenterCameraFullscreen(true);
+                                            }
                                           }
                                         }}
                                         className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
@@ -29315,7 +29145,7 @@ try {
                                           setGatheringSessionRef(getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex));
                                           setShowParticipantsGatheringModal(true);
                                         } else {
-                                          // Disparar Pago directly from z.png and redirect to sala de espera
+                                          // Inscribirse directly from zz.png and redirect to sala de espera
                                           handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
                                         }
                                       }}
@@ -29325,13 +29155,13 @@ try {
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
-                                      title={isUserParticipating ? "Ver sala de espera de la ronda" : `Disparar Pago de ${currentSessionFeeInfo.feeShort} y acceder a sala de espera`}
+                                      title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
                                     >
-                                      <span className="text-base shrink-0">{isUserParticipating ? '✅' : '⚡'}</span>
+                                      <span className="text-base shrink-0">✍️</span>
                                       <span className="truncate min-w-0 font-black tracking-tight">
                                         {isUserParticipating 
-                                          ? `Estás inscrita como participante (${currentSessionFeeInfo.feeShort})` 
-                                          : `Disparar Pago de ${currentSessionFeeInfo.feeShort}`}
+                                          ? `Estás inscrita como participante (${currentSessionFeeInfo.feeInWords})` 
+                                          : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
                                       </span>
                                     </button>
 
@@ -29340,7 +29170,7 @@ try {
                                       onClick={() => {
                                         setShowVotingProjectsModal(true);
                                       }}
-                                      className="w-auto min-w-[220px] sm:min-w-[250px] bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-white font-black text-[11.5px] xs:text-[12.5px] sm:text-[13px] px-8 sm:px-10 py-2.5 sm:py-3 rounded-full transition duration-200 border border-slate-700/80 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
+                                      className="w-auto min-w-[220px] sm:min-w-[250px] bg-white hover:bg-slate-100 text-slate-950 active:scale-95 font-black text-[11.5px] xs:text-[12.5px] sm:text-[13px] px-8 sm:px-10 py-2.5 sm:py-3 rounded-full transition duration-200 border border-slate-200 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
                                       id="btn-votar-mejor-proyecto-channel"
                                     >
                                       <span className="text-base shrink-0">📋</span>
@@ -31361,483 +31191,29 @@ try {
 
                       </div>
                     ) : showProjectDetailsInPopup ? (
-                      /* 📊 EMBEDDED DETAILED PROJECT VIEW MATCHING image.png INCRUSTADA DENTRO DEL CANAL */
-                      <div className="absolute inset-0 w-full h-full flex flex-col bg-white text-slate-800 p-4 sm:p-6 space-y-3 font-sans text-left overflow-y-auto animate-fade-in z-[200] select-none pb-20 pointer-events-auto">
-                        
-                        {/* 📄 PORTAL DE REGISTRO DE PROYECTOS HEADER MATCHING image.png */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 rounded-2xl shadow-lg border border-slate-800 shrink-0 text-left">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-rose-600 text-white rounded-xl shadow-md shrink-0 flex items-center justify-center font-black">
-                              <span className="text-base">💎</span>
-                            </div>
-                            <div>
-                              <h2 className="text-base sm:text-lg font-bold font-display text-white tracking-tight m-0">
-                                Portal de Registro de Proyectos
-                              </h2>
-                              <p className="text-[10px] text-slate-300 m-0 font-medium">
-                                Gestión de marca y capital de inversión • Fashion Finances
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap self-stretch sm:self-center justify-end">
-                            <button
-                              type="button"
-                              onClick={() => setShowProjectDetailsInPopup(false)}
-                              className="bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-[10px] px-3.5 py-2 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition active:scale-95"
-                            >
-                              <span>←</span>
-                              <span>Volver al Directo</span>
-                            </button>
-                            <div className="bg-emerald-500/20 text-emerald-300 font-black text-[9.5px] px-3 py-2 rounded-xl border border-emerald-400/30 flex items-center gap-1 shadow-2xs shrink-0">
-                              <span>🔒</span>
-                              <span>CIFRADO SSL</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* GREEN REGISTERED PROJECT BANNER MATCHING image.png */}
-                        <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl p-3.5 text-left shrink-0 shadow-2xs">
-                          <span className="bg-[#d1fae5] text-[#065f46] text-[9.5px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider inline-block mb-1">
-                            ✓ REGISTRADO
-                          </span>
-                          <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2 m-0">
-                            <span className="text-emerald-600 text-base">●</span>
-                            <span>{getFinanzasProjectDetails(activeFinanzasPopupUser.id).title}</span>
-                          </h3>
-                          <p className="text-[11px] text-slate-600 font-medium mt-0.5 m-0">
-                            Ya has subido un proyecto calificado para ingresar en las rondas.
-                          </p>
-                        </div>
-
-                        {/* Category, Title & Tagline */}
-                        <div className="flex flex-col gap-1.5 shrink-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10.5px] font-black uppercase text-rose-600 tracking-wider bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200">
-                              {getFinanzasProjectDetails(activeFinanzasPopupUser.id).category || 'Indumentaria y Moda Sostenible'}
-                            </span>
-                          </div>
-                          <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight m-0 leading-snug">
-                            {getFinanzasProjectDetails(activeFinanzasPopupUser.id).title}
-                          </h2>
-                          {getFinanzasProjectDetails(activeFinanzasPopupUser.id).tagline && (
-                            <p className="text-xs sm:text-sm text-amber-900 font-bold italic bg-amber-50/90 p-2.5 rounded-xl border border-amber-200 m-0 leading-snug">
-                              "{getFinanzasProjectDetails(activeFinanzasPopupUser.id).tagline}"
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Step Progress Pills (NO LATERAL SCROLL - GRID WRAPPER MATCHING image.png) */}
-                        <div className="bg-slate-100/90 border border-slate-200 rounded-2xl p-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-[10.5px] font-black shrink-0 w-full">
-                          <button
-                            type="button"
-                            onClick={() => setDetailModalStep(detailModalStep === 'basic' ? 'all' : 'basic')}
-                            className={`py-2 px-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer font-sans ${
-                              detailModalStep === 'basic'
-                                ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.01]'
-                                : 'bg-white text-slate-900 border-slate-200/90 hover:bg-slate-100'
-                            }`}
-                            title="Ver Identidad Creativa del Proyecto"
-                          >
-                            <span className="whitespace-nowrap font-extrabold">Identidad Creativa</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setDetailModalStep(detailModalStep === 'finance' ? 'all' : 'finance')}
-                            className={`py-2 px-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer font-sans ${
-                              detailModalStep === 'finance'
-                                ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.01]'
-                                : 'bg-white text-slate-900 border-slate-200/90 hover:bg-slate-100'
-                            }`}
-                            title="Ver Economía y Fondos"
-                          >
-                            <span className="whitespace-nowrap font-extrabold">Economía y Fondos</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setDetailModalStep(detailModalStep === 'team' ? 'all' : 'team')}
-                            className={`py-2 px-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer font-sans ${
-                              detailModalStep === 'team'
-                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-md scale-[1.01]'
-                                : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
-                            }`}
-                            title="Ver Equipo Humano"
-                          >
-                            <span className="whitespace-nowrap font-extrabold">Equipo Humano ✓</span>
-                          </button>
-                        </div>
-
-                        {/* Subtitle & Mode Toggle Bar */}
-                        <div className="flex flex-wrap justify-between items-center gap-1 px-1 text-[10px] font-bold text-slate-600 shrink-0">
-                          <span>
-                            {detailModalStep === 'basic' && 'Mostrando Paso 1: Identidad Creativa'}
-                            {detailModalStep === 'finance' && 'Mostrando Paso 2: Economía y Fondos'}
-                            {detailModalStep === 'team' && 'Mostrando Paso 3: Equipo Humano'}
-                            {detailModalStep === 'all' && 'Mostrando Todos los Pasos'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setDetailModalStep(detailModalStep === 'all' ? 'basic' : 'all')}
-                            className="text-[10px] font-black text-slate-800 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition border border-slate-200 cursor-pointer uppercase flex items-center gap-1"
-                          >
-                            👁️ {detailModalStep === 'all' ? 'FILTRAR PASO' : 'MOSTRAR TODOS LOS PASOS'}
-                          </button>
-                        </div>
-
-                        {/* Scrollable Container for Steps */}
-                        <div className="space-y-3 pr-1">
-                          {/* SECTION 1: IDENTIDAD CREATIVA */}
-                          {(detailModalStep === 'all' || detailModalStep === 'basic') && (
-                            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 text-left animate-fade-in">
-                              <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                                <span className="text-[10.5px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1">
-                                  📄 1. Identidad Creativa del Proyecto
-                                </span>
-                                <span className="text-[10px] text-emerald-800 font-extrabold bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">
-                                  ✓ Verificado
-                                </span>
-                              </div>
-
-                              <div>
-                                <span className="text-[9.5px] font-bold text-slate-400 uppercase block mb-1">Descripción del Proyecto</span>
-                                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium m-0">
-                                  {getFinanzasProjectDetails(activeFinanzasPopupUser.id).description}
-                                </p>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                                <div className="bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase block">Email de Contacto</span>
-                                  <span className="font-extrabold text-slate-900 truncate block">
-                                    {getFinanzasProjectDetails(activeFinanzasPopupUser.id).contactEmail || 'contacto@micropatrocinio.com'}
-                                  </span>
-                                </div>
-                                <div className="bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase block">Teléfono de Contacto</span>
-                                  <span className="font-extrabold text-slate-900 truncate block">
-                                    {getFinanzasProjectDetails(activeFinanzasPopupUser.id).contactPhone || '+34 612 345 678'}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* 📷 IMÁGENES Y VÍDEOS */}
-                              <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 shadow-2xs">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-sm">📷</span>
-                                    <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                                      IMÁGENES Y VÍDEOS
-                                    </span>
-                                  </div>
-                                  <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                                    {(customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.length || 0} Archivos
-                                  </span>
-                                </div>
-
-                                <p className="text-[11px] text-slate-600 leading-normal m-0 font-medium">
-                                  Fotografías y vídeos del proyecto para los inversores y patrocinadores de la sesión.
-                                </p>
-
-                                {/* Media Thumbnails Grid - Fotografías en tamaño mayor */}
-                                {((customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.length || 0) > 0 && (
-                                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                                    {(customProjectMedia[activeFinanzasPopupUser.id] || customProjectMedia['default'])?.map((item) => (
-                                      <div key={item.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 hover:border-slate-300 bg-slate-900 w-28 h-28 sm:w-36 sm:h-36 shrink-0 aspect-square shadow-sm">
-                                        {item.type === 'video' ? (
-                                          <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
-                                            <video src={item.url} className="w-full h-full object-cover opacity-85" muted loop autoPlay playsInline />
-                                            <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5">
-                                              <span className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow-md">▶</span>
-                                              <span className="text-[8.5px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded uppercase">{item.title}</span>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <div className="relative w-full h-full">
-                                            <img src={item.url} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                            <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
-                                              <span className="text-[9px] font-black text-white truncate block">{item.title}</span>
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                            setCustomProjectMedia(prev => ({
-                                              ...prev,
-                                              [curKey]: (prev[curKey] || []).filter(m => m.id !== item.id)
-                                            }));
-                                          }}
-                                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] transition cursor-pointer z-10"
-                                          title="Eliminar"
-                                        >
-                                          ✕
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Botón de subir archivo desde el equipo debajo de las fotos con diseño cuadrado */}
-                                <div className="pt-2">
-                                  <label className="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-2xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition w-32 h-32 sm:w-36 sm:h-36 aspect-square group shadow-2xs">
-                                    <input 
-                                      type="file" 
-                                      accept="image/*,video/*" 
-                                      className="hidden" 
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                          const url = URL.createObjectURL(file);
-                                          const isVid = file.type.startsWith('video');
-                                          const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                          setCustomProjectMedia(prev => ({
-                                            ...prev,
-                                            [curKey]: [
-                                              ...(prev[curKey] || []),
-                                              { id: `up-${Date.now()}`, type: isVid ? 'video' : 'image', url, title: file.name.slice(0, 14) }
-                                            ]
-                                          }));
-                                        }
-                                      }}
-                                    />
-                                    <span className="w-9 h-9 rounded-full bg-white group-hover:bg-rose-100 text-slate-700 group-hover:text-rose-600 flex items-center justify-center text-sm mb-1.5 transition shadow-2xs">
-                                      <Upload className="w-4 h-4" />
-                                    </span>
-                                    <span className="text-[10.5px] font-black text-slate-900 leading-tight">
-                                      Subir archivo desde el equipo
-                                    </span>
-                                    <span className="text-[8.5px] text-slate-400 mt-1 leading-tight">
-                                      Fotos (.jpg, .png) o vídeos (.mp4)
-                                    </span>
-                                  </label>
-                                </div>
-
-                                {/* URL Input Row */}
-                                <div className="pt-1.5 border-t border-slate-100 flex flex-wrap gap-1.5">
-                                  <div className="flex-1 min-w-[130px] flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                                    <input
-                                      type="text"
-                                      placeholder="Enlace de imagen (.jpg, .png)"
-                                      value={newMediaImageUrl}
-                                      onChange={(e) => setNewMediaImageUrl(e.target.value)}
-                                      className="w-full text-[9.5px] outline-none text-slate-800 bg-transparent"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (newMediaImageUrl.trim()) {
-                                          const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                          setCustomProjectMedia(prev => ({
-                                            ...prev,
-                                            [curKey]: [
-                                              ...(prev[curKey] || []),
-                                              { id: `img-${Date.now()}`, type: 'image', url: newMediaImageUrl, title: 'Imagen Web' }
-                                            ]
-                                          }));
-                                          setNewMediaImageUrl('');
-                                        }
-                                      }}
-                                      className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[8.5px] rounded cursor-pointer uppercase"
-                                    >
-                                      +IMG
-                                    </button>
-                                  </div>
-
-                                  <div className="flex-1 min-w-[130px] flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                                    <input
-                                      type="text"
-                                      placeholder="Enlace de video (.mp4)"
-                                      value={newMediaVideoUrl}
-                                      onChange={(e) => setNewMediaVideoUrl(e.target.value)}
-                                      className="w-full text-[9.5px] outline-none text-slate-800 bg-transparent"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (newMediaVideoUrl.trim()) {
-                                          const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                          setCustomProjectMedia(prev => ({
-                                            ...prev,
-                                            [curKey]: [
-                                              ...(prev[curKey] || []),
-                                              { id: `vid-${Date.now()}`, type: 'video', url: newMediaVideoUrl, title: 'Vídeo MP4' }
-                                            ]
-                                          }));
-                                          setNewMediaVideoUrl('');
-                                        }
-                                      }}
-                                      className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-[8.5px] rounded cursor-pointer uppercase"
-                                    >
-                                      +VID
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Quick Presets */}
-                                <div className="flex flex-wrap items-center gap-1 text-[8.5px] font-black pt-1">
-                                  <span className="text-slate-400 uppercase">Presets rápidos:</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                      setCustomProjectMedia(prev => ({
-                                        ...prev,
-                                        [curKey]: [
-                                          ...(prev[curKey] || []),
-                                          { id: `p-${Date.now()}`, type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400', title: 'Vestidos Atardecer' }
-                                        ]
-                                      }));
-                                    }}
-                                    className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer border border-slate-200"
-                                  >
-                                    + VESTIDOS ATARDECER
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                      setCustomProjectMedia(prev => ({
-                                        ...prev,
-                                        [curKey]: [
-                                          ...(prev[curKey] || []),
-                                          { id: `p-${Date.now()}`, type: 'image', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400', title: 'Pasarela Vanguardista' }
-                                        ]
-                                      }));
-                                    }}
-                                    className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer border border-slate-200"
-                                  >
-                                    + PASARELA VANGUARDISTA
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const curKey = customProjectMedia[activeFinanzasPopupUser.id] ? activeFinanzasPopupUser.id : 'default';
-                                      setCustomProjectMedia(prev => ({
-                                        ...prev,
-                                        [curKey]: [
-                                          ...(prev[curKey] || []),
-                                          { id: `p-${Date.now()}`, type: 'video', url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-neon-lighted-room-41562-large.mp4', title: 'Vídeo Neón' }
-                                        ]
-                                      }));
-                                    }}
-                                    className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer border border-slate-200"
-                                  >
-                                    + VÍDEO NEÓN
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* SECTION 2: ECONOMÍA Y FONDOS */}
-                          {(detailModalStep === 'all' || detailModalStep === 'finance') && (
-                            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 text-left animate-fade-in">
-                              <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                                  📈 2. Economía y Fondos (Plan de Viabilidad)
-                                </span>
-                                <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-100/80 px-2 py-0.5 rounded-md">
-                                  ✓ Auditado
-                                </span>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="bg-white p-3 rounded-xl border border-slate-200/70 flex flex-col gap-0.5">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase">Meta / Presupuesto</span>
-                                  <span className="text-sm font-black text-slate-900">
-                                    {getFinanzasProjectDetails(activeFinanzasPopupUser.id).fundingGoal || '50.000 €'}
-                                  </span>
-                                  <span className="text-[9.5px] text-slate-500 mt-1">
-                                    {getFinanzasProjectDetails(activeFinanzasPopupUser.id).metrics}
-                                  </span>
-                                </div>
-
-                                <div className="bg-white p-3 rounded-xl border border-slate-200/70 flex flex-col gap-0.5">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase">Retorno Estimado (ROI)</span>
-                                  <span className="text-xs font-black text-emerald-700">
-                                    {getFinanzasProjectDetails(activeFinanzasPopupUser.id).roi}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="bg-white p-3 rounded-xl border border-slate-200/70 text-xs space-y-1">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Desglose de Gastos & Uso de Fondos</span>
-                                <p className="font-semibold text-slate-800 leading-snug m-0">
-                                  {getFinanzasProjectDetails(activeFinanzasPopupUser.id).fundUsage || '60% Producción Textil Sostenible • 25% Marketing & Runway • 15% Certificaciones'}
-                                </p>
-                              </div>
-
-                              <div className="flex flex-col gap-2 w-full">
-                                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs w-full min-w-0 box-border">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase block">Plazo de Ejecución</span>
-                                  <span className="font-extrabold text-slate-800 break-words">
-                                    {getFinanzasProjectDetails(activeFinanzasPopupUser.id).timeline || '6 meses (Q3-Q4 2026)'}
-                                  </span>
-                                </div>
-                                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70 text-xs flex items-center justify-between gap-2 w-full min-w-0 box-border">
-                                  <div className="min-w-0 flex-1">
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase block">Documento Adjunto</span>
-                                    <span className="font-extrabold text-slate-800 text-[11px] truncate block" title={getFinanzasProjectDetails(activeFinanzasPopupUser.id).documentation || 'Plan-de-Viabilidad-Sostenible.pdf'}>
-                                      {getFinanzasProjectDetails(activeFinanzasPopupUser.id).documentation || 'Plan-de-Viabilidad-Sostenible.pdf'}
-                                    </span>
-                                  </div>
-                                  <span className="text-xs bg-red-50 text-red-700 font-black px-2 py-1 rounded border border-red-100 shrink-0">
-                                    PDF 📄
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* SECTION 3: EQUIPO HUMANO / PRESENTADOR */}
-                          {(detailModalStep === 'all' || detailModalStep === 'team') && (
-                            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2.5 text-left animate-fade-in w-full min-w-0 box-border">
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <img 
-                                  src={activeFinanzasPopupUser.avatar} 
-                                  alt={activeFinanzasPopupUser.name} 
-                                  className="w-11 h-11 rounded-full object-cover border-2 border-slate-200 shadow-xs shrink-0"
-                                  referrerPolicy="no-referrer"
-                                />
-                                <div className="flex flex-col text-left min-w-0 flex-1">
-                                  <span className="text-[9.5px] font-black uppercase text-amber-700 tracking-wider truncate">3. Equipo Humano · Creador/a</span>
-                                  <span className="text-sm font-black text-slate-900 truncate leading-tight">{activeFinanzasPopupUser.name}</span>
-                                  <span className="text-xs font-semibold text-slate-500 truncate">@{activeFinanzasPopupUser.username} · {activeFinanzasPopupUser.role}</span>
-                                </div>
-                              </div>
-                              <span className="text-[9.5px] sm:text-[10px] bg-slate-900 text-white font-black px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
-                                Líder Creativo
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Vote Button at bottom of Project Details (only for participants) */}
-                        {(() => {
-                          if (!isCurrentUserParticipatingInCurrentSession) return null;
-                          const targetUser = activeFinanzasPopupUser || detailProjectUser || FINANZAS_USERS[0];
-                          return (
-                            <div className="pt-2 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleVoteForProject(targetUser);
-                                }}
-                                className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3 px-4 rounded-full text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition shadow-lg border-0"
-                              >
-                                <span className="text-sm">🗳️</span>
-                                <span>VOTAR POR ESTE PROYECTO ({targetUser.name?.split(' ')[0] || ''})</span>
-                              </button>
-                            </div>
-                          );
-                        })()}
-
+                      /* 📊 EMBEDDED DETAILED PROJECT VIEW MATCHING image.png INCRUSTADA DENTRO DEL CANAL CON DISEÑO DARK LUXURY za.png */
+                      <div className="absolute inset-0 w-full h-full flex flex-col bg-[#070b14] text-white font-sans text-left overflow-hidden animate-fade-in z-[200] select-none pointer-events-auto">
+                        <ProjectFullscreenDossierModal
+                          detailProjectUser={detailProjectUser}
+                          showProjectDetailsInPopup={showProjectDetailsInPopup}
+                          activeFinanzasPopupUser={activeFinanzasPopupUser}
+                          selectedFinanzasUser={selectedFinanzasUser}
+                          currentFinanzasSession={currentFinanzasSession}
+                          getFinanzasProjectDetails={getFinanzasProjectDetails}
+                          customProjectMedia={customProjectMedia}
+                          setCustomProjectMedia={setCustomProjectMedia}
+                          newMediaImageUrl={newMediaImageUrl}
+                          setNewMediaImageUrl={setNewMediaImageUrl}
+                          newMediaVideoUrl={newMediaVideoUrl}
+                          setNewMediaVideoUrl={setNewMediaVideoUrl}
+                          detailModalStep={detailModalStep}
+                          setDetailModalStep={setDetailModalStep}
+                          onClose={() => {
+                            setShowProjectDetailsInPopup(false);
+                            setDetailProjectUser(null);
+                          }}
+                          onVoteProject={isCurrentUserParticipatingInCurrentSession ? ((user) => handleVoteForProject(user)) : undefined}
+                        />
                       </div>
                     ) : (
                       /* 🎬 DETAILS VIEW MATCHING CAPTURE ZXSA.PNG */

@@ -2982,10 +2982,19 @@ export default function App() {
                   setSelectedLiveModelId(undefined);
                   localStorage.setItem('casting_live_active_subtab', 'para-ti');
                   localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
+                  localStorage.setItem('finanzas_scenario', 'present');
                   try {
                     sessionStorage.removeItem('explicit_category_set_by_user');
+                    localStorage.removeItem('finanzas_session_voting_phase_map');
+                    localStorage.removeItem('finanzas_is_voting_phase_active');
+                    localStorage.removeItem('finanzas_voting_phase_timer');
+                    const resetNow = Date.now();
+                    ['sess-trabajadores-1', 'sess-emprendedores-1', 'sess-empresarios-1', 'sess-topmodels-1', 'sess-inversores-1', 'sess-millonarios-1'].forEach(sId => {
+                      localStorage.setItem(`finanzas_active_session_start_${sId}`, String(resetNow));
+                    });
                   } catch (e) {}
                   setActiveTabTab('casting_live');
+                  window.dispatchEvent(new CustomEvent('nav_to_casting_live'));
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                   activeTab === 'casting_live'

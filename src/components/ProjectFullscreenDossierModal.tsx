@@ -54,25 +54,25 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
   return (
     <div 
       id="channel-project-fullscreen-view"
-      className="relative w-full h-full bg-slate-950 flex flex-col font-sans select-none animate-fade-in overflow-hidden"
+      className="relative w-full h-full bg-[#070b14] text-white flex flex-col font-sans select-none animate-fade-in overflow-hidden"
     >
-      {/* 🌟 TOP CONTROL BAR INSIDE CHANNEL */}
-      <header className="w-full bg-slate-900 border-b border-slate-800 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 text-white shrink-0 z-20 shadow-xl">
+      {/* 🌟 TOP CONTROL BAR INSIDE CHANNEL (Dark Luxury matching za.png) */}
+      <header className="w-full bg-[#0e1628]/95 border-b border-slate-800/80 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 text-white shrink-0 z-20 shadow-xl">
         <div className="flex items-center gap-2 min-w-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 transition border border-slate-700 cursor-pointer shrink-0 active:scale-95 shadow-xs"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#131c31] hover:bg-[#1a2542] text-white font-extrabold text-xs flex items-center gap-1.5 transition border border-slate-700 cursor-pointer shrink-0 active:scale-95 shadow-md"
             title="Volver a la retransmisión"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="font-extrabold text-[11px] sm:text-xs">Volver al Directo</span>
+            <ArrowLeft className="w-4 h-4 text-amber-400" />
+            <span className="font-extrabold text-[11px] sm:text-xs tracking-wide">Volver al Directo</span>
           </button>
         </div>
 
         {/* Presenter info pill */}
         <div className="flex items-center gap-1.5 shrink-0 min-w-0">
-          <div className="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-full max-w-[140px] sm:max-w-none">
+          <div className="flex items-center gap-1.5 bg-[#070b14]/90 border border-slate-700/80 px-2.5 py-1 rounded-full max-w-[150px] sm:max-w-none shadow-inner">
             <img
               src={activeProjUser.avatar}
               alt={activeProjUser.name}
@@ -84,39 +84,39 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
         </div>
       </header>
 
-      {/* 📄 MAIN SCROLLABLE DOSSIER BODY */}
+      {/* 📄 MAIN SCROLLABLE DOSSIER BODY (Dark Luxury Theme) */}
       <div 
-        className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-slate-100 p-2 sm:p-3.5 pb-20 scrollbar-none box-border"
+        className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-[#070b14] p-2.5 sm:p-4 pb-20 scrollbar-none box-border"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <div className="w-full max-w-full mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col p-3 sm:p-4 space-y-3.5 box-border">
+        <div className="w-full max-w-full mx-auto bg-[#0e1628]/95 rounded-3xl shadow-2xl border border-slate-800/80 overflow-hidden flex flex-col p-3.5 sm:p-5 space-y-4 box-border">
           
           {/* Header: Title, Category, Tagline & Author Card */}
-          <div className="flex flex-col gap-3.5 border-b border-slate-200/80 pb-3.5 text-left w-full min-w-0 box-border">
-            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+          <div className="flex flex-col gap-3.5 border-b border-slate-800/80 pb-3.5 text-left w-full min-w-0 box-border">
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-rose-600 tracking-wider bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">
+                <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-rose-400 tracking-wider bg-rose-950/80 px-2.5 py-0.5 rounded-lg border border-rose-500/40">
                   {proj.category || 'Alta Costura & Pasarela Sostenible'}
                 </span>
-                <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-emerald-700 tracking-wider bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-emerald-400 tracking-wider bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-500/40 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
                   PROYECTO AUDITADO Y VERIFICADO
                 </span>
               </div>
 
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black font-display text-slate-950 tracking-tight m-0 leading-tight break-words">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black font-display text-white tracking-tight m-0 leading-tight break-words drop-shadow-sm">
                 {proj.title}
               </h1>
 
               {proj.tagline && (
-                <p className="text-xs sm:text-sm text-amber-900 font-serif italic bg-amber-50/80 p-2.5 sm:p-3 rounded-xl border border-amber-200/80 m-0 leading-relaxed shadow-2xs break-words">
+                <p className="text-xs sm:text-sm text-amber-200 font-serif italic bg-amber-950/30 p-2.5 sm:p-3 rounded-xl border border-amber-500/30 m-0 leading-relaxed shadow-inner break-words">
                   "{proj.tagline}"
                 </p>
               )}
             </div>
 
             {/* Presenter Profile Box */}
-            <div className="bg-slate-900 text-white p-3 sm:p-3.5 rounded-xl border border-slate-800 flex items-center gap-3 shadow-md text-left w-full min-w-0 box-border">
+            <div className="bg-[#070b14]/90 text-white p-3 sm:p-3.5 rounded-2xl border border-slate-800 flex items-center gap-3 shadow-md text-left w-full min-w-0 box-border">
               <div className="relative shrink-0">
                 <img
                   src={activeProjUser.avatar}
@@ -124,28 +124,28 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                   className="w-13 h-13 sm:w-15 sm:h-15 rounded-xl object-cover border-2 border-emerald-400 shadow-md"
                   referrerPolicy="no-referrer"
                 />
-                <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-black text-[8.5px] font-black px-1.5 py-0.2 rounded-full border border-white">
+                <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 text-[8.5px] font-black px-1.5 py-0.2 rounded-full border border-slate-950">
                   LIVE
                 </span>
               </div>
               <div className="flex flex-col text-left min-w-0 flex-1">
                 <span className="text-[9px] uppercase font-black tracking-widest text-emerald-400">Líder del Proyecto</span>
                 <h3 className="text-sm sm:text-base font-black text-white m-0 leading-tight truncate">{activeProjUser.name}</h3>
-                <span className="text-xs text-slate-300 font-medium truncate">@{activeProjUser.username || 'kendall_jenner_vip'}</span>
-                <span className="text-[10.5px] text-slate-400 font-bold mt-0.5 truncate">{activeProjUser.role}</span>
+                <span className="text-xs text-slate-400 font-medium truncate">@{activeProjUser.username || 'kendall_jenner_vip'}</span>
+                <span className="text-[10.5px] text-amber-400 font-bold mt-0.5 truncate">{activeProjUser.role}</span>
               </div>
             </div>
           </div>
 
           {/* Step Navigation Pills */}
-          <div className="bg-slate-100/90 border border-slate-200 rounded-xl p-1.5 grid grid-cols-3 gap-1 text-center text-[10px] sm:text-xs font-black shrink-0 w-full box-border">
+          <div className="bg-[#070b14]/90 border border-slate-800/80 rounded-2xl p-1.5 grid grid-cols-3 gap-1 text-center text-[10px] sm:text-xs font-black shrink-0 w-full box-border">
             <button
               type="button"
               onClick={() => setDetailModalStep(detailModalStep === 'basic' ? 'all' : 'basic')}
-              className={`py-2 px-1 rounded-lg border flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer font-sans ${
+              className={`py-2 px-1 rounded-xl border flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer font-sans ${
                 detailModalStep === 'basic'
-                  ? 'bg-slate-950 text-white border-slate-950 shadow-md scale-[1.01]'
-                  : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
+                  ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 text-white border-rose-500/50 shadow-md scale-[1.01]'
+                  : 'bg-[#0e1628]/80 text-slate-300 border-slate-800 hover:bg-[#131c31]'
               }`}
             >
               <span>📄</span>
@@ -155,10 +155,10 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
             <button
               type="button"
               onClick={() => setDetailModalStep(detailModalStep === 'finance' ? 'all' : 'finance')}
-              className={`py-2 px-1 rounded-lg border flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer font-sans ${
+              className={`py-2 px-1 rounded-xl border flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer font-sans ${
                 detailModalStep === 'finance'
-                  ? 'bg-slate-950 text-white border-slate-950 shadow-md scale-[1.01]'
-                  : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
+                  ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 text-white border-rose-500/50 shadow-md scale-[1.01]'
+                  : 'bg-[#0e1628]/80 text-slate-300 border-slate-800 hover:bg-[#131c31]'
               }`}
             >
               <span>📈</span>
@@ -168,10 +168,10 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
             <button
               type="button"
               onClick={() => setDetailModalStep(detailModalStep === 'team' ? 'all' : 'team')}
-              className={`py-2 px-1 rounded-lg border flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer font-sans ${
+              className={`py-2 px-1 rounded-xl border flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer font-sans ${
                 detailModalStep === 'team'
-                  ? 'bg-slate-950 text-white border-slate-950 shadow-md scale-[1.01]'
-                  : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
+                  ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 text-white border-rose-500/50 shadow-md scale-[1.01]'
+                  : 'bg-[#0e1628]/80 text-slate-300 border-slate-800 hover:bg-[#131c31]'
               }`}
             >
               <span>👥</span>
@@ -180,8 +180,8 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
           </div>
 
           {/* Subtitle & Step toggle */}
-          <div className="flex flex-wrap justify-between items-center gap-2 px-1 text-xs font-bold text-slate-500 shrink-0 border-b border-slate-100 pb-2 w-full">
-            <span className="text-[11px] sm:text-xs truncate">
+          <div className="flex flex-wrap justify-between items-center gap-2 px-1 text-xs font-bold text-slate-400 shrink-0 border-b border-slate-800/80 pb-2 w-full">
+            <span className="text-[11px] sm:text-xs truncate text-amber-300 font-mono">
               {detailModalStep === 'basic' && 'Paso 1: Identidad Creativa & Dossier'}
               {detailModalStep === 'finance' && 'Paso 2: Estructura Financiera'}
               {detailModalStep === 'team' && 'Paso 3: Equipo Humano'}
@@ -190,7 +190,7 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
             <button
               type="button"
               onClick={() => setDetailModalStep(detailModalStep === 'all' ? 'basic' : 'all')}
-              className="text-[10px] sm:text-[11px] font-black text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition border border-slate-200 cursor-pointer uppercase flex items-center gap-1 shrink-0"
+              className="text-[10px] sm:text-[11px] font-black text-white bg-[#131c31] hover:bg-[#1a2542] px-2.5 py-1.5 rounded-lg transition border border-slate-700 cursor-pointer uppercase flex items-center gap-1 shrink-0"
             >
               👁️ {detailModalStep === 'all' ? 'FILTRAR PASO' : 'VER TODOS'}
             </button>
@@ -198,62 +198,62 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
 
           {/* SECTION 1: IDENTIDAD CREATIVA */}
           {(detailModalStep === 'all' || detailModalStep === 'basic') && (
-            <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left animate-fade-in shadow-2xs w-full min-w-0 box-border">
-              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/80 pb-2.5">
-                <span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-rose-600 shrink-0" />
+            <div className="bg-[#070b14]/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left animate-fade-in shadow-inner w-full min-w-0 box-border">
+              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800/80 pb-2.5">
+                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>1. Identidad Creativa del Proyecto</span>
                 </span>
-                <span className="text-[10.5px] text-emerald-800 font-extrabold bg-emerald-100 px-2.5 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+                <span className="text-[10.5px] text-emerald-400 font-extrabold bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-500/40 shrink-0">
                   ✓ Verificado Oficial
                 </span>
               </div>
 
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Descripción Detallada de la Propuesta</span>
-                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium m-0 break-words">
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium m-0 break-words">
                   {proj.description}
                 </p>
               </div>
 
               <div className="flex flex-col gap-2.5 pt-1 w-full">
-                <div className="bg-white p-3 rounded-xl border border-slate-200 text-xs sm:text-sm shadow-2xs w-full min-w-0 box-border">
+                <div className="bg-[#0e1628]/95 p-3 rounded-xl border border-slate-800 text-xs sm:text-sm shadow-xs w-full min-w-0 box-border">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email de Contacto Oficial</span>
-                  <span className="font-extrabold text-slate-900 truncate block mt-0.5 flex items-center gap-1.5">
-                    <span className="text-rose-600 shrink-0">✉</span> <span className="truncate">{proj.contactEmail || 'kendall@818couture.com'}</span>
+                  <span className="font-extrabold text-white truncate block mt-0.5 flex items-center gap-1.5">
+                    <span className="text-rose-400 shrink-0">✉</span> <span className="truncate">{proj.contactEmail || 'kendall@818couture.com'}</span>
                   </span>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-slate-200 text-xs sm:text-sm shadow-2xs w-full min-w-0 box-border">
+                <div className="bg-[#0e1628]/95 p-3 rounded-xl border border-slate-800 text-xs sm:text-sm shadow-xs w-full min-w-0 box-border">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Teléfono Directo de Producción</span>
-                  <span className="font-extrabold text-slate-900 truncate block mt-0.5 flex items-center gap-1.5">
-                    <span className="text-emerald-600 shrink-0">📞</span> <span className="truncate">{proj.contactPhone || '+1 (310) 818-2026'}</span>
+                  <span className="font-extrabold text-white truncate block mt-0.5 flex items-center gap-1.5">
+                    <span className="text-emerald-400 shrink-0">📞</span> <span className="truncate">{proj.contactPhone || '+1 (310) 818-2026'}</span>
                   </span>
                 </div>
               </div>
 
               {/* IMÁGENES O VIDEOS DE REFERENCIA */}
-              <div className="mt-1 bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 shadow-2xs w-full min-w-0 box-border">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="mt-1 bg-[#0e1628]/95 border border-slate-800 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 shadow-md w-full min-w-0 box-border">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm">📷</span>
-                    <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                    <span className="text-xs font-black text-white uppercase tracking-wider">
                       IMÁGENES Y VÍDEOS
                     </span>
                   </div>
-                  <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 shrink-0">
+                  <span className="text-[10px] font-black text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-md border border-amber-500/40 shrink-0">
                     {mediaList.length} Archivos
                   </span>
                 </div>
 
-                <p className="text-xs text-slate-600 leading-normal m-0 font-medium break-words">
+                <p className="text-xs text-slate-400 leading-normal m-0 font-medium break-words">
                   Fotografías y vídeos del proyecto para los inversores y patrocinadores de la sesión.
                 </p>
 
-                {/* Media Thumbnails Grid - Fotografías en tamaño mayor */}
+                {/* Media Thumbnails Grid */}
                 {mediaList.length > 0 && (
                   <div className="flex flex-wrap items-center gap-3 pt-1 w-full">
                     {mediaList.map((item) => (
-                      <div key={item.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 hover:border-slate-300 bg-slate-900 w-28 h-28 sm:w-36 sm:h-36 shrink-0 aspect-square shadow-sm">
+                      <div key={item.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-700 hover:border-amber-400/80 bg-slate-900 w-28 h-28 sm:w-36 sm:h-36 shrink-0 aspect-square shadow-lg">
                         {item.type === 'video' ? (
                           <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
                             <video src={item.url} className="w-full h-full object-cover opacity-85" muted loop autoPlay playsInline />
@@ -282,7 +282,7 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                               [curKey]: (prev[curKey] || []).filter(m => m.id !== item.id)
                             }));
                           }}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition cursor-pointer z-10"
+                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/80 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition cursor-pointer z-10"
                           title="Eliminar"
                         >
                           ✕
@@ -294,7 +294,7 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
 
                 {/* Botón de subir archivo desde el equipo debajo de las fotos con diseño cuadrado */}
                 <div className="pt-2">
-                  <label className="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-2xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition w-28 h-28 sm:w-36 sm:h-36 aspect-square group shadow-2xs">
+                  <label className="border-2 border-dashed border-slate-700 hover:border-amber-400 bg-[#070b14] hover:bg-[#0e1628] rounded-2xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition w-28 h-28 sm:w-36 sm:h-36 aspect-square group shadow-inner">
                     <input 
                       type="file" 
                       accept="image/*,video/*" 
@@ -315,10 +315,10 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                         }
                       }}
                     />
-                    <span className="w-8 h-8 rounded-full bg-white group-hover:bg-rose-100 text-slate-700 group-hover:text-rose-600 flex items-center justify-center text-sm mb-1 transition shadow-2xs">
+                    <span className="w-8 h-8 rounded-full bg-[#131c31] group-hover:bg-amber-400/20 text-amber-300 flex items-center justify-center text-sm mb-1 transition shadow-xs">
                       <Upload className="w-4 h-4" />
                     </span>
-                    <span className="text-[10px] font-black text-slate-900 leading-tight">
+                    <span className="text-[10px] font-black text-white leading-tight">
                       Subir archivo desde el equipo
                     </span>
                     <span className="text-[8px] text-slate-400 mt-0.5 leading-tight">
@@ -328,14 +328,14 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                 </div>
 
                 {/* URL Input Row */}
-                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row gap-2 w-full min-w-0">
-                  <div className="flex-1 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 min-w-0">
+                <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row gap-2 w-full min-w-0">
+                  <div className="flex-1 flex items-center gap-1.5 bg-[#070b14] border border-slate-700 rounded-xl px-2.5 py-1.5 min-w-0">
                     <input
                       type="text"
                       placeholder="Enlace de foto (.jpg, .png)"
                       value={newMediaImageUrl}
                       onChange={(e) => setNewMediaImageUrl(e.target.value)}
-                      className="w-full text-[10px] outline-none text-slate-800 bg-transparent min-w-0"
+                      className="w-full text-[10px] outline-none text-white bg-transparent min-w-0 placeholder-slate-500"
                     />
                     <button
                       type="button"
@@ -352,19 +352,19 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                           setNewMediaImageUrl('');
                         }
                       }}
-                      className="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-white font-black text-[9px] rounded-lg cursor-pointer uppercase shrink-0"
+                      className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-95 text-slate-950 font-black text-[9px] rounded-lg cursor-pointer uppercase shrink-0"
                     >
                       +FOTO
                     </button>
                   </div>
 
-                  <div className="flex-1 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 min-w-0">
+                  <div className="flex-1 flex items-center gap-1.5 bg-[#070b14] border border-slate-700 rounded-xl px-2.5 py-1.5 min-w-0">
                     <input
                       type="text"
                       placeholder="Enlace de vídeo (.mp4)"
                       value={newMediaVideoUrl}
                       onChange={(e) => setNewMediaVideoUrl(e.target.value)}
-                      className="w-full text-[10px] outline-none text-slate-800 bg-transparent min-w-0"
+                      className="w-full text-[10px] outline-none text-white bg-transparent min-w-0 placeholder-slate-500"
                     />
                     <button
                       type="button"
@@ -381,7 +381,7 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                           setNewMediaVideoUrl('');
                         }
                       }}
-                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-black text-[9px] rounded-lg cursor-pointer uppercase shrink-0"
+                      className="px-2.5 py-1 bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:opacity-95 text-white font-black text-[9px] rounded-lg cursor-pointer uppercase shrink-0"
                     >
                       +VÍDEO
                     </button>
@@ -393,61 +393,61 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
 
           {/* SECTION 2: ECONOMÍA Y FONDOS */}
           {(detailModalStep === 'all' || detailModalStep === 'finance') && (
-            <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left animate-fade-in shadow-2xs w-full min-w-0 box-border">
-              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/80 pb-2.5">
-                <span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="bg-[#070b14]/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left animate-fade-in shadow-inner w-full min-w-0 box-border">
+              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800/80 pb-2.5">
+                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>2. Economía y Fondos (Plan de Viabilidad)</span>
                 </span>
-                <span className="text-[10.5px] text-emerald-800 font-extrabold bg-emerald-100 px-2.5 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+                <span className="text-[10.5px] text-emerald-400 font-extrabold bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-500/40 shrink-0">
                   ✓ Auditado por Fashions Finances
                 </span>
               </div>
 
               <div className="flex flex-col gap-3 w-full">
-                <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 flex flex-col gap-1 shadow-2xs w-full min-w-0 box-border">
+                <div className="bg-[#0e1628]/95 p-3.5 sm:p-4 rounded-2xl border border-slate-800 flex flex-col gap-1 shadow-md w-full min-w-0 box-border">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Meta de Financiación / Presupuesto</span>
-                  <span className="text-xl sm:text-2xl font-black text-slate-950">
+                  <span className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
                     {proj.fundingGoal || '500.000 €'}
                   </span>
-                  <span className="text-xs text-slate-600 mt-1 font-medium break-words">
+                  <span className="text-xs text-slate-300 mt-1 font-medium break-words">
                     {proj.metrics}
                   </span>
                 </div>
 
-                <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 flex flex-col gap-1 shadow-2xs w-full min-w-0 box-border">
+                <div className="bg-[#0e1628]/95 p-3.5 sm:p-4 rounded-2xl border border-slate-800 flex flex-col gap-1 shadow-md w-full min-w-0 box-border">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Retorno Estimado (ROI)</span>
-                  <span className="text-sm sm:text-base font-black text-emerald-700 leading-snug break-words">
+                  <span className="text-sm sm:text-base font-black text-emerald-400 leading-snug break-words font-mono">
                     {proj.roi}
                   </span>
                 </div>
               </div>
 
-              <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 text-sm space-y-1.5 shadow-2xs w-full min-w-0 box-border">
+              <div className="bg-[#0e1628]/95 p-3.5 sm:p-4 rounded-2xl border border-slate-800 text-sm space-y-1.5 shadow-md w-full min-w-0 box-border">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Desglose de Gastos & Uso de Fondos</span>
-                <p className="font-semibold text-slate-800 leading-relaxed m-0 text-xs sm:text-sm break-words">
+                <p className="font-semibold text-slate-300 leading-relaxed m-0 text-xs sm:text-sm break-words">
                   {proj.fundUsage || '50% Confección Alta Costura & Tejidos Sostenibles • 30% Producción Runway Fashion Week • 20% Marketing & Distribución Global'}
                 </p>
               </div>
 
               <div className="flex flex-col gap-2.5 w-full">
-                <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 text-xs shadow-2xs w-full min-w-0 box-border">
+                <div className="bg-[#0e1628]/95 p-3.5 rounded-2xl border border-slate-800 text-xs shadow-md w-full min-w-0 box-border">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Plazo de Ejecución</span>
-                  <span className="font-black text-slate-900 text-sm block mt-0.5 break-words">
+                  <span className="font-black text-white text-sm block mt-0.5 break-words">
                     {proj.timeline || '6 meses (Lanzamiento oficial Fashion Week 2026)'}
                   </span>
                 </div>
-                <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 text-xs flex items-center justify-between gap-3 shadow-2xs w-full min-w-0 box-border">
+                <div className="bg-[#0e1628]/95 p-3.5 rounded-2xl border border-slate-800 text-xs flex items-center justify-between gap-3 shadow-md w-full min-w-0 box-border">
                   <div className="min-w-0 flex-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Documento Oficial</span>
-                    <span className="font-extrabold text-slate-900 text-xs truncate block mt-0.5" title={proj.documentation || 'Dossier-Kendall-Jenner-Haute-Couture-2026.pdf'}>
+                    <span className="font-extrabold text-white text-xs truncate block mt-0.5" title={proj.documentation || 'Dossier-Kendall-Jenner-Haute-Couture-2026.pdf'}>
                       {proj.documentation || 'Dossier-Kendall-Jenner-Haute-Couture-2026.pdf'}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => alert(`📥 Descargando documento oficial: ${proj.documentation || 'Dossier-Proyecto.pdf'}`)}
-                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-black rounded-xl border border-rose-200 transition cursor-pointer text-xs flex items-center gap-1 shrink-0 active:scale-95"
+                    className="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 font-black rounded-xl border border-rose-500/40 transition cursor-pointer text-xs flex items-center gap-1 shrink-0 active:scale-95 shadow-sm"
                   >
                     <span>PDF</span>
                     <span>📄</span>
@@ -459,18 +459,18 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
 
           {/* SECTION 3: EQUIPO HUMANO */}
           {(detailModalStep === 'all' || detailModalStep === 'team') && (
-            <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left animate-fade-in shadow-2xs w-full min-w-0 box-border">
-              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/80 pb-2.5">
-                <span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+            <div className="bg-[#070b14]/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left animate-fade-in shadow-inner w-full min-w-0 box-border">
+              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800/80 pb-2.5">
+                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                   <span>3. Equipo Humano & Presentador</span>
                 </span>
-                <span className="text-[10.5px] text-emerald-800 font-extrabold bg-emerald-100 px-2.5 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+                <span className="text-[10.5px] text-emerald-400 font-extrabold bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-500/40 shrink-0">
                   ✓ Verificado Internacional
                 </span>
               </div>
 
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 shadow-2xs w-full min-w-0 box-border">
+              <div className="bg-[#0e1628]/95 border border-slate-800 rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 shadow-md w-full min-w-0 box-border">
                 {/* Header row: Avatar + Identidad + Badge Líder Creativa VIP */}
                 <div className="flex items-center justify-between gap-2.5 w-full min-w-0">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -481,24 +481,24 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
                       referrerPolicy="no-referrer"
                     />
                     <div className="flex flex-col text-left min-w-0 flex-1">
-                      <span className="text-[9.5px] font-black uppercase text-rose-600 tracking-wider truncate">
+                      <span className="text-[9.5px] font-black uppercase text-rose-400 tracking-wider truncate">
                         Creadora y Directora de Pasarela
                       </span>
-                      <span className="text-base sm:text-lg font-black text-slate-950 truncate leading-tight">
+                      <span className="text-base sm:text-lg font-black text-white truncate leading-tight">
                         {activeProjUser.name}
                       </span>
-                      <span className="text-[11px] font-semibold text-slate-500 truncate">
+                      <span className="text-[11px] font-semibold text-slate-400 truncate">
                         @{activeProjUser.username || 'kendall_jenner_vip'} · {activeProjUser.role}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] sm:text-xs bg-slate-950 text-white font-black px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm whitespace-nowrap">
+                  <span className="text-[10px] sm:text-xs bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm whitespace-nowrap">
                     Líder Creativa VIP
                   </span>
                 </div>
 
                 {/* Bio text below - full width, wraps cleanly, never clipped */}
-                <p className="text-xs text-slate-600 leading-relaxed m-0 font-medium break-words border-t border-slate-100 pt-2.5">
+                <p className="text-xs text-slate-300 leading-relaxed m-0 font-medium break-words border-t border-slate-800 pt-2.5">
                   Supermodelo internacional de alta costura, empresaria y referente global en semanas de la moda de Milán, París y Nueva York.
                 </p>
               </div>
@@ -506,13 +506,13 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
           )}
 
           {/* 💼 FOOTER ACTION BAR INSIDE DOSSIER */}
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200 w-full min-w-0 box-border">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800/80 w-full min-w-0 box-border">
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
               {onVoteProject && (
                 <button
                   type="button"
                   onClick={() => onVoteProject(activeProjUser)}
-                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#fe2c55] hover:bg-[#df2046] text-white font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95"
+                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-rose-950/60 active:scale-95 border border-rose-500/40"
                 >
                   <span className="text-sm">🗳️</span>
                   <span>Votar por este Proyecto</span>
@@ -522,9 +522,9 @@ export const ProjectFullscreenDossierModal: React.FC<ProjectFullscreenDossierMod
               <button
                 type="button"
                 onClick={() => alert(`📄 Descargando dossier oficial de ${proj.title}...`)}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#131c31] hover:bg-[#1a2542] text-white font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-700 shadow-md active:scale-95"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 text-amber-400" />
                 <span>Descargar PDF</span>
               </button>
             </div>
