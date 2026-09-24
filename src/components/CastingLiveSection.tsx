@@ -4488,11 +4488,441 @@ export default function CastingLiveSection({
         setScreenShareStream(null);
       }
       setIsScreenSharingActive(false);
+      setScreenSplitLayout('single');
       setShowScreenShareMenu(false);
       alert('🖥️ Compartición de pantalla finalizada.');
     } else {
       setShowScreenShareMenu(prev => !prev);
     }
+  };
+
+  const renderScreenShareOptionsModal = () => {
+    if (!showScreenShareMenu) return null;
+    const activeInvitedList = FINANZAS_USERS.filter(u => invitedUsersMap[u.id]);
+    const invitedCount = activeInvitedList.length;
+
+    const handleToggleGuest = (user: typeof FINANZAS_USERS[0]) => {
+      const isCurrentlyInvited = Boolean(invitedUsersMap[user.id]);
+      if (!isCurrentlyInvited) {
+        if (invitedCount >= 2) {
+          alert('⚠️ Límite alcanzado: Solo puedes elegir hasta dos invitados. Desmarca uno para añadir a otro.');
+          return;
+        }
+        const newCount = invitedCount + 1;
+        setInvitedUsersMap(prev => ({ ...prev, [user.id]: true }));
+        setIsScreenSharingActive(true);
+        setActiveScreenSharer('host');
+        if (newCount === 1) {
+          setScreenSplitLayout('50-50');
+          alert(`👥 ¡Has elegido a ${user.name}! La pantalla se ha dividido en dos.`);
+        } else if (newCount === 2) {
+          setScreenSplitLayout('grid-3');
+          alert(`👥 ¡Has elegido a ${user.name}! La pantalla se ha dividido en tres con tus dos invitados.`);
+        }
+      } else {
+        const newCount = invitedCount - 1;
+        setInvitedUsersMap(prev => ({ ...prev, [user.id]: false }));
+        if (newCount === 1) {
+          setScreenSplitLayout('50-50');
+          setIsScreenSharingActive(true);
+          alert(`🔄 Se ha retirado a ${user.name}. La pantalla se mantiene dividida en dos con el invitado restante.`);
+        } else {
+          setScreenSplitLayout('single');
+          setIsScreenSharingActive(false);
+          alert(`🔄 Se ha retirado a ${user.name}. Pantalla completa restablecida.`);
+        }
+      }
+    };
+
+    return (
+      <div 
+        className="absolute inset-0 z-[220] bg-white w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between shadow-2xl animate-fade-in text-slate-900 font-sans pointer-events-auto p-4 sm:p-5 box-border" 
+        id="screen-share-options-modal" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 1. Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 shadow-xs">
+              <Monitor className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-indigo-600" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm md:text-base font-black uppercase text-slate-900 tracking-wider truncate m-0">
+                Distribución de Pantalla
+              </h4>
+              <span className="text-[11px] sm:text-xs text-indigo-700 font-bold block truncate mt-0.5">
+                Elige entre 10 ventanas en 2 columnas o pantalla completa
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowScreenShareMenu(false)}
+            className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-200 shadow-xs active:scale-95"
+            title="Cerrar"
+            id="btn-close-screen-share-modal"
+          >
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
+
+        {/* 2. Scrollable Body in full size */}
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-4 py-2.5 pr-1 custom-scrollbar">
+          {/* Opciones directas de Pantalla: 10 Ventanas, Pantalla Completa, Dividida en 2 y Dividida en 3 */}
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-2.5">
+              {/* 1. Botón para dividir la pantalla en 10 ventanas */}
+              <button
+                type="button"
+                onClick={() => {
+                  setScreenSplitLayout('grid-10');
+                  setScreenShareMode('window');
+                  setIsScreenSharingActive(true);
+                  setActiveScreenSharer('host');
+                  setShowScreenShareMenu(false);
+                }}
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
+                  isScreenSharingActive && screenSplitLayout === 'grid-10'
+                    ? 'bg-purple-50/90 border-purple-600 text-purple-950 font-black ring-2 ring-purple-400 shadow-md'
+                    : 'bg-white hover:bg-purple-50/60 border-slate-200 hover:border-purple-300 text-slate-900 font-bold shadow-2xs'
+                }`}
+                id="btn-split-10-windows"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xl sm:text-2xl">👥</span>
+                  {isScreenSharingActive && screenSplitLayout === 'grid-10' && (
+                    <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">10 Ventanas</span>
+                  <span className="text-[10px] sm:text-[11px] text-purple-700 font-bold block leading-snug mt-0.5">2 cols en horizontal</span>
+                </div>
+              </button>
+
+              {/* 2. Botón para ponerla en pantalla completa */}
+              <button
+                type="button"
+                onClick={() => {
+                  setScreenSplitLayout('single');
+                  setIsScreenSharingActive(false);
+                  setActiveScreenSharer('host');
+                  if (screenShareStream) {
+                    try {
+                      screenShareStream.getTracks().forEach(t => t.stop());
+                    } catch (e) {}
+                    setScreenShareStream(null);
+                  }
+                  setShowScreenShareMenu(false);
+                  try {
+                    const videoElem = document.getElementById('main-live-video-player') || document.documentElement;
+                    if (videoElem && !document.fullscreenElement) {
+                      videoElem.requestFullscreen?.().catch(() => {});
+                    }
+                  } catch (e) {}
+                }}
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
+                  screenSplitLayout === 'single' && !isScreenSharingActive
+                    ? 'bg-indigo-50/90 border-indigo-600 text-indigo-950 font-black ring-2 ring-indigo-400 shadow-md'
+                    : 'bg-white hover:bg-indigo-50/60 border-slate-200 hover:border-indigo-300 text-slate-900 font-bold shadow-2xs'
+                }`}
+                id="btn-full-screen"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xl sm:text-2xl">🖥️</span>
+                  {screenSplitLayout === 'single' && !isScreenSharingActive && (
+                    <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Pantalla Completa</span>
+                  <span className="text-[10px] sm:text-[11px] text-indigo-700 font-bold block leading-snug mt-0.5">Modo único</span>
+                </div>
+              </button>
+
+              {/* 3. Botón para dividir en dos (1 invitado) */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (invitedCount === 0) {
+                    const firstUser = FINANZAS_USERS[0];
+                    setInvitedUsersMap({ [firstUser.id]: true });
+                    alert(`👥 Se ha seleccionado a ${firstUser.name} como invitado. ¡Pantalla dividida en dos!`);
+                  }
+                  setScreenSplitLayout('50-50');
+                  setIsScreenSharingActive(true);
+                  setActiveScreenSharer('host');
+                  setShowScreenShareMenu(false);
+                }}
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
+                  screenSplitLayout === '50-50'
+                    ? 'bg-emerald-50/90 border-emerald-600 text-emerald-950 font-black ring-2 ring-emerald-400 shadow-md'
+                    : 'bg-white hover:bg-emerald-50/60 border-slate-200 hover:border-emerald-300 text-slate-900 font-bold shadow-2xs'
+                }`}
+                id="btn-split-2-screens"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xl sm:text-2xl">🌓</span>
+                  {screenSplitLayout === '50-50' && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Dividida en 2</span>
+                  <span className="text-[10px] sm:text-[11px] text-emerald-700 font-bold block leading-snug mt-0.5">1 Invitado (50/50)</span>
+                </div>
+              </button>
+
+              {/* 4. Botón para dividir en tres (2 invitados) */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (invitedCount < 2) {
+                    const u1 = FINANZAS_USERS[0];
+                    const u2 = FINANZAS_USERS[1];
+                    setInvitedUsersMap({ [u1.id]: true, [u2.id]: true });
+                    alert(`👥 Se ha seleccionado a ${u1.name} y ${u2.name}. ¡Pantalla dividida en tres!`);
+                  }
+                  setScreenSplitLayout('grid-3');
+                  setIsScreenSharingActive(true);
+                  setActiveScreenSharer('host');
+                  setShowScreenShareMenu(false);
+                }}
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
+                  screenSplitLayout === 'grid-3'
+                    ? 'bg-cyan-50/90 border-cyan-600 text-cyan-950 font-black ring-2 ring-cyan-400 shadow-md'
+                    : 'bg-white hover:bg-cyan-50/60 border-slate-200 hover:border-cyan-300 text-slate-900 font-bold shadow-2xs'
+                }`}
+                id="btn-split-3-screens"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xl sm:text-2xl">📐</span>
+                  {screenSplitLayout === 'grid-3' && (
+                    <span className="w-2 h-2 rounded-full bg-cyan-600 animate-ping" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Dividida en 3</span>
+                  <span className="text-[10px] sm:text-[11px] text-cyan-700 font-bold block leading-snug mt-0.5">2 Invitados</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* 👥 Contenedor Invitados para invitar hasta dos usuarios y dividir la pantalla en dos o en tres */}
+          <div className="pt-3 border-t border-slate-200 space-y-3" id="container-invitados-presentacion">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <span className="text-xs sm:text-[13px] font-black uppercase text-slate-900 flex items-center gap-1.5">
+                  👥 Invitados ({invitedCount}/2)
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 block">
+                  Elige hasta 2 invitados: con 1 se divide en dos, con 2 en tres
+                </span>
+              </div>
+              <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-0.5 rounded-full border shrink-0 ${
+                invitedCount === 2
+                  ? 'bg-purple-100 text-purple-900 border-purple-300'
+                  : invitedCount === 1
+                  ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                  : 'bg-slate-100 text-slate-700 border-slate-300'
+              }`}>
+                {invitedCount === 0
+                  ? '0/2 Invitados'
+                  : invitedCount === 1
+                  ? '🟢 Pantalla en 2 (1/2)'
+                  : '🟣 Pantalla en 3 (2/2)'}
+              </span>
+            </div>
+
+            {/* Chips de invitados activos actualmente con opción de quitar rápida */}
+            {invitedCount > 0 && (
+              <div className="bg-indigo-50/80 border border-indigo-200 rounded-xl p-2.5 flex items-center justify-between gap-2 flex-wrap animate-fade-in">
+                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                  <span className="text-[10.5px] font-black text-indigo-900">
+                    {invitedCount === 1 ? '📺 En pantalla dividida en 2:' : '📺 En pantalla dividida en 3:'}
+                  </span>
+                  {activeInvitedList.map((invUser, idx) => (
+                    <span
+                      key={invUser.id}
+                      className="inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 text-[10.5px] font-black text-indigo-950 shadow-2xs"
+                    >
+                      <img src={invUser.avatar} className="w-4 h-4 rounded-full object-cover shrink-0" alt={invUser.name} />
+                      <span className="truncate max-w-[100px]">{invUser.name}</span>
+                      <span className="text-[8.5px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-extrabold">
+                        {idx === 0 ? 'Inv 1' : 'Inv 2'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleGuest(invUser)}
+                        className="text-slate-400 hover:text-rose-600 font-black ml-0.5 cursor-pointer text-xs"
+                        title={`Quitar a ${invUser.name}`}
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvitedUsersMap({});
+                    setScreenSplitLayout('single');
+                    setIsScreenSharingActive(false);
+                  }}
+                  className="text-[10px] text-rose-600 hover:text-rose-800 font-extrabold underline shrink-0 cursor-pointer ml-auto"
+                >
+                  Limpiar todos
+                </button>
+              </div>
+            )}
+
+            {/* Buscador de usuario para invitar */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={inviteSearchQueryInScreenModal}
+                onChange={(e) => setInviteSearchQueryInScreenModal(e.target.value)}
+                placeholder="Buscar usuario o ponente para invitar..."
+                className="w-full text-xs sm:text-sm pl-9 pr-8 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-indigo-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium transition shadow-2xs"
+                id="input-buscar-invitado-presentacion"
+              />
+              {inviteSearchQueryInScreenModal && (
+                <button
+                  type="button"
+                  onClick={() => setInviteSearchQueryInScreenModal('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  title="Limpiar búsqueda"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Lista de usuarios con botón de invitar a la presentación */}
+            <div className="space-y-2 pr-1">
+              {FINANZAS_USERS
+                .filter(user => {
+                  if (!inviteSearchQueryInScreenModal) return true;
+                  const q = inviteSearchQueryInScreenModal.toLowerCase();
+                  return user.name.toLowerCase().includes(q) || (user.role && user.role.toLowerCase().includes(q));
+                })
+                .map((user) => {
+                  const isInvited = Boolean(invitedUsersMap[user.id]);
+                  const userIndexInActive = activeInvitedList.findIndex(u => u.id === user.id);
+                  const isMaxReached = invitedCount >= 2 && !isInvited;
+
+                  return (
+                    <div
+                      key={user.id}
+                      className={`p-2.5 sm:p-3 rounded-2xl border flex items-center justify-between gap-2.5 transition ${
+                        isInvited
+                          ? 'bg-emerald-50/90 border-emerald-300 shadow-2xs'
+                          : isMaxReached
+                          ? 'bg-slate-50/70 border-slate-200 opacity-80'
+                          : 'bg-white hover:bg-indigo-50/40 border-slate-200/90 hover:border-indigo-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-slate-200 shrink-0 shadow-2xs"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs sm:text-[13px] font-bold text-slate-900 block truncate leading-tight">
+                              {user.name}
+                            </span>
+                            {isInvited && (
+                              <span className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded uppercase">
+                                {userIndexInActive === 0 ? 'Invitado 1' : 'Invitado 2'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10.5px] sm:text-[11px] text-slate-500 font-medium block truncate leading-tight mt-0.5">
+                            {user.role || 'Participante'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleGuest(user)}
+                        className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 active:scale-95 flex items-center gap-1.5 shadow-sm ${
+                          isInvited
+                            ? 'bg-emerald-600 hover:bg-rose-600 text-white'
+                            : isMaxReached
+                            ? 'bg-slate-300 hover:bg-slate-400 text-slate-700'
+                            : 'bg-[#3f4b59] hover:bg-[#2f3945] text-white'
+                        }`}
+                        id={`btn-invitar-presentacion-${user.id}`}
+                        title={
+                          isInvited
+                            ? `Quitar a ${user.name} de la pantalla dividida`
+                            : isMaxReached
+                            ? 'Límite de 2 invitados alcanzado'
+                            : `Invitar a ${user.name} para dividir la pantalla`
+                        }
+                      >
+                        {isInvited ? (
+                          <>
+                            <span>✓</span>
+                            <span>En Pantalla</span>
+                          </>
+                        ) : isMaxReached ? (
+                          <>
+                            <UserPlus className="w-3.5 h-3.5 opacity-60" />
+                            <span>Límite 2</span>
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>Invitar</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Footer */}
+        <div className="shrink-0 pt-3 border-t border-slate-200 flex items-center gap-2">
+          {isScreenSharingActive && (
+            <button
+              type="button"
+              onClick={() => {
+                if (screenShareStream) {
+                  try { screenShareStream.getTracks().forEach(t => t.stop()); } catch(e){}
+                  setScreenShareStream(null);
+                }
+                setIsScreenSharingActive(false);
+                setScreenSplitLayout('single');
+                setShowScreenShareMenu(false);
+                alert('🛑 Compartición de pantalla finalizada.');
+              }}
+              className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95 text-center"
+              id="btn-stop-screen-share"
+            >
+              🛑 Detener
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowScreenShareMenu(false)}
+            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95 text-center"
+            id="btn-done-screen-share"
+          >
+            Listo / Aplicar
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // Show blocked banner for 15 seconds when entering Finanzas category with < 10 participants
@@ -8193,13 +8623,21 @@ export default function CastingLiveSection({
   const [showExtraChannelGiftsPopover, setShowExtraChannelGiftsPopover] = useState(false);
   const [isRightMarginHovered, setIsRightMarginHovered] = useState(false);
 
-  // TikTok Desktop Live float actions panel counts (image.png)
-  const [liveLikesCount, setLiveLikesCount] = useState(3100);
+  // TikTok Desktop Live float actions panel counts (image.png & z.png)
+  const [liveLikesCount, setLiveLikesCount] = useState(43200);
   const [isLiveLiked, setIsLiveLiked] = useState(false);
-  const [liveCommentsCount, setLiveCommentsCount] = useState(18);
-  const [liveBookmarksCount, setLiveBookmarksCount] = useState(112);
+  const [liveCommentsCount, setLiveCommentsCount] = useState(17);
+  const [liveBookmarksCount, setLiveBookmarksCount] = useState(592);
   const [isLiveBookmarked, setIsLiveBookmarked] = useState(false);
-  const [liveSharesCount, setLiveSharesCount] = useState(94);
+  const [liveSharesCount, setLiveSharesCount] = useState(726);
+
+  // Helper formatting numbers matching TikTok in z.png (e.g. 43.2K)
+  const formatCount = (n: number) => {
+    if (!n) return '0';
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+  };
 
   const handleLiveShareClick = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -13088,7 +13526,7 @@ export default function CastingLiveSection({
 
     return (
       <div 
-        className="absolute inset-0 w-full h-full bg-slate-950 z-[60] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto border-2 border-purple-500/80 rounded-2xl shadow-2xl"
+        className="absolute inset-0 w-full h-full bg-[#070b14] z-[60] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto rounded-[40px] sm:rounded-[48px] border-0 shadow-2xl"
         id="enlarged-participant-window-view"
       >
         {/* 1. Large Live Media (Video or Image taking full stage) */}
@@ -13121,21 +13559,18 @@ export default function CastingLiveSection({
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none" />
         </div>
 
-        {/* 2. Top Header Bar (Live Badge + Action buttons + Volver button) */}
-        <div className="relative z-20 flex items-center justify-between p-3 sm:p-4 gap-2">
+        {/* 2. Top Header Bar (Live Badge + Action buttons + Volver button - Idéntico a captura image.png) */}
+        <div className="relative z-20 flex items-center justify-between p-3 sm:p-4 gap-1.5 xs:gap-2">
           {/* Live Badge */}
-          <div className="flex items-center gap-2">
-            <span className="bg-black/80 backdrop-blur-md text-[10px] sm:text-xs font-black text-emerald-400 px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-emerald-500/50 shadow-lg tracking-wider">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="bg-[#0c1a24]/90 backdrop-blur-md text-[10px] sm:text-xs font-black text-emerald-400 px-2.5 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-500/50 shadow-lg tracking-wider">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
               EN VIVO
-            </span>
-            <span className="bg-purple-900/80 backdrop-blur-md text-purple-200 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full border border-purple-500/40 hidden xs:inline-block">
-              Ventana en grande
             </span>
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 xs:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -13144,7 +13579,7 @@ export default function CastingLiveSection({
                 setDetailProjectUser(enlargedWindowUser as any);
                 setShowProjectDetailsInPopup(true);
               }}
-              className="bg-white/90 hover:bg-white text-slate-900 text-[10px] sm:text-[11px] font-black px-2.5 py-1.5 rounded-xl border border-white shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1"
+              className="bg-white hover:bg-slate-100 text-slate-950 text-[10px] sm:text-[11px] font-black px-2.5 sm:px-3 py-1.5 rounded-xl border border-white shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1"
               title="Ver dossier del proyecto"
             >
               <span>📋 Ver Proyecto</span>
@@ -13153,7 +13588,7 @@ export default function CastingLiveSection({
             <button
               type="button"
               onClick={() => setEnlargedWindowUser(null)}
-              className="bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-[11px] font-black px-3 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1 border border-red-400"
+              className="bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-[11px] font-black px-2.5 sm:px-3.5 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1 border border-red-500"
               title="Cerrar y volver a las ventanas"
               id="btn-close-enlarged-window"
             >
@@ -24814,7 +25249,7 @@ try {
           renderExploreGrid()
         ) : (
           /* Main vertically centered container holding Stories at the top and Smartphone Video + Sidebar at the bottom */
-          <div className="flex flex-col items-center justify-center gap-2 w-full max-w-full sm:max-w-[480px] md:max-w-[540px] animate-fade-in self-center px-0 select-none min-w-0 mx-auto box-border" id="main-feed-column-container">
+          <div className="flex flex-col items-center justify-center gap-2 w-full max-w-full sm:max-w-[580px] md:max-w-[620px] animate-fade-in self-center px-0 select-none min-w-0 mx-auto box-border" id="main-feed-column-container">
             
 
 
@@ -24994,12 +25429,7 @@ try {
                     Ver todos los vídeos
                   </button>
                 </div>
-              ) : (selectedCategoryFilter === 'Finanzas' && !(
-                showFinanzasInscriptionInChannel ||
-                detailProjectUser ||
-                showProjectDetailsInPopup ||
-                isUserLiveStreamingWithCamera
-              )) ? (
+              ) : (selectedCategoryFilter === 'Finanzas' && !showFinanzasInscriptionInChannel && screenSplitLayout === 'single' && !isScreenSharingActive) ? (
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR FINANZAS ROUNDS (image.png & z.png) */
                 <TikTokFinanzasFeed
                   activeSessionsOnly={activeSessionsOnly}
@@ -25023,6 +25453,10 @@ try {
                     setIsMuted(isBroadcastMicOn && !isMuted);
                   }}
                   isUserLiveStreamingWithCamera={isUserLiveStreamingWithCamera}
+                  userLiveMediaStream={userLiveMediaStream}
+                  liveStreamTimerSeconds={liveStreamTimerSeconds}
+                  formatLiveStreamDuration={formatLiveStreamDuration}
+                  liveCameraFacingMode={liveCameraFacingMode}
                   isWatchingPresenterCamera={isWatchingPresenterCamera}
                   handleToggleUserCameraLiveBroadcast={handleToggleUserCameraLiveBroadcast}
                   setIsWatchingPresenterCamera={setIsWatchingPresenterCamera}
@@ -25042,6 +25476,35 @@ try {
                   setDetailProjectUser={setDetailProjectUser}
                   setActiveFinanzasPopupUser={setActiveFinanzasPopupUser}
                   setShowProjectDetailsInPopup={setShowProjectDetailsInPopup}
+                  detailProjectUser={detailProjectUser}
+                  showProjectDetailsInPopup={showProjectDetailsInPopup}
+                  renderProjectDetailsContent={() => (detailProjectUser || showProjectDetailsInPopup) ? (
+                    <ProjectFullscreenDossierModal
+                      detailProjectUser={detailProjectUser}
+                      showProjectDetailsInPopup={showProjectDetailsInPopup}
+                      activeFinanzasPopupUser={activeFinanzasPopupUser}
+                      selectedFinanzasUser={selectedFinanzasUser}
+                      currentFinanzasSession={activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession}
+                      getFinanzasProjectDetails={getFinanzasProjectDetails}
+                      customProjectMedia={customProjectMedia}
+                      setCustomProjectMedia={setCustomProjectMedia}
+                      newMediaImageUrl={newMediaImageUrl}
+                      setNewMediaImageUrl={setNewMediaImageUrl}
+                      newMediaVideoUrl={newMediaVideoUrl}
+                      setNewMediaVideoUrl={setNewMediaVideoUrl}
+                      detailModalStep={detailModalStep}
+                      setDetailModalStep={setDetailModalStep}
+                      onClose={() => {
+                        setDetailProjectUser(null);
+                        setShowProjectDetailsInPopup(false);
+                      }}
+                      onVoteProject={isCurrentUserParticipatingInCurrentSession ? ((user) => {
+                        handleVoteForProject(user);
+                        setDetailProjectUser(null);
+                        setShowProjectDetailsInPopup(false);
+                      }) : undefined}
+                    />
+                  ) : null}
                   showFinanzasRecount={showFinanzasRecount}
                   renderFinanzasRecountContent={renderFinanzasRecountContent}
                   showFinanzasResults={showFinanzasResults}
@@ -25062,72 +25525,82 @@ try {
                     setShowCreateBroadcastModal(true);
                     setBroadcastModalTab('guests');
                   }}
+                  showScreenShareMenu={showScreenShareMenu}
+                  setShowScreenShareMenu={setShowScreenShareMenu}
+                  renderScreenShareContent={renderScreenShareOptionsModal}
+                  enlargedWindowUser={enlargedWindowUser}
+                  setEnlargedWindowUser={setEnlargedWindowUser}
+                  renderEnlargedParticipantWindow={renderEnlargedParticipantWindow}
                 />
               ) : (
-                /* 📱 Smartphone video frame container styled with width 100%, max-width, and centered flexbox */
                 <div 
-                  ref={videoCardRef}
-                  onWheel={(e) => {
-                    if (selectedCategoryFilter === 'Finanzas') return;
-                    const now = Date.now();
-                    if (now - lastScrollTime.current < 280) return;
-                    if (Math.abs(e.deltaY) > 12) {
-                      lastScrollTime.current = now;
-                      if (e.deltaY > 0) {
-                        setSlideDirection('up');
-                        handleNextVideo();
-                      } else {
-                        setSlideDirection('down');
-                        handlePrevVideo();
+                  className="w-full flex items-center justify-center my-auto relative gap-2.5 sm:gap-4.5 max-w-[560px] px-1 sm:px-2"
+                  id="video-feed-card-with-sidebar-wrapper"
+                >
+                  {/* 📱 Smartphone video frame container styled matching z.png */}
+                  <div 
+                    ref={videoCardRef}
+                    onWheel={(e) => {
+                      if (selectedCategoryFilter === 'Finanzas') return;
+                      const now = Date.now();
+                      if (now - lastScrollTime.current < 280) return;
+                      if (Math.abs(e.deltaY) > 12) {
+                        lastScrollTime.current = now;
+                        if (e.deltaY > 0) {
+                          setSlideDirection('up');
+                          handleNextVideo();
+                        } else {
+                          setSlideDirection('down');
+                          handlePrevVideo();
+                        }
                       }
-                    }
-                  }}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={(e) => {
-                    const touchDuration = Date.now() - touchStartTimeRef.current;
-                    const isCleanTap = !isTouchScrollingRef.current && touchDuration < 350;
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={(e) => {
+                      const touchDuration = Date.now() - touchStartTimeRef.current;
+                      const isCleanTap = !isTouchScrollingRef.current && touchDuration < 350;
 
-                    if (isCleanTap) {
-                      // Single tap on mobile channel/video toggles options overlay
-                      setMobileChannelControlsVisible(prev => !prev);
-                      setShowTouchTableOverlay(prev => !prev);
-                      setShowTouchRightSidebar(prev => !prev);
-                    } else {
-                      // Check if gesture was a vertical swipe for previous/next video
-                      if (touchStart !== null && touchEnd !== null) {
-                        const distance = touchStart - touchEnd;
-                        const velocity = Math.abs(distance) / (touchDuration || 1);
-                        const isSignificantSwipe = Math.abs(distance) > 28 || velocity > 0.22;
-                        if (isSignificantSwipe) {
-                          const now = Date.now();
-                          if (now - lastScrollTime.current > 200) {
-                            lastScrollTime.current = now;
-                            if (distance > 0) {
-                              setSlideDirection('up');
-                              handleNextVideo();
-                            } else {
-                              setSlideDirection('down');
-                              handlePrevVideo();
+                      if (isCleanTap) {
+                        // Single tap on mobile channel/video toggles options overlay
+                        setMobileChannelControlsVisible(prev => !prev);
+                        setShowTouchTableOverlay(prev => !prev);
+                        setShowTouchRightSidebar(prev => !prev);
+                      } else {
+                        // Check if gesture was a vertical swipe for previous/next video
+                        if (touchStart !== null && touchEnd !== null) {
+                          const distance = touchStart - touchEnd;
+                          const velocity = Math.abs(distance) / (touchDuration || 1);
+                          const isSignificantSwipe = Math.abs(distance) > 28 || velocity > 0.22;
+                          if (isSignificantSwipe) {
+                            const now = Date.now();
+                            if (now - lastScrollTime.current > 200) {
+                              lastScrollTime.current = now;
+                              if (distance > 0) {
+                                setSlideDirection('up');
+                                handleNextVideo();
+                              } else {
+                                setSlideDirection('down');
+                                handlePrevVideo();
+                              }
                             }
                           }
                         }
                       }
-                    }
-                    setTouchStart(null);
-                    setTouchEnd(null);
-                    isTouchScrollingRef.current = false;
-                  }}
-                  className={`relative bg-black shadow-2xl overflow-hidden flex items-center justify-center shrink-0 group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
-                    isMobileChannelPinned
-                      ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-0 m-0 border-none shadow-none'
-                      : 'w-full max-w-full sm:max-w-[460px] md:max-w-[480px] h-[880px] sm:h-[956px] max-h-[100dvh] sm:max-h-[956px] rounded-none sm:rounded-[55px] border-0 sm:border-[3.5px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
-                  }`} 
-                  id="video-feed-main-card"
-                >
+                      setTouchStart(null);
+                      setTouchEnd(null);
+                      isTouchScrollingRef.current = false;
+                    }}
+                    className={`relative bg-[#070b14] shadow-2xl overflow-hidden flex items-center justify-center min-w-0 flex-1 sm:flex-initial group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
+                      isMobileChannelPinned
+                        ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-0 m-0 border-none shadow-none'
+                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[810px] sm:h-[860px] max-h-[100dvh] sm:max-h-[860px] rounded-[44px] sm:rounded-[52px] border-[3.5px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
+                    }`} 
+                    id="video-feed-main-card"
+                  >
                 
-                {/* 📱 RIGHT SIDEBAR ELEMENTS BAR (Captura aa.png) - Visible on hover or touch tap */}
-                {(selectedCategoryFilter === 'Finanzas' || (hasChannelVideos && activeVideo)) && !(showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showProjectDetailsInPopup || detailProjectUser || showFinanzasInscriptionInChannel || (isUserLiveStreamingWithCamera && userLiveMediaStream)) && (
+                {/* 📱 RIGHT SIDEBAR ELEMENTS BAR (Captura aa.png) - Visible on hover or touch tap for non-Finanzas feeds */}
+                {selectedCategoryFilter !== 'Finanzas' && !isUserLiveStreamingWithCamera && hasChannelVideos && activeVideo && !(showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showProjectDetailsInPopup || detailProjectUser || showFinanzasInscriptionInChannel) && (
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-[58px] xs:w-[66px] sm:w-[76px] z-[90] flex items-center justify-end pr-1 xs:pr-1.5 sm:pr-2 pointer-events-auto group/channel-right-hover box-border"
                     id="channel-right-hover-zone"
@@ -25623,423 +26096,7 @@ try {
                 )}
 
                 {/* 🖥️ POPUP MODAL: OPCIONES DE COMPARTIR PANTALLA */}
-                {showScreenShareMenu && (
-                  <div className="absolute left-2 right-2 sm:left-4 sm:right-4 top-2 sm:top-4 z-[120] bg-white/98 backdrop-blur-2xl p-4 sm:p-5 rounded-3xl border-2 border-indigo-500 shadow-2xl animate-fade-in text-slate-900 font-sans text-left space-y-3.5 pointer-events-auto max-w-lg mx-auto box-border" id="screen-share-options-modal" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0">
-                          <Monitor className="w-5 h-5 text-indigo-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-xs sm:text-sm md:text-base font-black uppercase text-slate-900 tracking-wider truncate m-0">
-                            Distribución de Pantalla
-                          </h4>
-                          <span className="text-[11px] sm:text-xs text-indigo-700 font-bold block truncate mt-0.5">
-                            Elige entre 10 ventanas en 2 columnas o pantalla completa
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowScreenShareMenu(false)}
-                        className="p-2 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-full w-9 h-9 flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-200 shadow-xs active:scale-95"
-                        title="Cerrar"
-                        id="btn-close-screen-share-modal"
-                      >
-                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </button>
-                    </div>
-
-                    {/* Opciones directas de Pantalla: 10 Ventanas, Pantalla Completa, Dividida en 2 y Dividida en 3 */}
-                    {(() => {
-                      const activeInvitedList = FINANZAS_USERS.filter(u => invitedUsersMap[u.id]);
-                      const invitedCount = activeInvitedList.length;
-
-                      return (
-                        <div className="space-y-2.5">
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                            {/* 1. Botón para dividir la pantalla en 10 ventanas */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setScreenSplitLayout('grid-10');
-                                setScreenShareMode('window');
-                                setIsScreenSharingActive(true);
-                                setActiveScreenSharer('host');
-                                setShowScreenShareMenu(false);
-                              }}
-                              className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[85px] sm:min-h-[95px] ${
-                                isScreenSharingActive && screenSplitLayout === 'grid-10'
-                                  ? 'bg-purple-100 border-purple-600 text-purple-950 font-black ring-2 ring-purple-400 shadow-md'
-                                  : 'bg-slate-50 hover:bg-purple-50/70 border-slate-200 hover:border-purple-300 text-slate-900 font-bold shadow-2xs'
-                              }`}
-                              id="btn-split-10-windows"
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-lg sm:text-xl">👥</span>
-                                {isScreenSharingActive && screenSplitLayout === 'grid-10' && (
-                                  <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
-                                )}
-                              </div>
-                              <div>
-                                <span className="text-xs sm:text-[12.5px] font-black text-slate-900 block leading-tight">10 Ventanas</span>
-                                <span className="text-[9.5px] sm:text-[10.5px] text-purple-700 font-bold block leading-snug mt-0.5">2 cols en horizontal</span>
-                              </div>
-                            </button>
-
-                            {/* 2. Botón para ponerla en pantalla completa */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setScreenSplitLayout('single');
-                                setIsScreenSharingActive(false);
-                                setActiveScreenSharer('host');
-                                if (screenShareStream) {
-                                  try {
-                                    screenShareStream.getTracks().forEach(t => t.stop());
-                                  } catch (e) {}
-                                  setScreenShareStream(null);
-                                }
-                                setShowScreenShareMenu(false);
-                                try {
-                                  const videoElem = document.getElementById('main-live-video-player') || document.documentElement;
-                                  if (videoElem && !document.fullscreenElement) {
-                                    videoElem.requestFullscreen?.().catch(() => {});
-                                  }
-                                } catch (e) {}
-                              }}
-                              className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[85px] sm:min-h-[95px] ${
-                                screenSplitLayout === 'single' && !isScreenSharingActive
-                                  ? 'bg-indigo-100 border-indigo-600 text-indigo-950 font-black ring-2 ring-indigo-400 shadow-md'
-                                  : 'bg-slate-50 hover:bg-indigo-50/70 border-slate-200 hover:border-indigo-300 text-slate-900 font-bold shadow-2xs'
-                              }`}
-                              id="btn-full-screen"
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-lg sm:text-xl">🖥️</span>
-                                {screenSplitLayout === 'single' && !isScreenSharingActive && (
-                                  <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
-                                )}
-                              </div>
-                              <div>
-                                <span className="text-xs sm:text-[12.5px] font-black text-slate-900 block leading-tight">Pantalla Completa</span>
-                                <span className="text-[9.5px] sm:text-[10.5px] text-indigo-700 font-bold block leading-snug mt-0.5">Modo único</span>
-                              </div>
-                            </button>
-
-                            {/* 3. Botón para dividir en dos (1 invitado) */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (invitedCount === 0) {
-                                  const firstUser = FINANZAS_USERS[0];
-                                  setInvitedUsersMap({ [firstUser.id]: true });
-                                  alert(`👥 Se ha seleccionado a ${firstUser.name} como invitado. ¡Pantalla dividida en dos!`);
-                                }
-                                setScreenSplitLayout('50-50');
-                                setIsScreenSharingActive(true);
-                                setActiveScreenSharer('host');
-                                setShowScreenShareMenu(false);
-                              }}
-                              className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[85px] sm:min-h-[95px] ${
-                                screenSplitLayout === '50-50'
-                                  ? 'bg-emerald-100 border-emerald-600 text-emerald-950 font-black ring-2 ring-emerald-400 shadow-md'
-                                  : 'bg-slate-50 hover:bg-emerald-50/70 border-slate-200 hover:border-emerald-300 text-slate-900 font-bold shadow-2xs'
-                              }`}
-                              id="btn-split-2-screens"
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-lg sm:text-xl">🌓</span>
-                                {screenSplitLayout === '50-50' && (
-                                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
-                                )}
-                              </div>
-                              <div>
-                                <span className="text-xs sm:text-[12.5px] font-black text-slate-900 block leading-tight">Dividida en 2</span>
-                                <span className="text-[9.5px] sm:text-[10.5px] text-emerald-700 font-bold block leading-snug mt-0.5">1 Invitado (50/50)</span>
-                              </div>
-                            </button>
-
-                            {/* 4. Botón para dividir en tres (2 invitados) */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (invitedCount < 2) {
-                                  const u1 = FINANZAS_USERS[0];
-                                  const u2 = FINANZAS_USERS[1];
-                                  setInvitedUsersMap({ [u1.id]: true, [u2.id]: true });
-                                  alert(`👥 Se ha seleccionado a ${u1.name} y ${u2.name}. ¡Pantalla dividida en tres!`);
-                                }
-                                setScreenSplitLayout('grid-3');
-                                setIsScreenSharingActive(true);
-                                setActiveScreenSharer('host');
-                                setShowScreenShareMenu(false);
-                              }}
-                              className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[85px] sm:min-h-[95px] ${
-                                screenSplitLayout === 'grid-3'
-                                  ? 'bg-cyan-100 border-cyan-600 text-cyan-950 font-black ring-2 ring-cyan-400 shadow-md'
-                                  : 'bg-slate-50 hover:bg-cyan-50/70 border-slate-200 hover:border-cyan-300 text-slate-900 font-bold shadow-2xs'
-                              }`}
-                              id="btn-split-3-screens"
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-lg sm:text-xl">📐</span>
-                                {screenSplitLayout === 'grid-3' && (
-                                  <span className="w-2 h-2 rounded-full bg-cyan-600 animate-ping" />
-                                )}
-                              </div>
-                              <div>
-                                <span className="text-xs sm:text-[12.5px] font-black text-slate-900 block leading-tight">Dividida en 3</span>
-                                <span className="text-[9.5px] sm:text-[10.5px] text-cyan-700 font-bold block leading-snug mt-0.5">2 Invitados</span>
-                              </div>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* 👥 Contenedor Invitados para invitar hasta dos usuarios y dividir la pantalla en dos o en tres */}
-                    {(() => {
-                      const activeInvitedList = FINANZAS_USERS.filter(u => invitedUsersMap[u.id]);
-                      const invitedCount = activeInvitedList.length;
-
-                      const handleToggleGuest = (user: typeof FINANZAS_USERS[0]) => {
-                        const isCurrentlyInvited = Boolean(invitedUsersMap[user.id]);
-                        if (!isCurrentlyInvited) {
-                          if (invitedCount >= 2) {
-                            alert('⚠️ Límite alcanzado: Solo puedes elegir hasta dos invitados. Desmarca uno para añadir a otro.');
-                            return;
-                          }
-                          const newCount = invitedCount + 1;
-                          setInvitedUsersMap(prev => ({ ...prev, [user.id]: true }));
-                          setIsScreenSharingActive(true);
-                          setActiveScreenSharer('host');
-                          if (newCount === 1) {
-                            setScreenSplitLayout('50-50');
-                            alert(`👥 ¡Has elegido a ${user.name}! La pantalla se ha dividido en dos.`);
-                          } else if (newCount === 2) {
-                            setScreenSplitLayout('grid-3');
-                            alert(`👥 ¡Has elegido a ${user.name}! La pantalla se ha dividido en tres con tus dos invitados.`);
-                          }
-                        } else {
-                          const newCount = invitedCount - 1;
-                          setInvitedUsersMap(prev => ({ ...prev, [user.id]: false }));
-                          if (newCount === 1) {
-                            setScreenSplitLayout('50-50');
-                            setIsScreenSharingActive(true);
-                            alert(`🔄 Se ha retirado a ${user.name}. La pantalla se mantiene dividida en dos con el invitado restante.`);
-                          } else {
-                            setScreenSplitLayout('single');
-                            setIsScreenSharingActive(false);
-                            alert(`🔄 Se ha retirado a ${user.name}. Pantalla completa restablecida.`);
-                          }
-                        }
-                      };
-
-                      return (
-                        <div className="pt-3 border-t border-slate-200 space-y-2.5" id="container-invitados-presentacion">
-                          <div className="flex items-center justify-between gap-2">
-                            <div>
-                              <span className="text-xs sm:text-[13px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
-                                👥 Invitados ({invitedCount}/2)
-                              </span>
-                              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 block">
-                                Elige hasta 2 invitados: con 1 se divide en dos, con 2 en tres
-                              </span>
-                            </div>
-                            <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-0.5 rounded-full border shrink-0 ${
-                              invitedCount === 2
-                                ? 'bg-purple-100 text-purple-900 border-purple-300'
-                                : invitedCount === 1
-                                ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                                : 'bg-slate-100 text-slate-700 border-slate-300'
-                            }`}>
-                              {invitedCount === 0
-                                ? '0/2 Invitados'
-                                : invitedCount === 1
-                                ? '🟢 Pantalla en 2 (1/2)'
-                                : '🟣 Pantalla en 3 (2/2)'}
-                            </span>
-                          </div>
-
-                          {/* Chips de invitados activos actualmente con opción de quitar rápida */}
-                          {invitedCount > 0 && (
-                            <div className="bg-indigo-50/80 border border-indigo-200 rounded-xl p-2 flex items-center justify-between gap-2 flex-wrap animate-fade-in">
-                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                                <span className="text-[10.5px] font-black text-indigo-900">
-                                  {invitedCount === 1 ? '📺 En pantalla dividida en 2:' : '📺 En pantalla dividida en 3:'}
-                                </span>
-                                {activeInvitedList.map((invUser, idx) => (
-                                  <span
-                                    key={invUser.id}
-                                    className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-indigo-200 text-[10px] font-black text-indigo-950 shadow-2xs"
-                                  >
-                                    <img src={invUser.avatar} className="w-3.5 h-3.5 rounded-full object-cover shrink-0" alt={invUser.name} />
-                                    <span className="truncate max-w-[90px]">{invUser.name}</span>
-                                    <span className="text-[8px] bg-indigo-100 text-indigo-800 px-1 py-0.2 rounded font-extrabold">
-                                      {idx === 0 ? 'Inv 1' : 'Inv 2'}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleGuest(invUser)}
-                                      className="text-slate-400 hover:text-rose-600 font-black ml-0.5 cursor-pointer text-xs"
-                                      title={`Quitar a ${invUser.name}`}
-                                    >
-                                      ✕
-                                    </button>
-                                  </span>
-                                ))}
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setInvitedUsersMap({});
-                                  setScreenSplitLayout('single');
-                                  setIsScreenSharingActive(false);
-                                }}
-                                className="text-[9.5px] text-rose-600 hover:text-rose-800 font-extrabold underline shrink-0 cursor-pointer ml-auto"
-                              >
-                                Limpiar todos
-                              </button>
-                            </div>
-                          )}
-
-                          {/* Buscador de usuario para invitar */}
-                          <div className="relative">
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                              type="text"
-                              value={inviteSearchQueryInScreenModal}
-                              onChange={(e) => setInviteSearchQueryInScreenModal(e.target.value)}
-                              placeholder="Buscar usuario o ponente para invitar..."
-                              className="w-full text-xs pl-8 pr-7 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-indigo-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium transition shadow-2xs"
-                              id="input-buscar-invitado-presentacion"
-                            />
-                            {inviteSearchQueryInScreenModal && (
-                              <button
-                                type="button"
-                                onClick={() => setInviteSearchQueryInScreenModal('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
-                                title="Limpiar búsqueda"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Lista de usuarios con botón de invitar a la presentación */}
-                          <div className="max-h-48 sm:max-h-56 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
-                            {FINANZAS_USERS
-                              .filter(user => {
-                                if (!inviteSearchQueryInScreenModal) return true;
-                                const q = inviteSearchQueryInScreenModal.toLowerCase();
-                                return user.name.toLowerCase().includes(q) || (user.role && user.role.toLowerCase().includes(q));
-                              })
-                              .map((user) => {
-                                const isInvited = Boolean(invitedUsersMap[user.id]);
-                                const userIndexInActive = activeInvitedList.findIndex(u => u.id === user.id);
-                                const isMaxReached = invitedCount >= 2 && !isInvited;
-
-                                return (
-                                  <div
-                                    key={user.id}
-                                    className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition ${
-                                      isInvited
-                                        ? 'bg-emerald-50/90 border-emerald-300 shadow-2xs'
-                                        : isMaxReached
-                                        ? 'bg-slate-50/70 border-slate-200 opacity-80'
-                                        : 'bg-slate-50 hover:bg-indigo-50/50 border-slate-200 hover:border-indigo-200'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <img
-                                        src={user.avatar}
-                                        alt={user.name}
-                                        className="w-8 h-8 rounded-full object-cover border border-slate-300 shrink-0"
-                                        referrerPolicy="no-referrer"
-                                      />
-                                      <div className="min-w-0">
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                          <span className="text-xs sm:text-[12.5px] font-bold text-slate-900 block truncate leading-tight">
-                                            {user.name}
-                                          </span>
-                                          {isInvited && (
-                                            <span className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded uppercase">
-                                              {userIndexInActive === 0 ? 'Invitado 1' : 'Invitado 2'}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <span className="text-[10px] text-slate-500 font-medium block truncate leading-tight">
-                                          {user.role || 'Participante'}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleGuest(user)}
-                                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer shrink-0 active:scale-95 flex items-center gap-1 ${
-                                        isInvited
-                                          ? 'bg-emerald-600 hover:bg-rose-600 text-white shadow-xs'
-                                          : isMaxReached
-                                          ? 'bg-slate-300 hover:bg-slate-400 text-slate-700 shadow-2xs'
-                                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
-                                      }`}
-                                      id={`btn-invitar-presentacion-${user.id}`}
-                                      title={
-                                        isInvited
-                                          ? `Quitar a ${user.name} de la pantalla dividida`
-                                          : isMaxReached
-                                          ? 'Límite de 2 invitados alcanzado'
-                                          : `Invitar a ${user.name} para dividir la pantalla`
-                                      }
-                                    >
-                                      {isInvited ? (
-                                        <>
-                                          <span>✓</span>
-                                          <span>En Pantalla (Quitar)</span>
-                                        </>
-                                      ) : isMaxReached ? (
-                                        <>
-                                          <UserPlus className="w-3.5 h-3.5 opacity-60" />
-                                          <span>Límite 2</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <UserPlus className="w-3.5 h-3.5" />
-                                          <span>Invitar</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Stop Screen Sharing Button if Active */}
-                    {isScreenSharingActive && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (screenShareStream) {
-                            try { screenShareStream.getTracks().forEach(t => t.stop()); } catch(e){}
-                            setScreenShareStream(null);
-                          }
-                          setIsScreenSharingActive(false);
-                          setShowScreenShareMenu(false);
-                          alert('🛑 Compartición de pantalla finalizada.');
-                        }}
-                        className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-sm border-0 active:scale-95 text-center block min-h-[42px]"
-                        id="btn-stop-screen-share"
-                      >
-                        🛑 Detener Compartición de Pantalla
-                      </button>
-                    )}
-                  </div>
-                )}
+                {renderScreenShareOptionsModal()}
 
                 {/* 👯 POPUP MODAL: OPCIONES DE DÚO Y DÚO COMERCIAL */}
                 {showDuoMenu && (
@@ -27022,10 +27079,8 @@ try {
                     >
                       <div 
                         className="flex items-center justify-between gap-2 cursor-pointer"
-                        onMouseEnter={handleTopMenuMouseEnter}
-                        onMouseLeave={handleTopMenuMouseLeave}
                         onClick={() => setIsTopControlsMenuHovered(prev => !prev)}
-                        title="Pasa el puntero por el margen superior para abrir la ventana de control y canales"
+                        title="Pulsa para abrir o cerrar la ventana de control y canales"
                       >
                         {/* Live Badge & Duración */}
                         <div className="flex items-center gap-2 min-w-0">
@@ -27258,10 +27313,34 @@ try {
                       );
                     })()}
 
-                    {/* 🔻 Barra Inferior: Comentarios de los usuarios en directo y formulario para comentar */}
-                    <div className="relative z-20 flex flex-col gap-2 p-2 sm:p-3 mt-auto max-w-xl w-full mx-auto pointer-events-auto">
+                    {/* 🔻 Barra Inferior: Comentarios de los usuarios en directo y formulario para comentar - OCUPA TODO EL ANCHO DEL CANAL */}
+                    {isCommentsOpen && (
+                      <div className="absolute inset-x-0 bottom-0 z-40 w-full bg-slate-950/95 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-t-3xl p-3 sm:p-4 shadow-[0_-16px_50px_rgba(0,0,0,0.95)] flex flex-col gap-2 pointer-events-auto animate-slide-up text-left">
+                        {/* Header con botón para cerrar */}
+                        <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                          <div className="flex items-center gap-1.5 text-left">
+                            <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
+                              Comentarios en directo
+                            </span>
+                            <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
+                              {enlargedWindowComments.length}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setIsCommentsOpen(false)}
+                            className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                            title="Cerrar comentarios"
+                          >
+                            <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
                       {/* Lista de comentarios de los usuarios (con fondo transparente según solicitud previa) */}
-                      <div className="flex flex-col gap-1.5 max-h-44 sm:max-h-52 overflow-y-auto custom-scrollbar px-1 py-1">
+                      <div className="flex flex-col gap-1.5 max-h-36 sm:max-h-44 overflow-y-auto custom-scrollbar px-1 py-1">
                         {enlargedWindowComments.map((c) => (
                           <div 
                             key={c.id} 
@@ -27290,6 +27369,43 @@ try {
                               </p>
                             </div>
                           </div>
+                        ))}
+                      </div>
+
+                      {/* Tira rápida de emojis para enviar directamente */}
+                      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-900/90 rounded-full border border-slate-800">
+                        <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                          <span>⚡</span>
+                          <span>Enviar emoji:</span>
+                        </span>
+                        {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((em) => (
+                          <button
+                            key={em}
+                            type="button"
+                            onClick={(e) => {
+                              const newC = {
+                                id: `comm-live-${Date.now()}`,
+                                user: userProfile?.name || 'Tú (En Vivo)',
+                                avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+                                text: em,
+                                time: 'ahora mismo'
+                              };
+                              setEnlargedWindowComments(prev => [...prev, newC]);
+                              window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                detail: {
+                                  emoji: em,
+                                  icon: em,
+                                  pureEmoji: true,
+                                  x: e.clientX,
+                                  y: e.clientY
+                                }
+                              }));
+                            }}
+                            className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                            title={`Enviar ${em}`}
+                          >
+                            {em}
+                          </button>
                         ))}
                       </div>
 
@@ -27425,8 +27541,9 @@ try {
                         </form>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              )}
 
                 {/* 🌌 CENTRAL EMBEDDED LOGO AND PARTICIPANTS GRID FOR FINANZAS CATEGORY */}
                 {selectedCategoryFilter === 'Finanzas' && (
@@ -31421,7 +31538,7 @@ try {
                 {isCommentsOpen && (
                   <div 
                     id="in-channel-comments-window"
-                    className="absolute inset-x-0 bottom-0 h-[480px] max-h-[80vh] sm:max-h-[82vh] bg-slate-950/95 backdrop-blur-2xl border-t border-rose-500/30 z-[120] p-4 px-4.5 sm:px-5 transition-all duration-300 animate-slide-up flex flex-col font-sans text-white rounded-t-[32px] shadow-[0_-16px_50px_rgba(0,0,0,0.9)] select-none pointer-events-auto"
+                    className="absolute inset-x-0 bottom-0 max-h-[50vh] sm:max-h-[55vh] bg-slate-950/95 backdrop-blur-2xl border-t border-rose-500/30 z-[120] p-4 px-4.5 sm:px-5 transition-all duration-300 animate-slide-up flex flex-col font-sans text-white rounded-t-[32px] shadow-[0_-16px_50px_rgba(0,0,0,0.9)] select-none pointer-events-auto"
                   >
                     {/* Top drag handle indicator */}
                     <div className="w-12 h-1 bg-white/25 rounded-full mx-auto -mt-1 mb-2.5 shrink-0" />
@@ -31523,15 +31640,34 @@ try {
                       )}
                     </div>
 
-                    {/* Quick Reactions One-Tap Bar */}
-                    <div className="flex items-center justify-between gap-1 py-1.5 px-1 border-t border-white/10 my-1 overflow-x-auto scrollbar-none shrink-0">
-                      {['😍', '🔥', '💖', '👏', '👑', '✨', '🌹', '🚀'].map((emoji) => (
+                    {/* Quick Reactions One-Tap Bar - Enviar emojis directamente */}
+                    <div className="flex items-center gap-1.5 py-1.5 px-1 border-t border-white/10 my-1 overflow-x-auto no-scrollbar shrink-0">
+                      <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1 pr-0.5 shrink-0 flex items-center gap-1">
+                        <span>⚡</span>
+                        <span>Enviar emoji:</span>
+                      </span>
+                      {['😍', '🔥', '💖', '👏', '👑', '✨', '🌹', '🚀', '💯', '😂', '🙌', '💡', '💰', '👍', '💎', '🎉'].map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={(e) => {
-                            setNewCommentText(prev => prev + emoji);
-                            mobileCommentInputRef.current?.focus();
+                            if (activeVideo) {
+                              const newC = {
+                                id: `c-${Date.now()}`,
+                                user: userProfile?.name || 'Tú',
+                                avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150',
+                                text: emoji,
+                                date: 'ahora',
+                                likesCount: 0,
+                                isLikedByMe: false
+                              };
+                              if (activeVideo.comments) {
+                                activeVideo.comments.unshift(newC);
+                              } else {
+                                activeVideo.comments = [newC];
+                              }
+                              setChannelCommentsCount(prev => prev + 1);
+                            }
                             window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
                               detail: {
                                 emoji: emoji,
@@ -31542,8 +31678,8 @@ try {
                               }
                             }));
                           }}
-                          className="w-7.5 h-7.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-125 transition-transform flex items-center justify-center text-sm cursor-pointer border-0 shrink-0"
-                          title={`Reaccionar con ${emoji}`}
+                          className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 active:scale-130 hover:scale-110 transition flex items-center justify-center text-sm cursor-pointer border-0 shrink-0"
+                          title={`Enviar ${emoji}`}
                         >
                           {emoji}
                         </button>
@@ -31652,7 +31788,10 @@ try {
                             <div className={`absolute bottom-full right-0 pb-3 z-50 transition-all duration-150 ${showEmojiPicker ? 'block' : 'hidden group-hover/emoji-picker-zone:block'}`}>
                               <div className="bg-slate-900/95 backdrop-blur-md border border-white/20 p-2.5 rounded-2xl shadow-2xl animate-fade-in w-60 text-center select-none emoji-picker-container">
                                 <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-white/15 px-1">
-                                  <span className="text-[9.5px] font-black uppercase tracking-wider text-rose-400 select-none">Elegir emojis:</span>
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-400 select-none flex items-center gap-1">
+                                    <span>📚</span>
+                                    <span>Glosario de Emojis:</span>
+                                  </span>
                                   {showEmojiPicker && (
                                     <button
                                       type="button"
@@ -31704,10 +31843,10 @@ try {
                                 setShowAtTooltip(false);
                                 mobileCommentInputRef.current?.focus();
                               }}
-                              className={`p-1 hover:text-[#fe2c55] hover:bg-white/10 rounded-full cursor-pointer active:scale-90 transition ${showEmojiPicker ? 'text-[#fe2c55] bg-white/10' : ''}`}
-                              title="Menú de Emojis"
+                              className={`p-1 hover:scale-125 rounded-full cursor-pointer active:scale-95 transition text-base leading-none select-none ${showEmojiPicker ? 'scale-125 bg-white/10' : ''}`}
+                              title="Abrir Glosario de Emojis"
                             >
-                              <Smile className="w-3.5 h-3.5" />
+                              😊
                             </button>
                           </div>
                         </div>
@@ -32351,17 +32490,146 @@ try {
 
             </div>
 
+            {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT (Idéntica a captura z.png) */}
+            <div 
+              className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto z-40"
+              id="channel-live-tiktok-actions-sidebar"
+            >
+                {/* Like button with count (43.2K) - Queda marcado y lanza lluvia de corazones */}
+                <div className="flex flex-col items-center relative group/channel-heart-zone">
+                  {/* Hover quick reaction bar */}
+                  <div className="absolute right-[calc(100%+10px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-col items-center gap-1 bg-[#0a0e1a]/95 backdrop-blur-md border border-slate-700/80 py-2 px-1.5 rounded-full shadow-2xl animate-fade-in max-h-[260px] overflow-y-auto scrollbar-none select-none">
+                    {['❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '🚀', '💎', '💯'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendFreeEmojiReaction(emoji);
+                        }}
+                        className="text-base hover:scale-130 active:scale-95 transition-all cursor-pointer bg-transparent border-0 shrink-0 p-0.5"
+                        title={`Enviar ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLiveLiked(prev => !prev);
+                      setLiveLikesCount(prev => isLiveLiked ? prev - 1 : prev + 1);
+                      window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                        detail: { emoji: '❤️', icon: '❤️' }
+                      }));
+                    }}
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 cursor-pointer ${
+                      isLiveLiked
+                        ? 'bg-[#fe2c55]/20 ring-2 ring-[#fe2c55] shadow-[0_0_16px_rgba(254,44,85,0.6)] text-[#fe2c55] scale-105'
+                        : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
+                    }`}
+                    title={isLiveLiked ? "¡Marcado! Pulsa para enviar más corazones" : "Me gusta"}
+                    id="btn-live-like-heart"
+                  >
+                    <Heart 
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        isLiveLiked 
+                          ? 'fill-[#fe2c55] text-[#fe2c55] scale-110 drop-shadow-[0_0_8px_rgba(254,44,85,0.9)]' 
+                          : 'text-white'
+                      }`} 
+                    />
+                  </button>
+                  <span className={`text-[10px] sm:text-[11px] font-bold mt-0.5 transition-colors ${
+                    isLiveLiked ? 'text-[#fe2c55] font-black' : 'text-slate-700 dark:text-slate-200'
+                  }`}>
+                    {formatCount(liveLikesCount || 43200)}
+                  </span>
+                </div>
+
+                {/* Comment icon with count (17) */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCommentsOpen(prev => !prev);
+                    }}
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer ${
+                      isCommentsOpen
+                        ? 'bg-rose-600 text-white ring-2 ring-rose-400 shadow-rose-600/50 scale-105'
+                        : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
+                    }`}
+                    title="Comentarios"
+                    id="btn-live-comments"
+                  >
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </button>
+                  <span className={`text-[10px] sm:text-[11px] font-bold mt-0.5 ${isCommentsOpen ? 'text-rose-400 font-black' : 'text-slate-700 dark:text-slate-200'}`}>
+                    {liveCommentsCount || 17}
+                  </span>
+                </div>
+
+                {/* Bookmark / Guardar with count (592) */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLiveBookmarked(prev => !prev);
+                      setLiveBookmarksCount(prev => isLiveBookmarked ? prev - 1 : prev + 1);
+                    }}
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
+                    title="Guardar"
+                    id="btn-live-bookmark"
+                  >
+                    <Bookmark className={`w-5 h-5 ${isLiveBookmarked ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+                  </button>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-0.5">
+                    {formatCount(liveBookmarksCount || 592)}
+                  </span>
+                </div>
+
+                {/* Share icon with count (726) */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => handleLiveShareClick()}
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
+                    title="Compartir"
+                    id="btn-live-share"
+                  >
+                    <Share2 className="w-5 h-5 text-white" />
+                  </button>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-0.5">
+                    {formatCount(liveSharesCount || 726)}
+                  </span>
+                </div>
+
+                {/* Options (...) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileEmojiPopover(prev => !prev);
+                  }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
+                  title="Más opciones y emoticones"
+                  id="btn-live-more"
+                >
+                  <MoreHorizontal className="w-5 h-5 text-white" />
+                </button>
+              </div>
+          </div>
+
           )}
         </div>
 
 
 
-          {/* 💬 / 🔔 UNDER-VIDEO INTEGRATED INTERACTIVE PANEL (Matching zsz.png & zvz.png layout requests) */}
-          {(isCommentsOpen || isActivityDrawerOpen) && activeVideo && (
+          {/* 🔔 UNDER-VIDEO INTEGRATED ACTIVITY PANEL */}
+          {isActivityDrawerOpen && activeVideo && (
             <div className="w-full max-w-4xl mx-auto bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm mt-4 animate-fade-in text-slate-850" id="under-video-interactive-panel">
               
-              {/* 1. COMMENTS RENDER BLOCK */}
-              {isCommentsOpen && (
+              {/* 1. COMMENTS RENDER BLOCK (Disabled - comments are strictly in-channel) */}
+              {false && isCommentsOpen && (
                 <div className="flex flex-col space-y-3.5">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                     <span className="text-xs font-black uppercase text-slate-800 tracking-wide flex items-center gap-1.5 font-sans">
@@ -32661,8 +32929,8 @@ try {
         </div>
         )}
       </main>
-      {/* Desktop/Tablet aside comments panel enabled */}
-      {isCommentsOpen && activeVideo && (
+      {/* Desktop/Tablet aside comments panel disabled (comments are in-channel) */}
+      {false && isCommentsOpen && activeVideo && (
         <aside className="hidden md:flex md:w-[280px] bg-slate-50 border-l border-slate-150 p-4 transition-all animate-fade-in flex-col justify-between shrink-0" id="desktop-tablet-comments-aside">
           
           <div className="flex flex-col h-full space-y-4 max-h-[580px] md:max-h-none overflow-y-auto">

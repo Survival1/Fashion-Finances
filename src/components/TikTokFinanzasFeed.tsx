@@ -62,6 +62,10 @@ interface TikTokFinanzasFeedProps {
   isMuted: boolean;
   toggleBroadcastMic?: () => void;
   isUserLiveStreamingWithCamera: boolean;
+  userLiveMediaStream?: MediaStream | null;
+  liveStreamTimerSeconds?: number;
+  formatLiveStreamDuration?: (secs: number) => string;
+  liveCameraFacingMode?: 'user' | 'environment';
   isWatchingPresenterCamera: boolean;
   handleToggleUserCameraLiveBroadcast: () => void;
   setIsWatchingPresenterCamera: React.Dispatch<React.SetStateAction<boolean>>;
@@ -81,6 +85,9 @@ interface TikTokFinanzasFeedProps {
   setDetailProjectUser: (user: any) => void;
   setActiveFinanzasPopupUser: (user: any) => void;
   setShowProjectDetailsInPopup: (show: boolean) => void;
+  detailProjectUser?: any;
+  showProjectDetailsInPopup?: boolean;
+  renderProjectDetailsContent?: () => React.ReactNode;
   showFinanzasRecount?: boolean;
   renderFinanzasRecountContent?: () => React.ReactNode;
   showFinanzasResults?: boolean;
@@ -98,6 +105,12 @@ interface TikTokFinanzasFeedProps {
   isScreenSharingActive?: boolean;
   broadcastGuestsCount?: number;
   onOpenGuestsModal?: () => void;
+  showScreenShareMenu?: boolean;
+  setShowScreenShareMenu?: (show: boolean) => void;
+  renderScreenShareContent?: () => React.ReactNode;
+  enlargedWindowUser?: any;
+  setEnlargedWindowUser?: (user: any) => void;
+  renderEnlargedParticipantWindow?: () => React.ReactNode;
 }
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
@@ -119,6 +132,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   isMuted,
   toggleBroadcastMic,
   isUserLiveStreamingWithCamera,
+  userLiveMediaStream = null,
+  liveStreamTimerSeconds = 14,
+  formatLiveStreamDuration = (sec: number) => `${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`,
+  liveCameraFacingMode = 'user',
   isWatchingPresenterCamera,
   handleToggleUserCameraLiveBroadcast,
   setIsWatchingPresenterCamera,
@@ -138,6 +155,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   setDetailProjectUser,
   setActiveFinanzasPopupUser,
   setShowProjectDetailsInPopup,
+  detailProjectUser = null,
+  showProjectDetailsInPopup = false,
+  renderProjectDetailsContent,
   showFinanzasRecount = false,
   renderFinanzasRecountContent,
   showFinanzasResults = false,
@@ -154,12 +174,33 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   onToggleScreenShare,
   isScreenSharingActive = false,
   broadcastGuestsCount = 3,
-  onOpenGuestsModal
+  onOpenGuestsModal,
+  showScreenShareMenu = false,
+  setShowScreenShareMenu,
+  renderScreenShareContent,
+  enlargedWindowUser,
+  setEnlargedWindowUser,
+  renderEnlargedParticipantWindow
 }) => {
   const feedContainerRef = useRef<HTMLDivElement>(null);
   // 🎛️ Channels menu hover & toggle state
   const [activeChannelsMenuSessionId, setActiveChannelsMenuSessionId] = useState<string | null>(null);
   const channelsMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showCameraParticipantsGrid, setShowCameraParticipantsGrid] = useState<Record<string, boolean>>({});
+
+  const lastWheelTimeRef = useRef<number>(0);
+  const handleWheelFeed = (e: React.WheelEvent) => {
+    const now = Date.now();
+    if (now - lastWheelTimeRef.current < 350) return;
+    if (Math.abs(e.deltaY) > 20) {
+      lastWheelTimeRef.current = now;
+      if (e.deltaY > 0) {
+        scrollToRound(activeFinanzasSessionIndex + 1);
+      } else {
+        scrollToRound(activeFinanzasSessionIndex - 1);
+      }
+    }
+  };
 
   const handleMouseEnterRonda = (sessionId: string) => {
     if (channelsMenuTimeoutRef.current) {
@@ -267,10 +308,63 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   const EMOJI_LIST = ['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '🏆', '✨', '👍', '🌟', '🤩', '💎', '📈', '🎯', '💪', '🎉', '😎', '🥳', '👑', '💸'];
 
+  const EMOJI_GLOSSARY: Array<{ category: string; icon: string; emojis: string[] }> = [
+    {
+      category: 'Populares',
+      icon: '🔥',
+      emojis: ['❤️', '🔥', '👏', '🚀', '💯', '✨', '💎', '👑', '🏆', '⚡', '🍿', '🤩', '🥂', '🌟', '💥', '🔝', '🎯', '🦾', '🥳', '🙌', '😍', '😂']
+    },
+    {
+      category: 'Caras y Emociones',
+      icon: '😀',
+      emojis: [
+        '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '🥲', '🥹', '😊', '😇',
+        '🙂', '😉', '😌', '😍', '🥰', '😘', '😋', '😛', '😜', '🤪', '😝', '🤑',
+        '🤗', '🤫', '🤔', '🫡', '🤐', '🤨', '😐', '😏', '😒', '🙄', '😬', '🤥',
+        '😴', '😷', '🤒', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '😎', '🤓', '🧐'
+      ]
+    },
+    {
+      category: 'Finanzas y Negocios',
+      icon: '💰',
+      emojis: [
+        '💰', '💵', '💶', '💷', '🪙', '💸', '💳', '📈', '📉', '📊', '🏦', '🏢',
+        '💼', '📁', '🤝', '💡', '⚖️', '🎯', '📱', '💻', '🖥️', '📞', '🏷️', '📌',
+        '🔑', '🔒', '🗂️', '🧾', '📦', '🛒', '🛍️', '🎁'
+      ]
+    },
+    {
+      category: 'Gestos y Manos',
+      icon: '🙌',
+      emojis: [
+        '👍', '👎', '👏', '🙌', '👐', '🤲', '🤝', '🤜', '🤛', '✊', '👊', '🖐️',
+        '✋', '🤚', '👋', '🤙', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '👈',
+        '👉', '👆', '👇', '☝️', '✍️', '🙏', '🫶', '💪'
+      ]
+    },
+    {
+      category: 'Amor y Corazones',
+      icon: '❤️',
+      emojis: [
+        '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹',
+        '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝'
+      ]
+    },
+    {
+      category: 'Celebración',
+      icon: '🎉',
+      emojis: [
+        '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '👑', '🥳',
+        '🍾', '🥂', '🍻', '🎂', '🍰', '🎆', '🎇', '🔔', '📣', '📢'
+      ]
+    }
+  ];
+
   const [sessionCommentsMap, setSessionCommentsMap] = useState(INITIAL_COMMENTS_MAP);
   const [activeCommentsSessionId, setActiveCommentsSessionId] = useState<string | null>(null);
   const [commentInputMap, setCommentInputMap] = useState<Record<string, string>>({});
   const [showEmojiPickerSessionId, setShowEmojiPickerSessionId] = useState<string | null>(null);
+  const [glossaryCategory, setGlossaryCategory] = useState<string>('Populares');
 
   const handleAddSessionComment = (sessionId: string, customText?: string) => {
     const text = (customText !== undefined ? customText : (commentInputMap[sessionId] || '')).trim();
@@ -300,6 +394,94 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }));
   };
 
+  // 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque para escribir comentarios
+  const renderEmojiGlossary = (sessionId: string) => {
+    if (showEmojiPickerSessionId !== sessionId) return null;
+    const activeCatObj = EMOJI_GLOSSARY.find(c => c.category === glossaryCategory) || EMOJI_GLOSSARY[0];
+    return (
+      <div 
+        className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-50 bg-[#070b14]/98 backdrop-blur-2xl border-2 border-rose-500/70 rounded-2xl p-2.5 sm:p-3 shadow-[0_-16px_50px_rgba(0,0,0,0.98)] animate-slide-up text-left select-none pointer-events-auto"
+        id={`emoji-glossary-popover-${sessionId}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header con título y botón de cierre */}
+        <div className="flex items-center justify-between pb-1.5 border-b border-white/10 mb-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">📚</span>
+            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
+              Glosario de Emojis
+            </span>
+            <span className="text-[8px] text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded-full border border-amber-400/20">
+              Toca para añadir
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowEmojiPickerSessionId(null)}
+            className="text-slate-400 hover:text-white p-1 rounded-full text-xs font-bold transition hover:bg-slate-800 cursor-pointer"
+            title="Cerrar glosario"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Pestañas de categorías del glosario */}
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1.5 mb-1.5 border-b border-white/5">
+          {EMOJI_GLOSSARY.map(cat => (
+            <button
+              key={cat.category}
+              type="button"
+              onClick={() => setGlossaryCategory(cat.category)}
+              className={`px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-bold whitespace-nowrap transition cursor-pointer shrink-0 flex items-center gap-1 ${
+                glossaryCategory === cat.category
+                  ? 'bg-rose-600 text-white shadow-sm ring-1 ring-rose-400'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              <span>{cat.icon}</span>
+              <span>{cat.category}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Cuadrícula de emojis interactiva */}
+        <div className="grid grid-cols-7 sm:grid-cols-8 gap-1.5 max-h-36 sm:max-h-44 overflow-y-auto custom-scrollbar p-1">
+          {activeCatObj.emojis.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={(e) => {
+                handleInsertEmoji(sessionId, emoji);
+                window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                  detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
+                }));
+              }}
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-lg sm:text-xl rounded-xl hover:bg-white/15 active:scale-130 hover:scale-115 transition cursor-pointer select-none border-0 bg-transparent"
+              title={`Añadir ${emoji}`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
+        {/* Barra inferior: instrucción y botón para enviar */}
+        <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-white/10 text-[8.5px] text-slate-400">
+          <span>Toca emojis para añadirlos</span>
+          <button
+            type="button"
+            onClick={() => {
+              handleAddSessionComment(sessionId);
+            }}
+            disabled={!(commentInputMap[sessionId] || '').trim()}
+            className="text-emerald-400 font-bold hover:underline disabled:opacity-30 cursor-pointer bg-transparent border-0"
+          >
+            Enviar ahora ↵
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const handleToggleCommentLike = (sessionId: string, commentId: string) => {
     setSessionCommentsMap(prev => {
       const list = prev[sessionId] || INITIAL_COMMENTS_MAP['sess-trabajadores-1'] || [];
@@ -323,16 +505,43 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // 🔊 Channel volume control state & handlers
   const [channelVolume, setChannelVolume] = useState<number>(80);
   const [prevVolume, setPrevVolume] = useState<number>(80);
-  const liveVideoRef = useRef<HTMLVideoElement>(null);
-  const volumeTrackRef = useRef<HTMLDivElement>(null);
   const [isDraggingVolume, setIsDraggingVolume] = useState<boolean>(false);
+  const [isVolumeHovered, setIsVolumeHovered] = useState<boolean>(false);
+  const liveVideoRef = useRef<HTMLVideoElement>(null);
+  const activeVolumeTrackRef = useRef<HTMLElement | null>(null);
 
-  const handleVolumeChangeFromY = (clientY: number) => {
-    if (!volumeTrackRef.current) return;
-    const rect = volumeTrackRef.current.getBoundingClientRect();
+  // Audio chirp feedback when adjusting volume
+  const playVolumeBeep = (volPct: number) => {
+    try {
+      if (volPct <= 0 || isPresenterCameraAudioMuted) return;
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400 + (volPct * 3.5), ctx.currentTime);
+      const volumeGain = Math.max(0.005, (volPct / 100) * 0.08);
+      gain.gain.setValueAtTime(volumeGain, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } catch {}
+  };
+
+  const updateVolumeFromClientY = (clientY: number, trackEl?: HTMLElement | null) => {
+    const el = trackEl || activeVolumeTrackRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     const height = rect.height;
+    if (height <= 0) return;
     const offsetY = rect.bottom - clientY;
-    const percentage = Math.round(Math.max(0, Math.min(100, (offsetY / height) * 100)));
+    const rawPct = (offsetY / height) * 100;
+    const percentage = Math.round(Math.max(0, Math.min(100, rawPct)));
+    
     setChannelVolume(percentage);
     if (percentage === 0) {
       if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(true);
@@ -345,29 +554,65 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   };
 
   const handleVolumePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const trackEl = (e.currentTarget.querySelector('[data-volume-track]') as HTMLElement) || e.currentTarget;
+    activeVolumeTrackRef.current = trackEl;
     setIsDraggingVolume(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
-    handleVolumeChangeFromY(e.clientY);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+    updateVolumeFromClientY(e.clientY, trackEl);
   };
 
   const handleVolumePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isDraggingVolume || e.buttons === 1) {
-      handleVolumeChangeFromY(e.clientY);
+      e.preventDefault();
+      e.stopPropagation();
+      updateVolumeFromClientY(e.clientY);
     }
   };
 
   const handleVolumePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    setIsDraggingVolume(false);
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
+    if (isDraggingVolume) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingVolume(false);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {}
+      playVolumeBeep(channelVolume);
+    }
   };
 
-  const handleToggleMute = () => {
+  const handleVolumeWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const delta = e.deltaY < 0 ? 5 : -5;
+    setChannelVolume(prev => {
+      const next = Math.max(0, Math.min(100, prev + delta));
+      if (next === 0) {
+        if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(true);
+      } else {
+        if (setIsPresenterCameraAudioMuted && isPresenterCameraAudioMuted) {
+          setIsPresenterCameraAudioMuted(false);
+        }
+        setPrevVolume(next);
+      }
+      playVolumeBeep(next);
+      return next;
+    });
+  };
+
+  const handleToggleMute = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (isPresenterCameraAudioMuted || channelVolume === 0) {
       const restore = prevVolume > 0 ? prevVolume : 80;
       setChannelVolume(restore);
       if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(false);
+      playVolumeBeep(restore);
     } else {
       setPrevVolume(channelVolume);
       setChannelVolume(0);
@@ -375,13 +620,31 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   };
 
+  // Synchronize master video audio & element volumes
   useEffect(() => {
+    const isMuted = Boolean(isPresenterCameraAudioMuted || channelVolume === 0);
+    const vol = isMuted ? 0 : Math.max(0, Math.min(1, channelVolume / 100));
+
     if (liveVideoRef.current) {
-      const isMuted = Boolean(isPresenterCameraAudioMuted || channelVolume === 0);
       liveVideoRef.current.muted = isMuted;
-      liveVideoRef.current.volume = isMuted ? 0 : channelVolume / 100;
+      liveVideoRef.current.volume = vol;
     }
-  }, [channelVolume, isPresenterCameraAudioMuted]);
+
+    try {
+      const cur = activeSessionsOnly[activeFinanzasSessionIndex];
+      if (cur) {
+        const container = document.getElementById(`round-container-box-${cur.id}`);
+        if (container) {
+          const videos = container.querySelectorAll('video');
+          videos.forEach((v) => {
+            if (v.getAttribute('data-is-self-camera') === 'true') return;
+            v.muted = isMuted;
+            v.volume = vol;
+          });
+        }
+      }
+    } catch {}
+  }, [channelVolume, isPresenterCameraAudioMuted, activeSessionsOnly, activeFinanzasSessionIndex]);
 
   const sharesCountMap: Record<string, number> = {
     'sess-trabajadores-1': 726,
@@ -814,13 +1077,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   // Synchronize speech synthesis volume when channelVolume or isPresenterCameraAudioMuted changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       if (isPresenterCameraAudioMuted || channelVolume === 0) {
         window.speechSynthesis.cancel();
         if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-        speechTimeoutRef.current = setTimeout(() => {
-          if (isSpeechActiveRef.current) speakLucasTorresSegment();
-        }, 100);
+        setIsLucasTorresSpeaking(false);
+      } else {
+        if (isSpeechActiveRef.current && !window.speechSynthesis.speaking) {
+          speakLucasTorresSegment();
+        }
       }
     }
   }, [channelVolume, isPresenterCameraAudioMuted]);
@@ -1015,6 +1280,174 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeFinanzasSessionIndex, activeSessionsOnly, isPresenterCameraFullscreen, setIsPresenterCameraFullscreen, setIsWatchingPresenterCamera]);
 
+  // 🎛️ Helper to render the channels & broadcast controls menu window (strictly matching z.png)
+  const renderChannelsOverlay = (session: any) => {
+    if (activeChannelsMenuSessionId !== session.id) return null;
+    return (
+      <div 
+        className="absolute top-0 inset-x-0 z-[170] p-2.5 sm:p-3 pointer-events-auto animate-slide-down-tiktok"
+        onMouseEnter={() => handleMouseEnterRonda(session.id)}
+        onMouseLeave={handleMouseLeaveRonda}
+        onClick={(e) => e.stopPropagation()}
+        id={`embedded-channels-menu-overlay-${session.id}`}
+      >
+        {/* Subtle top indicator bar */}
+        <div className="w-16 h-1 bg-white/40 rounded-full mx-auto mb-1.5 opacity-80" />
+
+        <div className="w-full bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-3.5 rounded-3xl border border-slate-700/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 select-none">
+          {/* Top Row: Volver, current channel badge, and Close */}
+          <div className="flex items-center justify-between gap-1.5 w-full">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveChannelsMenuSessionId(null);
+                if (onCategoryFilterChange) onCategoryFilterChange('Todos');
+              }}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#181d2a] hover:bg-[#22293b] text-white text-[11px] font-black rounded-full transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-md shrink-0"
+              title="Volver a Todos"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#fe2c55] stroke-[3]" />
+              <span className="font-black">Volver</span>
+            </button>
+
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[10px] font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="text-slate-400 font-medium">Canal:</span>
+              <span className="text-rose-400 font-black">{selectedCategoryFilter || 'Finanzas'}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveChannelsMenuSessionId(null)}
+              className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700 active:scale-95 shrink-0"
+              title="Cerrar menú"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados) */}
+          <div className="grid grid-cols-4 gap-1.5 pt-0.5 text-center w-full">
+            {/* Cámara ON */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isUserLiveStreamingWithCamera) {
+                  handleToggleUserCameraLiveBroadcast();
+                } else if (toggleBroadcastCam) {
+                  toggleBroadcastCam();
+                }
+              }}
+              className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
+                (isBroadcastCamOn || isUserLiveStreamingWithCamera)
+                  ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
+                  : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
+              }`}
+              title="Configurar Cámara"
+            >
+              <Camera className="w-4 h-4 text-[#10b981] shrink-0" />
+              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">
+                {(isBroadcastCamOn || isUserLiveStreamingWithCamera) ? 'Cámara ON' : 'Cámara OFF'}
+              </span>
+            </button>
+
+            {/* Mic ON */}
+            <button
+              type="button"
+              onClick={() => {
+                if (toggleBroadcastMic) {
+                  toggleBroadcastMic();
+                }
+              }}
+              className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
+                isBroadcastMicOn && !isMuted
+                  ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
+                  : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
+              }`}
+              title="Configurar Micrófono"
+            >
+              <Mic className="w-4 h-4 text-[#10b981] shrink-0" />
+              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isBroadcastMicOn && !isMuted ? 'Mic ON' : 'Mute'}</span>
+            </button>
+
+            {/* Pantalla */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveChannelsMenuSessionId(null);
+                if (onToggleScreenShare) {
+                  onToggleScreenShare();
+                }
+              }}
+              className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
+                isScreenSharingActive
+                  ? 'bg-indigo-950/70 text-indigo-300 border-2 border-indigo-500 font-black ring-1 ring-indigo-400'
+                  : 'bg-[#181d2a] text-slate-200 border border-slate-700/70 hover:bg-[#22293b] font-bold'
+              }`}
+              title="Compartir Pantalla"
+            >
+              <Monitor className="w-4 h-4 text-slate-200 shrink-0" />
+              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
+            </button>
+
+            {/* Invitados */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenGuestsModal) {
+                  onOpenGuestsModal();
+                }
+              }}
+              className="py-2 px-1 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold active:scale-95 shadow-md"
+              title="Invitar Invitados"
+            >
+              <Users className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">Invitados ({broadcastGuestsCount || 3})</span>
+            </button>
+          </div>
+
+          {/* Bottom Row: 10 Live Channels in 2 Columns */}
+          <div className="pt-2 border-t border-slate-800/80 w-full">
+            <div className="flex items-center justify-between px-1 mb-1.5">
+              <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-white">
+                CANALES EN DIRECTO
+              </span>
+              <span className="text-[9px] sm:text-[9.5px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-2.5 py-0.5 rounded-full border border-[#fe2c55]/60">
+                {selectedCategoryFilter || 'Finanzas'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 w-full max-h-[46vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/90 border border-slate-800 shadow-inner scrollbar-none">
+              {CHANNELS_LIST.map(cat => {
+                const isActive = (selectedCategoryFilter || 'Finanzas') === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveChannelsMenuSessionId(null);
+                      if (onCategoryFilterChange) {
+                        onCategoryFilterChange(cat.id);
+                      }
+                    }}
+                    className={`py-2 sm:py-2.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-black transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 text-white font-black shadow-lg shadow-rose-600/40 border-2 border-pink-400 ring-2 ring-rose-400/40' 
+                        : 'bg-[#181d2a] hover:bg-[#22293b] text-white border border-slate-700/70 hover:border-slate-500'
+                    }`}
+                    id={`finanzas-feed-channel-btn-${cat.id}`}
+                  >
+                    <span className="truncate">{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="relative w-full flex flex-col items-center justify-center">
       {/* 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA */}
@@ -1055,6 +1488,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       <div
         ref={feedContainerRef}
         onScroll={handleScroll}
+        onWheel={handleWheelFeed}
         id="tiktok-rounds-vertical-feed"
         className="w-full max-w-full h-[calc(100dvh-130px)] min-h-[740px] max-h-[920px] overflow-y-auto snap-y snap-mandatory scroll-smooth py-6 flex flex-col items-center gap-10 sm:gap-14 select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
@@ -1159,59 +1593,39 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
 
-                {/* 🔊 ZONA DE DETECCIÓN Y BARRA DE VOLUMEN (APARECE SOLO AL PASAR EL RATÓN POR EL LADO IZQUIERDO DE LA PANTALLA) */}
-                <div 
-                  className="absolute left-0 top-0 bottom-0 w-28 sm:w-36 z-[160] flex items-center pl-2.5 sm:pl-3.5 group/volumezone pointer-events-auto select-none"
-                  id={`volume-hover-zone-${session.id}`}
-                >
+                {/* 📋 DOSSIER DEL PROYECTO DENTRO DEL CANAL EN PANTALLA COMPLETA */}
+                {(detailProjectUser || showProjectDetailsInPopup) && isCurrentlyActiveRound && renderProjectDetailsContent && (
                   <div 
-                    className={`flex flex-col items-center bg-[#070b14]/90 backdrop-blur-xl border border-white/20 rounded-full py-2.5 px-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.9)] transition-all duration-300 transform ${
-                      isDraggingVolume
-                        ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto ring-1 ring-emerald-500/50'
-                        : 'opacity-0 -translate-x-4 scale-95 pointer-events-none group-hover/volumezone:opacity-100 group-hover/volumezone:translate-x-0 group-hover/volumezone:scale-100 group-hover/volumezone:pointer-events-auto'
-                    } hover:border-emerald-500/50 hover:bg-[#070b14]/95`}
-                    id={`channel-volume-bar-${session.id}`}
+                    className="absolute inset-0 z-[150] bg-slate-950 w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
+                    id={`project-details-in-channel-fullscreen-${session.id}`}
                   >
-                    {/* Mute / Unmute icon */}
-                    <button
-                      type="button"
-                      onClick={handleToggleMute}
-                      className="p-1 text-white hover:text-emerald-400 transition cursor-pointer active:scale-90"
-                      title={isPresenterCameraAudioMuted || channelVolume === 0 ? "Activar audio" : "Silenciar audio"}
-                    >
-                      {isPresenterCameraAudioMuted || channelVolume === 0 ? (
-                        <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" />
-                      ) : (
-                        <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
-                      )}
-                    </button>
-
-                    {/* Vertical Slider Track */}
-                    <div 
-                      ref={volumeTrackRef}
-                      onPointerDown={handleVolumePointerDown}
-                      onPointerMove={handleVolumePointerMove}
-                      onPointerUp={handleVolumePointerUp}
-                      className="relative w-1.5 sm:w-2 h-24 sm:h-28 bg-slate-800/90 rounded-full cursor-pointer overflow-hidden my-1.5 flex flex-col justify-end border border-slate-700/60 shadow-inner touch-none"
-                      title={`Volumen: ${isPresenterCameraAudioMuted ? 0 : channelVolume}%`}
-                    >
-                      {/* Fill bar from bottom to top */}
-                      <div 
-                        className={`w-full rounded-full transition-all duration-75 ${
-                          isPresenterCameraAudioMuted || channelVolume === 0 
-                            ? 'bg-rose-500/50' 
-                            : 'bg-gradient-to-t from-emerald-500 via-teal-400 to-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.6)]'
-                        }`}
-                        style={{ height: `${isPresenterCameraAudioMuted ? 0 : channelVolume}%` }}
-                      />
-                    </div>
-
-                    {/* Percentage Badge */}
-                    <span className="text-[7.5px] sm:text-[8px] font-mono font-black text-slate-200 tracking-tighter">
-                      {isPresenterCameraAudioMuted ? '0%' : `${channelVolume}%`}
-                    </span>
+                    {renderProjectDetailsContent()}
                   </div>
-                </div>
+                )}
+
+                {/* 🪟 VENTANA EN GRANDE DEL PARTICIPANTE (captura image.png) */}
+                {enlargedWindowUser && isCurrentlyActiveRound && renderEnlargedParticipantWindow && (
+                  <div 
+                    className="absolute inset-0 z-[155] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    id={`enlarged-window-in-channel-${session.id}`}
+                  >
+                    {renderEnlargedParticipantWindow()}
+                  </div>
+                )}
+
+                {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (captura z.png) */}
+                {renderChannelsOverlay(session)}
+
+                {/* 🖥️ POPUP MODAL: DISTRIBUCIÓN DE PANTALLA (COMPARTIR PANTALLA) EN TAMAÑO COMPLETO */}
+                {showScreenShareMenu && renderScreenShareContent && (
+                  <div 
+                    className="absolute inset-0 w-full h-full z-[220] pointer-events-auto rounded-[40px] sm:rounded-[48px] overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                    id="fullscreen-screen-distribution-wrapper"
+                  >
+                    {renderScreenShareContent()}
+                  </div>
+                )}
 
                 {/* 🎥 LIVE EXPOSITION OVERLAY DENTRO DEL CANAL (captura image.png) */}
                 {isPresenterCameraFullscreen && isCurrentlyActiveRound && (
@@ -1298,220 +1712,476 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                     {/* 🔻 BOTTOM CONTROLS & SYNCHRONIZED COUNTDOWN DENTRO DEL CANAL */}
                     <div className="relative z-20 w-full pb-3.5 sm:pb-4 px-2.5 sm:px-3 flex flex-col items-center gap-2 pointer-events-auto">
-                      {isCommentsOpenForThisSession ? (
-                        /* 💬 COMENTARIOS DE USUARIOS Y POSIBILIDAD DE COMENTAR (Sustituye a image.png al pulsar comentarios) */
-                        <div 
-                          className="w-full bg-[#0a0e1a]/95 backdrop-blur-xl border border-rose-500/60 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-[0_12px_40px_rgba(0,0,0,0.85)] animate-fade-in"
-                          id={`live-exposition-comments-${session.id}`}
-                        >
-                          {/* Header */}
-                          <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
-                            <div className="flex items-center gap-1.5 text-left">
-                              <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
-                              <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
-                                Comentarios en vivo
-                              </span>
-                              <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
-                                {commentsCount}
-                              </span>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => setActiveCommentsSessionId(null)}
-                              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition cursor-pointer flex items-center gap-1 text-[9px] font-bold"
-                              title="Cerrar comentarios y volver a la cuenta atrás"
-                            >
-                              <span className="text-[8px] uppercase tracking-wider text-slate-400 hidden xs:inline">Volver a cuenta atrás</span>
-                              <X className="w-3.5 h-3.5" />
-                            </button>
+{/* ⏱️ SYNCHRONIZED COUNTDOWN CARD & ACTION BUTTONS */}
+                      <div className="w-full bg-[#0a0e1a]/95 backdrop-blur-xl border border-emerald-500/60 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-[0_12px_40px_rgba(0,0,0,0.8)]">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="text-left shrink-0">
+                            <span className="text-[7px] sm:text-[7.5px] text-slate-400 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
+                            <span className="text-[10px] sm:text-[11px] text-white font-black block leading-none">5 min exposición</span>
                           </div>
 
-                          {/* Scrollable Comments List */}
-                          <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 text-left select-text">
-                            {sessionComments.map((comm) => (
-                              <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
-                                <img
-                                  src={comm.userAvatar}
-                                  alt={comm.userName}
-                                  className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
-                                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between gap-1">
-                                    <span className="text-[10px] font-black text-white truncate">{comm.userName}</span>
-                                    <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
-                                    {comm.text}
-                                  </p>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleCommentLike(session.id, comm.id)}
-                                  className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                                    comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
-                                  }`}
-                                  title="Me gusta"
-                                >
-                                  <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                                  <span className="text-[8px] font-mono">{comm.likes}</span>
-                                </button>
-                              </div>
-                            ))}
+                          <div className="bg-white text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 sm:px-5 py-0.5 rounded-xl shadow-xl border-0 select-none tracking-tight">
+                            {formattedTimer}
                           </div>
 
-                          {/* Quick Emojis strip */}
-                          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 px-1 shrink-0 bg-slate-950/60 rounded-full border border-slate-800/80">
-                            <span className="text-[7.5px] text-slate-400 font-bold uppercase tracking-wider pl-1 pr-0.5 shrink-0">Emojis:</span>
-                            {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍'].map((emoji) => (
-                              <button
-                                key={emoji}
-                                type="button"
-                                onClick={() => handleInsertEmoji(session.id, emoji)}
-                                className="p-0.5 hover:bg-slate-800 rounded-md transition active:scale-125 cursor-pointer text-xs shrink-0 select-none"
-                                title={`Añadir ${emoji}`}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
+                          <div className="text-right shrink-0">
+                            <span className="text-[7px] sm:text-[7.5px] text-slate-400 block font-black uppercase tracking-wider">RONDA</span>
+                            <span className="font-mono text-emerald-400 font-black text-[9px] sm:text-[10px] block leading-tight">
+                              {turnNumber}/10 (50m)
+                            </span>
                           </div>
+                        </div>
 
-                          {/* Emoji Grid popover if Smile clicked */}
-                          {showEmojiPickerSessionId === session.id && (
-                            <div className="bg-[#0f172a] border border-rose-500/40 rounded-2xl p-2 shadow-2xl backdrop-blur-xl animate-fade-in grid grid-cols-6 sm:grid-cols-8 gap-1 select-none shrink-0 z-30">
-                              {EMOJI_LIST.map((emoji) => (
-                                <button
-                                  key={emoji}
-                                  type="button"
-                                  onClick={() => handleInsertEmoji(session.id, emoji)}
-                                  className="w-6 h-6 flex items-center justify-center text-sm hover:bg-slate-800 rounded-lg transition hover:scale-125 active:scale-95 cursor-pointer select-none"
-                                  title={emoji}
-                                >
-                                  {emoji}
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                        {/* Progress Bar (emerald -> amber -> rose) */}
+                        <div className="w-full bg-slate-900/90 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                          <div 
+                            className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 rounded-full transition-all duration-1000 ease-linear"
+                            style={{ width: `${Math.min(100, Math.max(0, (timerVal / 300) * 100))}%` }}
+                          />
+                        </div>
 
-                          {/* New comment input & send form */}
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              handleAddSessionComment(session.id);
-                            }}
-                            className="flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0"
+                        {/* Action Buttons: Micro, Finalizar, Detener Live */}
+                        <div className="grid grid-cols-3 gap-1.5 mt-0.5">
+                          <button
+                            type="button"
+                            onClick={toggleBroadcastMic}
+                            className={`py-1.5 px-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
+                              isBroadcastMicOn && !isMuted
+                                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                            }`}
                           >
-                            <img
-                              src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                              alt="Tú"
-                              className="w-6 h-6 rounded-full object-cover border border-rose-500 shrink-0"
-                            />
-                            <div className="relative flex-1 flex items-center min-w-0">
-                              <input
-                                type="text"
-                                value={commentInputMap[session.id] || ''}
-                                onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
-                                placeholder="Añade un comentario o emoji..."
-                                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-full pl-2.5 pr-8 py-1.5 text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none focus:border-rose-500 transition"
+                            <Mic className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handlePresenterFinalize(session, index);
+                            }}
+                            className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-rose-500 text-white font-black text-[9px] py-1.5 px-1.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-rose-400/80"
+                          >
+                            <Square className="w-3 h-3 fill-white text-white shrink-0" />
+                            <span className="truncate">FINALIZAR</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsPresenterCameraFullscreen(false);
+                              setIsWatchingPresenterCamera(false);
+                            }}
+                            className="bg-red-600/90 hover:bg-red-500 text-white font-black text-[9px] py-1.5 px-1.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-400"
+                          >
+                            <CameraOff className="w-3 h-3 shrink-0" />
+                            <span className="truncate">DETENER</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  
+                    {/* 💬 COMENTARIOS DE USUARIOS EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
+                    {isCommentsOpenForThisSession && (
+                      <div 
+                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-[#0a0e1a]/98 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-b-[40px] sm:rounded-b-[48px] rounded-t-3xl p-3.5 sm:p-4.5 flex flex-col gap-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.98)] animate-slide-up text-left pointer-events-auto"
+                        id={`live-exposition-comments-${session.id}`}
+                      >
+                        {/* Header con botón para cerrar */}
+                        <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                          <div className="flex items-center gap-1.5 text-left">
+                            <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
+                              Comentarios en vivo
+                            </span>
+                            <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
+                              {commentsCount}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveCommentsSessionId(null)}
+                            className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                            title="Cerrar comentarios"
+                          >
+                            <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Scrollable Comments List */}
+                        <div className="w-full max-h-[130px] sm:max-h-[150px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-white/20">
+                          {sessionComments.map((comm) => (
+                            <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
+                              <img
+                                src={comm.userAvatar}
+                                alt={comm.userName}
+                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
                               />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-[10px] font-black text-rose-300 truncate">{comm.userName}</span>
+                                  <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                </div>
+                                <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                                  {comm.text}
+                                </p>
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => setShowEmojiPickerSessionId(prev => prev === session.id ? null : session.id)}
-                                className={`absolute right-2 p-0.5 transition cursor-pointer ${
-                                  showEmojiPickerSessionId === session.id ? 'text-rose-400 scale-110' : 'text-slate-400 hover:text-amber-400'
+                                onClick={() => handleToggleCommentLike(session.id, comm.id)}
+                                className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
+                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
                                 }`}
-                                title="Selector de emojis"
+                                title="Me gusta"
                               >
-                                <Smile className="w-3.5 h-3.5" />
+                                <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                <span className="text-[8px] font-mono">{comm.likes}</span>
                               </button>
                             </div>
-                            <button
-                              type="submit"
-                              disabled={!(commentInputMap[session.id] || '').trim()}
-                              className={`p-1.5 sm:p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
-                                (commentInputMap[session.id] || '').trim()
-                                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md'
-                                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                              }`}
-                              title="Publicar comentario"
-                            >
-                              <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                            </button>
-                          </form>
+                          ))}
                         </div>
-                      ) : (
-                        /* ⏱️ SYNCHRONIZED COUNTDOWN CARD (SAME AS IMAGE.PNG & CARD) */
-                        <div className="w-full bg-[#0a0e1a]/95 backdrop-blur-xl border border-emerald-500/60 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-[0_12px_40px_rgba(0,0,0,0.8)]">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="text-left shrink-0">
-                              <span className="text-[7px] sm:text-[7.5px] text-slate-400 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
-                              <span className="text-[10px] sm:text-[11px] text-white font-black block leading-none">5 min exposición</span>
-                            </div>
 
-                            <div className="bg-white text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 sm:px-5 py-0.5 rounded-xl shadow-xl border-0 select-none tracking-tight">
-                              {formattedTimer}
-                            </div>
+                        {/* Quick Emojis strip - Tap to send directly! */}
+                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
+                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                            <span>⚡</span>
+                            <span>Enviar emoji:</span>
+                          </span>
+                          {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => {
+                                handleAddSessionComment(session.id, emoji);
+                                window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                  detail: { emoji, icon: emoji, pureEmoji: true }
+                                }));
+                              }}
+                              className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                              title={`Enviar ${emoji}`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
 
-                            <div className="text-right shrink-0">
-                              <span className="text-[7px] sm:text-[7.5px] text-slate-400 block font-black uppercase tracking-wider">RONDA</span>
-                              <span className="font-mono text-emerald-400 font-black text-[9px] sm:text-[10px] block leading-tight">
-                                {turnNumber}/10 (50m)
-                              </span>
-                            </div>
-                          </div>
+                        {/* New comment input & send form */}
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleAddSessionComment(session.id);
+                          }}
+                          className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                        >
+                          {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
+                          {renderEmojiGlossary(session.id)}
 
-                          {/* Progress Bar (emerald -> amber -> rose) */}
-                          <div className="w-full bg-slate-900/90 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
-                            <div 
-                              className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 rounded-full transition-all duration-1000 ease-linear"
-                              style={{ width: `${Math.min(100, Math.max(0, (timerVal / 300) * 100))}%` }}
+                          {/* Bloque para escribir con el emoji dentro */}
+                          <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                            {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
+                            <button
+                              type="button"
+                              onClick={() => setShowEmojiPickerSessionId(prev => prev === session.id ? null : session.id)}
+                              className="p-1 text-base sm:text-lg hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none"
+                              title="Abrir glosario de emojis"
+                              id={`btn-open-emoji-glossary-expo-${session.id}`}
+                            >
+                              😊
+                            </button>
+
+                            <input
+                              type="text"
+                              value={commentInputMap[session.id] || ''}
+                              onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
+                              placeholder="Escribe un comentario o emoji..."
+                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
                             />
                           </div>
 
-                          {/* Action Buttons: Micro, Finalizar, Detener Live */}
-                          <div className="grid grid-cols-3 gap-1.5 mt-0.5">
-                            <button
-                              type="button"
-                              onClick={toggleBroadcastMic}
-                              className={`py-1.5 px-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
-                                isBroadcastMicOn && !isMuted
-                                  ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-                              }`}
-                            >
-                              <Mic className="w-3 h-3 shrink-0" />
-                              <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
-                            </button>
+                          <button
+                            type="submit"
+                            disabled={!(commentInputMap[session.id] || '').trim()}
+                            className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
+                              (commentInputMap[session.id] || '').trim()
+                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
+                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            }`}
+                            title="Publicar comentario"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        </form>
+                      </div>
+                    )}
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handlePresenterFinalize(session, index);
-                              }}
-                              className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-rose-500 text-white font-black text-[9px] py-1.5 px-1.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-rose-400/80"
-                            >
-                              <Square className="w-3 h-3 fill-white text-white shrink-0" />
-                              <span className="truncate">FINALIZAR</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsPresenterCameraFullscreen(false);
-                                setIsWatchingPresenterCamera(false);
-                              }}
-                              className="bg-red-600/90 hover:bg-red-500 text-white font-black text-[9px] py-1.5 px-1.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-400"
-                            >
-                              <CameraOff className="w-3 h-3 shrink-0" />
-                              <span className="truncate">DETENER</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
+                {/* 🔴 VISTA EN VIVO CON CÁMARA GRABÁNDOTE EN DIRECTO (Strictly matching image.png) */}
+                {isUserLiveStreamingWithCamera && isCurrentlyActiveRound ? (
+                  <div 
+                    className="absolute inset-0 z-10 w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between select-none pointer-events-auto bg-black"
+                    id={`live-camera-broadcast-fullscreen-${session.id}`}
+                  >
+                    {/* Background live camera stream */}
+                    {userLiveMediaStream ? (
+                      <video
+                        ref={(el) => {
+                          if (el && userLiveMediaStream) {
+                            if (el.srcObject !== userLiveMediaStream) {
+                              el.srcObject = userLiveMediaStream;
+                            }
+                            el.play().catch(() => {});
+                          }
+                        }}
+                        autoPlay
+                        playsInline
+                        muted
+                        className={`absolute inset-0 w-full h-full object-cover z-0 ${
+                          liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
+                        }`}
+                      />
+                    ) : (
+                      <video
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-cover z-0"
+                        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                      />
+                    )}
+
+                    {/* Gradient vignettes at top and bottom */}
+                    <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/85 via-black/40 to-transparent pointer-events-none z-10" />
+                    <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
+
+                    {/* 🔝 ZONA SUPERIOR SENSIBLE AL RATÓN: Al pasar el puntero por la parte superior de este canal, aparece la ventana de la captura z.png */}
+                    <div 
+                      className="relative z-20 w-full flex flex-col items-center pt-3.5 sm:pt-4 px-3.5 sm:px-4 pb-6 cursor-pointer group/cam-hover-top"
+                      onMouseEnter={() => handleMouseEnterRonda(session.id)}
+                      onMouseLeave={handleMouseLeaveRonda}
+                      onClick={() => toggleChannelsMenu(session.id)}
+                      title="Pasa el ratón por la parte superior para abrir canales y controles"
+                    >
+                      {/* Top Phone Speaker Notch */}
+                      <div className="w-14 h-1 bg-slate-700/60 rounded-full mx-auto mb-1 shrink-0 pointer-events-none" />
+
+                      {/* Invisible expanded hover target across the top 110px */}
+                      <div className="absolute top-0 inset-x-0 h-28 pointer-events-auto" />
+                    </div>
+
+                    {/* 👥 OPCIONAL OVERLAY: 10 PARTICIPANTES SI EL USUARIO PULSA "VER PARTICIPANTES" */}
+                    {showCameraParticipantsGrid[session.id] && (
+                      <div className="relative z-30 bg-[#0B0F19]/95 backdrop-blur-md border border-slate-800/90 rounded-2xl p-2.5 shadow-2xl animate-fade-in flex flex-col gap-2 my-auto">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase text-white tracking-wider">
+                            10 Participantes de la Mesa
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: false }))}
+                            className="p-1 text-slate-400 hover:text-white"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {participants.slice(0, 10).map((userObj, idx) => (
+                            <div key={userObj.id || idx} className="flex flex-col items-center">
+                              <img
+                                src={userObj.avatar}
+                                alt={userObj.name}
+                                className="w-8 h-8 rounded-full object-cover border border-slate-700"
+                                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
+                              />
+                              <span className="text-[8px] text-slate-300 font-bold truncate max-w-[42px] mt-0.5">
+                                {userObj.name.split(' ')[0]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 🔻 PARTE INFERIOR: CONTROLES DE MICRO, COMENTARIOS Y NAVEGACIÓN */}
+                    <div className="relative z-20 w-full flex flex-col gap-2 p-3.5 sm:p-4 pb-4 sm:pb-5">
+                      {/* 💬 COMENTARIOS EN VIVO EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
+<div className="flex items-center justify-between gap-1.5 bg-black/70 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-lg">
+                        <button
+                          type="button"
+                          onClick={toggleBroadcastMic}
+                          className={`py-2 px-2.5 rounded-xl font-black text-[9px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center gap-1 border shadow-md ${
+                            isBroadcastMicOn && !isMuted
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                              : 'bg-slate-800 text-slate-200 border-slate-700'
+                          }`}
+                        >
+                          <Mic className="w-3 h-3 shrink-0" />
+                          <span>{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: !prev[session.id] }));
+                          }}
+                          className="bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold text-[9px] py-2 px-2.5 rounded-xl border border-slate-700 transition cursor-pointer"
+                        >
+                          👥 {showCameraParticipantsGrid[session.id] ? 'Ocultar' : 'Participantes'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleFinishRetransmissionAndPassToNextParticipant}
+                          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-[9px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer border border-emerald-400"
+                        >
+                          FINALIZAR
+                        </button>
+                      </div>
+                    </div>
+                  
+                    {/* 💬 COMENTARIOS EN VIVO EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
+                    {isCommentsOpenForThisSession && (
+                      <div 
+                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-[#0a0e1a]/98 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-b-[40px] sm:rounded-b-[48px] rounded-t-3xl p-3.5 sm:p-4.5 flex flex-col gap-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.98)] animate-slide-up text-left pointer-events-auto"
+                        id={`live-camera-comments-${session.id}`}
+                      >
+                        {/* Header con botón para cerrar */}
+                        <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                          <div className="flex items-center gap-1.5">
+                            <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
+                              Comentarios en directo
+                            </span>
+                            <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
+                              {commentsCount}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveCommentsSessionId(null)}
+                            className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                            title="Cerrar comentarios"
+                          >
+                            <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Scrollable Comments List */}
+                        <div className="w-full max-h-[130px] sm:max-h-[150px] overflow-y-auto space-y-1.5 pr-1 select-text scrollbar-thin scrollbar-thumb-white/20">
+                          {sessionComments.map((comm) => (
+                            <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
+                              <img
+                                src={comm.userAvatar}
+                                alt={comm.userName}
+                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-[10px] font-black text-rose-300 truncate">{comm.userName}</span>
+                                  <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                </div>
+                                <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                                  {comm.text}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleCommentLike(session.id, comm.id)}
+                                className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
+                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
+                                }`}
+                                title="Me gusta"
+                              >
+                                <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                <span className="text-[7.5px]">{comm.likes}</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Quick emojis - Tap to send directly! */}
+                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
+                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                            <span>⚡</span>
+                            <span>Enviar emoji:</span>
+                          </span>
+                          {['❤️', '🔥', '👏', '🚀', '💯', '💎', '✨', '😍', '😂', '🙌', '💡', '💰', '👍', '🎉', '🥂', '👑'].map((em) => (
+                            <button
+                              key={em}
+                              type="button"
+                              onClick={() => {
+                                handleAddSessionComment(session.id, em);
+                                window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                  detail: { emoji: em, icon: em, pureEmoji: true }
+                                }));
+                              }}
+                              className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                              title={`Enviar ${em}`}
+                            >
+                              {em}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Comment input form with emoji trigger inside writing block */}
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleAddSessionComment(session.id);
+                          }}
+                          className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                        >
+                          {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
+                          {renderEmojiGlossary(session.id)}
+
+                          {/* Bloque para escribir comentarios con el emoji dentro */}
+                          <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                            {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
+                            <button
+                              type="button"
+                              onClick={() => setShowEmojiPickerSessionId(prev => prev === session.id ? null : session.id)}
+                              className="p-1 text-base sm:text-lg hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none"
+                              title="Abrir glosario de emojis"
+                              id={`btn-open-emoji-glossary-cam-${session.id}`}
+                            >
+                              😊
+                            </button>
+
+                            <input
+                              type="text"
+                              value={commentInputMap[session.id] || ''}
+                              onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
+                              placeholder="Escribe un comentario o emoji..."
+                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={!(commentInputMap[session.id] || '').trim()}
+                            className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
+                              (commentInputMap[session.id] || '').trim()
+                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
+                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            }`}
+                            title="Publicar comentario"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        </form>
+                      </div>
+                    )}
+
+                  </div>
+                ) : (
+                  <>
                 {/* 🎥 Embedded Live Stream Video Background inside Channel Container */}
                 {isLiveActive && (
                   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px]">
@@ -1566,166 +2236,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <span className="h-0.5 w-6 sm:w-8 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                   </div>
                 </div>
-
-                {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (Se abre al pasar el ratón por Ronda en Curso) */}
-                {activeChannelsMenuSessionId === session.id && (
-                  <div 
-                    className="absolute top-0 inset-x-0 z-[120] p-2.5 sm:p-3 pointer-events-auto animate-slide-down-tiktok"
-                    onMouseEnter={() => handleMouseEnterRonda(session.id)}
-                    onMouseLeave={handleMouseLeaveRonda}
-                    onClick={(e) => e.stopPropagation()}
-                    id={`embedded-channels-menu-overlay-${session.id}`}
-                  >
-                    {/* Subtle top indicator bar */}
-                    <div className="w-16 h-1 bg-white/40 rounded-full mx-auto mb-1.5 opacity-80" />
-
-                    <div className="w-full bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-3.5 rounded-3xl border border-slate-700/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 select-none">
-                      {/* Top Row: Volver, current channel badge, and Close */}
-                      <div className="flex items-center justify-between gap-1.5 w-full">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveChannelsMenuSessionId(null);
-                            if (onCategoryFilterChange) onCategoryFilterChange('Todos');
-                          }}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#181d2a] hover:bg-[#22293b] text-white text-[11px] font-black rounded-full transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-md shrink-0"
-                          title="Volver a Todos"
-                        >
-                          <ArrowLeft className="w-3.5 h-3.5 text-[#fe2c55] stroke-[3]" />
-                          <span className="font-black">Volver</span>
-                        </button>
-
-                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[10px] font-mono">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                          <span className="text-slate-400 font-medium">Canal:</span>
-                          <span className="text-rose-400 font-black">{selectedCategoryFilter || 'Finanzas'}</span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setActiveChannelsMenuSessionId(null)}
-                          className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700 active:scale-95 shrink-0"
-                          title="Cerrar menú"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados) */}
-                      <div className="grid grid-cols-4 gap-1.5 pt-0.5 text-center w-full">
-                        {/* Cámara ON */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (toggleBroadcastCam) {
-                              toggleBroadcastCam();
-                            }
-                          }}
-                          className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                            isBroadcastCamOn
-                              ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                              : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-                          }`}
-                          title="Configurar Cámara"
-                        >
-                          <Camera className="w-4 h-4 text-[#10b981] shrink-0" />
-                          <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
-                        </button>
-
-                        {/* Mic ON */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (toggleBroadcastMic) {
-                              toggleBroadcastMic();
-                            }
-                          }}
-                          className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                            isBroadcastMicOn && !isMuted
-                              ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                              : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-                          }`}
-                          title="Configurar Micrófono"
-                        >
-                          <Mic className="w-4 h-4 text-[#10b981] shrink-0" />
-                          <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isBroadcastMicOn && !isMuted ? 'Mic ON' : 'Mute'}</span>
-                        </button>
-
-                        {/* Pantalla */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onToggleScreenShare) {
-                              onToggleScreenShare();
-                            }
-                          }}
-                          className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                            isScreenSharingActive
-                              ? 'bg-indigo-950/70 text-indigo-300 border-2 border-indigo-500 font-black ring-1 ring-indigo-400'
-                              : 'bg-[#181d2a] text-slate-200 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-                          }`}
-                          title="Compartir Pantalla"
-                        >
-                          <Monitor className="w-4 h-4 text-slate-200 shrink-0" />
-                          <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
-                        </button>
-
-                        {/* Invitados */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onOpenGuestsModal) {
-                              onOpenGuestsModal();
-                            }
-                          }}
-                          className="py-2 px-1 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold active:scale-95 shadow-md"
-                          title="Invitar Invitados"
-                        >
-                          <Users className="w-4 h-4 text-amber-400 shrink-0" />
-                          <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">Invitados ({broadcastGuestsCount || 3})</span>
-                        </button>
-                      </div>
-
-                      {/* Bottom Row: 10 Live Channels in 2 Columns */}
-                      <div className="pt-2 border-t border-slate-800/80 w-full">
-                        <div className="flex items-center justify-between px-1 mb-1.5">
-                          <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-white">
-                            CANALES EN DIRECTO
-                          </span>
-                          <span className="text-[9px] sm:text-[9.5px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-2.5 py-0.5 rounded-full border border-[#fe2c55]/60">
-                            {selectedCategoryFilter || 'Finanzas'}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-1.5 w-full max-h-[46vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/90 border border-slate-800 shadow-inner scrollbar-none">
-                          {CHANNELS_LIST.map(cat => {
-                            const isActive = (selectedCategoryFilter || 'Finanzas') === cat.id;
-                            return (
-                              <button
-                                key={cat.id}
-                                type="button"
-                                onClick={() => {
-                                  setActiveChannelsMenuSessionId(null);
-                                  if (onCategoryFilterChange) {
-                                    onCategoryFilterChange(cat.id);
-                                  }
-                                }}
-                                className={`py-2 sm:py-2.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-black transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm ${
-                                  isActive 
-                                    ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 text-white font-black shadow-lg shadow-rose-600/40 border-2 border-pink-400 ring-2 ring-rose-400/40' 
-                                    : 'bg-[#181d2a] hover:bg-[#22293b] text-white border border-slate-700/70 hover:border-slate-500'
-                                }`}
-                                id={`finanzas-feed-channel-btn-${cat.id}`}
-                              >
-                                <span className="truncate">{cat.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* 🟢 CENTRAL STAGE CARD (Strictly matching image.png during 5m exposition, and zq.png during 10m voting) */}
                 <div 
@@ -1900,144 +2410,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           </span>
                         </div>
                       </div>
-
-                      {isCommentsOpenForThisSession ? (
-                        /* 💬 COMENTARIOS DE USUARIOS Y POSIBILIDAD DE COMENTAR (Sustituye a image.png en tarjeta) */
-                        <div 
-                          className="w-full bg-[#070b14]/95 border border-rose-500/50 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-inner mb-3 animate-fade-in"
-                          id={`normal-card-comments-${session.id}`}
-                        >
-                          <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
-                            <div className="flex items-center gap-1.5 text-left">
-                              <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
-                              <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
-                                Comentarios ({commentsCount})
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setActiveCommentsSessionId(null)}
-                              className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer"
-                              title="Volver a la cuenta atrás"
-                            >
-                              <span className="text-[8px] uppercase tracking-wider text-slate-400 hidden xs:inline">Volver a cuenta atrás</span>
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          <div className="w-full max-h-[140px] overflow-y-auto space-y-1.5 pr-1 text-left select-text">
-                            {sessionComments.map((comm) => (
-                              <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
-                                <img
-                                  src={comm.userAvatar}
-                                  alt={comm.userName}
-                                  className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
-                                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between gap-1">
-                                    <span className="text-[10px] font-black text-white truncate">{comm.userName}</span>
-                                    <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
-                                    {comm.text}
-                                  </p>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleCommentLike(session.id, comm.id)}
-                                  className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                                    comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
-                                  }`}
-                                  title="Me gusta"
-                                >
-                                  <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                                  <span className="text-[8px] font-mono">{comm.likes}</span>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Quick Emojis strip */}
-                          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 px-1 shrink-0 bg-slate-950/60 rounded-full border border-slate-800/80">
-                            <span className="text-[7.5px] text-slate-400 font-bold uppercase tracking-wider pl-1 pr-0.5 shrink-0">Emojis:</span>
-                            {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍'].map((emoji) => (
-                              <button
-                                key={emoji}
-                                type="button"
-                                onClick={() => handleInsertEmoji(session.id, emoji)}
-                                className="p-0.5 hover:bg-slate-800 rounded-md transition active:scale-125 cursor-pointer text-xs shrink-0 select-none"
-                                title={`Añadir ${emoji}`}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Emoji Grid popover if Smile clicked */}
-                          {showEmojiPickerSessionId === session.id && (
-                            <div className="bg-[#0f172a] border border-rose-500/40 rounded-2xl p-2 shadow-2xl backdrop-blur-xl animate-fade-in grid grid-cols-6 sm:grid-cols-8 gap-1 select-none shrink-0 z-30">
-                              {EMOJI_LIST.map((emoji) => (
-                                <button
-                                  key={emoji}
-                                  type="button"
-                                  onClick={() => handleInsertEmoji(session.id, emoji)}
-                                  className="w-6 h-6 flex items-center justify-center text-sm hover:bg-slate-800 rounded-lg transition hover:scale-125 active:scale-95 cursor-pointer select-none"
-                                  title={emoji}
-                                >
-                                  {emoji}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              handleAddSessionComment(session.id);
-                            }}
-                            className="flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0"
-                          >
-                            <img
-                              src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                              alt="Tú"
-                              className="w-6 h-6 rounded-full object-cover border border-rose-500 shrink-0"
-                            />
-                            <div className="relative flex-1 flex items-center min-w-0">
-                              <input
-                                type="text"
-                                value={commentInputMap[session.id] || ''}
-                                onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
-                                placeholder="Añade un comentario o emoji..."
-                                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-full pl-2.5 pr-8 py-1.5 text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none focus:border-rose-500 transition"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowEmojiPickerSessionId(prev => prev === session.id ? null : session.id)}
-                                className={`absolute right-2 p-0.5 transition cursor-pointer ${
-                                  showEmojiPickerSessionId === session.id ? 'text-rose-400 scale-110' : 'text-slate-400 hover:text-amber-400'
-                                }`}
-                                title="Selector de emojis"
-                              >
-                                <Smile className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                            <button
-                              type="submit"
-                              disabled={!(commentInputMap[session.id] || '').trim()}
-                              className={`p-1.5 sm:p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
-                                (commentInputMap[session.id] || '').trim()
-                                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md'
-                                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                              }`}
-                              title="Publicar comentario"
-                            >
-                              <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                            </button>
-                          </form>
-                        </div>
-                      ) : (
-                        /* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: white digital pill timer) */
+{/* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: white digital pill timer) */}
                         <div className="w-full bg-[#070b14] border border-emerald-500/40 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-inner mb-3">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-1.5 text-left">
@@ -2080,7 +2453,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             />
                           </div>
                         </div>
-                      )}
 
                       {/* ACTION BUTTONS (Matching image.png: MICRO ON, FINALIZAR, LIVE) */}
                       <div className="w-full flex flex-col gap-2">
@@ -2312,6 +2684,202 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <span className="font-black">VER PROYECTOS</span>
                   </button>
                 </div>
+                  </>
+                )}
+              
+                {/* 💬 COMENTARIOS DE USUARIOS Y POSIBILIDAD DE COMENTAR - OCUPA TODO EL ANCHO DEL CANAL */}
+                {isCommentsOpenForThisSession && (
+                  <div 
+                    className="absolute inset-x-0 bottom-0 z-50 w-full bg-[#0a0e1a]/98 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-b-[40px] sm:rounded-b-[48px] rounded-t-3xl p-3.5 sm:p-4.5 flex flex-col gap-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.98)] animate-slide-up pointer-events-auto text-left"
+                    id={`normal-card-comments-${session.id}`}
+                  >
+                    <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                      <div className="flex items-center gap-1.5 text-left">
+                        <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
+                          Comentarios ({commentsCount})
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveCommentsSessionId(null)}
+                        className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                        title="Cerrar comentarios"
+                      >
+                        <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Comments List */}
+                    <div className="w-full max-h-[130px] sm:max-h-[150px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-white/20">
+                      {sessionComments.map((comm) => (
+                        <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
+                          <img
+                            src={comm.userAvatar}
+                            alt={comm.userName}
+                            className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                            onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[10px] font-black text-rose-300 truncate">{comm.userName}</span>
+                              <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                              {comm.text}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCommentLike(session.id, comm.id)}
+                            className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
+                              comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
+                            }`}
+                            title="Me gusta"
+                          >
+                            <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                            <span className="text-[8px] font-mono">{comm.likes}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Quick Emojis strip - Tap to send directly! */}
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
+                      <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                        <span>⚡</span>
+                        <span>Enviar emoji:</span>
+                      </span>
+                      {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            handleAddSessionComment(session.id, emoji);
+                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                              detail: { emoji, icon: emoji, pureEmoji: true }
+                            }));
+                          }}
+                          className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                          title={`Enviar ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Bloque para escribir con emoji dentro que abre glosario */}
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleAddSessionComment(session.id);
+                      }}
+                      className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                    >
+                      {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
+                      {renderEmojiGlossary(session.id)}
+
+                      {/* Bloque para escribir comentarios con el emoji dentro */}
+                      <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                        {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
+                        <button
+                          type="button"
+                          onClick={() => setShowEmojiPickerSessionId(prev => prev === session.id ? null : session.id)}
+                          className="p-1 text-base sm:text-lg hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none"
+                          title="Abrir glosario de emojis"
+                          id={`btn-open-emoji-glossary-normal-${session.id}`}
+                        >
+                          😊
+                        </button>
+
+                        <input
+                          type="text"
+                          value={commentInputMap[session.id] || ''}
+                          onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
+                          placeholder="Escribe un comentario o emoji..."
+                          className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={!(commentInputMap[session.id] || '').trim()}
+                        className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
+                          (commentInputMap[session.id] || '').trim()
+                            ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
+                            : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                        }`}
+                        title="Publicar comentario"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+              
+                {/* 🔊 ZONA CENTRAL IZQUIERDA SENSIBLE AL RATÓN Y BARRA DE VOLUMEN (APARECE SOLO AL PASAR EL PUNTERO POR EL CENTRO-IZQUIERDA) */}
+                <div 
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-[340px] sm:h-[380px] w-24 sm:w-28 z-[170] flex items-center pl-2.5 sm:pl-3 group/volumezone pointer-events-auto select-none"
+                  id={`volume-hover-zone-${session.id}`}
+                  onMouseEnter={() => setIsVolumeHovered(true)}
+                  onMouseLeave={() => {
+                    if (!isDraggingVolume) setIsVolumeHovered(false);
+                  }}
+                  onWheel={handleVolumeWheel}
+                >
+                  {/* Cápsula de volumen vertical (idéntica a captura image.png) */}
+                  <div 
+                    className={`flex flex-col items-center bg-[#070b14]/95 backdrop-blur-2xl border border-white/20 rounded-full py-3 px-1.5 sm:px-2 shadow-[0_15px_45px_rgba(0,0,0,0.95)] transition-all duration-300 transform ${
+                      isDraggingVolume || isVolumeHovered
+                        ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto ring-1 ring-[#00f2fe]/40'
+                        : 'opacity-0 -translate-x-4 scale-95 pointer-events-none group-hover/volumezone:opacity-100 group-hover/volumezone:translate-x-0 group-hover/volumezone:scale-100 group-hover/volumezone:pointer-events-auto'
+                    } hover:border-[#00f2fe]/50 hover:bg-[#070b14]/98`}
+                    id={`channel-volume-bar-${session.id}`}
+                    onPointerDown={handleVolumePointerDown}
+                    onPointerMove={handleVolumePointerMove}
+                    onPointerUp={handleVolumePointerUp}
+                  >
+                    {/* Botón Mute / Unmute con altavoz de color cian / esmeralda (estilo captura) */}
+                    <button
+                      type="button"
+                      onClick={handleToggleMute}
+                      className="p-1 text-white hover:scale-110 transition cursor-pointer active:scale-90"
+                      title={isPresenterCameraAudioMuted || channelVolume === 0 ? "Activar audio" : "Silenciar audio"}
+                    >
+                      {isPresenterCameraAudioMuted || channelVolume === 0 ? (
+                        <VolumeX className="w-4 h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.6)]" />
+                      )}
+                    </button>
+
+                    {/* Barra deslizante vertical de volumen (Track) */}
+                    <div 
+                      data-volume-track="true"
+                      className="relative w-2 sm:w-2.5 h-28 sm:h-32 bg-slate-900/95 border border-slate-700/80 rounded-full cursor-pointer overflow-hidden my-1 flex flex-col justify-end shadow-inner touch-none select-none"
+                      title={`Volumen: ${isPresenterCameraAudioMuted ? 0 : channelVolume}%`}
+                    >
+                      {/* Relleno cian/verde neón brillante desde la base hacia arriba */}
+                      <div 
+                        className={`w-full rounded-full transition-all duration-75 ${
+                          isPresenterCameraAudioMuted || channelVolume === 0 
+                            ? 'bg-rose-500/40' 
+                            : 'bg-gradient-to-t from-emerald-500 via-teal-400 to-[#00f2fe] shadow-[0_0_12px_rgba(0,242,254,0.8)]'
+                        }`}
+                        style={{ height: `${isPresenterCameraAudioMuted ? 0 : channelVolume}%` }}
+                      />
+                    </div>
+
+                    {/* Porcentaje en texto: 100%, 80%, 0% */}
+                    <span className="text-[7.5px] sm:text-[8px] font-mono font-black text-white tracking-tighter select-none mt-0.5">
+                      {isPresenterCameraAudioMuted ? '0%' : `${channelVolume}%`}
+                    </span>
+                  </div>
+                </div>
+
               </div>
 
               {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT */}
