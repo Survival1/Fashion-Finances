@@ -18,7 +18,8 @@ import {
   Minimize2,
   CameraOff,
   Send,
-  Smile
+  Smile,
+  MicOff
 } from 'lucide-react';
 import { 
   TRABAJADORES_USERS, 
@@ -189,10 +190,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [showCameraParticipantsGrid, setShowCameraParticipantsGrid] = useState<Record<string, boolean>>({});
 
   const lastWheelTimeRef = useRef<number>(0);
+  // ⚠️ Aviso cuando el usuario intenta inscribirse en otra ronda estando ya participando en una
+  const [alreadyParticipatingNotice, setAlreadyParticipatingNotice] = useState<{
+    show: boolean;
+    currentRoundTitle: string;
+    attemptedRoundTitle: string;
+    enrolledIndex: number;
+    targetSessionId?: string;
+  } | null>(null);
+
   const handleWheelFeed = (e: React.WheelEvent) => {
     const now = Date.now();
-    if (now - lastWheelTimeRef.current < 350) return;
-    if (Math.abs(e.deltaY) > 20) {
+    if (now - lastWheelTimeRef.current < 300) return;
+    if (Math.abs(e.deltaY) > 10) {
       lastWheelTimeRef.current = now;
       if (e.deltaY > 0) {
         scrollToRound(activeFinanzasSessionIndex + 1);
@@ -201,6 +211,40 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       }
     }
   };
+
+  // Touch swipe support for mobile and trackpad gestures (Matching image.png snap scrolling)
+  const touchStartYRef = useRef<number | null>(null);
+  const handleTouchStartFeed = (e: React.TouchEvent) => {
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+  const handleTouchEndFeed = (e: React.TouchEvent) => {
+    if (touchStartYRef.current === null) return;
+    const diff = touchStartYRef.current - e.changedTouches[0].clientY;
+    touchStartYRef.current = null;
+    if (Math.abs(diff) > 30) {
+      if (diff > 0) {
+        scrollToRound(activeFinanzasSessionIndex + 1);
+      } else {
+        scrollToRound(activeFinanzasSessionIndex - 1);
+      }
+    }
+  };
+
+  // Listen to global feed scroll events from child views (such as z.png results screen)
+  useEffect(() => {
+    const handleCustomFeedScroll = (e: any) => {
+      const now = Date.now();
+      if (now - lastWheelTimeRef.current < 300) return;
+      lastWheelTimeRef.current = now;
+      if (e.detail?.direction === 'next') {
+        scrollToRound(activeFinanzasSessionIndex + 1);
+      } else if (e.detail?.direction === 'prev') {
+        scrollToRound(activeFinanzasSessionIndex - 1);
+      }
+    };
+    window.addEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
+    return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
+  }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
 
   const handleMouseEnterRonda = (sessionId: string) => {
     if (channelsMenuTimeoutRef.current) {
@@ -216,7 +260,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
     channelsMenuTimeoutRef.current = setTimeout(() => {
       setActiveChannelsMenuSessionId(null);
-    }, 320);
+    }, 450);
   };
 
   const toggleChannelsMenu = (sessionId: string) => {
@@ -764,6 +808,81 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   };
 
+  // 🎙️ Estado y manejador del micrófono en directo para la vista de cámara del presentador
+  const [isPresenterLiveMicActive, setIsPresenterLiveMicActive] = useState<boolean>(true);
+
+  useEffect(() => {
+    const isMutedEffective = Boolean(isPresenterCameraAudioMuted || isMuted || !isBroadcastMicOn);
+    setIsPresenterLiveMicActive(!isMutedEffective);
+  }, [isPresenterCameraAudioMuted, isMuted, isBroadcastMicOn]);
+
+  const handleTogglePresenterLiveMic = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const nextState = !isPresenterLiveMicActive;
+    setIsPresenterLiveMicActive(nextState);
+
+    // Sincronizar con el estado global de micro de la transmisión
+    if (toggleBroadcastMic) {
+      toggleBroadcastMic();
+    }
+
+    if (nextState) {
+      // Activar audio, vídeo y síntesis de voz
+      if (setIsPresenterCameraAudioMuted) {
+        setIsPresenterCameraAudioMuted(false);
+      }
+      if (channelVolume === 0) {
+        setChannelVolume(80);
+        setPrevVolume(80);
+      }
+      if (liveVideoRef.current) {
+        liveVideoRef.current.muted = false;
+        liveVideoRef.current.volume = Math.max(0.2, (channelVolume || 80) / 100);
+        liveVideoRef.current.play().catch(() => {});
+      }
+      resumeOrStartLucasSpeech();
+
+      if (userLiveMediaStream) {
+        userLiveMediaStream.getAudioTracks().forEach(t => {
+          t.enabled = true;
+        });
+      }
+
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: '🎙️ Micrófono activado: audio en directo conectado'
+        });
+      }
+    } else {
+      // Silenciar audio, vídeo y cancelar voz
+      if (setIsPresenterCameraAudioMuted) {
+        setIsPresenterCameraAudioMuted(true);
+      }
+      if (liveVideoRef.current) {
+        liveVideoRef.current.muted = true;
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (userLiveMediaStream) {
+        userLiveMediaStream.getAudioTracks().forEach(t => {
+          t.enabled = false;
+        });
+      }
+
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: '🔇 Micrófono silenciado'
+        });
+      }
+    }
+  };
+
   // 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA
   const [showerHearts, setShowerHearts] = useState<Array<{
     id: number;
@@ -1172,32 +1291,46 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${session.id}`) === 'true')
     );
 
-    // Ensure Adriana Lima is prominently marked as participant (Tú) for the 10€ round only if enrolled
-    if (isEnrolled && (sId.includes('trabajadores') || fee === 10)) {
-      const hasAdriana = list.some(p => p.name?.includes('Adriana') || p.id === 'user-adriana');
-      if (!hasAdriana) {
-        list[9] = {
-          id: userProfile?.id || 'user-adriana',
-          name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
-          username: userProfile?.username || 'adrianalima',
-          avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-          role: 'Participante Activa (Tú)',
-          isSelf: true
-        };
-      } else {
-        list = list.map(p => {
-          if (p.name?.includes('Adriana') || p.id === 'user-adriana') {
-            return {
-              ...p,
-              name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
-              avatar: userProfile?.avatar || p.avatar,
-              role: 'Participante Activa (Tú)',
-              isSelf: true
-            };
-          }
-          return p;
-        });
-      }
+    // If NOT enrolled in this round: Adriana Lima must NEVER appear in the list!
+    if (!isEnrolled) {
+      return list.map((p, idx) => {
+        if (p.name?.toLowerCase().includes('adriana') || p.id === 'user-adriana' || p.id === userProfile?.id || p.isSelf || p.role?.includes('(Tú)')) {
+          return {
+            id: `trab-alt-${idx}`,
+            name: 'Marina Serrano',
+            username: 'marina_serrano_mod',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+            role: 'Patronista Sostenible'
+          };
+        }
+        return p;
+      });
+    }
+
+    // ONLY IF ENROLLED: Adriana Lima replaces slot 10
+    const hasAdriana = list.some(p => p.name?.includes('Adriana') || p.id === 'user-adriana');
+    if (!hasAdriana) {
+      list[9] = {
+        id: userProfile?.id || 'user-adriana',
+        name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
+        username: userProfile?.username || 'adrianalima',
+        avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        role: 'Participante Activa (Tú)',
+        isSelf: true
+      };
+    } else {
+      list = list.map(p => {
+        if (p.name?.includes('Adriana') || p.id === 'user-adriana') {
+          return {
+            ...p,
+            name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
+            avatar: userProfile?.avatar || p.avatar,
+            role: 'Participante Activa (Tú)',
+            isSelf: true
+          };
+        }
+        return p;
+      });
     }
 
     return list;
@@ -1252,6 +1385,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   // Programmatic scroll to next / prev round
   const scrollToRound = (targetIndex: number) => {
+    setActiveChannelsMenuSessionId(null);
     if (targetIndex < 0 || targetIndex >= activeSessionsOnly.length) return;
     const targetSession = activeSessionsOnly[targetIndex];
     if (!targetSession) return;
@@ -1489,6 +1623,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         ref={feedContainerRef}
         onScroll={handleScroll}
         onWheel={handleWheelFeed}
+        onTouchStart={handleTouchStartFeed}
+        onTouchEnd={handleTouchEndFeed}
         id="tiktok-rounds-vertical-feed"
         className="w-full max-w-full h-[calc(100dvh-130px)] min-h-[740px] max-h-[920px] overflow-y-auto snap-y snap-mandatory scroll-smooth py-6 flex flex-col items-center gap-10 sm:gap-14 select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
@@ -1557,6 +1693,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 className="w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[810px] sm:h-[860px] bg-[#070b14] border-[3.5px] border-slate-800 rounded-[44px] sm:rounded-[52px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between p-3.5 sm:p-5 box-border select-none"
                 id={`round-container-box-${session.id}`}
               >
+                {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página y por encima de Ronda en Curso) */}
+                <div 
+                  className="absolute top-0 inset-x-0 h-16 sm:h-20 z-40 pointer-events-auto cursor-pointer"
+                  onMouseEnter={() => handleMouseEnterRonda(session.id)}
+                  onMouseLeave={handleMouseLeaveRonda}
+                  id={`top-hover-trigger-zone-${session.id}`}
+                  title="Pasa el ratón para abrir el menú de opciones"
+                />
                 {/* 🗳️ VENTANA DE VOTACIÓN DENTRO DEL CANAL EN PANTALLA COMPLETA (captura image.png) */}
                 {showVotingProjectsModal && isCurrentlyActiveRound && (
                   <div 
@@ -1633,6 +1777,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     className="absolute inset-0 z-[150] bg-black w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
                     id={`live-exposition-in-channel-${session.id}`}
                   >
+                    {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página) */}
+                    <div 
+                      className="absolute top-0 inset-x-0 h-16 sm:h-20 z-30 pointer-events-auto cursor-pointer"
+                      onMouseEnter={() => handleMouseEnterRonda(session.id)}
+                      onMouseLeave={handleMouseLeaveRonda}
+                      title="Pasa el ratón para abrir el menú de opciones"
+                    />
+
                     {/* Background Live Video of Lucas Torres / Presenter */}
                     <video
                       ref={liveVideoRef}
@@ -1740,30 +1892,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           />
                         </div>
 
-                        {/* Action Buttons: Micro, Finalizar, Detener Live */}
-                        <div className="grid grid-cols-3 gap-1.5 mt-0.5">
+                        {/* Action Buttons: Micro y Detener Live (FINALIZAR eliminado de esta página únicamente) */}
+                        <div className="grid grid-cols-2 gap-2 mt-1">
                           <button
                             type="button"
-                            onClick={toggleBroadcastMic}
-                            className={`py-1.5 px-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
-                              isBroadcastMicOn && !isMuted
-                                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                            onClick={handleTogglePresenterLiveMic}
+                            className={`py-2 px-2.5 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border shadow-lg ${
+                              isPresenterLiveMicActive
+                                ? 'bg-[#00e676] hover:bg-[#00c853] text-slate-950 border-[#00e676] shadow-[0_0_14px_rgba(0,230,118,0.5)]'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
                             }`}
+                            id={`btn-toggle-presenter-mic-${session.id}`}
                           >
-                            <Mic className="w-3 h-3 shrink-0" />
-                            <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handlePresenterFinalize(session, index);
-                            }}
-                            className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-rose-500 text-white font-black text-[9px] py-1.5 px-1.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-rose-400/80"
-                          >
-                            <Square className="w-3 h-3 fill-white text-white shrink-0" />
-                            <span className="truncate">FINALIZAR</span>
+                            {isPresenterLiveMicActive ? (
+                              <Mic className="w-3.5 h-3.5 shrink-0 text-slate-950" />
+                            ) : (
+                              <MicOff className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                            )}
+                            <span className="truncate font-black">{isPresenterLiveMicActive ? 'MICRO ON' : 'MICRO OFF'}</span>
                           </button>
 
                           <button
@@ -1772,10 +1918,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               setIsPresenterCameraFullscreen(false);
                               setIsWatchingPresenterCamera(false);
                             }}
-                            className="bg-red-600/90 hover:bg-red-500 text-white font-black text-[9px] py-1.5 px-1.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-400"
+                            className="bg-red-600 hover:bg-red-500 text-white font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-lg uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-red-400"
+                            id={`btn-stop-presenter-cam-${session.id}`}
                           >
-                            <CameraOff className="w-3 h-3 shrink-0" />
-                            <span className="truncate">DETENER</span>
+                            <CameraOff className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate font-black">DETENER</span>
                           </button>
                         </div>
                       </div>
@@ -1958,87 +2105,186 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/85 via-black/40 to-transparent pointer-events-none z-10" />
                     <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
 
-                    {/* 🔝 ZONA SUPERIOR SENSIBLE AL RATÓN: Al pasar el puntero por la parte superior de este canal, aparece la ventana de la captura z.png */}
+                    {/* 🔝 ZONA SUPERIOR: Barra y controles del canal */}
                     <div 
-                      className="relative z-20 w-full flex flex-col items-center pt-3.5 sm:pt-4 px-3.5 sm:px-4 pb-6 cursor-pointer group/cam-hover-top"
-                      onMouseEnter={() => handleMouseEnterRonda(session.id)}
-                      onMouseLeave={handleMouseLeaveRonda}
-                      onClick={() => toggleChannelsMenu(session.id)}
-                      title="Pasa el ratón por la parte superior para abrir canales y controles"
+                      className="relative z-20 w-full flex flex-col items-center pt-3.5 sm:pt-4 px-3.5 sm:px-4 pb-6 select-none"
                     >
                       {/* Top Phone Speaker Notch */}
                       <div className="w-14 h-1 bg-slate-700/60 rounded-full mx-auto mb-1 shrink-0 pointer-events-none" />
-
-                      {/* Invisible expanded hover target across the top 110px */}
-                      <div className="absolute top-0 inset-x-0 h-28 pointer-events-auto" />
                     </div>
 
-                    {/* 👥 OPCIONAL OVERLAY: 10 PARTICIPANTES SI EL USUARIO PULSA "VER PARTICIPANTES" */}
+                    {/* 👥 4 PARTICIPANTES EN VIVO (Strictly matching captura z.png) */}
                     {showCameraParticipantsGrid[session.id] && (
-                      <div className="relative z-30 bg-[#0B0F19]/95 backdrop-blur-md border border-slate-800/90 rounded-2xl p-2.5 shadow-2xl animate-fade-in flex flex-col gap-2 my-auto">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-white tracking-wider">
-                            10 Participantes de la Mesa
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: false }))}
-                            className="p-1 text-slate-400 hover:text-white"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
+                      <div className="absolute inset-0 z-25 w-full h-full p-2.5 sm:p-3 pb-20 grid grid-cols-2 grid-rows-2 gap-2 sm:gap-2.5 bg-[#0a0d17] animate-fade-in pointer-events-auto">
+                        {/* 1. Adriana Lima (Tú) con Cámara en Directo */}
+                        <div 
+                          onClick={() => setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: false }))}
+                          className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-black flex flex-col justify-between shadow-2xl cursor-pointer group"
+                          title="Clic para volver a pantalla completa de tu cámara"
+                        >
+                          {userLiveMediaStream ? (
+                            <video
+                              ref={(el) => {
+                                if (el && userLiveMediaStream && el.srcObject !== userLiveMediaStream) {
+                                  el.srcObject = userLiveMediaStream;
+                                  el.play().catch(() => {});
+                                }
+                              }}
+                              autoPlay
+                              playsInline
+                              muted
+                              className={`w-full h-full object-cover ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                            />
+                          ) : (
+                            <img
+                              src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'}
+                              alt="Adriana Lima"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <div className="absolute top-2 left-2 z-10">
+                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                              EN VIVO
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
+                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">{userProfile?.name || 'Adriana Lima'} (Tú)</p>
+                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
+                              <span>Participante Activa (Tú)</span>
+                            </p>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-5 gap-1.5">
-                          {participants.slice(0, 10).map((userObj, idx) => (
-                            <div key={userObj.id || idx} className="flex flex-col items-center">
-                              <img
-                                src={userObj.avatar}
-                                alt={userObj.name}
-                                className="w-8 h-8 rounded-full object-cover border border-slate-700"
-                                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
-                              />
-                              <span className="text-[8px] text-slate-300 font-bold truncate max-w-[42px] mt-0.5">
-                                {userObj.name.split(' ')[0]}
-                              </span>
-                            </div>
-                          ))}
+
+                        {/* 2. Alessia Vance */}
+                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-slate-900 flex flex-col justify-between shadow-2xl">
+                          <img
+                            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650"
+                            alt="Alessia Vance"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute top-2 left-2 z-10">
+                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                              EN VIVO
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
+                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">Alessia Vance</p>
+                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
+                              <span>Modelo Directora</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 3. Gisele Bündchen */}
+                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-slate-900 flex flex-col justify-between shadow-2xl">
+                          <img
+                            src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650"
+                            alt="Gisele Bündchen"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute top-2 left-2 z-10">
+                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                              EN VIVO
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
+                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">Gisele Bündchen</p>
+                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
+                              <span>Inversora Principal</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 4. Marcus Vance */}
+                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-slate-900 flex flex-col justify-between shadow-2xl">
+                          <img
+                            src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650"
+                            alt="Marcus Vance"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute top-2 left-2 z-10">
+                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                              EN VIVO
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
+                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">Marcus Vance</p>
+                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
+                              <span>Asesor Fintech</span>
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}
 
-                    {/* 🔻 PARTE INFERIOR: CONTROLES DE MICRO, COMENTARIOS Y NAVEGACIÓN */}
-                    <div className="relative z-20 w-full flex flex-col gap-2 p-3.5 sm:p-4 pb-4 sm:pb-5">
-                      {/* 💬 COMENTARIOS EN VIVO EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
-<div className="flex items-center justify-between gap-1.5 bg-black/70 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-lg">
+                    {/* 🔻 PARTE INFERIOR: CONTROLES DE MICRO, COMENTARIOS Y NAVEGACIÓN (Matching image.png) */}
+                    <div className="relative z-30 w-full flex flex-col gap-2 p-3 sm:p-4 pb-4 sm:pb-5 pointer-events-auto">
+                      <div className="flex items-center justify-between gap-2 bg-[#0c1424]/90 backdrop-blur-md px-3 py-2 rounded-3xl border border-slate-700/60 shadow-2xl max-w-sm sm:max-w-md mx-auto w-full">
+                        {/* 🎙️ MICRO ON */}
                         <button
                           type="button"
                           onClick={toggleBroadcastMic}
-                          className={`py-2 px-2.5 rounded-xl font-black text-[9px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center gap-1 border shadow-md ${
+                          className={`py-2 px-3.5 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-md ${
                             isBroadcastMicOn && !isMuted
-                              ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                              : 'bg-slate-800 text-slate-200 border-slate-700'
+                              ? 'bg-[#00e676] hover:bg-[#00c853] text-slate-950 shadow-[0_0_12px_rgba(0,230,118,0.5)]'
+                              : 'bg-slate-800 text-slate-200 border border-slate-700'
                           }`}
+                          id="btn-live-cam-micro"
                         >
-                          <Mic className="w-3 h-3 shrink-0" />
+                          <Mic className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
                           <span>{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
                         </button>
 
+                        {/* 👥 PARTICIPANTES (Lleva a la página de la captura z.png) */}
                         <button
                           type="button"
                           onClick={() => {
                             setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: !prev[session.id] }));
                           }}
-                          className="bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold text-[9px] py-2 px-2.5 rounded-xl border border-slate-700 transition cursor-pointer"
+                          className={`font-black text-[10px] sm:text-[11px] py-2 px-3.5 rounded-full shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                            showCameraParticipantsGrid[session.id]
+                              ? 'bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                              : 'bg-white hover:bg-slate-100 text-slate-950'
+                          }`}
+                          id="btn-live-cam-participantes"
+                          title="Ver participantes de la captura z.png"
                         >
-                          👥 {showCameraParticipantsGrid[session.id] ? 'Ocultar' : 'Participantes'}
+                          <Users className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
+                          <span>PARTICIPANTES</span>
                         </button>
 
+                        {/* FINALIZAR (Lleva a la página de la captura zz.png) */}
                         <button
                           type="button"
-                          onClick={handleFinishRetransmissionAndPassToNextParticipant}
-                          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-[9px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer border border-emerald-400"
+                          onClick={() => {
+                            // Redirigir directamente a la página de votación de proyectos (captura zz.png)
+                            setSessionVotingPhaseMap(prev => {
+                              const next = { ...prev, [session.id]: true };
+                              try {
+                                localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
+                              } catch (e) {}
+                              return next;
+                            });
+                            setSessionVotingTimerMap(prev => ({ ...prev, [session.id]: 600 }));
+                            if (setVotingPhaseTimer) setVotingPhaseTimer(600);
+                            setShowVotingProjectsModal(true);
+                          }}
+                          className="bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-[11px] py-2 px-4 rounded-full shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center border-0"
+                          id="btn-live-cam-finalizar"
+                          title="Finalizar e ir a mesa de votación zz.png"
                         >
-                          FINALIZAR
+                          <span>FINALIZAR</span>
                         </button>
                       </div>
                     </div>
@@ -2198,19 +2444,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 )}
                 {/* 🔴 TOP BANNER (z.png): RONDA EN CURSO • REF:X */}
                 <div 
-                  className="w-full flex flex-col items-center justify-center text-center pt-2 sm:pt-3 relative cursor-pointer"
+                  className="w-full flex flex-col items-center justify-center text-center pt-2 sm:pt-3 relative z-30 pointer-events-auto"
                   onMouseEnter={() => handleMouseEnterRonda(session.id)}
                   onMouseLeave={handleMouseLeaveRonda}
                 >
                   {/* Red badge with pulsing dot - hover to open channels menu */}
                   <button
                     type="button"
+                    onMouseEnter={() => handleMouseEnterRonda(session.id)}
+                    onMouseLeave={handleMouseLeaveRonda}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleChannelsMenu(session.id);
                     }}
                     className="inline-flex items-center gap-1.5 bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/50 hover:border-rose-400 text-rose-300 px-3 py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider mb-1.5 shadow-xs cursor-pointer transition-all hover:scale-105 active:scale-95 group/ronda-pill"
-                    title="Pasa el ratón o pulsa para abrir el menú de canales en directo"
+                    title="Pasa el ratón o pulsa para abrir el menú de opciones"
                     id={`ronda-en-curso-pill-${session.id}`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
@@ -2631,6 +2879,85 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     })}
                   </div>
 
+                  {/* ⚠️ AVISO: YA ESTÁS PARTICIPANDO EN OTRA RONDA (Dentro de la pantalla del canal, justo encima del botón que se pulsa, fondo sin opacidad y transparente) */}
+                  {alreadyParticipatingNotice?.show && (alreadyParticipatingNotice.targetSessionId === session.id || !alreadyParticipatingNotice.targetSessionId) && (
+                    <div 
+                      className="w-full relative z-40 mb-2 p-3.5 sm:p-4 rounded-3xl border-2 border-amber-400 text-white animate-slide-up flex flex-col items-center text-center space-y-2 select-none shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                      style={{
+                        backgroundColor: 'transparent',
+                        background: 'transparent'
+                      }}
+                      id={`aviso-ya-participando-${session.id}`}
+                    >
+                      {/* Close button X */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAlreadyParticipatingNotice(null);
+                        }}
+                        className="absolute top-2.5 right-2.5 text-amber-300 hover:text-white p-1 rounded-full hover:bg-white/10 transition cursor-pointer"
+                        title="Cerrar aviso"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+
+                      {/* Icono de advertencia */}
+                      <div className="w-10 h-10 rounded-full border-2 border-amber-400 flex items-center justify-center text-xl shadow-md" style={{ backgroundColor: 'transparent' }}>
+                        ⚠️
+                      </div>
+
+                      {/* Badge */}
+                      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-amber-400 text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider text-amber-300 font-mono" style={{ backgroundColor: 'transparent' }}>
+                        <span>●</span>
+                        <span>PARTICIPACIÓN SIMULTÁNEA NO PERMITIDA</span>
+                      </div>
+
+                      {/* Título */}
+                      <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                        Ya estás participando en otra Ronda
+                      </h3>
+
+                      {/* Descripción detallada */}
+                      <div className="border border-amber-400/50 p-2.5 rounded-2xl text-[11px] sm:text-[11.5px] text-white leading-snug text-left space-y-1.5 w-full" style={{ backgroundColor: 'transparent' }}>
+                        <p className="m-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                          Tu usuario <strong className="text-amber-300 font-black">{userProfile?.name || 'Adriana Lima'}</strong> ya está inscrito activamente en la ronda:
+                        </p>
+                        <div className="border border-amber-400 rounded-xl px-2.5 py-1 flex items-center gap-1.5 text-amber-300 font-black text-xs drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" style={{ backgroundColor: 'transparent' }}>
+                          <span>📍</span>
+                          <span className="truncate">{alreadyParticipatingNotice.currentRoundTitle}</span>
+                        </div>
+                        <p className="text-[10px] text-amber-200/90 m-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                          Las normas de la mesa financiera estipulan que debes finalizar tu participación en la ronda en curso antes de poder inscribirte en una nueva.
+                        </p>
+                      </div>
+
+                      {/* Botones de acción */}
+                      <div className="w-full flex flex-col gap-1.5 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            scrollToRound(alreadyParticipatingNotice.enrolledIndex);
+                            setAlreadyParticipatingNotice(null);
+                          }}
+                          className="w-full py-2.5 px-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5 border border-amber-200"
+                        >
+                          <span>🔄</span>
+                          <span>Ir a mi Ronda Activa</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setAlreadyParticipatingNotice(null)}
+                          className="w-full py-2 px-3 rounded-2xl text-white hover:text-amber-200 font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer border border-white/50 hover:border-amber-400"
+                          style={{ backgroundColor: 'transparent' }}
+                        >
+                          <span>Entendido</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Inscription Button: ✍️ Inscribirse en una sesión de (10 Euros) */}
                   <button
                     type="button"
@@ -2647,10 +2974,40 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         if (setShowParticipantsGatheringModal) {
                           setShowParticipantsGatheringModal(true);
                         }
-                      } else if (onExecutePaymentAndJoinSession) {
-                        onExecutePaymentAndJoinSession(session);
                       } else {
-                        setShowFinanzasInscriptionInChannel(true);
+                        // 🛑 Comprobar si el usuario ya está participando en otra ronda
+                        const otherEnrolledRound = activeSessionsOnly.find(s => {
+                          if (s.id === session.id) return false;
+                          return Boolean(
+                            userPaidSessions[s.id] ||
+                            (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${s.id}`) === 'true')
+                          );
+                        });
+
+                        if (otherEnrolledRound) {
+                          const otherIdx = activeSessionsOnly.findIndex(s => s.id === otherEnrolledRound.id);
+                          setAlreadyParticipatingNotice({
+                            show: true,
+                            currentRoundTitle: otherEnrolledRound.title || 'Round STREETWEAR & URBAN',
+                            attemptedRoundTitle: roundTitle,
+                            enrolledIndex: otherIdx !== -1 ? otherIdx : 0,
+                            targetSessionId: session.id
+                          });
+
+                          if (setSystemVoiceNotification) {
+                            setSystemVoiceNotification({
+                              show: true,
+                              message: `⚠️ Ya estás participando en ${otherEnrolledRound.title || 'otra Ronda'}. No puedes inscribirte en múltiples rondas simultáneamente.`
+                            });
+                          }
+                          return;
+                        }
+
+                        if (onExecutePaymentAndJoinSession) {
+                          onExecutePaymentAndJoinSession(session);
+                        } else {
+                          setShowFinanzasInscriptionInChannel(true);
+                        }
                       }
                     }}
                     className="w-full bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] font-black text-xs sm:text-[13px] py-2.5 sm:py-3 px-5 rounded-full border border-[#F4A8B9] shadow-md flex items-center justify-center gap-2 cursor-pointer font-sans transition active:scale-95"

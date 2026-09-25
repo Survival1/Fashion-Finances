@@ -1290,7 +1290,7 @@ export default function SessionResultsPodium({
   };
 
   return (
-    <div className="bg-[#070b14] text-white rounded-none border-0 p-3 sm:p-5 pb-20 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full scrollbar-none no-scrollbar box-border" id="podium-results-screen" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="bg-[#070b14] text-white rounded-none border-0 p-3 sm:p-5 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full scrollbar-none no-scrollbar box-border" id="podium-results-screen" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       
       {/* Immersive stadium visual background effects */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
@@ -1400,13 +1400,13 @@ export default function SessionResultsPodium({
           <div className="bg-[#0e1628]/95 p-5 sm:p-7 rounded-3xl border border-slate-800/80 shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-6">
             <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
             
-            {/* Decorative title */}
+            {/* Decorative title - Desduplicado: Podio de Ganadores */}
             <div className="text-center space-y-2 relative z-10">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border border-amber-400/60 px-4 py-1 rounded-full text-[10.5px] font-black uppercase tracking-[0.2em] text-amber-300 mx-auto shadow-sm">
                 <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA <span>✦</span>
               </div>
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-white tracking-tight uppercase">
-                RESULTADOS FINALES
+                PODIO DE GANADORES
               </h3>
               <p className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.15em] font-bold max-w-lg mx-auto">
                 ASIGNACIÓN OFICIAL DE CAPITAL DE INVERSIÓN Y RECONOCIMIENTO FINANCIERO
@@ -2108,6 +2108,9 @@ export default function SessionResultsPodium({
                setSimulationLogs([]);
                setIsCastingPublished(false);
              }
+             try {
+               window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+             } catch (e) {}
            }}
            className="px-5 py-2.5 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 text-black border border-pink-250 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-md"
         >

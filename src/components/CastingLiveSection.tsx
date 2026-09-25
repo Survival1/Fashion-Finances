@@ -1682,7 +1682,7 @@ export const TRABAJADORES_USERS = [
   { id: 'trab-7', name: 'Álvaro Díaz', username: 'alvaro_makeup', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Maquillador Profesional' },
   { id: 'trab-8', name: 'Lucía Navarro', username: 'lucia_produccion', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Asistente Producción' },
   { id: 'trab-9', name: 'Daniel Morales', username: 'daniel_3d_moda', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Modelista Digital' },
-  { id: 'user-adriana', name: 'Adriana Lima', username: 'adrianalima', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Participante Activa (Tú)', isSelf: true }
+  { id: 'trab-10', name: 'Marina Serrano', username: 'marina_serrano_mod', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Patronista Sostenible' }
 ];
 
 export const EMPRESARIOS_USERS = [
@@ -3357,20 +3357,15 @@ export default function CastingLiveSection({
   const sessionScrollLockRef = useRef<boolean>(false);
 
   // States to guarantee instant reactivity when paying and joining sessions
+  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda.
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>(() => {
-    return {
-      'sess-trabajadores-1': true
-    };
+    return {};
   });
-  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(true);
+  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(false);
   const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(true);
 
-  // Position / slot assigned to user (Adriana Lima) by order of arrival (slot 10, index 9, as last participant)
-  const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return 9;
-    const stored = localStorage.getItem('finanzas_user_slot_index');
-    return stored !== null && !isNaN(Number(stored)) ? Number(stored) : 9;
-  });
+  // Position / slot assigned to user (Adriana Lima) by order of arrival
+  const [userParticipantSlotIndex, setUserParticipantSlotIndex] = useState<number | null>(null);
 
   // Simulated live peer arrivals counter per session (number of peers arrived before user, from 1 to 9)
   const [sessionArrivalMap, setSessionArrivalMap] = useState<Record<string, number>>(() => ({
@@ -3382,20 +3377,25 @@ export default function CastingLiveSection({
     'sess-millonarios-1': 2,
   }));
 
-  // Explicit user selection of arrival position (null for live second timing, or 0-9 for explicit testing)
-  const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(9);
+  // Explicit user selection of arrival position
+  const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
 
-  // Ensure Adriana Lima is enrolled in the 10 Euro round (sess-trabajadores-1) as she just made the payment
+  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda.
+  // Es obligatorio pagar e inscribirse explícitamente para participar.
   useEffect(() => {
     try {
-      localStorage.setItem('user_paid_session_sess-trabajadores-1', 'true');
-      localStorage.setItem('finanzas_user_participating', 'true');
-      localStorage.setItem('finanzas_user_slot_index', '9');
-      setIsFinanzasUserParticipatingState(true);
-      setUserPaidSessions(prev => ({
-        ...prev,
-        'sess-trabajadores-1': true
-      }));
+      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+      localStorage.removeItem('user_paid_session_sess-emprendedores-1');
+      localStorage.removeItem('user_paid_session_sess-empresarios-1');
+      localStorage.removeItem('user_paid_session_sess-topmodels-1');
+      localStorage.removeItem('user_paid_session_sess-inversores-1');
+      localStorage.removeItem('user_paid_session_sess-millonarios-1');
+      localStorage.removeItem('finanzas_user_participating');
+      localStorage.removeItem('finanzas_user_slot_index');
+      localStorage.removeItem('user_paid_finanzas_session');
+      localStorage.removeItem('finanzas_target_session_id');
+      setIsFinanzasUserParticipatingState(false);
+      setUserPaidSessions({});
     } catch (e) {}
   }, []);
 
@@ -4006,6 +4006,25 @@ export default function CastingLiveSection({
 
     const fee = explicitFee !== undefined ? explicitFee : (targetSession?.entryFee || 10);
 
+    // 🛑 Comprobar si el usuario ya está participando en otra ronda
+    const otherEnrolledSession = activeSessionsOnly.find(s => {
+      if (s.id === targetSession?.id) return false;
+      return Boolean(
+        userPaidSessions[s.id] ||
+        (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${s.id}`) === 'true')
+      );
+    });
+
+    if (otherEnrolledSession) {
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: `⚠️ Ya estás participando en ${otherEnrolledSession.title}. No puedes inscribirte en otra ronda simultáneamente.`
+        });
+      }
+      return;
+    }
+
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
     const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
 
@@ -4344,17 +4363,35 @@ export default function CastingLiveSection({
 
   // Reference media uploaded per project state (Matching image.png)
   const [customProjectMedia, setCustomProjectMedia] = useState<Record<string, Array<{ id: string; type: 'image' | 'video'; url: string; title: string }>>>({
+    'user-adriana': [
+      { id: 'vs-m1', type: 'image', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400', title: "Victoria's Secret Runway & Eco-Couture" },
+      { id: 'vs-m2', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
+      { id: 'vs-m3', type: 'image', url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=85&w=1400', title: 'Colección Alta Costura' },
+    ],
+    'adrianalima': [
+      { id: 'vs-m1', type: 'image', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400', title: "Victoria's Secret Runway & Eco-Couture" },
+      { id: 'vs-m2', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
+      { id: 'vs-m3', type: 'image', url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=85&w=1400', title: 'Colección Alta Costura' },
+    ],
+    'adrianalima_w1': [
+      { id: 'vs-m1', type: 'image', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400', title: "Victoria's Secret Runway & Eco-Couture" },
+      { id: 'vs-m2', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
+    ],
+    'host-self': [
+      { id: 'vs-m1', type: 'image', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400', title: "Victoria's Secret Runway & Eco-Couture" },
+      { id: 'vs-m2', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
+    ],
     'tm-1': [
       { id: 'kj-m1', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600', title: 'Haute Couture 818' },
       { id: 'kj-m2', type: 'image', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', title: 'Pasarela París 2026' },
       { id: 'kj-m3', type: 'video', url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-neon-lighted-room-41562-large.mp4', title: 'Runway Live' },
     ],
     'f-1': [
-      { id: 'm-1', type: 'image', url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400', title: 'Modelo de Referencia' },
-      { id: 'm-2', type: 'video', url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-neon-lighted-room-41562-large.mp4', title: 'mixkit-fashi' },
+      { id: 'vs-m1', type: 'image', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400', title: "Victoria's Secret Runway & Eco-Couture" },
+      { id: 'vs-m2', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
     ],
     'default': [
-      { id: 'm-1', type: 'image', url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400', title: 'Modelo de Referencia' },
+      { id: 'm-1', type: 'image', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400', title: "Victoria's Secret Runway & Eco-Couture" },
       { id: 'm-2', type: 'video', url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-neon-lighted-room-41562-large.mp4', title: 'mixkit-fashi' },
     ]
   });
@@ -11223,9 +11260,15 @@ export default function CastingLiveSection({
                     <button
                       type="button"
                       onClick={() => {
+                        const nextState = isMuted;
                         setIsMuted(!isMuted);
-                        setIsBroadcastMicOn(isMuted);
-                        alert(isMuted ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.');
+                        setIsBroadcastMicOn(nextState);
+                        if (setSystemVoiceNotification) {
+                          setSystemVoiceNotification({
+                            show: true,
+                            message: nextState ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.'
+                          });
+                        }
                       }}
                       className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
                         !isMuted && isBroadcastMicOn
@@ -11534,9 +11577,9 @@ export default function CastingLiveSection({
                     type="button"
                     onClick={handleToggleUserCameraLiveBroadcast}
                     className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider"
-                    title="Finalizar retransmisión"
+                    title="Detener retransmisión"
                   >
-                    Finalizar
+                    Detener
                   </button>
                 </div>
 
@@ -13395,7 +13438,10 @@ export default function CastingLiveSection({
   const renderFinanzasResultsContent = () => {
     const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
     return (
-      <div className="w-full h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border" id="finanzas-results-in-channel">
+      <div 
+        className="w-full h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-hidden no-scrollbar animate-fade-in select-none pointer-events-auto box-border" 
+        id="finanzas-results-in-channel"
+      >
         {/* Fixed Header bar inside phone container matching zr.png */}
         <div className="bg-[#0e1628]/95 border-b border-slate-800/80 p-2.5 sm:p-3 shrink-0 shadow-lg z-20 flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2 w-full">
@@ -13436,8 +13482,14 @@ export default function CastingLiveSection({
           </div>
         </div>
 
-        {/* Podium content in dark luxury styling */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-0 scrollbar-none no-scrollbar w-full max-w-full">
+        {/* Podium content in dark luxury styling - Cómodo desplazamiento completo */}
+        <div 
+          className="flex-1 overflow-y-auto overflow-x-hidden p-0 scroll-smooth custom-scrollbar w-full max-w-full"
+          id="podium-scrollable-content-wrapper"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           <SessionResultsPodium
             completedSessionToDisplay={activeSessionToDisplay}
             userProfile={{
@@ -13561,11 +13613,16 @@ export default function CastingLiveSection({
 
         {/* 2. Top Header Bar (Live Badge + Action buttons + Volver button - Idéntico a captura image.png) */}
         <div className="relative z-20 flex items-center justify-between p-3 sm:p-4 gap-1.5 xs:gap-2">
-          {/* Live Badge */}
+          {/* Live Badge - Solo el punto verde sin el texto 'EN VIVO' */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="bg-[#0c1a24]/90 backdrop-blur-md text-[10px] sm:text-xs font-black text-emerald-400 px-2.5 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-500/50 shadow-lg tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
-              EN VIVO
+            <span 
+              className="bg-[#0c1a24]/90 backdrop-blur-md px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full flex items-center justify-center border border-emerald-500/50 shadow-lg tracking-wider shrink-0"
+              title="En vivo"
+            >
+              <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+              </span>
             </span>
           </div>
 
@@ -13574,13 +13631,49 @@ export default function CastingLiveSection({
             <button
               type="button"
               onClick={() => {
-                setSelectedFinanzasUser(enlargedWindowUser as any);
-                setActiveFinanzasPopupUser(enlargedWindowUser as any);
-                setDetailProjectUser(enlargedWindowUser as any);
-                setShowProjectDetailsInPopup(true);
+                const target = enlargedWindowUser || activeFinanzasPopupUser || detailProjectUser || {
+                  id: userProfile?.id || 'user-adriana',
+                  name: userProfile?.name || 'Adriana Lima (Tú)',
+                  username: userProfile?.username || 'adrianalima',
+                  avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
+                };
+
+                const targetKey = (target.username || target.id || '').toLowerCase();
+                const isAdriana = targetKey.includes('adriana') || target.name?.toLowerCase().includes('adriana') || Boolean(target.isSelf) || Boolean(target.isHost);
+                const proj = getFinanzasProjectDetails(isAdriana ? 'user-adriana' : target.id);
+                
+                const userMedia = customProjectMedia[target.id] || 
+                  (isAdriana ? (customProjectMedia['user-adriana'] || customProjectMedia['adrianalima']) : null) || 
+                  customProjectMedia['default'] || [];
+                
+                const imgMedia = userMedia.filter((m: any) => m.type === 'image');
+                const defaultAdrianaImage = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400';
+                const primaryImage = imgMedia[0]?.url || (isAdriana ? defaultAdrianaImage : target.avatar);
+                
+                const galleryItems = (imgMedia.length > 0 ? imgMedia : [
+                  { url: primaryImage, title: proj.title },
+                  { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
+                  { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=85&w=1400', title: 'Colección Alta Costura' }
+                ]).map((item: any) => ({
+                  src: item.url,
+                  alt: item.title || proj.title,
+                  title: proj.title || target.name || 'Proyecto Oficial',
+                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
+                  badge: 'PROYECTO AUDITADO Y VERIFICADO'
+                }));
+
+                openImageLightbox({
+                  src: primaryImage,
+                  alt: proj.title || target.name,
+                  title: proj.title || target.name || 'Proyecto Oficial',
+                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
+                  badge: 'PROYECTO AUDITADO Y VERIFICADO',
+                  images: galleryItems,
+                  currentIndex: 0
+                });
               }}
               className="bg-white hover:bg-slate-100 text-slate-950 text-[10px] sm:text-[11px] font-black px-2.5 sm:px-3 py-1.5 rounded-xl border border-white shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1"
-              title="Ver dossier del proyecto"
+              title="Ver imagen del proyecto a pantalla completa"
             >
               <span>📋 Ver Proyecto</span>
             </button>
@@ -13686,17 +13779,18 @@ export default function CastingLiveSection({
               <button
                 type="submit"
                 disabled={!enlargedCommentText.trim()}
-                className="ml-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 text-white text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider transition active:scale-95 cursor-pointer shrink-0"
+                className="ml-1 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition active:scale-95 cursor-pointer shrink-0 shadow-md"
+                title="Comentar"
               >
-                Comentar
+                <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </button>
             </form>
 
-            {/* Enviar Regalo Trigger Button (solo el icono del regalo, sin texto ni moneda) */}
+            {/* Enviar Regalo Trigger Button (mismo tamaño que el botón comentar) */}
             <button
               type="button"
               onClick={() => setIsEnlargedGiftDrawerOpen(!isEnlargedGiftDrawerOpen)}
-              className={`flex items-center justify-center p-2.5 rounded-xl text-lg sm:text-xl transition active:scale-90 cursor-pointer shrink-0 shadow-lg border ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-base sm:text-lg transition active:scale-90 cursor-pointer shrink-0 shadow-lg border ${
                 isEnlargedGiftDrawerOpen
                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300'
                   : 'bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white border-pink-400/70'
@@ -27156,9 +27250,39 @@ try {
                                   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
                                   role: 'Top Model Internacional'
                                 } : rawTarget;
-                                setActiveFinanzasPopupUser(target);
-                                setDetailProjectUser(target);
-                                setShowProjectDetailsInPopup(true);
+                                
+                                const targetKey = (target.username || target.id || '').toLowerCase();
+                                const isAdriana = targetKey.includes('adriana') || target.name?.toLowerCase().includes('adriana');
+                                const proj = getFinanzasProjectDetails(isAdriana ? 'user-adriana' : target.id);
+                                
+                                const userMedia = customProjectMedia[target.id] || 
+                                  (isAdriana ? (customProjectMedia['user-adriana'] || customProjectMedia['adrianalima']) : null) || 
+                                  customProjectMedia['default'] || [];
+                                
+                                const imgMedia = userMedia.filter((m: any) => m.type === 'image');
+                                const defaultAdrianaImage = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400';
+                                const primaryImage = imgMedia[0]?.url || (isAdriana ? defaultAdrianaImage : target.avatar);
+
+                                const galleryItems = (imgMedia.length > 0 ? imgMedia : [
+                                  { url: primaryImage, title: proj.title },
+                                  { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' }
+                                ]).map((item: any) => ({
+                                  src: item.url,
+                                  alt: item.title || proj.title,
+                                  title: proj.title || target.name || 'Proyecto Oficial',
+                                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
+                                  badge: 'PROYECTO AUDITADO Y VERIFICADO'
+                                }));
+
+                                openImageLightbox({
+                                  src: primaryImage,
+                                  alt: proj.title || target.name,
+                                  title: proj.title || target.name || 'Proyecto Oficial',
+                                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
+                                  badge: 'PROYECTO AUDITADO Y VERIFICADO',
+                                  images: galleryItems,
+                                  currentIndex: 0
+                                });
                               }}
                               className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-slate-200 text-center"
                               title="Ver proyecto en pantalla completa"
@@ -28842,7 +28966,7 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* Actions: MICRO ON/OFF + Finalizar Exposición (Matching image.png) */}
+                                      {/* Actions: MICRO ON/OFF + LIVE CAMERA (FINALIZAR removed per user request) */}
                                       <div className="mt-2.5 w-full grid grid-cols-2 gap-2 box-border">
                                         <button
                                           type="button"
@@ -28862,20 +28986,8 @@ try {
                                           <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
                                         </button>
 
+                                        {/* 🎥 Botón Cámara al lado de Micro (FINALIZAR eliminado) */}
                                         <button
-                                          type="button"
-                                          onClick={handleFinishRetransmissionAndPassToNextParticipant}
-                                          className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-rose-400/80 box-border"
-                                          id="btn-finish-presentation-central"
-                                          title={`Finalizar exposición de ${activeUser?.name || 'participante'}`}
-                                        >
-                                          <Square className="w-3 h-3 fill-white text-white shrink-0" />
-                                          <span className="truncate">FINALIZAR</span>
-                                        </button>
-                                      </div>
-
-                                      {/* 🎥 Botón Cámara debajo de Ver Proyecto y de Finalizar */}
-                                      <button
                                         type="button"
                                         onClick={() => {
                                           if (isPresenterUser) {
@@ -28890,7 +29002,7 @@ try {
                                             }
                                           }
                                         }}
-                                        className={`w-full mt-2 py-2 sm:py-2.5 px-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                        className={`w-full py-2 px-2.5 rounded-xl font-black text-[10.5px] sm:text-[11.5px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border shadow-md box-border ${
                                           (isPresenterUser ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera)
                                             ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
                                             : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
@@ -28914,7 +29026,8 @@ try {
                                           </>
                                         )}
                                       </button>
-                                    </>
+                                    </div>
+                                  </>
                                   ) : (
                                     <>
                                       {/* 🗳️ FASE FINAL DE VOTACIÓN (10 MINUTOS TRAS EXPOSICIÓN DE MARINA SOLER) */}
@@ -29502,9 +29615,9 @@ try {
                             type="button"
                             onClick={handleToggleUserCameraLiveBroadcast}
                             className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider"
-                            title="Finalizar retransmisión"
+                            title="Detener retransmisión"
                           >
-                            Finalizar
+                            Detener
                           </button>
                         </div>
                       </div>
@@ -30082,8 +30195,8 @@ try {
                   </div>
                 )}
 
-                {/* 📺 EMBEDDED BROADCAST CREATION CONSOLE DIRECTLY INSIDE VIDEO PLAYER FRAME - WHITE THEME CONTAINER */}
-                {showCreateBroadcastModal && (
+                {/* 📺 EMBEDDED BROADCAST CREATION CONSOLE ELIMINADA POR PETICIÓN DEL USUARIO */}
+                {false /* Página eliminada según solicitud del usuario */ && showCreateBroadcastModal && (
                   <div className="absolute inset-0 z-[75] bg-white/98 text-slate-900 rounded-[22px] flex flex-col font-sans overflow-hidden animate-fade-in shadow-2xl" id="embedded-broadcast-console-screen">
                     
                     {/* Header Bar */}
@@ -31515,9 +31628,38 @@ try {
                                       role: 'Top Model Internacional'
                                     };
                                     const target = activeFinanzasPopupUser || kendallUser;
-                                    setDetailProjectUser(target);
-                                    setActiveFinanzasPopupUser(target);
-                                    setShowProjectDetailsInPopup(true);
+                                    const targetKey = (target.username || target.id || '').toLowerCase();
+                                    const isAdriana = targetKey.includes('adriana') || target.name?.toLowerCase().includes('adriana');
+                                    const proj = getFinanzasProjectDetails(isAdriana ? 'user-adriana' : target.id);
+                                    
+                                    const userMedia = customProjectMedia[target.id] || 
+                                      (isAdriana ? (customProjectMedia['user-adriana'] || customProjectMedia['adrianalima']) : null) || 
+                                      customProjectMedia['default'] || [];
+                                    
+                                    const imgMedia = userMedia.filter((m: any) => m.type === 'image');
+                                    const defaultAdrianaImage = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400';
+                                    const primaryImage = imgMedia[0]?.url || (isAdriana ? defaultAdrianaImage : target.avatar);
+
+                                    const galleryItems = (imgMedia.length > 0 ? imgMedia : [
+                                      { url: primaryImage, title: proj.title },
+                                      { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' }
+                                    ]).map((item: any) => ({
+                                      src: item.url,
+                                      alt: item.title || proj.title,
+                                      title: proj.title || target.name || 'Proyecto Oficial',
+                                      subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
+                                      badge: 'PROYECTO AUDITADO Y VERIFICADO'
+                                    }));
+
+                                    openImageLightbox({
+                                      src: primaryImage,
+                                      alt: proj.title || target.name,
+                                      title: proj.title || target.name || 'Proyecto Oficial',
+                                      subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
+                                      badge: 'PROYECTO AUDITADO Y VERIFICADO',
+                                      images: galleryItems,
+                                      currentIndex: 0
+                                    });
                                   }}
                                   className="w-full bg-white hover:bg-slate-100 text-slate-950 font-extrabold py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-lg border-0"
                                 >

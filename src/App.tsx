@@ -114,34 +114,49 @@ function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; 
   };
 
   return (
-    <div className={`w-full flex-1 bg-slate-950 rounded-2xl sm:rounded-3xl flex items-center justify-center p-3 sm:p-6 relative overflow-hidden shadow-2xl group border border-white/10 ${
-      fullscreen ? 'min-h-[380px] sm:min-h-[460px] md:min-h-[520px] lg:min-h-[580px] h-full' : 'min-h-[220px] sm:min-h-[260px] md:min-h-[300px]'
+    <div className={`w-full flex-1 rounded-2xl sm:rounded-3xl flex items-center justify-center p-3 sm:p-6 relative overflow-hidden group transition-colors ${
+      fullscreen 
+        ? 'min-h-[380px] sm:min-h-[460px] md:min-h-[520px] lg:min-h-[580px] h-full bg-white border border-slate-200/90 shadow-sm' 
+        : 'min-h-[220px] sm:min-h-[260px] md:min-h-[300px] bg-slate-950 border border-white/10 shadow-2xl'
     }`}>
-      {/* Photo counter badge */}
-      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 bg-slate-900/85 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-[11px] sm:text-xs font-mono font-bold flex items-center gap-2 border border-white/15 shadow-xl select-none">
-        <Camera className="w-3.5 h-3.5 text-rose-400" />
-        <span>{currentIndex + 1} / {photosList.length} FOTOS</span>
-      </div>
+      {/* Wrapper contenedor de la foto para ubicar la etiqueta exactamente encima de la foto */}
+      <div className="relative inline-flex items-center justify-center max-w-full max-h-full">
+        {/* Photo counter badge - Situado encima de la foto de la modelo */}
+        <div className={`absolute top-3 left-3 sm:top-4 sm:left-4 z-20 backdrop-blur-md px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold flex items-center gap-2 border select-none shadow-lg pointer-events-none ${
+          fullscreen 
+            ? 'bg-slate-900/80 text-white border-white/20' 
+            : 'bg-slate-900/85 text-white border-white/15'
+        }`}>
+          <Camera className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+          <span>{currentIndex + 1} / {photosList.length} FOTOS</span>
+        </div>
 
-      {/* Main image */}
-      <img
-        key={currentIndex}
-        src={photosList[currentIndex]}
-        alt={`${model.name} photo ${currentIndex + 1}`}
-        referrerPolicy="no-referrer"
-        onClick={nextPhoto}
-        className={`max-w-full object-contain rounded-xl sm:rounded-2xl shadow-2xl border border-slate-900/60 transition-all duration-300 animate-fade-in cursor-pointer select-none ${
-          fullscreen ? 'max-h-[50vh] sm:max-h-[56vh] md:max-h-[62vh] lg:max-h-[66vh]' : 'max-h-[26vh] sm:max-h-[30vh] md:max-h-[34vh] lg:max-h-[38vh]'
-        }`}
-        title="Haz clic para siguiente foto"
-      />
+        {/* Main image */}
+        <img
+          key={currentIndex}
+          src={photosList[currentIndex]}
+          alt={`${model.name} photo ${currentIndex + 1}`}
+          referrerPolicy="no-referrer"
+          onClick={nextPhoto}
+          className={`max-w-full object-contain rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in cursor-pointer select-none block ${
+            fullscreen 
+              ? 'max-h-[58vh] sm:max-h-[66vh] md:max-h-[72vh] lg:max-h-[76vh] border border-slate-200/80 bg-slate-50' 
+              : 'max-h-[26vh] sm:max-h-[30vh] md:max-h-[34vh] lg:max-h-[38vh] border border-slate-900/60'
+          }`}
+          title="Haz clic para siguiente foto"
+        />
+      </div>
 
       {/* Left chevron button */}
       {photosList.length > 1 && (
         <button
           type="button"
           onClick={prevPhoto}
-          className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-xl cursor-pointer hover:scale-110 active:scale-95"
+          className={`absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 border cursor-pointer hover:scale-110 active:scale-95 ${
+            fullscreen
+              ? 'bg-white/95 hover:bg-white text-slate-800 border-slate-200 shadow-md'
+              : 'bg-slate-900/80 hover:bg-slate-900 text-white border-white/20 shadow-xl'
+          }`}
           title="Foto anterior"
         >
           <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -153,7 +168,11 @@ function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; 
         <button
           type="button"
           onClick={nextPhoto}
-          className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 border border-white/20 shadow-xl cursor-pointer hover:scale-110 active:scale-95"
+          className={`absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 border cursor-pointer hover:scale-110 active:scale-95 ${
+            fullscreen
+              ? 'bg-white/95 hover:bg-white text-slate-800 border-slate-200 shadow-md'
+              : 'bg-slate-900/80 hover:bg-slate-900 text-white border-white/20 shadow-xl'
+          }`}
           title="Siguiente foto"
         >
           <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -162,7 +181,11 @@ function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; 
 
       {/* Bottom pagination dots */}
       {photosList.length > 1 && (
-        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2 bg-slate-900/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-white/20 shadow-lg">
+        <div className={`absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border shadow-md ${
+          fullscreen
+            ? 'bg-white/95 border-slate-200'
+            : 'bg-slate-900/80 border-white/20'
+        }`}>
           {photosList.map((_, idx) => (
             <button
               key={idx}
@@ -172,7 +195,11 @@ function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; 
                 setCurrentIndex(idx);
               }}
               className={`h-1.5 sm:h-2 rounded-full transition-all duration-200 cursor-pointer ${
-                idx === currentIndex ? 'w-5 sm:w-6 bg-rose-500 shadow-xs' : 'w-1.5 sm:w-2 bg-white/40 hover:bg-white/80'
+                idx === currentIndex
+                  ? 'w-5 sm:w-6 bg-rose-500 shadow-xs'
+                  : fullscreen
+                    ? 'w-1.5 sm:w-2 bg-slate-300 hover:bg-slate-400'
+                    : 'w-1.5 sm:w-2 bg-white/40 hover:bg-white/80'
               }`}
               title={`Ver foto ${idx + 1}`}
             />
