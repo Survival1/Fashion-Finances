@@ -19,7 +19,8 @@ import {
   CameraOff,
   Send,
   Smile,
-  MicOff
+  MicOff,
+  Database
 } from 'lucide-react';
 import { 
   TRABAJADORES_USERS, 
@@ -112,6 +113,8 @@ interface TikTokFinanzasFeedProps {
   enlargedWindowUser?: any;
   setEnlargedWindowUser?: (user: any) => void;
   renderEnlargedParticipantWindow?: () => React.ReactNode;
+  onOpenRoundDatabaseModal?: (roundId?: string) => void;
+  onNavigateTo10WindowsLive?: () => void;
 }
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
@@ -128,6 +131,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   setVotingPhaseTimer,
   setSystemVoiceNotification,
   getFinanzasRoundRef,
+  onOpenRoundDatabaseModal,
+  onNavigateTo10WindowsLive,
   handleFinishRetransmissionAndPassToNextParticipant,
   isBroadcastMicOn,
   isMuted,
@@ -246,6 +251,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
 
+  // Sync feed scroll position whenever activeFinanzasSessionIndex changes
+  useEffect(() => {
+    if (activeSessionsOnly[activeFinanzasSessionIndex]) {
+      const targetSession = activeSessionsOnly[activeFinanzasSessionIndex];
+      const el = document.getElementById(`tiktok-round-card-${targetSession.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
+
   const handleMouseEnterRonda = (sessionId: string) => {
     if (channelsMenuTimeoutRef.current) {
       clearTimeout(channelsMenuTimeoutRef.current);
@@ -260,7 +276,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
     channelsMenuTimeoutRef.current = setTimeout(() => {
       setActiveChannelsMenuSessionId(null);
-    }, 450);
+    }, 280);
   };
 
   const toggleChannelsMenu = (sessionId: string) => {
@@ -974,6 +990,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // ⏱️ Exposition 5-minute timer (300s = 5:00 minutes each participant)
   const [sessionExpositionTimerMap, setSessionExpositionTimerMap] = useState<Record<string, number>>(() => ({
     'sess-trabajadores-1': 300,
+    'sess-streetwear-ref-2': 300,
     'sess-emprendedores-1': 300,
     'sess-empresarios-1': 300,
     'sess-topmodels-1': 300,
@@ -984,6 +1001,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // 🗳️ Voting phase 10-minute countdown (600s, i.e. 10:00 -> 09:31)
   const [sessionVotingTimerMap, setSessionVotingTimerMap] = useState<Record<string, number>>(() => ({
     'sess-trabajadores-1': 600,
+    'sess-streetwear-ref-2': 600,
     'sess-emprendedores-1': 600,
     'sess-empresarios-1': 600,
     'sess-topmodels-1': 600,
@@ -1026,6 +1044,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     });
     setSessionVotingTimerMap(prev => ({ ...prev, [sessionId]: 600 }));
     if (setVotingPhaseTimer) setVotingPhaseTimer(600);
+    try {
+      localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+      const now = Date.now();
+      localStorage.setItem(`finanzas_active_session_start_${sessionId}`, String(now - (3000 * 1000)));
+    } catch (e) {}
     playVotingPhaseChime();
     if (setSystemVoiceNotification) {
       setSystemVoiceNotification({
@@ -1105,18 +1128,22 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       const isVoting = Boolean(sessionVotingPhaseMap[sId] || isVotingPhaseActive);
 
       if (isVoting) {
-        // Ticking down 10-minute voting timer
+        // Keep voting countdown ticking in real-time every second
         setSessionVotingTimerMap(prev => {
-          const currentSecs = prev[sId] !== undefined ? prev[sId] : 600;
+          const currentSecs = prev[sId] !== undefined
+            ? prev[sId]
+            : ((typeof votingPhaseTimer === 'number' && votingPhaseTimer > 0) ? votingPhaseTimer : 600);
           const nextSecs = Math.max(0, currentSecs - 1);
+          if (setVotingPhaseTimer && nextSecs !== votingPhaseTimer) {
+            setVotingPhaseTimer(nextSecs);
+          }
           if (nextSecs === 0 && currentSecs > 0) {
-            triggerScrutinyAndRecount();
+            if (triggerScrutinyAndRecount) {
+              triggerScrutinyAndRecount();
+            }
           }
           return { ...prev, [sId]: nextSecs };
         });
-        if (setVotingPhaseTimer) {
-          setVotingPhaseTimer(prev => Math.max(0, prev - 1));
-        }
       } else {
         // In 5-minute exposition phase:
         setSessionExpositionTimerMap(prev => {
@@ -1278,7 +1305,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     const sId = session?.id || '';
     const fee = session?.entryFee;
     let list: any[] = [];
-    if (sId.includes('trabajadores') || fee === 10) list = [...TRABAJADORES_USERS.slice(0, 10)];
+    if (Array.isArray(session?.participants) && session.participants.length >= 10) {
+      list = [...session.participants.slice(0, 10)];
+    } else if (sId.includes('trabajadores') || fee === 10) list = [...TRABAJADORES_USERS.slice(0, 10)];
     else if (sId.includes('emprendedores') || fee === 100) list = [...FINANZAS_USERS.slice(0, 10)];
     else if (sId.includes('empresarios') || fee === 1000) list = [...EMPRESARIOS_USERS.slice(0, 10)];
     else if (sId.includes('topmodels') || fee === 10000) list = [...TOPMODELS_USERS.slice(0, 10)];
@@ -1417,6 +1446,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // 🎛️ Helper to render the channels & broadcast controls menu window (strictly matching z.png)
   const renderChannelsOverlay = (session: any) => {
     if (activeChannelsMenuSessionId !== session.id) return null;
+    const overlayRoundRef = getFinanzasRoundRef ? getFinanzasRoundRef(session) : (session.reference || 'REF: 1');
     return (
       <div 
         className="absolute top-0 inset-x-0 z-[170] p-2.5 sm:p-3 pointer-events-auto animate-slide-down-tiktok"
@@ -1428,7 +1458,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         {/* Subtle top indicator bar */}
         <div className="w-16 h-1 bg-white/40 rounded-full mx-auto mb-1.5 opacity-80" />
 
-        <div className="w-full bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-3.5 rounded-3xl border border-slate-700/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 select-none">
+        <div 
+          className="w-full bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-3.5 rounded-3xl border border-slate-700/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 select-none"
+          onMouseEnter={() => handleMouseEnterRonda(session.id)}
+          onMouseLeave={handleMouseLeaveRonda}
+        >
           {/* Top Row: Volver, current channel badge, and Close */}
           <div className="flex items-center justify-between gap-1.5 w-full">
             <button
@@ -1540,6 +1574,29 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             </button>
           </div>
 
+          {/* Quick Round Database Access Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveChannelsMenuSessionId(null);
+              if (onOpenRoundDatabaseModal) {
+                onOpenRoundDatabaseModal(session.id);
+              } else {
+                window.dispatchEvent(new CustomEvent('open-round-database-modal', { detail: { roundId: session.id } }));
+              }
+            }}
+            className="w-full py-2 px-3 rounded-2xl bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-200 text-xs font-black uppercase tracking-wider flex items-center justify-between cursor-pointer transition active:scale-95 shadow-md"
+            title="Ver base de datos independiente de esta ronda"
+          >
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4 text-cyan-400" />
+              <span>Base de Datos ({overlayRoundRef})</span>
+            </div>
+            <span className="text-[9.5px] font-mono bg-cyan-500/20 px-2 py-0.5 rounded-full text-cyan-300 border border-cyan-400/30">
+              Ronda #{session.roundIndex ?? 0}
+            </span>
+          </button>
+
           {/* Bottom Row: 10 Live Channels in 2 Columns */}
           <div className="pt-2 border-t border-slate-800/80 w-full">
             <div className="flex items-center justify-between px-1 mb-1.5">
@@ -1650,9 +1707,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           const isSessionInVoting = Boolean(sessionVotingPhaseMap[session.id] || (isVotingPhaseActive && isCurrentlyActiveRound));
           const currentVotingSecs = sessionVotingTimerMap[session.id] !== undefined
             ? sessionVotingTimerMap[session.id]
-            : (votingPhaseTimer || 600);
-          const vMin = Math.floor(currentVotingSecs / 60).toString().padStart(2, '0');
-          const vSec = (currentVotingSecs % 60).toString().padStart(2, '0');
+            : ((typeof votingPhaseTimer === 'number' && votingPhaseTimer >= 0) ? votingPhaseTimer : 600);
+          const vMin = Math.floor(Math.max(0, currentVotingSecs) / 60).toString().padStart(2, '0');
+          const vSec = (Math.max(0, currentVotingSecs) % 60).toString().padStart(2, '0');
           const displayVotingTimer = `${vMin}:${vSec}`;
 
           const timerVal = isCurrentlyActiveRound
@@ -1704,7 +1761,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 🗳️ VENTANA DE VOTACIÓN DENTRO DEL CANAL EN PANTALLA COMPLETA (captura image.png) */}
                 {showVotingProjectsModal && isCurrentlyActiveRound && (
                   <div 
-                    className="absolute inset-0 z-[120] bg-white w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[200] bg-white w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
                     id={`voting-projects-in-channel-fullscreen-${session.id}`}
                   >
                     {renderVotingProjectsContent ? (
@@ -1737,15 +1794,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
 
-                {/* 📋 DOSSIER DEL PROYECTO DENTRO DEL CANAL EN PANTALLA COMPLETA */}
-                {(detailProjectUser || showProjectDetailsInPopup) && isCurrentlyActiveRound && renderProjectDetailsContent && (
-                  <div 
-                    className="absolute inset-0 z-[150] bg-slate-950 w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
-                    id={`project-details-in-channel-fullscreen-${session.id}`}
-                  >
-                    {renderProjectDetailsContent()}
-                  </div>
-                )}
 
                 {/* 🪟 VENTANA EN GRANDE DEL PARTICIPANTE (captura image.png) */}
                 {enlargedWindowUser && isCurrentlyActiveRound && renderEnlargedParticipantWindow && (
@@ -1931,48 +1979,45 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     {/* 💬 COMENTARIOS DE USUARIOS EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
                     {isCommentsOpenForThisSession && (
                       <div 
-                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-[#0a0e1a]/98 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-b-[40px] sm:rounded-b-[48px] rounded-t-3xl p-3.5 sm:p-4.5 flex flex-col gap-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.98)] animate-slide-up text-left pointer-events-auto"
+                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-transparent p-3 sm:p-4 pb-3 flex flex-col gap-2 animate-slide-up text-left pointer-events-auto"
                         id={`live-exposition-comments-${session.id}`}
                       >
                         {/* Header con botón para cerrar */}
-                        <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                        <div className="flex items-center justify-between pb-1 shrink-0 px-1 drop-shadow-md">
                           <div className="flex items-center gap-1.5 text-left">
-                            <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
-                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
-                              Comentarios en vivo
-                            </span>
-                            <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
-                              {commentsCount}
+                            <MessageCircle className="w-3.5 h-3.5 text-rose-400 drop-shadow" />
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                              COMENTARIOS ({commentsCount})
                             </span>
                           </div>
 
                           <button
                             type="button"
                             onClick={() => setActiveCommentsSessionId(null)}
-                            className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                            className="text-slate-200 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-black/40 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]"
                             title="Cerrar comentarios"
                           >
-                            <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
-                            <X className="w-3.5 h-3.5" />
+                            <span className="text-[8px] font-mono text-slate-200 drop-shadow">Pulsa 💬 para cerrar</span>
+                            <X className="w-3.5 h-3.5 drop-shadow" />
                           </button>
                         </div>
 
                         {/* Scrollable Comments List */}
-                        <div className="w-full max-h-[130px] sm:max-h-[150px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-white/20">
+                        <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-white/20">
                           {sessionComments.map((comm) => (
-                            <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
+                            <div key={comm.id} className="flex items-start gap-2 bg-black/40 backdrop-blur-xs p-1.5 rounded-xl border border-white/10 shadow-md">
                               <img
                                 src={comm.userAvatar}
                                 alt={comm.userName}
-                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-600 mt-0.5"
                                 onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1">
-                                  <span className="text-[10px] font-black text-rose-300 truncate">{comm.userName}</span>
-                                  <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                  <span className="text-[10px] font-black text-rose-300 truncate drop-shadow-sm">{comm.userName}</span>
+                                  <span className="text-[8px] text-slate-300 shrink-0 font-mono drop-shadow-sm">{comm.timeAgo}</span>
                                 </div>
-                                <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                                <p className="text-[10px] text-white mt-0.5 leading-snug break-words drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                                   {comm.text}
                                 </p>
                               </div>
@@ -1980,24 +2025,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 type="button"
                                 onClick={() => handleToggleCommentLike(session.id, comm.id)}
                                 className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
+                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-300 hover:text-rose-400'
                                 }`}
                                 title="Me gusta"
                               >
                                 <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                                <span className="text-[8px] font-mono">{comm.likes}</span>
+                                <span className="text-[8px] font-mono text-white drop-shadow-sm">{comm.likes}</span>
                               </button>
                             </div>
                           ))}
                         </div>
 
                         {/* Quick Emojis strip - Tap to send directly! */}
-                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
-                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-black/40 backdrop-blur-xs rounded-full border border-white/10 shadow-md">
+                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1 drop-shadow-sm">
                             <span>⚡</span>
-                            <span>Enviar emoji:</span>
+                            <span>ENVIAR EMOJI:</span>
                           </span>
-                          {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((emoji) => (
+                          {['💖', '🔥', '👏', '🚀', '💯', '😂', '🤩', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((emoji) => (
                             <button
                               key={emoji}
                               type="button"
@@ -2007,7 +2052,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                   detail: { emoji, icon: emoji, pureEmoji: true }
                                 }));
                               }}
-                              className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                              className="p-1 hover:bg-white/10 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
                               title={`Enviar ${emoji}`}
                             >
                               {emoji}
@@ -2021,13 +2066,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             e.preventDefault();
                             handleAddSessionComment(session.id);
                           }}
-                          className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                          className="relative flex items-center gap-1.5 pt-0.5 shrink-0 w-full"
                         >
                           {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
                           {renderEmojiGlossary(session.id)}
 
                           {/* Bloque para escribir con el emoji dentro */}
-                          <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                          <div className="flex-1 flex items-center bg-black/50 backdrop-blur-xs border border-white/20 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-lg min-w-0">
                             {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
                             <button
                               type="button"
@@ -2044,7 +2089,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               value={commentInputMap[session.id] || ''}
                               onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
                               placeholder="Escribe un comentario o emoji..."
-                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
+                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-300 focus:outline-none min-w-0 px-1 py-0.5"
                             />
                           </div>
 
@@ -2054,7 +2099,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
                               (commentInputMap[session.id] || '').trim()
                                 ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
-                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                : 'bg-black/50 text-slate-500 border border-white/10 cursor-not-allowed'
                             }`}
                             title="Publicar comentario"
                           >
@@ -2105,12 +2150,123 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/85 via-black/40 to-transparent pointer-events-none z-10" />
                     <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
 
-                    {/* 🔝 ZONA SUPERIOR: Barra y controles del canal */}
-                    <div 
-                      className="relative z-20 w-full flex flex-col items-center pt-3.5 sm:pt-4 px-3.5 sm:px-4 pb-6 select-none"
-                    >
+                    {/* 🔝 ZONA SUPERIOR: Barra y controles de acción de la captura image.png */}
+                    <div className="relative z-30 w-full pt-3 sm:pt-4 px-3 sm:px-4 select-none pointer-events-auto">
                       {/* Top Phone Speaker Notch */}
-                      <div className="w-14 h-1 bg-slate-700/60 rounded-full mx-auto mb-1 shrink-0 pointer-events-none" />
+                      <div className="w-14 h-1 bg-slate-700/60 rounded-full mx-auto mb-2 shrink-0 pointer-events-none" />
+
+                      {/* Header sincronizado con Live Badge y Cuenta Atrás de 10 minutos (matching capturas) */}
+                      <div className="flex items-center justify-between gap-2 max-w-sm sm:max-w-md mx-auto w-full mb-2 px-0.5">
+                        <div className="flex items-center gap-2">
+                          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse border border-red-400/50 shrink-0">
+                            <span className="w-2 h-2 rounded-full bg-white shrink-0" />
+                            <span>EN DIRECTO</span>
+                          </div>
+                          <span className="font-mono text-white text-[11px] sm:text-xs font-black bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/15 shadow-sm shrink-0">
+                            {displayVotingTimer}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950/90 backdrop-blur-md p-2 sm:p-2.5 rounded-2xl border border-slate-800/90 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col gap-2 max-w-sm sm:max-w-md mx-auto w-full">
+                        {/* Presenter Name & Role */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-emerald-400 overflow-hidden bg-slate-800 shrink-0">
+                              <img
+                                src={userProfile?.avatar || presenter.avatar}
+                                alt="Presenter"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-white text-xs sm:text-sm font-black tracking-tight leading-tight m-0 truncate">
+                                {userProfile?.name || presenter.name}
+                              </h4>
+                              <span className="text-emerald-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider block truncate">
+                                {userProfile?.role || presenter.role || 'Participante'} • En directo
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className="bg-[#fe2c55] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-xs">
+                            10 ONLINE
+                          </span>
+                        </div>
+
+                        {/* Action buttons row: Proyectos (redirige a proyectos de captura z.png) y Desactivar (redirige a canales de captura z.png) */}
+                        <div className="grid grid-cols-2 gap-2 pt-1" id="broadcast-top-actions-row">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // 🎯 Redirige a los proyectos de la pagina de la captura z.png (Mesa de votación y proyectos)
+                              if (isUserLiveStreamingWithCamera) {
+                                handleToggleUserCameraLiveBroadcast();
+                              }
+                              setIsWatchingPresenterCamera(false);
+                              setIsPresenterCameraFullscreen(false);
+                              setShowVotingProjectsModal(true);
+                              setShowFinanzasInscriptionInChannel(false);
+                              setShowProjectDetailsInPopup(false);
+                              setDetailProjectUser(null);
+                              setActiveFinanzasPopupUser(null);
+                              if (setShowFinanzasResults) setShowFinanzasResults(false);
+                              if (setShowFinanzasRecount) setShowFinanzasRecount(false);
+                              setActiveChannelsMenuSessionId(null);
+                            }}
+                            className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-slate-200 text-center"
+                            title="Redirigir a los proyectos de la captura z.png"
+                            id="btn-ver-proyectos-live-cam"
+                          >
+                            <span className="truncate">📋 Proyectos</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // 🎯 Redirige a la página de la captura z.png (donde tenemos la cuenta atrás de 10 minutos)
+                              if (isUserLiveStreamingWithCamera) {
+                                handleToggleUserCameraLiveBroadcast();
+                              }
+                              setIsWatchingPresenterCamera(false);
+                              setIsPresenterCameraFullscreen(false);
+                              setShowVotingProjectsModal(false);
+                              setShowFinanzasInscriptionInChannel(false);
+                              setShowProjectDetailsInPopup(false);
+                              setDetailProjectUser(null);
+                              setActiveFinanzasPopupUser(null);
+                              if (setShowFinanzasResults) setShowFinanzasResults(false);
+                              if (setShowFinanzasRecount) setShowFinanzasRecount(false);
+                              // Asegura que NO se abra el menú overlay de canales
+                              setActiveChannelsMenuSessionId(null);
+                              if (channelsMenuTimeoutRef.current) {
+                                clearTimeout(channelsMenuTimeoutRef.current);
+                              }
+                              // Activa la fase de votación de 10 minutos para mostrar la tarjeta de la captura z.png
+                              setSessionVotingPhaseMap(prev => ({ ...prev, [session.id]: true }));
+                              const activeSessionId = session.id;
+                              const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
+                              const now = Date.now();
+                              const currentStart = localStorage.getItem(sessionStartKey);
+                              let startTime = currentStart ? parseInt(currentStart, 10) : 0;
+                              if (!startTime || isNaN(startTime) || (now - startTime) < 3000 * 1000) {
+                                startTime = now - (3000 * 1000);
+                                localStorage.setItem(sessionStartKey, String(startTime));
+                              }
+                              localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                              if (setVotingPhaseTimer) {
+                                setVotingPhaseTimer(prev => (prev > 0 && prev <= 600) ? prev : 600);
+                              }
+                            }}
+                            className="py-2.5 px-3 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-400 text-center"
+                            title="Desactivar y volver a la página de votación con la cuenta atrás de 10 minutos (captura z.png)"
+                            id="btn-desactivar-live-cam"
+                          >
+                            <span>Desactivar</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     {/* 👥 4 PARTICIPANTES EN VIVO (Strictly matching captura z.png) */}
@@ -2228,112 +2384,50 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       </div>
                     )}
 
-                    {/* 🔻 PARTE INFERIOR: CONTROLES DE MICRO, COMENTARIOS Y NAVEGACIÓN (Matching image.png) */}
-                    <div className="relative z-30 w-full flex flex-col gap-2 p-3 sm:p-4 pb-4 sm:pb-5 pointer-events-auto">
-                      <div className="flex items-center justify-between gap-2 bg-[#0c1424]/90 backdrop-blur-md px-3 py-2 rounded-3xl border border-slate-700/60 shadow-2xl max-w-sm sm:max-w-md mx-auto w-full">
-                        {/* 🎙️ MICRO ON */}
-                        <button
-                          type="button"
-                          onClick={toggleBroadcastMic}
-                          className={`py-2 px-3.5 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-md ${
-                            isBroadcastMicOn && !isMuted
-                              ? 'bg-[#00e676] hover:bg-[#00c853] text-slate-950 shadow-[0_0_12px_rgba(0,230,118,0.5)]'
-                              : 'bg-slate-800 text-slate-200 border border-slate-700'
-                          }`}
-                          id="btn-live-cam-micro"
-                        >
-                          <Mic className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
-                          <span>{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
-                        </button>
 
-                        {/* 👥 PARTICIPANTES (Lleva a la página de la captura z.png) */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: !prev[session.id] }));
-                          }}
-                          className={`font-black text-[10px] sm:text-[11px] py-2 px-3.5 rounded-full shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center gap-1.5 ${
-                            showCameraParticipantsGrid[session.id]
-                              ? 'bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                              : 'bg-white hover:bg-slate-100 text-slate-950'
-                          }`}
-                          id="btn-live-cam-participantes"
-                          title="Ver participantes de la captura z.png"
-                        >
-                          <Users className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
-                          <span>PARTICIPANTES</span>
-                        </button>
-
-                        {/* FINALIZAR (Lleva a la página de la captura zz.png) */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            // Redirigir directamente a la página de votación de proyectos (captura zz.png)
-                            setSessionVotingPhaseMap(prev => {
-                              const next = { ...prev, [session.id]: true };
-                              try {
-                                localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
-                              } catch (e) {}
-                              return next;
-                            });
-                            setSessionVotingTimerMap(prev => ({ ...prev, [session.id]: 600 }));
-                            if (setVotingPhaseTimer) setVotingPhaseTimer(600);
-                            setShowVotingProjectsModal(true);
-                          }}
-                          className="bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-[11px] py-2 px-4 rounded-full shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center border-0"
-                          id="btn-live-cam-finalizar"
-                          title="Finalizar e ir a mesa de votación zz.png"
-                        >
-                          <span>FINALIZAR</span>
-                        </button>
-                      </div>
-                    </div>
                   
                     {/* 💬 COMENTARIOS EN VIVO EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
                     {isCommentsOpenForThisSession && (
                       <div 
-                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-[#0a0e1a]/98 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-b-[40px] sm:rounded-b-[48px] rounded-t-3xl p-3.5 sm:p-4.5 flex flex-col gap-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.98)] animate-slide-up text-left pointer-events-auto"
+                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-transparent p-3 sm:p-4 pb-3 flex flex-col gap-2 animate-slide-up text-left pointer-events-auto"
                         id={`live-camera-comments-${session.id}`}
                       >
                         {/* Header con botón para cerrar */}
-                        <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                        <div className="flex items-center justify-between pb-1 shrink-0 px-1 drop-shadow-md">
                           <div className="flex items-center gap-1.5">
-                            <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
-                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
-                              Comentarios en directo
-                            </span>
-                            <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
-                              {commentsCount}
+                            <MessageCircle className="w-3.5 h-3.5 text-rose-400 drop-shadow" />
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                              COMENTARIOS ({commentsCount})
                             </span>
                           </div>
 
                           <button
                             type="button"
                             onClick={() => setActiveCommentsSessionId(null)}
-                            className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                            className="text-slate-200 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-black/40 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]"
                             title="Cerrar comentarios"
                           >
-                            <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
-                            <X className="w-3.5 h-3.5" />
+                            <span className="text-[8px] font-mono text-slate-200 drop-shadow">Pulsa 💬 para cerrar</span>
+                            <X className="w-3.5 h-3.5 drop-shadow" />
                           </button>
                         </div>
 
                         {/* Scrollable Comments List */}
-                        <div className="w-full max-h-[130px] sm:max-h-[150px] overflow-y-auto space-y-1.5 pr-1 select-text scrollbar-thin scrollbar-thumb-white/20">
+                        <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 select-text scrollbar-thin scrollbar-thumb-white/20">
                           {sessionComments.map((comm) => (
-                            <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
+                            <div key={comm.id} className="flex items-start gap-2 bg-black/40 backdrop-blur-xs p-1.5 rounded-xl border border-white/10 shadow-md">
                               <img
                                 src={comm.userAvatar}
                                 alt={comm.userName}
-                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-600 mt-0.5"
                                 onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1">
-                                  <span className="text-[10px] font-black text-rose-300 truncate">{comm.userName}</span>
-                                  <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                  <span className="text-[10px] font-black text-rose-300 truncate drop-shadow-sm">{comm.userName}</span>
+                                  <span className="text-[8px] text-slate-300 shrink-0 font-mono drop-shadow-sm">{comm.timeAgo}</span>
                                 </div>
-                                <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                                <p className="text-[10px] text-white mt-0.5 leading-snug break-words drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                                   {comm.text}
                                 </p>
                               </div>
@@ -2341,24 +2435,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 type="button"
                                 onClick={() => handleToggleCommentLike(session.id, comm.id)}
                                 className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
+                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-300 hover:text-rose-400'
                                 }`}
                                 title="Me gusta"
                               >
                                 <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                                <span className="text-[7.5px]">{comm.likes}</span>
+                                <span className="text-[7.5px] text-white drop-shadow-sm">{comm.likes}</span>
                               </button>
                             </div>
                           ))}
                         </div>
 
                         {/* Quick emojis - Tap to send directly! */}
-                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
-                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-black/40 backdrop-blur-xs rounded-full border border-white/10 shadow-md">
+                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1 drop-shadow-sm">
                             <span>⚡</span>
-                            <span>Enviar emoji:</span>
+                            <span>ENVIAR EMOJI:</span>
                           </span>
-                          {['❤️', '🔥', '👏', '🚀', '💯', '💎', '✨', '😍', '😂', '🙌', '💡', '💰', '👍', '🎉', '🥂', '👑'].map((em) => (
+                          {['💖', '🔥', '👏', '🚀', '💯', '💎', '✨', '😍', '😂', '🙌', '💡', '💰', '👍', '🎉', '🥂', '👑'].map((em) => (
                             <button
                               key={em}
                               type="button"
@@ -2368,7 +2462,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                   detail: { emoji: em, icon: em, pureEmoji: true }
                                 }));
                               }}
-                              className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                              className="p-1 hover:bg-white/10 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
                               title={`Enviar ${em}`}
                             >
                               {em}
@@ -2382,13 +2476,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             e.preventDefault();
                             handleAddSessionComment(session.id);
                           }}
-                          className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                          className="relative flex items-center gap-1.5 pt-0.5 shrink-0 w-full"
                         >
                           {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
                           {renderEmojiGlossary(session.id)}
 
                           {/* Bloque para escribir comentarios con el emoji dentro */}
-                          <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                          <div className="flex-1 flex items-center bg-black/50 backdrop-blur-xs border border-white/20 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-lg min-w-0">
                             {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
                             <button
                               type="button"
@@ -2405,7 +2499,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               value={commentInputMap[session.id] || ''}
                               onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
                               placeholder="Escribe un comentario o emoji..."
-                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
+                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-300 focus:outline-none min-w-0 px-1 py-0.5"
                             />
                           </div>
 
@@ -2415,7 +2509,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
                               (commentInputMap[session.id] || '').trim()
                                 ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
-                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                : 'bg-black/50 text-slate-500 border border-white/10 cursor-not-allowed'
                             }`}
                             title="Publicar comentario"
                           >
@@ -2479,7 +2573,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       <span className="text-slate-500">•</span>
                       <span>10 Participantes</span>
                       <span className="text-slate-500">•</span>
-                      <span className="text-amber-300 font-black">{roundRef}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenRoundDatabaseModal) {
+                            onOpenRoundDatabaseModal(session.id);
+                          } else {
+                            window.dispatchEvent(new CustomEvent('open-round-database-modal', { detail: { roundId: session.id } }));
+                          }
+                        }}
+                        className="text-amber-300 font-black hover:text-amber-200 transition-all flex items-center gap-1 cursor-pointer hover:underline"
+                        title={`Ver base de datos independiente de esta ronda (${roundRef})`}
+                        id={`round-ref-pill-${session.id}`}
+                      >
+                        <Database className="w-2.5 h-2.5 text-cyan-400" />
+                        <span>{roundRef}</span>
+                      </button>
                     </span>
                     <span className="h-0.5 w-6 sm:w-8 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                   </div>
@@ -2520,6 +2630,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             type="button"
                             onClick={() => {
                               // Fast-forward to 3 seconds for test convenience
+                              const activeSessionId = session.id;
+                              const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
+                              const now = Date.now();
+                              localStorage.setItem(sessionStartKey, String(now - (3597 * 1000)));
                               setSessionVotingTimerMap(prev => ({ ...prev, [session.id]: 3 }));
                               if (setVotingPhaseTimer) setVotingPhaseTimer(3);
                               if (setSystemVoiceNotification) {
@@ -2583,13 +2697,39 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           onClick={() => {
                             setActiveFinanzasSessionIndex(index);
                             if (setSelectedFinanzasUser) setSelectedFinanzasUser(presenter);
-                            handleToggleUserCameraLiveBroadcast();
+                            if (onNavigateTo10WindowsLive) {
+                              onNavigateTo10WindowsLive();
+                            } else {
+                              const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana');
+                              if (isPresenter) {
+                                handleToggleUserCameraLiveBroadcast();
+                                setIsPresenterCameraFullscreen(prev => !prev);
+                              } else {
+                                if (isPresenterCameraFullscreen) {
+                                  setIsPresenterCameraFullscreen(false);
+                                  setIsWatchingPresenterCamera(false);
+                                } else {
+                                  setIsWatchingPresenterCamera(true);
+                                  setIsPresenterCameraFullscreen(true);
+                                  resumeOrStartLucasSpeech();
+                                }
+                              }
+                            }
                           }}
-                          className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-xs sm:text-sm py-2.5 sm:py-3 px-4 rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border border-slate-200 flex items-center justify-center gap-2 cursor-pointer"
+                          className={`w-full font-black text-xs sm:text-sm py-2.5 sm:py-3 px-4 rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
+                            isLiveActive
+                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
+                          }`}
                           id={`btn-live-voting-${session.id}`}
                         >
-                          <Camera className="w-4 h-4 text-slate-950 shrink-0" />
+                          <Camera className="w-4 h-4 shrink-0 text-current" />
                           <span>LIVE</span>
+                          {isLiveActive && (
+                            <span className="ml-1 px-1.5 py-0.5 bg-red-950 text-white text-[8px] font-mono rounded-full border border-red-400/80">
+                              EN VIVO
+                            </span>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -2747,6 +2887,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 setActiveFinanzasSessionIndex(index);
                                 if (setSelectedFinanzasUser) {
                                   setSelectedFinanzasUser(presenter);
+                                }
+                                if (onNavigateTo10WindowsLive) {
+                                  onNavigateTo10WindowsLive();
+                                  return;
                                 }
                                 if (isPresenter) {
                                   handleToggleUserCameraLiveBroadcast();
@@ -2975,6 +3119,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           setShowParticipantsGatheringModal(true);
                         }
                       } else {
+                        const isStreetwear10 = Boolean(session.entryFee === 10 || session.title?.toUpperCase().includes('STREETWEAR'));
+                        if (isStreetwear10) {
+                          if (onExecutePaymentAndJoinSession) {
+                            onExecutePaymentAndJoinSession(session);
+                          } else {
+                            setShowFinanzasInscriptionInChannel(true);
+                          }
+                          return;
+                        }
+
                         // 🛑 Comprobar si el usuario ya está participando en otra ronda
                         const otherEnrolledRound = activeSessionsOnly.find(s => {
                           if (s.id === session.id) return false;
@@ -3047,44 +3201,44 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 💬 COMENTARIOS DE USUARIOS Y POSIBILIDAD DE COMENTAR - OCUPA TODO EL ANCHO DEL CANAL */}
                 {isCommentsOpenForThisSession && (
                   <div 
-                    className="absolute inset-x-0 bottom-0 z-50 w-full bg-[#0a0e1a]/98 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-b-[40px] sm:rounded-b-[48px] rounded-t-3xl p-3.5 sm:p-4.5 flex flex-col gap-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.98)] animate-slide-up pointer-events-auto text-left"
+                    className="absolute inset-x-0 bottom-0 z-50 w-full bg-transparent p-3 sm:p-4 pb-3 flex flex-col gap-2 animate-slide-up pointer-events-auto text-left"
                     id={`normal-card-comments-${session.id}`}
                   >
-                    <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                    <div className="flex items-center justify-between pb-1 shrink-0 px-1 drop-shadow-md">
                       <div className="flex items-center gap-1.5 text-left">
-                        <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
-                        <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
-                          Comentarios ({commentsCount})
+                        <MessageCircle className="w-3.5 h-3.5 text-rose-400 drop-shadow" />
+                        <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                          COMENTARIOS ({commentsCount})
                         </span>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => setActiveCommentsSessionId(null)}
-                        className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                        className="text-slate-200 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-black/40 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]"
                         title="Cerrar comentarios"
                       >
-                        <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
-                        <X className="w-3.5 h-3.5" />
+                        <span className="text-[8px] font-mono text-slate-200 drop-shadow">Pulsa 💬 para cerrar</span>
+                        <X className="w-3.5 h-3.5 drop-shadow" />
                       </button>
                     </div>
 
                     {/* Comments List */}
-                    <div className="w-full max-h-[130px] sm:max-h-[150px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-white/20">
+                    <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-white/20">
                       {sessionComments.map((comm) => (
-                        <div key={comm.id} className="flex items-start gap-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-800/80">
+                        <div key={comm.id} className="flex items-start gap-2 bg-black/40 backdrop-blur-xs p-1.5 rounded-xl border border-white/10 shadow-md">
                           <img
                             src={comm.userAvatar}
                             alt={comm.userName}
-                            className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                            className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-600 mt-0.5"
                             onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-[10px] font-black text-rose-300 truncate">{comm.userName}</span>
-                              <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                              <span className="text-[10px] font-black text-rose-300 truncate drop-shadow-sm">{comm.userName}</span>
+                              <span className="text-[8px] text-slate-300 shrink-0 font-mono drop-shadow-sm">{comm.timeAgo}</span>
                             </div>
-                            <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                            <p className="text-[10px] text-white mt-0.5 leading-snug break-words drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                               {comm.text}
                             </p>
                           </div>
@@ -3092,24 +3246,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             type="button"
                             onClick={() => handleToggleCommentLike(session.id, comm.id)}
                             className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                              comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
+                              comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-300 hover:text-rose-400'
                             }`}
                             title="Me gusta"
                           >
                             <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                            <span className="text-[8px] font-mono">{comm.likes}</span>
+                            <span className="text-[8px] font-mono text-white drop-shadow-sm">{comm.likes}</span>
                           </button>
                         </div>
                       ))}
                     </div>
 
                     {/* Quick Emojis strip - Tap to send directly! */}
-                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
-                      <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-black/40 backdrop-blur-xs rounded-full border border-white/10 shadow-md">
+                      <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1 drop-shadow-sm">
                         <span>⚡</span>
-                        <span>Enviar emoji:</span>
+                        <span>ENVIAR EMOJI:</span>
                       </span>
-                      {['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((emoji) => (
+                      {['💖', '🔥', '👏', '🚀', '💯', '😂', '🤩', '🙌', '💡', '💰', '✨', '👍', '💎', '🎉', '🥂', '👑'].map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
@@ -3119,7 +3273,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               detail: { emoji, icon: emoji, pureEmoji: true }
                             }));
                           }}
-                          className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                          className="p-1 hover:bg-white/10 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
                           title={`Enviar ${emoji}`}
                         >
                           {emoji}
@@ -3133,13 +3287,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         e.preventDefault();
                         handleAddSessionComment(session.id);
                       }}
-                      className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                      className="relative flex items-center gap-1.5 pt-0.5 shrink-0 w-full"
                     >
                       {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
                       {renderEmojiGlossary(session.id)}
 
                       {/* Bloque para escribir comentarios con el emoji dentro */}
-                      <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                      <div className="flex-1 flex items-center bg-black/50 backdrop-blur-xs border border-white/20 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-lg min-w-0">
                         {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
                         <button
                           type="button"
@@ -3156,7 +3310,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           value={commentInputMap[session.id] || ''}
                           onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
                           placeholder="Escribe un comentario o emoji..."
-                          className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
+                          className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-300 focus:outline-none min-w-0 px-1 py-0.5"
                         />
                       </div>
 
@@ -3166,7 +3320,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
                           (commentInputMap[session.id] || '').trim()
                             ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
-                            : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'bg-black/50 text-slate-500 border border-white/10 cursor-not-allowed'
                         }`}
                         title="Publicar comentario"
                       >
@@ -3245,7 +3399,34 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 id={`tiktok-actions-sidebar-${session.id}`}
               >
                 {/* Like button with count (e.g. 43.2K) - Queda marcado y lanza lluvia de corazones */}
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center relative group/channel-heart-zone">
+                  {/* Floating horizontal emoji glossary on hover */}
+                  <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-[#0a0e1a]/95 backdrop-blur-xl border border-slate-700/80 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                    {[
+                      '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                      '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                      '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                      '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                      '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                      '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                    ].map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                            detail: { emoji, icon: emoji }
+                          }));
+                        }}
+                        className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-white/15 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
+                        title={`Enviar ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => handleToggleLike(session.id)}

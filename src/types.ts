@@ -159,3 +159,75 @@ export interface HistoryWonRecord {
   coWinnersNames?: string[];
   totalWinnersCount?: number;
 }
+
+export type RoundCategoryKey =
+  | 'streetwear'
+  | 'casual'
+  | 'glamour'
+  | 'elegant'
+  | 'highfashion_100k'
+  | 'highfashion_1m';
+
+export interface RoundParticipant {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  role: string;
+  projectTitle?: string;
+  votesReceived?: number;
+  hasVoted?: boolean;
+  votedFor?: string;
+}
+
+export interface RoundComment {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  text: string;
+  timeAgo: string;
+  likes: number;
+  userLiked?: boolean;
+}
+
+export interface RoundResults {
+  poolTotal: number;
+  winners: Array<{
+    id: string;
+    name: string;
+    avatar: string;
+    votes: number;
+    prize: number;
+    role: string;
+  }>;
+  sponsorShare: number;
+  celebratedDate: string;
+  isTie?: boolean;
+}
+
+export interface RoundDatabaseRecord {
+  id: string;
+  categoryKey: RoundCategoryKey;
+  roundIndex: number; // 0, 1, 2... enumerada desde el 0 en adelante
+  reference: string;  // "REF: 1", "REF: 2"...
+  roundNumber: number; // 1, 2...
+  title: string;
+  brand: string;
+  category: string;
+  entryFee: number;
+  totalParticipants: number;
+  status: 'active' | 'voting' | 'completed';
+  createdAt: string;
+  celebratedAt?: string;
+  presenter: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: string;
+  };
+  participants: RoundParticipant[];
+  votes: Record<string, number>;
+  voters: Record<string, string>;
+  comments: RoundComment[];
+  results?: RoundResults;
+}

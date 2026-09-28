@@ -1,13 +1,23 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
-import { ProjectFullscreenDossierModal } from './ProjectFullscreenDossierModal';
 import { TikTokFinanzasFeed } from './TikTokFinanzasFeed';
+import { RoundDatabaseModal } from './RoundDatabaseModal';
+import { 
+  getRoundReference, 
+  celebrateRoundDatabase, 
+  getActiveRoundForCategory, 
+  resolveCategoryKey,
+  formatRoundRef,
+  createNewRoundRecord,
+  saveRoundDatabase
+} from '../utils/roundsDatabase';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
 import { saveLuxuryWatchGift, playLuxuryWatchSoundEffect } from './LuxuryWatchAnimation';
 import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { 
   Sparkles, 
+  Database,
   Home, 
   Compass, 
   UserCheck, 
@@ -2465,6 +2475,7 @@ export default function CastingLiveSection({
     }
     topMenuTimeoutRef.current = setTimeout(() => {
       setIsTopControlsMenuHovered(false);
+      setMobileChannelControlsVisible(false);
     }, 280);
   };
 
@@ -2908,7 +2919,9 @@ export default function CastingLiveSection({
   const [showParticipantsGatheringModal, setShowParticipantsGatheringModal] = useState<boolean>(false);
   const [gatheringSessionTitle, setGatheringSessionTitle] = useState<string>('Round STREETWEAR & URBAN');
   const [gatheringSessionFee, setGatheringSessionFee] = useState<number>(10);
-  const [gatheringSessionRef, setGatheringSessionRef] = useState<string>('Ref:1');
+  const [gatheringSessionRef, setGatheringSessionRef] = useState<string>('REF: 1');
+  const [isRoundDatabaseModalOpen, setIsRoundDatabaseModalOpen] = useState<boolean>(false);
+  const [roundDatabaseModalTargetId, setRoundDatabaseModalTargetId] = useState<string | undefined>(undefined);
   const [gatheringParticipantsList, setGatheringParticipantsList] = useState<any[]>(TRABAJADORES_USERS);
   const [selectedInscriptionProjectId, setSelectedInscriptionProjectId] = useState<string>('proj-eco-fashion');
   const [completedSessionToDisplay, setCompletedSessionToDisplay] = useState<any | null>(null);
@@ -2960,6 +2973,15 @@ export default function CastingLiveSection({
     const s = Math.max(0, totalSecs) % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
+
+  useEffect(() => {
+    const handleOpenRoundDb = (e: any) => {
+      setRoundDatabaseModalTargetId(e.detail?.roundId);
+      setIsRoundDatabaseModalOpen(true);
+    };
+    window.addEventListener('open-round-database-modal', handleOpenRoundDb);
+    return () => window.removeEventListener('open-round-database-modal', handleOpenRoundDb);
+  }, []);
 
   // Auto-redirect from vote count/scrutiny page (zxcv.png) to final results page (zas.png) when countdown hits 0 / last vote in
   useEffect(() => {
@@ -3112,8 +3134,9 @@ export default function CastingLiveSection({
   const DEFAULT_FINANZAS_TABLE_SESSIONS = [
     {
       id: 'sess-trabajadores-1',
-      reference: 'Ref:1',
+      reference: 'REF: 1',
       roundNumber: 1,
+      roundIndex: 0,
       title: 'Round STREETWEAR & URBAN',
       brand: 'Estilo moderno, sneakers, denim y cultura street.',
       category: 'Round STREETWEAR & URBAN',
@@ -3126,8 +3149,9 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-emprendedores-1',
-      reference: 'Ref:2',
-      roundNumber: 2,
+      reference: 'REF: 1',
+      roundNumber: 1,
+      roundIndex: 0,
       title: 'Round CASUAL & LIFESTYLE',
       brand: 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.',
       category: 'Round CASUAL & LIFESTYLE',
@@ -3140,8 +3164,9 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-empresarios-1',
-      reference: 'Ref:3',
-      roundNumber: 3,
+      reference: 'REF: 1',
+      roundNumber: 1,
+      roundIndex: 0,
       title: 'Ronda Glamour ✨',
       brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
       category: 'Ronda Glamour ✨',
@@ -3154,8 +3179,9 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-topmodels-1',
-      reference: 'Ref:4',
-      roundNumber: 4,
+      reference: 'REF: 1',
+      roundNumber: 1,
+      roundIndex: 0,
       title: 'Ronda Elegant & Classic 🤍',
       brand: 'sofisticado, clásico, atemporal y refinado.',
       category: 'Ronda Elegant & Classic 🤍',
@@ -3168,8 +3194,9 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-inversores-1',
-      reference: 'Ref:5',
-      roundNumber: 5,
+      reference: 'REF: 1',
+      roundNumber: 1,
+      roundIndex: 0,
       title: 'Ronda High Fashion 👠',
       brand: 'alta moda, diseñadores, pasarela y tendencias.',
       category: 'Ronda High Fashion 👠',
@@ -3182,8 +3209,9 @@ export default function CastingLiveSection({
     },
     {
       id: 'sess-millonarios-1',
-      reference: 'Ref:6',
-      roundNumber: 6,
+      reference: 'REF: 1',
+      roundNumber: 1,
+      roundIndex: 0,
       title: 'Ronda High Fashion 👠',
       brand: 'alta moda, diseñadores, pasarela y tendencias.',
       category: 'Ronda High Fashion 👠',
@@ -3200,6 +3228,7 @@ export default function CastingLiveSection({
     id: string;
     reference?: string;
     roundNumber?: number;
+    roundIndex?: number;
     title: string;
     brand: string;
     category: string;
@@ -3213,17 +3242,20 @@ export default function CastingLiveSection({
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Strictly ensure user (Adriana Lima) is NOT enrolled by default in ANY round
+          // Strictly ensure user is NOT enrolled by default in unjoined rounds, but PRESERVE joined REF: 2 session
           const cleaned = parsed.map((sess: any, idx: number) => {
-            const ref = sess.reference || (
-              sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 || sess.title?.toUpperCase().includes('STREETWEAR') ? 'Ref:1' :
-              sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 || sess.title?.toUpperCase().includes('CASUAL') ? 'Ref:2' :
-              sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 || sess.title?.toUpperCase().includes('GLAMOUR') ? 'Ref:3' :
-              sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 || sess.title?.toUpperCase().includes('ELEGANT') ? 'Ref:4' :
-              sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? 'Ref:5' :
-              sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? 'Ref:6' :
-              `Ref:${idx + 1}`
+            const isUserEnrolledInThis = Boolean(
+              sess.id === 'sess-streetwear-ref-2' ||
+              (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${sess.id}`) === 'true')
             );
+            if (isUserEnrolledInThis) {
+              return {
+                ...sess,
+                reference: sess.reference || (sess.id === 'sess-streetwear-ref-2' ? 'REF: 2' : getRoundReference(sess, idx)),
+                status: 'active' as const
+              };
+            }
+            const ref = getRoundReference(sess, idx);
             const defaultParticipants = (
               sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
               sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
@@ -3261,44 +3293,24 @@ export default function CastingLiveSection({
     return DEFAULT_FINANZAS_TABLE_SESSIONS;
   });
 
-  const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(0);
+  const [activeFinanzasSessionIndex, setActiveFinanzasSessionIndex] = useState<number>(() => {
+    try {
+      const savedIdx = localStorage.getItem('finanzas_active_session_index');
+      if (savedIdx !== null && !isNaN(Number(savedIdx))) {
+        return Number(savedIdx);
+      }
+      const targetId = localStorage.getItem('finanzas_target_session_id');
+      if (targetId === 'sess-streetwear-ref-2') {
+        return 1;
+      }
+    } catch (e) {}
+    return 0;
+  });
 
-  // Helper to obtain the reference for each round celebrated, starting from Ronda 1 (Ref:1) onward
+  // Helper to obtain the reference for each round celebrated, starting from Ronda 1 (REF: 1) onward
+  // Cada Ronda tiene su propia base de datos y conforme se van celebrando rondas se van enumerando desde el 0 en adelante
   const getFinanzasRoundRef = (session?: any, index?: number): string => {
-    if (session?.reference) return session.reference;
-    const sId = session?.id || '';
-    const fee = session?.entryFee;
-    const cat = (session?.category || session?.title || '').toUpperCase();
-    
-    if (sId === 'sess-trabajadores-1' || sId === 'sess-workers' || fee === 10 || cat.includes('STREETWEAR') || cat.includes('TRABAJADORES')) {
-      return 'Ref:1';
-    }
-    if (sId === 'sess-emprendedores-1' || sId === 'sess-entrepreneurs' || fee === 100 || cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || cat.includes('LIFESTYLE')) {
-      return 'Ref:2';
-    }
-    if (sId === 'sess-empresarios-1' || sId === 'sess-businessmen' || fee === 1000 || cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS')) {
-      return 'Ref:3';
-    }
-    if (sId === 'sess-topmodels-1' || sId === 'sess-topmodels' || fee === 10000 || cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS')) {
-      return 'Ref:4';
-    }
-    if (sId === 'sess-inversores-1' || sId === 'sess-investors' || fee === 100000 || cat.includes('HIGH FASHION 100K')) {
-      return 'Ref:5';
-    }
-    if (sId === 'sess-millonarios-1' || sId === 'sess-millionaires' || fee === 1000000 || cat.includes('MILLONAR')) {
-      return 'Ref:6';
-    }
-
-    if (typeof index === 'number' && index >= 0) {
-      return `Ref:${index + 1}`;
-    }
-
-    const listIndex = openFinanzasSessions.findIndex(s => s.id === sId);
-    if (listIndex !== -1) {
-      return `Ref:${listIndex + 1}`;
-    }
-
-    return 'Ref:1';
+    return getRoundReference(session, index);
   };
 
   // Helper to format the session inscription fee in words and short format
@@ -3357,11 +3369,23 @@ export default function CastingLiveSection({
   const sessionScrollLockRef = useRef<boolean>(false);
 
   // States to guarantee instant reactivity when paying and joining sessions
-  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda.
+  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda (salvo que ya se haya inscrito en REF: 2).
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>(() => {
+    try {
+      const isRef2Paid = localStorage.getItem('user_paid_session_sess-streetwear-ref-2') === 'true';
+      if (isRef2Paid) {
+        return { 'sess-streetwear-ref-2': true };
+      }
+    } catch (e) {}
     return {};
   });
-  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(false);
+  const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('user_paid_session_sess-streetwear-ref-2') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
   const [forceShowParticipantsPanel, setForceShowParticipantsPanel] = useState<boolean>(true);
 
   // Position / slot assigned to user (Adriana Lima) by order of arrival
@@ -3380,7 +3404,7 @@ export default function CastingLiveSection({
   // Explicit user selection of arrival position
   const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
 
-  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda.
+  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda por defecto.
   // Es obligatorio pagar e inscribirse explícitamente para participar.
   useEffect(() => {
     try {
@@ -3390,24 +3414,35 @@ export default function CastingLiveSection({
       localStorage.removeItem('user_paid_session_sess-topmodels-1');
       localStorage.removeItem('user_paid_session_sess-inversores-1');
       localStorage.removeItem('user_paid_session_sess-millonarios-1');
-      localStorage.removeItem('finanzas_user_participating');
-      localStorage.removeItem('finanzas_user_slot_index');
-      localStorage.removeItem('user_paid_finanzas_session');
-      localStorage.removeItem('finanzas_target_session_id');
-      setIsFinanzasUserParticipatingState(false);
-      setUserPaidSessions({});
+      const isRef2Paid = localStorage.getItem('user_paid_session_sess-streetwear-ref-2') === 'true';
+      if (!isRef2Paid) {
+        localStorage.removeItem('finanzas_user_participating');
+        localStorage.removeItem('finanzas_user_slot_index');
+        localStorage.removeItem('user_paid_finanzas_session');
+        localStorage.removeItem('finanzas_target_session_id');
+        setIsFinanzasUserParticipatingState(false);
+        setUserPaidSessions({});
+      } else {
+        setIsFinanzasUserParticipatingState(true);
+        setUserPaidSessions({ 'sess-streetwear-ref-2': true });
+      }
     } catch (e) {}
   }, []);
 
-  // Active open sessions only: guarantee that all 6 default sessions are always present and active
+  // Active open sessions only: guarantee that all default sessions are present and active, preserving multiple rounds per fee
   const activeSessionsOnly = useMemo(() => {
     const list = [...openFinanzasSessions.filter(s => s.status === 'active')];
     DEFAULT_FINANZAS_TABLE_SESSIONS.forEach(defSess => {
-      if (!list.some(s => s.id === defSess.id || s.entryFee === defSess.entryFee)) {
+      if (!list.some(s => s.id === defSess.id)) {
         list.push(defSess);
       }
     });
-    return list.sort((a, b) => a.entryFee - b.entryFee);
+    return list.sort((a, b) => {
+      if (a.entryFee !== b.entryFee) {
+        return a.entryFee - b.entryFee;
+      }
+      return (a.roundNumber || 1) - (b.roundNumber || 1);
+    });
   }, [openFinanzasSessions]);
   const currentFinanzasSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0] || openFinanzasSessions[0];
 
@@ -3578,7 +3613,7 @@ export default function CastingLiveSection({
   // Helper function to handle scrolling and switching sessions (TikTok style)
   const handleScrollSession = (direction: 'up' | 'down') => {
     if (showFinanzasResults || showFinanzasRecount) return;
-    if (showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+    if (showProjectDetailsInPopup || detailProjectUser) return;
     if (activeSessionsOnly.length <= 1) return;
     if (direction === 'down') {
       setSlideDirection('up');
@@ -3832,13 +3867,15 @@ export default function CastingLiveSection({
     localStorage.removeItem('came_from_finanzas');
 
     // Identify target session
-    const targetSessionId = localStorage.getItem('finanzas_target_session_id');
+    const targetSessionId = localStorage.getItem('finanzas_target_session_id') || 'sess-streetwear-ref-2';
     const activeSess = (targetSessionId ? openFinanzasSessions.find(s => s.id === targetSessionId) : null) || 
+      activeSessionsOnly.find(s => s.id === targetSessionId) ||
+      (targetSessionId === 'sess-streetwear-ref-2' ? activeSessionsOnly[1] : null) ||
       activeSessionsOnly[activeFinanzasSessionIndex] || 
       currentFinanzasSession || 
       openFinanzasSessions[0];
 
-    const sessionStartKey = `finanzas_active_session_start_${activeSess?.id || 'sess-trabajadores-1'}`;
+    const sessionStartKey = `finanzas_active_session_start_${activeSess?.id || 'sess-streetwear-ref-2'}`;
     localStorage.setItem(sessionStartKey, String(Date.now()));
 
     const myId = userProfile?.id || "user-adriana";
@@ -3876,7 +3913,7 @@ export default function CastingLiveSection({
       sessionParticipants = copy.slice(0, 10);
     }
 
-    const enrolledId = targetSessionId || activeSess?.id || 'sess-trabajadores-1';
+    const enrolledId = targetSessionId || activeSess?.id || 'sess-streetwear-ref-2';
     setJoinedPresenterIds(sessionParticipants.map((p: any) => p.id));
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
@@ -3885,6 +3922,7 @@ export default function CastingLiveSection({
     }));
     try {
       localStorage.setItem(`user_paid_session_${enrolledId}`, 'true');
+      localStorage.setItem('finanzas_target_session_id', enrolledId);
       localStorage.setItem('finanzas_user_participating', 'true');
       localStorage.setItem('finanzas_user_slot_index', String(userParticipantSlotIndex ?? 9));
     } catch (e) {}
@@ -3926,12 +3964,20 @@ export default function CastingLiveSection({
     if (activeSess?.id) {
       spokenSessionIdsRef.current.add(activeSess.id);
       setOpenFinanzasSessions(prev => {
-        const updated = prev.map(s => (s.id === activeSess.id || (s.entryFee === 10 && activeSess.entryFee === 10)) ? { ...s, status: 'active' as const, participants: sessionParticipants } : s);
+        const updated = prev.map(s => s.id === activeSess.id ? { ...s, status: 'active' as const, participants: sessionParticipants } : s);
         try {
           localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(updated));
         } catch (e) {}
         return updated;
       });
+    }
+
+    // Explicitly guarantee active session index points to the enrolled round (index 1 for REF: 2)
+    const targetIdx = activeSessionsOnly.findIndex(s => s.id === enrolledId);
+    if (targetIdx !== -1) {
+      setActiveFinanzasSessionIndex(targetIdx);
+    } else if (enrolledId === 'sess-streetwear-ref-2') {
+      setActiveFinanzasSessionIndex(1);
     }
 
     setFinanzasTimerActive({
@@ -4117,34 +4163,119 @@ export default function CastingLiveSection({
     // 3. Complete list of exactly 10 participants
     const finalTen = [...peersBefore, userParticipant, ...peersAfter];
 
-    const updatedSessions = openFinanzasSessions.map(s => {
-      if (s.id === targetSessionId || s.id === targetSession?.id || s.id === currentFinanzasSession?.id || (fee === 10 && (s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR')))) {
-        return {
-          ...s,
+    const is10EuroStreetwear = Boolean(
+      fee === 10 ||
+      targetSession?.entryFee === 10 ||
+      targetSession?.title?.toUpperCase().includes('STREETWEAR') ||
+      targetSession?.category?.toUpperCase().includes('STREETWEAR')
+    );
+
+    let effectiveTargetSessionId = targetSessionId;
+    let updatedSessions = [...openFinanzasSessions];
+
+    if (is10EuroStreetwear) {
+      // 🌟 REQUISITO:
+      // Cuando le dé al botón "Inscribirme en una sesión de (10 Euros)"
+      // APAREZCA UNA SEGUNDA SESIÓN DE Round Streetwear & Urban CON LA REF: 2.
+      const secondRoundId = 'sess-streetwear-ref-2';
+      effectiveTargetSessionId = secondRoundId;
+
+      // 1. Asegurar que la primera sesión (REF: 1) permanece con sus 10 participantes originales
+      const firstSessionIdx = updatedSessions.findIndex(s => s.id === 'sess-trabajadores-1');
+      if (firstSessionIdx !== -1) {
+        updatedSessions[firstSessionIdx] = {
+          ...updatedSessions[firstSessionIdx],
+          reference: 'REF: 1',
+          roundNumber: 1,
+          roundIndex: 0,
+          participants: TRABAJADORES_USERS.slice(0, 10),
+          status: 'active' as const
+        };
+      } else {
+        updatedSessions.unshift({
+          id: 'sess-trabajadores-1',
+          reference: 'REF: 1',
+          roundNumber: 1,
+          roundIndex: 0,
+          title: 'Round STREETWEAR & URBAN',
+          brand: 'Estilo moderno, sneakers, denim y cultura street.',
+          category: 'Round STREETWEAR & URBAN',
+          entryFee: 10,
+          presenter: TRABAJADORES_USERS[0],
+          participants: TRABAJADORES_USERS.slice(0, 10),
+          status: 'active' as const
+        });
+      }
+
+      // 2. Crear y persistir la base de datos de la 2ª sesión de Streetwear (REF: 2)
+      const secondRoundDb = createNewRoundRecord('streetwear', 1, secondRoundId);
+      secondRoundDb.reference = 'REF: 2';
+      secondRoundDb.roundNumber = 2;
+      secondRoundDb.roundIndex = 1;
+      secondRoundDb.participants = finalTen;
+      saveRoundDatabase(secondRoundDb);
+
+      const secondRoundSession = {
+        id: secondRoundId,
+        reference: 'REF: 2',
+        roundNumber: 2,
+        roundIndex: 1,
+        title: 'Round STREETWEAR & URBAN',
+        brand: 'Estilo moderno, sneakers, denim y cultura street.',
+        category: 'Round STREETWEAR & URBAN',
+        entryFee: 10,
+        presenter: finalTen[0] || TRABAJADORES_USERS[0],
+        participants: finalTen,
+        status: 'active' as const
+      };
+
+      // 3. Insertar o actualizar la segunda sesión en openFinanzasSessions inmediatamente después de la primera
+      const existingSecondIdx = updatedSessions.findIndex(s => s.id === secondRoundId);
+      if (existingSecondIdx !== -1) {
+        updatedSessions[existingSecondIdx] = secondRoundSession;
+      } else {
+        const ref1Idx = updatedSessions.findIndex(s => s.id === 'sess-trabajadores-1');
+        if (ref1Idx !== -1) {
+          updatedSessions.splice(ref1Idx + 1, 0, secondRoundSession);
+        } else {
+          updatedSessions.unshift(secondRoundSession);
+        }
+      }
+    } else {
+      updatedSessions = updatedSessions.map(s => {
+        if (s.id === targetSessionId || s.id === targetSession?.id || s.id === currentFinanzasSession?.id) {
+          return {
+            ...s,
+            status: 'active' as const,
+            participants: finalTen
+          };
+        }
+        return s;
+      });
+
+      if (!updatedSessions.some(s => s.id === targetSessionId)) {
+        const baseSession = DEFAULT_FINANZAS_TABLE_SESSIONS.find(s => s.id === targetSessionId || s.entryFee === fee) || DEFAULT_FINANZAS_TABLE_SESSIONS[0];
+        updatedSessions.unshift({
+          ...baseSession,
           status: 'active' as const,
           participants: finalTen
-        };
+        });
       }
-      return s;
-    });
-
-    if (!updatedSessions.some(s => s.id === targetSessionId || (fee === 10 && (s.id === 'sess-trabajadores-1' || s.entryFee === 10)))) {
-      const baseSession = DEFAULT_FINANZAS_TABLE_SESSIONS.find(s => s.id === targetSessionId || s.entryFee === fee) || DEFAULT_FINANZAS_TABLE_SESSIONS[0];
-      updatedSessions.unshift({
-        ...baseSession,
-        status: 'active' as const,
-        participants: finalTen
-      });
     }
 
     setOpenFinanzasSessions(updatedSessions);
+    try {
+      localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(updatedSessions));
+    } catch (e) {}
+
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
       ...prev,
-      [targetSessionId]: true
+      [effectiveTargetSessionId]: true
     }));
     try {
-      localStorage.setItem(`user_paid_session_${targetSessionId}`, 'true');
+      localStorage.setItem(`user_paid_session_${effectiveTargetSessionId}`, 'true');
+      localStorage.setItem('finanzas_target_session_id', effectiveTargetSessionId);
       localStorage.setItem('finanzas_user_participating', 'true');
       localStorage.setItem('finanzas_user_slot_index', String(userSlotIndex));
     } catch (e) {}
@@ -4168,20 +4299,17 @@ export default function CastingLiveSection({
       }))
     );
 
-    const activeList = updatedSessions.filter(s => s.status === "active");
-    if (fee === 10) {
-      const idx10 = activeList.findIndex(s => s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR'));
-      if (idx10 !== -1) {
-        setActiveFinanzasSessionIndex(idx10);
-      } else {
-        setActiveFinanzasSessionIndex(0);
-      }
-    } else {
-      const targetIdx = activeList.findIndex(s => s.id === targetSessionId || s.entryFee === fee);
-      if (targetIdx !== -1) {
-        setActiveFinanzasSessionIndex(targetIdx);
-      }
-    }
+    // Sort activeList identically to activeSessionsOnly
+    const activeList = updatedSessions.filter(s => s.status === "active").sort((a, b) => {
+      if (a.entryFee !== b.entryFee) return a.entryFee - b.entryFee;
+      return (a.roundNumber || 1) - (b.roundNumber || 1);
+    });
+    const targetIdx = activeList.findIndex(s => s.id === effectiveTargetSessionId);
+    const resolvedSessionIndex = targetIdx !== -1 ? targetIdx : (is10EuroStreetwear ? 1 : 0);
+    setActiveFinanzasSessionIndex(resolvedSessionIndex);
+    try {
+      localStorage.setItem('finanzas_active_session_index', String(resolvedSessionIndex));
+    } catch (e) {}
 
     // Set first presenter in spotlight (if Adriana is at slot 0, she is in the spotlight immediately!)
     setSelectedFinanzasUser(finalTen[0]);
@@ -4189,7 +4317,7 @@ export default function CastingLiveSection({
     setFirstPresenterRevealed(true);
 
     // Synchronize 5-min timer for presenter #1
-    const sessionStartKey = `finanzas_active_session_start_${targetSessionId}`;
+    const sessionStartKey = `finanzas_active_session_start_${effectiveTargetSessionId}`;
     localStorage.setItem(sessionStartKey, String(Date.now()));
     setFinanzasTimers({
       [finalTen[0].id]: 300
@@ -4201,7 +4329,9 @@ export default function CastingLiveSection({
     // Notify user of their exact arrival position
     setSystemVoiceNotification({
       show: true,
-      message: `🎉 ¡Inscripción y Pago Confirmados! Adriana Lima asignada a la posición #${arrivalPositionNumber} de 10 por orden de llegada.`
+      message: is10EuroStreetwear
+        ? `🎉 ¡Inscripción y Pago Confirmados! Has accedido a Round Streetwear & Urban con REF: 2.`
+        : `🎉 ¡Inscripción y Pago Confirmados! Adriana Lima asignada a la posición #${arrivalPositionNumber} de 10 por orden de llegada.`
     });
     setTimeout(() => {
       setSystemVoiceNotification(prev => ({ ...prev, show: false }));
@@ -4217,7 +4347,7 @@ export default function CastingLiveSection({
     // Trigger gathering modal (identical to SessionSimulator.tsx / page z.png)
     setGatheringSessionTitle(targetSession?.title || (fee === 10 ? 'Round STREETWEAR & URBAN' : 'Mesa de Inversión'));
     setGatheringSessionFee(fee);
-    setGatheringSessionRef(getFinanzasRoundRef(targetSession, activeFinanzasSessionIndex));
+    setGatheringSessionRef(is10EuroStreetwear ? 'REF: 2' : getFinanzasRoundRef(targetSession, resolvedSessionIndex));
     setGatheringParticipantsList(finalTen);
     setShowFinanzasInscriptionInChannel(false);
     setShowParticipantsGatheringModal(true);
@@ -4272,10 +4402,38 @@ export default function CastingLiveSection({
     const myId = userProfile?.id || 'user-adriana';
     const myUsername = userProfile?.username || 'adrianalima_w1';
 
+    // Celebrate and archive current round in its dedicated database, then spawn next round (REF: +1)
+    let nextCreatedRound: any = null;
+    if (currentFinanzasSession) {
+      try {
+        const { nextRound } = celebrateRoundDatabase(currentFinanzasSession.id || currentFinanzasSession, {
+          poolTotal: (currentFinanzasSession.entryFee || 10) * 10
+        });
+        nextCreatedRound = nextRound;
+      } catch (e) {
+        console.error('Error celebrating round database:', e);
+      }
+    }
+
     // Mark current session as completed and reset user participation for upcoming active sessions
     setOpenFinanzasSessions(prev => {
       const updated = prev.map(s => {
         if (currentFinanzasSession && s.id === currentFinanzasSession.id) {
+          if (nextCreatedRound) {
+            return {
+              id: nextCreatedRound.id,
+              reference: nextCreatedRound.reference,
+              roundNumber: nextCreatedRound.roundNumber,
+              roundIndex: nextCreatedRound.roundIndex,
+              title: nextCreatedRound.title,
+              brand: nextCreatedRound.brand,
+              category: nextCreatedRound.category,
+              entryFee: nextCreatedRound.entryFee,
+              presenter: nextCreatedRound.presenter,
+              participants: nextCreatedRound.participants,
+              status: 'active' as const
+            };
+          }
           return { ...s, status: 'completed' as const };
         }
         if (s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR')) {
@@ -5113,8 +5271,16 @@ export default function CastingLiveSection({
             setSystemVoiceNotification(prev => ({ ...prev, show: false }));
           }, 4000);
         } catch (err3) {
-          console.error('Camera access failed:', err3);
-          alert('⚠️ No se pudo acceder a la cámara. Por favor permite el acceso a la cámara en los permisos de tu navegador.');
+          console.warn('Camera device access fallback to simulated live stream:', err3);
+          setIsUserLiveStreamingWithCamera(true);
+          setIsLiveStreamAudioMuted(false);
+          setSystemVoiceNotification({
+            show: true,
+            message: '🔴 ¡Emisión LIVE en directo conectada!'
+          });
+          setTimeout(() => {
+            setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+          }, 4000);
         }
       }
     }
@@ -5151,6 +5317,76 @@ export default function CastingLiveSection({
       });
       setIsLiveStreamAudioMuted(!isLiveStreamAudioMuted);
     }
+  };
+
+  // 🎯 REDIRECCIÓN DIRECTA A LA PÁGINA DE 10 VENTANAS EN VIVO (captura image.png)
+  const handleNavigateTo10WindowsLivePage = async () => {
+    // 1. Activar el diseño de 10 ventanas en 2 columnas (captura image.png)
+    setScreenSplitLayout('grid-10');
+    setIsScreenSharingActive(true);
+
+    // 2. Establecer como presentadora activa a Adriana Lima (Tú) con rol de participante activa
+    const adrianaLimaUser = {
+      id: userProfile?.id || 'f-adriana-lima',
+      name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
+      username: 'adrianalima_w1',
+      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      role: 'Participante Activa (Tú)',
+      isHost: true,
+      isSelf: true
+    };
+    setSelectedFinanzasUser(adrianaLimaUser);
+    setActiveFinanzasPopupUser(adrianaLimaUser);
+
+    // 3. Activar emisión de cámara en directo
+    setIsUserLiveStreamingWithCamera(true);
+    setIsWatchingPresenterCamera(false);
+    setIsPresenterCameraFullscreen(true);
+    setIsPresenterCameraBrowserFullscreen(false);
+
+    // 4. Intentar conectar cámara en vivo (sin alertas intrusivas y con fallback a stream/foto)
+    if (!userLiveMediaStream) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: liveCameraFacingMode,
+            width: { ideal: 1080 },
+            height: { ideal: 1920 }
+          },
+          audio: true
+        });
+        setUserLiveMediaStream(stream);
+        setIsLiveStreamAudioMuted(false);
+      } catch (err1) {
+        try {
+          const stream2 = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          setUserLiveMediaStream(stream2);
+          setIsLiveStreamAudioMuted(false);
+        } catch (err2) {
+          try {
+            const stream3 = await navigator.mediaDevices.getUserMedia({ video: true });
+            setUserLiveMediaStream(stream3);
+            setIsLiveStreamAudioMuted(true);
+          } catch (err3) {
+            console.warn('Live stream using simulated/virtual camera:', err3);
+          }
+        }
+      }
+    }
+
+    // 5. Categoría Finanzas activa
+    setSelectedCategoryFilter('Finanzas');
+
+    // 6. Cerrar cualquier modal o menú superpuesto
+    setShowVotingProjectsModal(false);
+    setShowFinanzasInscriptionInChannel(false);
+    setShowProjectDetailsInPopup(false);
+    setDetailProjectUser(null);
+    setShowFinanzasResults(false);
+    setShowFinanzasRecount(false);
+    setIsTopControlsMenuHovered(false);
+    setMobileChannelControlsVisible(false);
+    setEnlargedWindowUser(null);
   };
 
   const [liveCameraFilter, setLiveCameraFilter] = useState<'normal' | 'beauty' | 'gold' | 'party'>('normal');
@@ -5737,13 +5973,26 @@ export default function CastingLiveSection({
       const totalElapsed = Math.max(0, Math.floor((now - startTime) / 1000));
       const sessionParticipants = currentFinanzasSession?.participants || TRABAJADORES_USERS;
 
-      if (totalElapsed < 3000) {
+      const isVotingSaved = localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
+      const isVotingCurrentlyActive = Boolean(isVotingPhaseActive || isVotingSaved);
+
+      if (isVotingCurrentlyActive && totalElapsed < 3000) {
+        // If voting phase has been initiated, advance timeline to minute 50:00 (start of 10m voting)
+        startTime = now - (3000 * 1000);
+        localStorage.setItem(sessionStartKey, String(startTime));
+      }
+
+      const activeTotalElapsed = isVotingCurrentlyActive
+        ? Math.max(3000, Math.floor((now - startTime) / 1000))
+        : totalElapsed;
+
+      if (!isVotingCurrentlyActive && activeTotalElapsed < 3000) {
         // Reset flag while presentations are still ongoing
         hasOpenedVotingModalOnFinishRef.current = false;
 
         // --- PHASE 1: 50 MINUTES OF EXPOSITIONS (10 participants x 5 minutes = 300 seconds each) ---
-        const presenterIdx = Math.min(9, Math.floor(totalElapsed / 300));
-        const remainingForPresenter = 300 - (totalElapsed % 300);
+        const presenterIdx = Math.min(9, Math.floor(activeTotalElapsed / 300));
+        const remainingForPresenter = 300 - (activeTotalElapsed % 300);
         const activePresenter = sessionParticipants[presenterIdx] || sessionParticipants[0];
 
         // Update timer dictionary
@@ -5803,11 +6052,12 @@ export default function CastingLiveSection({
         setIsVotingPhaseActive(false);
         setVotingPhaseTimer(600);
 
-      } else if (totalElapsed < 3600) {
+      } else if (activeTotalElapsed < 3600) {
         // --- PHASE 2: FINAL 10 MINUTES VOTING & DECISION (Minute 50:00 to 60:00) ---
-        const remainingVoting = 3600 - totalElapsed;
+        const remainingVoting = Math.max(0, 3600 - activeTotalElapsed);
         setIsVotingPhaseActive(true);
         setVotingPhaseTimer(remainingVoting);
+        setVotingCountdownSeconds(remainingVoting);
 
         // Mark all 10 participants as finished in queue
         setFinanzasPresentationQueue((prev) =>
@@ -6912,6 +7162,7 @@ export default function CastingLiveSection({
   const [showCreationTypeModal, setShowCreationTypeModal] = useState<boolean>(false);
   const [votingProjectSlideIndex, setVotingProjectSlideIndex] = useState<number>(0);
   const [projectTouchStartX, setProjectTouchStartX] = useState<number | null>(null);
+  const [projectTouchStartY, setProjectTouchStartY] = useState<number | null>(null);
   const [reelPrivacy, setReelPrivacy] = useState<'publico' | 'seguidores' | 'solo_yo' | 'personalizado'>('publico');
   const [allowLikes, setAllowLikes] = useState<boolean>(true);
   const [allowShares, setAllowShares] = useState<boolean>(true);
@@ -12165,17 +12416,15 @@ export default function CastingLiveSection({
 
               {/* 2. Heart (Likes) Button with dynamic count (e.g. 1762) & hover floating emojis */}
               <div className="flex flex-col items-center relative group/right-heart-zone shrink-0">
-                {/* Floating vertical menu with expanded emojis on hover */}
-                <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/right-heart-zone:flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200/90 py-2 px-1.5 rounded-full shadow-2xl shadow-black/40 ring-1 ring-black/10 animate-fade-in max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-none after:content-[''] after:absolute after:-right-3 after:inset-y-0 after:w-5 select-none">
+                {/* Floating horizontal menu with expanded emojis on hover */}
+                <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/right-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl border border-slate-200/90 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/30 ring-1 ring-black/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 select-none">
                   {[
-                    '❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '😘',
-                    '💕', '💘', '💗', '💓', '💞', '💯', '⚡', '🎁', '🥳', '👑',
-                    '🚀', '✨', '🌟', '🌹', '🌸', '🌺', '🌷', '💋', '👄', '💎',
-                    '🤍', '🤎', '💜', '💙', '💚', '💛', '🧡', '🤩', '😎', '😜',
-                    '🎀', '💃', '🕺', '🥂', '🍿', '🛍️', '👠', '🎵', '🎶', '🙌',
-                    '💫', '🎯', '💥', '🏆', '🥇', '🎈', '🪄', '🧸', '🌈', '🍦',
-                    '🍰', '🍫', '🍓', '🍒', '🌻', '🌼', '🦋', '🦄', '🕊️', '💸',
-                    '💰', '🤑', '🤝', '💪', '🙏', '👀', '🤤', '🤯', '🥵', '😻'
+                    '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                    '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                    '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                    '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                    '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                    '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
                   ].map((emoji) => (
                     <button
                       key={emoji}
@@ -12184,7 +12433,7 @@ export default function CastingLiveSection({
                         e.stopPropagation();
                         handleSendFreeEmojiReaction(emoji);
                       }}
-                      className="text-lg hover:scale-140 active:scale-90 hover:bg-slate-100/80 rounded-full p-0.5 transition-all cursor-pointer bg-transparent border-0 shrink-0"
+                      className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-slate-100 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
                       title={`Enviar ${emoji}`}
                     >
                       {emoji}
@@ -12956,23 +13205,72 @@ export default function CastingLiveSection({
 
     const handleTouchStart = (e: React.TouchEvent) => {
       setProjectTouchStartX(e.touches[0].clientX);
+      setProjectTouchStartY(e.touches[0].clientY);
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
-      if (projectTouchStartX === null) return;
+      if (projectTouchStartX === null || projectTouchStartY === null) return;
       const diffX = projectTouchStartX - e.changedTouches[0].clientX;
-      if (diffX > 40) {
-        // Swipe Left -> Next Project
-        setVotingProjectSlideIndex(prev => Math.min(prev + 1, participantsList.length - 1));
-      } else if (diffX < -40) {
-        // Swipe Right -> Previous Project
-        setVotingProjectSlideIndex(prev => Math.max(prev - 1, 0));
-      }
+      const diffY = projectTouchStartY - e.changedTouches[0].clientY;
+
       setProjectTouchStartX(null);
+      setProjectTouchStartY(null);
+
+      // Si el desplazamiento horizontal es dominante, cambiamos de proyecto
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+        if (diffX > 0) {
+          // Swipe Izquierda -> Siguiente Proyecto
+          setVotingProjectSlideIndex(prev => Math.min(prev + 1, participantsList.length - 1));
+        } else {
+          // Swipe Derecha -> Anterior Proyecto
+          setVotingProjectSlideIndex(prev => Math.max(prev - 1, 0));
+        }
+      } else if (Math.abs(diffY) > 30) {
+        // 🚀 Desplazamiento vertical dominante: desplaza la pantalla entera como en imagen.png
+        const now = Date.now();
+        if (now - lastScrollTime.current < 280) return;
+        lastScrollTime.current = now;
+
+        if (diffY > 0) {
+          setSlideDirection('up');
+          handleScrollSession('down');
+          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+        } else {
+          setSlideDirection('down');
+          handleScrollSession('up');
+          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
+        }
+      }
+    };
+
+    const handleSliderWheel = (e: React.WheelEvent) => {
+      // 🚀 Desplazamiento vertical por rueda de ratón: desplaza la pantalla entera igual que en image.png
+      if (Math.abs(e.deltaY) > 10) {
+        const now = Date.now();
+        if (now - lastScrollTime.current < 280) return;
+        lastScrollTime.current = now;
+
+        if (e.deltaY > 0) {
+          setSlideDirection('up');
+          handleScrollSession('down');
+          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+        } else {
+          setSlideDirection('down');
+          handleScrollSession('up');
+          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
+        }
+      }
     };
 
     return (
-      <div className="w-full h-full bg-white flex flex-col justify-between overflow-hidden text-slate-800 font-sans text-left select-none relative z-30">
+      <div 
+        onWheel={handleSliderWheel}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={`w-full h-full bg-white flex flex-col justify-between overflow-hidden text-slate-800 font-sans text-left select-none relative z-30 transition-transform duration-300 ${
+          slideDirection === 'up' ? 'animate-slide-up-tiktok' : slideDirection === 'down' ? 'animate-slide-down-tiktok' : ''
+        }`}
+      >
         {/* Header */}
         <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white text-slate-900 shrink-0 select-none relative z-50">
           {/* Top row: Badges on the left, Close X button on the right (matching image.png) */}
@@ -13626,66 +13924,66 @@ export default function CastingLiveSection({
             </span>
           </div>
 
-          {/* Right Controls */}
+          {/* Right Controls: Ver Proyecto (abre captura z.png con el proyecto del participante activo) y Volver */}
           <div className="flex items-center gap-1.5 xs:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => {
-                const target = enlargedWindowUser || activeFinanzasPopupUser || detailProjectUser || {
-                  id: userProfile?.id || 'user-adriana',
-                  name: userProfile?.name || 'Adriana Lima (Tú)',
-                  username: userProfile?.username || 'adrianalima',
-                  avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
-                };
+                const target = enlargedWindowUser || selectedFinanzasUser || currentFinanzasSession?.presenter || currentFinanzasSession?.participants?.[0] || TRABAJADORES_USERS[0];
 
-                const targetKey = (target.username || target.id || '').toLowerCase();
-                const isAdriana = targetKey.includes('adriana') || target.name?.toLowerCase().includes('adriana') || Boolean(target.isSelf) || Boolean(target.isHost);
-                const proj = getFinanzasProjectDetails(isAdriana ? 'user-adriana' : target.id);
-                
-                const userMedia = customProjectMedia[target.id] || 
-                  (isAdriana ? (customProjectMedia['user-adriana'] || customProjectMedia['adrianalima']) : null) || 
-                  customProjectMedia['default'] || [];
-                
-                const imgMedia = userMedia.filter((m: any) => m.type === 'image');
-                const defaultAdrianaImage = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400';
-                const primaryImage = imgMedia[0]?.url || (isAdriana ? defaultAdrianaImage : target.avatar);
-                
-                const galleryItems = (imgMedia.length > 0 ? imgMedia : [
-                  { url: primaryImage, title: proj.title },
-                  { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' },
-                  { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=85&w=1400', title: 'Colección Alta Costura' }
-                ]).map((item: any) => ({
-                  src: item.url,
-                  alt: item.title || proj.title,
-                  title: proj.title || target.name || 'Proyecto Oficial',
-                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
-                  badge: 'PROYECTO AUDITADO Y VERIFICADO'
-                }));
+                const participantsList = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
+                  ? currentSessionParticipants10
+                  : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+                    ? currentFinanzasSession.participants
+                    : TRABAJADORES_USERS;
 
-                openImageLightbox({
-                  src: primaryImage,
-                  alt: proj.title || target.name,
-                  title: proj.title || target.name || 'Proyecto Oficial',
-                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
-                  badge: 'PROYECTO AUDITADO Y VERIFICADO',
-                  images: galleryItems,
-                  currentIndex: 0
+                const targetId = String(target?.id || '').toLowerCase().trim();
+                const targetName = String(target?.name || '').toLowerCase().trim();
+                const targetUsername = String(target?.username || '').toLowerCase().trim();
+
+                let targetIdx = participantsList.findIndex((p) => {
+                  const pId = String(p.id || '').toLowerCase().trim();
+                  const pName = String(p.name || '').toLowerCase().trim();
+                  const pUser = String(p.username || '').toLowerCase().trim();
+
+                  if (targetId && pId && (targetId === pId || targetId.includes(pId) || pId.includes(targetId))) return true;
+                  if (targetUsername && pUser && (targetUsername === pUser || targetUsername.includes(pUser) || pUser.includes(targetUsername))) return true;
+                  if (targetName && pName && (targetName === pName || targetName.includes(pName) || pName.includes(targetName))) return true;
+                  const isTargetSelf = Boolean(target.isSelf || target.isHost || targetName.includes('adriana') || targetId.includes('adriana') || targetId === userProfile?.id);
+                  const isPSelf = Boolean(p.isSelf || p.isHost || pName.includes('adriana') || pId.includes('adriana') || pId === 'user' || pId === 'user-adriana');
+                  if (isTargetSelf && isPSelf) return true;
+                  return false;
                 });
+
+                if (targetIdx === -1) {
+                  const isTargetSelf = Boolean(target.isSelf || target.isHost || targetName.includes('adriana') || targetId.includes('adriana') || targetId === userProfile?.id);
+                  if (isTargetSelf) {
+                    const selfIdx = participantsList.findIndex(p => p.isSelf || p.name?.toLowerCase().includes('adriana') || p.id === 'user-adriana' || p.id === 'user');
+                    targetIdx = selfIdx !== -1 ? selfIdx : (participantsList.length - 1);
+                  } else {
+                    targetIdx = 0;
+                  }
+                }
+
+                setVotingProjectSlideIndex(targetIdx);
+                setShowVotingProjectsModal(true);
               }}
-              className="bg-white hover:bg-slate-100 text-slate-950 text-[10px] sm:text-[11px] font-black px-2.5 sm:px-3 py-1.5 rounded-xl border border-white shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1"
-              title="Ver imagen del proyecto a pantalla completa"
+              className="bg-white hover:bg-slate-100 text-slate-950 text-[10px] sm:text-[11px] font-black px-2.5 sm:px-3 py-1.5 rounded-xl border border-white shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1.5"
+              title={`Ver proyecto de ${enlargedWindowUser?.name || 'la participante'}`}
+              id="btn-ver-proyecto-enlarged-window"
             >
-              <span>📋 Ver Proyecto</span>
+              <span className="text-sm">📋</span>
+              <span>VER PROYECTO</span>
             </button>
 
             <button
               type="button"
               onClick={() => setEnlargedWindowUser(null)}
-              className="bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-[11px] font-black px-2.5 sm:px-3.5 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center gap-1 border border-red-500"
-              title="Cerrar y volver a las ventanas"
+              className="bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-[11px] font-black px-3 sm:px-4 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center justify-center border border-red-500"
+              title="Volver a las ventanas"
               id="btn-close-enlarged-window"
             >
-              <span>Volver a las ventanas ✕</span>
+              <span>Volver</span>
             </button>
           </div>
         </div>
@@ -13852,6 +14150,16 @@ export default function CastingLiveSection({
             </div>
           )}
         </div>
+
+        {/* 🗳️ Modal de Votación y Proyectos de los Participantes (captura z.png) */}
+        {showVotingProjectsModal && (
+          <div 
+            className="absolute inset-0 z-[100] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto rounded-[40px] sm:rounded-[48px]"
+            id="enlarged-voting-projects-modal"
+          >
+            {renderSingleProjectSlider()}
+          </div>
+        )}
       </div>
     );
   };
@@ -25539,6 +25847,10 @@ try {
                   setVotingPhaseTimer={setVotingPhaseTimer}
                   setSystemVoiceNotification={setSystemVoiceNotification}
                   getFinanzasRoundRef={getFinanzasRoundRef}
+                  onOpenRoundDatabaseModal={(roundId) => {
+                    setRoundDatabaseModalTargetId(roundId);
+                    setIsRoundDatabaseModalOpen(true);
+                  }}
                   handleFinishRetransmissionAndPassToNextParticipant={handleFinishRetransmissionAndPassToNextParticipant}
                   isBroadcastMicOn={isBroadcastMicOn}
                   isMuted={isMuted}
@@ -25553,6 +25865,7 @@ try {
                   liveCameraFacingMode={liveCameraFacingMode}
                   isWatchingPresenterCamera={isWatchingPresenterCamera}
                   handleToggleUserCameraLiveBroadcast={handleToggleUserCameraLiveBroadcast}
+                  onNavigateTo10WindowsLive={handleNavigateTo10WindowsLivePage}
                   setIsWatchingPresenterCamera={setIsWatchingPresenterCamera}
                   isPresenterCameraFullscreen={isPresenterCameraFullscreen}
                   setIsPresenterCameraFullscreen={setIsPresenterCameraFullscreen}
@@ -25572,33 +25885,7 @@ try {
                   setShowProjectDetailsInPopup={setShowProjectDetailsInPopup}
                   detailProjectUser={detailProjectUser}
                   showProjectDetailsInPopup={showProjectDetailsInPopup}
-                  renderProjectDetailsContent={() => (detailProjectUser || showProjectDetailsInPopup) ? (
-                    <ProjectFullscreenDossierModal
-                      detailProjectUser={detailProjectUser}
-                      showProjectDetailsInPopup={showProjectDetailsInPopup}
-                      activeFinanzasPopupUser={activeFinanzasPopupUser}
-                      selectedFinanzasUser={selectedFinanzasUser}
-                      currentFinanzasSession={activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession}
-                      getFinanzasProjectDetails={getFinanzasProjectDetails}
-                      customProjectMedia={customProjectMedia}
-                      setCustomProjectMedia={setCustomProjectMedia}
-                      newMediaImageUrl={newMediaImageUrl}
-                      setNewMediaImageUrl={setNewMediaImageUrl}
-                      newMediaVideoUrl={newMediaVideoUrl}
-                      setNewMediaVideoUrl={setNewMediaVideoUrl}
-                      detailModalStep={detailModalStep}
-                      setDetailModalStep={setDetailModalStep}
-                      onClose={() => {
-                        setDetailProjectUser(null);
-                        setShowProjectDetailsInPopup(false);
-                      }}
-                      onVoteProject={isCurrentUserParticipatingInCurrentSession ? ((user) => {
-                        handleVoteForProject(user);
-                        setDetailProjectUser(null);
-                        setShowProjectDetailsInPopup(false);
-                      }) : undefined}
-                    />
-                  ) : null}
+                  renderProjectDetailsContent={() => null}
                   showFinanzasRecount={showFinanzasRecount}
                   renderFinanzasRecountContent={renderFinanzasRecountContent}
                   showFinanzasResults={showFinanzasResults}
@@ -25733,17 +26020,15 @@ try {
 
                       {/* Heart Like (1762) */}
                       <div className="flex flex-col items-center shrink-0 relative group/channel-heart-zone">
-                        {/* Floating vertical menu with expanded emojis on hover */}
-                        <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200/90 py-2 px-1.5 rounded-full shadow-2xl shadow-black/40 ring-1 ring-black/10 animate-fade-in max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-none after:content-[''] after:absolute after:-right-3 after:inset-y-0 after:w-5 select-none">
+                        {/* Floating horizontal menu with expanded emojis on hover */}
+                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl border border-slate-200/90 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/30 ring-1 ring-black/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 select-none">
                           {[
-                            '❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '😘',
-                            '💕', '💘', '💗', '💓', '💞', '💯', '⚡', '🎁', '🥳', '👑',
-                            '🚀', '✨', '🌟', '🌹', '🌸', '🌺', '🌷', '💋', '👄', '💎',
-                            '🤍', '🤎', '💜', '💙', '💚', '💛', '🧡', '🤩', '😎', '😜',
-                            '🎀', '💃', '🕺', '🥂', '🍿', '🛍️', '👠', '🎵', '🎶', '🙌',
-                            '💫', '🎯', '💥', '🏆', '🥇', '🎈', '🪄', '🧸', '🌈', '🍦',
-                            '🍰', '🍫', '🍓', '🍒', '🌻', '🌼', '🦋', '🦄', '🕊️', '💸',
-                            '💰', '🤑', '🤝', '💪', '🙏', '👀', '🤤', '🤯', '🥵', '😻'
+                            '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                            '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                            '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                            '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                            '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                            '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
                           ].map((emoji) => (
                             <button
                               key={emoji}
@@ -25752,7 +26037,7 @@ try {
                                 e.stopPropagation();
                                 handleSendFreeEmojiReaction(emoji);
                               }}
-                              className="text-lg hover:scale-140 active:scale-90 hover:bg-slate-100/80 rounded-full p-0.5 transition-all cursor-pointer bg-transparent border-0 shrink-0"
+                              className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-slate-100 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
                               title={`Enviar ${emoji}`}
                             >
                               {emoji}
@@ -26979,7 +27264,7 @@ try {
                 )}
 
                 {/* 🎥 RETRANSMISIÓN EN PANTALLA COMPLETA EN TODO EL CANAL CON CÁMARA */}
-                {isUserLiveStreamingWithCamera && userLiveMediaStream && (
+                {(isUserLiveStreamingWithCamera || screenSplitLayout === 'grid-10' || screenSplitLayout === 'grid') && (
                   <div 
                     className="absolute inset-0 w-full h-full bg-black z-35 overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
                     id="channel-fullscreen-camera-broadcast"
@@ -26987,25 +27272,43 @@ try {
                     {/* 🪟 Ventana en grande interactiva con comentarios y regalos */}
                     {enlargedWindowUser && renderEnlargedParticipantWindow()}
 
+                    {/* 🗳️ Modal de Votación y Proyectos de los Participantes (captura z.png) */}
+                    {showVotingProjectsModal && (
+                      <div 
+                        className="absolute inset-0 z-50 bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto"
+                        id="fullscreen-broadcast-voting-projects-modal"
+                      >
+                        {renderSingleProjectSlider()}
+                      </div>
+                    )}
+
                     {/* Vídeo en directo ocupando el 100% de la pantalla cuando está en modo normal/single */}
                     {screenSplitLayout === 'single' && (
-                      <video
-                        ref={(el) => {
-                          fullscreenChannelVideoRef.current = el;
-                          if (el && userLiveMediaStream) {
-                            if (el.srcObject !== userLiveMediaStream) {
-                              el.srcObject = userLiveMediaStream;
+                      userLiveMediaStream ? (
+                        <video
+                          ref={(el) => {
+                            fullscreenChannelVideoRef.current = el;
+                            if (el && userLiveMediaStream) {
+                              if (el.srcObject !== userLiveMediaStream) {
+                                el.srcObject = userLiveMediaStream;
+                              }
+                              el.play().catch(() => {});
                             }
-                            el.play().catch(() => {});
-                          }
-                        }}
-                        autoPlay
-                        playsInline
-                        muted
-                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${
-                          liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
-                        }`}
-                      />
+                          }}
+                          autoPlay
+                          playsInline
+                          muted
+                          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${
+                            liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
+                          }`}
+                        />
+                      ) : (
+                        <img
+                          src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'}
+                          alt="Host"
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      )
                     )}
 
                     {/* 👥 PANTALLA DIVIDIDA EN DOS (ANFITRIÓN + 1 INVITADO) */}
@@ -27176,14 +27479,22 @@ try {
                         onClick={() => setIsTopControlsMenuHovered(prev => !prev)}
                         title="Pulsa para abrir o cerrar la ventana de control y canales"
                       >
-                        {/* Live Badge & Duración */}
+                        {/* Live Badge & Duración (Sincronizado con la cuenta atrás de los 10 minutos finales) */}
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse border border-red-400/50 shrink-0">
                             <span className="w-2 h-2 rounded-full bg-white shrink-0" />
                             <span>EN DIRECTO</span>
                           </div>
-                          <span className="font-mono text-white text-[11px] sm:text-xs font-black bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/15 shadow-sm shrink-0">
-                            {formatLiveStreamDuration(liveStreamTimerSeconds)}
+                          <span 
+                            className="font-mono text-white text-[11px] sm:text-xs font-black bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/15 shadow-sm shrink-0"
+                            id="header-live-countdown-timer"
+                          >
+                            {(() => {
+                              const activeSecs = (typeof votingPhaseTimer === 'number' && votingPhaseTimer >= 0) ? votingPhaseTimer : 600;
+                              const vMin = Math.floor(Math.max(0, activeSecs) / 60).toString().padStart(2, '0');
+                              const vSec = (Math.max(0, activeSecs) % 60).toString().padStart(2, '0');
+                              return `${vMin}:${vSec}`;
+                            })()}
                           </span>
 
                           {(screenSplitLayout === '50-50' || screenSplitLayout === 'grid-3') && (
@@ -27208,14 +27519,32 @@ try {
                       </div>
 
                       {/* 🔝 Botones de Acción situados arriba (Ver Proyecto, Volver a Pantalla Completa, Desactivar) */}
-                      {selectedCategoryFilter === 'Finanzas' ? (
+                      {selectedCategoryFilter === 'Finanzas' ? (() => {
+                        const sessionParticipants = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
+                          ? currentSessionParticipants10
+                          : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+                            ? currentFinanzasSession.participants
+                            : TRABAJADORES_USERS;
+
+                        const isSelectedInList = selectedFinanzasUser && sessionParticipants.some(p => 
+                          p.id === selectedFinanzasUser.id || 
+                          p.name === selectedFinanzasUser.name ||
+                          ((p.isSelf || p.name?.toLowerCase().includes('adriana')) && 
+                           (selectedFinanzasUser.isSelf || selectedFinanzasUser.name?.toLowerCase().includes('adriana')))
+                        );
+
+                        const activePresenter = isSelectedInList 
+                          ? selectedFinanzasUser 
+                          : (sessionParticipants.find(p => p.isSelf || p.name?.toLowerCase().includes('adriana')) || sessionParticipants[0]);
+
+                        return (
                         <div className="bg-slate-950/90 backdrop-blur-md p-2 sm:p-2.5 rounded-2xl border border-slate-800/90 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col gap-2 pointer-events-auto">
                           {/* Presenter Name & Role */}
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-emerald-400 overflow-hidden bg-slate-800 shrink-0">
                                 <img
-                                  src={(selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0]).avatar}
+                                  src={activePresenter.avatar}
                                   alt="Presenter"
                                   className="w-full h-full object-cover"
                                   referrerPolicy="no-referrer"
@@ -27223,10 +27552,10 @@ try {
                               </div>
                               <div className="min-w-0">
                                 <h4 className="text-white text-xs sm:text-sm font-black tracking-tight leading-tight m-0 truncate">
-                                  {(selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0]).name}
+                                  {activePresenter.name}
                                 </h4>
                                 <span className="text-emerald-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider block truncate">
-                                  {(selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0]).role || 'Participante'} • En directo
+                                  {activePresenter.role || 'Participante'} • En directo
                                 </span>
                               </div>
                             </div>
@@ -27236,73 +27565,126 @@ try {
                             </span>
                           </div>
 
-                          {/* Action buttons row: Ver Proyecto y Desactivar Cámara */}
+                          {/* Action buttons row: Proyectos (redirige a proyectos de captura z.png) y Desactivar (redirige a canales de captura z.png) */}
                           <div className="grid grid-cols-2 gap-2 pt-1" id="broadcast-bottom-actions-row">
                             <button
                               type="button"
                               onClick={() => {
-                                const rawTarget = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
-                                const isKendall = !rawTarget || rawTarget.name?.toLowerCase().includes('kendall') || rawTarget.id === 'tm-1' || rawTarget.username?.includes('kendall');
-                                const target = isKendall ? {
-                                  id: 'tm-1',
-                                  name: 'Kendall Jenner',
-                                  username: 'kendall_jenner_vip',
-                                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                                  role: 'Top Model Internacional'
-                                } : rawTarget;
-                                
-                                const targetKey = (target.username || target.id || '').toLowerCase();
-                                const isAdriana = targetKey.includes('adriana') || target.name?.toLowerCase().includes('adriana');
-                                const proj = getFinanzasProjectDetails(isAdriana ? 'user-adriana' : target.id);
-                                
-                                const userMedia = customProjectMedia[target.id] || 
-                                  (isAdriana ? (customProjectMedia['user-adriana'] || customProjectMedia['adrianalima']) : null) || 
-                                  customProjectMedia['default'] || [];
-                                
-                                const imgMedia = userMedia.filter((m: any) => m.type === 'image');
-                                const defaultAdrianaImage = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=1400';
-                                const primaryImage = imgMedia[0]?.url || (isAdriana ? defaultAdrianaImage : target.avatar);
+                                // 🎯 Redirigir a los proyectos de la pagina de la captura z.png (Mesa de votación y proyectos)
+                                if (isUserLiveStreamingWithCamera) {
+                                  handleToggleUserCameraLiveBroadcast();
+                                }
+                                setIsWatchingPresenterCamera(false);
+                                setIsPresenterCameraFullscreen(false);
+                                setIsPresenterCameraBrowserFullscreen(false);
+                                setScreenSplitLayout('single');
 
-                                const galleryItems = (imgMedia.length > 0 ? imgMedia : [
-                                  { url: primaryImage, title: proj.title },
-                                  { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=85&w=1400', title: 'Pasarela Sostenible 2026' }
-                                ]).map((item: any) => ({
-                                  src: item.url,
-                                  alt: item.title || proj.title,
-                                  title: proj.title || target.name || 'Proyecto Oficial',
-                                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
-                                  badge: 'PROYECTO AUDITADO Y VERIFICADO'
-                                }));
+                                const target = selectedFinanzasUser || currentFinanzasSession?.presenter || currentFinanzasSession?.participants?.[0] || TRABAJADORES_USERS[0];
+                                const participantsList = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
+                                  ? currentSessionParticipants10
+                                  : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+                                    ? currentFinanzasSession.participants
+                                    : TRABAJADORES_USERS;
 
-                                openImageLightbox({
-                                  src: primaryImage,
-                                  alt: proj.title || target.name,
-                                  title: proj.title || target.name || 'Proyecto Oficial',
-                                  subtitle: `${target.name || 'Líder del Proyecto'} • ${proj.category || 'Alta Costura'}`,
-                                  badge: 'PROYECTO AUDITADO Y VERIFICADO',
-                                  images: galleryItems,
-                                  currentIndex: 0
+                                const targetId = String(target?.id || '').toLowerCase().trim();
+                                const targetName = String(target?.name || '').toLowerCase().trim();
+                                const targetUsername = String(target?.username || '').toLowerCase().trim();
+
+                                let targetIdx = participantsList.findIndex((p) => {
+                                  const pId = String(p.id || '').toLowerCase().trim();
+                                  const pName = String(p.name || '').toLowerCase().trim();
+                                  const pUser = String(p.username || '').toLowerCase().trim();
+
+                                  if (targetId && pId && (targetId === pId || targetId.includes(pId) || pId.includes(targetId))) return true;
+                                  if (targetUsername && pUser && (targetUsername === pUser || targetUsername.includes(pUser) || pUser.includes(targetUsername))) return true;
+                                  if (targetName && pName && (targetName === pName || targetName.includes(pName) || pName.includes(targetName))) return true;
+                                  const isTargetSelf = Boolean(target.isSelf || target.isHost || targetName.includes('adriana') || targetId.includes('adriana') || targetId === userProfile?.id);
+                                  const isPSelf = Boolean(p.isSelf || p.isHost || pName.includes('adriana') || pId.includes('adriana') || pId === 'user' || pId === 'user-adriana');
+                                  if (isTargetSelf && isPSelf) return true;
+                                  return false;
                                 });
+
+                                if (targetIdx === -1) {
+                                  const isTargetSelf = Boolean(target.isSelf || target.isHost || targetName.includes('adriana') || targetId.includes('adriana') || targetId === userProfile?.id);
+                                  if (isTargetSelf) {
+                                    const selfIdx = participantsList.findIndex(p => p.isSelf || p.name?.toLowerCase().includes('adriana') || p.id === 'user-adriana' || p.id === 'user');
+                                    targetIdx = selfIdx !== -1 ? selfIdx : (participantsList.length - 1);
+                                  } else {
+                                    targetIdx = 0;
+                                  }
+                                }
+
+                                setShowVotingProjectsModal(true);
+                                setVotingProjectSlideIndex(targetIdx);
+                                setShowFinanzasInscriptionInChannel(false);
+                                setShowProjectDetailsInPopup(false);
+                                setDetailProjectUser(null);
+                                setActiveFinanzasPopupUser(null);
+                                setShowFinanzasResults(false);
+                                setShowFinanzasRecount(false);
+                                setIsTopControlsMenuHovered(false);
+                                setMobileChannelControlsVisible(false);
                               }}
-                              className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-slate-200 text-center"
-                              title="Ver proyecto en pantalla completa"
+                              className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-md transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 text-center"
+                              title="Redirigir a los proyectos de la captura z.png"
                               id="btn-ver-proyecto-broadcast"
                             >
-                              <span className="truncate">📋 Ver Proyecto</span>
+                              <span className="text-sm">📋</span>
+                              <span className="truncate">PROYECTOS</span>
                             </button>
 
                             <button
                               type="button"
-                              onClick={handleToggleUserCameraLiveBroadcast}
-                              className="py-2.5 px-3 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-400 text-center"
-                              title="Desactivar cámara en directo"
+                              onClick={() => {
+                                // 🎯 Redirigir a la página de la captura z.png (donde tenemos la cuenta atrás de 10 minutos)
+                                if (isUserLiveStreamingWithCamera) {
+                                  handleToggleUserCameraLiveBroadcast();
+                                }
+                                setIsWatchingPresenterCamera(false);
+                                setIsPresenterCameraFullscreen(false);
+                                setIsPresenterCameraBrowserFullscreen(false);
+                                setScreenSplitLayout('single');
+                                setIsScreenSharingActive(false);
+                                setShowVotingProjectsModal(false);
+                                setShowFinanzasInscriptionInChannel(false);
+                                setShowProjectDetailsInPopup(false);
+                                setDetailProjectUser(null);
+                                setActiveFinanzasPopupUser(null);
+                                setShowFinanzasResults(false);
+                                setShowFinanzasRecount(false);
+
+                                // Asegurar que NO se abra el overlay de canales
+                                setIsTopControlsMenuHovered(false);
+                                setMobileChannelControlsVisible(false);
+                                if (topMenuTimeoutRef.current) {
+                                  clearTimeout(topMenuTimeoutRef.current);
+                                }
+
+                                // Activa la fase de votación de 10 minutos para mostrar la tarjeta de la captura z.png
+                                setSelectedCategoryFilter('Finanzas');
+                                const activeSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
+                                const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
+                                const now = Date.now();
+                                const currentStart = localStorage.getItem(sessionStartKey);
+                                let startTime = currentStart ? parseInt(currentStart, 10) : 0;
+                                if (!startTime || isNaN(startTime) || (now - startTime) < 3000 * 1000) {
+                                  startTime = now - (3000 * 1000);
+                                  localStorage.setItem(sessionStartKey, String(startTime));
+                                }
+                                localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                                setIsVotingPhaseActive(true);
+                                setVotingPhaseTimer(prev => (prev > 0 && prev <= 600) ? prev : 600);
+                              }}
+                              className="py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-500 text-center"
+                              title="Desactivar y volver a la página de votación con la cuenta atrás de 10 minutos (captura z.png)"
                               id="btn-desactivar-broadcast"
                             >
-                              <span>Desactivar</span>
+                              <span>DESACTIVAR</span>
                             </button>
                           </div>
                         </div>
-                      ) : (
+                        );
+                      })() : (
                         <div className="bg-slate-950/85 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/15 flex items-center justify-between gap-2 shadow-xl flex-wrap pointer-events-auto">
                           <div className="flex flex-col">
                             <span className="text-white text-xs font-black uppercase tracking-wider">
@@ -27316,9 +27698,72 @@ try {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={handleToggleUserCameraLiveBroadcast}
+                              onClick={() => {
+                                if (isUserLiveStreamingWithCamera) {
+                                  handleToggleUserCameraLiveBroadcast();
+                                }
+                                setIsWatchingPresenterCamera(false);
+                                setIsPresenterCameraFullscreen(false);
+                                setIsPresenterCameraBrowserFullscreen(false);
+                                setScreenSplitLayout('single');
+                                setShowVotingProjectsModal(true);
+                                setShowVotingProjectsModal(true);
+                                setVotingProjectSlideIndex(0);
+                                setShowFinanzasInscriptionInChannel(false);
+                                setShowProjectDetailsInPopup(false);
+                                setDetailProjectUser(null);
+                                setActiveFinanzasPopupUser(null);
+                                setShowFinanzasResults(false);
+                                setShowFinanzasRecount(false);
+                                setIsTopControlsMenuHovered(false);
+                                setMobileChannelControlsVisible(false);
+                              }}
+                              className="py-2 px-3 bg-white hover:bg-slate-100 text-slate-900 font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition active:scale-95 cursor-pointer flex items-center gap-1.5 border border-slate-200"
+                              title="Redirigir a proyectos de la captura z.png"
+                              id="btn-proyectos-broadcast-alt"
+                            >
+                              <span>📋 Proyectos</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isUserLiveStreamingWithCamera) {
+                                  handleToggleUserCameraLiveBroadcast();
+                                }
+                                setIsWatchingPresenterCamera(false);
+                                setIsPresenterCameraFullscreen(false);
+                                setIsPresenterCameraBrowserFullscreen(false);
+                                setScreenSplitLayout('single');
+                                setShowVotingProjectsModal(false);
+                                setShowFinanzasInscriptionInChannel(false);
+                                setShowProjectDetailsInPopup(false);
+                                setDetailProjectUser(null);
+                                setActiveFinanzasPopupUser(null);
+                                setShowFinanzasResults(false);
+                                setShowFinanzasRecount(false);
+                                setIsTopControlsMenuHovered(false);
+                                setMobileChannelControlsVisible(false);
+                                if (topMenuTimeoutRef.current) {
+                                  clearTimeout(topMenuTimeoutRef.current);
+                                }
+                                setSelectedCategoryFilter('Finanzas');
+                                const activeSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
+                                const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
+                                const now = Date.now();
+                                const currentStart = localStorage.getItem(sessionStartKey);
+                                let startTime = currentStart ? parseInt(currentStart, 10) : 0;
+                                if (!startTime || isNaN(startTime) || (now - startTime) < 3000 * 1000) {
+                                  startTime = now - (3000 * 1000);
+                                  localStorage.setItem(sessionStartKey, String(startTime));
+                                }
+                                localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                                setIsVotingPhaseActive(true);
+                                setVotingPhaseTimer(prev => (prev > 0 && prev <= 600) ? prev : 600);
+                              }}
                               className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition active:scale-95 cursor-pointer flex items-center gap-1.5 border border-red-400"
-                              title="Desactivar cámara en directo"
+                              title="Desactivar y volver a la página de votación con la cuenta atrás de 10 minutos (captura z.png)"
+                              id="btn-desactivar-broadcast-alt"
                             >
                               <span>Desactivar</span>
                             </button>
@@ -27329,36 +27774,64 @@ try {
 
                     {/* 👥 10 VENTANAS DE USUARIOS EN DOS COLUMNAS EN HORIZONTAL EN EL CANAL DE Z.PNG */}
                     {(screenSplitLayout === 'grid-10' || screenSplitLayout === 'grid') && (() => {
-                      const activePresenter = selectedFinanzasUser || currentFinanzasSession?.participants?.[0] || FINANZAS_USERS[0];
-                      const otherNine = FINANZAS_USERS.filter(u => u.id !== activePresenter.id).slice(0, 9);
+                      const sessionParticipants = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
+                        ? currentSessionParticipants10
+                        : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+                          ? currentFinanzasSession.participants
+                          : TRABAJADORES_USERS;
+
+                      const isSelectedInList = selectedFinanzasUser && sessionParticipants.some(p => 
+                        p.id === selectedFinanzasUser.id || 
+                        p.name === selectedFinanzasUser.name ||
+                        ((p.isSelf || p.name?.toLowerCase().includes('adriana')) && 
+                         (selectedFinanzasUser.isSelf || selectedFinanzasUser.name?.toLowerCase().includes('adriana')))
+                      );
+
+                      const activePresenter = isSelectedInList 
+                        ? selectedFinanzasUser 
+                        : (sessionParticipants.find(p => p.isSelf || p.name?.toLowerCase().includes('adriana')) || sessionParticipants[0]);
+
+                      const isPresenterSelfOrAdriana = Boolean(
+                        activePresenter?.isSelf || 
+                        activePresenter?.name?.toLowerCase().includes('adriana') || 
+                        activePresenter?.id === userProfile?.id || 
+                        activePresenter?.id === 'user-adriana'
+                      );
+
+                      const otherNine = sessionParticipants.filter(u => {
+                        if (u.id === activePresenter.id) return false;
+                        if (u.name === activePresenter.name) return false;
+                        const isUSelfOrAdriana = Boolean(
+                          u.isSelf || 
+                          u.name?.toLowerCase().includes('adriana') || 
+                          u.id === userProfile?.id || 
+                          u.id === 'user-adriana'
+                        );
+                        if (isPresenterSelfOrAdriana && isUSelfOrAdriana) return false;
+                        return true;
+                      }).slice(0, 9);
+
                       const displayTenUsers = [activePresenter, ...otherNine];
+                      if (displayTenUsers.length < 10) {
+                        for (const u of sessionParticipants) {
+                          if (!displayTenUsers.some(d => d.id === u.id || d.name === u.name)) {
+                            displayTenUsers.push(u);
+                            if (displayTenUsers.length === 10) break;
+                          }
+                        }
+                      }
 
                       return (
                         <div className="relative z-20 flex-1 w-full min-h-0 px-2 sm:px-3 overflow-y-auto custom-scrollbar flex flex-col gap-2 my-1 pointer-events-auto" id="channel-fullscreen-10-windows">
-                          {/* Top Header Banner */}
-                          <div className="bg-slate-900/95 border border-purple-500/80 px-2.5 py-1.5 rounded-xl text-white flex items-center justify-between text-[10px] font-black shrink-0 shadow-xl">
-                            <div className="flex items-center gap-1.5 text-purple-300 min-w-0">
-                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0" />
-                              <span className="uppercase tracking-wider truncate font-black">
-                                👥 10 Ventanas de Usuarios • 2 Columnas en Horizontal
+                          {/* Top Header Banner (Strictly matching image.png) */}
+                          <div className="flex items-center justify-start gap-2 shrink-0 my-1 px-0.5">
+                            <div className="bg-[#141b2d] border border-slate-700/80 px-2.5 py-1.5 rounded-xl flex items-center gap-2 text-white text-[10px] font-black shadow-md min-w-0">
+                              <span className="truncate uppercase tracking-wider text-slate-200">
+                                👥 10 VENTANAS ...
                               </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="bg-purple-600 text-white text-[8.5px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider shadow-xs">
-                                10 / 10 En Vivo
+                              <span className="bg-[#241f3d] border border-purple-500/60 text-purple-200 text-[9px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase shrink-0">
+                                10 / 10 EN VIVO
                               </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setScreenSplitLayout('single');
-                                  setIsScreenSharingActive(false);
-                                }}
-                                className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[8px] font-bold px-1.5 py-0.5 rounded border border-slate-600 cursor-pointer"
-                                title="Volver a pantalla completa"
-                              >
-                                ✕ Pantalla Completa
-                              </button>
                             </div>
                           </div>
 
@@ -27383,7 +27856,7 @@ try {
                                       isSelf
                                     });
                                   }}
-                                  className="relative flex flex-col bg-slate-900 rounded-xl overflow-hidden border-2 border-purple-500/60 hover:border-purple-400 shadow-md group transition cursor-pointer min-h-[115px] sm:min-h-[135px]"
+                                  className="relative flex flex-col bg-slate-900 rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400 shadow-lg group transition cursor-pointer aspect-[9/14] min-h-[170px]"
                                   id={`channel-user-window-${i + 1}`}
                                 >
                                   {/* Window Live Content */}
@@ -27412,19 +27885,19 @@ try {
                                       />
                                     )}
 
-                                    {/* Live Badge */}
-                                    <div className="absolute top-1 left-1 z-10">
-                                      <span className="bg-black/80 backdrop-blur-xs text-[6.5px] font-black text-emerald-400 px-1 py-0.2 rounded flex items-center gap-0.5 border border-emerald-500/40 leading-none shadow-xs">
-                                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-ping inline-block" />
+                                    {/* Live Badge (Strictly matching image.png) */}
+                                    <div className="absolute top-2 left-2 z-10">
+                                      <span className="bg-[#0b101c]/85 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
                                         EN VIVO
                                       </span>
                                     </div>
 
-                                    {/* Bottom Info Bar */}
-                                    <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-1 sm:p-1.5 flex flex-col justify-end">
-                                      <p className="text-[8px] sm:text-[9px] font-black text-white truncate leading-tight m-0">{u.name}</p>
-                                      <p className="text-[6.5px] sm:text-[7px] text-purple-300 font-bold truncate leading-none mt-0.5 flex items-center gap-0.5 m-0">
-                                        <span className="w-1 h-1 rounded-full bg-purple-400 inline-block shrink-0" />
+                                    {/* Bottom Info Bar (Strictly matching image.png) */}
+                                    <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
+                                      <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">{u.name}</p>
+                                      <p className="text-[7.5px] sm:text-[8px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
                                         <span>{u.role}</span>
                                       </p>
                                     </div>
@@ -27674,7 +28147,7 @@ try {
                   <div 
                     onWheel={(e) => {
                       e.stopPropagation();
-                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser) return;
                       if (sessionScrollLockRef.current) return;
                       if (Math.abs(e.deltaY) < 15) return;
                       
@@ -27690,13 +28163,13 @@ try {
                       }
                     }}
                     onTouchStart={(e) => {
-                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser) return;
                       if (e.touches && e.touches[0]) {
                         setTouchStartY(e.touches[0].clientY);
                       }
                     }}
                     onTouchEnd={(e) => {
-                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal) return;
+                      if (showFinanzasResults || showFinanzasRecount || showProjectDetailsInPopup || detailProjectUser) return;
                       if (touchStartY !== null && e.changedTouches && e.changedTouches[0]) {
                         const deltaY = e.changedTouches[0].clientY - touchStartY;
                         if (Math.abs(deltaY) > 35) {
@@ -27867,7 +28340,18 @@ try {
                               <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
                                 <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes</span>
                                 <span className="text-slate-500">•</span>
-                                <span className="text-amber-300 font-black">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setRoundDatabaseModalTargetId(currentFinanzasSession?.id);
+                                    setIsRoundDatabaseModalOpen(true);
+                                  }}
+                                  className="text-amber-300 font-black hover:text-amber-200 transition-all flex items-center gap-1 cursor-pointer hover:underline"
+                                  title="Ver base de datos independiente de esta ronda"
+                                >
+                                  <Database className="w-2.5 h-2.5 text-cyan-400" />
+                                  <span>{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
+                                </button>
                               </span>
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                             </div>
@@ -28004,46 +28488,9 @@ try {
                           );
                         })()}
 
-                    {/* CONDITIONAL RENDER: EMBEDDED PROJECT DOSSIER, VOTING PROJECTS OR RESULTS DIRECTLY INSIDE THE CHANNEL FRAME */}
-                    {(detailProjectUser || showProjectDetailsInPopup) ? (
+                    {/* CONDITIONAL RENDER: VOTING PROJECTS OR RESULTS DIRECTLY INSIDE THE CHANNEL FRAME */}
+                    {showVotingProjectsModal ? (
                       <div 
-                        onWheel={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
-                        className="absolute inset-0 z-[280] bg-slate-950 flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto"
-                        id="channel-project-dossier-in-channel-wrapper"
-                      >
-                        <ProjectFullscreenDossierModal
-                          detailProjectUser={detailProjectUser}
-                          showProjectDetailsInPopup={showProjectDetailsInPopup}
-                          activeFinanzasPopupUser={activeFinanzasPopupUser}
-                          selectedFinanzasUser={selectedFinanzasUser}
-                          currentFinanzasSession={currentFinanzasSession}
-                          getFinanzasProjectDetails={getFinanzasProjectDetails}
-                          customProjectMedia={customProjectMedia}
-                          setCustomProjectMedia={setCustomProjectMedia}
-                          newMediaImageUrl={newMediaImageUrl}
-                          setNewMediaImageUrl={setNewMediaImageUrl}
-                          newMediaVideoUrl={newMediaVideoUrl}
-                          setNewMediaVideoUrl={setNewMediaVideoUrl}
-                          detailModalStep={detailModalStep}
-                          setDetailModalStep={setDetailModalStep}
-                          onClose={() => {
-                            setDetailProjectUser(null);
-                            setShowProjectDetailsInPopup(false);
-                          }}
-                          onVoteProject={isCurrentUserParticipatingInCurrentSession ? ((user) => {
-                            handleVoteForProject(user);
-                            setDetailProjectUser(null);
-                            setShowProjectDetailsInPopup(false);
-                          }) : undefined}
-                        />
-                      </div>
-                    ) : showVotingProjectsModal ? (
-                      <div 
-                        onWheel={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
                         className="absolute inset-0 z-[320] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto"
                       >
                         {renderSingleProjectSlider()}
@@ -28082,7 +28529,7 @@ try {
                               </div>
                             </div>
 
-                            {/* Quick selector tabs for all 6 rounds */}
+                            {/* Quick selector tabs for all rounds */}
                             <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none shrink-0 px-3 box-border">
                               {activeSessionsOnly.map((sess, idx) => {
                                 const isSel = idx === (activeFinanzasSessionIndex % activeSessionsOnly.length);
@@ -28091,6 +28538,7 @@ try {
                                   sess.entryFee === 100 ? 'Casual' :
                                   sess.entryFee === 1000 ? 'Glamour' :
                                   sess.entryFee === 10000 ? 'Classic' : 'High Fashion';
+                                const refStr = getFinanzasRoundRef(sess, idx);
                                 return (
                                   <button
                                     key={sess.id}
@@ -28102,7 +28550,7 @@ try {
                                         : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800'
                                     }`}
                                   >
-                                    {shortName} ({feeStr})
+                                    {shortName} {sess.entryFee === 10 ? refStr : `(${feeStr})`}
                                   </button>
                                 );
                               })}
@@ -28126,12 +28574,14 @@ try {
                                 {/* Active Center Card */}
                                 <div className="flex-1 min-w-0 max-w-full mx-auto">
                                   {(() => {
-                                    const isPinkStreetwear = activeFee === 10 || currentSession?.id === 'sess-trabajadores-1' || currentSession?.title?.toUpperCase().includes('STREETWEAR') || currentSession?.category?.toUpperCase().includes('STREETWEAR');
+                                    const isPinkStreetwear = activeFee === 10 || currentSession?.id === 'sess-trabajadores-1' || currentSession?.id === 'sess-streetwear-ref-2' || currentSession?.title?.toUpperCase().includes('STREETWEAR') || currentSession?.category?.toUpperCase().includes('STREETWEAR');
                                     const isCasualLifestyle = activeFee === 100 || currentSession?.id === 'sess-emprendedores-1' || currentSession?.title?.toUpperCase().includes('CASUAL') || currentSession?.category?.toUpperCase().includes('CASUAL');
                                     const isGlamour = activeFee === 1000 || currentSession?.id === 'sess-empresarios-1' || currentSession?.title?.toUpperCase().includes('GLAMOUR') || currentSession?.category?.toUpperCase().includes('GLAMOUR');
                                     const isClassic = activeFee === 10000 || currentSession?.id === 'sess-topmodels-1';
                                     const isHighFashion100k = activeFee === 100000 || currentSession?.id === 'sess-inversores-1';
                                     const isHighFashion1m = activeFee >= 1000000 || currentSession?.id === 'sess-millonarios-1';
+
+                                    const currentRefStr = getFinanzasRoundRef(currentSession, activeFinanzasSessionIndex);
 
                                     const badgeText = isPinkStreetwear ? 'ROUND STREETWEAR & URBAN' :
                                       isCasualLifestyle ? 'ROUND CASUAL & LIFESTYLE' :
@@ -28141,7 +28591,7 @@ try {
                                       isHighFashion1m ? 'RONDA HIGH FASHION 👠' :
                                       (currentSession?.title?.toUpperCase() || 'RONDA ACTIVA');
 
-                                    const titleText = isPinkStreetwear ? 'Round STREETWEAR & URBAN' :
+                                    const titleText = isPinkStreetwear ? `Round STREETWEAR & URBAN (${currentRefStr})` :
                                       isCasualLifestyle ? 'Round CASUAL & LIFESTYLE' :
                                       isGlamour ? 'Ronda Glamour ✨' :
                                       isClassic ? 'Ronda Elegant & Classic 🤍' :
@@ -28162,6 +28612,9 @@ try {
                                           <div className="flex justify-between items-start gap-1">
                                             <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3CBD7] bg-[#FCEEF3] text-slate-900 leading-none truncate max-w-full">
                                               {badgeText}
+                                            </span>
+                                            <span className="text-[9px] sm:text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 border border-amber-500 shrink-0">
+                                              {currentRefStr}
                                             </span>
                                           </div>
 
@@ -28606,36 +29059,6 @@ try {
                       })()
                     ) : (showFinanzasRecount && selectedCategoryFilter === 'Finanzas') ? (
                       renderFinanzasRecountContent()
-                    ) : (showProjectDetailsInPopup || detailProjectUser) ? (
-                      <div 
-                        onWheel={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
-                        className="absolute inset-0 z-[350] bg-[#070b14] flex flex-col w-full h-full overflow-hidden text-white font-sans text-left animate-fade-in select-none pointer-events-auto"
-                        id="channel-embedded-dossier-window"
-                      >
-                        <ProjectFullscreenDossierModal
-                          detailProjectUser={detailProjectUser}
-                          showProjectDetailsInPopup={showProjectDetailsInPopup}
-                          activeFinanzasPopupUser={activeFinanzasPopupUser}
-                          selectedFinanzasUser={selectedFinanzasUser}
-                          currentFinanzasSession={currentFinanzasSession}
-                          getFinanzasProjectDetails={getFinanzasProjectDetails}
-                          customProjectMedia={customProjectMedia}
-                          setCustomProjectMedia={setCustomProjectMedia}
-                          newMediaImageUrl={newMediaImageUrl}
-                          setNewMediaImageUrl={setNewMediaImageUrl}
-                          newMediaVideoUrl={newMediaVideoUrl}
-                          setNewMediaVideoUrl={setNewMediaVideoUrl}
-                          detailModalStep={detailModalStep}
-                          setDetailModalStep={setDetailModalStep}
-                          onClose={() => {
-                            setShowProjectDetailsInPopup(false);
-                            setDetailProjectUser(null);
-                            setActiveFinanzasPopupUser(null);
-                          }}
-                        />
-                      </div>
                     ) : (
                       <>
                         {/* 🏢 CENTRAL STAGE: VOICE PRESENTATION & 5-MINUTE COUNTDOWN */}
@@ -28681,7 +29104,19 @@ try {
                               <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-300 font-mono tracking-wider uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-700/80 flex items-center gap-1.5">
                                 <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes</span>
                                 <span className="text-slate-500">•</span>
-                                <span className="text-amber-300 font-black tracking-wider" id="finanzas-round-ref-badge-bottom">{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setRoundDatabaseModalTargetId(currentFinanzasSession?.id);
+                                    setIsRoundDatabaseModalOpen(true);
+                                  }}
+                                  className="text-amber-300 font-black tracking-wider hover:text-amber-200 transition-all flex items-center gap-1 cursor-pointer hover:underline"
+                                  title="Ver base de datos independiente de esta ronda"
+                                  id="finanzas-round-ref-badge-bottom"
+                                >
+                                  <Database className="w-2.5 h-2.5 text-cyan-400" />
+                                  <span>{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
+                                </button>
                               </span>
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                             </div>
@@ -29103,38 +29538,37 @@ try {
                                         </div>
                                       </div>
 
-                                      {/* Actions during voting phase: Votar Proyectos -> Redirige a la Mesa de Votación (captura z.png) */}
-                                      <div className="mt-2.5 w-full box-border">
+                                      {/* Actions during voting phase: Votar Proyectos and LIVE (Strictly matching image.png) */}
+                                      <div className="mt-2.5 w-full flex flex-col gap-2 box-border">
                                         <button
                                           type="button"
                                           onClick={() => {
                                             setShowVotingProjectsModal(true);
                                             setVotingProjectSlideIndex(0);
                                           }}
-                                          className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10.5px] sm:text-[11.5px] py-2.5 px-3 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-rose-400/80 box-border"
+                                          className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-xs sm:text-sm py-2.5 sm:py-3 px-4 rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border border-slate-200 flex items-center justify-center gap-2 cursor-pointer box-border"
                                           id="btn-votar-proyectos-countdown-z"
                                         >
-                                          <span>🗳️</span>
-                                          <span className="truncate">Votar Proyectos</span>
+                                          <span className="text-base">📁</span>
+                                          <span>VOTAR PROYECTOS</span>
                                         </button>
-                                      </div>
 
-                                      {/* 🎥 Botón Cámara para retransmitir en directo -> ahora Live */}
-                                      <div className="mt-2 w-full box-border">
                                         <button
                                           type="button"
-                                          onClick={handleToggleUserCameraLiveBroadcast}
-                                          className={`w-full py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-lg box-border ${
-                                            isUserLiveStreamingWithCamera
+                                          onClick={() => {
+                                            handleNavigateTo10WindowsLivePage();
+                                          }}
+                                          className={`w-full py-2.5 sm:py-3 px-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
+                                            (isPresenterUser ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera)
                                               ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.55)] animate-pulse'
-                                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200 shadow-md'
+                                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                                           }`}
                                           id="btn-camara-voting"
-                                          title={isUserLiveStreamingWithCamera ? "Desconectar cámara Live" : "Conectar cámara Live"}
+                                          title="LIVE"
                                         >
                                           <Camera className="w-4 h-4 shrink-0 text-current" />
-                                          <span>Live</span>
-                                          {isUserLiveStreamingWithCamera && (
+                                          <span>LIVE</span>
+                                          {(isPresenterUser ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera) && (
                                             <span className="ml-1.5 px-2 py-0.5 bg-red-950/90 text-white text-[9px] font-mono rounded-full border border-red-400/80 animate-pulse">
                                               🔴 EN DIRECTO
                                             </span>
@@ -29357,7 +29791,7 @@ try {
                                       onClick={() => {
                                         // Ensure the current session is selected
                                         const currentSessionId = currentFinanzasSession?.id;
-                                        const currIdx = activeSessionsOnly.findIndex(s => s.id === currentSessionId || s.entryFee === currentSessionFeeInfo.fee);
+                                        const currIdx = activeSessionsOnly.findIndex(s => s.id === currentSessionId);
                                         if (currIdx !== -1) {
                                           setActiveFinanzasSessionIndex(currIdx);
                                         }
@@ -29372,10 +29806,10 @@ try {
                                           // Directly open waiting room (sala de espera) for this round
                                           setGatheringSessionTitle(currentFinanzasSession?.title || 'Round STREETWEAR & URBAN');
                                           setGatheringSessionFee(currentSessionFeeInfo.fee);
-                                          setGatheringSessionRef(getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex));
+                                          setGatheringSessionRef(getFinanzasRoundRef(currentFinanzasSession, currIdx !== -1 ? currIdx : activeFinanzasSessionIndex));
                                           setShowParticipantsGatheringModal(true);
                                         } else {
-                                          // Inscribirse directly from zz.png and redirect to sala de espera
+                                          // Inscribirse directly and redirect to sala de espera & REF: 2
                                           handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
                                         }
                                       }}
@@ -30061,7 +30495,7 @@ try {
 
                         {/* 10 Application Windows Grid (Strictly 2 Columns horizontally) */}
                         <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full flex-1 min-h-0">
-                          {FINANZAS_USERS.slice(0, 10).map((u, i) => {
+                          {(((currentSessionParticipants10 && currentSessionParticipants10.length >= 10) ? currentSessionParticipants10 : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10) ? currentFinanzasSession.participants : TRABAJADORES_USERS).slice(0, 10)).map((u, i) => {
                             const ctrl = financeControlsList.find(c => c.id === u.id);
                             const micOn = ctrl ? ctrl.micOn : true;
                             const camOn = ctrl ? ctrl.camOn : true;
@@ -31420,31 +31854,6 @@ try {
                         </div>
 
                       </div>
-                    ) : showProjectDetailsInPopup ? (
-                      /* 📊 EMBEDDED DETAILED PROJECT VIEW MATCHING image.png INCRUSTADA DENTRO DEL CANAL CON DISEÑO DARK LUXURY za.png */
-                      <div className="absolute inset-0 w-full h-full flex flex-col bg-[#070b14] text-white font-sans text-left overflow-hidden animate-fade-in z-[200] select-none pointer-events-auto">
-                        <ProjectFullscreenDossierModal
-                          detailProjectUser={detailProjectUser}
-                          showProjectDetailsInPopup={showProjectDetailsInPopup}
-                          activeFinanzasPopupUser={activeFinanzasPopupUser}
-                          selectedFinanzasUser={selectedFinanzasUser}
-                          currentFinanzasSession={currentFinanzasSession}
-                          getFinanzasProjectDetails={getFinanzasProjectDetails}
-                          customProjectMedia={customProjectMedia}
-                          setCustomProjectMedia={setCustomProjectMedia}
-                          newMediaImageUrl={newMediaImageUrl}
-                          setNewMediaImageUrl={setNewMediaImageUrl}
-                          newMediaVideoUrl={newMediaVideoUrl}
-                          setNewMediaVideoUrl={setNewMediaVideoUrl}
-                          detailModalStep={detailModalStep}
-                          setDetailModalStep={setDetailModalStep}
-                          onClose={() => {
-                            setShowProjectDetailsInPopup(false);
-                            setDetailProjectUser(null);
-                          }}
-                          onVoteProject={isCurrentUserParticipatingInCurrentSession ? ((user) => handleVoteForProject(user)) : undefined}
-                        />
-                      </div>
                     ) : (
                       /* 🎬 DETAILS VIEW MATCHING CAPTURE ZXSA.PNG */
                       <>
@@ -32509,16 +32918,14 @@ try {
                   {/* Heart Button Area */}
                   <div className="flex flex-col items-center shrink-0 relative group/video-heart-zone">
                     {/* Floating vertical menu with expanded emojis on hover */}
-                    <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/video-heart-zone:flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200/90 py-2 px-1.5 rounded-full shadow-2xl shadow-black/40 ring-1 ring-black/10 animate-fade-in max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-none after:content-[''] after:absolute after:-right-3 after:inset-y-0 after:w-5 select-none">
+                    <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/video-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl border border-slate-200/90 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/30 ring-1 ring-black/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 select-none">
                       {[
-                        '❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '😘',
-                        '💕', '💘', '💗', '💓', '💞', '💯', '⚡', '🎁', '🥳', '👑',
-                        '🚀', '✨', '🌟', '🌹', '🌸', '🌺', '🌷', '💋', '👄', '💎',
-                        '🤍', '🤎', '💜', '💙', '💚', '💛', '🧡', '🤩', '😎', '😜',
-                        '🎀', '💃', '🕺', '🥂', '🍿', '🛍️', '👠', '🎵', '🎶', '🙌',
-                        '💫', '🎯', '💥', '🏆', '🥇', '🎈', '🪄', '🧸', '🌈', '🍦',
-                        '🍰', '🍫', '🍓', '🍒', '🌻', '🌼', '🦋', '🦄', '🕊️', '💸',
-                        '💰', '🤑', '🤝', '💪', '🙏', '👀', '🤤', '🤯', '🥵', '😻'
+                        '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                        '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                        '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                        '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                        '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                        '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
                       ].map((emoji) => (
                         <button
                           key={emoji}
@@ -32527,7 +32934,7 @@ try {
                             e.stopPropagation();
                             handleSendFreeEmojiReaction(emoji);
                           }}
-                          className="text-lg hover:scale-140 active:scale-90 hover:bg-slate-100/80 rounded-full p-0.5 transition-all cursor-pointer bg-transparent border-0 shrink-0"
+                          className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-slate-100 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
                           title={`Enviar ${emoji}`}
                         >
                           {emoji}
@@ -32639,9 +33046,16 @@ try {
             >
                 {/* Like button with count (43.2K) - Queda marcado y lanza lluvia de corazones */}
                 <div className="flex flex-col items-center relative group/channel-heart-zone">
-                  {/* Hover quick reaction bar */}
-                  <div className="absolute right-[calc(100%+10px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-col items-center gap-1 bg-[#0a0e1a]/95 backdrop-blur-md border border-slate-700/80 py-2 px-1.5 rounded-full shadow-2xl animate-fade-in max-h-[260px] overflow-y-auto scrollbar-none select-none">
-                    {['❤️', '💖', '🔥', '👏', '😍', '🎉', '👍', '⭐', '🥰', '🚀', '💎', '💯'].map((emoji) => (
+                  {/* Floating horizontal emoji glossary on hover (captura image.png) */}
+                  <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-[#0a0e1a]/95 backdrop-blur-xl border border-slate-700/80 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                    {[
+                      '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                      '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                      '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                      '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                      '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                      '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                    ].map((emoji) => (
                       <button
                         key={emoji}
                         type="button"
@@ -32649,7 +33063,7 @@ try {
                           e.stopPropagation();
                           handleSendFreeEmojiReaction(emoji);
                         }}
-                        className="text-base hover:scale-130 active:scale-95 transition-all cursor-pointer bg-transparent border-0 shrink-0 p-0.5"
+                        className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-white/15 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
                         title={`Enviar ${emoji}`}
                       >
                         {emoji}
@@ -33580,7 +33994,23 @@ try {
         currentUserProfile={userProfile}
         userSlotIndex={userParticipantSlotIndex !== null ? userParticipantSlotIndex : targetUserArrivalSlot}
         onComplete={handleGatheringComplete}
-        onClose={() => setShowParticipantsGatheringModal(false)}
+        onClose={() => {
+          setShowParticipantsGatheringModal(false);
+          const enrolledId = localStorage.getItem('finanzas_target_session_id') || 'sess-streetwear-ref-2';
+          const targetIdx = activeSessionsOnly.findIndex(s => s.id === enrolledId);
+          if (targetIdx !== -1) {
+            setActiveFinanzasSessionIndex(targetIdx);
+          } else if (enrolledId === 'sess-streetwear-ref-2') {
+            setActiveFinanzasSessionIndex(1);
+          }
+        }}
+      />
+
+      {/* 🗄️ MODAL DE BASE DE DATOS INDEPENDIENTE DE LA RONDA */}
+      <RoundDatabaseModal
+        isOpen={isRoundDatabaseModalOpen}
+        onClose={() => setIsRoundDatabaseModalOpen(false)}
+        initialRoundId={roundDatabaseModalTargetId || currentFinanzasSession?.id}
       />
 
       {/* 🔮 BEAUTIFUL ACTIVE STORY LIGHTBOX PLAYER */}

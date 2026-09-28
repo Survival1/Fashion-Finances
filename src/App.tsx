@@ -735,8 +735,21 @@ export default function App() {
   }, [followingList, userProfile?.id, userProfile?.name, userProfile?.username]);
 
   // Load / Setup state on mounted
+  // Al abrirse la App por primera vez nunca estar participando por defecto en ninguna ronda
   useEffect(() => {
     setIsLoaded(true);
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('user_paid_session_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.removeItem('finanzas_user_participating');
+      localStorage.removeItem('finanzas_user_slot_index');
+      localStorage.removeItem('user_paid_finanzas_session');
+      localStorage.removeItem('finanzas_target_session_id');
+      localStorage.removeItem('open_finanzas_sessions_list_v43');
+    } catch (e) {}
   }, []);
 
   // Sync rankings when custom videos are uploaded or published in CastingLiveSection

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Users, CheckCircle2, ShieldCheck, Zap, Sparkles, ArrowRight, X, Eye, EyeOff, Minimize2, Maximize2 } from 'lucide-react';
+import { getRoundReference } from '../utils/roundsDatabase';
 
 export interface GatheringParticipant {
   id: string;
@@ -60,7 +61,7 @@ export const ParticipantsGatheringModal: React.FC<ParticipantsGatheringModalProp
   onClose
 }) => {
   const is10EuroSession = Boolean(entryFee === 10 || sessionTitle.toUpperCase().includes('STREETWEAR'));
-  const effectiveRoundRef = roundRef || (is10EuroSession ? 'Ref:1' : entryFee === 100 ? 'Ref:2' : entryFee === 1000 ? 'Ref:3' : entryFee === 10000 ? 'Ref:4' : entryFee === 100000 ? 'Ref:5' : 'Ref:6');
+  const effectiveRoundRef = roundRef ? getRoundReference({ reference: roundRef }) : getRoundReference({ entryFee, title: sessionTitle });
   const [joinedCount, setJoinedCount] = useState<number>(userSlotIndex !== undefined ? userSlotIndex : (is10EuroSession ? 7 : 1));
   const [activityLogs, setActivityLogs] = useState<string[]>([]);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);

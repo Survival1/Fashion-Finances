@@ -1403,11 +1403,15 @@ export default function SessionResultsPodium({
             {/* Decorative title - Desduplicado: Podio de Ganadores */}
             <div className="text-center space-y-2 relative z-10">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border border-amber-400/60 px-4 py-1 rounded-full text-[10.5px] font-black uppercase tracking-[0.2em] text-amber-300 mx-auto shadow-sm">
-                <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA <span>✦</span>
+                <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA • {completedSessionToDisplay.reference || 'REF: 1'} <span>✦</span>
               </div>
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-white tracking-tight uppercase">
-                PODIO DE GANADORES
+                PODIO DE GANADORES • {completedSessionToDisplay.title}
               </h3>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-[10px] font-mono text-cyan-300 mx-auto">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span>Base de Datos Archivada: {completedSessionToDisplay.reference || 'REF: 1'} (Ronda #{completedSessionToDisplay.roundNumber ? completedSessionToDisplay.roundNumber - 1 : 0})</span>
+              </div>
               <p className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.15em] font-bold max-w-lg mx-auto">
                 ASIGNACIÓN OFICIAL DE CAPITAL DE INVERSIÓN Y RECONOCIMIENTO FINANCIERO
               </p>
