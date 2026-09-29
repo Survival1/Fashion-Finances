@@ -2457,11 +2457,14 @@ export default function CastingLiveSection({
     }
     return false;
   });
+  const [enlargedWindowUser, setEnlargedWindowUser] = useState<{ id: string; name: string; username?: string; avatar: string; role?: string; isHost?: boolean; isSelf?: boolean } | null>(null);
   const [mobileChannelControlsVisible, setMobileChannelControlsVisible] = useState<boolean>(false);
   const [isTopControlsMenuHovered, setIsTopControlsMenuHovered] = useState<boolean>(false);
   const topMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleTopMenuMouseEnter = () => {
+    // 🚫 Solo en la ventana en grande del participante (image.png), NO abrir la ventana de los canales (z.png)
+    if (enlargedWindowUser) return;
     if (topMenuTimeoutRef.current) {
       clearTimeout(topMenuTimeoutRef.current);
       topMenuTimeoutRef.current = null;
@@ -2478,6 +2481,14 @@ export default function CastingLiveSection({
       setMobileChannelControlsVisible(false);
     }, 280);
   };
+
+  // 🛡️ Asegurar que al abrir la ventana en grande de image.png, el menú de canales quede cerrado inmediatamente
+  useEffect(() => {
+    if (enlargedWindowUser) {
+      setIsTopControlsMenuHovered(false);
+      setMobileChannelControlsVisible(false);
+    }
+  }, [enlargedWindowUser]);
 
   // 👥 Finanzas 10-Participants bottom panel hover state (only visible when hovering bottom margin of channel)
   const [isBottomParticipantsHovered, setIsBottomParticipantsHovered] = useState<boolean>(false);
@@ -2854,7 +2865,6 @@ export default function CastingLiveSection({
 
   // Advanced Finanzas interactive features (fullscreen stream, detailed project modal, project voting)
   const [fullscreenFinanzasUser, setFullscreenFinanzasUser] = useState<{ id: string; name: string; username: string; avatar: string; role: string } | null>(null);
-  const [enlargedWindowUser, setEnlargedWindowUser] = useState<{ id: string; name: string; username?: string; avatar: string; role?: string; isHost?: boolean; isSelf?: boolean } | null>(null);
   const [enlargedWindowComments, setEnlargedWindowComments] = useState<Array<{ id: string; user: string; avatar: string; text: string; time: string; isGift?: boolean; giftIcon?: string }>>([
     { id: 'enc-1', user: 'Carlos Inversor', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150', text: '¡Excelente exposición! Mucho potencial en este proyecto 🚀', time: 'hace 1 min' },
     { id: 'enc-2', user: 'Lucía Modelo', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', text: 'Gran presencia en directo y claridad en los números 👏', time: 'hace 30s' },
@@ -5164,10 +5174,24 @@ export default function CastingLiveSection({
 
   // 🎥 WATCH OTHER PARTICIPANT LIVE CAMERA FEED (CUANDO NO ES EL TURNO DE ADRIANA LIMA)
   const [isWatchingPresenterCamera, setIsWatchingPresenterCamera] = useState<boolean>(false);
-  const [isPresenterCameraAudioMuted, setIsPresenterCameraAudioMuted] = useState<boolean>(true);
+  const [isPresenterCameraAudioMuted, setIsPresenterCameraAudioMuted] = useState<boolean>(false);
   const [isPresenterCameraFullscreen, setIsPresenterCameraFullscreen] = useState<boolean>(false);
   const [isPresenterCameraBrowserFullscreen, setIsPresenterCameraBrowserFullscreen] = useState<boolean>(false);
   const [showLivePresenterControls, setShowLivePresenterControls] = useState<boolean>(false);
+
+  // 🎯 Sincronizar el cierre del Live en pantalla completa para volver a la página de exposición (image.png)
+  useEffect(() => {
+    const handleClosePresenterLiveCam = () => {
+      setIsPresenterCameraFullscreen(false);
+      setIsWatchingPresenterCamera(false);
+      setIsPresenterCameraBrowserFullscreen(false);
+      setIsUserLiveStreamingWithCamera(false);
+      setScreenSplitLayout('single');
+      setIsScreenSharingActive(false);
+    };
+    window.addEventListener('close-presenter-live-camera', handleClosePresenterLiveCam);
+    return () => window.removeEventListener('close-presenter-live-camera', handleClosePresenterLiveCam);
+  }, []);
 
   useEffect(() => {
     let interval: any;
@@ -11394,8 +11418,8 @@ export default function CastingLiveSection({
                 : 'w-full max-w-full h-full rounded-none sm:rounded-[50px]'
             }`}>
             
-              {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de captura image.png al pasar el puntero) */}
-              {!(showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
+              {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de captura z.png al pasar el puntero) */}
+              {!(enlargedWindowUser || showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
                 <div 
                   className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[48] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/desktop-top-sensor select-none"
                   id="desktop-video-top-margin-hover-sensor"
@@ -11403,6 +11427,7 @@ export default function CastingLiveSection({
                   onMouseLeave={handleTopMenuMouseLeave}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (enlargedWindowUser) return;
                     setIsTopControlsMenuHovered(prev => !prev);
                   }}
                   title="Pasa el puntero por el margen superior para abrir opciones y canales"
@@ -11411,10 +11436,10 @@ export default function CastingLiveSection({
                 </div>
               )}
 
-              {/* 🎛️ TOP HOVER ZONE & EMBEDDED CONTROL OVERLAY INSIDE CHANNEL (image.png options) */}
+              {/* 🎛️ TOP HOVER ZONE & EMBEDDED CONTROL OVERLAY INSIDE CHANNEL (z.png channels options) */}
               <div 
                 className={`absolute top-0 inset-x-0 h-auto max-h-[92vh] z-50 flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-all duration-300 ${
-                  (showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
+                  (enlargedWindowUser || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
                     ? 'pointer-events-none opacity-0 hidden'
                     : isTopControlsMenuHovered
                       ? 'pointer-events-auto'
@@ -12416,29 +12441,41 @@ export default function CastingLiveSection({
 
               {/* 2. Heart (Likes) Button with dynamic count (e.g. 1762) & hover floating emojis */}
               <div className="flex flex-col items-center relative group/right-heart-zone shrink-0">
-                {/* Floating horizontal menu with expanded emojis on hover */}
-                <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/right-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl border border-slate-200/90 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/30 ring-1 ring-black/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 select-none">
-                  {[
-                    '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                    '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                    '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                    '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                    '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                    '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                  ].map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSendFreeEmojiReaction(emoji);
-                      }}
-                      className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-slate-100 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
-                      title={`Enviar ${emoji}`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda */}
+                <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/right-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                  {/* Cabecera del recuadro */}
+                  <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
+                      <span>✨</span>
+                      <span>Reacciones</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
+                  </div>
+
+                  {/* Rejilla de emojis centrada y cómoda */}
+                  <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
+                    {[
+                      '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                      '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                      '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                      '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                      '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                      '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                    ].map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendFreeEmojiReaction(emoji);
+                        }}
+                        className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                        title={`Enviar ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <button
@@ -13299,10 +13336,34 @@ export default function CastingLiveSection({
                 setDetailProjectUser(null);
                 setActiveFinanzasPopupUser(null);
                 setShowFinanzasInscriptionInChannel(false);
+                setIsVotingPhaseActive(false);
+                setShowFinanzasRecount(false);
+                setShowFinanzasResults(false);
+
+                // Redirigir a la pantalla de exposición de Lucas Torres (image.png)
+                const lucasUser = TRABAJADORES_USERS[0];
+                setSelectedFinanzasUser(lucasUser);
+                setActiveFinanzasSessionIndex(0);
+                setIsBroadcastMicOn(true);
+                setIsMuted(false);
+                setIsPresenterCameraAudioMuted(false);
+                setFinanzasTimers(prev => ({
+                  ...prev,
+                  [lucasUser.id]: 296,
+                  'trab-1': 296
+                }));
+
+                // Despachar evento para sincronizar TikTokFinanzasFeed
+                window.dispatchEvent(new CustomEvent('exit-voting-to-exposition', {
+                  detail: {
+                    sessionId: currentFinanzasSession?.id || 'sess-trabajadores-1',
+                    targetTurn: 1
+                  }
+                }));
               }}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 shadow-xs pointer-events-auto"
-              title="Cerrar ventana y volver al directo"
-              aria-label="Cerrar ventana"
+              title="Cerrar ventana y volver a la exposición de Lucas Torres"
+              aria-label="Cerrar ventana y volver a la exposición de Lucas Torres"
               id="btn-close-voting-projects-modal"
             >
               <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
@@ -13876,9 +13937,26 @@ export default function CastingLiveSection({
 
     return (
       <div 
-        className="absolute inset-0 w-full h-full bg-[#070b14] z-[60] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto rounded-[40px] sm:rounded-[48px] border-0 shadow-2xl"
+        className="absolute inset-0 w-full h-full bg-[#070b14] z-[250] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto rounded-[40px] sm:rounded-[48px] border-0 shadow-2xl"
         id="enlarged-participant-window-view"
+        onMouseEnter={(e) => {
+          e.stopPropagation();
+          setIsTopControlsMenuHovered(false);
+        }}
       >
+        {/* 🛡️ Safe-guard top shield: evita que al pasar el puntero por arriba de esta página se abra la ventana de canales z.png */}
+        <div 
+          className="absolute top-0 inset-x-0 h-28 z-40 pointer-events-auto"
+          onMouseEnter={(e) => {
+            e.stopPropagation();
+            setIsTopControlsMenuHovered(false);
+          }}
+          onMouseMove={(e) => {
+            e.stopPropagation();
+            setIsTopControlsMenuHovered(false);
+          }}
+        />
+
         {/* 1. Large Live Media (Video or Image taking full stage) */}
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black flex items-center justify-center">
           {isHostOrSelf && userLiveMediaStream ? (
@@ -13909,10 +13987,16 @@ export default function CastingLiveSection({
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none" />
         </div>
 
-        {/* 2. Top Header Bar (Live Badge + Action buttons + Volver button - Idéntico a captura image.png) */}
-        <div className="relative z-20 flex items-center justify-between p-3 sm:p-4 gap-1.5 xs:gap-2">
-          {/* Live Badge - Solo el punto verde sin el texto 'EN VIVO' */}
-          <div className="flex items-center gap-1.5 shrink-0">
+        {/* 2. Top Header Bar (Live Badge a la izquierda + Botones Ver Proyecto y Volver centrados en la página) */}
+        <div 
+          className="relative z-50 w-full flex items-center justify-center p-3 sm:p-4 min-h-[56px] pointer-events-auto"
+          onMouseEnter={(e) => {
+            e.stopPropagation();
+            setIsTopControlsMenuHovered(false);
+          }}
+        >
+          {/* Live Badge - Solo el punto verde posicionado a la izquierda */}
+          <div className="absolute left-3 sm:left-4 flex items-center gap-1.5 shrink-0 z-10">
             <span 
               className="bg-[#0c1a24]/90 backdrop-blur-md px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full flex items-center justify-center border border-emerald-500/50 shadow-lg tracking-wider shrink-0"
               title="En vivo"
@@ -13924,8 +14008,8 @@ export default function CastingLiveSection({
             </span>
           </div>
 
-          {/* Right Controls: Ver Proyecto (abre captura z.png con el proyecto del participante activo) y Volver */}
-          <div className="flex items-center gap-1.5 xs:gap-2 shrink-0">
+          {/* Botones centrados exactamente en el centro de la página */}
+          <div className="flex items-center justify-center gap-2 xs:gap-2.5 z-10">
             <button
               type="button"
               onClick={() => {
@@ -13978,12 +14062,15 @@ export default function CastingLiveSection({
 
             <button
               type="button"
-              onClick={() => setEnlargedWindowUser(null)}
-              className="bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-[11px] font-black px-3 sm:px-4 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center justify-center border border-red-500"
+              onClick={() => {
+                setEnlargedWindowUser(null);
+                setIsTopControlsMenuHovered(false);
+              }}
+              className="bg-white hover:bg-slate-100 text-slate-950 text-[10px] sm:text-[11px] font-black px-3 sm:px-4 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center justify-center border border-white"
               title="Volver a las ventanas"
               id="btn-close-enlarged-window"
             >
-              <span>Volver</span>
+              <span>VOLVER</span>
             </button>
           </div>
         </div>
@@ -25831,7 +25918,7 @@ try {
                     Ver todos los vídeos
                   </button>
                 </div>
-              ) : (selectedCategoryFilter === 'Finanzas' && !showFinanzasInscriptionInChannel && screenSplitLayout === 'single' && !isScreenSharingActive) ? (
+              ) : (selectedCategoryFilter === 'Finanzas') ? (
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR FINANZAS ROUNDS (image.png & z.png) */
                 <TikTokFinanzasFeed
                   activeSessionsOnly={activeSessionsOnly}
@@ -26020,29 +26107,41 @@ try {
 
                       {/* Heart Like (1762) */}
                       <div className="flex flex-col items-center shrink-0 relative group/channel-heart-zone">
-                        {/* Floating horizontal menu with expanded emojis on hover */}
-                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl border border-slate-200/90 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/30 ring-1 ring-black/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 select-none">
-                          {[
-                            '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                            '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                            '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                            '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                            '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                            '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                          ].map((emoji) => (
-                            <button
-                              key={emoji}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSendFreeEmojiReaction(emoji);
-                              }}
-                              className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-slate-100 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
-                              title={`Enviar ${emoji}`}
-                            >
-                              {emoji}
-                            </button>
-                          ))}
+                        {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda */}
+                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                          {/* Cabecera del recuadro */}
+                          <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
+                            <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
+                              <span>✨</span>
+                              <span>Reacciones</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
+                          </div>
+
+                          {/* Rejilla de emojis centrada y cómoda */}
+                          <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
+                            {[
+                              '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                              '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                              '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                              '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                              '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                              '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                            ].map((emoji) => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSendFreeEmojiReaction(emoji);
+                                }}
+                                className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                                title={`Enviar ${emoji}`}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
                         <button
@@ -26124,8 +26223,8 @@ try {
                   </div>
                 )}
                 
-                {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de la captura image.png al pasar el puntero sobre z.png) */}
-                {!(showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
+                {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de la captura z.png al pasar el puntero) */}
+                {!(enlargedWindowUser || showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
                   <div 
                     className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[98] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
                     id="video-top-margin-hover-sensor"
@@ -26133,6 +26232,7 @@ try {
                     onMouseLeave={handleTopMenuMouseLeave}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (enlargedWindowUser) return;
                       setIsTopControlsMenuHovered(prev => !prev);
                     }}
                     title="Pasa el puntero por el margen superior para abrir opciones y canales"
@@ -26142,10 +26242,10 @@ try {
                   </div>
                 )}
 
-                {/* 🎛️ EMBEDDED BROADCAST CONTROL OVERLAY AT TOP OF VIDEO FRAME (Captura image.png) */}
+                {/* 🎛️ EMBEDDED BROADCAST CONTROL OVERLAY AT TOP OF VIDEO FRAME (Captura z.png canales) */}
                 <div 
                   className={`absolute top-0 inset-x-0 h-auto max-h-[92vh] z-[100] flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-all duration-300 w-full max-w-full min-w-0 ${
-                    (isShortVideoGiftPanelOpen || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showFinanzasInscriptionInChannel || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
+                    (enlargedWindowUser || isShortVideoGiftPanelOpen || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showFinanzasInscriptionInChannel || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
                       ? 'pointer-events-none opacity-0 hidden'
                       : (isTopControlsMenuHovered || mobileChannelControlsVisible)
                         ? 'pointer-events-auto opacity-100'
@@ -28142,8 +28242,8 @@ try {
                 </div>
               )}
 
-                {/* 🌌 CENTRAL EMBEDDED LOGO AND PARTICIPANTS GRID FOR FINANZAS CATEGORY */}
-                {selectedCategoryFilter === 'Finanzas' && (
+                {/* 🌌 CENTRAL EMBEDDED LOGO AND PARTICIPANTS GRID FOR FINANZAS CATEGORY (ELIMINADO: zz.png eliminada por completo) */}
+                {false && selectedCategoryFilter === 'Finanzas' && (
                   <div 
                     onWheel={(e) => {
                       e.stopPropagation();
@@ -32917,29 +33017,41 @@ try {
 
                   {/* Heart Button Area */}
                   <div className="flex flex-col items-center shrink-0 relative group/video-heart-zone">
-                    {/* Floating vertical menu with expanded emojis on hover */}
-                    <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/video-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl border border-slate-200/90 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/30 ring-1 ring-black/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 select-none">
-                      {[
-                        '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                        '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                        '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                        '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                        '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                        '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                      ].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSendFreeEmojiReaction(emoji);
-                          }}
-                          className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-slate-100 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
-                          title={`Enviar ${emoji}`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
+                    {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda */}
+                    <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/video-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                      {/* Cabecera del recuadro */}
+                      <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
+                          <span>✨</span>
+                          <span>Reacciones</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
+                      </div>
+
+                      {/* Rejilla de emojis centrada y cómoda */}
+                      <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
+                        {[
+                          '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                          '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                          '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                          '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                          '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                          '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                        ].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendFreeEmojiReaction(emoji);
+                            }}
+                            className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                            title={`Enviar ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <button
@@ -33041,34 +33153,46 @@ try {
 
             {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT (Idéntica a captura z.png) */}
             <div 
-              className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto z-40"
+              className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto relative z-[350]"
               id="channel-live-tiktok-actions-sidebar"
             >
                 {/* Like button with count (43.2K) - Queda marcado y lanza lluvia de corazones */}
                 <div className="flex flex-col items-center relative group/channel-heart-zone">
-                  {/* Floating horizontal emoji glossary on hover (captura image.png) */}
-                  <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-[#0a0e1a]/95 backdrop-blur-xl border border-slate-700/80 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
-                    {[
-                      '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                      '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                      '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                      '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                      '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                      '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                    ].map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSendFreeEmojiReaction(emoji);
-                        }}
-                        className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-white/15 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
-                        title={`Enviar ${emoji}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+                  {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda SIEMPRE por delante */}
+                  <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                    {/* Cabecera del recuadro */}
+                    <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
+                        <span>✨</span>
+                        <span>Reacciones</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
+                    </div>
+
+                    {/* Rejilla de emojis centrada y cómoda */}
+                    <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
+                      {[
+                        '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                        '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                        '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                        '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                        '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                        '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                      ].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendFreeEmojiReaction(emoji);
+                          }}
+                          className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                          title={`Enviar ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <button

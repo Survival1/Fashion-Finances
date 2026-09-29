@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Heart, 
   MessageCircle, 
@@ -20,7 +20,9 @@ import {
   Send,
   Smile,
   MicOff,
-  Database
+  Database,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { 
   TRABAJADORES_USERS, 
@@ -44,6 +46,41 @@ const CHANNELS_LIST = [
   { id: 'Beauty', label: 'Beauty 💄' },
   { id: 'Influencer', label: 'Influencer 📱' }
 ];
+
+// Componente memoizado para renderizar de forma segura el stream de cámara en vivo sin bucles de re-render
+const LiveUserStreamVideo = React.memo(({ 
+  stream, 
+  facingMode = 'user', 
+  className = '' 
+}: { 
+  stream: MediaStream | null; 
+  facingMode?: string; 
+  className?: string; 
+}) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (el && stream) {
+      if (el.srcObject !== stream) {
+        el.srcObject = stream;
+        el.play().catch(() => {});
+      }
+    }
+  }, [stream]);
+
+  if (!stream) return null;
+
+  return (
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      muted
+      className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''} ${className}`}
+    />
+  );
+});
 
 interface TikTokFinanzasFeedProps {
   activeSessionsOnly: any[];
@@ -204,10 +241,48 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     targetSessionId?: string;
   } | null>(null);
 
+  const isProgrammaticScrollRef = useRef<boolean>(false);
+  const isMouseDownRef = useRef<boolean>(false);
+  const mouseStartYRef = useRef<number | null>(null);
+
+  // Mouse drag support for desktop/trackpad (Swipe like on mobile/TikTok)
+  const handleMouseDownFeed = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, textarea, a, select, [role="button"], form')) {
+      return;
+    }
+    isMouseDownRef.current = true;
+    mouseStartYRef.current = e.clientY;
+  };
+
+  const handleMouseMoveFeed = (e: React.MouseEvent) => {
+    if (!isMouseDownRef.current || mouseStartYRef.current === null) return;
+    const diff = mouseStartYRef.current - e.clientY;
+    if (Math.abs(diff) > 35) {
+      isMouseDownRef.current = false;
+      mouseStartYRef.current = null;
+      if (diff > 0) {
+        scrollToRound(activeFinanzasSessionIndex + 1);
+      } else {
+        scrollToRound(activeFinanzasSessionIndex - 1);
+      }
+    }
+  };
+
+  const handleMouseUpFeed = () => {
+    isMouseDownRef.current = false;
+    mouseStartYRef.current = null;
+  };
+
   const handleWheelFeed = (e: React.WheelEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.overflow-y-auto:not(#tiktok-rounds-vertical-feed)')) {
+      return;
+    }
     const now = Date.now();
-    if (now - lastWheelTimeRef.current < 300) return;
-    if (Math.abs(e.deltaY) > 10) {
+    if (now - lastWheelTimeRef.current < 250) return;
+    if (Math.abs(e.deltaY) > 8) {
       lastWheelTimeRef.current = now;
       if (e.deltaY > 0) {
         scrollToRound(activeFinanzasSessionIndex + 1);
@@ -226,7 +301,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     if (touchStartYRef.current === null) return;
     const diff = touchStartYRef.current - e.changedTouches[0].clientY;
     touchStartYRef.current = null;
-    if (Math.abs(diff) > 30) {
+    if (Math.abs(diff) > 25) {
       if (diff > 0) {
         scrollToRound(activeFinanzasSessionIndex + 1);
       } else {
@@ -251,18 +326,50 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
 
-  // Sync feed scroll position whenever activeFinanzasSessionIndex changes
+  // 🎯 Redirigir a la pantalla de exposición de Lucas Torres (image.png) al pulsar X en la ventana de votación (z.png)
   useEffect(() => {
+    const handleExitVotingToExposition = (e: any) => {
+      const targetSessionId = e.detail?.sessionId || activeSessionsOnly[0]?.id || 'sess-trabajadores-1';
+      setShowVotingProjectsModal(false);
+      setSessionVotingPhaseMap(prev => ({ ...prev, [targetSessionId]: false }));
+      const lucasUser = TRABAJADORES_USERS[0];
+      setSessionSelectedPresenterMap(prev => ({ ...prev, [targetSessionId]: lucasUser }));
+      setSessionExpositionTimerMap(prev => ({ ...prev, [targetSessionId]: 296 }));
+      setActiveFinanzasSessionIndex(0);
+      if (setSelectedFinanzasUser) setSelectedFinanzasUser(null);
+      if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(false);
+      scrollToRound(0);
+      setTimeout(() => {
+        resumeOrStartLucasSpeech();
+      }, 200);
+    };
+    window.addEventListener('exit-voting-to-exposition', handleExitVotingToExposition);
+    return () => window.removeEventListener('exit-voting-to-exposition', handleExitVotingToExposition);
+  }, [activeSessionsOnly]);
+
+  // Sync feed scroll position whenever activeFinanzasSessionIndex changes from outside
+  useEffect(() => {
+    if (isProgrammaticScrollRef.current) return;
     if (activeSessionsOnly[activeFinanzasSessionIndex]) {
       const targetSession = activeSessionsOnly[activeFinanzasSessionIndex];
+      const container = feedContainerRef.current;
       const el = document.getElementById(`tiktok-round-card-${targetSession.id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (container && el) {
+        const targetTop = el.offsetTop - (container.clientHeight - el.clientHeight) / 2;
+        if (Math.abs(container.scrollTop - targetTop) > 60) {
+          isProgrammaticScrollRef.current = true;
+          container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+          setTimeout(() => {
+            isProgrammaticScrollRef.current = false;
+          }, 550);
+        }
       }
     }
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
 
   const handleMouseEnterRonda = (sessionId: string) => {
+    // 🚫 Solo en la ventana en grande del participante (image.png), NO abrir la ventana de los canales (z.png)
+    if (enlargedWindowUser) return;
     if (channelsMenuTimeoutRef.current) {
       clearTimeout(channelsMenuTimeoutRef.current);
       channelsMenuTimeoutRef.current = null;
@@ -278,6 +385,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       setActiveChannelsMenuSessionId(null);
     }, 280);
   };
+
+  // 🛡️ Al abrir la ventana en grande (image.png), cerrar inmediatamente el menú de canales
+  useEffect(() => {
+    if (enlargedWindowUser) {
+      setActiveChannelsMenuSessionId(null);
+    }
+  }, [enlargedWindowUser]);
 
   const toggleChannelsMenu = (sessionId: string) => {
     if (activeChannelsMenuSessionId === sessionId) {
@@ -746,7 +860,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   const speakLucasTorresSegment = () => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    if (!isSpeechActiveRef.current) return;
+
+    // El participante sólo se escucha si el micrófono está encendido
+    const isMicOn = Boolean(
+      isPresenterLiveMicActive &&
+      isBroadcastMicOn &&
+      !isMuted &&
+      !isPresenterCameraAudioMuted &&
+      channelVolume > 0
+    );
+    if (!isMicOn) {
+      stopLucasTorresSpeech();
+      return;
+    }
 
     const curSession = activeSessionsOnly[activeFinanzasSessionIndex];
     if (!curSession) return;
@@ -762,21 +888,27 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       return;
     }
 
+    isSpeechActiveRef.current = true;
+
     try {
       window.speechSynthesis.cancel();
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
       const segments = LUCAS_TORRES_SPEECH_SEGMENTS;
       const text = segments[speechSegmentIndexRef.current % segments.length];
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
-      utterance.rate = 1.02;
+      utterance.rate = 1.0;
       utterance.pitch = 1.0;
-
-      const isMuted = isPresenterCameraAudioMuted || channelVolume === 0;
-      utterance.volume = isMuted ? 0 : Math.max(0.1, channelVolume / 100);
+      // Volumen pleno cuando el micro está encendido
+      utterance.volume = Math.max(0.7, (channelVolume || 80) / 100);
 
       const voices = window.speechSynthesis.getVoices();
-      const spanishVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Jorge') || v.name.includes('Pablo') || v.name.includes('Diego') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Spain')))
-        || voices.find(v => v.lang.startsWith('es'));
+      const spanishVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Jorge') || v.name.includes('Pablo') || v.name.includes('Diego') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Spain') || v.name.includes('Castilian') || v.name.includes('Monica') || v.name.includes('Carlos')))
+        || voices.find(v => v.lang.startsWith('es'))
+        || voices[0];
       if (spanishVoice) {
         utterance.voice = spanishVoice;
       }
@@ -787,23 +919,60 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
       utterance.onend = () => {
         speechSegmentIndexRef.current = (speechSegmentIndexRef.current + 1) % segments.length;
-        if (isSpeechActiveRef.current) {
+        const stillMicOn = Boolean(
+          isPresenterLiveMicActive &&
+          isBroadcastMicOn &&
+          !isMuted &&
+          !isPresenterCameraAudioMuted &&
+          channelVolume > 0
+        );
+        if (isSpeechActiveRef.current && stillMicOn) {
           speechTimeoutRef.current = setTimeout(() => {
-            if (isSpeechActiveRef.current) {
+            const currentMicOn = Boolean(
+              isPresenterLiveMicActive &&
+              isBroadcastMicOn &&
+              !isMuted &&
+              !isPresenterCameraAudioMuted &&
+              channelVolume > 0
+            );
+            if (isSpeechActiveRef.current && currentMicOn) {
               speakLucasTorresSegment();
+            } else {
+              stopLucasTorresSpeech();
             }
-          }, 1400);
+          }, 1200);
+        } else {
+          stopLucasTorresSpeech();
         }
       };
 
-      utterance.onerror = () => {
-        if (isSpeechActiveRef.current) {
+      utterance.onerror = (e) => {
+        console.warn("Speech synthesis notice:", e);
+        const stillMicOn = Boolean(
+          isPresenterLiveMicActive &&
+          isBroadcastMicOn &&
+          !isMuted &&
+          !isPresenterCameraAudioMuted &&
+          channelVolume > 0
+        );
+        if (isSpeechActiveRef.current && stillMicOn) {
           speechSegmentIndexRef.current = (speechSegmentIndexRef.current + 1) % segments.length;
           speechTimeoutRef.current = setTimeout(() => {
-            if (isSpeechActiveRef.current) {
+            const currentMicOn = Boolean(
+              isPresenterLiveMicActive &&
+              isBroadcastMicOn &&
+              !isMuted &&
+              !isPresenterCameraAudioMuted &&
+              channelVolume > 0
+            );
+            if (isSpeechActiveRef.current && currentMicOn) {
               speakLucasTorresSegment();
+            } else {
+              stopLucasTorresSpeech();
             }
-          }, 1500);
+          }, 1400);
+        } else {
+          stopLucasTorresSpeech();
         }
       };
 
@@ -814,13 +983,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   };
 
   const resumeOrStartLucasSpeech = () => {
+    const isMicOn = Boolean(
+      isPresenterLiveMicActive &&
+      isBroadcastMicOn &&
+      !isMuted &&
+      !isPresenterCameraAudioMuted &&
+      channelVolume > 0
+    );
+    if (!isMicOn) {
+      stopLucasTorresSpeech();
+      return;
+    }
     isSpeechActiveRef.current = true;
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
-      } else if (!window.speechSynthesis.speaking) {
-        speakLucasTorresSegment();
       }
+      speakLucasTorresSegment();
     }
   };
 
@@ -830,6 +1009,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   useEffect(() => {
     const isMutedEffective = Boolean(isPresenterCameraAudioMuted || isMuted || !isBroadcastMicOn);
     setIsPresenterLiveMicActive(!isMutedEffective);
+    if (isMutedEffective) {
+      stopLucasTorresSpeech();
+      if (liveVideoRef.current) {
+        liveVideoRef.current.muted = true;
+        liveVideoRef.current.volume = 0;
+      }
+    }
   }, [isPresenterCameraAudioMuted, isMuted, isBroadcastMicOn]);
 
   const handleTogglePresenterLiveMic = (e?: React.MouseEvent) => {
@@ -840,15 +1026,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     const nextState = !isPresenterLiveMicActive;
     setIsPresenterLiveMicActive(nextState);
 
-    // Sincronizar con el estado global de micro de la transmisión
-    if (toggleBroadcastMic) {
-      toggleBroadcastMic();
-    }
-
     if (nextState) {
-      // Activar audio, vídeo y síntesis de voz
+      // Activar audio, vídeo y síntesis de voz (MICRO ON)
       if (setIsPresenterCameraAudioMuted) {
         setIsPresenterCameraAudioMuted(false);
+      }
+      if (toggleBroadcastMic && (!isBroadcastMicOn || isMuted)) {
+        toggleBroadcastMic();
       }
       if (channelVolume === 0) {
         setChannelVolume(80);
@@ -874,15 +1058,22 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         });
       }
     } else {
-      // Silenciar audio, vídeo y cancelar voz
+      // Silenciar audio, vídeo y cancelar voz POR COMPLETO (MICRO OFF)
+      stopLucasTorresSpeech();
       if (setIsPresenterCameraAudioMuted) {
         setIsPresenterCameraAudioMuted(true);
       }
+      if (toggleBroadcastMic && (isBroadcastMicOn && !isMuted)) {
+        toggleBroadcastMic();
+      }
       if (liveVideoRef.current) {
         liveVideoRef.current.muted = true;
+        liveVideoRef.current.volume = 0;
       }
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+        try {
+          window.speechSynthesis.cancel();
+        } catch {}
       }
       if (userLiveMediaStream) {
         userLiveMediaStream.getAudioTracks().forEach(t => {
@@ -893,11 +1084,35 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (setSystemVoiceNotification) {
         setSystemVoiceNotification({
           show: true,
-          message: '🔇 Micrófono silenciado'
+          message: '🔇 Micrófono en OFF: participante silenciado'
         });
       }
     }
   };
+
+  // 🎥 Control local del modo pantalla completa de la cámara del presentador (z.png)
+  const [localCameraFullscreenOverride, setLocalCameraFullscreenOverride] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setLocalCameraFullscreenOverride(isPresenterCameraFullscreen);
+  }, [isPresenterCameraFullscreen]);
+
+  const effectiveCameraFullscreen = localCameraFullscreenOverride !== null ? localCameraFullscreenOverride : Boolean(isPresenterCameraFullscreen);
+
+  // 🎯 Cerrar la cámara en directo (z.png) y redirigir inmediatamente a la página de exposición (image.png)
+  const handleStopPresenterLiveCam = () => {
+    setLocalCameraFullscreenOverride(false);
+    if (setIsPresenterCameraFullscreen) {
+      setIsPresenterCameraFullscreen(false);
+    }
+    if (setIsWatchingPresenterCamera) {
+      setIsWatchingPresenterCamera(false);
+    }
+    window.dispatchEvent(new CustomEvent('close-presenter-live-camera'));
+  };
+
+  // 👥 Vista de 10 ventanas de participantes en vivo durante la fase de votación (captura z.png)
+  const [showTenWindowsVotingLive, setShowTenWindowsVotingLive] = useState<boolean>(false);
 
   // 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA
   const [showerHearts, setShowerHearts] = useState<Array<{
@@ -1185,14 +1400,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => clearInterval(interval);
   }, [activeSessionsOnly, activeFinanzasSessionIndex, sessionVotingPhaseMap, isVotingPhaseActive, sessionSelectedPresenterMap, selectedFinanzasUser]);
 
-  // 🎙️ Effect to start Lucas Torres live exposition speech as soon as page opens and countdown begins
+  // 🎙️ Effect to start Lucas Torres live exposition speech as soon as page opens and countdown begins (Micro ON)
   useEffect(() => {
     const curSession = activeSessionsOnly[activeFinanzasSessionIndex];
     const isVoting = Boolean(curSession && (sessionVotingPhaseMap[curSession.id] || (isVotingPhaseActive && activeFinanzasSessionIndex === 0)));
     const currentPresenter = curSession ? getSessionPresenter(curSession, activeFinanzasSessionIndex) : null;
     const isLucas = currentPresenter?.name?.includes('Lucas') || currentPresenter?.id === 'trab-1';
+    const isMicOn = Boolean(
+      isPresenterLiveMicActive &&
+      isBroadcastMicOn &&
+      !isMuted &&
+      !isPresenterCameraAudioMuted &&
+      channelVolume > 0
+    );
 
-    if (!isVoting && !showFinanzasResults && !showFinanzasRecount && isLucas) {
+    if (!isVoting && !showFinanzasResults && !showFinanzasRecount && isLucas && isMicOn) {
       isSpeechActiveRef.current = true;
       speakLucasTorresSegment();
 
@@ -1219,22 +1441,29 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => {
       stopLucasTorresSpeech();
     };
-  }, [activeFinanzasSessionIndex, isVotingPhaseActive, showFinanzasResults, showFinanzasRecount, sessionVotingPhaseMap, activeSessionsOnly]);
+  }, [activeFinanzasSessionIndex, isVotingPhaseActive, showFinanzasResults, showFinanzasRecount, sessionVotingPhaseMap, activeSessionsOnly, isBroadcastMicOn, isMuted, isPresenterLiveMicActive, isPresenterCameraAudioMuted, channelVolume]);
 
-  // Synchronize speech synthesis volume when channelVolume or isPresenterCameraAudioMuted changes
+  // Synchronize speech synthesis volume when channelVolume or microphone changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      if (isPresenterCameraAudioMuted || channelVolume === 0) {
-        window.speechSynthesis.cancel();
-        if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-        setIsLucasTorresSpeaking(false);
-      } else {
-        if (isSpeechActiveRef.current && !window.speechSynthesis.speaking) {
-          speakLucasTorresSegment();
-        }
+    const isMicOn = Boolean(
+      isPresenterLiveMicActive &&
+      isBroadcastMicOn &&
+      !isMuted &&
+      !isPresenterCameraAudioMuted &&
+      channelVolume > 0
+    );
+    if (!isMicOn) {
+      stopLucasTorresSpeech();
+      if (liveVideoRef.current) {
+        liveVideoRef.current.muted = true;
+        liveVideoRef.current.volume = 0;
+      }
+    } else {
+      if (isSpeechActiveRef.current && !window.speechSynthesis?.speaking) {
+        speakLucasTorresSegment();
       }
     }
-  }, [channelVolume, isPresenterCameraAudioMuted]);
+  }, [channelVolume, isBroadcastMicOn, isMuted, isPresenterLiveMicActive, isPresenterCameraAudioMuted]);
 
   // Helper for formatting numbers like TikTok (e.g. 43.2K)
   const formatCount = (n: number) => {
@@ -1255,6 +1484,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         }
       };
     });
+
+    // Abre o conmuta la ventana de reacciones por delante de cualquier ventana
+    setShowEmojiPickerSessionId(prev => (prev === sessionId ? null : sessionId));
 
     // Lluvia de corazones en toda la pantalla cada vez que se pulsa
     triggerHeartsShower();
@@ -1365,6 +1597,84 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return list;
   };
 
+  // 👥 Lista de 10 participantes para la vista de 10 ventanas en vivo (captura z.png)
+  const tenVotingLiveParticipants = useMemo(() => {
+    return [
+      {
+        id: userProfile?.id || 'f-adriana-lima',
+        name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
+        role: 'Participante Activa (Tú)',
+        avatar: (userProfile?.avatar && userProfile.avatar.startsWith('http'))
+          ? userProfile.avatar
+          : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        isSelf: true
+      },
+      {
+        id: 'f-1',
+        name: 'Alessia Vance',
+        role: 'Modelo Directora',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'f-2',
+        name: 'Gisele Bündchen',
+        role: 'Inversora Principal',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'f-3',
+        name: 'Marcus Vance',
+        role: 'Asesor Fintech',
+        avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'trab-1',
+        name: 'Lucas Torres',
+        role: 'Diseñador Gráfico',
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'trab-2',
+        name: 'Clara Vega',
+        role: 'Patronista Textil',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'trab-3',
+        name: 'Mateo Ruiz',
+        role: 'Fotógrafo de Moda',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'trab-4',
+        name: 'Paula Ortiz',
+        role: 'Estilista Creativa',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'trab-5',
+        name: 'Hugo Silva',
+        role: 'Diseñador de Calzado',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'trab-6',
+        name: 'Natalia Vega',
+        role: 'Diseñadora de Joyas',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      }
+    ];
+  }, [userProfile]);
+
   // Helper to get presenter for each session
   const getSessionPresenter = (session: any, index: number) => {
     const participants = getSessionParticipants(session);
@@ -1418,8 +1728,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     if (targetIndex < 0 || targetIndex >= activeSessionsOnly.length) return;
     const targetSession = activeSessionsOnly[targetIndex];
     if (!targetSession) return;
+    const container = feedContainerRef.current;
     const el = document.getElementById(`tiktok-round-card-${targetSession.id}`);
-    if (el) {
+    if (container && el) {
+      isProgrammaticScrollRef.current = true;
+      const targetTop = el.offsetTop - (container.clientHeight - el.clientHeight) / 2;
+      container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+      setActiveFinanzasSessionIndex(targetIndex);
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 550);
+    } else if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setActiveFinanzasSessionIndex(targetIndex);
     }
@@ -1428,9 +1747,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // Keyboard navigation up / down
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isPresenterCameraFullscreen) {
-        setIsPresenterCameraFullscreen(false);
-        setIsWatchingPresenterCamera(false);
+      if (e.key === 'Escape' && effectiveCameraFullscreen) {
+        handleStopPresenterLiveCam();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         scrollToRound(activeFinanzasSessionIndex + 1);
@@ -1441,11 +1759,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeFinanzasSessionIndex, activeSessionsOnly, isPresenterCameraFullscreen, setIsPresenterCameraFullscreen, setIsWatchingPresenterCamera]);
+  }, [activeFinanzasSessionIndex, activeSessionsOnly, effectiveCameraFullscreen]);
 
   // 🎛️ Helper to render the channels & broadcast controls menu window (strictly matching z.png)
   const renderChannelsOverlay = (session: any) => {
-    if (activeChannelsMenuSessionId !== session.id) return null;
+    // 🚫 Solo en la ventana en grande del participante (image.png), NO abrir la ventana de canales (z.png)
+    if (enlargedWindowUser || activeChannelsMenuSessionId !== session.id) return null;
     const overlayRoundRef = getFinanzasRoundRef ? getFinanzasRoundRef(session) : (session.reference || 'REF: 1');
     return (
       <div 
@@ -1675,15 +1994,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         </div>
       )}
 
-      {/* 📱 TIKTOK VERTICAL SNAP SCROLL FEED */}
+      {/* 📱 TIKTOK VERTICAL SNAP SCROLL FEED (Desplazamiento vertical entre Rondas de Financiación como en z.png) */}
       <div
         ref={feedContainerRef}
         onScroll={handleScroll}
         onWheel={handleWheelFeed}
         onTouchStart={handleTouchStartFeed}
         onTouchEnd={handleTouchEndFeed}
+        onMouseDown={handleMouseDownFeed}
+        onMouseMove={handleMouseMoveFeed}
+        onMouseUp={handleMouseUpFeed}
+        onMouseLeave={handleMouseUpFeed}
         id="tiktok-rounds-vertical-feed"
-        className="w-full max-w-full h-[calc(100dvh-130px)] min-h-[740px] max-h-[920px] overflow-y-auto snap-y snap-mandatory scroll-smooth py-6 flex flex-col items-center gap-10 sm:gap-14 select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="w-full max-w-full h-[calc(100dvh-130px)] min-h-[740px] max-h-[920px] overflow-y-auto snap-y snap-mandatory scroll-smooth py-6 flex flex-col items-center gap-8 sm:gap-12 select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative"
       >
         {activeSessionsOnly.map((session, index) => {
           const roundRef = getFinanzasRoundRef(session, index);
@@ -1743,7 +2066,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div
               key={session.id}
               id={`tiktok-round-card-${session.id}`}
-              className="snap-center shrink-0 flex items-center justify-center gap-2.5 sm:gap-4.5 w-full max-w-[560px] my-auto relative px-1 sm:px-2"
+              className="snap-center shrink-0 flex items-center justify-center gap-2.5 sm:gap-4.5 w-full max-w-[560px] my-0 py-2 sm:py-3 relative px-1 sm:px-2"
             >
               {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) */}
               <div 
@@ -1795,16 +2118,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 )}
 
 
-                {/* 🪟 VENTANA EN GRANDE DEL PARTICIPANTE (captura image.png) */}
-                {enlargedWindowUser && isCurrentlyActiveRound && renderEnlargedParticipantWindow && (
-                  <div 
-                    className="absolute inset-0 z-[155] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
-                    id={`enlarged-window-in-channel-${session.id}`}
-                  >
-                    {renderEnlargedParticipantWindow()}
-                  </div>
-                )}
-
                 {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (captura z.png) */}
                 {renderChannelsOverlay(session)}
 
@@ -1819,19 +2132,135 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
 
+                {/* 👥 10 VENTANAS DE LOS PARTICIPANTES EN VIVO (Strictly matching captura z.png) */}
+                {showTenWindowsVotingLive && isCurrentlyActiveRound && (
+                  <div 
+                    className="absolute inset-0 z-[230] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto select-none"
+                    id={`ten-windows-live-modal-${session.id}`}
+                  >
+                    {/* 🔝 CABECERA SUPERIOR DE 10 VENTANAS (con botón X para volver a image.png) */}
+                    <div className="relative z-30 w-full pt-3.5 pb-2.5 px-3 sm:px-4 flex items-center justify-between border-b border-slate-800/90 bg-[#070b14] shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-red-600 text-white text-[9px] sm:text-[10px] font-black uppercase px-2.5 py-1 rounded-full shadow-md flex items-center gap-1.5 tracking-wider">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                          10 VENTANAS EN VIVO
+                        </span>
+                        <span className="bg-slate-900 border border-slate-700/80 text-emerald-400 font-mono text-[9.5px] sm:text-[10px] font-black px-2 py-0.5 rounded-lg shadow-inner">
+                          ⏱️ {displayVotingTimer}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowTenWindowsVotingLive(false)}
+                        className="w-8 h-8 rounded-full bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center transition cursor-pointer border border-slate-700 shadow-md shrink-0"
+                        title="Cerrar y volver a la página de votación (image.png)"
+                        id={`btn-close-ten-windows-${session.id}`}
+                      >
+                        <X className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    </div>
+
+                    {/* 👥 GRID DE 10 VENTANAS EN 2 COLUMNAS (Aspecto y tamaño mejorados idéntico a z.png) */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-2.5 grid grid-cols-2 gap-2 sm:gap-2.5 w-full pb-6">
+                      {tenVotingLiveParticipants.map((u, i) => {
+                        const isSelfUser = i === 0 || Boolean(u.isSelf || u.id === userProfile?.id || u.name?.includes('(Tú)'));
+                        return (
+                          <div
+                            key={u.id || i}
+                            onClick={() => {
+                              const clickedUser = {
+                                id: u.id,
+                                name: u.name,
+                                username: (u as any).username || u.name?.toLowerCase().replace(/\s+/g, '_'),
+                                avatar: u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                role: u.role || 'Participante',
+                                isSelf: isSelfUser,
+                                isHost: i === 0
+                              };
+                              if (setEnlargedWindowUser) {
+                                setEnlargedWindowUser(clickedUser);
+                              }
+                              if (setSelectedFinanzasUser) setSelectedFinanzasUser(clickedUser);
+                              if (setActiveFinanzasPopupUser) setActiveFinanzasPopupUser(clickedUser);
+                              if (setDetailProjectUser) setDetailProjectUser(clickedUser);
+                            }}
+                            className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 hover:border-purple-400/80 bg-slate-900 shadow-2xl group transition cursor-pointer aspect-[9/13.5] min-h-[250px] sm:min-h-[285px] flex flex-col justify-between"
+                            id={`voting-user-window-${i + 1}`}
+                          >
+                            {/* Live Media Content */}
+                            <div className="relative w-full h-full bg-slate-950 overflow-hidden">
+                              {isSelfUser && userLiveMediaStream ? (
+                                <LiveUserStreamVideo 
+                                  stream={userLiveMediaStream} 
+                                  facingMode={liveCameraFacingMode} 
+                                />
+                              ) : (
+                                <img
+                                  src={u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'}
+                                  alt={u.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+                                  }}
+                                />
+                              )}
+
+                              {/* Badge EN VIVO (Strictly matching z.png) */}
+                              <div className="absolute top-2.5 left-2.5 z-20">
+                                <span className="bg-[#0b101c]/85 backdrop-blur-md text-[7.5px] sm:text-[8px] font-black text-emerald-400 px-2 py-0.5 rounded-md flex items-center gap-1.5 border border-emerald-500/40 leading-none shadow-md">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                                  EN VIVO
+                                </span>
+                              </div>
+
+                              {/* Bottom Info Bar (Strictly matching z.png) */}
+                              <div className="absolute bottom-0 inset-x-0 z-20 bg-gradient-to-t from-black/95 via-black/60 to-transparent pt-10 pb-2.5 px-2.5 sm:px-3 flex flex-col justify-end">
+                                <p className="text-xs sm:text-[13px] font-black text-white truncate leading-tight drop-shadow-sm">{u.name}</p>
+                                <p className="text-[8.5px] sm:text-[9.5px] text-purple-300 font-semibold truncate leading-none mt-1 flex items-center gap-1.5 drop-shadow-xs">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
+                                  <span>{u.role}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 🪟 VENTANA EN GRANDE DEL PARTICIPANTE CON COMENTARIOS Y REGALOS EN VIVO */}
+                {enlargedWindowUser && isCurrentlyActiveRound && renderEnlargedParticipantWindow && (
+                  <div 
+                    className="absolute inset-0 z-[260] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    id={`enlarged-window-in-channel-${session.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={(e) => {
+                      e.stopPropagation();
+                      setActiveChannelsMenuSessionId(null);
+                    }}
+                  >
+                    {renderEnlargedParticipantWindow()}
+                  </div>
+                )}
+
                 {/* 🎥 LIVE EXPOSITION OVERLAY DENTRO DEL CANAL (captura image.png) */}
-                {isPresenterCameraFullscreen && isCurrentlyActiveRound && (
+                {effectiveCameraFullscreen && isCurrentlyActiveRound && (
                   <div 
                     className="absolute inset-0 z-[150] bg-black w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
                     id={`live-exposition-in-channel-${session.id}`}
                   >
                     {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página) */}
-                    <div 
-                      className="absolute top-0 inset-x-0 h-16 sm:h-20 z-30 pointer-events-auto cursor-pointer"
-                      onMouseEnter={() => handleMouseEnterRonda(session.id)}
-                      onMouseLeave={handleMouseLeaveRonda}
-                      title="Pasa el ratón para abrir el menú de opciones"
-                    />
+                    {!enlargedWindowUser && (
+                      <div 
+                        className="absolute top-0 inset-x-0 h-16 sm:h-20 z-30 pointer-events-auto cursor-pointer"
+                        onMouseEnter={() => handleMouseEnterRonda(session.id)}
+                        onMouseLeave={handleMouseLeaveRonda}
+                        title="Pasa el ratón para abrir el menú de opciones"
+                      />
+                    )}
 
                     {/* Background Live Video of Lucas Torres / Presenter */}
                     <video
@@ -1841,7 +2270,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       autoPlay
                       loop
                       playsInline
-                      muted={isPresenterCameraAudioMuted || channelVolume === 0}
+                      muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
                       className="absolute inset-0 w-full h-full object-cover z-0"
                     />
 
@@ -1898,12 +2327,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setIsPresenterCameraFullscreen(false);
-                            setIsWatchingPresenterCamera(false);
-                          }}
+                          onClick={handleStopPresenterLiveCam}
                           className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md border border-rose-400 shrink-0"
-                          title="Cerrar Live"
+                          title="Cerrar Live y volver a la página de exposición"
                         >
                           <X className="w-3 h-3 text-white" />
                         </button>
@@ -1962,12 +2388,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                           <button
                             type="button"
-                            onClick={() => {
-                              setIsPresenterCameraFullscreen(false);
-                              setIsWatchingPresenterCamera(false);
-                            }}
+                            onClick={handleStopPresenterLiveCam}
                             className="bg-red-600 hover:bg-red-500 text-white font-black text-[10px] sm:text-[11px] py-2 px-2.5 rounded-xl shadow-lg uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-red-400"
                             id={`btn-stop-presenter-cam-${session.id}`}
+                            title="Detener Live y volver a la página de exposición"
                           >
                             <CameraOff className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate font-black">DETENER</span>
@@ -2119,21 +2543,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   >
                     {/* Background live camera stream */}
                     {userLiveMediaStream ? (
-                      <video
-                        ref={(el) => {
-                          if (el && userLiveMediaStream) {
-                            if (el.srcObject !== userLiveMediaStream) {
-                              el.srcObject = userLiveMediaStream;
-                            }
-                            el.play().catch(() => {});
-                          }
-                        }}
-                        autoPlay
-                        playsInline
-                        muted
-                        className={`absolute inset-0 w-full h-full object-cover z-0 ${
-                          liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''
-                        }`}
+                      <LiveUserStreamVideo 
+                        stream={userLiveMediaStream} 
+                        facingMode={liveCameraFacingMode} 
+                        className="absolute inset-0 z-0" 
                       />
                     ) : (
                       <video
@@ -2279,18 +2692,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           title="Clic para volver a pantalla completa de tu cámara"
                         >
                           {userLiveMediaStream ? (
-                            <video
-                              ref={(el) => {
-                                if (el && userLiveMediaStream && el.srcObject !== userLiveMediaStream) {
-                                  el.srcObject = userLiveMediaStream;
-                                  el.play().catch(() => {});
-                                }
-                              }}
-                              autoPlay
-                              playsInline
-                              muted
-                              className={`w-full h-full object-cover ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
-                            />
+                            <LiveUserStreamVideo stream={userLiveMediaStream} facingMode={liveCameraFacingMode} />
                           ) : (
                             <img
                               src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'}
@@ -2697,37 +3099,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           onClick={() => {
                             setActiveFinanzasSessionIndex(index);
                             if (setSelectedFinanzasUser) setSelectedFinanzasUser(presenter);
-                            if (onNavigateTo10WindowsLive) {
-                              onNavigateTo10WindowsLive();
-                            } else {
-                              const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana');
-                              if (isPresenter) {
-                                handleToggleUserCameraLiveBroadcast();
-                                setIsPresenterCameraFullscreen(prev => !prev);
-                              } else {
-                                if (isPresenterCameraFullscreen) {
-                                  setIsPresenterCameraFullscreen(false);
-                                  setIsWatchingPresenterCamera(false);
-                                } else {
-                                  setIsWatchingPresenterCamera(true);
-                                  setIsPresenterCameraFullscreen(true);
-                                  resumeOrStartLucasSpeech();
-                                }
-                              }
+                            if (!userLiveMediaStream && handleToggleUserCameraLiveBroadcast) {
+                              handleToggleUserCameraLiveBroadcast();
                             }
+                            setShowTenWindowsVotingLive(true);
                           }}
                           className={`w-full font-black text-xs sm:text-sm py-2.5 sm:py-3 px-4 rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
-                            isLiveActive
+                            showTenWindowsVotingLive
                               ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
                               : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                           }`}
                           id={`btn-live-voting-${session.id}`}
+                          title="Ver las 10 ventanas en vivo de los participantes (captura z.png)"
                         >
                           <Camera className="w-4 h-4 shrink-0 text-current" />
                           <span>LIVE</span>
-                          {isLiveActive && (
+                          {showTenWindowsVotingLive && (
                             <span className="ml-1 px-1.5 py-0.5 bg-red-950 text-white text-[8px] font-mono rounded-full border border-red-400/80">
-                              EN VIVO
+                              10 EN VIVO
                             </span>
                           )}
                         </button>
@@ -2787,16 +3176,28 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         <span className="text-[8.5px] sm:text-[9px] text-slate-400 italic">
                           Exposición de 5 minutos en directo
                         </span>
-                        {/* Audio exposition live indicator */}
-                        <div className="flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[8px] sm:text-[8.5px] font-bold shadow-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-                          <span>Voz en directo conectada</span>
+                        {/* Audio exposition live indicator (Clic para escuchar o reactivar la voz de Lucas Torres) */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            resumeOrStartLucasSpeech();
+                          }}
+                          title="Voz en directo de Lucas Torres activa. Pulsa para escuchar la presentación."
+                          className={`flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full border text-[8px] sm:text-[8.5px] font-bold shadow-xs transition active:scale-95 cursor-pointer select-none ${
+                            isLucasTorresSpeaking
+                              ? 'bg-emerald-950/90 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                              : 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/80'
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full bg-emerald-400 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
+                          <span className="font-extrabold">{isLucasTorresSpeaking ? 'Hablando en directo...' : 'Voz en directo conectada'}</span>
                           <span className="flex items-end gap-0.5 h-2.5 ml-0.5">
-                            <span className="w-0.5 h-2 bg-emerald-400 animate-pulse" />
-                            <span className="w-0.5 h-3 bg-emerald-400 animate-pulse delay-75" />
-                            <span className="w-0.5 h-1.5 bg-emerald-400 animate-pulse delay-150" />
+                            <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse' : 'h-1.5'}`} />
+                            <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-4 animate-pulse delay-75' : 'h-2'}`} />
+                            <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse delay-150' : 'h-1'}`} />
                           </span>
-                        </div>
+                        </button>
                       </div>
 {/* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: white digital pill timer) */}
                         <div className="w-full bg-[#070b14] border border-emerald-500/40 rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 shadow-inner mb-3">
@@ -2848,8 +3249,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           <button
                             type="button"
                             onClick={() => {
+                              const willBeOn = !isBroadcastMicOn || isMuted;
                               if (toggleBroadcastMic) {
                                 toggleBroadcastMic();
+                              }
+                              if (willBeOn) {
+                                resumeOrStartLucasSpeech();
+                              } else {
+                                stopLucasTorresSpeech();
                               }
                             }}
                             className={`w-full py-2 px-2.5 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border shadow-md ${
@@ -2857,6 +3264,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
                             }`}
+                            title={isBroadcastMicOn && !isMuted ? "Micrófono encendido: Lucas Torres está hablando. Pulsa para silenciar" : "Micrófono apagado. Pulsa para encender y escuchar a Lucas Torres"}
                           >
                             <Mic className="w-3.5 h-3.5 shrink-0 text-white" />
                             <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
@@ -3395,36 +3803,63 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
               {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT */}
               <div 
-                className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto"
+                className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto relative z-[350]"
                 id={`tiktok-actions-sidebar-${session.id}`}
               >
                 {/* Like button with count (e.g. 43.2K) - Queda marcado y lanza lluvia de corazones */}
                 <div className="flex flex-col items-center relative group/channel-heart-zone">
-                  {/* Floating horizontal emoji glossary on hover */}
-                  <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-row items-center gap-1.5 sm:gap-2 bg-[#0a0e1a]/95 backdrop-blur-xl border border-slate-700/80 px-3 py-2 rounded-2xl sm:rounded-full shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-fade-in max-w-[300px] xs:max-w-[380px] sm:max-w-[480px] overflow-x-auto custom-scrollbar select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
-                    {[
-                      '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                      '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                      '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                      '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                      '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                      '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                    ].map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                            detail: { emoji, icon: emoji }
-                          }));
-                        }}
-                        className="text-2xl sm:text-3xl hover:scale-135 active:scale-90 hover:bg-white/15 rounded-xl p-1 transition-all transform cursor-pointer bg-transparent border-0 shrink-0"
-                        title={`Enviar ${emoji}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+                  {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda SIEMPRE por delante */}
+                  <div className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 ${
+                    showEmojiPickerSessionId === session.id ? 'flex' : 'hidden group-hover/channel-heart-zone:flex'
+                  }`}>
+                    {/* Cabecera del recuadro */}
+                    <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
+                        <span>✨</span>
+                        <span>Reacciones</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowEmojiPickerSessionId(null);
+                          }}
+                          className="w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer"
+                          title="Cerrar ventana de reacciones"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Rejilla de emojis centrada y cómoda */}
+                    <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
+                      {[
+                        '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
+                        '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
+                        '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
+                        '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
+                        '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
+                        '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                      ].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                              detail: { emoji, icon: emoji }
+                            }));
+                          }}
+                          className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                          title={`Enviar ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <button
@@ -3521,6 +3956,39 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             </div>
           );
         })}
+      </div>
+
+      {/* 🧭 NAVEGADOR FLOTANTE VERTICAL DE RONDAS DE FINANCIACIÓN (Permite desplazarse cómodamente entre pantallas como en z.png) */}
+      <div 
+        className="fixed bottom-6 right-3 sm:right-6 z-[80] flex flex-col items-center gap-1 bg-[#0a0e1a]/90 backdrop-blur-xl border border-slate-700/80 px-2 py-2.5 rounded-2xl shadow-2xl select-none animate-fade-in pointer-events-auto"
+        id="floating-finanzas-rounds-navigator"
+      >
+        <button
+          type="button"
+          disabled={activeFinanzasSessionIndex <= 0}
+          onClick={() => scrollToRound(activeFinanzasSessionIndex - 1)}
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 hover:bg-slate-700 disabled:opacity-25 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700"
+          title="Ronda anterior (desplazar arriba)"
+        >
+          <ChevronUp className="w-4 h-4 text-white" />
+        </button>
+
+        <div className="flex flex-col items-center py-0.5 text-center">
+          <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">RONDA</span>
+          <span className="text-[11px] font-black font-mono text-emerald-400">
+            {activeFinanzasSessionIndex + 1}/{activeSessionsOnly.length}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          disabled={activeFinanzasSessionIndex >= activeSessionsOnly.length - 1}
+          onClick={() => scrollToRound(activeFinanzasSessionIndex + 1)}
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 hover:bg-slate-700 disabled:opacity-25 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700"
+          title="Siguiente ronda (desplazar abajo)"
+        >
+          <ChevronDown className="w-4 h-4 text-white" />
+        </button>
       </div>
     </div>
   );
