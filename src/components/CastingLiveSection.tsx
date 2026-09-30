@@ -2870,6 +2870,22 @@ export default function CastingLiveSection({
     { id: 'enc-2', user: 'Lucía Modelo', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', text: 'Gran presencia en directo y claridad en los números 👏', time: 'hace 30s' },
     { id: 'enc-3', user: 'Mateo R.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150', text: '¡Adelante con la ronda de inversión! 💎', time: 'ahora mismo' }
   ]);
+  const [isEnlargedCommentsVisible, setIsEnlargedCommentsVisible] = useState<boolean>(true);
+
+  // Escuchar eventos globales para alternar la visibilidad de los comentarios al pulsar el botón
+  useEffect(() => {
+    const handleToggle = () => setIsEnlargedCommentsVisible(prev => !prev);
+    const handleHide = () => setIsEnlargedCommentsVisible(false);
+    const handleShow = () => setIsEnlargedCommentsVisible(true);
+    window.addEventListener('toggle-live-comments', handleToggle);
+    window.addEventListener('hide-live-comments', handleHide);
+    window.addEventListener('show-live-comments', handleShow);
+    return () => {
+      window.removeEventListener('toggle-live-comments', handleToggle);
+      window.removeEventListener('hide-live-comments', handleHide);
+      window.removeEventListener('show-live-comments', handleShow);
+    };
+  }, []);
   const [broadcastBottomCommentText, setBroadcastBottomCommentText] = useState('');
   const [showBroadcastEmojiPopover, setShowBroadcastEmojiPopover] = useState(false);
   const [inscriptionBalanceError, setInscriptionBalanceError] = useState<string | null>(null);
@@ -5793,11 +5809,14 @@ export default function CastingLiveSection({
     localStorage.setItem('finanzas_presentation_timers', JSON.stringify(finanzasTimers));
   }, [finanzasTimers]);
 
-  // Persist voting phase states to localStorage
+  // Persist voting phase states to localStorage por sessionId
   useEffect(() => {
-    localStorage.setItem('finanzas_is_voting_phase_active', String(isVotingPhaseActive));
-    localStorage.setItem('finanzas_voting_phase_timer', String(votingPhaseTimer));
-  }, [isVotingPhaseActive, votingPhaseTimer]);
+    if (currentFinanzasSession?.id) {
+      localStorage.setItem(`finanzas_is_voting_phase_active_${currentFinanzasSession.id}`, String(isVotingPhaseActive));
+      localStorage.setItem(`finanzas_voting_phase_timer_${currentFinanzasSession.id}`, String(votingPhaseTimer));
+    }
+    localStorage.removeItem('finanzas_is_voting_phase_active');
+  }, [isVotingPhaseActive, votingPhaseTimer, currentFinanzasSession?.id]);
 
   const buildFinanzasCompletedSession = (votesMap: Record<string, number>) => {
     const defaultParticipantVotes: Record<string, number> = {
@@ -5997,11 +6016,18 @@ export default function CastingLiveSection({
       const totalElapsed = Math.max(0, Math.floor((now - startTime) / 1000));
       const sessionParticipants = currentFinanzasSession?.participants || TRABAJADORES_USERS;
 
-      const isVotingSaved = localStorage.getItem('finanzas_is_voting_phase_active') === 'true';
-      const isVotingCurrentlyActive = Boolean(isVotingPhaseActive || isVotingSaved);
+      // 🛑 Cada ronda es estrictamente independiente de la otra: comprobación por sessionId
+      const isVotingSaved = localStorage.getItem(`finanzas_is_voting_phase_active_${activeSessionId}`) === 'true';
+      const isVotingCurrentlyActive = Boolean(isVotingSaved);
+
+      // Si la ronda fue adelantada artificialmente a 50 min por el antiguo flag global pero no está en votación, restaurar
+      if (!isVotingCurrentlyActive && totalElapsed >= 3000) {
+        startTime = now - (50 * 1000);
+        localStorage.setItem(sessionStartKey, String(startTime));
+      }
 
       if (isVotingCurrentlyActive && totalElapsed < 3000) {
-        // If voting phase has been initiated, advance timeline to minute 50:00 (start of 10m voting)
+        // If voting phase has been initiated para esta ronda específica, advance timeline to minute 50:00 (start of 10m voting)
         startTime = now - (3000 * 1000);
         localStorage.setItem(sessionStartKey, String(startTime));
       }
@@ -13262,41 +13288,13 @@ export default function CastingLiveSection({
           // Swipe Derecha -> Anterior Proyecto
           setVotingProjectSlideIndex(prev => Math.max(prev - 1, 0));
         }
-      } else if (Math.abs(diffY) > 30) {
-        // 🚀 Desplazamiento vertical dominante: desplaza la pantalla entera como en imagen.png
-        const now = Date.now();
-        if (now - lastScrollTime.current < 280) return;
-        lastScrollTime.current = now;
-
-        if (diffY > 0) {
-          setSlideDirection('up');
-          handleScrollSession('down');
-          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
-        } else {
-          setSlideDirection('down');
-          handleScrollSession('up');
-          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
-        }
       }
     };
 
     const handleSliderWheel = (e: React.WheelEvent) => {
-      // 🚀 Desplazamiento vertical por rueda de ratón: desplaza la pantalla entera igual que en image.png
-      if (Math.abs(e.deltaY) > 10) {
-        const now = Date.now();
-        if (now - lastScrollTime.current < 280) return;
-        lastScrollTime.current = now;
-
-        if (e.deltaY > 0) {
-          setSlideDirection('up');
-          handleScrollSession('down');
-          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
-        } else {
-          setSlideDirection('down');
-          handleScrollSession('up');
-          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
-        }
-      }
+      // Detener propagación para permitir el scroll natural vertical dentro de la página
+      // sin que el feed principal cambie de ronda
+      e.stopPropagation();
     };
 
     return (
@@ -13304,24 +13302,23 @@ export default function CastingLiveSection({
         onWheel={handleSliderWheel}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`w-full h-full bg-white flex flex-col justify-between overflow-hidden text-slate-800 font-sans text-left select-none relative z-30 transition-transform duration-300 ${
-          slideDirection === 'up' ? 'animate-slide-up-tiktok' : slideDirection === 'down' ? 'animate-slide-down-tiktok' : ''
-        }`}
+        className="w-full h-full bg-white flex flex-col overflow-y-auto custom-scrollbar text-slate-800 font-sans text-left relative z-30 select-none scroll-smooth overscroll-contain touch-pan-y"
+        id="voting-projects-scrollable-container"
       >
-        {/* Header */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-white text-slate-900 shrink-0 select-none relative z-50">
+        {/* Header pegajoso superior con insignias, cronómetro y botón X */}
+        <div className="sticky top-0 z-40 p-2.5 sm:p-3 border-b border-slate-200 bg-white/95 backdrop-blur-md text-slate-900 shrink-0 select-none shadow-xs">
           {/* Top row: Badges on the left, Close X button on the right (matching image.png) */}
           <div className="flex items-center justify-between gap-2 w-full">
-            <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[#fe2c55] text-[10px] font-black uppercase tracking-wider font-mono">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+              <div className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[#fe2c55] text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider font-mono">
                 <span>💼 MESA DE VOTACIÓN FINANCIERA</span>
               </div>
-              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 border border-rose-500/80 text-white font-mono text-[10.5px] font-black shadow-xs">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900 border border-rose-500/80 text-white font-mono text-[10px] sm:text-[10.5px] font-black shadow-xs">
                 <span className="text-rose-400">⏱️</span>
-                <span className="text-[9.5px] text-slate-300 uppercase font-sans font-bold">Votación (10 min):</span>
+                <span className="text-[9px] sm:text-[9.5px] text-slate-300 uppercase font-sans font-bold">Votación (10 min):</span>
                 <span className="text-emerald-400 font-black">{formattedVotingTimer}</span>
               </div>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded-full text-[9.5px] font-black font-mono">
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded-full text-[9px] sm:text-[9.5px] font-black font-mono">
                 {finanzasVotedVoterIds.length}/10 votos emitidos
               </span>
             </div>
@@ -13369,16 +13366,16 @@ export default function CastingLiveSection({
               <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
             </button>
           </div>
+        </div>
 
-          {/* Centered phrase with clear separation from the contents above */}
-          <div className="mt-3.5 sm:mt-4 mb-1 w-full flex flex-col items-center justify-center text-center gap-1">
-            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight text-center m-0">
-              Proyectos de los Participantes
-            </h3>
-            <span className="text-[11px] sm:text-xs font-bold text-[#fe2c55] uppercase tracking-wide">
-              🗳️ Tienen 10 minutos para votar todos los participantes
-            </span>
-          </div>
+        {/* Centered phrase with clear separation from the contents above */}
+        <div className="pt-3 pb-1 px-3 sm:px-4 w-full flex flex-col items-center justify-center text-center gap-1 shrink-0 bg-white">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight text-center m-0">
+            Proyectos de los Participantes
+          </h3>
+          <span className="text-[11px] sm:text-xs font-bold text-[#fe2c55] uppercase tracking-wide">
+            🗳️ Tienen 10 minutos para votar todos los participantes
+          </span>
         </div>
 
         {/* Dos filas horizontales de 5 participantes en tamaño adaptado al canal */}
@@ -13459,9 +13456,7 @@ export default function CastingLiveSection({
 
         {/* Active Project Slide (Full Detail Card) */}
         <div 
-          className="flex-1 p-3.5 sm:p-5 overflow-y-auto space-y-3.5 bg-slate-50/50 touch-pan-y"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+          className="p-3 sm:p-4 space-y-3.5 bg-slate-50/50"
         >
           {/* Presenter / Author Info */}
           <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-3.5 shadow-2xs flex items-center justify-between gap-3">
@@ -13571,7 +13566,7 @@ export default function CastingLiveSection({
         </div>
 
         {/* Footer Controls: Prev / Next Buttons */}
-        <div className="w-full max-w-full box-border px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 border-t border-slate-200 bg-white flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 overflow-hidden" id="voting-slider-footer-nav">
+        <div className="w-full max-w-full box-border px-3 sm:px-4 md:px-5 pt-3 pb-12 border-t border-slate-200 bg-white flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 overflow-hidden" id="voting-slider-footer-nav">
           <button
             type="button"
             disabled={votingProjectSlideIndex === 0}
@@ -13843,11 +13838,15 @@ export default function CastingLiveSection({
 
         {/* Podium content in dark luxury styling - Cómodo desplazamiento completo */}
         <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-0 scroll-smooth custom-scrollbar w-full max-w-full"
+          className="flex-1 overflow-y-auto overflow-x-hidden p-0 scroll-smooth custom-scrollbar w-full max-w-full touch-pan-y overscroll-contain"
           id="podium-scrollable-content-wrapper"
           onWheel={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseMove={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
         >
           <SessionResultsPodium
             completedSessionToDisplay={activeSessionToDisplay}
@@ -14104,25 +14103,61 @@ export default function CastingLiveSection({
           )}
 
           {/* Live Comments Overlay (Auto-scrolling stream, transparent without container background) */}
-          <div className="max-h-[160px] sm:max-h-[180px] overflow-y-auto space-y-2 pr-1 custom-scrollbar pointer-events-auto max-w-md" id="enlarged-comments-overlay">
-            {enlargedWindowComments.slice(0, 8).map(c => (
-              <div 
-                key={c.id} 
-                className="flex items-start gap-2 p-1 bg-transparent border-0 shadow-none text-left text-xs drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
-              >
-                <img src={c.avatar} alt={c.user} className="w-6 h-6 rounded-full object-cover border border-white/40 shrink-0 mt-0.5 shadow-sm" />
-                <div className="min-w-0 flex-1 leading-snug">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-black text-rose-300 drop-shadow truncate">@{c.user}</span>
-                    <span className="text-[9px] text-slate-300/80 font-mono drop-shadow">{c.time}</span>
-                  </div>
-                  <p className="text-[11px] text-white font-medium break-words m-0 drop-shadow">
-                    {c.text}
-                  </p>
-                </div>
+          {isEnlargedCommentsVisible ? (
+            <div className="flex flex-col gap-1 max-w-md animate-fade-in pointer-events-auto">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] text-rose-300 font-black uppercase tracking-wider flex items-center gap-1 drop-shadow">
+                  <MessageCircle className="w-3 h-3 text-rose-400" /> Comentarios ({enlargedWindowComments.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEnlargedCommentsVisible(false);
+                    window.dispatchEvent(new CustomEvent('hide-live-comments'));
+                  }}
+                  className="text-[10px] text-slate-300 hover:text-white bg-black/60 hover:bg-black/90 px-2 py-0.5 rounded-full flex items-center gap-1 transition cursor-pointer drop-shadow border border-white/15"
+                  title="Ocultar comentarios"
+                >
+                  <span>Ocultar</span>
+                  <X className="w-3 h-3" />
+                </button>
               </div>
-            ))}
-          </div>
+              <div className="max-h-[160px] sm:max-h-[180px] overflow-y-auto space-y-2 pr-1 custom-scrollbar" id="enlarged-comments-overlay">
+                {enlargedWindowComments.slice(0, 8).map(c => (
+                  <div 
+                    key={c.id} 
+                    className="flex items-start gap-2 p-1 bg-transparent border-0 shadow-none text-left text-xs drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+                  >
+                    <img src={c.avatar} alt={c.user} className="w-6 h-6 rounded-full object-cover border border-white/40 shrink-0 mt-0.5 shadow-sm" />
+                    <div className="min-w-0 flex-1 leading-snug">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-black text-rose-300 drop-shadow truncate">@{c.user}</span>
+                        <span className="text-[9px] text-slate-300/80 font-mono drop-shadow">{c.time}</span>
+                      </div>
+                      <p className="text-[11px] text-white font-medium break-words m-0 drop-shadow">
+                        {c.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="pointer-events-auto max-w-xs animate-fade-in self-start mb-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEnlargedCommentsVisible(true);
+                  window.dispatchEvent(new CustomEvent('show-live-comments'));
+                }}
+                className="bg-black/60 hover:bg-black/85 text-rose-300 hover:text-white px-3 py-1 rounded-full text-[10.5px] font-bold flex items-center gap-1.5 border border-white/20 shadow-lg transition active:scale-95 cursor-pointer backdrop-blur-sm"
+                title="Ver comentarios"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
+                <span>Ver comentarios ({enlargedWindowComments.length})</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 4. Bottom Controls Bar: Comentarios y Enviar Regalos */}
@@ -14189,46 +14224,61 @@ export default function CastingLiveSection({
 
           {/* Virtual Gifts Drawer Shelf (When open) */}
           {isEnlargedGiftDrawerOpen && (
-            <div className="bg-slate-900 border border-amber-500/50 rounded-2xl p-3 shadow-2xl animate-slide-up flex flex-col gap-2">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                <div className="flex items-center gap-1.5 text-amber-400 font-black text-xs uppercase tracking-wider">
-                  <span>🎁</span>
-                  <span>Enviar Regalo a {enlargedWindowUser.name}</span>
+            <div className="bg-[#0b101c]/95 backdrop-blur-2xl border border-amber-500/50 rounded-3xl p-3 sm:p-4 shadow-2xl animate-slide-up flex flex-col gap-2.5 z-30 select-none">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2 px-1">
+                <div className="flex items-center gap-2 text-amber-400 font-black text-xs sm:text-sm uppercase tracking-wider">
+                  <span className="text-base sm:text-lg">🎁</span>
+                  <span>ENVIAR REGALO A {enlargedWindowUser.name}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-amber-300 font-bold font-mono">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-[11px] sm:text-xs text-amber-300 font-black font-mono bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-full shadow-inner">
                     Saldo: {liveUserCoins} 🪙
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsEnlargedGiftDrawerOpen(false)}
-                    className="text-slate-400 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold border border-slate-700 transition cursor-pointer"
+                    title="Cerrar panel de regalos"
                   >
                     ✕
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 max-h-[160px] overflow-y-auto custom-scrollbar p-1">
+              {/* Grid 4 en 4 horizontal en formato cuadrado (16 regalos en total) */}
+              <div className="grid grid-cols-4 gap-2 sm:gap-2.5 max-h-[290px] sm:max-h-[340px] overflow-y-auto custom-scrollbar p-1">
                 {[
                   { name: 'Rosa roja', icon: '🌹', cost: 1 },
                   { name: 'Un Beso', icon: '💋', cost: 1 },
                   { name: 'Café Caliente', icon: '☕', cost: 5 },
                   { name: 'Bombones', icon: '🍫', cost: 10 },
+                  { name: 'Cohete VIP', icon: '🚀', cost: 20 },
+                  { name: 'Copa Brindis', icon: '🥂', cost: 25 },
                   { name: 'Corona VIP', icon: '👑', cost: 50 },
+                  { name: 'Fuegos Artif.', icon: '🎆', cost: 75 },
+                  { name: 'Deportivo', icon: '🏎️', cost: 150 },
                   { name: 'Diamante', icon: '💎', cost: 300 },
-                  { name: 'Anillo de Brillantes', icon: '💍', cost: 600 },
-                  { name: 'León Imperial', icon: '🦁', cost: 1000 }
+                  { name: 'Yate Lujo', icon: '🛥️', cost: 500 },
+                  { name: 'Anillo Brill.', icon: '💍', cost: 600 },
+                  { name: 'Jet Privado', icon: '✈️', cost: 800 },
+                  { name: 'León Imperial', icon: '🦁', cost: 1000 },
+                  { name: 'Castillo Real', icon: '🏰', cost: 1500 },
+                  { name: 'Galaxia VIP', icon: '🪐', cost: 2000 }
                 ].map((gift, gIdx) => (
                   <button
                     key={gIdx}
                     type="button"
                     onClick={() => handleSendGiftToEnlargedUser(gift)}
-                    className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 active:scale-90 border border-slate-700 hover:border-amber-400 transition cursor-pointer group shadow-sm text-center"
+                    className="aspect-square flex flex-col items-center justify-between p-2 rounded-2xl bg-slate-800/90 hover:bg-slate-750 active:scale-95 border border-slate-700/80 hover:border-amber-400/90 hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-all cursor-pointer group shadow-md text-center"
+                    title={`Enviar ${gift.name} (${gift.cost} 🪙)`}
                   >
-                    <span className="text-2xl group-hover:scale-125 transition-transform">{gift.icon}</span>
-                    <span className="text-[9px] font-bold text-slate-200 mt-1 truncate max-w-full">{gift.name}</span>
-                    <span className="text-[9px] font-black text-amber-400 font-mono mt-0.5 flex items-center gap-0.5">
+                    <span className="text-2xl sm:text-3xl group-hover:scale-120 transition-transform duration-200 mt-1 drop-shadow-sm select-none">
+                      {gift.icon}
+                    </span>
+                    <span className="text-[10px] sm:text-[10.5px] font-bold text-slate-100 group-hover:text-amber-300 transition-colors truncate max-w-full leading-tight">
+                      {gift.name}
+                    </span>
+                    <span className="text-[9.5px] sm:text-[10px] font-black text-amber-400 font-mono flex items-center justify-center gap-1 bg-amber-500/15 border border-amber-500/25 px-2 py-0.5 rounded-full mb-0.5">
                       🪙 {gift.cost}
                     </span>
                   </button>
@@ -26062,7 +26112,7 @@ try {
                     className={`relative bg-[#070b14] shadow-2xl overflow-hidden flex items-center justify-center min-w-0 flex-1 sm:flex-initial group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
                       isMobileChannelPinned
                         ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-0 m-0 border-none shadow-none'
-                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[810px] sm:h-[860px] max-h-[100dvh] sm:max-h-[860px] rounded-[44px] sm:rounded-[52px] border-[3.5px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
+                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[810px] sm:h-[860px] max-h-[100dvh] sm:max-h-[860px] rounded-[44px] sm:rounded-[52px] border border-black shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
                     }`} 
                     id="video-feed-main-card"
                   >
@@ -27771,7 +27821,8 @@ try {
                                   startTime = now - (3000 * 1000);
                                   localStorage.setItem(sessionStartKey, String(startTime));
                                 }
-                                localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                                localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+                                localStorage.removeItem('finanzas_is_voting_phase_active');
                                 setIsVotingPhaseActive(true);
                                 setVotingPhaseTimer(prev => (prev > 0 && prev <= 600) ? prev : 600);
                               }}
@@ -27857,7 +27908,8 @@ try {
                                   startTime = now - (3000 * 1000);
                                   localStorage.setItem(sessionStartKey, String(startTime));
                                 }
-                                localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                                localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+                                localStorage.removeItem('finanzas_is_voting_phase_active');
                                 setIsVotingPhaseActive(true);
                                 setVotingPhaseTimer(prev => (prev > 0 && prev <= 600) ? prev : 600);
                               }}
@@ -29736,7 +29788,7 @@ try {
                             onMouseLeave={handleBottomParticipantsMouseLeave}
                           >
                             <div 
-                              className="flex flex-col gap-2 sm:gap-3 w-full max-w-[420px] sm:max-w-[460px] min-w-0 bg-[#0B0F19]/95 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-slate-800/90 shadow-[0_20px_60px_rgba(0,0,0,0.95)] px-3 sm:px-4 mx-auto box-border"
+                              className="flex flex-col gap-2 sm:gap-3 w-full max-w-[420px] sm:max-w-[460px] min-w-0 bg-[#0B0F19]/95 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-black shadow-[0_20px_60px_rgba(0,0,0,0.95)] px-3 sm:px-4 mx-auto box-border"
                               id="finanzas-live-participants-panel-channel"
                               onClick={(e) => e.stopPropagation()}
                               onMouseEnter={handleBottomParticipantsMouseEnter}
@@ -29915,14 +29967,14 @@ try {
                                       }}
                                       className={`w-full max-w-[400px] font-black text-[12px] xs:text-[13px] sm:text-[14px] px-5 sm:px-6 py-3 sm:py-3.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
                                         isUserParticipating
-                                          ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white border-emerald-400 shadow-emerald-900/30'
+                                          ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] animate-pulse ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
                                       title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
                                     >
-                                      <span className="text-base shrink-0">✍️</span>
-                                      <span className="truncate min-w-0 font-black tracking-tight">
+                                      <span className={`text-base shrink-0 ${isUserParticipating ? 'animate-bounce' : ''}`}>✍️</span>
+                                      <span className={`truncate min-w-0 font-black tracking-tight ${isUserParticipating ? 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]' : ''}`}>
                                         {isUserParticipating 
                                           ? `Estás inscrita como participante (${currentSessionFeeInfo.feeInWords})` 
                                           : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
@@ -33233,13 +33285,14 @@ try {
                     type="button"
                     onClick={() => {
                       setIsCommentsOpen(prev => !prev);
+                      window.dispatchEvent(new CustomEvent('toggle-live-comments'));
                     }}
                     className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer ${
                       isCommentsOpen
                         ? 'bg-rose-600 text-white ring-2 ring-rose-400 shadow-rose-600/50 scale-105'
                         : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
                     }`}
-                    title="Comentarios"
+                    title={isCommentsOpen ? "Ocultar comentarios" : "Ver comentarios"}
                     id="btn-live-comments"
                   >
                     <MessageCircle className="w-5 h-5 text-white" />
@@ -33267,35 +33320,6 @@ try {
                     {formatCount(liveBookmarksCount || 592)}
                   </span>
                 </div>
-
-                {/* Share icon with count (726) */}
-                <div className="flex flex-col items-center">
-                  <button
-                    type="button"
-                    onClick={() => handleLiveShareClick()}
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
-                    title="Compartir"
-                    id="btn-live-share"
-                  >
-                    <Share2 className="w-5 h-5 text-white" />
-                  </button>
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-0.5">
-                    {formatCount(liveSharesCount || 726)}
-                  </span>
-                </div>
-
-                {/* Options (...) */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMobileEmojiPopover(prev => !prev);
-                  }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
-                  title="Más opciones y emoticones"
-                  id="btn-live-more"
-                >
-                  <MoreHorizontal className="w-5 h-5 text-white" />
-                </button>
               </div>
           </div>
 

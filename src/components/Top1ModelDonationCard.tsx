@@ -564,7 +564,7 @@ export default function Top1ModelDonationCard({
     <div 
       id="top-1-ranking-model-container" 
       data-channel-container="true"
-      className="bg-gradient-to-b from-[#fff2f6] via-[#fff9fb] to-[#fff3f7] rounded-[36px] border-2 border-rose-200/90 p-5 sm:p-8 shadow-2xl relative overflow-hidden text-left animate-fade-in space-y-8"
+      className="w-full max-w-full box-border bg-gradient-to-b from-[#fff2f6] via-[#fff9fb] to-[#fff3f7] rounded-[36px] border-2 border-rose-200/90 p-5 sm:p-8 shadow-2xl relative overflow-hidden text-left animate-fade-in space-y-8"
     >
       {/* Luxury Background Silk Drapery & Atmospheric Gold Sparkles Effect */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-pink-200/35 via-rose-100/20 to-transparent pointer-events-none" />

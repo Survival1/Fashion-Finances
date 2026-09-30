@@ -1290,7 +1290,7 @@ export default function SessionResultsPodium({
   };
 
   return (
-    <div className="bg-[#070b14] text-white rounded-none border-0 p-3 sm:p-5 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full scrollbar-none no-scrollbar box-border" id="podium-results-screen" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain" id="podium-results-screen">
       
       {/* Immersive stadium visual background effects */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
@@ -1350,23 +1350,23 @@ export default function SessionResultsPodium({
       </div>
 
       {/* 🧪 TESTING CONTROLLER FOR MULTI-WINNER SCENARIOS */}
-      <div className="bg-[#0e1628]/95 border border-slate-800/80 p-4 sm:p-5 rounded-3xl relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md animate-fade-in">
-        <div className="space-y-1 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-1.5 text-xs font-black text-amber-400 tracking-wider">
+      <div className="bg-[#0e1628]/95 border border-black p-3.5 sm:p-4 rounded-3xl relative z-10 flex flex-col items-center gap-3 text-center shadow-md animate-fade-in">
+        <div className="space-y-1 text-center">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-black text-amber-400 tracking-wider">
             <span className="animate-pulse">✨</span> <span>SIMULADOR DE GANADORES MÚLTIPLES</span>
           </div>
-          <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed max-w-xl font-medium">
-            Prueba cómo responde la interfaz interactiva en tiempo real al haber un empate de <strong>5 ganadores</strong>. Cambia el escenario a continuación para explorar cada uno de sus proyectos de forma cómoda e intuitiva.
+          <p className="text-[10.5px] sm:text-[11px] text-slate-300 leading-relaxed max-w-md font-medium">
+            Prueba cómo responde la interfaz interactiva en tiempo real al haber un empate de <strong>5 ganadores</strong>. Cambia el escenario a continuación para explorar cada uno de sus proyectos.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             onClick={() => {
               setIsSimulatedFiveWinners(false);
               setSponsorViewMode('individual');
               setActiveWinnerIndex(0);
             }}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition duration-150 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition duration-150 cursor-pointer ${
               !isSimulatedFiveWinners
                 ? 'bg-slate-900 text-white shadow-md font-black border border-slate-700'
                 : 'bg-[#070b14] hover:bg-slate-900 text-slate-300 border border-slate-800 shadow-3xs'
@@ -1380,7 +1380,7 @@ export default function SessionResultsPodium({
               setSponsorViewMode('individual');
               setActiveWinnerIndex(0);
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition duration-150 flex items-center gap-1 cursor-pointer ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition duration-150 flex items-center gap-1 cursor-pointer ${
               isSimulatedFiveWinners
                 ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black ring-2 ring-amber-300'
                 : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-400/40'
@@ -1391,31 +1391,28 @@ export default function SessionResultsPodium({
         </div>
       </div>
 
-      {/* MAIN BODY GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 items-start">
-        {/* LEFT COLUMN (8/12 OF SCREEN WIDTH) */}
-        <div className="lg:col-span-8 space-y-8">
+      {/* 🏛️ CONTENEDORES ORDENADOS VERTICALMENTE CON DISEÑO COHESIVO Y ELEGANTE */}
+      <div className="flex flex-col gap-6 relative z-10 w-full max-w-full">
+        {/* 🏆 CONTENEDOR 1: EL PODIO DE NUESTROS GANADORES */}
+        <div className="bg-[#0e1628]/95 p-4 sm:p-6 rounded-3xl border border-black shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-5">
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
           
-          {/* THE ANGELS RANKING PODIUM DE NUESTROS GANADORES */}
-          <div className="bg-[#0e1628]/95 p-5 sm:p-7 rounded-3xl border border-slate-800/80 shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-6">
-            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
-            
-            {/* Decorative title - Desduplicado: Podio de Ganadores */}
-            <div className="text-center space-y-2 relative z-10">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border border-amber-400/60 px-4 py-1 rounded-full text-[10.5px] font-black uppercase tracking-[0.2em] text-amber-300 mx-auto shadow-sm">
-                <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA • {completedSessionToDisplay.reference || 'REF: 1'} <span>✦</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-white tracking-tight uppercase">
-                PODIO DE GANADORES • {completedSessionToDisplay.title}
-              </h3>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-[10px] font-mono text-cyan-300 mx-auto">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span>Base de Datos Archivada: {completedSessionToDisplay.reference || 'REF: 1'} (Ronda #{completedSessionToDisplay.roundNumber ? completedSessionToDisplay.roundNumber - 1 : 0})</span>
-              </div>
-              <p className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.15em] font-bold max-w-lg mx-auto">
-                ASIGNACIÓN OFICIAL DE CAPITAL DE INVERSIÓN Y RECONOCIMIENTO FINANCIERO
-              </p>
+          {/* Decorative title - Desduplicado: Podio de Ganadores */}
+          <div className="text-center space-y-2 relative z-10">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border border-amber-400/60 px-3.5 py-1 rounded-full text-[10px] sm:text-[10.5px] font-black uppercase tracking-[0.2em] text-amber-300 mx-auto shadow-sm">
+              <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA • {completedSessionToDisplay.reference || 'REF: 1'} <span>✦</span>
             </div>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-white tracking-wide uppercase leading-snug break-words px-2 m-0">
+              PODIO DE GANADORES • {completedSessionToDisplay.title}
+            </h3>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-[9.5px] sm:text-[10px] font-mono text-cyan-300 mx-auto">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span>Base de Datos Archivada: {completedSessionToDisplay.reference || 'REF: 1'} (Ronda #{completedSessionToDisplay.roundNumber ? completedSessionToDisplay.roundNumber - 1 : 0})</span>
+            </div>
+            <p className="text-[9.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold max-w-lg mx-auto">
+              ASIGNACIÓN OFICIAL DE CAPITAL DE INVERSIÓN Y RECONOCIMIENTO FINANCIERO
+            </p>
+          </div>
 
             {/* Podium pedestal columns or Multi-winner Slider */}
             {isMultiWinner ? (
@@ -1708,14 +1705,70 @@ export default function SessionResultsPodium({
             </p>
           </div>
 
-          {/* DYNAMIC WINNER CAROUSEL VIEW */}
+          {/* 👥 CONTENEDOR 2: 10 PARTICIPANTES TOTALES Y RECUENTO DE VOTOS (Diseño oscuro de lujo a ancho completo) */}
+          <div className="bg-[#0e1628]/95 border border-black rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-left" id="ranking-participantes-ronda">
+            <div className="flex items-center justify-between gap-2 px-1 border-b border-slate-800/80 pb-2.5">
+              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-200 font-mono">
+                <span>👥</span>
+                <span>10 PARTICIPANTES TOTALES</span>
+              </div>
+              <div className="inline-flex items-center gap-1 bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>100% VOTOS EMITIDOS</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
+              {[...completedSessionToDisplay.participants]
+                .sort((a, b) => b.votesReceived - a.votesReceived)
+                .map((part) => {
+                const isSelf = part.userId === userProfile.id;
+                return (
+                  <div 
+                    key={part.userId} 
+                    onClick={() => handleNavigateToModelProfile(part)}
+                    className="bg-slate-900/90 hover:bg-slate-850 rounded-2xl p-2.5 sm:p-3 border border-slate-800 hover:border-amber-400/60 flex flex-col justify-between items-start gap-2 transition hover:scale-[1.01] active:scale-98 cursor-pointer select-none shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 truncate w-full text-left">
+                      <img 
+                        src={part.avatar} 
+                        alt={part.name} 
+                        onError={(e) => handleAvatarError(e, part.name)}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-slate-700 shrink-0" 
+                      />
+                      <span className="text-white font-extrabold text-xs truncate">
+                        {part.name}
+                      </span>
+                    </div>
+                    
+                    <div className="w-full text-left flex items-center justify-between pt-1.5 border-t border-slate-800/80">
+                      {isSelf ? (
+                        <span className="text-[8px] sm:text-[8.5px] font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-1.5 py-0.5 rounded uppercase tracking-tight">
+                          Mesa
+                        </span>
+                      ) : (
+                        <span className="text-[8px] sm:text-[8.5px] font-bold text-rose-300 bg-rose-950/80 border border-rose-500/40 px-1.5 py-0.5 rounded uppercase tracking-tight">
+                          Votado
+                        </span>
+                      )}
+                      <span className="text-[10px] sm:text-[10.5px] font-black text-amber-400 font-mono">
+                        {part.votesReceived} votos
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 🎨 CONTENEDOR 3: DYNAMIC WINNER CAROUSEL VIEW */}
           {firstPlace && (() => {
             const winnerProjectImages = getWinnerProjectImages(firstPlace);
             const winnerProject = getWinnerFullProject(firstPlace);
             return (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-pink-100/50 pb-2">
-                  <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-slate-800 font-sans flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-slate-800/80 pb-2">
+                  <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-amber-400 font-sans flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                     {isMultiWinner ? 'GALERÍA DE ALTA COSTURA DE LOS PROYECTOS FINANCIADOS' : 'GALERÍA DE ALTA COSTURA DEL PROYECTO FINANCIADO'}
                   </h3>
@@ -1975,76 +2028,13 @@ export default function SessionResultsPodium({
             </div>
           </div>
 
-          {/* 👑 CONTENEDOR DE LA MODELO LÍDER DEL RANKING (MODELO DIAMANTE #1) CON SISTEMA DE DONACIONES Y REGALOS */}
-          <Top1ModelDonationCard
-            models={models}
-            userProfile={userProfile}
-            onSelectModel={onSelectModel}
-            onNavigateToTab={onNavigateToTab}
-          />
-
-        </div>
-
-        {/* RIGHT COLUMN (4/12 OF SCREEN WIDTH) */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-[10.5px] font-black tracking-widest uppercase text-slate-500 font-mono flex items-center justify-between">
-              <span>10 PARTICIPANTES TOTALES</span>
-              <span className="text-emerald-500">100% Votos</span>
-            </h3>
-
-            <div className="bg-white border border-pink-100 rounded-3xl p-5 space-y-4 shadow-2xs">
-              <div className="grid grid-cols-2 gap-3 max-h-[350px] overflow-y-auto no-scrollbar">
-                {[...completedSessionToDisplay.participants]
-                  .sort((a, b) => b.votesReceived - a.votesReceived)
-                  .map((part) => {
-                  const isSelf = part.userId === userProfile.id;
-                  const matchedModel = models.find(m => m.id === part.userId || m.name.toLowerCase() === part.name.toLowerCase());
-                  return (
-                    <div 
-                      key={part.userId} 
-                      onClick={() => handleNavigateToModelProfile(part)}
-                      className="bg-pink-50/20 rounded-xl p-3 border border-pink-100/50 flex flex-col justify-between items-start space-y-1.5 transition hover:border-pink-300 hover:bg-pink-50/50 hover:scale-[1.01] active:scale-98 cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-2 truncate w-full text-left">
-                        <img 
-                          src={part.avatar} 
-                          alt={part.name} 
-                          onError={(e) => handleAvatarError(e, part.name)}
-                          className="w-10 h-10 rounded-full object-cover border border-pink-100 shrink-0 cursor-pointer" 
-                        />
-                        <span className="text-slate-800 font-extrabold text-xs truncate">
-                          {part.name}
-                        </span>
-                      </div>
-                      
-                      <div className="w-full text-left flex items-center justify-between mt-1 pt-1 border-t border-pink-100/30">
-                        {isSelf ? (
-                          <span className="text-[8.5px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded uppercase tracking-tight">
-                            Mesa
-                          </span>
-                        ) : (
-                          <span className="text-[8.5px] font-bold text-rose-455 text-rose-500 bg-pink-50 border border-pink-205 px-1.5 py-0.2 rounded uppercase tracking-tight">
-                            Votado
-                          </span>
-                        )}
-                        <span className="text-[10px] font-black text-rose-600 font-mono">
-                          {part.votesReceived} votos
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-pink-100 rounded-3xl p-5 space-y-3 shadow-2xs text-center">
-            <h4 className="text-xs font-black text-rose-900 uppercase tracking-widest flex items-center justify-center gap-1.5 font-mono">
-              <Wallet className="w-4 h-4 text-pink-500" />
+          {/* 💼 CONTENEDOR 5: MI PORTAFOLIO CREATIVO (Diseño oscuro de lujo a ancho completo) */}
+          <div className="bg-[#0e1628]/95 border border-black rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-center">
+            <h4 className="text-xs sm:text-[13px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1.5 font-mono">
+              <Wallet className="w-4 h-4 text-amber-400" />
               <span>Mi Portafolio Creativo</span>
             </h4>
-            <p className="text-[10.5px] text-slate-400 font-medium leading-relaxed">
+            <p className="text-[11px] text-slate-300 font-medium leading-relaxed max-w-md mx-auto">
               Consulte sus retornos acumulados, movimientos de fondos u operaciones inmediatas.
             </p>
             <button
@@ -2053,17 +2043,23 @@ export default function SessionResultsPodium({
                 setSimulationLogs([]);
                 if (onNavigateToTab) onNavigateToTab('finance');
               }}
-              className="w-full px-4 py-2 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 text-[#1a1516] border border-pink-250 font-black rounded-lg text-[10.5px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-xs"
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
             >
               Ir a Mi Portafolio
             </button>
           </div>
 
-        </div>
+          {/* 👑 CONTENEDOR 6: MODELO LÍDER DEL RANKING (MODELO DIAMANTE #1) CON SISTEMA DE DONACIONES Y REGALOS */}
+          <Top1ModelDonationCard
+            models={models}
+            userProfile={userProfile}
+            onSelectModel={onSelectModel}
+            onNavigateToTab={onNavigateToTab}
+          />
       </div>
 
       {/* BOTTOM CONTROL ACTIONS */}
-      <div className="text-center pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-pink-100 relative z-10">
+      <div className="text-center pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80 relative z-10">
         <div className="flex items-center gap-2 text-slate-400 text-[10px] text-left font-semibold">
           <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
           <span>Asignación del 10% de afiliación y 10% de comisión de plataforma ejecutado con éxito.</span>

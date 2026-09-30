@@ -502,3 +502,69 @@ body {
   animation: heartRainRise var(--dur, 2.6s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
+/* Elegant and comfortable scrollbar specifically for the voting projects modal */
+#voting-projects-scrollable-container::-webkit-scrollbar,
+.voting-projects-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+}
+
+#voting-projects-scrollable-container::-webkit-scrollbar-track,
+.voting-projects-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-radius: 9999px !important;
+}
+
+#voting-projects-scrollable-container::-webkit-scrollbar-thumb,
+.voting-projects-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(254, 44, 85, 0.45) !important;
+  border-radius: 9999px !important;
+}
+
+#voting-projects-scrollable-container::-webkit-scrollbar-thumb:hover,
+.voting-projects-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(254, 44, 85, 0.85) !important;
+}
+
+#voting-projects-scrollable-container,
+.voting-projects-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(254, 44, 85, 0.45) rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Elegant and comfortable scrollbar for podium results screen and feeds */
+#podium-scrollable-content-wrapper::-webkit-scrollbar,
+#podium-results-screen::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+}
+
+#podium-scrollable-content-wrapper::-webkit-scrollbar-track,
+#podium-results-screen::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(14, 22, 40, 0.4) !important;
+  border-radius: 9999px !important;
+}
+
+#podium-scrollable-content-wrapper::-webkit-scrollbar-thumb,
+#podium-results-screen::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(251, 191, 36, 0.45) !important;
+  border-radius: 9999px !important;
+}
+
+#podium-scrollable-content-wrapper::-webkit-scrollbar-thumb:hover,
+#podium-results-screen::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 191, 36, 0.85) !important;
+}
+
+#podium-scrollable-content-wrapper,
+#podium-results-screen,
+.custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(251, 191, 36, 0.45) rgba(14, 22, 40, 0.4) !important;
+}
+
+
