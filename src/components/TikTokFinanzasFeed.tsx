@@ -119,6 +119,7 @@ interface TikTokFinanzasFeedProps {
   showVotingProjectsModal?: boolean;
   renderVotingProjectsContent?: () => React.ReactNode;
   setShowVotingProjectsModal: (show: boolean) => void;
+  setVotingProjectSlideIndex?: (idx: number) => void;
   setShowParticipantsGatheringModal?: (show: boolean) => void;
   onExecutePaymentAndJoinSession?: (session: any) => void;
   setDetailProjectUser: (user: any) => void;
@@ -193,6 +194,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   showVotingProjectsModal = false,
   renderVotingProjectsContent,
   setShowVotingProjectsModal,
+  setVotingProjectSlideIndex,
   setShowParticipantsGatheringModal,
   onExecutePaymentAndJoinSession,
   setDetailProjectUser,
@@ -255,6 +257,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       showFinanzasRecount ||
       target.closest('button, input, textarea, a, select, [role="button"], form') ||
       target.closest('.overflow-y-auto:not(#tiktok-rounds-vertical-feed)') ||
+      target.closest('#voting-projects-scrollable-container') ||
       target.closest('[id^="voting-projects-in-channel"]') ||
       target.closest('[id^="finanzas-results-in-channel"]') ||
       target.closest('#podium-scrollable-content-wrapper') ||
@@ -295,12 +298,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       showFinanzasResults ||
       showFinanzasRecount ||
       target.closest('.overflow-y-auto:not(#tiktok-rounds-vertical-feed)') ||
+      target.closest('#voting-projects-scrollable-container') ||
       target.closest('[id^="voting-projects-in-channel"]') ||
       target.closest('[id^="finanzas-results-in-channel"]') ||
       target.closest('#podium-scrollable-content-wrapper') ||
       target.closest('#podium-results-screen') ||
       target.closest('#ten-windows-live-modal') ||
-      target.closest('#participants-round-table-panel') ||
       target.closest('#in-channel-comments-window')
     ) {
       return;
@@ -326,12 +329,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       showFinanzasResults ||
       showFinanzasRecount ||
       target.closest('.overflow-y-auto:not(#tiktok-rounds-vertical-feed)') ||
+      target.closest('#voting-projects-scrollable-container') ||
       target.closest('[id^="voting-projects-in-channel"]') ||
       target.closest('[id^="finanzas-results-in-channel"]') ||
       target.closest('#podium-scrollable-content-wrapper') ||
       target.closest('#podium-results-screen') ||
       target.closest('#ten-windows-live-modal') ||
-      target.closest('#participants-round-table-panel') ||
       target.closest('#in-channel-comments-window')
     ) {
       touchStartYRef.current = null;
@@ -386,25 +389,70 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
 
-  // 🎯 Redirigir a la pantalla de exposición de Lucas Torres (image.png) al pulsar X en la ventana de votación (z.png)
+  // 🎯 Redirigir directamente a la pantalla de la captura image.png (cuenta atrás de 10 min para votar en REF: 2) al pulsar X en z.png
   useEffect(() => {
-    const handleExitVotingToExposition = (e: any) => {
-      const targetSessionId = e.detail?.sessionId || activeSessionsOnly[0]?.id || 'sess-trabajadores-1';
+    const handleExitVotingToImagePage = (e: any) => {
+      // Buscar específicamente la ronda con REF: 2
+      let ref2Idx = activeSessionsOnly.findIndex(s => s.id === 'sess-streetwear-ref-2' || s.reference === 'REF: 2' || s.reference?.includes('2'));
+      if (ref2Idx === -1) {
+        ref2Idx = activeSessionsOnly.findIndex((s, idx) => idx > 0 && (s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR')));
+      }
+      const targetIdx = ref2Idx !== -1 ? ref2Idx : (activeSessionsOnly.length > 1 ? 1 : 0);
+      const targetSession = activeSessionsOnly[targetIdx] || activeSessionsOnly[0];
+      const targetSessionId = targetSession?.id || 'sess-streetwear-ref-2';
+
       setShowVotingProjectsModal(false);
-      setSessionVotingPhaseMap(prev => ({ ...prev, [targetSessionId]: false }));
-      const lucasUser = TRABAJADORES_USERS[0];
-      setSessionSelectedPresenterMap(prev => ({ ...prev, [targetSessionId]: lucasUser }));
-      setSessionExpositionTimerMap(prev => ({ ...prev, [targetSessionId]: 296 }));
-      setActiveFinanzasSessionIndex(0);
-      if (setSelectedFinanzasUser) setSelectedFinanzasUser(null);
-      if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(false);
-      scrollToRound(0);
-      setTimeout(() => {
-        resumeOrStartLucasSpeech();
-      }, 200);
+      setShowProjectDetailsInPopup(false);
+      setDetailProjectUser(null);
+      setActiveFinanzasPopupUser(null);
+      setShowFinanzasInscriptionInChannel(false);
+      if (setShowFinanzasResults) setShowFinanzasResults(false);
+      if (setShowFinanzasRecount) setShowFinanzasRecount(false);
+
+      // ⏱️ Mantener la cuenta atrás final de 10 minutos activa como en image.png
+      setSessionVotingPhaseMap(prev => {
+        const next = { ...prev, [targetSessionId]: true, 'sess-streetwear-ref-2': true };
+        try {
+          localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
+          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'true');
+          localStorage.setItem('finanzas_is_voting_phase_active_sess-streetwear-ref-2', 'true');
+          const currentEnd = localStorage.getItem(`finanzas_voting_end_time_${targetSessionId}`) || localStorage.getItem('finanzas_voting_end_time_sess-streetwear-ref-2');
+          if (!currentEnd) {
+            localStorage.setItem(`finanzas_voting_end_time_${targetSessionId}`, String(Date.now() + 591 * 1000));
+            localStorage.setItem('finanzas_voting_end_time_sess-streetwear-ref-2', String(Date.now() + 591 * 1000));
+          }
+        } catch (err) {}
+        return next;
+      });
+
+      // Asegurar que Adriana Lima esté seleccionada/destacada como participante (image.png)
+      if (targetSession) {
+        const participants = getSessionParticipants(targetSession);
+        const adriana = participants.find(p => p.id === 'user-adriana' || p.name?.toLowerCase().includes('adriana') || p.isSelf);
+        if (adriana) {
+          setSessionSelectedPresenterMap(prev => ({ ...prev, [targetSessionId]: adriana }));
+          if (setSelectedFinanzasUser) setSelectedFinanzasUser(adriana);
+        }
+      }
+
+      // 🛡️ Mantener a los usuarios inscritos en esta Ronda hasta que lleguemos a la página de los resultados finales
+      try {
+        localStorage.setItem(`user_paid_session_${targetSessionId}`, 'true');
+        localStorage.setItem('user_paid_session_sess-streetwear-ref-2', 'true');
+        localStorage.setItem('finanzas_target_session_id', targetSessionId);
+        localStorage.setItem('finanzas_user_participating', 'true');
+      } catch (e) {}
+
+      stopLucasTorresSpeech();
+      setActiveFinanzasSessionIndex(targetIdx);
+      scrollToRound(targetIdx);
     };
-    window.addEventListener('exit-voting-to-exposition', handleExitVotingToExposition);
-    return () => window.removeEventListener('exit-voting-to-exposition', handleExitVotingToExposition);
+    window.addEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
+    window.addEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
+    return () => {
+      window.removeEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
+      window.removeEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
+    };
   }, [activeSessionsOnly]);
 
   // Sync feed scroll position whenever activeFinanzasSessionIndex changes from outside
@@ -1271,8 +1319,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   };
 
   const [activeHoveredParticipantsSession, setActiveHoveredParticipantsSession] = useState<string | null>(null);
-  // 🎛️ Synchronized selected presenter per session for direct turn switching
-  const [sessionSelectedPresenterMap, setSessionSelectedPresenterMap] = useState<Record<string, any>>({});
+  // 🎛️ Synchronized selected presenter per session for direct turn switching (Marina Serrano by default for Streetwear & Urban matching z.png)
+  const [sessionSelectedPresenterMap, setSessionSelectedPresenterMap] = useState<Record<string, any>>(() => {
+    return {
+      'sess-trabajadores-1': { id: 'trab-10', name: 'Marina Serrano', role: 'PATRONISTA SOSTENIBLE', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', username: 'marina_serrano_mod' }
+    };
+  });
 
   // 🗳️ State for 10-minute voting phase per session (matching zq.png)
   // 🛑 CADA RONDA ES ESTRICTAMENTE INDEPENDIENTE DE LA OTRA: guardado por sessionId
@@ -1326,16 +1378,75 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     'sess-millonarios-1': 300,
   }));
 
-  // 🗳️ Voting phase 10-minute countdown (600s, i.e. 10:00 -> 09:31)
-  const [sessionVotingTimerMap, setSessionVotingTimerMap] = useState<Record<string, number>>(() => ({
-    'sess-trabajadores-1': 600,
-    'sess-streetwear-ref-2': 600,
-    'sess-emprendedores-1': 600,
-    'sess-empresarios-1': 600,
-    'sess-topmodels-1': 600,
-    'sess-inversores-1': 600,
-    'sess-millonarios-1': 600,
-  }));
+  const sessionExpositionTimerMapRef = useRef(sessionExpositionTimerMap);
+  useEffect(() => {
+    sessionExpositionTimerMapRef.current = sessionExpositionTimerMap;
+  }, [sessionExpositionTimerMap]);
+
+  const votingPhaseTimerRef = useRef(votingPhaseTimer);
+  useEffect(() => {
+    votingPhaseTimerRef.current = votingPhaseTimer;
+  }, [votingPhaseTimer]);
+
+  // 🗳️ Función robusta para calcular los segundos restantes persistentes de la cuenta atrás según timestamps reales
+  const getPersistentVotingRemainingSeconds = (sessionId: string): number => {
+    try {
+      const endKey = `finanzas_voting_end_time_${sessionId}`;
+      const endVal = localStorage.getItem(endKey);
+      if (endVal) {
+        const endMs = parseInt(endVal, 10);
+        if (!isNaN(endMs) && endMs > 0) {
+          return Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+        }
+      }
+      
+      const startKey = `finanzas_active_session_start_${sessionId}`;
+      const startVal = localStorage.getItem(startKey);
+      if (startVal) {
+        const startMs = parseInt(startVal, 10);
+        if (!isNaN(startMs) && startMs > 0) {
+          const elapsed = Math.floor((Date.now() - startMs) / 1000);
+          const rem = Math.max(0, 3600 - elapsed);
+          localStorage.setItem(endKey, String(Date.now() + rem * 1000));
+          return rem;
+        }
+      }
+
+      const savedTimer = localStorage.getItem(`finanzas_voting_phase_timer_${sessionId}`);
+      if (savedTimer) {
+        const s = parseInt(savedTimer, 10);
+        if (!isNaN(s) && s >= 0 && s <= 600) {
+          localStorage.setItem(endKey, String(Date.now() + s * 1000));
+          return s;
+        }
+      }
+
+      // Si la votación está activa en este canal, establecemos el timestamp final
+      const isVoting = localStorage.getItem(`finanzas_is_voting_phase_active_${sessionId}`) === 'true';
+      if (isVoting) {
+        localStorage.setItem(endKey, String(Date.now() + 600 * 1000));
+      }
+    } catch (e) {}
+    return 600;
+  };
+
+  // 🗳️ Voting phase 10-minute countdown (persistente a través de cambios de página y recargas)
+  const [sessionVotingTimerMap, setSessionVotingTimerMap] = useState<Record<string, number>>(() => {
+    const sessionIds = [
+      'sess-trabajadores-1',
+      'sess-streetwear-ref-2',
+      'sess-emprendedores-1',
+      'sess-empresarios-1',
+      'sess-topmodels-1',
+      'sess-inversores-1',
+      'sess-millonarios-1',
+    ];
+    const initialMap: Record<string, number> = {};
+    sessionIds.forEach(id => {
+      initialMap[id] = getPersistentVotingRemainingSeconds(id);
+    });
+    return initialMap;
+  });
 
   // Play transition chime when 5m ends and 10m voting begins
   const playVotingPhaseChime = () => {
@@ -1373,10 +1484,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     setSessionVotingTimerMap(prev => ({ ...prev, [sessionId]: 600 }));
     if (setVotingPhaseTimer) setVotingPhaseTimer(600);
     try {
+      const now = Date.now();
       localStorage.setItem(`finanzas_is_voting_phase_active_${sessionId}`, 'true');
       localStorage.removeItem('finanzas_is_voting_phase_active');
-      const now = Date.now();
+      localStorage.setItem(`finanzas_voting_end_time_${sessionId}`, String(now + 600 * 1000));
       localStorage.setItem(`finanzas_active_session_start_${sessionId}`, String(now - (3000 * 1000)));
+      localStorage.setItem(`finanzas_voting_phase_timer_${sessionId}`, '600');
     } catch (e) {}
     playVotingPhaseChime();
     if (setSystemVoiceNotification) {
@@ -1457,62 +1570,63 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       const isVoting = Boolean(sessionVotingPhaseMap[sId]);
 
       if (isVoting) {
-        // Keep voting countdown ticking in real-time every second
-        setSessionVotingTimerMap(prev => {
-          const currentSecs = prev[sId] !== undefined
-            ? prev[sId]
-            : ((typeof votingPhaseTimer === 'number' && votingPhaseTimer > 0) ? votingPhaseTimer : 600);
-          const nextSecs = Math.max(0, currentSecs - 1);
-          if (setVotingPhaseTimer && nextSecs !== votingPhaseTimer) {
-            setVotingPhaseTimer(nextSecs);
+        // Keep voting countdown ticking in real-time based on persistent wall-clock timestamp
+        const nextSecs = getPersistentVotingRemainingSeconds(sId);
+        setSessionVotingTimerMap(prev => ({ ...prev, [sId]: nextSecs }));
+        
+        try {
+          localStorage.setItem(`finanzas_voting_phase_timer_${sId}`, String(nextSecs));
+        } catch (e) {}
+
+        if (setVotingPhaseTimer && votingPhaseTimerRef.current !== nextSecs) {
+          votingPhaseTimerRef.current = nextSecs;
+          setVotingPhaseTimer(nextSecs);
+        }
+
+        if (nextSecs === 0) {
+          if (triggerScrutinyAndRecount) {
+            triggerScrutinyAndRecount();
           }
-          if (nextSecs === 0 && currentSecs > 0) {
-            if (triggerScrutinyAndRecount) {
-              triggerScrutinyAndRecount();
-            }
-          }
-          return { ...prev, [sId]: nextSecs };
-        });
+        }
       } else {
         // In 5-minute exposition phase:
-        setSessionExpositionTimerMap(prev => {
-          const currentSecs = prev[sId] !== undefined ? prev[sId] : 300;
-          const nextSecs = Math.max(0, currentSecs - 1);
-          if (nextSecs === 0 && currentSecs > 0) {
-            // 5 minutes ended:
-            const participants = getSessionParticipants(currentSession);
-            const presenter = getSessionPresenter(currentSession, activeFinanzasSessionIndex);
-            const presenterIdx = participants.findIndex(p =>
-              p.id === presenter.id ||
-              p.name === presenter.name ||
-              (presenter.name?.includes('Adriana') && (p.name?.includes('Adriana') || p.id === 'user-adriana' || p.isSelf))
-            );
-            const currentIdx = presenterIdx !== -1 ? presenterIdx : 0;
-            const isLast = currentIdx >= participants.length - 1 || currentIdx >= 9;
+        const currentSecs = sessionExpositionTimerMapRef.current[sId] !== undefined ? sessionExpositionTimerMapRef.current[sId] : 300;
+        const nextSecs = Math.max(0, currentSecs - 1);
+        setSessionExpositionTimerMap(prev => ({ ...prev, [sId]: nextSecs }));
 
-            if (isLast) {
-              // ⏰ Only transition to 10-minute voting window after the LAST participant!
-              stopLucasTorresSpeech();
-              setTimeout(() => handleStartVotingPhase(sId), 10);
-            } else {
-              // Advance to next participant automatically!
-              stopLucasTorresSpeech();
-              const nextIdx = currentIdx + 1;
-              const nextPresenter = participants[nextIdx];
-              if (nextPresenter) {
-                setSessionSelectedPresenterMap(p => ({ ...p, [sId]: nextPresenter }));
-                if (setSelectedFinanzasUser) setSelectedFinanzasUser(nextPresenter);
-              }
-              return { ...prev, [sId]: 300 };
+        if (nextSecs === 0 && currentSecs > 0) {
+          // 5 minutes ended:
+          const participants = getSessionParticipants(currentSession);
+          const presenter = getSessionPresenter(currentSession, activeFinanzasSessionIndex);
+          const presenterIdx = participants.findIndex(p =>
+            p.id === presenter.id ||
+            p.name === presenter.name ||
+            (presenter.name?.includes('Adriana') && (p.name?.includes('Adriana') || p.id === 'user-adriana' || p.isSelf))
+          );
+          const currentIdx = presenterIdx !== -1 ? presenterIdx : 0;
+          const isLast = currentIdx >= participants.length - 1 || currentIdx >= 9;
+
+          if (isLast) {
+            // ⏰ Only transition to 10-minute voting window after the LAST participant!
+            stopLucasTorresSpeech();
+            handleStartVotingPhase(sId);
+          } else {
+            // Advance to next participant automatically!
+            stopLucasTorresSpeech();
+            const nextIdx = currentIdx + 1;
+            const nextPresenter = participants[nextIdx];
+            if (nextPresenter) {
+              setSessionSelectedPresenterMap(p => ({ ...p, [sId]: nextPresenter }));
+              if (setSelectedFinanzasUser) setSelectedFinanzasUser(nextPresenter);
             }
+            setSessionExpositionTimerMap(prev => ({ ...prev, [sId]: 300 }));
           }
-          return { ...prev, [sId]: nextSecs };
-        });
+        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeSessionsOnly, activeFinanzasSessionIndex, sessionVotingPhaseMap, isVotingPhaseActive, sessionSelectedPresenterMap, selectedFinanzasUser]);
+  }, [activeSessionsOnly, activeFinanzasSessionIndex, sessionVotingPhaseMap, isVotingPhaseActive]);
 
   // 🎙️ Effect to start Lucas Torres live exposition speech as soon as page opens and countdown begins (Micro ON)
   useEffect(() => {
@@ -2120,7 +2234,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         onMouseUp={handleMouseUpFeed}
         onMouseLeave={handleMouseUpFeed}
         id="tiktok-rounds-vertical-feed"
-        className="w-full max-w-full h-[calc(100dvh-20px)] sm:h-[calc(100dvh-24px)] overflow-y-auto snap-y snap-mandatory scroll-smooth py-1 flex flex-col items-center gap-3 sm:gap-4 select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative"
+        className="w-full max-w-full h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] overflow-x-hidden overflow-y-hidden md:overflow-y-auto md:snap-y md:snap-mandatory scroll-smooth py-0 sm:py-0.5 flex flex-col items-center select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative"
       >
         {activeSessionsOnly.map((session, index) => {
           const roundRef = getFinanzasRoundRef(session, index);
@@ -2131,6 +2245,18 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           const isUserEnrolledInThisRound = Boolean(
             userPaidSessions[session.id] ||
             (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${session.id}`) === 'true')
+          );
+          // Comprobar si el usuario está participando en esta ronda o en cualquier otra ronda/sesión
+          const isUserParticipating = Boolean(
+            isUserEnrolledInThisRound ||
+            userPaidSessions[session.id] ||
+            (typeof window !== 'undefined' && (
+              localStorage.getItem(`user_paid_session_${session.id}`) === 'true' ||
+              localStorage.getItem('finanzas_user_is_participating') === 'true' ||
+              Object.keys(localStorage).some(k => k.startsWith('user_paid_session_') && localStorage.getItem(k) === 'true')
+            )) ||
+            Object.values(userPaidSessions).some(Boolean) ||
+            participants.some(p => p.isSelf || p.id === 'user-adriana' || p.id === 'user' || p.name?.toLowerCase().includes('adriana'))
           );
           const isCurrentlyActiveRound = index === activeFinanzasSessionIndex;
           const likesData = likesMap[session.id] || { count: 43200, userLiked: false };
@@ -2143,9 +2269,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           // Timer calculation (5 min exposition vs 10 min voting)
           // 🛑 CADA RONDA ES ESTRICTAMENTE INDEPENDIENTE DE LA OTRA
           const isSessionInVoting = Boolean(sessionVotingPhaseMap[session.id]);
-          const currentVotingSecs = sessionVotingTimerMap[session.id] !== undefined
-            ? sessionVotingTimerMap[session.id]
-            : ((typeof votingPhaseTimer === 'number' && votingPhaseTimer >= 0) ? votingPhaseTimer : 600);
+          const currentVotingSecs = isSessionInVoting
+            ? (sessionVotingTimerMap[session.id] !== undefined
+                ? sessionVotingTimerMap[session.id]
+                : getPersistentVotingRemainingSeconds(session.id))
+            : (sessionVotingTimerMap[session.id] ?? 600);
           const vMin = Math.floor(Math.max(0, currentVotingSecs) / 60).toString().padStart(2, '0');
           const vSec = (Math.max(0, currentVotingSecs) % 60).toString().padStart(2, '0');
           const displayVotingTimer = `${vMin}:${vSec}`;
@@ -2181,13 +2309,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div
               key={session.id}
               id={`tiktok-round-card-${session.id}`}
-              className="snap-center shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[560px] my-0 py-0.5 relative px-[1px] sm:px-1"
+              className="snap-center shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[580px] my-0 py-0 sm:py-0.5 relative px-0 sm:px-2 overflow-x-hidden h-full max-md:h-[100dvh]"
             >
-              {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) */}
-              <div 
-                className="w-full max-w-full sm:max-w-[430px] md:max-w-[440px] h-[calc(100dvh-32px)] sm:h-[calc(100dvh-36px)] min-h-[720px] sm:min-h-[760px] md:min-h-[790px] max-h-[920px] xl:max-h-[960px] bg-[#070b14] border-[1px] border-black rounded-[34px] sm:rounded-[40px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between px-[1px] py-2 sm:py-2.5 md:py-3 box-border select-none"
-                id={`round-container-box-${session.id}`}
-              >
+              {/* 📦 Relative anchor for the channel card and its external right-side navigator */}
+              <div className="relative flex items-center justify-center w-full max-w-[430px] md:max-w-[440px] overflow-x-hidden md:overflow-x-visible h-full max-md:h-[100dvh]">
+                {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) */}
+                <div 
+                  className="w-full max-w-full sm:max-w-[420px] md:max-w-[430px] h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] sm:max-h-[820px] bg-[#070b14] border-0 sm:border border-black rounded-none sm:rounded-[36px] md:rounded-[44px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
+                  id={`round-container-box-${session.id}`}
+                >
+                {/* 📱 Subtle top speaker notch matching z.png */}
+                <div className="w-16 h-1 bg-white/20 rounded-full mx-auto mb-0.5 opacity-60 shrink-0 pointer-events-none" />
                 {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página y por encima de Ronda en Curso) */}
                 <div 
                   className="absolute top-0 inset-x-0 h-16 sm:h-20 z-40 pointer-events-auto cursor-pointer"
@@ -2201,7 +2333,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <div 
                     className="absolute inset-0 z-[200] bg-white w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
                     id={`voting-projects-in-channel-fullscreen-${session.id}`}
-                    onWheel={(e) => e.stopPropagation()}
+                    onWheel={(e) => {
+                      e.stopPropagation();
+                      const container = document.getElementById('voting-projects-scrollable-container');
+                      if (container) {
+                        container.scrollTop += e.deltaY;
+                      }
+                    }}
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                   >
@@ -2233,7 +2371,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <div 
                     className="absolute inset-0 z-[140] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
                     id={`finanzas-results-in-channel-${session.id}`}
-                    onWheel={(e) => e.stopPropagation()}
+                    onWheel={(e) => {
+                      e.stopPropagation();
+                      const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+                      if (wrapper) {
+                        wrapper.scrollTop += e.deltaY;
+                      }
+                    }}
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
@@ -2448,21 +2592,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         <span className="truncate">TURNO {turnNumber} DE 10 • EN EXPOSICIÓN</span>
                       </div>
 
-                      {/* Right: Viewers & Close (audio icon removed) */}
+                      {/* Right: Viewers */}
                       <div className="flex items-center gap-1 shrink-0">
                         <div className="flex items-center gap-0.5 bg-black/80 backdrop-blur-md border border-slate-700/80 text-slate-200 px-1.5 py-1 rounded-full text-[8.5px] sm:text-[9.5px] font-black">
                           <Users className="w-2.5 h-2.5 text-rose-400 shrink-0" />
                           <span>1.4K</span>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={handleStopPresenterLiveCam}
-                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md border border-rose-400 shrink-0"
-                          title="Cerrar Live y volver a la página de exposición"
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </button>
                       </div>
                     </div>
 
@@ -2547,12 +2682,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                           <button
                             type="button"
-                            onClick={() => setActiveCommentsSessionId(null)}
-                            className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setActiveCommentsSessionId(null);
+                            }}
+                            className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition active:scale-90"
                             title="Cerrar comentarios"
+                            aria-label="Cerrar comentarios"
                           >
-                            <span className="text-[8.5px] font-mono text-slate-500">Pulsa 💬 para cerrar</span>
-                            <X className="w-3.5 h-3.5 text-slate-600" />
+                            <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
                           </button>
                         </div>
 
@@ -2665,396 +2804,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                   </div>
                 )}
-                {/* 🔴 VISTA EN VIVO CON CÁMARA GRABÁNDOTE EN DIRECTO (Strictly matching image.png) */}
-                {isUserLiveStreamingWithCamera && isCurrentlyActiveRound ? (
-                  <div 
-                    className="absolute inset-0 z-10 w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between select-none pointer-events-auto bg-black"
-                    id={`live-camera-broadcast-fullscreen-${session.id}`}
-                  >
-                    {/* Background live camera stream */}
-                    {userLiveMediaStream ? (
-                      <LiveUserStreamVideo 
-                        stream={userLiveMediaStream} 
-                        facingMode={liveCameraFacingMode} 
-                        className="absolute inset-0 z-0" 
-                      />
-                    ) : (
-                      <video
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="absolute inset-0 w-full h-full object-cover z-0"
-                        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-                      />
-                    )}
-
-                    {/* Gradient vignettes at top and bottom */}
-                    <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/85 via-black/40 to-transparent pointer-events-none z-10" />
-                    <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
-
-                    {/* 🔝 ZONA SUPERIOR: Barra y controles de acción de la captura image.png */}
-                    <div className="relative z-30 w-full pt-3 sm:pt-4 px-3 sm:px-4 select-none pointer-events-auto">
-                      {/* Top Phone Speaker Notch */}
-                      <div className="w-14 h-1 bg-slate-700/60 rounded-full mx-auto mb-2 shrink-0 pointer-events-none" />
-
-                      {/* Header sincronizado con Live Badge y Cuenta Atrás de 10 minutos (matching capturas) */}
-                      <div className="flex items-center justify-between gap-2 max-w-sm sm:max-w-md mx-auto w-full mb-2 px-0.5">
-                        <div className="flex items-center gap-2">
-                          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse border border-red-400/50 shrink-0">
-                            <span className="w-2 h-2 rounded-full bg-white shrink-0" />
-                            <span>EN DIRECTO</span>
-                          </div>
-                          <span className="font-mono text-white text-[11px] sm:text-xs font-black bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/15 shadow-sm shrink-0">
-                            {displayVotingTimer}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-950/90 backdrop-blur-md p-2 sm:p-2.5 rounded-2xl border border-slate-800/90 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col gap-2 max-w-sm sm:max-w-md mx-auto w-full">
-                        {/* Presenter Name & Role */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-emerald-400 overflow-hidden bg-slate-800 shrink-0">
-                              <img
-                                src={userProfile?.avatar || presenter.avatar}
-                                alt="Presenter"
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="text-white text-xs sm:text-sm font-black tracking-tight leading-tight m-0 truncate">
-                                {userProfile?.name || presenter.name}
-                              </h4>
-                              <span className="text-emerald-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider block truncate">
-                                {userProfile?.role || presenter.role || 'Participante'} • En directo
-                              </span>
-                            </div>
-                          </div>
-
-                          <span className="bg-[#fe2c55] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-xs">
-                            10 ONLINE
-                          </span>
-                        </div>
-
-                        {/* Action buttons row: Proyectos (redirige a proyectos de captura z.png) y Desactivar (redirige a canales de captura z.png) */}
-                        <div className="grid grid-cols-2 gap-2 pt-1" id="broadcast-top-actions-row">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              // 🎯 Redirige a los proyectos de la pagina de la captura z.png (Mesa de votación y proyectos)
-                              if (isUserLiveStreamingWithCamera) {
-                                handleToggleUserCameraLiveBroadcast();
-                              }
-                              setIsWatchingPresenterCamera(false);
-                              setIsPresenterCameraFullscreen(false);
-                              setShowVotingProjectsModal(true);
-                              setShowFinanzasInscriptionInChannel(false);
-                              setShowProjectDetailsInPopup(false);
-                              setDetailProjectUser(null);
-                              setActiveFinanzasPopupUser(null);
-                              if (setShowFinanzasResults) setShowFinanzasResults(false);
-                              if (setShowFinanzasRecount) setShowFinanzasRecount(false);
-                              setActiveChannelsMenuSessionId(null);
-                            }}
-                            className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-slate-200 text-center"
-                            title="Redirigir a los proyectos de la captura z.png"
-                            id="btn-ver-proyectos-live-cam"
-                          >
-                            <span className="truncate">📋 Proyectos</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              // 🎯 Redirige a la página de la captura z.png (donde tenemos la cuenta atrás de 10 minutos)
-                              if (isUserLiveStreamingWithCamera) {
-                                handleToggleUserCameraLiveBroadcast();
-                              }
-                              setIsWatchingPresenterCamera(false);
-                              setIsPresenterCameraFullscreen(false);
-                              setShowVotingProjectsModal(false);
-                              setShowFinanzasInscriptionInChannel(false);
-                              setShowProjectDetailsInPopup(false);
-                              setDetailProjectUser(null);
-                              setActiveFinanzasPopupUser(null);
-                              if (setShowFinanzasResults) setShowFinanzasResults(false);
-                              if (setShowFinanzasRecount) setShowFinanzasRecount(false);
-                              // Asegura que NO se abra el menú overlay de canales
-                              setActiveChannelsMenuSessionId(null);
-                              if (channelsMenuTimeoutRef.current) {
-                                clearTimeout(channelsMenuTimeoutRef.current);
-                              }
-                              // Activa la fase de votación de 10 minutos para mostrar la tarjeta de la captura z.png
-                              setSessionVotingPhaseMap(prev => ({ ...prev, [session.id]: true }));
-                              const activeSessionId = session.id;
-                              const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
-                              const now = Date.now();
-                              const currentStart = localStorage.getItem(sessionStartKey);
-                              let startTime = currentStart ? parseInt(currentStart, 10) : 0;
-                              if (!startTime || isNaN(startTime) || (now - startTime) < 3000 * 1000) {
-                                startTime = now - (3000 * 1000);
-                                localStorage.setItem(sessionStartKey, String(startTime));
-                              }
-                              localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
-                              localStorage.removeItem('finanzas_is_voting_phase_active');
-                              if (setVotingPhaseTimer) {
-                                setVotingPhaseTimer(prev => (prev > 0 && prev <= 600) ? prev : 600);
-                              }
-                            }}
-                            className="py-2.5 px-3 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-red-400 text-center"
-                            title="Desactivar y volver a la página de votación con la cuenta atrás de 10 minutos (captura z.png)"
-                            id="btn-desactivar-live-cam"
-                          >
-                            <span>Desactivar</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 👥 4 PARTICIPANTES EN VIVO (Strictly matching captura z.png) */}
-                    {showCameraParticipantsGrid[session.id] && (
-                      <div className="absolute inset-0 z-25 w-full h-full p-2.5 sm:p-3 pb-20 grid grid-cols-2 grid-rows-2 gap-2 sm:gap-2.5 bg-[#0a0d17] animate-fade-in pointer-events-auto">
-                        {/* 1. Adriana Lima (Tú) con Cámara en Directo */}
-                        <div 
-                          onClick={() => setShowCameraParticipantsGrid(prev => ({ ...prev, [session.id]: false }))}
-                          className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-black flex flex-col justify-between shadow-2xl cursor-pointer group"
-                          title="Clic para volver a pantalla completa de tu cámara"
-                        >
-                          {userLiveMediaStream ? (
-                            <LiveUserStreamVideo stream={userLiveMediaStream} facingMode={liveCameraFacingMode} />
-                          ) : (
-                            <img
-                              src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'}
-                              alt="Adriana Lima"
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                          <div className="absolute top-2 left-2 z-10">
-                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-                              EN VIVO
-                            </span>
-                          </div>
-                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
-                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">{userProfile?.name || 'Adriana Lima'} (Tú)</p>
-                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
-                              <span>Participante Activa (Tú)</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* 2. Alessia Vance */}
-                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-slate-900 flex flex-col justify-between shadow-2xl">
-                          <img
-                            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650"
-                            alt="Alessia Vance"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute top-2 left-2 z-10">
-                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-                              EN VIVO
-                            </span>
-                          </div>
-                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
-                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">Alessia Vance</p>
-                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
-                              <span>Modelo Directora</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* 3. Gisele Bündchen */}
-                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-slate-900 flex flex-col justify-between shadow-2xl">
-                          <img
-                            src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650"
-                            alt="Gisele Bündchen"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute top-2 left-2 z-10">
-                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-                              EN VIVO
-                            </span>
-                          </div>
-                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
-                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">Gisele Bündchen</p>
-                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
-                              <span>Inversora Principal</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* 4. Marcus Vance */}
-                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-slate-900 flex flex-col justify-between shadow-2xl">
-                          <img
-                            src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650"
-                            alt="Marcus Vance"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute top-2 left-2 z-10">
-                            <span className="bg-black/80 backdrop-blur-xs text-[7px] sm:text-[7.5px] font-black text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/40 leading-none shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-                              EN VIVO
-                            </span>
-                          </div>
-                          <div className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-2 sm:p-2.5 flex flex-col justify-end">
-                            <p className="text-[10px] sm:text-xs font-black text-white truncate leading-tight m-0">Marcus Vance</p>
-                            <p className="text-[8px] sm:text-[9px] text-purple-300 font-bold truncate leading-none mt-1 flex items-center gap-1 m-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block shrink-0" />
-                              <span>Asesor Fintech</span>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-
-                  
-                    {/* 💬 COMENTARIOS EN VIVO EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
-                    {isCommentsOpenForThisSession && (
-                      <div 
-                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-transparent p-3 sm:p-4 pb-3 flex flex-col gap-2 animate-slide-up text-left pointer-events-auto"
-                        id={`live-camera-comments-${session.id}`}
-                      >
-                        {/* Header con botón para cerrar */}
-                        <div className="flex items-center justify-between pb-1 shrink-0 px-1 drop-shadow-md">
-                          <div className="flex items-center gap-1.5">
-                            <MessageCircle className="w-3.5 h-3.5 text-rose-400 drop-shadow" />
-                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-                              COMENTARIOS ({commentsCount})
-                            </span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveCommentsSessionId(null)}
-                            className="text-slate-200 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-black/40 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]"
-                            title="Cerrar comentarios"
-                          >
-                            <span className="text-[8px] font-mono text-slate-200 drop-shadow">Pulsa 💬 para cerrar</span>
-                            <X className="w-3.5 h-3.5 drop-shadow" />
-                          </button>
-                        </div>
-
-                        {/* Scrollable Comments List */}
-                        <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 select-text scrollbar-thin scrollbar-thumb-white/20">
-                          {sessionComments.map((comm) => (
-                            <div key={comm.id} className="flex items-start gap-2 bg-black/40 backdrop-blur-xs p-1.5 rounded-xl border border-white/10 shadow-md">
-                              <img
-                                src={comm.userAvatar}
-                                alt={comm.userName}
-                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-600 mt-0.5"
-                                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="text-[10px] font-black text-rose-300 truncate drop-shadow-sm">{comm.userName}</span>
-                                  <span className="text-[8px] text-slate-300 shrink-0 font-mono drop-shadow-sm">{comm.timeAgo}</span>
-                                </div>
-                                <p className="text-[10px] text-white mt-0.5 leading-snug break-words drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
-                                  {comm.text}
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleCommentLike(session.id, comm.id)}
-                                className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                                  comm.userLiked ? 'text-rose-500 scale-110' : 'text-slate-300 hover:text-rose-400'
-                                }`}
-                                title="Me gusta"
-                              >
-                                <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                                <span className="text-[7.5px] text-white drop-shadow-sm">{comm.likes}</span>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Quick emojis - Tap to send directly! */}
-                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-black/40 backdrop-blur-xs rounded-full border border-white/10 shadow-md">
-                          <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1 drop-shadow-sm">
-                            <span>⚡</span>
-                            <span>ENVIAR EMOJI:</span>
-                          </span>
-                          {['💖', '🔥', '👏', '🚀', '💯', '💎', '✨', '😍', '😂', '🙌', '💡', '💰', '👍', '🎉', '🥂', '👑'].map((em) => (
-                            <button
-                              key={em}
-                              type="button"
-                              onClick={() => {
-                                handleAddSessionComment(session.id, em);
-                                window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                                  detail: { emoji: em, icon: em, pureEmoji: true }
-                                }));
-                              }}
-                              className="p-1 hover:bg-white/10 rounded-lg transition active:scale-130 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
-                              title={`Enviar ${em}`}
-                            >
-                              {em}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Comment input form with emoji trigger inside writing block */}
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            handleAddSessionComment(session.id);
-                          }}
-                          className="relative flex items-center gap-1.5 pt-0.5 shrink-0 w-full"
-                        >
-                          {/* 📚 Glosario de Emojis que se abre al pulsar en el emoji del bloque */}
-                          {renderEmojiGlossary(session.id)}
-
-                          {/* Bloque para escribir comentarios con el emoji dentro */}
-                          <div className="flex-1 flex items-center bg-black/50 backdrop-blur-xs border border-white/20 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-lg min-w-0">
-                            {/* Emoji en el bloque para escribir: al pinchar sobre él abre el glosario de emojis */}
-                            <button
-                              type="button"
-                              onClick={() => setShowEmojiPickerSessionId(prev => prev === session.id ? null : session.id)}
-                              className="p-1 text-base sm:text-lg hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none"
-                              title="Abrir glosario de emojis"
-                              id={`btn-open-emoji-glossary-cam-${session.id}`}
-                            >
-                              😊
-                            </button>
-
-                            <input
-                              type="text"
-                              value={commentInputMap[session.id] || ''}
-                              onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
-                              placeholder="Escribe un comentario o emoji..."
-                              className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-300 focus:outline-none min-w-0 px-1 py-0.5"
-                            />
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={!(commentInputMap[session.id] || '').trim()}
-                            className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
-                              (commentInputMap[session.id] || '').trim()
-                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
-                                : 'bg-black/50 text-slate-500 border border-white/10 cursor-not-allowed'
-                            }`}
-                            title="Publicar comentario"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                          </button>
-                        </form>
-                      </div>
-                    )}
-
-                  </div>
-                ) : (
-                  <>
                 {/* 🎥 Embedded Live Stream Video Background inside Channel Container */}
                 {isLiveActive && (
                   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px]">
@@ -3130,7 +2879,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                 {/* 🟢 CENTRAL STAGE CARD (Strictly matching image.png during 5m exposition, and zq.png during 10m voting) */}
                 <div 
-                  className="w-full bg-[#0e1628]/95 border border-emerald-500/60 rounded-2xl p-1.5 sm:p-2 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center text-center my-0.5 sm:my-1 transition-all shrink-0"
+                  className="w-full bg-[#0e1628]/95 border border-emerald-500/60 rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-2.5 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center text-center my-0.5 xs:my-1 transition-all shrink min-h-0"
                   id={`central-stage-card-${session.id}`}
                 >
                   {isSessionInVoting ? (
@@ -3164,9 +2913,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             onClick={() => {
                               // Fast-forward to 3 seconds for test convenience
                               const activeSessionId = session.id;
-                              const sessionStartKey = `finanzas_active_session_start_${activeSessionId}`;
                               const now = Date.now();
-                              localStorage.setItem(sessionStartKey, String(now - (3597 * 1000)));
+                              localStorage.setItem(`finanzas_voting_end_time_${activeSessionId}`, String(now + 3 * 1000));
+                              localStorage.setItem(`finanzas_active_session_start_${activeSessionId}`, String(now - (3597 * 1000)));
+                              localStorage.setItem(`finanzas_voting_phase_timer_${activeSessionId}`, '3');
                               setSessionVotingTimerMap(prev => ({ ...prev, [session.id]: 3 }));
                               if (setVotingPhaseTimer) setVotingPhaseTimer(3);
                               if (setSystemVoiceNotification) {
@@ -3210,6 +2960,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         <button
                           type="button"
                           onClick={() => {
+                            const lucasIdx = participants.findIndex(p => 
+                              p.name?.toLowerCase().includes('lucas') || 
+                              p.id === 'trab-1' || 
+                              p.id === 'lucas' || 
+                              p.username?.toLowerCase().includes('lucas')
+                            );
+                            const targetIdx = lucasIdx !== -1 ? lucasIdx : 0;
+                            if (setVotingProjectSlideIndex) {
+                              setVotingProjectSlideIndex(targetIdx);
+                            }
+                            const lucasUser = participants[targetIdx] || participants[0];
+                            if (setSelectedFinanzasUser && lucasUser) {
+                              setSelectedFinanzasUser(lucasUser);
+                            }
+                            setSessionSelectedPresenterMap(prev => ({ ...prev, [session.id]: lucasUser }));
                             setShowVotingProjectsModal(true);
                             if (setSystemVoiceNotification) {
                               setSystemVoiceNotification({
@@ -3230,9 +2995,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           onClick={() => {
                             setActiveFinanzasSessionIndex(index);
                             if (setSelectedFinanzasUser) setSelectedFinanzasUser(presenter);
-                            if (!userLiveMediaStream && handleToggleUserCameraLiveBroadcast) {
-                              handleToggleUserCameraLiveBroadcast();
-                            }
                             setShowTenWindowsVotingLive(true);
                           }}
                           className={`w-full font-black text-xs sm:text-[13px] py-2 sm:py-2.5 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
@@ -3285,26 +3047,26 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       </button>
 
                       {/* Presenter Profile Spotlight */}
-                      <div className="flex flex-col items-center gap-0.5 mb-1">
+                      <div className="flex flex-col items-center gap-0.5 mb-0.5 xs:mb-1">
                         <div className="relative">
                           <img
                             src={presenter.avatar}
                             alt={presenter.name}
-                            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-emerald-400 shadow-md"
+                            className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-emerald-400 shadow-md"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[7px] sm:text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[6.5px] xs:text-[7px] sm:text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
                             EN VIVO
                           </span>
                         </div>
 
-                        <h4 className="text-white font-black text-xs sm:text-[13px] mt-0.5 tracking-tight leading-tight">
+                        <h4 className="text-white font-black text-[11.5px] xs:text-xs sm:text-[13px] mt-0.5 tracking-tight leading-tight">
                           {presenter.name}
                         </h4>
-                        <span className="text-[8.5px] sm:text-[9px] text-emerald-300 font-bold uppercase tracking-wider">
+                        <span className="text-[8px] xs:text-[8.5px] sm:text-[9px] text-emerald-300 font-bold uppercase tracking-wider">
                           {presenter.role || 'PATRONISTA TEXTIL'}
                         </span>
-                        <span className="text-[7.5px] sm:text-[8px] text-slate-400 italic">
+                        <span className="text-[7px] xs:text-[7.5px] sm:text-[8px] text-slate-400 italic">
                           Exposición de 5 minutos en directo
                         </span>
                         {/* Audio exposition live indicator (Clic para escuchar o reactivar la voz de Lucas Torres) */}
@@ -3477,7 +3239,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                 {/* 👥 10 PARTICIPANTES PANEL DIRECTAMENTE VISIBLE (Strictly matching zz.png) */}
                 <div 
-                  className="w-full bg-[#0B0F19]/95 backdrop-blur-md border border-black rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2 box-border mt-auto shrink-0"
+                  className="w-full bg-[#0B0F19]/95 backdrop-blur-md border border-black rounded-xl sm:rounded-3xl p-1.5 xs:p-2 shadow-[0_20px_60px_rgba(0,0,0,0.95)] flex flex-col gap-1 sm:gap-1.5 box-border mt-auto shrink-0 pb-1.5 xs:pb-2"
                   id={`finanzas-live-participants-panel-${session.id}`}
                 >
                   {/* Header: Red pulsing dot + Round Title (left) & 10 ONLINE (right) */}
@@ -3537,7 +3299,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               });
                             }
                           }}
-                          className={`aspect-square min-h-[46px] xs:min-h-[50px] sm:min-h-[54px] rounded-xl sm:rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-0.5 sm:p-1 box-border cursor-pointer ${
+                          className={`aspect-square min-h-[26px] xs:min-h-[30px] sm:min-h-[44px] rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-0.5 sm:p-1 box-border cursor-pointer ${
                             isChosenInSpotlight
                               ? 'border-2 border-[#fe2c55] ring-2 ring-[#fe2c55]/90 shadow-[0_0_14px_rgba(254,44,85,0.9)] scale-[1.02]'
                               : 'border border-slate-700/80 hover:border-white/80 bg-slate-900'
@@ -3644,7 +3406,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   {/* Inscription Button: ✍️ Inscribirse en una sesión de (10 Euros) */}
                   <button
                     type="button"
-                    onClick={() => {
+                    disabled={isUserParticipating}
+                    onClick={(e) => {
+                      if (isUserParticipating) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // 🛑 Mientras el usuario esté participando en una Ronda o Sesión, el botón NO funciona
+                        return;
+                      }
+
                       setActiveFinanzasSessionIndex(index);
                       setShowVotingProjectsModal(false);
                       setShowProjectDetailsInPopup(false);
@@ -3653,65 +3423,37 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       if (setShowFinanzasResults) setShowFinanzasResults(false);
                       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
 
-                      if (isUserEnrolledInThisRound) {
-                        if (setShowParticipantsGatheringModal) {
-                          setShowParticipantsGatheringModal(true);
-                        }
-                      } else {
-                        const isStreetwear10 = Boolean(session.entryFee === 10 || session.title?.toUpperCase().includes('STREETWEAR'));
-                        if (isStreetwear10) {
-                          if (onExecutePaymentAndJoinSession) {
-                            onExecutePaymentAndJoinSession(session);
-                          } else {
-                            setShowFinanzasInscriptionInChannel(true);
-                          }
-                          return;
-                        }
-
-                        // 🛑 Comprobar si el usuario ya está participando en otra ronda
-                        const otherEnrolledRound = activeSessionsOnly.find(s => {
-                          if (s.id === session.id) return false;
-                          return Boolean(
-                            userPaidSessions[s.id] ||
-                            (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${s.id}`) === 'true')
-                          );
-                        });
-
-                        if (otherEnrolledRound) {
-                          const otherIdx = activeSessionsOnly.findIndex(s => s.id === otherEnrolledRound.id);
-                          setAlreadyParticipatingNotice({
-                            show: true,
-                            currentRoundTitle: otherEnrolledRound.title || 'Round STREETWEAR & URBAN',
-                            attemptedRoundTitle: roundTitle,
-                            enrolledIndex: otherIdx !== -1 ? otherIdx : 0,
-                            targetSessionId: session.id
-                          });
-
-                          if (setSystemVoiceNotification) {
-                            setSystemVoiceNotification({
-                              show: true,
-                              message: `⚠️ Ya estás participando en ${otherEnrolledRound.title || 'otra Ronda'}. No puedes inscribirte en múltiples rondas simultáneamente.`
-                            });
-                          }
-                          return;
-                        }
-
+                      const isStreetwear10 = Boolean(session.entryFee === 10 || session.title?.toUpperCase().includes('STREETWEAR'));
+                      if (isStreetwear10) {
                         if (onExecutePaymentAndJoinSession) {
                           onExecutePaymentAndJoinSession(session);
                         } else {
                           setShowFinanzasInscriptionInChannel(true);
                         }
+                        return;
+                      }
+
+                      if (onExecutePaymentAndJoinSession) {
+                        onExecutePaymentAndJoinSession(session);
+                      } else {
+                        setShowFinanzasInscriptionInChannel(true);
                       }
                     }}
-                    className={`w-full font-black text-xs sm:text-[12.5px] py-2 sm:py-2.5 px-4 rounded-full border shadow-md flex items-center justify-center gap-2 cursor-pointer font-sans transition active:scale-95 ${
+                    className={`w-full font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border shadow-md flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 ${
+                      isUserParticipating
+                        ? 'cursor-default active:scale-100 select-none'
+                        : 'cursor-pointer active:scale-95'
+                    } ${
                       isUserEnrolledInThisRound
-                        ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] animate-pulse ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
+                        ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
                         : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9]'
                     }`}
                     id={`btn-inscribirse-ronda-${session.id}`}
+                    title={isUserParticipating ? "Ya estás participando en una ronda o sesión activa" : `Inscribirse en una sesión de (${feeInfo.feeInWords})`}
+                    aria-disabled={isUserParticipating}
                   >
-                    <span className={`text-base shrink-0 ${isUserEnrolledInThisRound ? 'animate-bounce' : ''}`}>✍️</span>
-                    <span className={`truncate min-w-0 font-black ${isUserEnrolledInThisRound ? 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]' : ''}`}>
+                    <span className="text-base shrink-0">✍️</span>
+                    <span className="truncate min-w-0 font-black">
                       {isUserEnrolledInThisRound
                         ? `Estás inscrita como participante (${feeInfo.feeInWords})`
                         : `Inscribirse en una sesión de (${feeInfo.feeInWords})`}
@@ -3723,6 +3465,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     type="button"
                     onClick={() => {
                       setActiveFinanzasSessionIndex(index);
+                      const lucasIdx = participants.findIndex(p => 
+                        p.name?.toLowerCase().includes('lucas') || 
+                        p.id === 'trab-1' || 
+                        p.id === 'lucas' || 
+                        p.username?.toLowerCase().includes('lucas')
+                      );
+                      const targetIdx = lucasIdx !== -1 ? lucasIdx : 0;
+                      if (setVotingProjectSlideIndex) {
+                        setVotingProjectSlideIndex(targetIdx);
+                      }
+                      const lucasUser = participants[targetIdx] || participants[0];
+                      if (setSelectedFinanzasUser && lucasUser) {
+                        setSelectedFinanzasUser(lucasUser);
+                      }
+                      setSessionSelectedPresenterMap(prev => ({ ...prev, [session.id]: lucasUser }));
                       setShowFinanzasInscriptionInChannel(false);
                       setShowProjectDetailsInPopup(false);
                       setDetailProjectUser(null);
@@ -3731,15 +3488,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
                       setShowVotingProjectsModal(true);
                     }}
-                    className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-xs sm:text-[12.5px] py-2 sm:py-2.5 px-4 rounded-full border border-slate-200 shadow-md flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans transition active:scale-95"
+                    className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-slate-200 shadow-md flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer uppercase tracking-wider font-sans transition active:scale-95 shrink-0 mb-0.5 sm:mb-1"
                     id={`btn-ver-proyectos-ronda-${session.id}`}
                   >
                     <span className="text-base shrink-0">📋</span>
                     <span className="font-black">VER PROYECTOS</span>
                   </button>
                 </div>
-                  </>
-                )}
               
                 {/* 💬 COMENTARIOS DE USUARIOS Y POSIBILIDAD DE COMENTAR - OCUPA TODO EL ANCHO DEL CANAL CON FONDO BLANCO */}
                 {isCommentsOpenForThisSession && (
@@ -3757,12 +3512,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => setActiveCommentsSessionId(null)}
-                        className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setActiveCommentsSessionId(null);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition active:scale-90"
                         title="Cerrar comentarios"
+                        aria-label="Cerrar comentarios"
                       >
-                        <span className="text-[8.5px] font-mono text-slate-500">Pulsa 💬 para cerrar</span>
-                        <X className="w-3.5 h-3.5 text-slate-600" />
+                        <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
                       </button>
                     </div>
 
@@ -4080,43 +3839,51 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 </div>
 
+                </div>
+
+                {/* 🧭 NAVEGADOR VERTICAL DE RONDAS (Solo en pantallas medianas/grandes para evitar desborde horizontal en móvil) */}
+                <div 
+                  className="hidden md:flex absolute left-[calc(100%+10px)] sm:left-[calc(100%+14px)] md:left-[calc(100%+18px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-1.5 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-2.5 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
+                  id={`floating-finanzas-rounds-navigator-${session.id}`}
+                >
+                  <button
+                    type="button"
+                    disabled={activeFinanzasSessionIndex <= 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      scrollToRound(activeFinanzasSessionIndex - 1);
+                    }}
+                    className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
+                    title="Ronda anterior (desplazar arriba)"
+                  >
+                    <ChevronUp className="w-4 h-4 text-white stroke-[2.5]" />
+                  </button>
+
+                  <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
+                    <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">RONDA</span>
+                    <span className="text-xs sm:text-[13px] font-black font-mono text-[#00e676]">
+                      {activeFinanzasSessionIndex + 1}/{activeSessionsOnly.length}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={activeFinanzasSessionIndex >= activeSessionsOnly.length - 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      scrollToRound(activeFinanzasSessionIndex + 1);
+                    }}
+                    className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
+                    title="Siguiente ronda (desplazar abajo)"
+                  >
+                    <ChevronDown className="w-4 h-4 text-white stroke-[2.5]" />
+                  </button>
+                </div>
+
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* 🧭 NAVEGADOR FLOTANTE VERTICAL DE RONDAS DE FINANCIACIÓN (Oculto en móvil, visible en escritorio/tablet; su función se mantiene por swipe táctil y scroll) */}
-      <div 
-        className="fixed bottom-6 right-3 sm:right-6 z-[80] hidden sm:flex flex-col items-center gap-1 bg-[#0a0e1a]/90 backdrop-blur-xl border border-slate-700/80 px-2 py-2.5 rounded-2xl shadow-2xl select-none animate-fade-in pointer-events-auto"
-        id="floating-finanzas-rounds-navigator"
-      >
-        <button
-          type="button"
-          disabled={activeFinanzasSessionIndex <= 0}
-          onClick={() => scrollToRound(activeFinanzasSessionIndex - 1)}
-          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 hover:bg-slate-700 disabled:opacity-25 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700"
-          title="Ronda anterior (desplazar arriba)"
-        >
-          <ChevronUp className="w-4 h-4 text-white" />
-        </button>
-
-        <div className="flex flex-col items-center py-0.5 text-center">
-          <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">RONDA</span>
-          <span className="text-[11px] font-black font-mono text-emerald-400">
-            {activeFinanzasSessionIndex + 1}/{activeSessionsOnly.length}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          disabled={activeFinanzasSessionIndex >= activeSessionsOnly.length - 1}
-          onClick={() => scrollToRound(activeFinanzasSessionIndex + 1)}
-          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 hover:bg-slate-700 disabled:opacity-25 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700"
-          title="Siguiente ronda (desplazar abajo)"
-        >
-          <ChevronDown className="w-4 h-4 text-white" />
-        </button>
       </div>
     </div>
   );

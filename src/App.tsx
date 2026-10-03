@@ -2799,7 +2799,7 @@ export default function App() {
   const userSponsor = models.find(m => m.id === userProfile.patrocinadorId);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden overflow-y-auto select-none">
+    <div className={`min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:overflow-hidden max-md:min-h-0' : 'overflow-y-auto'} select-none no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}>
       <HeartRainOverlay />
       
       {showVictoriaSecretRanking && (
@@ -2825,8 +2825,8 @@ export default function App() {
       )}
 
 
-      {/* PRIMARY HEADER BRANDING */}
-      <header className="bg-white border-b border-slate-100 py-2 sm:py-4 px-3 sm:px-6 sticky top-0 z-[100] shrink-0 shadow-sm">
+      {/* PRIMARY HEADER BRANDING (Hidden on mobile when in casting_live so the live round screen fits 100% without scrolling) */}
+      <header className={`bg-white border-b border-slate-100 py-2 sm:py-4 px-3 sm:px-6 sticky top-0 z-[100] shrink-0 shadow-sm ${activeTab === 'casting_live' ? 'max-md:hidden' : ''}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <FashionsFinanceLogo mode="light" className="w-10 h-10" />
@@ -2891,10 +2891,10 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER TABS WRAPPER */}
-      <main className={`max-w-7xl w-full mx-auto flex-1 flex flex-col lg:flex-row gap-6 min-h-0 ${
+      <main className={`max-w-7xl w-full mx-auto flex-1 flex flex-col lg:flex-row min-h-0 ${
         activeTab === 'casting_live'
-          ? 'p-0 max-md:p-0 sm:px-0 md:px-0 lg:p-4'
-          : 'p-4 sm:p-6 max-md:p-3'
+          ? 'p-0 max-md:p-0 sm:px-0 md:px-0 lg:p-4 max-md:h-full max-md:gap-0 max-md:overflow-hidden'
+          : 'p-4 sm:p-6 max-md:p-3 gap-6'
       }`}>
         {/* LEFT NAV PANEL - Styled with high contrast and desktop responsiveness */}
         <aside className="lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden">
@@ -3109,25 +3109,27 @@ export default function App() {
         </aside>
 
         {/* RIGHT MASTER DETAIL CONTENT VIEWPORT */}
-        <section className="flex-1 flex flex-col gap-6 min-w-0 max-w-full overflow-x-hidden" id="master-viewport">
-          {/* 📱 MOBILE NAVIGATION MENU (image.png) - Visible across all tabs on mobile view */}
-          <MobileNavigationMenu
-            activeTab={activeTab}
-            userRole={userProfile.role}
-            onNavigateToTab={(tab) => {
-              if (tab === 'home') {
+        <section className={`flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'gap-0 max-md:h-full max-md:overflow-hidden' : 'gap-6'} no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`} id="master-viewport">
+          {/* 📱 MOBILE NAVIGATION MENU - Visible on general tabs; hidden on casting_live to prevent overflow and lateral scrollbar */}
+          {activeTab !== 'casting_live' && (
+            <MobileNavigationMenu
+              activeTab={activeTab}
+              userRole={userProfile.role}
+              onNavigateToTab={(tab) => {
+                if (tab === 'home') {
+                  setSelectedModelForView(null);
+                  setModelViewSourceTab(null);
+                }
+                setActiveTabTab(tab as any);
+              }}
+              onLogout={handleLogout}
+              selectedModelForView={selectedModelForView}
+              onResetSelectedModel={() => {
                 setSelectedModelForView(null);
                 setModelViewSourceTab(null);
-              }
-              setActiveTabTab(tab as any);
-            }}
-            onLogout={handleLogout}
-            selectedModelForView={selectedModelForView}
-            onResetSelectedModel={() => {
-              setSelectedModelForView(null);
-              setModelViewSourceTab(null);
-            }}
-          />
+              }}
+            />
+          )}
 
           {activeTab === 'home' && (
             selectedModelForView ? (
@@ -3370,7 +3372,7 @@ export default function App() {
           )}
 
           {activeTab === 'create_project' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in bg-gradient-to-b from-[#00BFFF]/15 via-[#00BFFF]/5 to-transparent p-1.5 sm:p-3 rounded-3xl">
               <ProjectForm
                 userProjects={projects}
                 userId={userProfile.id}
@@ -4050,7 +4052,7 @@ export default function App() {
             </div>
           )}
 
-          <div className={activeTab === 'casting_live' ? 'space-y-4 max-md:space-y-0 animate-fade-in pt-0 w-full max-w-full overflow-x-hidden min-w-0 max-md:h-full flex-1 flex flex-col' : 'hidden'}>
+          <div className={activeTab === 'casting_live' ? 'space-y-4 max-md:space-y-0 animate-fade-in pt-0 w-full max-w-full overflow-x-hidden min-w-0 max-md:h-full max-md:overflow-hidden flex-1 flex flex-col' : 'hidden'}>
             <CastingLiveSection
               models={models}
               userProfile={userProfile}

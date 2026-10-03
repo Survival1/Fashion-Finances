@@ -278,20 +278,20 @@ export default function ProjectForm({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-150 p-6 sm:p-8 space-y-8 shadow-sm text-left relative overflow-hidden" id="premium-project-form-container">
+    <div className="bg-[#00BFFF] rounded-3xl border border-[#009cd9] p-6 sm:p-8 space-y-8 shadow-xl text-left relative overflow-hidden" id="premium-project-form-container">
       
       {/* Visual background accents */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/40 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50/20 rounded-full blur-3xl -z-10" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-white/15 rounded-full blur-3xl -z-0 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-300/20 rounded-full blur-3xl -z-0 pointer-events-none" />
 
       {/* Elegant Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-100">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-white/25 relative z-10">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-indigo-650 text-white rounded-2xl shadow-sm">
+          <div className="p-3 bg-white/20 text-white rounded-2xl shadow-sm backdrop-blur-md border border-white/30">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 tracking-tight">Portal de Registro de Proyectos</h2>
+            <h2 className="text-xl sm:text-2xl font-black font-display text-white tracking-tight drop-shadow-sm">Portal de Registro de Proyectos</h2>
           </div>
         </div>
 
@@ -301,22 +301,22 @@ export default function ProjectForm({
             <button
               type="button"
               onClick={() => onNavigateToTab('saved_projects')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-200 rounded-xl font-bold transition-all active:scale-95 cursor-pointer font-sans text-xs shadow-3xs"
+              className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-[#0077b6] hover:text-[#005f92] border border-white/80 rounded-xl font-bold transition-all active:scale-95 cursor-pointer font-sans text-xs shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver a Proyectos Guardados</span>
             </button>
           )}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200">
-            <Lock className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Cifrado de Seguridad SSL</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-xl border border-white/30 backdrop-blur-sm text-white">
+            <Lock className="w-3.5 h-3.5 text-white/90" />
+            <span className="text-[10px] font-bold text-white uppercase font-mono tracking-wider">Cifrado de Seguridad SSL</span>
           </div>
         </div>
       </div>
 
       {/* Success View */}
       {isSuccess ? (
-        <div className="bg-slate-900 text-white rounded-3xl p-8 text-center space-y-4 max-w-xl mx-auto shadow-lg border border-slate-800 animate-fade-in">
+        <div className="bg-slate-900 text-white rounded-3xl p-8 text-center space-y-4 max-w-xl mx-auto shadow-lg border border-slate-800 animate-fade-in relative z-10">
           <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-3xl">
             ✓
           </div>
@@ -333,11 +333,11 @@ export default function ProjectForm({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
           
           {/* STEPPER NAVIGATION SIDEBAR */}
-          <div className="lg:col-span-3 space-y-2 lg:border-r lg:border-slate-100 lg:pr-6" id="form-stepper-sidebar">
-            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4">
+          <div className="lg:col-span-3 space-y-2 lg:border-r lg:border-white/25 lg:pr-6" id="form-stepper-sidebar">
+            <span className="text-[9px] font-extrabold text-white/95 uppercase tracking-widest block mb-4 drop-shadow-xs">
               Progreso de Calificación
             </span>
 
@@ -347,8 +347,8 @@ export default function ProjectForm({
               onClick={() => setActiveStep('basic')}
               className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
                 activeStep === 'basic'
-                  ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm font-bold scale-[1.02]'
-                  : 'bg-transparent text-slate-600 hover:bg-slate-50 font-medium'
+                  ? 'bg-slate-900 text-white shadow-md font-bold scale-[1.02]'
+                  : 'bg-white/95 text-slate-800 hover:bg-white font-bold border border-white/60 shadow-xs'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -363,8 +363,8 @@ export default function ProjectForm({
               onClick={() => setActiveStep('finance')}
               className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
                 activeStep === 'finance'
-                  ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm font-bold scale-[1.02]'
-                  : 'bg-transparent text-slate-600 hover:bg-slate-50 font-medium'
+                  ? 'bg-slate-900 text-white shadow-md font-bold scale-[1.02]'
+                  : 'bg-white/95 text-slate-800 hover:bg-white font-bold border border-white/60 shadow-xs'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -379,8 +379,8 @@ export default function ProjectForm({
               onClick={() => setActiveStep('team')}
               className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
                 activeStep === 'team'
-                  ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm font-bold scale-[1.02]'
-                  : 'bg-transparent text-slate-600 hover:bg-slate-50 font-medium'
+                  ? 'bg-slate-900 text-white shadow-md font-bold scale-[1.02]'
+                  : 'bg-white/95 text-slate-800 hover:bg-white font-bold border border-white/60 shadow-xs'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -391,7 +391,7 @@ export default function ProjectForm({
 
             {/* Active Project Card if loaded */}
             {userProjects.length > 0 && (
-              <div className="mt-8 p-4 bg-emerald-50 border border-emerald-150 rounded-2xl space-y-2">
+              <div className="mt-8 p-4 bg-white/95 border border-white/80 rounded-2xl space-y-2 shadow-sm">
                 <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase tracking-wider inline-block">
                   {userProjects.length === 1 ? '✓ Registrado' : `✓ ${userProjects.length} Registrados`}
                 </span>
@@ -403,7 +403,7 @@ export default function ProjectForm({
                     </p>
                   ))}
                 </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed block">
+                <p className="text-[10px] text-slate-600 leading-relaxed block">
                   {userProjects.length === 1 
                     ? 'Ya has subido un proyecto calificado para ingresar en las rondas.' 
                     : 'Ya has subido proyectos calificados para ingresar en las rondas.'
@@ -414,7 +414,7 @@ export default function ProjectForm({
           </div>
 
           {/* ACTIVE STEP CONTENT CONTAINER */}
-          <div className="lg:col-span-9 bg-slate-50/50 rounded-2xl border border-slate-150 p-5 sm:p-7 space-y-6">
+          <div className="lg:col-span-9 bg-white/95 rounded-2xl border border-white/80 p-5 sm:p-7 space-y-6 shadow-sm backdrop-blur-sm">
             
             {/* Horizontal Step Pills matching image.png */}
             <div className="bg-slate-100/90 border border-slate-200/80 rounded-2xl p-2 flex flex-wrap sm:grid sm:grid-cols-3 gap-2 text-center text-[10px] sm:text-[11px] font-black">

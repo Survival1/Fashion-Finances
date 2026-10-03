@@ -878,6 +878,60 @@ export default function SessionResultsPodium({
     };
   }, []);
 
+  // 🎯 Desplazamiento fluido y confiable con la rueda del ratón y teclado en la pantalla de resultados
+  useEffect(() => {
+    const handleGlobalWheel = (e: WheelEvent) => {
+      const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+      if (!wrapper) return;
+      const target = e.target as HTMLElement;
+      if (target && (target.closest('#finanzas-results-in-channel') || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('[id^="finanzas-results-in-channel"]'))) {
+        const isAtBottom = wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 15;
+        const isAtTop = wrapper.scrollTop <= 15;
+        if (e.deltaY > 0 && isAtBottom) {
+          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+        } else if (e.deltaY < 0 && isAtTop) {
+          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
+        } else {
+          wrapper.scrollTop += e.deltaY;
+        }
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+      const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+      if (!wrapper) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        wrapper.scrollBy({ top: 80, behavior: 'auto' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        wrapper.scrollBy({ top: -80, behavior: 'auto' });
+      } else if (e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        wrapper.scrollBy({ top: 320, behavior: 'auto' });
+      } else if (e.key === 'PageUp') {
+        e.preventDefault();
+        wrapper.scrollBy({ top: -320, behavior: 'auto' });
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        wrapper.scrollTo({ top: 0, behavior: 'auto' });
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        wrapper.scrollTo({ top: wrapper.scrollHeight, behavior: 'auto' });
+      }
+    };
+
+    window.addEventListener('wheel', handleGlobalWheel, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('wheel', handleGlobalWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement, Event>, name: string) => {
     const target = e.currentTarget;
     const nameLower = name.toLowerCase();
@@ -1290,7 +1344,30 @@ export default function SessionResultsPodium({
   };
 
   return (
-    <div className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain" id="podium-results-screen">
+    <div 
+      className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
+      id="podium-results-screen"
+      onWheel={(e) => {
+        const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+        if (wrapper) {
+          const isAtBottom = wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 15;
+          const isAtTop = wrapper.scrollTop <= 15;
+          if (e.deltaY > 0 && isAtBottom) {
+            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+          } else if (e.deltaY < 0 && isAtTop) {
+            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
+          } else {
+            wrapper.scrollTop += e.deltaY;
+          }
+        } else {
+          if (e.deltaY > 0) {
+            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+          } else if (e.deltaY < 0) {
+            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
+          }
+        }
+      }}
+    >
       
       {/* Immersive stadium visual background effects */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />

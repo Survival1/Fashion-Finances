@@ -4,6 +4,8 @@ import { seedInitialData } from '../utils/seedData';
 import { getRoundReference } from '../utils/roundsDatabase';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
+import ReglasParticipacionModal from './ReglasParticipacionModal';
+import ComisionesModal from './ComisionesModal';
 import { 
   TRABAJADORES_USERS, 
   FINANZAS_USERS, 
@@ -364,6 +366,19 @@ export default function SessionSimulator({
   const [enrollProjectId, setEnrollProjectId] = useState<string>('');
   const [showGatheringModal, setShowGatheringModal] = useState<boolean>(false);
   const [gatheringSessionData, setGatheringSessionData] = useState<InvestmentSession | null>(null);
+  const [showReglasModal, setShowReglasModal] = useState<boolean>(false);
+  const [showComisionesModal, setShowComisionesModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleOpenReglas = () => setShowReglasModal(true);
+    const handleOpenComisiones = () => setShowComisionesModal(true);
+    window.addEventListener('open-reglas-participacion', handleOpenReglas);
+    window.addEventListener('open-comisiones-modal', handleOpenComisiones);
+    return () => {
+      window.removeEventListener('open-reglas-participacion', handleOpenReglas);
+      window.removeEventListener('open-comisiones-modal', handleOpenComisiones);
+    };
+  }, []);
 
   const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement, Event>, name: string) => {
     const target = e.currentTarget;
@@ -2848,7 +2863,7 @@ export default function SessionSimulator({
               <span>Escalafón y Tally de Resultados Completos</span>
             </h3>
 
-            <div className="divide-y divide-slate-800/80 font-mono text-[11px] max-h-[300px] overflow-y-auto pr-1">
+            <div className="divide-y divide-slate-800/80 font-mono text-[11px] max-h-[300px] overflow-y-auto pr-1 no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {sortedParticipantsForRanking.map((part, rankingIndex) => {
                 const isAwardWinner = rankingIndex === 0;
                 const matchedModel = models.find(m => m.id === part.userId || m.name.toLowerCase() === part.name.toLowerCase());
@@ -3236,7 +3251,7 @@ export default function SessionSimulator({
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-900/80 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden" id="automated-sessions-section">
+    <div className="bg-white rounded-3xl border border-slate-900/80 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="automated-sessions-section">
       
       {/* Upper header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
@@ -3244,30 +3259,38 @@ export default function SessionSimulator({
           <span className="text-[10px] font-extrabold text-slate-800 uppercase tracking-widest flex items-center gap-1.5 font-mono">
             <span>⚙️ MESA DE SESIONES COLECTIVAS</span>
           </span>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1 animate-fade-in">Simulación de Rondas Colectivas</h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1 animate-fade-in">Rondas de Financiación</h2>
           <p className="text-xs text-slate-500 max-w-xl leading-relaxed mt-0.5">
-            Únete a mesas de inversión y votación. Al completarse los 10 miembros todos votan, calculándose los ganadores de forma automática.
+            Únete a nuestras Rondas de financiación con tu proyecto y conseguirás los fondos que deseas.
           </p>
         </div>
 
-        {/* Dynamic Scheduler Pilot Button */}
-        <button
-          type="button"
-          onClick={() => setShowSchedulerPanel(!showSchedulerPanel)}
-          className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center gap-2 cursor-pointer border ${
-            showSchedulerPanel
-              ? 'bg-amber-500 hover:bg-amber-600 border-amber-600 text-slate-950 shadow-md ring-2 ring-amber-500/20 shadow-amber-500/15'
-              : 'bg-slate-950 hover:bg-slate-900 border-slate-800 text-amber-400 hover:text-amber-300 shadow-sm'
-          }`}
-          title="Abrir programador de inversión automatizada"
-          id="btn-toggle-auto-invest-panel"
-        >
-          <span className="text-sm">🎰 🚊</span>
-          <span>{showSchedulerPanel ? 'Cerrar Piloto Automático' : 'Programador Autónomo'}</span>
-          {scheduledOrders.filter(o => o.status === 'pending' && o.userId === userProfile.id).length > 0 && (
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
-          )}
-        </button>
+        {/* Dynamic Action Buttons: Reglas de participación y Comisiones */}
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          {/* Botón: Reglas de participación */}
+          <button
+            type="button"
+            onClick={() => setShowReglasModal(true)}
+            className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95"
+            title="Ver reglas de participación completas"
+            id="btn-open-reglas-participacion"
+          >
+            <span className="text-sm text-[#fe2c55]">📜</span>
+            <span>Reglas de participación</span>
+          </button>
+
+          {/* Botón: Comisiones */}
+          <button
+            type="button"
+            onClick={() => setShowComisionesModal(true)}
+            className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95"
+            title="Ver desglose y estructura de comisiones"
+            id="btn-open-comisiones"
+          >
+            <span className="text-sm text-emerald-600">💰</span>
+            <span>Comisiones</span>
+          </button>
+        </div>
       </div>
 
       {/* SUCCESS TOAST FOR AUTOMATED ORDER ACTIVATION */}
@@ -3796,15 +3819,15 @@ export default function SessionSimulator({
         <div className="space-y-6">
           
           {/* Detailed Info Ribbon for the current active selection */}
-          <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-sm" id="detail-active-ribbon">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/15 rounded-full blur-2xl" />
-            <div className="space-y-1 max-w-xl">
-              <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-md ${
-                currentSession.status === 'voting' ? 'bg-slate-950 text-white border border-slate-700 shadow-sm' : 'bg-indigo-500 text-white shadow-sm'
+          <div className="bg-gradient-to-r from-[#fce4ec] via-[#f7eef5] to-[#e0f2fe] text-slate-900 p-6 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-sm border border-pink-200/80" id="detail-active-ribbon">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="space-y-1.5 max-w-2xl mx-auto flex flex-col items-center text-center">
+              <span className={`inline-flex items-center text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-md ${
+                currentSession.status === 'voting' ? 'bg-slate-950 text-white border border-slate-700 shadow-sm' : 'bg-indigo-600 text-white shadow-sm'
               }`}>
                 {currentSession.status === 'voting' ? '🗳️ RDA VOTACIÓN ABIERTA' : '⏳ RECLUTANDO MIEMBROS (FALTAN ' + (10 - currentSession.participants.length) + ' MÁS PARA ABRIR VOTACIÓN)'}
               </span>
-              <h3 className="font-bold text-base text-slate-100 flex items-center gap-2 mt-1">
+              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 flex items-center justify-center gap-2 mt-1">
                 <span>
                   {(currentSession.entryFee === 10 || currentSession.id === 'sess-workers' || currentSession.title?.includes('Trabajad') || currentSession.title?.includes('STREETWEAR'))
                     ? 'Round STREETWEAR & URBAN'
@@ -3820,63 +3843,44 @@ export default function SessionSimulator({
                     ? 'Ronda High Fashion 👠'
                     : currentSession.title}
                 </span>
-                <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/10 border border-amber-400/40 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-mono font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full shadow-2xs">
                   {getRoundReference(currentSession)}
                 </span>
               </h3>
               {(currentSession.entryFee === 10 || currentSession.id === 'sess-workers' || currentSession.title?.includes('Trabajad') || currentSession.title?.includes('STREETWEAR')) && (
-                <p className="text-xs text-slate-300 font-medium">
+                <p className="text-xs text-slate-700 font-medium">
                   Estilo moderno, sneakers, denim y cultura street.
                 </p>
               )}
               {(currentSession.entryFee === 100 || currentSession.id === 'sess-entrepreneurs' || currentSession.title?.includes('Bronce') || currentSession.title?.includes('Emprendedor') || currentSession.title?.includes('CASUAL')) && (
-                <p className="text-xs text-amber-200/90 font-medium">
+                <p className="text-xs text-slate-700 font-medium">
                   Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
                 </p>
               )}
               {(currentSession.entryFee === 1000 || currentSession.id === 'sess-businessmen' || currentSession.title?.includes('Acero') || currentSession.title?.includes('Empresar') || currentSession.title?.includes('Glamour')) && (
-                <p className="text-xs text-slate-300 font-medium">
+                <p className="text-xs text-slate-700 font-medium">
                   vestidos, belleza, eventos, alfombra roja y looks impactantes.
                 </p>
               )}
               {(currentSession.entryFee === 10000 || currentSession.id === 'sess-topmodels' || currentSession.title?.includes('Model') || currentSession.title?.includes('Oro') || currentSession.title?.includes('Classic') || currentSession.title?.includes('Elegant')) && (
-                <p className="text-xs text-amber-200/90 font-medium">
+                <p className="text-xs text-slate-700 font-medium">
                   sofisticado, clásico, atemporal y refinado.
                 </p>
               )}
               {(currentSession.entryFee === 100000 || currentSession.id === 'sess-investors' || currentSession.title?.includes('Invers') || currentSession.title?.includes('Rosa') || currentSession.title?.includes('Fashion')) && (
-                <p className="text-xs text-rose-200/90 font-medium">
+                <p className="text-xs text-slate-700 font-medium">
                   alta moda, diseñadores, pasarela y tendencias.
                 </p>
               )}
               {(currentSession.entryFee === 1000000 || currentSession.id === 'sess-millionaires' || currentSession.title?.includes('Millon') || currentSession.title?.includes('Platino')) && (
-                <p className="text-xs text-amber-200/90 font-medium">
+                <p className="text-xs text-slate-700 font-medium">
                   alta moda, diseñadores, pasarela y tendencias.
                 </p>
               )}
-              <p className="text-xs text-slate-400">
-                Fondo Acumulado: <strong className="text-amber-400 font-mono text-sm">{currentSession.poolTotal}€</strong> — Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el **80% del premio**.
+              <p className="text-xs text-slate-700">
+                Fondo Acumulado: <strong className="text-emerald-700 font-mono text-sm font-black">{currentSession.poolTotal}€</strong> — Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el **80% del premio**.
               </p>
             </div>
-
-            {currentSession.status === 'voting' ? (
-              <div className="flex flex-col sm:flex-row gap-2.5 shrink-0 w-full sm:w-auto">
-                {/* Simulated AI casting vote button */}
-                <button
-                  onClick={handleSimulateAIVotes}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer active:scale-95"
-                  title="Simula que el resto de los participantes emiten su voto de forma instantánea"
-                >
-                  <span className="text-sm">🪞</span>
-                  <span>Simular Votaciones IA</span>
-                </button>
-              </div>
-            ) : (
-              <span className="text-xs font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-4 py-2 rounded-xl flex flex-col items-center justify-center text-center leading-tight">
-                <span>⏳ Esperando</span>
-                <span>Inscripciones</span>
-              </span>
-            )}
           </div>
 
           {/* USER ACTION CARD: CHOOSE & JOIN ROUND (Shown when session is active to let user simulate/test payment) */}
@@ -3905,18 +3909,19 @@ export default function SessionSimulator({
                 </div>
               ) : (
                 <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
-                  <div>
-                    <label className="block text-[10px] font-bold text-indigo-650 uppercase tracking-wider mb-1.5">
-                      Selecciona Cuál de tus proyectos vas a inscribir:
+                  <div className="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200/90 shadow-2xs space-y-1.5">
+                    <label className="block text-[11px] font-black text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse inline-block" />
+                      <span>Selecciona Cuál de tus proyectos vas a inscribir:</span>
                     </label>
                     <select
                       value={enrollProjectId}
                       onChange={(e) => setEnrollProjectId(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-550 font-bold cursor-pointer"
+                      className="w-full bg-white border-2 border-rose-500 hover:border-rose-600 focus:border-rose-600 rounded-xl px-3.5 py-2.5 text-xs text-rose-950 focus:outline-none focus:ring-3 focus:ring-rose-200/80 font-black cursor-pointer shadow-sm transition"
                     >
-                      <option value="">-- Elige un proyecto de la lista --</option>
+                      <option value="" className="text-slate-500 font-normal">-- Elige un proyecto de la lista --</option>
                       {userProjects.map((proj) => (
-                        <option key={proj.id} value={proj.id}>
+                        <option key={proj.id} value={proj.id} className="text-slate-900 font-bold">
                           {proj.title} ({proj.category}) — Presupuesto: {proj.budget}€
                         </option>
                       ))}
@@ -3951,9 +3956,9 @@ export default function SessionSimulator({
                     <button
                       type="button"
                       onClick={() => handleJoinSession(currentSession.id)}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-700 font-sans"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 bg-gradient-to-r from-white via-sky-50 to-sky-100 hover:from-white hover:to-sky-200 text-sky-950 border border-sky-300 font-sans shadow-sm"
                     >
-                      <Play className="w-4 h-4 fill-current text-white" />
+                      <Play className="w-4 h-4 fill-sky-600 text-sky-600" />
                       <span>Disparar Pago de {currentSession.entryFee}€ y Acceder a Votaciones</span>
                     </button>
                   </div>
@@ -3984,7 +3989,7 @@ export default function SessionSimulator({
       {/* Embedded Project Details Dialog Popup */}
       {selectedProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 text-slate-800 relative shadow-2xl">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 text-slate-800 relative shadow-2xl no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             <button
               onClick={() => setSelectedProject(null)}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 p-2 rounded-full transition"
@@ -4362,6 +4367,18 @@ export default function SessionSimulator({
           </div>
         </div>
       )}
+
+      {/* 📜 MODAL DE REGLAS DE PARTICIPACIÓN */}
+      <ReglasParticipacionModal 
+        isOpen={showReglasModal}
+        onClose={() => setShowReglasModal(false)}
+      />
+
+      {/* 💰 MODAL DE COMISIONES Y REPARTO DE FONDOS */}
+      <ComisionesModal 
+        isOpen={showComisionesModal}
+        onClose={() => setShowComisionesModal(false)}
+      />
     </div>
   );
 }

@@ -315,6 +315,13 @@ body {
   position: relative;
 }
 
+/* Prevent any horizontal scrollbar across the entire app */
+::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0px !important;
+  width: 0px !important;
+}
+
 /* Mobile viewport configuration (responsive layout with full scrollability) */
 @media (max-width: 768px) {
   html, body {
@@ -502,69 +509,61 @@ body {
   animation: heartRainRise var(--dur, 2.6s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* Elegant and comfortable scrollbar specifically for the voting projects modal */
+/* Hide visible lateral scrollbar on voting projects container while preserving smooth scrolling functionality */
 #voting-projects-scrollable-container::-webkit-scrollbar,
 .voting-projects-scrollbar::-webkit-scrollbar {
-  display: block !important;
-  width: 6px !important;
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
 }
 
 #voting-projects-scrollable-container::-webkit-scrollbar-track,
 .voting-projects-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-radius: 9999px !important;
+  background: transparent !important;
 }
 
 #voting-projects-scrollable-container::-webkit-scrollbar-thumb,
 .voting-projects-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(254, 44, 85, 0.45) !important;
-  border-radius: 9999px !important;
-}
-
-#voting-projects-scrollable-container::-webkit-scrollbar-thumb:hover,
-.voting-projects-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(254, 44, 85, 0.85) !important;
+  background: transparent !important;
 }
 
 #voting-projects-scrollable-container,
 .voting-projects-scrollbar {
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(254, 44, 85, 0.45) rgba(0, 0, 0, 0.04) !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
-/* Elegant and comfortable scrollbar for podium results screen and feeds */
+/* Hide visible lateral scrollbar on podium results screen while preserving smooth scrolling functionality */
 #podium-scrollable-content-wrapper::-webkit-scrollbar,
 #podium-results-screen::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
-  display: block !important;
-  width: 6px !important;
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
 }
 
 #podium-scrollable-content-wrapper::-webkit-scrollbar-track,
 #podium-results-screen::-webkit-scrollbar-track,
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(14, 22, 40, 0.4) !important;
-  border-radius: 9999px !important;
+  background: transparent !important;
 }
 
 #podium-scrollable-content-wrapper::-webkit-scrollbar-thumb,
 #podium-results-screen::-webkit-scrollbar-thumb,
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(251, 191, 36, 0.45) !important;
-  border-radius: 9999px !important;
-}
-
-#podium-scrollable-content-wrapper::-webkit-scrollbar-thumb:hover,
-#podium-results-screen::-webkit-scrollbar-thumb:hover,
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(251, 191, 36, 0.85) !important;
+  background: transparent !important;
 }
 
 #podium-scrollable-content-wrapper,
 #podium-results-screen,
 .custom-scrollbar {
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(251, 191, 36, 0.45) rgba(14, 22, 40, 0.4) !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 

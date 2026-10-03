@@ -3057,10 +3057,37 @@ export default function CastingLiveSection({
   const [finanzasTimerActive, setFinanzasTimerActive] = useState<Record<string, boolean>>({});
 
   // 10-minute final voting & decision phase states (Minute 50:00 to 60:00)
-  const [isVotingPhaseActive, setIsVotingPhaseActive] = useState<boolean>(false);
+  const [isVotingPhaseActive, setIsVotingPhaseActive] = useState<boolean>(() => {
+    try {
+      const activeId = 'sess-trabajadores-1';
+      return localStorage.getItem(`finanzas_is_voting_phase_active_${activeId}`) === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
   const [votingPhaseTimer, setVotingPhaseTimer] = useState<number>(() => {
-    const saved = localStorage.getItem('finanzas_voting_phase_timer');
-    return saved ? parseInt(saved, 10) : 600;
+    try {
+      const activeId = 'sess-trabajadores-1';
+      const endVal = localStorage.getItem(`finanzas_voting_end_time_${activeId}`);
+      if (endVal) {
+        const endMs = parseInt(endVal, 10);
+        if (!isNaN(endMs) && endMs > 0) {
+          return Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+        }
+      }
+      const startVal = localStorage.getItem(`finanzas_active_session_start_${activeId}`);
+      if (startVal) {
+        const startMs = parseInt(startVal, 10);
+        if (!isNaN(startMs) && startMs > 0) {
+          const elapsed = Math.floor((Date.now() - startMs) / 1000);
+          return Math.max(0, 3600 - elapsed);
+        }
+      }
+      const saved = localStorage.getItem(`finanzas_voting_phase_timer_${activeId}`) || localStorage.getItem('finanzas_voting_phase_timer');
+      return saved ? parseInt(saved, 10) : 600;
+    } catch (e) {
+      return 600;
+    }
   });
   const lastAnnouncedPresenterIndexRef = useRef<number>(-1);
   const hasAnnouncedVotingPhaseRef = useRef<boolean>(false);
@@ -3170,6 +3197,31 @@ export default function CastingLiveSection({
       presenter: TRABAJADORES_USERS[0],
       participants: [
         ...TRABAJADORES_USERS.slice(0, 10)
+      ],
+      status: 'active' as const
+    },
+    {
+      id: 'sess-streetwear-ref-2',
+      reference: 'REF: 2',
+      roundNumber: 2,
+      roundIndex: 1,
+      title: 'Round STREETWEAR & URBAN',
+      brand: 'Estilo moderno, sneakers, denim y cultura street.',
+      category: 'Round STREETWEAR & URBAN',
+      entryFee: 10,
+      presenter: TRABAJADORES_USERS[0],
+      participants: [
+        ...TRABAJADORES_USERS.slice(0, 9),
+        {
+          id: userProfile?.id || 'user-adriana',
+          name: userProfile?.name || 'Adriana Lima',
+          username: userProfile?.username || 'adrianalima',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          role: 'Usuario Inversor (Tú)',
+          projectId: 'proj-eco-fashion',
+          projectTitle: 'Eco-Fashion Runway',
+          isSelf: true
+        }
       ],
       status: 'active' as const
     },
@@ -6104,10 +6156,18 @@ export default function CastingLiveSection({
 
       } else if (activeTotalElapsed < 3600) {
         // --- PHASE 2: FINAL 10 MINUTES VOTING & DECISION (Minute 50:00 to 60:00) ---
-        const remainingVoting = Math.max(0, 3600 - activeTotalElapsed);
+        const calculatedRemaining = Math.max(0, 3600 - activeTotalElapsed);
+        let endMs = parseInt(localStorage.getItem(`finanzas_voting_end_time_${activeSessionId}`) || '0', 10);
+        if (!endMs || isNaN(endMs) || endMs <= Date.now() - 3600000 || endMs > Date.now() + 700000) {
+          endMs = Date.now() + calculatedRemaining * 1000;
+          localStorage.setItem(`finanzas_voting_end_time_${activeSessionId}`, String(endMs));
+        }
+
+        const remainingVoting = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
         setIsVotingPhaseActive(true);
         setVotingPhaseTimer(remainingVoting);
         setVotingCountdownSeconds(remainingVoting);
+        localStorage.setItem(`finanzas_voting_phase_timer_${activeSessionId}`, String(remainingVoting));
 
         // Mark all 10 participants as finished in queue
         setFinanzasPresentationQueue((prev) =>
@@ -13247,6 +13307,43 @@ export default function CastingLiveSection({
     );
   };
 
+  // 🎯 Desplazamiento cómodo y fluido con teclado para la ventana de votación de proyectos
+  useEffect(() => {
+    if (!showVotingProjectsModal) return;
+
+    const handleVotingKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+      const container = document.getElementById('voting-projects-scrollable-container');
+      if (!container) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        container.scrollBy({ top: 80, behavior: 'auto' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        container.scrollBy({ top: -80, behavior: 'auto' });
+      } else if (e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        container.scrollBy({ top: 300, behavior: 'auto' });
+      } else if (e.key === 'PageUp') {
+        e.preventDefault();
+        container.scrollBy({ top: -300, behavior: 'auto' });
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        container.scrollTo({ top: 0, behavior: 'auto' });
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
+      }
+    };
+
+    window.addEventListener('keydown', handleVotingKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleVotingKeyDown);
+    };
+  }, [showVotingProjectsModal]);
+
   // --- Single Project Slider & Voting Projects View ---
   const renderSingleProjectSlider = () => {
     const isUserParticipating = isCurrentUserParticipatingInCurrentSession;
@@ -13291,10 +13388,13 @@ export default function CastingLiveSection({
       }
     };
 
-    const handleSliderWheel = (e: React.WheelEvent) => {
-      // Detener propagación para permitir el scroll natural vertical dentro de la página
-      // sin que el feed principal cambie de ronda
+    const handleSliderWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+      // Detener propagación para no mover el feed principal de rondas y permitir scroll vertical suave y cómodo
       e.stopPropagation();
+      const container = e.currentTarget || document.getElementById('voting-projects-scrollable-container');
+      if (container) {
+        container.scrollTop += e.deltaY;
+      }
     };
 
     return (
@@ -13302,8 +13402,10 @@ export default function CastingLiveSection({
         onWheel={handleSliderWheel}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="w-full h-full bg-white flex flex-col overflow-y-auto custom-scrollbar text-slate-800 font-sans text-left relative z-30 select-none scroll-smooth overscroll-contain touch-pan-y"
+        className="w-full h-full flex-1 min-h-0 bg-white flex flex-col overflow-y-auto custom-scrollbar text-slate-800 font-sans text-left relative z-30 select-none overscroll-contain touch-pan-y"
         id="voting-projects-scrollable-container"
+        style={{ scrollBehavior: 'auto' }}
+        tabIndex={0}
       >
         {/* Header pegajoso superior con insignias, cronómetro y botón X */}
         <div className="sticky top-0 z-40 p-2.5 sm:p-3 border-b border-slate-200 bg-white/95 backdrop-blur-md text-slate-900 shrink-0 select-none shadow-xs">
@@ -13333,34 +13435,42 @@ export default function CastingLiveSection({
                 setDetailProjectUser(null);
                 setActiveFinanzasPopupUser(null);
                 setShowFinanzasInscriptionInChannel(false);
-                setIsVotingPhaseActive(false);
                 setShowFinanzasRecount(false);
                 setShowFinanzasResults(false);
 
-                // Redirigir a la pantalla de exposición de Lucas Torres (image.png)
-                const lucasUser = TRABAJADORES_USERS[0];
-                setSelectedFinanzasUser(lucasUser);
-                setActiveFinanzasSessionIndex(0);
-                setIsBroadcastMicOn(true);
-                setIsMuted(false);
-                setIsPresenterCameraAudioMuted(false);
-                setFinanzasTimers(prev => ({
-                  ...prev,
-                  [lucasUser.id]: 296,
-                  'trab-1': 296
-                }));
+                // 🎯 Redirigir directamente a la página de la captura imagen.png "REF 2" (sess-streetwear-ref-2)
+                const ref2Session = activeSessionsOnly.find(s => s.id === 'sess-streetwear-ref-2' || s.reference === 'REF: 2') || activeSessionsOnly[1] || activeSessionsOnly[0];
+                const activeSessionId = ref2Session?.id || 'sess-streetwear-ref-2';
+                
+                // Mantener los 10 minutos de cuenta atrás final activos para image.png
+                setIsVotingPhaseActive(true);
+                try {
+                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+                  localStorage.setItem('finanzas_is_voting_phase_active_sess-streetwear-ref-2', 'true');
+                  const currentEnd = localStorage.getItem(`finanzas_voting_end_time_${activeSessionId}`) || localStorage.getItem('finanzas_voting_end_time_sess-streetwear-ref-2');
+                  if (!currentEnd) {
+                    localStorage.setItem(`finanzas_voting_end_time_${activeSessionId}`, String(Date.now() + 591 * 1000));
+                    localStorage.setItem('finanzas_voting_end_time_sess-streetwear-ref-2', String(Date.now() + 591 * 1000));
+                  }
+                  // Mantener usuarios inscritos en esta Ronda hasta llegar a la página de los resultados finales
+                  localStorage.setItem('user_paid_session_sess-streetwear-ref-2', 'true');
+                  localStorage.setItem(`user_paid_session_${activeSessionId}`, 'true');
+                  localStorage.setItem('finanzas_user_participating', 'true');
+                  localStorage.setItem('finanzas_target_session_id', activeSessionId);
+                } catch (err) {}
 
-                // Despachar evento para sincronizar TikTokFinanzasFeed
-                window.dispatchEvent(new CustomEvent('exit-voting-to-exposition', {
+                // Despachar evento para sincronizar TikTokFinanzasFeed hacia la vista de image.png "REF 2"
+                window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
                   detail: {
-                    sessionId: currentFinanzasSession?.id || 'sess-trabajadores-1',
-                    targetTurn: 1
+                    sessionId: activeSessionId,
+                    targetRef: 'REF: 2',
+                    preserveVotingCountdown: true
                   }
                 }));
               }}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 shadow-xs pointer-events-auto"
-              title="Cerrar ventana y volver a la exposición de Lucas Torres"
-              aria-label="Cerrar ventana y volver a la exposición de Lucas Torres"
+              title="Cerrar ventana y volver a la página de la ronda REF: 2 (image.png)"
+              aria-label="Cerrar ventana y volver a la página de la ronda REF: 2 (image.png)"
               id="btn-close-voting-projects-modal"
             >
               <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
@@ -13795,9 +13905,25 @@ export default function CastingLiveSection({
       <div 
         className="w-full h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-hidden no-scrollbar animate-fade-in select-none pointer-events-auto box-border" 
         id="finanzas-results-in-channel"
+        onWheel={(e) => {
+          e.stopPropagation();
+          const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+          if (wrapper) {
+            wrapper.scrollTop += e.deltaY;
+          }
+        }}
       >
         {/* Fixed Header bar inside phone container matching zr.png */}
-        <div className="bg-[#0e1628]/95 border-b border-slate-800/80 p-2.5 sm:p-3 shrink-0 shadow-lg z-20 flex flex-col gap-1.5">
+        <div 
+          className="bg-[#0e1628]/95 border-b border-slate-800/80 p-2.5 sm:p-3 shrink-0 shadow-lg z-20 flex flex-col gap-1.5"
+          onWheel={(e) => {
+            e.stopPropagation();
+            const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+            if (wrapper) {
+              wrapper.scrollTop += e.deltaY;
+            }
+          }}
+        >
           <div className="flex items-center justify-between gap-2 w-full">
             <button
               type="button"
@@ -13836,11 +13962,14 @@ export default function CastingLiveSection({
           </div>
         </div>
 
-        {/* Podium content in dark luxury styling - Cómodo desplazamiento completo */}
+        {/* Podium content in dark luxury styling - Cómodo desplazamiento completo con rueda de ratón */}
         <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-0 scroll-smooth custom-scrollbar w-full max-w-full touch-pan-y overscroll-contain"
+          className="flex-1 overflow-y-auto overflow-x-hidden p-0 scrollbar-none no-scrollbar w-full max-w-full touch-pan-y overscroll-contain"
           id="podium-scrollable-content-wrapper"
-          onWheel={(e) => e.stopPropagation()}
+          onWheel={(e) => {
+            e.stopPropagation();
+            e.currentTarget.scrollTop += e.deltaY;
+          }}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
@@ -13916,6 +14045,13 @@ export default function CastingLiveSection({
         <div 
           className="bg-white rounded-3xl w-full max-w-2xl h-[92vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden relative animate-scale-up text-slate-800 cursor-default"
           onClick={(e) => e.stopPropagation()}
+          onWheel={(e) => {
+            e.stopPropagation();
+            const container = document.getElementById('voting-projects-scrollable-container');
+            if (container) {
+              container.scrollTop += e.deltaY;
+            }
+          }}
         >
           {renderSingleProjectSlider()}
         </div>
@@ -14293,6 +14429,13 @@ export default function CastingLiveSection({
           <div 
             className="absolute inset-0 z-[100] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto rounded-[40px] sm:rounded-[48px]"
             id="enlarged-voting-projects-modal"
+            onWheel={(e) => {
+              e.stopPropagation();
+              const container = document.getElementById('voting-projects-scrollable-container');
+              if (container) {
+                container.scrollTop += e.deltaY;
+              }
+            }}
           >
             {renderSingleProjectSlider()}
           </div>
@@ -25257,7 +25400,7 @@ try {
   }
 
   return (
-    <div className="bg-white rounded-2xl max-md:rounded-none border border-slate-200 max-md:border-none shadow-sm min-h-[750px] max-md:min-h-0 flex flex-col md:flex-row text-slate-800 relative w-full" id="casting_live-root-section">
+    <div className="bg-white rounded-2xl max-md:rounded-none border border-slate-200 max-md:border-none shadow-sm min-h-[750px] max-md:min-h-0 max-md:h-full max-md:overflow-hidden flex flex-col md:flex-row text-slate-800 relative w-full" id="casting_live-root-section">
       
       {/* 🌧️ FULL-CHANNEL GIFT RAIN OVERLAY */}
       {fullChannelGiftRain.length > 0 && (
@@ -25345,8 +25488,8 @@ try {
         </div>
       )}
 
-      {/* 🚀 LEFT COLUMN: Sidebar matching exact layout of xzxzxzxz.png */}
-      <aside className="w-full md:w-[260px] border-r border-slate-100 p-4 shrink-0 flex flex-col justify-between bg-slate-50/50">
+      {/* 🚀 LEFT COLUMN: Sidebar matching exact layout of xzxzxzxz.png (Hidden on mobile so live screen fits 100% without scrollbar) */}
+      <aside className="hidden md:flex md:w-[260px] border-r border-slate-100 p-4 shrink-0 flex-col justify-between bg-slate-50/50">
         <div className="space-y-6">
           
           {/* Brand Logo and Search bar matching image "Buscar" */}
@@ -25779,7 +25922,11 @@ try {
       {/* 🎬 CENTER COLUMN: Standard vertical Video Wall with playback, overlays, and controls */}
       <main 
         ref={feedContainerRef}
-        className="flex-1 bg-white flex flex-col items-center justify-start p-0 px-0 pb-16 md:pb-32 relative min-h-[680px] w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container"
+        className={`flex-1 bg-white flex flex-col items-center justify-start p-0 px-0 relative w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container ${
+          selectedCategoryFilter === 'Finanzas'
+            ? 'pb-0 max-md:pb-0 min-h-0 max-md:h-full max-md:overflow-hidden'
+            : 'pb-16 md:pb-32 min-h-[680px]'
+        }`}
       >
 
         {viewingTikTokProfileUsername ? (
@@ -25793,8 +25940,9 @@ try {
 
 
 
-            {/* 📸 STORIES SLIDER (HISTORIAS GRABADAS) - Centered in exact proportion */}
-            <div className="w-full max-w-full mx-auto relative group/stories select-none mb-1.5 px-1 sm:px-2">
+            {/* 📸 STORIES SLIDER (HISTORIAS GRABADAS) - Hidden on Finanzas category so rounds fit 100% on mobile without scrollbar */}
+            {selectedCategoryFilter !== 'Finanzas' && (
+              <div className="w-full max-w-full mx-auto relative group/stories select-none mb-1.5 px-1 sm:px-2">
               
               {/* Left Slider Arrow - appears smoothly on hover */}
               <button
@@ -25943,9 +26091,10 @@ try {
                 })()}
               </div>
             </div>
+            )}
 
             {/* Flex row wrapper to place sidebar inside the video window */}
-            <div className="flex flex-col items-center justify-center w-full max-w-full px-1.5 xs:px-2.5 sm:px-4 box-border min-w-0 mx-auto">
+            <div className={`flex flex-col items-center justify-center w-full max-w-full px-0 sm:px-4 box-border min-w-0 mx-auto ${selectedCategoryFilter === 'Finanzas' ? 'max-md:h-full max-md:justify-center' : ''}`}>
               
               {filteredVideos.length === 0 ? (
                 /* Empty Search results or empty category view */
@@ -26015,6 +26164,7 @@ try {
                   showVotingProjectsModal={showVotingProjectsModal}
                   renderVotingProjectsContent={renderSingleProjectSlider}
                   setShowVotingProjectsModal={setShowVotingProjectsModal}
+                  setVotingProjectSlideIndex={setVotingProjectSlideIndex}
                   setShowParticipantsGatheringModal={setShowParticipantsGatheringModal}
                   onExecutePaymentAndJoinSession={(session: any) => handleExecutePaymentAndJoinSession(undefined, session?.entryFee || 10, targetUserArrivalSlot, session)}
                   setDetailProjectUser={setDetailProjectUser}
@@ -26112,7 +26262,7 @@ try {
                     className={`relative bg-[#070b14] shadow-2xl overflow-hidden flex items-center justify-center min-w-0 flex-1 sm:flex-initial group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
                       isMobileChannelPinned
                         ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-0 m-0 border-none shadow-none'
-                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[810px] sm:h-[860px] max-h-[100dvh] sm:max-h-[860px] rounded-[44px] sm:rounded-[52px] border border-black shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
+                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[calc(810px-3cm)] sm:h-[calc(860px-3cm)] max-h-[calc(100dvh-3cm)] sm:max-h-[calc(860px-3cm)] rounded-[44px] sm:rounded-[52px] border border-black shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
                     }`} 
                     id="video-feed-main-card"
                   >
@@ -26155,10 +26305,10 @@ try {
                         </div>
                       </div>
 
-                      {/* Heart Like (1762) */}
-                      <div className="flex flex-col items-center shrink-0 relative group/channel-heart-zone">
-                        {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda */}
-                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-50 hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                      {/* 1. Like button with count (43.2K) - Queda marcado y lanza lluvia de corazones */}
+                      <div className="flex flex-col items-center relative group/channel-heart-zone shrink-0">
+                        {/* Recuadro de emojis dentro del canal */}
+                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
                           {/* Cabecera del recuadro */}
                           <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
                             <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
@@ -26197,76 +26347,74 @@ try {
                         <button
                           type="button"
                           onClick={() => {
-                            setChannelLikesCount(prev => isChannelLiked ? prev - 1 : prev + 1);
-                            setIsChannelLiked(!isChannelLiked);
+                            setIsLiveLiked(prev => !prev);
+                            setLiveLikesCount(prev => isLiveLiked ? prev - 1 : prev + 1);
+                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                              detail: { emoji: '❤️', icon: '❤️' }
+                            }));
                           }}
-                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center shadow-md transition cursor-pointer active:scale-90 ${
-                            isChannelLiked ? 'bg-rose-500 text-white shadow-rose-500/40' : 'bg-[#fff0f3] text-[#fe2c55] hover:bg-rose-100'
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 cursor-pointer ${
+                            isLiveLiked
+                              ? 'bg-[#fe2c55]/20 ring-2 ring-[#fe2c55] shadow-[0_0_16px_rgba(254,44,85,0.6)] text-[#fe2c55] scale-105'
+                              : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
                           }`}
-                          title="Me gusta"
+                          title={isLiveLiked ? "¡Marcado! Pulsa para enviar más corazones" : "Me gusta"}
+                          id="btn-live-like-heart"
                         >
-                          <Heart className={`w-4 h-4 ${isChannelLiked ? 'fill-white' : 'fill-[#fe2c55] text-[#fe2c55]'}`} />
+                          <Heart 
+                            className={`w-4.5 h-4.5 transition-transform duration-200 ${
+                              isLiveLiked 
+                                ? 'fill-[#fe2c55] text-[#fe2c55] scale-110 drop-shadow-[0_0_8px_rgba(254,44,85,0.9)]' 
+                                : 'text-white'
+                            }`} 
+                          />
                         </button>
-                        <span className="text-[9.5px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
-                          {channelLikesCount}
+                        <span className={`text-[10px] font-bold mt-0.5 transition-colors ${
+                          isLiveLiked ? 'text-[#fe2c55] font-black' : 'text-white drop-shadow-md'
+                        }`}>
+                          {formatCount(liveLikesCount || 43200)}
                         </span>
                       </div>
 
-                      {/* Share (81) */}
-                      <div className="flex flex-col items-center shrink-0">
-                        <button
-                          type="button"
-                          onClick={handleShareChannel}
-                          className="w-8.5 h-8.5 rounded-full bg-[#fff0f3] hover:bg-rose-100 text-slate-800 flex items-center justify-center shadow-md transition cursor-pointer active:scale-90"
-                          title="Compartir"
-                        >
-                          <svg className="w-4 h-4 text-slate-800 fill-current" viewBox="0 0 24 24">
-                            <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" />
-                          </svg>
-                        </button>
-                        <span className="text-[9.5px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
-                          {channelSharesCount}
-                        </span>
-                      </div>
-
-                      {/* Gift (Regalo) */}
+                      {/* 2. Comment icon with count (17) */}
                       <div className="flex flex-col items-center shrink-0">
                         <button
                           type="button"
                           onClick={() => {
-                            setIsShortVideoGiftPanelOpen(true);
+                            setIsCommentsOpen(prev => !prev);
+                            window.dispatchEvent(new CustomEvent('toggle-live-comments'));
                           }}
-                          className="w-8.5 h-8.5 rounded-full bg-[#fff8eb] hover:bg-amber-100 text-amber-500 flex items-center justify-center shadow-md transition cursor-pointer active:scale-90"
-                          title="Enviar Regalo"
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer ${
+                            isCommentsOpen
+                              ? 'bg-rose-600 text-white ring-2 ring-rose-400 shadow-rose-600/50 scale-105'
+                              : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
+                          }`}
+                          title={isCommentsOpen ? "Ocultar comentarios" : "Ver comentarios"}
+                          id="btn-live-comments"
                         >
-                          <Gift className="w-4 h-4 text-amber-500" />
+                          <MessageCircle className="w-4.5 h-4.5 text-white" />
                         </button>
-                        <span className="text-[9px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
-                          Regalo
+                        <span className={`text-[10px] font-bold mt-0.5 ${isCommentsOpen ? 'text-rose-400 font-black' : 'text-white drop-shadow-md'}`}>
+                          {liveCommentsCount || 17}
                         </span>
                       </div>
 
-                      {/* Botón Pantalla Completa / Salir */}
+                      {/* 3. Bookmark / Guardar with count (592) */}
                       <div className="flex flex-col items-center shrink-0">
                         <button
                           type="button"
-                          onClick={() => setIsMobileChannelPinned(!isMobileChannelPinned)}
-                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center shadow-md transition cursor-pointer active:scale-90 ${
-                            isMobileChannelPinned 
-                              ? 'bg-cyan-500 text-white shadow-cyan-500/50 ring-2 ring-white/60 animate-pulse' 
-                              : 'bg-[#fff0f3] text-slate-800 hover:bg-cyan-100'
-                          }`}
-                          title={isMobileChannelPinned ? "Salir de pantalla completa" : "Ver en pantalla completa"}
-                          id="btn-sidebar-fullscreen-toggle"
+                          onClick={() => {
+                            setIsLiveBookmarked(prev => !prev);
+                            setLiveBookmarksCount(prev => isLiveBookmarked ? prev - 1 : prev + 1);
+                          }}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
+                          title="Guardar"
+                          id="btn-live-bookmark"
                         >
-                          {isMobileChannelPinned ? (
-                            <Minimize2 className="w-4 h-4 text-white stroke-[2.5]" />
-                          ) : (
-                            <Maximize2 className="w-4 h-4 text-slate-800 stroke-[2]" />
-                          )}
+                          <Bookmark className={`w-4.5 h-4.5 ${isLiveBookmarked ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
                         </button>
-                        <span className="text-[8.5px] font-black text-white mt-0.5 drop-shadow-md tracking-tight">
-                          {isMobileChannelPinned ? 'Salir' : 'Completa'}
+                        <span className="text-[10px] font-bold text-white drop-shadow-md mt-0.5">
+                          {formatCount(liveBookmarksCount || 592)}
                         </span>
                       </div>
                     </div>
@@ -27413,8 +27561,8 @@ try {
                   </div>
                 )}
 
-                {/* 🎥 RETRANSMISIÓN EN PANTALLA COMPLETA EN TODO EL CANAL CON CÁMARA */}
-                {(isUserLiveStreamingWithCamera || screenSplitLayout === 'grid-10' || screenSplitLayout === 'grid') && (
+                {/* 🎥 RETRANSMISIÓN EN PANTALLA COMPLETA EN TODO EL CANAL CON CÁMARA (DESACTIVADO: eliminada por completo) */}
+                {false && (isUserLiveStreamingWithCamera || screenSplitLayout === 'grid-10' || screenSplitLayout === 'grid') && (
                   <div 
                     className="absolute inset-0 w-full h-full bg-black z-35 overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
                     id="channel-fullscreen-camera-broadcast"
@@ -27427,6 +27575,13 @@ try {
                       <div 
                         className="absolute inset-0 z-50 bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto"
                         id="fullscreen-broadcast-voting-projects-modal"
+                        onWheel={(e) => {
+                          e.stopPropagation();
+                          const container = document.getElementById('voting-projects-scrollable-container');
+                          if (container) {
+                            container.scrollTop += e.deltaY;
+                          }
+                        }}
                       >
                         {renderSingleProjectSlider()}
                       </div>
@@ -28079,12 +28234,16 @@ try {
 
                           <button
                             type="button"
-                            onClick={() => setIsCommentsOpen(false)}
-                            className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsCommentsOpen(false);
+                            }}
+                            className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer transition active:scale-90"
                             title="Cerrar comentarios"
+                            aria-label="Cerrar comentarios"
                           >
-                            <span className="text-[8px] font-mono text-slate-400">Pulsa 💬 para cerrar</span>
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4 stroke-[2.5]" />
                           </button>
                         </div>
 
@@ -28644,6 +28803,13 @@ try {
                     {showVotingProjectsModal ? (
                       <div 
                         className="absolute inset-0 z-[320] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto"
+                        onWheel={(e) => {
+                          e.stopPropagation();
+                          const container = document.getElementById('voting-projects-scrollable-container');
+                          if (container) {
+                            container.scrollTop += e.deltaY;
+                          }
+                        }}
                       >
                         {renderSingleProjectSlider()}
                       </div>
@@ -29899,7 +30065,7 @@ try {
 
                                             return (
                                               <div
-                                                className={`w-full max-w-full min-w-0 aspect-square min-h-[58px] xs:min-h-[66px] sm:min-h-[74px] rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-1 box-border ${
+                                                className={`w-full max-w-full min-w-0 aspect-square min-h-[30px] xs:min-h-[36px] sm:min-h-[64px] rounded-xl sm:rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-0.5 sm:p-1 box-border ${
                                                   isChosenInSpotlight 
                                                     ? 'border-2 border-[#fe2c55] ring-2 ring-[#fe2c55]/90 shadow-[0_0_14px_rgba(254,44,85,0.9)]' 
                                                     : isSelf
@@ -29921,10 +30087,10 @@ try {
                                                   </span>
                                                 )}
 
-                                                <div className={`relative z-10 self-center backdrop-blur-xs text-center py-0.5 px-2 min-w-0 max-w-[92%] overflow-hidden rounded-md box-border shadow-md ${
+                                                <div className={`relative z-10 self-center backdrop-blur-xs text-center py-0.5 px-1.5 sm:px-2 min-w-0 max-w-[92%] overflow-hidden rounded-md box-border shadow-md ${
                                                   isSelf ? 'bg-pink-950/90 border border-pink-400/60' : 'bg-black/85'
                                                 }`}>
-                                                  <span className={`text-[8.5px] xs:text-[9.5px] sm:text-[10.5px] font-black block truncate leading-tight min-w-0 ${isSelf ? 'text-pink-200' : 'text-white'}`}>
+                                                  <span className={`text-[7.5px] xs:text-[8.5px] sm:text-[10px] font-black block truncate leading-tight min-w-0 ${isSelf ? 'text-pink-200' : 'text-white'}`}>
                                                     {displayName}
                                                   </span>
                                                 </div>
@@ -29936,8 +30102,8 @@ try {
                                     })}
                                   </div>
 
-                                  {/* Action buttons: Botón para inscribirse en esta sesión y ver proyectos (Mayor tamaño como en imagen.png) */}
-                                  <div className="w-full flex flex-col items-center justify-center gap-2.5 sm:gap-3 mt-2 sm:mt-2.5 box-border" id="miembros-de-la-sala-btn-container-channel">
+                                  {/* Action buttons: Botón para inscribirse en esta sesión y ver proyectos (Ajustado para encajar al 100% en móvil) */}
+                                  <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 mt-1.5 sm:mt-2.5 box-border" id="miembros-de-la-sala-btn-container-channel">
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -29955,17 +30121,14 @@ try {
                                         setShowFinanzasRecount(false);
 
                                         if (isUserParticipating) {
-                                          // Directly open waiting room (sala de espera) for this round
-                                          setGatheringSessionTitle(currentFinanzasSession?.title || 'Round STREETWEAR & URBAN');
-                                          setGatheringSessionFee(currentSessionFeeInfo.fee);
-                                          setGatheringSessionRef(getFinanzasRoundRef(currentFinanzasSession, currIdx !== -1 ? currIdx : activeFinanzasSessionIndex));
-                                          setShowParticipantsGatheringModal(true);
-                                        } else {
-                                          // Inscribirse directly and redirect to sala de espera & REF: 2
-                                          handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
+                                          // 🛑 Mientras el usuario esté participando en una Ronda o Sesión, el botón NO funciona
+                                          return;
                                         }
+
+                                        handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
                                       }}
-                                      className={`w-full max-w-[400px] font-black text-[12px] xs:text-[13px] sm:text-[14px] px-5 sm:px-6 py-3 sm:py-3.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
+                                      disabled={isUserParticipating}
+                                      className={`w-full max-w-[400px] font-black text-[10.5px] xs:text-[11.5px] sm:text-[13px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
                                         isUserParticipating
                                           ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] animate-pulse ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
@@ -29973,7 +30136,7 @@ try {
                                       id="btn-inscribirse-en-esta-sesion"
                                       title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
                                     >
-                                      <span className={`text-base shrink-0 ${isUserParticipating ? 'animate-bounce' : ''}`}>✍️</span>
+                                      <span className={`text-sm shrink-0 ${isUserParticipating ? 'animate-bounce' : ''}`}>✍️</span>
                                       <span className={`truncate min-w-0 font-black tracking-tight ${isUserParticipating ? 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]' : ''}`}>
                                         {isUserParticipating 
                                           ? `Estás inscrita como participante (${currentSessionFeeInfo.feeInWords})` 
@@ -29984,12 +30147,14 @@ try {
                                     <button
                                       type="button"
                                       onClick={() => {
+                                        const lucasIdx = currentSessionParticipants10.findIndex(p => p.name?.toLowerCase().includes('lucas') || p.id === 'trab-1' || p.id === 'lucas');
+                                        setVotingProjectSlideIndex(lucasIdx !== -1 ? lucasIdx : 0);
                                         setShowVotingProjectsModal(true);
                                       }}
-                                      className="w-auto min-w-[220px] sm:min-w-[250px] bg-white hover:bg-slate-100 text-slate-950 active:scale-95 font-black text-[11.5px] xs:text-[12.5px] sm:text-[13px] px-8 sm:px-10 py-2.5 sm:py-3 rounded-full transition duration-200 border border-slate-200 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
+                                      className="w-full max-w-[400px] bg-white hover:bg-slate-100 text-slate-950 active:scale-95 font-black text-[10.5px] xs:text-[11.5px] sm:text-[12.5px] px-6 sm:px-10 py-2 sm:py-2.5 rounded-full transition duration-200 border border-slate-200 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
                                       id="btn-votar-mejor-proyecto-channel"
                                     >
-                                      <span className="text-base shrink-0">📋</span>
+                                      <span className="text-sm shrink-0">📋</span>
                                       <span className="truncate min-w-0 font-black">VER PROYECTOS</span>
                                     </button>
                                   </div>
@@ -33202,125 +33367,6 @@ try {
               {/* Floating volume bar removed per user request */}
 
             </div>
-
-            {/* 📱 TIKTOK ACTION COLUMN ON THE RIGHT (Idéntica a captura z.png) */}
-            <div 
-              className="flex flex-col items-center gap-2.5 sm:gap-3 select-none shrink-0 self-center my-auto relative z-[350]"
-              id="channel-live-tiktok-actions-sidebar"
-            >
-                {/* Like button with count (43.2K) - Queda marcado y lanza lluvia de corazones */}
-                <div className="flex flex-col items-center relative group/channel-heart-zone">
-                  {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda SIEMPRE por delante */}
-                  <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
-                    {/* Cabecera del recuadro */}
-                    <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
-                      <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
-                        <span>✨</span>
-                        <span>Reacciones</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
-                    </div>
-
-                    {/* Rejilla de emojis centrada y cómoda */}
-                    <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
-                      {[
-                        '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                        '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                        '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                        '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                        '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                        '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                      ].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSendFreeEmojiReaction(emoji);
-                          }}
-                          className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
-                          title={`Enviar ${emoji}`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsLiveLiked(prev => !prev);
-                      setLiveLikesCount(prev => isLiveLiked ? prev - 1 : prev + 1);
-                      window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                        detail: { emoji: '❤️', icon: '❤️' }
-                      }));
-                    }}
-                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 cursor-pointer ${
-                      isLiveLiked
-                        ? 'bg-[#fe2c55]/20 ring-2 ring-[#fe2c55] shadow-[0_0_16px_rgba(254,44,85,0.6)] text-[#fe2c55] scale-105'
-                        : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
-                    }`}
-                    title={isLiveLiked ? "¡Marcado! Pulsa para enviar más corazones" : "Me gusta"}
-                    id="btn-live-like-heart"
-                  >
-                    <Heart 
-                      className={`w-5 h-5 transition-transform duration-200 ${
-                        isLiveLiked 
-                          ? 'fill-[#fe2c55] text-[#fe2c55] scale-110 drop-shadow-[0_0_8px_rgba(254,44,85,0.9)]' 
-                          : 'text-white'
-                      }`} 
-                    />
-                  </button>
-                  <span className={`text-[10px] sm:text-[11px] font-bold mt-0.5 transition-colors ${
-                    isLiveLiked ? 'text-[#fe2c55] font-black' : 'text-slate-700 dark:text-slate-200'
-                  }`}>
-                    {formatCount(liveLikesCount || 43200)}
-                  </span>
-                </div>
-
-                {/* Comment icon with count (17) */}
-                <div className="flex flex-col items-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsCommentsOpen(prev => !prev);
-                      window.dispatchEvent(new CustomEvent('toggle-live-comments'));
-                    }}
-                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer ${
-                      isCommentsOpen
-                        ? 'bg-rose-600 text-white ring-2 ring-rose-400 shadow-rose-600/50 scale-105'
-                        : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
-                    }`}
-                    title={isCommentsOpen ? "Ocultar comentarios" : "Ver comentarios"}
-                    id="btn-live-comments"
-                  >
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </button>
-                  <span className={`text-[10px] sm:text-[11px] font-bold mt-0.5 ${isCommentsOpen ? 'text-rose-400 font-black' : 'text-slate-700 dark:text-slate-200'}`}>
-                    {liveCommentsCount || 17}
-                  </span>
-                </div>
-
-                {/* Bookmark / Guardar with count (592) */}
-                <div className="flex flex-col items-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsLiveBookmarked(prev => !prev);
-                      setLiveBookmarksCount(prev => isLiveBookmarked ? prev - 1 : prev + 1);
-                    }}
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
-                    title="Guardar"
-                    id="btn-live-bookmark"
-                  >
-                    <Bookmark className={`w-5 h-5 ${isLiveBookmarked ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
-                  </button>
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-0.5">
-                    {formatCount(liveBookmarksCount || 592)}
-                  </span>
-                </div>
-              </div>
           </div>
 
           )}
