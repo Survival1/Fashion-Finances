@@ -376,6 +376,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // Listen to global feed scroll events from child views (such as z.png results screen)
   useEffect(() => {
     const handleCustomFeedScroll = (e: any) => {
+      // 🛡️ Si estamos en la pantalla de resultados finales (image.png), no permitir cambio involuntario de ronda
+      if (showFinanzasResults && !e.detail?.force) return;
       const now = Date.now();
       if (now - lastWheelTimeRef.current < 300) return;
       lastWheelTimeRef.current = now;
@@ -387,19 +389,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     };
     window.addEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
     return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
-  }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
+  }, [activeFinanzasSessionIndex, activeSessionsOnly.length, showFinanzasResults]);
 
-  // 🎯 Redirigir directamente a la pantalla de la captura image.png (cuenta atrás de 10 min para votar en REF: 2) al pulsar X en z.png
+  // 🎯 Redirigir directamente a la pantalla de la captura z.png (REF: 1, Turno 10 de 10 con Marina Serrano) al pulsar X en image.png
   useEffect(() => {
-    const handleExitVotingToImagePage = (e: any) => {
-      // Buscar específicamente la ronda con REF: 2
-      let ref2Idx = activeSessionsOnly.findIndex(s => s.id === 'sess-streetwear-ref-2' || s.reference === 'REF: 2' || s.reference?.includes('2'));
-      if (ref2Idx === -1) {
-        ref2Idx = activeSessionsOnly.findIndex((s, idx) => idx > 0 && (s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR')));
+    const handleExitVotingToZPage = (e: any) => {
+      // Buscar específicamente la ronda con REF: 1 (captura z.png)
+      let ref1Idx = activeSessionsOnly.findIndex(s => s.id === 'sess-trabajadores-1' || s.reference === 'REF: 1');
+      if (ref1Idx === -1) {
+        ref1Idx = 0;
       }
-      const targetIdx = ref2Idx !== -1 ? ref2Idx : (activeSessionsOnly.length > 1 ? 1 : 0);
+      const targetIdx = ref1Idx;
       const targetSession = activeSessionsOnly[targetIdx] || activeSessionsOnly[0];
-      const targetSessionId = targetSession?.id || 'sess-streetwear-ref-2';
+      const targetSessionId = targetSession?.id || 'sess-trabajadores-1';
 
       setShowVotingProjectsModal(false);
       setShowProjectDetailsInPopup(false);
@@ -409,49 +411,50 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (setShowFinanzasResults) setShowFinanzasResults(false);
       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
 
-      // ⏱️ Mantener la cuenta atrás final de 10 minutos activa como en image.png
+      // Desactivar fase de votación para que se muestre en fase de exposición como en z.png
       setSessionVotingPhaseMap(prev => {
-        const next = { ...prev, [targetSessionId]: true, 'sess-streetwear-ref-2': true };
+        const next = { ...prev, [targetSessionId]: false };
         try {
           localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
-          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'true');
-          localStorage.setItem('finanzas_is_voting_phase_active_sess-streetwear-ref-2', 'true');
-          const currentEnd = localStorage.getItem(`finanzas_voting_end_time_${targetSessionId}`) || localStorage.getItem('finanzas_voting_end_time_sess-streetwear-ref-2');
-          if (!currentEnd) {
-            localStorage.setItem(`finanzas_voting_end_time_${targetSessionId}`, String(Date.now() + 591 * 1000));
-            localStorage.setItem('finanzas_voting_end_time_sess-streetwear-ref-2', String(Date.now() + 591 * 1000));
-          }
+          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'false');
+          localStorage.removeItem(`finanzas_is_voting_phase_active_${targetSessionId}`);
+          localStorage.removeItem('finanzas_is_voting_phase_active');
         } catch (err) {}
         return next;
       });
 
-      // Asegurar que Adriana Lima esté seleccionada/destacada como participante (image.png)
-      if (targetSession) {
-        const participants = getSessionParticipants(targetSession);
-        const adriana = participants.find(p => p.id === 'user-adriana' || p.name?.toLowerCase().includes('adriana') || p.isSelf);
-        if (adriana) {
-          setSessionSelectedPresenterMap(prev => ({ ...prev, [targetSessionId]: adriana }));
-          if (setSelectedFinanzasUser) setSelectedFinanzasUser(adriana);
-        }
-      }
+      // Asegurar que Marina Serrano esté seleccionada como presentadora del Turno 10 de 10 (z.png)
+      const participants = targetSession ? getSessionParticipants(targetSession) : TRABAJADORES_USERS;
+      const marinaSerrano = participants.find(p => p.id === 'trab-10' || p.name?.toLowerCase().includes('marina')) || {
+        id: 'trab-10',
+        name: 'Marina Serrano',
+        role: 'PATRONISTA SOSTENIBLE',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        username: 'marina_serrano_mod'
+      };
 
-      // 🛡️ Mantener a los usuarios inscritos en esta Ronda hasta que lleguemos a la página de los resultados finales
+      setSessionSelectedPresenterMap(prev => ({
+        ...prev,
+        [targetSessionId]: marinaSerrano
+      }));
+      if (setSelectedFinanzasUser) setSelectedFinanzasUser(marinaSerrano);
+
+      // Ajustar el temporizador de 5 minutos a ~4:19 como en la captura z.png
       try {
-        localStorage.setItem(`user_paid_session_${targetSessionId}`, 'true');
-        localStorage.setItem('user_paid_session_sess-streetwear-ref-2', 'true');
-        localStorage.setItem('finanzas_target_session_id', targetSessionId);
-        localStorage.setItem('finanzas_user_participating', 'true');
+        localStorage.setItem(`finanzas_active_session_start_${targetSessionId}`, String(Date.now() - 41 * 1000));
       } catch (e) {}
 
       stopLucasTorresSpeech();
       setActiveFinanzasSessionIndex(targetIdx);
       scrollToRound(targetIdx);
     };
-    window.addEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
-    window.addEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
+    window.addEventListener('exit-voting-to-z-page', handleExitVotingToZPage);
+    window.addEventListener('exit-voting-to-image-page', handleExitVotingToZPage);
+    window.addEventListener('exit-voting-to-exposition', handleExitVotingToZPage);
     return () => {
-      window.removeEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
-      window.removeEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
+      window.removeEventListener('exit-voting-to-z-page', handleExitVotingToZPage);
+      window.removeEventListener('exit-voting-to-image-page', handleExitVotingToZPage);
+      window.removeEventListener('exit-voting-to-exposition', handleExitVotingToZPage);
     };
   }, [activeSessionsOnly]);
 
@@ -3479,7 +3482,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       if (setSelectedFinanzasUser && lucasUser) {
                         setSelectedFinanzasUser(lucasUser);
                       }
-                      setSessionSelectedPresenterMap(prev => ({ ...prev, [session.id]: lucasUser }));
+                      if (session.id === 'sess-trabajadores-1' || session.reference === 'REF: 1') {
+                        setSessionSelectedPresenterMap(prev => ({
+                          ...prev,
+                          [session.id]: {
+                            id: 'trab-10',
+                            name: 'Marina Serrano',
+                            role: 'PATRONISTA SOSTENIBLE',
+                            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                            username: 'marina_serrano_mod'
+                          }
+                        }));
+                      } else {
+                        setSessionSelectedPresenterMap(prev => ({ ...prev, [session.id]: lucasUser }));
+                      }
                       setShowFinanzasInscriptionInChannel(false);
                       setShowProjectDetailsInPopup(false);
                       setDetailProjectUser(null);

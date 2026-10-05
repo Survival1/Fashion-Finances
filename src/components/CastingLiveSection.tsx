@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import StoryCreatorModal from './StoryCreatorModal';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import { TikTokFinanzasFeed } from './TikTokFinanzasFeed';
@@ -3211,17 +3212,7 @@ export default function CastingLiveSection({
       entryFee: 10,
       presenter: TRABAJADORES_USERS[0],
       participants: [
-        ...TRABAJADORES_USERS.slice(0, 9),
-        {
-          id: userProfile?.id || 'user-adriana',
-          name: userProfile?.name || 'Adriana Lima',
-          username: userProfile?.username || 'adrianalima',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-          role: 'Usuario Inversor (Tú)',
-          projectId: 'proj-eco-fashion',
-          projectTitle: 'Eco-Fashion Runway',
-          isSelf: true
-        }
+        ...TRABAJADORES_USERS.slice(0, 10)
       ],
       status: 'active' as const
     },
@@ -3323,13 +3314,12 @@ export default function CastingLiveSection({
           // Strictly ensure user is NOT enrolled by default in unjoined rounds, but PRESERVE joined REF: 2 session
           const cleaned = parsed.map((sess: any, idx: number) => {
             const isUserEnrolledInThis = Boolean(
-              sess.id === 'sess-streetwear-ref-2' ||
-              (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${sess.id}`) === 'true')
+              typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${sess.id}`) === 'true'
             );
             if (isUserEnrolledInThis) {
               return {
                 ...sess,
-                reference: sess.reference || (sess.id === 'sess-streetwear-ref-2' ? 'REF: 2' : getRoundReference(sess, idx)),
+                reference: sess.reference || getRoundReference(sess, idx),
                 status: 'active' as const
               };
             }
@@ -3447,19 +3437,41 @@ export default function CastingLiveSection({
   const sessionScrollLockRef = useRef<boolean>(false);
 
   // States to guarantee instant reactivity when paying and joining sessions
-  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda (salvo que ya se haya inscrito en REF: 2).
+  // Por defecto al abrir la APP por primera vez, el usuario NO participa en ninguna ronda.
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
     try {
-      const isRef2Paid = localStorage.getItem('user_paid_session_sess-streetwear-ref-2') === 'true';
-      if (isRef2Paid) {
-        return { 'sess-streetwear-ref-2': true };
+      const isFreshAppOpen = typeof window !== 'undefined' && !sessionStorage.getItem('app_user_visited_session');
+      if (isFreshAppOpen) {
+        sessionStorage.setItem('app_user_visited_session', 'true');
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('user_paid_session_') || key.startsWith('finanzas_active_session_start_')) {
+            localStorage.removeItem(key);
+          }
+        });
+        localStorage.removeItem('finanzas_user_participating');
+        localStorage.removeItem('finanzas_user_slot_index');
+        localStorage.removeItem('user_paid_finanzas_session');
+        localStorage.removeItem('finanzas_target_session_id');
+        localStorage.removeItem('open_finanzas_sessions_list_v43');
+        localStorage.removeItem('open_finanzas_sessions_list_v44');
+        return initial;
       }
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('user_paid_session_') && localStorage.getItem(key) === 'true') {
+          const sId = key.replace('user_paid_session_', '');
+          initial[sId] = true;
+        }
+      });
     } catch (e) {}
-    return {};
+    return initial;
   });
   const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('user_paid_session_sess-streetwear-ref-2') === 'true';
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('app_user_visited_session')) {
+        return false;
+      }
+      return Object.keys(localStorage).some(key => key.startsWith('user_paid_session_') && localStorage.getItem(key) === 'true');
     } catch (e) {
       return false;
     }
@@ -3482,27 +3494,18 @@ export default function CastingLiveSection({
   // Explicit user selection of arrival position
   const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
 
-  // Por defecto al abrir la APP, el usuario Adriana Lima NO participa en ninguna ronda por defecto.
+  // Por defecto al abrir la APP, el usuario NO participa en ninguna ronda por defecto.
   // Es obligatorio pagar e inscribirse explícitamente para participar.
   useEffect(() => {
     try {
-      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-      localStorage.removeItem('user_paid_session_sess-emprendedores-1');
-      localStorage.removeItem('user_paid_session_sess-empresarios-1');
-      localStorage.removeItem('user_paid_session_sess-topmodels-1');
-      localStorage.removeItem('user_paid_session_sess-inversores-1');
-      localStorage.removeItem('user_paid_session_sess-millonarios-1');
-      const isRef2Paid = localStorage.getItem('user_paid_session_sess-streetwear-ref-2') === 'true';
-      if (!isRef2Paid) {
+      const hasAnyPaid = Object.keys(localStorage).some(k => k.startsWith('user_paid_session_') && localStorage.getItem(k) === 'true');
+      if (!hasAnyPaid) {
         localStorage.removeItem('finanzas_user_participating');
         localStorage.removeItem('finanzas_user_slot_index');
         localStorage.removeItem('user_paid_finanzas_session');
         localStorage.removeItem('finanzas_target_session_id');
         setIsFinanzasUserParticipatingState(false);
         setUserPaidSessions({});
-      } else {
-        setIsFinanzasUserParticipatingState(true);
-        setUserPaidSessions({ 'sess-streetwear-ref-2': true });
       }
     } catch (e) {}
   }, []);
@@ -13194,7 +13197,7 @@ export default function CastingLiveSection({
   const renderCreationTypeModal = () => {
     return (
       <div 
-        className="fixed inset-0 bg-slate-950/25 backdrop-blur-[1px] z-[3500] flex items-center justify-center p-4 animate-fade-in cursor-pointer" 
+        className="fixed inset-0 bg-transparent z-[3500] flex items-center justify-center p-4 animate-fade-in cursor-pointer" 
         id="creation-type-modal-backdrop"
         onClick={() => setShowCreationTypeModal(false)}
       >
@@ -13438,39 +13441,39 @@ export default function CastingLiveSection({
                 setShowFinanzasRecount(false);
                 setShowFinanzasResults(false);
 
-                // 🎯 Redirigir directamente a la página de la captura imagen.png "REF 2" (sess-streetwear-ref-2)
-                const ref2Session = activeSessionsOnly.find(s => s.id === 'sess-streetwear-ref-2' || s.reference === 'REF: 2') || activeSessionsOnly[1] || activeSessionsOnly[0];
-                const activeSessionId = ref2Session?.id || 'sess-streetwear-ref-2';
+                // 🎯 Redirigir directamente a la página de la captura z.png (REF: 1 con Marina Serrano)
+                const ref1Session = activeSessionsOnly.find(s => s.id === 'sess-trabajadores-1' || s.reference === 'REF: 1') || activeSessionsOnly[0];
+                const activeSessionId = ref1Session?.id || 'sess-trabajadores-1';
                 
-                // Mantener los 10 minutos de cuenta atrás final activos para image.png
-                setIsVotingPhaseActive(true);
+                setIsVotingPhaseActive(false);
                 try {
-                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
-                  localStorage.setItem('finanzas_is_voting_phase_active_sess-streetwear-ref-2', 'true');
-                  const currentEnd = localStorage.getItem(`finanzas_voting_end_time_${activeSessionId}`) || localStorage.getItem('finanzas_voting_end_time_sess-streetwear-ref-2');
-                  if (!currentEnd) {
-                    localStorage.setItem(`finanzas_voting_end_time_${activeSessionId}`, String(Date.now() + 591 * 1000));
-                    localStorage.setItem('finanzas_voting_end_time_sess-streetwear-ref-2', String(Date.now() + 591 * 1000));
-                  }
-                  // Mantener usuarios inscritos en esta Ronda hasta llegar a la página de los resultados finales
-                  localStorage.setItem('user_paid_session_sess-streetwear-ref-2', 'true');
-                  localStorage.setItem(`user_paid_session_${activeSessionId}`, 'true');
-                  localStorage.setItem('finanzas_user_participating', 'true');
-                  localStorage.setItem('finanzas_target_session_id', activeSessionId);
+                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'false');
+                  localStorage.removeItem(`finanzas_is_voting_phase_active_${activeSessionId}`);
+                  localStorage.removeItem('finanzas_is_voting_phase_active');
+                  localStorage.setItem(`finanzas_active_session_start_${activeSessionId}`, String(Date.now() - 41 * 1000));
                 } catch (err) {}
 
-                // Despachar evento para sincronizar TikTokFinanzasFeed hacia la vista de image.png "REF 2"
-                window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
+                // Asegurar que Marina Serrano esté seleccionada como presentadora del Turno 10 de 10 (z.png)
+                const marinaSerrano = {
+                  id: 'trab-10',
+                  name: 'Marina Serrano',
+                  role: 'PATRONISTA SOSTENIBLE',
+                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                  username: 'marina_serrano_mod'
+                };
+                if (setSelectedFinanzasUser) setSelectedFinanzasUser(marinaSerrano);
+
+                // Despachar evento para sincronizar TikTokFinanzasFeed hacia la vista de z.png
+                window.dispatchEvent(new CustomEvent('exit-voting-to-z-page', {
                   detail: {
                     sessionId: activeSessionId,
-                    targetRef: 'REF: 2',
-                    preserveVotingCountdown: true
+                    targetRef: 'REF: 1'
                   }
                 }));
               }}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 shadow-xs pointer-events-auto"
-              title="Cerrar ventana y volver a la página de la ronda REF: 2 (image.png)"
-              aria-label="Cerrar ventana y volver a la página de la ronda REF: 2 (image.png)"
+              title="Cerrar ventana y volver a la página de la ronda REF: 1 (z.png)"
+              aria-label="Cerrar ventana y volver a la página de la ronda REF: 1 (z.png)"
               id="btn-close-voting-projects-modal"
             >
               <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
@@ -13662,11 +13665,12 @@ export default function CastingLiveSection({
                 type="button"
                 id="btn-ver-proyecto-completo"
                 onClick={() => {
+                  setActiveFinanzasPopupUser(currentUser);
                   setDetailProjectUser(currentUser);
                   setShowProjectDetailsInPopup(true);
-                  setShowVotingProjectsModal(false);
+                  setShowQueueInPopup(false);
                 }}
-                className="w-full bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-white font-black py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider font-sans"
+                className="w-full bg-white hover:bg-slate-50 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-xl shadow-xs hover:shadow transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 text-xs sm:text-sm uppercase tracking-wider font-sans"
               >
                 <span className="text-sm">🔍</span>
                 <span>VER PROYECTO COMPLETO</span>
@@ -14040,7 +14044,12 @@ export default function CastingLiveSection({
       <div 
         className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] z-[3600] flex items-center justify-center p-2 sm:p-4 animate-fade-in font-sans cursor-pointer"
         id="voting-projects-modal-backdrop"
-        onClick={() => setShowVotingProjectsModal(false)}
+        onClick={() => {
+          setShowVotingProjectsModal(false);
+          window.dispatchEvent(new CustomEvent('exit-voting-to-z-page', {
+            detail: { sessionId: 'sess-trabajadores-1', targetRef: 'REF: 1' }
+          }));
+        }}
       >
         <div 
           className="bg-white rounded-3xl w-full max-w-2xl h-[92vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden relative animate-scale-up text-slate-800 cursor-default"
@@ -31777,13 +31786,25 @@ try {
                 )}
 
                 {/* 🎴 CENTERED DETAILED MODAL OVERLAY FOR FINANZAS PARTICIPANT (Full screen modal matching capture z.png) */}
-               {activeFinanzasPopupUser && selectedCategoryFilter !== 'Finanzas' && (
-                 <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-fade-in select-none pointer-events-auto" id="finanzas-centered-popup-overlay">
-                   <div className={`w-full max-w-md sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-[24px] p-4 sm:p-5 shadow-2xl flex flex-col justify-between border ${
-                     !showQueueInPopup && !showProjectDetailsInPopup
-                       ? 'bg-[#0a0d17] text-white border-slate-800/90'
-                       : 'bg-slate-950/98 text-white border-slate-800'
-                   }`}>
+                {activeFinanzasPopupUser && (
+                  <div 
+                    className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-fade-in select-none pointer-events-auto cursor-pointer" 
+                    id="finanzas-centered-popup-overlay"
+                    onClick={() => {
+                      setActiveFinanzasPopupUser(null);
+                      setShowQueueInPopup(false);
+                      setShowProjectDetailsInPopup(false);
+                      setShowVotingProjectsModal(true);
+                    }}
+                  >
+                    <div 
+                      onClick={(e) => e.stopPropagation()}
+                      className={`w-full max-w-md sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-[28px] p-4 sm:p-5 shadow-2xl flex flex-col justify-between border cursor-default custom-scrollbar ${
+                        showQueueInPopup
+                          ? 'bg-slate-950/98 text-white border-slate-800'
+                          : 'bg-white text-slate-800 border-slate-200'
+                      }`}
+                    >
                     {showQueueInPopup ? (
                       /* 📈 COLA DE EXPOSICIÓN DE PROYECTOS VIEW */
                       <div className="flex flex-col h-full justify-between gap-4 animate-fade-in text-left">
@@ -32172,27 +32193,29 @@ try {
 
                       </div>
                     ) : (
-                      /* 🎬 DETAILS VIEW MATCHING CAPTURE ZXSA.PNG */
+                      /* 🎬 DETAILS VIEW MATCHING CAPTURE image.png CON FONDO BLANCO */
                       <>
-                        {/* Header of details view */}
-                        <div className="flex items-center justify-end border-b border-slate-800/80 pb-2 flex-shrink-0">
+                        {/* Header of details view with ✕ Cerrar button */}
+                        <div className="flex items-center justify-end border-b border-slate-100 pb-2 flex-shrink-0">
                           <button
                             type="button"
+                            id="btn-close-project-details-popup"
                             onClick={() => {
                               setActiveFinanzasPopupUser(null);
                               setShowQueueInPopup(false);
                               setShowProjectDetailsInPopup(false);
+                              setShowVotingProjectsModal(true);
                             }}
-                            className="bg-[#1c2236] hover:bg-slate-700 text-slate-300 rounded-xl px-3 py-1 text-[10px] sm:text-[11px] font-black transition cursor-pointer border border-slate-700/80 active:scale-95 shadow-2xs flex items-center gap-1"
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl px-3 py-1.5 text-[10px] sm:text-[11px] font-black transition cursor-pointer border border-slate-200 active:scale-95 shadow-2xs flex items-center gap-1.5"
                           >
-                            <span>✕</span>
+                            <span className="font-mono text-xs">✕</span>
                             <span>Cerrar</span>
                           </button>
                         </div>
 
-                        {/* Participant Avatar & Info matching capture ZXSA.png */}
-                        <div className="flex flex-col items-center justify-center text-center gap-1.5 py-1 flex-shrink-0">
-                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden border-2 border-[#fe2c55] flex-shrink-0 shadow-[0_0_15px_rgba(254,44,85,0.6)] relative group/popup-avatar">
+                        {/* Participant Avatar & Info matching capture image.png (White Background) */}
+                        <div className="flex flex-col items-center justify-center text-center gap-1.5 py-1.5 flex-shrink-0">
+                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden border-2 border-[#fe2c55] flex-shrink-0 shadow-[0_0_15px_rgba(254,44,85,0.4)] relative group/popup-avatar">
                             <img
                               src={activeFinanzasPopupUser.avatar}
                               alt={activeFinanzasPopupUser.name}
@@ -32201,48 +32224,49 @@ try {
                             />
                           </div>
                           <div className="flex flex-col items-center">
-                            <h2 className="text-lg sm:text-xl font-black text-white leading-tight tracking-tight">
+                            <h2 className="text-lg sm:text-xl font-black text-slate-900 leading-tight tracking-tight">
                               {activeFinanzasPopupUser.name}
                             </h2>
-                            <span className="text-[10px] sm:text-[11px] text-slate-300 font-extrabold tracking-wider uppercase mt-1 bg-[#1c2236] px-3.5 py-0.5 rounded-full border border-slate-700/80">
-                              {activeFinanzasPopupUser.role || 'INVERSORA PRINCIPAL'}
+                            <span className="text-[10px] sm:text-[11px] text-slate-700 font-extrabold tracking-wider uppercase mt-1 bg-slate-100 px-3.5 py-0.5 rounded-full border border-slate-200">
+                              {activeFinanzasPopupUser.role || 'DISEÑADOR GRÁFICO'}
                             </span>
                           </div>
                         </div>
 
-                        {/* Card 1: Presentation Timer Status block matching ZXSA.png */}
+                        {/* Card 1: Presentation Timer Status block matching image.png (White Background) */}
                         {(() => {
                           const id = activeFinanzasPopupUser.id;
-                          const timerVal = finanzasTimers[id] !== undefined ? finanzasTimers[id] : 300;
+                          const defaultTimer = (id === 'trab-1' || activeFinanzasPopupUser.name.toLowerCase().includes('lucas')) ? 125 : 300;
+                          const timerVal = finanzasTimers[id] !== undefined ? finanzasTimers[id] : defaultTimer;
                           const minutes = Math.floor(timerVal / 60);
                           const seconds = timerVal % 60;
                           const formattedTimer = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
                           const isActive = !!finanzasTimerActive[id];
 
                           return (
-                            <div className="bg-[#141824] border border-slate-800/90 rounded-2xl p-3 flex items-center justify-between gap-3 text-left my-1 flex-shrink-0 shadow-md">
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3 text-left my-1 flex-shrink-0 shadow-xs">
                               <div className="flex items-center gap-2.5">
-                                <div className="p-2 rounded-xl bg-rose-950/60 text-rose-400 border border-rose-800/60 animate-pulse flex items-center justify-center">
+                                <div className="p-2 rounded-xl bg-rose-100/70 text-rose-500 border border-rose-200/80 animate-pulse flex items-center justify-center">
                                   <span className="text-xs">⏱️</span>
                                 </div>
                                 <div className="flex-1">
                                   <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block leading-none">
                                     TIEMPO DE EXPOSICIÓN
                                   </span>
-                                  <span className="text-[10px] sm:text-[11px] text-slate-200 font-bold leading-tight mt-0.5 block">
+                                  <span className="text-[10px] sm:text-[11px] text-slate-800 font-bold leading-tight mt-0.5 block">
                                     5 min para presentación en directo
                                   </span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className="bg-[#080a10] border border-red-900/80 text-[#fe2c55] font-mono text-xs sm:text-sm font-black px-2.5 py-1 rounded-lg tracking-widest shadow-inner">
+                                <div className="bg-slate-950 border border-slate-800 text-rose-400 font-mono text-xs sm:text-sm font-black px-2.5 py-1 rounded-lg tracking-widest shadow-inner">
                                   {formattedTimer}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <button
                                     type="button"
                                     onClick={() => setFinanzasTimerActive(prev => ({ ...prev, [id]: !isActive }))}
-                                    className="p-1.5 rounded-lg bg-[#20273c] hover:bg-slate-700 text-white border border-slate-700/80 text-[10px] font-bold transition-all cursor-pointer"
+                                    className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold shadow-2xs transition-all cursor-pointer"
                                     title={isActive ? "Pausar" : "Reanudar"}
                                   >
                                     {isActive ? "⏸️" : "▶️"}
@@ -32253,7 +32277,7 @@ try {
                                       setFinanzasTimers(prev => ({ ...prev, [id]: 300 }));
                                       setFinanzasTimerActive(prev => ({ ...prev, [id]: true }));
                                     }}
-                                    className="p-1.5 rounded-lg bg-[#20273c] hover:bg-slate-700 text-white border border-slate-700/80 text-[10px] font-bold transition-all cursor-pointer"
+                                    className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold shadow-2xs transition-all cursor-pointer"
                                     title="Reiniciar (5m)"
                                   >
                                     🔄
@@ -32264,47 +32288,47 @@ try {
                           );
                         })()}
 
-                        {/* Card 2: Project Details matching ZXSA.png */}
-                        <div className="bg-[#141824] border border-slate-800/90 rounded-2xl p-3.5 flex flex-col gap-1.5 text-left my-1 overflow-y-auto max-h-[160px] scrollbar-none text-white shadow-md">
+                        {/* Card 2: Project Details matching image.png (White Background) */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-1.5 text-left my-1 overflow-y-auto max-h-[160px] scrollbar-none text-slate-800 shadow-xs">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] sm:text-[11px] text-amber-400 font-black tracking-wider uppercase flex items-center gap-1">
+                            <span className="text-[10px] sm:text-[11px] text-amber-600 font-black tracking-wider uppercase flex items-center gap-1">
                               📋 PROYECTO ACTIVO
                             </span>
-                            <span className="text-[9px] sm:text-[10px] font-mono text-slate-300 bg-[#20273c] border border-slate-700/80 px-2 py-0.5 rounded-md font-bold">
+                            <span className="text-[9px] sm:text-[10px] font-mono text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold">
                               ID: {activeFinanzasPopupUser.id}
                             </span>
                           </div>
-                          <h3 className="text-sm sm:text-base font-black text-white leading-snug">
+                          <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">
                             {getFinanzasProjectDetails(activeFinanzasPopupUser.id).title}
                           </h3>
-                          <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium">
                             {getFinanzasProjectDetails(activeFinanzasPopupUser.id).description}
                           </p>
                           {getFinanzasProjectDetails(activeFinanzasPopupUser.id).tagline && (
-                            <p className="text-xs text-amber-200 font-bold italic bg-amber-950/40 border-l-4 border-[#fe2c55] p-2 rounded-r-xl mt-1 leading-relaxed font-serif">
+                            <p className="text-xs text-amber-900 font-bold italic bg-amber-50/90 border-l-4 border-[#fe2c55] border-y border-r border-amber-200/60 p-2.5 rounded-r-xl mt-1 leading-relaxed font-serif">
                               "{getFinanzasProjectDetails(activeFinanzasPopupUser.id).tagline}"
                             </p>
                           )}
                         </div>
 
-                        {/* Card 3: Project Metrics Summary Card matching ZXSA.png */}
+                        {/* Card 3: Project Metrics Summary Card matching image.png (White Background) */}
                         {(() => {
                           const project = getFinanzasProjectDetails(activeFinanzasPopupUser.id);
                           return (
-                            <div className="bg-[#141824] border border-slate-800/90 rounded-2xl p-3 space-y-2 text-[9px] sm:text-[10px] text-left my-1 flex-shrink-0 font-sans shadow-md">
-                              <span className="text-[9.5px] text-amber-400 font-black tracking-wider uppercase flex items-center gap-1">
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2 text-[9px] sm:text-[10px] text-left my-1 flex-shrink-0 font-sans shadow-xs">
+                              <span className="text-[9.5px] text-amber-600 font-black tracking-wider uppercase flex items-center gap-1">
                                 📊 FICHA DE RESUMEN DEL PROYECTO
                               </span>
                               <div className="grid grid-cols-2 gap-2">
-                                <div className="bg-[#1c2236] p-2.5 rounded-xl border border-slate-800">
+                                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                                   <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider block">MÉTRICAS CLAVE</span>
-                                  <p className="text-[9.5px] sm:text-[10.5px] text-slate-200 font-bold mt-1 leading-normal">
+                                  <p className="text-[9.5px] sm:text-[10.5px] text-slate-800 font-bold mt-1 leading-normal">
                                     {project.metrics}
                                   </p>
                                 </div>
-                                <div className="bg-[#1c2236] p-2.5 rounded-xl border border-slate-800">
+                                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                                   <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider block">RETORNO ESTIMADO (ROI)</span>
-                                  <p className="text-[9.5px] sm:text-[10.5px] text-slate-200 font-bold mt-1 leading-normal">
+                                  <p className="text-[9.5px] sm:text-[10.5px] text-slate-800 font-bold mt-1 leading-normal">
                                     {project.roi}
                                   </p>
                                 </div>
@@ -32313,22 +32337,22 @@ try {
                           );
                         })()}
 
-                        {/* Card 4: Votes Indicator matching ZXSA.png */}
+                        {/* Card 4: Votes Indicator matching image.png (White Background) */}
                         {(() => {
-                          const initialDefault = activeFinanzasPopupUser.id === 'f-1' ? 3 : activeFinanzasPopupUser.id === 'f-2' ? 2 : (activeFinanzasPopupUser.id === 'f-3' || activeFinanzasPopupUser.id === 'f-4' || activeFinanzasPopupUser.id === 'f-5' || activeFinanzasPopupUser.id === 'f-10' || activeFinanzasPopupUser.id === 'user') ? 1 : 0;
+                          const initialDefault = activeFinanzasPopupUser.id === 'f-1' ? 3 : activeFinanzasPopupUser.id === 'f-2' ? 2 : (activeFinanzasPopupUser.id === 'f-3' || activeFinanzasPopupUser.id === 'f-4' || activeFinanzasPopupUser.id === 'f-5' || activeFinanzasPopupUser.id === 'f-10' || activeFinanzasPopupUser.id === 'user') ? 1 : (activeFinanzasPopupUser.id === 'trab-1' ? 1 : 0);
                           const currentVotesCount = finanzasVotes[activeFinanzasPopupUser.id] ?? initialDefault;
                           return (
                             <>
-                              <div className="flex items-center justify-between bg-[#06241b] border border-emerald-800/70 rounded-2xl px-4 py-2.5 text-[11px] sm:text-[12px] my-1 flex-shrink-0 font-sans shadow-md">
-                                <span className="text-slate-200 font-bold flex items-center gap-1.5 font-sans">
+                              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2.5 text-[11px] sm:text-[12px] my-1 flex-shrink-0 font-sans shadow-xs">
+                                <span className="text-slate-800 font-bold flex items-center gap-1.5 font-sans">
                                   📊 Votos recibidos por este proyecto:
                                 </span>
-                                <strong className="text-emerald-400 font-mono font-black text-sm bg-[#043324] px-3.5 py-0.5 rounded-xl border border-emerald-500/80">
+                                <strong className="text-white font-mono font-black text-sm bg-emerald-600 px-3.5 py-0.5 rounded-xl border border-emerald-500 shadow-xs">
                                   {currentVotesCount}
                                 </strong>
                               </div>
 
-                              {/* Action buttons matching ZXSA.png: two white full rounded pill buttons */}
+                              {/* Action buttons matching image.png: two white full rounded pill buttons */}
                               <div className="flex flex-col gap-2.5 pt-2 flex-shrink-0">
                                 <button
                                   type="button"
@@ -32337,7 +32361,7 @@ try {
                                     setActiveFinanzasPopupUser(null);
                                     setShowProjectDetailsInPopup(false);
                                   }}
-                                  className="w-full bg-white hover:bg-slate-100 text-slate-950 font-extrabold py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-lg border-0"
+                                  className="w-full bg-white hover:bg-slate-50 text-slate-950 font-black py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-md border border-slate-200"
                                 >
                                   <span className="text-sm">📺</span>
                                   <span>VER DIRECTO (PANTALLA COMPLETA)</span>
@@ -32387,7 +32411,7 @@ try {
                                       currentIndex: 0
                                     });
                                   }}
-                                  className="w-full bg-white hover:bg-slate-100 text-slate-950 font-extrabold py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-lg border-0"
+                                  className="w-full bg-white hover:bg-slate-50 text-slate-950 font-black py-3 px-4 rounded-full text-[11px] sm:text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shadow-md border border-slate-200"
                                 >
                                   <span className="text-sm">📊</span>
                                   <span>VER PROYECTO DETENIDAMENTE</span>
@@ -34227,124 +34251,19 @@ try {
         />
       )}
 
-            {/* 📸 CREAR HISTORIA INSTRUCCIÓN POPUP MODAL */}
-      {showCreateStoryModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 text-slate-850">
-          <div className="bg-white rounded-2xl w-full max-w-lg border border-slate-200 p-6 space-y-4 shadow-2xl relative animate-scale-up">
-            
-            <button
-              onClick={() => setShowCreateStoryModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1 rounded-full hover:bg-slate-100 transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1">
-              <span className="text-[10px] bg-indigo-50 border border-indigo-200 text-indigo-600 px-2.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                24 Horas Efímeras
-              </span>
-              <h3 className="text-lg font-bold font-display text-slate-900">
-                Crear Nueva Historia
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Las historias permanecerán públicas en tu perfil y en Casting Live durante 24 horas. Si activas el archivo, se guardarán indefinidamente en tu apartado privado.
-              </p>
-            </div>
-
-            <form onSubmit={handleCreateStory} className="space-y-4 text-left">
-              
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">Paso 1: Elige un diseño rápido o escribe un URL de imagen</label>
-                <div className="grid grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
-                  {STORY_PRESETS.map((preset, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => {
-                        setSelectedStoryPreset(preset.url);
-                        setNewStoryImage(preset.url);
-                      }}
-                      className={`p-2 rounded-xl border text-[11px] font-bold flex flex-col items-center gap-1 cursor-pointer transition ${
-                        selectedStoryPreset === preset.url ? 'border-indigo-600 bg-indigo-50/50 text-indigo-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      {preset.isVideo ? (
-                        <video src={preset.url} className="w-12 h-12 object-cover rounded" muted />
-                      ) : (
-                        <img src={preset.url} className="w-12 h-12 object-cover rounded" referrerPolicy="no-referrer" />
-                      )}
-                      <span className="truncate w-full text-center">{preset.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">URL personalizada de Imagen / Vídeo MP4 (opcional)</label>
-                <input
-                  type="text"
-                  placeholder="https://images.unsplash.com/... o archivo .mp4"
-                  value={newStoryImage}
-                  onChange={(e) => {
-                    setNewStoryImage(e.target.value);
-                    setSelectedStoryPreset('');
-                  }}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">Título / Mensaje de tu Historia</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Escribe el título de tu historia aquí..."
-                  value={newStoryTitle}
-                  onChange={(e) => setNewStoryTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 flex items-center justify-between">
-                <div className="text-left">
-                  <span className="text-xs font-extrabold text-slate-700 block">Guardar en Archivo de Historias</span>
-                  <span className="text-[10px] text-slate-500">Se guardará de forma indefinida en tu pestaña privada.</span>
-                </div>
-                <input 
-                  type="checkbox" 
-                  checked={
-                    localStorage.getItem(`story_archive_enabled_${userProfile.id}`) 
-                      ? JSON.parse(localStorage.getItem(`story_archive_enabled_${userProfile.id}`)!) 
-                      : true
-                  } 
-                  onChange={(e) => {
-                    localStorage.setItem(`story_archive_enabled_${userProfile.id}`, JSON.stringify(e.target.checked));
-                    setVideoForceUpdateTrigger(prev => prev + 1);
-                  }}
-                  className="w-5 h-5 accent-indigo-650 cursor-pointer"
-                />
-              </div>
-
-              <div className="flex gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateStoryModal(false)}
-                  className="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-705 text-xs font-bold rounded-xl transition cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
-                >
-                  🚀 Publicar Historia
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
+            {/* 📸 CREAR HISTORIA MODAL PROFESIONAL (Grabación en directo hasta 60s + Subida de fotos/vídeos con división automática) */}
+      <StoryCreatorModal
+        isOpen={showCreateStoryModal}
+        onClose={() => setShowCreateStoryModal(false)}
+        userProfile={userProfile}
+        onStoriesCreated={(created) => {
+          setActiveStories(prev => {
+            const existing = prev.filter(s => s.expiresAt > Date.now());
+            return [...existing, ...created];
+          });
+          setVideoForceUpdateTrigger(prev => prev + 1);
+        }}
+      />
 
       {/* 📸 QUICK CAMERA CAPTURE MODAL - HIGH POLISH SIMULATOR & WEBCAM STREAM */}
       {showQuickCameraModal && (
@@ -35337,7 +35256,14 @@ function CastingLiveStoryLightbox({
     
     const safeSubIndex = Math.min(Math.max(0, activeStorySubIndex), finalPubStories.length - 1);
 
-    const duration = 6000; // 6 seconds per story
+    const currentStory = finalPubStories[safeSubIndex];
+    const isVideoStory = currentStory?.isVideo || (currentStory?.image && (currentStory.image.endsWith('.mp4') || currentStory.image.includes('mixkit.co')));
+    // Duración en tiempo:
+    // Vídeos: clip continuo de hasta 60s (o duración exacta del vídeo)
+    // Fotos fijas: 5 a 7 segundos de forma predeterminada (6s)
+    const duration = isVideoStory 
+      ? (currentStory?.duration ? Math.min(60000, currentStory.duration * 1000) : 60000)
+      : 6000;
     const timer = setTimeout(() => {
       if (safeSubIndex < finalPubStories.length - 1) {
         setActiveStorySubIndex(prev => prev + 1);

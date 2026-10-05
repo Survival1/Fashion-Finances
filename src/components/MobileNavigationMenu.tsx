@@ -31,6 +31,28 @@ export default function MobileNavigationMenu({
 
   return (
     <div className="md:hidden w-full max-w-[360px] xs:max-w-[400px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[640px] mx-auto px-1.5 xs:px-2 sm:px-3 space-y-2.5 pt-1 pb-2 animate-fade-in box-border" id="mobile-navigation-image-menu">
+      {/* 👑 ACCESO MASTER ADMINISTRADOR EN MÓVIL */}
+      {userRole === 'admin' && (
+        <button
+          type="button"
+          onClick={() => {
+            onNavigateToTab('admin');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className={`w-full flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 border border-amber-300 rounded-2xl shadow-sm transition-all active:scale-[0.98] cursor-pointer text-left ${
+            activeTab === 'admin' ? 'ring-2 ring-amber-300 font-black' : ''
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-base select-none">👑</span>
+            <span className="text-[11.5px] font-black uppercase tracking-wider font-mono">PANEL ADMINISTRADOR</span>
+          </div>
+          <span className="text-[9px] bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full font-black font-mono">
+            MASTER
+          </span>
+        </button>
+      )}
+
       {/* 1. MI PERFIL */}
       <button
         type="button"

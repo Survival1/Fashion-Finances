@@ -10245,7 +10245,11 @@ function ModelStoryLightbox({
 
   // Custom timer for story progression
   React.useEffect(() => {
-    const duration = 6000; // 6 seconds per story
+    const isVid = currentActiveSubStory?.isVideo || (currentActiveSubStory?.image && (currentActiveSubStory.image.endsWith('.mp4') || currentActiveSubStory.image.includes('mixkit.co')));
+    // Duración en tiempo: Vídeos hasta 60s continuos, Fotos fijas 5-7s (6s predeterminado)
+    const duration = isVid 
+      ? (currentActiveSubStory?.duration ? Math.min(60000, currentActiveSubStory.duration * 1000) : 60000)
+      : 6000;
     const timer = setTimeout(() => {
       if (safeSubIndex < pubStories.length - 1) {
         setProfileStorySubIndex(prev => prev + 1);

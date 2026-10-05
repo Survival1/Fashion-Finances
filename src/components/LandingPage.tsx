@@ -415,25 +415,25 @@ export default function LandingPage({
               </button>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-5 flex flex-col justify-between hover:border-slate-400 transition-all duration-200">
+            <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-5 flex flex-col justify-between hover:border-pink-300 transition-all duration-200">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-2xl">
-                  👓
+                <div className="w-12 h-12 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 text-2xl">
+                  💃
                 </div>
                 <div>
-                  <h4 className="font-display font-bold text-xs text-slate-900">Modo Invitado (Visitor)</h4>
-                  <p className="text-[10px] text-slate-400 font-mono">Navegación sin cuenta activa</p>
+                  <h4 className="font-display font-bold text-xs text-slate-900">Modelo: Adriana Lima</h4>
+                  <p className="text-[10px] text-slate-400 font-mono">Modelo Profesional en Ranking</p>
                 </div>
                 <p className="text-[11px] text-slate-500 leading-normal">
-                  Navega como un visitante externo no registrado. Ideal para visualizar las secciones públicas antes de tomar una decisión.
+                  Visualiza el panel de la modelo, cobra comisiones del 10% automático de tus referidos, publica contenido y modera tu lista de fans.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => onSwitchPersona('visitor')}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition uppercase tracking-wide cursor-pointer shadow-xs active:scale-98"
+                onClick={() => onSwitchPersona('model')}
+                className="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl text-xs transition uppercase tracking-wide cursor-pointer shadow-xs shadow-pink-500/10 active:scale-98"
               >
-                Simular Invitado
+                Simular Modelo
               </button>
             </div>
           </div>

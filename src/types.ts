@@ -33,7 +33,7 @@ export interface ModelProfile {
   gender?: 'female' | 'male';
 }
 
-export type UserRole = 'model' | 'investor' | 'visitor';
+export type UserRole = 'model' | 'investor' | 'visitor' | 'admin';
 
 export interface UserSessionProfile {
   id: string;

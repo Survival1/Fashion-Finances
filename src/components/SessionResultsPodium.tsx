@@ -885,15 +885,8 @@ export default function SessionResultsPodium({
       if (!wrapper) return;
       const target = e.target as HTMLElement;
       if (target && (target.closest('#finanzas-results-in-channel') || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('[id^="finanzas-results-in-channel"]'))) {
-        const isAtBottom = wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 15;
-        const isAtTop = wrapper.scrollTop <= 15;
-        if (e.deltaY > 0 && isAtBottom) {
-          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
-        } else if (e.deltaY < 0 && isAtTop) {
-          window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
-        } else {
-          wrapper.scrollTop += e.deltaY;
-        }
+        e.stopPropagation();
+        wrapper.scrollTop += e.deltaY;
       }
     };
 
@@ -1348,23 +1341,10 @@ export default function SessionResultsPodium({
       className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
       id="podium-results-screen"
       onWheel={(e) => {
+        e.stopPropagation();
         const wrapper = document.getElementById('podium-scrollable-content-wrapper');
         if (wrapper) {
-          const isAtBottom = wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 15;
-          const isAtTop = wrapper.scrollTop <= 15;
-          if (e.deltaY > 0 && isAtBottom) {
-            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
-          } else if (e.deltaY < 0 && isAtTop) {
-            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
-          } else {
-            wrapper.scrollTop += e.deltaY;
-          }
-        } else {
-          if (e.deltaY > 0) {
-            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
-          } else if (e.deltaY < 0) {
-            window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'prev' } }));
-          }
+          wrapper.scrollTop += e.deltaY;
         }
       }}
     >

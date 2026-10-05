@@ -3313,9 +3313,6 @@ export default function VictoriaSecretRanking({
                     <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 scrollbar-none text-[11px] font-bold uppercase tracking-wider">
                       {[
                         { id: 'all', label: `Todos (${receivedGifts.length})`, icon: Gift },
-                        { id: 'lujo', label: '👑 Lujo VIP', icon: Crown },
-                        { id: 'intermedio', label: '💎 Joyería & Certificados', icon: Gem },
-                        { id: 'basico', label: '⭐ Esenciales', icon: Star },
                       ].map(cat => {
                         const Icon = cat.icon;
                         const isActive = receivedCategoryFilter === cat.id;
@@ -3323,7 +3320,7 @@ export default function VictoriaSecretRanking({
                           <button
                             key={cat.id}
                             onClick={() => setReceivedCategoryFilter(cat.id as any)}
-                            className={`px-3.5 py-1.5 rounded-full border transition-all duration-200 shrink-0 flex items-center gap-1 cursor-pointer select-none ${
+                            className={`px-3 py-1.5 rounded-full border transition-all duration-200 shrink-0 flex items-center gap-1 cursor-pointer select-none ${
                               isActive 
                                 ? 'bg-pink-600 text-white border-pink-600 shadow-xs' 
                                 : 'bg-white text-slate-600 border-slate-200 hover:border-pink-300 hover:text-pink-600'
@@ -3348,8 +3345,8 @@ export default function VictoriaSecretRanking({
                     </div>
                   </div>
 
-                  {/* Received Gifts Grid / Cards List */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Received Gifts Grid / Cards List - Tamaño más chico y compacto */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                     {(() => {
                       const filteredReceived = receivedGifts.filter(g => {
                         if (!isGiftInTimePeriod(g.timestamp, giftTimeFilter)) return false;
@@ -3368,12 +3365,12 @@ export default function VictoriaSecretRanking({
 
                       if (filteredReceived.length === 0) {
                         return (
-                          <div className="col-span-full bg-white rounded-2xl border border-dashed border-pink-200 p-8 text-center space-y-2">
-                            <Clock className="w-8 h-8 text-pink-400 mx-auto" />
-                            <h4 className="font-serif font-bold text-slate-800 text-sm">
+                          <div className="col-span-full bg-white rounded-2xl border border-dashed border-pink-200 p-6 text-center space-y-2">
+                            <Clock className="w-7 h-7 text-pink-400 mx-auto" />
+                            <h4 className="font-serif font-bold text-slate-800 text-xs sm:text-sm">
                               No hay regalos recibidos en el período: {giftTimeFilter === 'actuales' ? 'Actuales (Última semana)' : giftTimeFilter === 'recientes' ? 'Recientes (Último mes)' : 'Antiguos (> 1 mes)'}
                             </h4>
-                            <p className="text-xs text-slate-400 font-mono">
+                            <p className="text-[11px] text-slate-400 font-mono">
                               Selecciona otro período en los botones superiores para explorar más registros.
                             </p>
                           </div>
@@ -3389,73 +3386,73 @@ export default function VictoriaSecretRanking({
                           <div
                             key={gift.id}
                             onClick={() => setSelectedShowcaseGiftId(gift.id)}
-                            className={`rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 relative group cursor-pointer ${
+                            className={`rounded-xl border p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-2 relative group cursor-pointer text-left ${
                               isSelected 
-                                ? 'bg-amber-50/70 border-amber-400 ring-2 ring-amber-400/80 shadow-md' 
+                                ? 'bg-amber-50/70 border-amber-400 ring-2 ring-amber-400/80 shadow-xs' 
                                 : 'bg-white border-pink-100 hover:border-pink-300 hover:bg-pink-50/30'
                             }`}
                           >
                             {/* Selected Active Badge */}
                             {isSelected && (
-                              <span className="absolute -top-2.5 right-4 px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-[9px] rounded-full uppercase tracking-wider font-mono shadow-xs">
+                              <span className="absolute -top-2 right-2 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[8px] rounded-full uppercase tracking-wider font-mono shadow-xs">
                                 👁️ EN GRANDE
                               </span>
                             )}
 
                             {/* Top row: Sender Avatar & Details + Valuation */}
-                            <div className="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100">
-                              <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="flex items-start justify-between gap-2 pb-1.5 border-b border-slate-100">
+                              <div className="flex items-center gap-2 min-w-0">
                                 <img
                                   src={gift.senderAvatar}
                                   alt={gift.senderName}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-pink-400/60 shrink-0"
+                                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-pink-400/60 shrink-0"
                                 />
                                 <div className="min-w-0">
-                                  <span className="text-[9px] uppercase font-mono font-bold text-pink-600 block tracking-wider">
+                                  <span className="text-[7.5px] uppercase font-mono font-bold text-pink-600 block tracking-wider leading-none">
                                     REGALADO POR:
                                   </span>
-                                  <h4 className="text-xs font-bold text-slate-900 truncate font-serif flex items-center gap-1">
+                                  <h4 className="text-[11px] font-bold text-slate-900 truncate font-serif flex items-center gap-1 leading-tight mt-0.5">
                                     {gift.senderName}
-                                    {gift.isExclusive && <Crown className="w-3 h-3 text-amber-500 shrink-0" />}
+                                    {gift.isExclusive && <Crown className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
                                   </h4>
-                                  <span className="text-[10px] text-slate-400 font-mono truncate block">@{gift.senderUsername}</span>
+                                  <span className="text-[9px] text-slate-400 font-mono truncate block leading-none">@{gift.senderUsername}</span>
                                 </div>
                               </div>
 
                               <div className="text-right shrink-0">
-                                <span className="text-xs font-black font-mono text-amber-600 block">🪙 {gift.price.toLocaleString()}</span>
-                                <span className="text-[10px] text-emerald-600 font-mono font-bold">({gift.euroCost}€)</span>
+                                <span className="text-[11px] font-black font-mono text-amber-600 block leading-tight">🪙 {gift.price.toLocaleString()}</span>
+                                <span className="text-[9px] text-emerald-600 font-mono font-bold leading-tight">({gift.euroCost}€)</span>
                               </div>
                             </div>
 
                             {/* Gift Badge & Name */}
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-sm shrink-0 group-hover:scale-105 transition-transform">
                                 {gift.giftIcon}
                               </div>
                               <div className="min-w-0">
-                                <span className="text-xs font-extrabold text-slate-800 block truncate font-serif">
+                                <span className="text-[11px] font-extrabold text-slate-800 block truncate font-serif leading-tight">
                                   {gift.giftName}
                                 </span>
-                                <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 inline-block">
+                                <span className="text-[7.5px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-slate-100 text-slate-600 inline-block leading-tight">
                                   {gift.category === 'lujo' ? '👑 Lujo VIP' : gift.category === 'intermedio' ? '💎 Joyería' : '⭐ Esencial'}
                                 </span>
                               </div>
                             </div>
 
                             {/* Message Quotation */}
-                            <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 text-[11px] italic text-slate-700 font-serif leading-relaxed line-clamp-3">
+                            <div className="bg-slate-50/80 rounded-lg p-1.5 sm:p-2 border border-slate-100 text-[10px] italic text-slate-700 font-serif leading-snug line-clamp-2">
                               "{gift.message}"
                             </div>
 
                             {/* Bottom Row Actions */}
-                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                              <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                                <CheckCircle2 className="w-3 h-3" />
-                                {gift.dateFormatted}
+                            <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-slate-500">
+                              <span className="flex items-center gap-1 text-emerald-600 font-bold text-[8.5px]">
+                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                <span className="truncate max-w-[80px] sm:max-w-none">{gift.dateFormatted}</span>
                               </span>
 
-                              <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                 <button
                                   onClick={() => {
                                     setSelectedShowcaseGiftId(gift.id);
@@ -3480,18 +3477,18 @@ export default function VictoriaSecretRanking({
                                       setShowGenericGiftModal(true);
                                     }
                                   }}
-                                  className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-[9px] uppercase transition cursor-pointer flex items-center gap-0.5"
+                                  className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5"
                                   title="Ver en Grande"
                                 >
-                                  <Sparkles className="w-2.5 h-2.5" />
+                                  <Sparkles className="w-2 h-2" />
                                   <span>{isCert ? '📜 Ver' : 'Ver'}</span>
                                 </button>
 
                                 <button
                                   onClick={() => handleThankSender(gift)}
-                                  className="px-2.5 py-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1"
+                                  className="px-2 py-0.5 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded font-bold text-[8.5px] transition cursor-pointer flex items-center gap-0.5"
                                 >
-                                  <Heart className="w-3 h-3" />
+                                  <Heart className="w-2.5 h-2.5" />
                                   <span>Agradecer</span>
                                 </button>
                               </div>
@@ -3552,9 +3549,6 @@ export default function VictoriaSecretRanking({
                     <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 scrollbar-none text-[11px] font-bold uppercase tracking-wider">
                       {[
                         { id: 'all', label: `Todos los Envíos (${sentGifts.length})`, icon: Gift },
-                        { id: 'lujo', label: '👑 Lujo VIP', icon: Crown },
-                        { id: 'intermedio', label: '💎 Moda & Joyería', icon: Gem },
-                        { id: 'basico', label: '⭐ Esenciales', icon: Star },
                       ].map(cat => {
                         const Icon = cat.icon;
                         const isActive = sentCategoryFilter === cat.id;
@@ -3562,7 +3556,7 @@ export default function VictoriaSecretRanking({
                           <button
                             key={cat.id}
                             onClick={() => setSentCategoryFilter(cat.id as any)}
-                            className={`px-3.5 py-1.5 rounded-full border transition-all duration-200 shrink-0 flex items-center gap-1 cursor-pointer select-none ${
+                            className={`px-3 py-1.5 rounded-full border transition-all duration-200 shrink-0 flex items-center gap-1 cursor-pointer select-none ${
                               isActive 
                                 ? 'bg-pink-600 text-white border-pink-600 shadow-xs' 
                                 : 'bg-white text-slate-600 border-slate-200 hover:border-pink-300 hover:text-pink-600'
@@ -3597,8 +3591,8 @@ export default function VictoriaSecretRanking({
                     </div>
                   </div>
 
-                  {/* Sent Gifts Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Sent Gifts Grid - Tamaño más chico y compacto */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                     {(() => {
                       const filteredSent = sentGifts.filter(g => {
                         if (!isGiftInTimePeriod(g.timestamp, giftTimeFilter)) return false;
@@ -3617,12 +3611,12 @@ export default function VictoriaSecretRanking({
 
                       if (filteredSent.length === 0) {
                         return (
-                          <div className="col-span-full bg-white rounded-2xl border border-dashed border-pink-200 p-8 text-center space-y-2">
-                            <Clock className="w-8 h-8 text-pink-400 mx-auto" />
-                            <h4 className="font-serif font-bold text-slate-800 text-sm">
+                          <div className="col-span-full bg-white rounded-2xl border border-dashed border-pink-200 p-6 text-center space-y-2">
+                            <Clock className="w-7 h-7 text-pink-400 mx-auto" />
+                            <h4 className="font-serif font-bold text-slate-800 text-xs sm:text-sm">
                               No hay regalos enviados en el período: {giftTimeFilter === 'actuales' ? 'Actuales (Última semana)' : giftTimeFilter === 'recientes' ? 'Recientes (Último mes)' : 'Antiguos (> 1 mes)'}
                             </h4>
-                            <p className="text-xs text-slate-400 font-mono">
+                            <p className="text-[11px] text-slate-400 font-mono">
                               Selecciona otro período en los botones superiores para explorar más envíos o envía un nuevo regalo desde el catálogo.
                             </p>
                           </div>
@@ -3632,71 +3626,71 @@ export default function VictoriaSecretRanking({
                       return filteredSent.map((gift) => (
                         <div
                           key={gift.id}
-                          className="bg-white rounded-2xl border border-pink-100 p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 relative group"
+                          className="bg-white rounded-xl border border-pink-100 p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-2 relative group text-left"
                         >
                           {/* Top row: Recipient Avatar & Details + Price */}
-                          <div className="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100">
-                            <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex items-start justify-between gap-2 pb-1.5 border-b border-slate-100">
+                            <div className="flex items-center gap-2 min-w-0">
                               <img
                                 src={gift.receiverAvatar}
                                 alt={gift.receiverName}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/60 shrink-0"
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-amber-400/60 shrink-0"
                               />
                               <div className="min-w-0">
-                                <span className="text-[9px] uppercase font-mono font-bold text-amber-600 block tracking-wider">
+                                <span className="text-[7.5px] uppercase font-mono font-bold text-amber-600 block tracking-wider leading-none">
                                   ENVIADO PARA:
                                 </span>
-                                <h4 className="text-xs font-bold text-slate-900 truncate font-serif flex items-center gap-1">
+                                <h4 className="text-[11px] font-bold text-slate-900 truncate font-serif flex items-center gap-1 leading-tight mt-0.5">
                                   {gift.receiverName}
                                 </h4>
-                                <span className="text-[10px] text-slate-400 font-mono truncate block">@{gift.receiverUsername}</span>
+                                <span className="text-[9px] text-slate-400 font-mono truncate block leading-none">@{gift.receiverUsername}</span>
                               </div>
                             </div>
 
                             <div className="text-right shrink-0">
-                              <span className="text-xs font-black font-mono text-amber-600 block">🪙 {gift.price.toLocaleString()}</span>
-                              <span className="text-[10px] text-emerald-600 font-mono font-bold">({gift.euroCost}€)</span>
+                              <span className="text-[11px] font-black font-mono text-amber-600 block leading-tight">🪙 {gift.price.toLocaleString()}</span>
+                              <span className="text-[9px] text-emerald-600 font-mono font-bold leading-tight">({gift.euroCost}€)</span>
                             </div>
                           </div>
 
                           {/* Gift Badge & Name */}
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-lg shrink-0">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-sm shrink-0">
                               {gift.giftIcon}
                             </div>
                             <div className="min-w-0">
-                              <span className="text-xs font-extrabold text-slate-800 block truncate font-serif">
+                              <span className="text-[11px] font-extrabold text-slate-800 block truncate font-serif leading-tight">
                                 {gift.giftName}
                               </span>
-                              <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-md bg-amber-50 text-amber-800 inline-block">
+                              <span className="text-[7.5px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-amber-50 text-amber-800 inline-block leading-tight">
                                 {gift.isExclusive ? '👑 Lujo VIP' : '✨ Detalle Especial'}
                               </span>
                             </div>
                           </div>
 
                           {/* Dedication Message */}
-                          <div className="bg-amber-50/40 rounded-xl p-2.5 border border-amber-100/60 text-[11px] italic text-slate-700 font-serif leading-relaxed line-clamp-3">
+                          <div className="bg-amber-50/40 rounded-lg p-1.5 sm:p-2 border border-amber-100/60 text-[10px] italic text-slate-700 font-serif leading-snug line-clamp-2">
                             "{gift.message}"
                           </div>
 
                           {/* Bottom Row Actions */}
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                            <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                              <Check className="w-3 h-3" />
-                              {gift.dateFormatted}
+                          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-slate-500">
+                            <span className="flex items-center gap-1 text-emerald-600 font-bold text-[8.5px]">
+                              <Check className="w-2.5 h-2.5" />
+                              <span className="truncate max-w-[80px] sm:max-w-none">{gift.dateFormatted}</span>
                             </span>
 
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1">
                               {gift.isExclusive && (
                                 <button
                                   onClick={() => {
                                     setActiveModalGift(gift);
                                     setShowLuxuryWatchModal(true);
                                   }}
-                                  className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-[9px] uppercase transition cursor-pointer flex items-center gap-0.5"
+                                  className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5"
                                   title="Ver Animación de Lujo"
                                 >
-                                  <Sparkles className="w-2.5 h-2.5" />
+                                  <Sparkles className="w-2 h-2" />
                                   <span>3D</span>
                                 </button>
                               )}
@@ -3706,7 +3700,7 @@ export default function VictoriaSecretRanking({
                                   setRecipientModelId(models.find(m => m.name === gift.receiverName)?.id || 'topf-1');
                                   setGiftsSubTab('catalog');
                                 }}
-                                className="px-2.5 py-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1"
+                                className="px-2 py-0.5 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded font-bold text-[8.5px] transition cursor-pointer flex items-center gap-0.5"
                               >
                                 <Send className="w-2.5 h-2.5" />
                                 <span>Enviar otro</span>
