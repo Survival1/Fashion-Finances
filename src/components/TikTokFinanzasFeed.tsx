@@ -153,6 +153,8 @@ interface TikTokFinanzasFeedProps {
   renderEnlargedParticipantWindow?: () => React.ReactNode;
   onOpenRoundDatabaseModal?: (roundId?: string) => void;
   onNavigateTo10WindowsLive?: () => void;
+  screenSplitLayout?: 'single' | '50-50' | 'pip' | 'grid-3' | 'grid-4' | 'presentation' | 'grid' | 'grid-10';
+  invitedUsersMap?: Record<string, boolean>;
 }
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
@@ -225,7 +227,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   renderScreenShareContent,
   enlargedWindowUser,
   setEnlargedWindowUser,
-  renderEnlargedParticipantWindow
+  renderEnlargedParticipantWindow,
+  screenSplitLayout = 'single',
+  invitedUsersMap = {}
 }) => {
   const feedContainerRef = useRef<HTMLDivElement>(null);
   // 🎛️ Channels menu hover & toggle state
@@ -391,18 +395,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length, showFinanzasResults]);
 
-  // 🎯 Redirigir directamente a la pantalla de la captura z.png (REF: 1, Turno 10 de 10 con Marina Serrano) al pulsar X en image.png
+  // 🎯 Redirigir directamente a la página de la captura imagen.png (donde los participantes están en la cuenta atrás de los 10 minutos para votar) al pulsar X
   useEffect(() => {
-    const handleExitVotingToZPage = (e: any) => {
-      // Buscar específicamente la ronda con REF: 1 (captura z.png)
-      let ref1Idx = activeSessionsOnly.findIndex(s => s.id === 'sess-trabajadores-1' || s.reference === 'REF: 1');
-      if (ref1Idx === -1) {
-        ref1Idx = 0;
-      }
-      const targetIdx = ref1Idx;
-      const targetSession = activeSessionsOnly[targetIdx] || activeSessionsOnly[0];
-      const targetSessionId = targetSession?.id || 'sess-trabajadores-1';
-
+    const handleExitVotingToImagePage = (e: any) => {
       setShowVotingProjectsModal(false);
       setShowProjectDetailsInPopup(false);
       setDetailProjectUser(null);
@@ -411,52 +406,30 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (setShowFinanzasResults) setShowFinanzasResults(false);
       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
 
-      // Desactivar fase de votación para que se muestre en fase de exposición como en z.png
+      const targetSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0];
+      const targetSessionId = e.detail?.sessionId || targetSession?.id || 'sess-trabajadores-1';
+
+      // Mantener la fase de votación de 10 minutos activa (captura image.png con la cuenta atrás)
       setSessionVotingPhaseMap(prev => {
-        const next = { ...prev, [targetSessionId]: false };
+        const next = { ...prev, [targetSessionId]: true };
         try {
           localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
-          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'false');
-          localStorage.removeItem(`finanzas_is_voting_phase_active_${targetSessionId}`);
-          localStorage.removeItem('finanzas_is_voting_phase_active');
+          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'true');
+          localStorage.setItem('finanzas_is_voting_phase_active', 'true');
         } catch (err) {}
         return next;
       });
-
-      // Asegurar que Marina Serrano esté seleccionada como presentadora del Turno 10 de 10 (z.png)
-      const participants = targetSession ? getSessionParticipants(targetSession) : TRABAJADORES_USERS;
-      const marinaSerrano = participants.find(p => p.id === 'trab-10' || p.name?.toLowerCase().includes('marina')) || {
-        id: 'trab-10',
-        name: 'Marina Serrano',
-        role: 'PATRONISTA SOSTENIBLE',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-        username: 'marina_serrano_mod'
-      };
-
-      setSessionSelectedPresenterMap(prev => ({
-        ...prev,
-        [targetSessionId]: marinaSerrano
-      }));
-      if (setSelectedFinanzasUser) setSelectedFinanzasUser(marinaSerrano);
-
-      // Ajustar el temporizador de 5 minutos a ~4:19 como en la captura z.png
-      try {
-        localStorage.setItem(`finanzas_active_session_start_${targetSessionId}`, String(Date.now() - 41 * 1000));
-      } catch (e) {}
-
-      stopLucasTorresSpeech();
-      setActiveFinanzasSessionIndex(targetIdx);
-      scrollToRound(targetIdx);
     };
-    window.addEventListener('exit-voting-to-z-page', handleExitVotingToZPage);
-    window.addEventListener('exit-voting-to-image-page', handleExitVotingToZPage);
-    window.addEventListener('exit-voting-to-exposition', handleExitVotingToZPage);
+
+    window.addEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
+    window.addEventListener('exit-voting-to-z-page', handleExitVotingToImagePage);
+    window.addEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
     return () => {
-      window.removeEventListener('exit-voting-to-z-page', handleExitVotingToZPage);
-      window.removeEventListener('exit-voting-to-image-page', handleExitVotingToZPage);
-      window.removeEventListener('exit-voting-to-exposition', handleExitVotingToZPage);
+      window.removeEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
+      window.removeEventListener('exit-voting-to-z-page', handleExitVotingToImagePage);
+      window.removeEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
     };
-  }, [activeSessionsOnly]);
+  }, [activeSessionsOnly, activeFinanzasSessionIndex]);
 
   // Sync feed scroll position whenever activeFinanzasSessionIndex changes from outside
   useEffect(() => {
@@ -477,40 +450,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       }
     }
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length]);
-
-  const handleMouseEnterRonda = (sessionId: string) => {
-    // 🚫 Solo en la ventana en grande del participante (image.png), NO abrir la ventana de los canales (z.png)
-    if (enlargedWindowUser) return;
-    if (channelsMenuTimeoutRef.current) {
-      clearTimeout(channelsMenuTimeoutRef.current);
-      channelsMenuTimeoutRef.current = null;
-    }
-    setActiveChannelsMenuSessionId(sessionId);
-  };
-
-  const handleMouseLeaveRonda = () => {
-    if (channelsMenuTimeoutRef.current) {
-      clearTimeout(channelsMenuTimeoutRef.current);
-    }
-    channelsMenuTimeoutRef.current = setTimeout(() => {
-      setActiveChannelsMenuSessionId(null);
-    }, 280);
-  };
-
-  // 🛡️ Al abrir la ventana en grande (image.png), cerrar inmediatamente el menú de canales
-  useEffect(() => {
-    if (enlargedWindowUser) {
-      setActiveChannelsMenuSessionId(null);
-    }
-  }, [enlargedWindowUser]);
-
-  const toggleChannelsMenu = (sessionId: string) => {
-    if (activeChannelsMenuSessionId === sessionId) {
-      setActiveChannelsMenuSessionId(null);
-    } else {
-      setActiveChannelsMenuSessionId(sessionId);
-    }
-  };
 
   useEffect(() => {
     return () => {
@@ -1224,7 +1163,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     setLocalCameraFullscreenOverride(isPresenterCameraFullscreen);
   }, [isPresenterCameraFullscreen]);
 
-  const effectiveCameraFullscreen = localCameraFullscreenOverride !== null ? localCameraFullscreenOverride : Boolean(isPresenterCameraFullscreen);
+  // Si la pantalla compartida se activa con 1 o 2 usuarios, asegurar que la vista en directo completa se abra
+  useEffect(() => {
+    if (isScreenSharingActive && (screenSplitLayout === '50-50' || screenSplitLayout === 'grid-3')) {
+      setLocalCameraFullscreenOverride(true);
+    }
+  }, [isScreenSharingActive, screenSplitLayout]);
+
+  useEffect(() => {
+    const handleOpenSharedScreen = () => {
+      setLocalCameraFullscreenOverride(true);
+    };
+    window.addEventListener('open-shared-screen-live', handleOpenSharedScreen);
+    return () => window.removeEventListener('open-shared-screen-live', handleOpenSharedScreen);
+  }, []);
+
+  const effectiveCameraFullscreen = (isScreenSharingActive && (screenSplitLayout === '50-50' || screenSplitLayout === 'grid-3'))
+    ? (localCameraFullscreenOverride !== false)
+    : (localCameraFullscreenOverride !== null ? localCameraFullscreenOverride : Boolean(isPresenterCameraFullscreen));
 
   // 🎯 Cerrar la cámara en directo (z.png) y redirigir inmediatamente a la página de exposición (image.png)
   const handleStopPresenterLiveCam = () => {
@@ -1351,7 +1307,52 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return {};
   });
 
-  // Limpieza inicial de startTimes corrompidos por el antiguo flag global en rondas independientes
+  const isSessionInVotingPhase = (sessionId: string) => {
+    return Boolean(
+      sessionVotingPhaseMap[sessionId] || 
+      (sessionId === activeSessionsOnly[activeFinanzasSessionIndex]?.id && isVotingPhaseActive) ||
+      (sessionId === 'sess-trabajadores-1' && isVotingPhaseActive)
+    );
+  };
+
+  const handleMouseEnterRonda = (sessionId: string) => {
+    // 🚫 Solo en la ventana en grande del participante o durante el tiempo de votación final de 10 minutos (captura z.png), NO abrir la ventana de los canales (captura image.png)
+    if (enlargedWindowUser || isSessionInVotingPhase(sessionId)) return;
+    if (channelsMenuTimeoutRef.current) {
+      clearTimeout(channelsMenuTimeoutRef.current);
+      channelsMenuTimeoutRef.current = null;
+    }
+    setActiveChannelsMenuSessionId(sessionId);
+  };
+
+  const handleMouseLeaveRonda = () => {
+    if (channelsMenuTimeoutRef.current) {
+      clearTimeout(channelsMenuTimeoutRef.current);
+    }
+    channelsMenuTimeoutRef.current = setTimeout(() => {
+      setActiveChannelsMenuSessionId(null);
+    }, 280);
+  };
+
+  // 🛡️ Al abrir la ventana en grande o durante la fase de votación de 10 minutos, cerrar inmediatamente el menú de canales
+  useEffect(() => {
+    if (enlargedWindowUser || isVotingPhaseActive || Object.values(sessionVotingPhaseMap).some(Boolean)) {
+      setActiveChannelsMenuSessionId(null);
+    }
+  }, [enlargedWindowUser, isVotingPhaseActive, sessionVotingPhaseMap]);
+
+  const toggleChannelsMenu = (sessionId: string) => {
+    // 🚫 Durante el tiempo de votación final de 10 minutos, no permitir abrir el menú de canales
+    if (isSessionInVotingPhase(sessionId)) {
+      setActiveChannelsMenuSessionId(null);
+      return;
+    }
+    if (activeChannelsMenuSessionId === sessionId) {
+      setActiveChannelsMenuSessionId(null);
+    } else {
+      setActiveChannelsMenuSessionId(sessionId);
+    }
+  };
   useEffect(() => {
     try {
       localStorage.removeItem('finanzas_is_voting_phase_active');
@@ -1373,7 +1374,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // ⏱️ Exposition 5-minute timer (300s = 5:00 minutes each participant)
   const [sessionExpositionTimerMap, setSessionExpositionTimerMap] = useState<Record<string, number>>(() => ({
     'sess-trabajadores-1': 300,
-    'sess-streetwear-ref-2': 300,
     'sess-emprendedores-1': 300,
     'sess-empresarios-1': 300,
     'sess-topmodels-1': 300,
@@ -1437,7 +1437,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [sessionVotingTimerMap, setSessionVotingTimerMap] = useState<Record<string, number>>(() => {
     const sessionIds = [
       'sess-trabajadores-1',
-      'sess-streetwear-ref-2',
       'sess-emprendedores-1',
       'sess-empresarios-1',
       'sess-topmodels-1',
@@ -1994,8 +1993,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   // 🎛️ Helper to render the channels & broadcast controls menu window (strictly matching z.png)
   const renderChannelsOverlay = (session: any) => {
+    // 🚫 Durante el tiempo de votación final de 10 minutos (captura z.png), NO abrir la ventana de menú de canales (captura image.png)
+    if (isSessionInVotingPhase(session.id)) return null;
     // 🚫 Solo en la ventana en grande del participante (image.png), NO abrir la ventana de canales (z.png)
     if (enlargedWindowUser || activeChannelsMenuSessionId !== session.id) return null;
+    const presenter = getSessionPresenter(session, activeFinanzasSessionIndex);
     const overlayRoundRef = getFinanzasRoundRef ? getFinanzasRoundRef(session) : (session.reference || 'REF: 1');
     return (
       <div 
@@ -2050,20 +2052,48 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <button
               type="button"
               onClick={() => {
-                if (isUserLiveStreamingWithCamera) {
-                  handleToggleUserCameraLiveBroadcast();
-                } else if (toggleBroadcastCam) {
+                const isPresenter = Boolean(
+                  presenter.id === userProfile?.id ||
+                  presenter.name?.includes('Adriana') ||
+                  presenter.isSelf ||
+                  presenter.id === 'user-adriana'
+                );
+                const isExpositionPhase = !isSessionInVotingPhase(session.id);
+                if (!isPresenter || !isExpositionPhase) {
+                  if (setSystemVoiceNotification) {
+                    setSystemVoiceNotification({
+                      show: true,
+                      message: '⚠️ El botón Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación.'
+                    });
+                  }
+                  return;
+                }
+                handleToggleUserCameraLiveBroadcast();
+                if (toggleBroadcastCam) {
                   toggleBroadcastCam();
                 }
+                setIsWatchingPresenterCamera(true);
+                setIsPresenterCameraFullscreen(true);
               }}
               className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                (isBroadcastCamOn || isUserLiveStreamingWithCamera)
-                  ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                  : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
+                (!Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf || presenter.id === 'user-adriana') || isSessionInVotingPhase(session.id))
+                  ? 'bg-[#181d2a]/50 text-slate-500 border-slate-800/80 cursor-not-allowed opacity-60'
+                  : (isBroadcastCamOn || isUserLiveStreamingWithCamera)
+                    ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
+                    : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
               }`}
-              title="Configurar Cámara"
+              title={
+                (!Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf || presenter.id === 'user-adriana') || isSessionInVotingPhase(session.id))
+                  ? '⚠️ La Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación'
+                  : (isBroadcastCamOn || isUserLiveStreamingWithCamera) ? 'Desconectar Cámara' : 'Conectar Cámara ON'
+              }
+              id="btn-camara-on-channels-menu"
             >
-              <Camera className="w-4 h-4 text-[#10b981] shrink-0" />
+              <Camera className={`w-4 h-4 shrink-0 ${
+                (!Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf || presenter.id === 'user-adriana') || isSessionInVotingPhase(session.id))
+                  ? 'text-slate-500'
+                  : 'text-[#10b981]'
+              }`} />
               <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">
                 {(isBroadcastCamOn || isUserLiveStreamingWithCamera) ? 'Cámara ON' : 'Cámara OFF'}
               </span>
@@ -2092,7 +2122,26 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <button
               type="button"
               onClick={() => {
+                const isPresenter = Boolean(
+                  presenter.id === userProfile?.id ||
+                  presenter.name?.includes('Adriana') ||
+                  presenter.isSelf ||
+                  presenter.id === 'user-adriana'
+                );
+                const isExpositionPhase = !isSessionInVotingPhase(session.id);
+                if (!isPresenter || !isExpositionPhase) {
+                  if (setSystemVoiceNotification) {
+                    setSystemVoiceNotification({
+                      show: true,
+                      message: '⚠️ La opción del botón dividir pantalla solo funciona y puede decidirlo la persona que está dando su exposición de 5 minutos en el momento.'
+                    });
+                  }
+                  return;
+                }
                 setActiveChannelsMenuSessionId(null);
+                if (setShowScreenShareMenu) {
+                  setShowScreenShareMenu(true);
+                }
                 if (onToggleScreenShare) {
                   onToggleScreenShare();
                 }
@@ -2103,6 +2152,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   : 'bg-[#181d2a] text-slate-200 border border-slate-700/70 hover:bg-[#22293b] font-bold'
               }`}
               title="Compartir Pantalla"
+              id="btn-pantalla-on-channels-menu"
             >
               <Monitor className="w-4 h-4 text-slate-200 shrink-0" />
               <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
@@ -2271,7 +2321,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
           // Timer calculation (5 min exposition vs 10 min voting)
           // 🛑 CADA RONDA ES ESTRICTAMENTE INDEPENDIENTE DE LA OTRA
-          const isSessionInVoting = Boolean(sessionVotingPhaseMap[session.id]);
+          const isSessionInVoting = isSessionInVotingPhase(session.id);
           const currentVotingSecs = isSessionInVoting
             ? (sessionVotingTimerMap[session.id] !== undefined
                 ? sessionVotingTimerMap[session.id]
@@ -2323,14 +2373,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 >
                 {/* 📱 Subtle top speaker notch matching z.png */}
                 <div className="w-16 h-1 bg-white/20 rounded-full mx-auto mb-0.5 opacity-60 shrink-0 pointer-events-none" />
-                {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página y por encima de Ronda en Curso) */}
-                <div 
-                  className="absolute top-0 inset-x-0 h-16 sm:h-20 z-40 pointer-events-auto cursor-pointer"
-                  onMouseEnter={() => handleMouseEnterRonda(session.id)}
-                  onMouseLeave={handleMouseLeaveRonda}
-                  id={`top-hover-trigger-zone-${session.id}`}
-                  title="Pasa el ratón para abrir el menú de opciones"
-                />
+                {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página y por encima de Ronda en Curso) - DESACTIVADA DURANTE LA VOTACIÓN FINAL */}
+                {!isSessionInVoting && (
+                  <div 
+                    className="absolute top-0 inset-x-0 h-16 sm:h-20 z-40 pointer-events-auto cursor-pointer"
+                    onMouseEnter={() => handleMouseEnterRonda(session.id)}
+                    onMouseLeave={handleMouseLeaveRonda}
+                    id={`top-hover-trigger-zone-${session.id}`}
+                    title="Pasa el ratón para abrir el menú de opciones"
+                  />
+                )}
                 {/* 🗳️ VENTANA DE VOTACIÓN DENTRO DEL CANAL EN PANTALLA COMPLETA (captura image.png) */}
                 {showVotingProjectsModal && isCurrentlyActiveRound && (
                   <div 
@@ -2539,21 +2591,221 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       />
                     )}
 
-                    {/* Background Live Video of Lucas Torres / Presenter */}
-                    <video
-                      ref={liveVideoRef}
-                      src={getParticipantLiveCameraVideo(presenter)}
-                      onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
-                      autoPlay
-                      loop
-                      playsInline
-                      muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
-                      className="absolute inset-0 w-full h-full object-cover z-0"
-                    />
+                    {/* Background Live Media: Single vs Split with 1 Guest (50/50) vs Split with 2 Guests (Trío) */}
+                    {(() => {
+                      const allAvailableGuests = [
+                        ...FINANZAS_USERS,
+                        ...TRABAJADORES_USERS.filter(tu => !FINANZAS_USERS.some(fu => fu.id === tu.id || fu.name === tu.name))
+                      ];
+                      const activeInvitedList = allAvailableGuests.filter(u => invitedUsersMap[u.id]);
+                      const isSplit3Active = isScreenSharingActive && (screenSplitLayout === 'grid-3' || activeInvitedList.length >= 2);
+                      const isSplit2Active = isScreenSharingActive && !isSplit3Active && (screenSplitLayout === '50-50' || activeInvitedList.length === 1);
+                      const guest1 = activeInvitedList[0] || FINANZAS_USERS[0];
+                      const guest2 = activeInvitedList[1] || FINANZAS_USERS[1];
 
-                    {/* Gradient Vignettes */}
-                    <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
-                    <div className="absolute bottom-0 inset-x-0 h-64 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
+                      if (isSplit2Active) {
+                        return (
+                          <div className="absolute inset-0 w-full h-full grid grid-cols-2 gap-2 p-2 pt-16 pb-36 z-0 bg-[#070b14] overflow-hidden animate-fade-in">
+                            {/* Stream 1: Presentador / Anfitrión */}
+                            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-rose-500/80 bg-slate-950 flex flex-col justify-between p-2 shadow-2xl">
+                              <video
+                                ref={liveVideoRef}
+                                src={getParticipantLiveCameraVideo(presenter)}
+                                onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
+                                autoPlay
+                                loop
+                                playsInline
+                                muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="bg-rose-600 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  <span>ANFITRIÓN</span>
+                                </span>
+                                <span className="bg-black/70 backdrop-blur-md text-slate-200 text-[8px] font-mono px-1.5 py-0.5 rounded">
+                                  En vivo
+                                </span>
+                              </div>
+                              <div className="relative z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg text-[9.5px] sm:text-[10px] font-black text-rose-300 uppercase tracking-wider w-max border border-rose-500/40 truncate max-w-full">
+                                👤 {presenter.name}
+                              </div>
+                            </div>
+
+                            {/* Stream 2: Invitado 1 */}
+                            <div 
+                              onClick={() => {
+                                if (setEnlargedWindowUser) setEnlargedWindowUser({ ...guest1, role: guest1.role || 'Invitado 1' });
+                              }}
+                              className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-emerald-500/80 bg-slate-950 flex flex-col justify-between p-2 shadow-2xl cursor-pointer group hover:border-emerald-400 transition"
+                              title="Clic para ver en grande"
+                            >
+                              <video
+                                src={getParticipantLiveCameraVideo(guest1)}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                autoPlay
+                                loop
+                                playsInline
+                                muted
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              <img
+                                src={guest1.avatar}
+                                alt={guest1.name}
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+                                }}
+                              />
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="bg-emerald-600 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  <span>🟢 INVITADO 1</span>
+                                </span>
+                                <span className="bg-black/70 backdrop-blur-md text-emerald-300 text-[8px] font-bold px-1.5 py-0.5 rounded">
+                                  Conectado
+                                </span>
+                              </div>
+                              <div className="relative z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg text-[9.5px] sm:text-[10px] font-black text-emerald-300 uppercase tracking-wider w-max border border-emerald-500/40 truncate max-w-full">
+                                👥 {guest1.name}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (isSplit3Active) {
+                        return (
+                          <div className="absolute inset-0 w-full h-full grid grid-cols-2 grid-rows-2 gap-2 p-2 pt-16 pb-36 z-0 bg-[#070b14] overflow-hidden animate-fade-in">
+                            {/* Stream 1: Presentador / Anfitrión (Arriba, ancho completo) */}
+                            <div className="col-span-2 relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-rose-500/80 bg-slate-950 flex flex-col justify-between p-2 shadow-2xl">
+                              <video
+                                ref={liveVideoRef}
+                                src={getParticipantLiveCameraVideo(presenter)}
+                                onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
+                                autoPlay
+                                loop
+                                playsInline
+                                muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="bg-rose-600 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  <span>ANFITRIÓN</span>
+                                </span>
+                                <span className="bg-black/70 backdrop-blur-md text-slate-200 text-[8px] font-mono px-1.5 py-0.5 rounded">
+                                  En vivo
+                                </span>
+                              </div>
+                              <div className="relative z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg text-[9.5px] sm:text-[10px] font-black text-rose-300 uppercase tracking-wider w-max border border-rose-500/40 truncate max-w-full">
+                                👤 {presenter.name}
+                              </div>
+                            </div>
+
+                            {/* Stream 2: Invitado 1 */}
+                            <div 
+                              onClick={() => {
+                                if (setEnlargedWindowUser) setEnlargedWindowUser({ ...guest1, role: guest1.role || 'Invitado 1' });
+                              }}
+                              className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-emerald-500/80 bg-slate-950 flex flex-col justify-between p-2 shadow-2xl cursor-pointer group hover:border-emerald-400 transition"
+                              title="Clic para ver en grande"
+                            >
+                              <video
+                                src={getParticipantLiveCameraVideo(guest1)}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                autoPlay
+                                loop
+                                playsInline
+                                muted
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              <img
+                                src={guest1.avatar}
+                                alt={guest1.name}
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+                                }}
+                              />
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="bg-emerald-600 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  <span>🟢 INVITADO 1</span>
+                                </span>
+                              </div>
+                              <div className="relative z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg text-[9px] sm:text-[9.5px] font-black text-emerald-300 uppercase tracking-wider w-max border border-emerald-500/40 truncate max-w-full">
+                                👥 {guest1.name}
+                              </div>
+                            </div>
+
+                            {/* Stream 3: Invitado 2 */}
+                            <div 
+                              onClick={() => {
+                                if (setEnlargedWindowUser) setEnlargedWindowUser({ ...guest2, role: guest2.role || 'Invitado 2' });
+                              }}
+                              className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-cyan-500/80 bg-slate-950 flex flex-col justify-between p-2 shadow-2xl cursor-pointer group hover:border-cyan-400 transition"
+                              title="Clic para ver en grande"
+                            >
+                              <video
+                                src={getParticipantLiveCameraVideo(guest2)}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                autoPlay
+                                loop
+                                playsInline
+                                muted
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              <img
+                                src={guest2.avatar}
+                                alt={guest2.name}
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650';
+                                }}
+                              />
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="bg-cyan-600 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  <span>🟣 INVITADO 2</span>
+                                </span>
+                              </div>
+                              <div className="relative z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg text-[9px] sm:text-[9.5px] font-black text-cyan-300 uppercase tracking-wider w-max border border-cyan-500/40 truncate max-w-full">
+                                👥 {guest2.name}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <>
+                          {isPresenter && userLiveMediaStream ? (
+                            <LiveUserStreamVideo
+                              stream={userLiveMediaStream}
+                              facingMode={liveCameraFacingMode}
+                              className="absolute inset-0 w-full h-full object-cover z-0"
+                            />
+                          ) : (
+                            <video
+                              ref={liveVideoRef}
+                              src={getParticipantLiveCameraVideo(presenter)}
+                              onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
+                              autoPlay
+                              loop
+                              playsInline
+                              muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
+                              className="absolute inset-0 w-full h-full object-cover z-0"
+                            />
+                          )}
+                          <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
+                          <div className="absolute bottom-0 inset-x-0 h-64 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-10" />
+                        </>
+                      );
+                    })()}
 
                     {/* 🔝 CABECERA SUPERIOR DENTRO DEL CANAL (idéntica a captura image.png) */}
                     <div className="relative z-20 w-full pt-3 sm:pt-4 px-2.5 sm:px-3.5 flex items-center justify-between gap-1 sm:gap-1.5 pointer-events-auto">
@@ -2808,41 +3060,170 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
                 {/* 🎥 Embedded Live Stream Video Background inside Channel Container */}
-                {isLiveActive && (
-                  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px]">
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover opacity-50 transition-opacity duration-700"
-                      src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#070b14]/80 via-[#070b14]/50 to-[#070b14]/90" />
-                  </div>
-                )}
+                {(() => {
+                  const allAvailableGuests = [
+                    ...FINANZAS_USERS,
+                    ...TRABAJADORES_USERS.filter(tu => !FINANZAS_USERS.some(fu => fu.id === tu.id || fu.name === tu.name))
+                  ];
+                  const activeInvitedList = allAvailableGuests.filter(u => invitedUsersMap[u.id]);
+                  const isSplit3Active = isScreenSharingActive && (screenSplitLayout === 'grid-3' || activeInvitedList.length >= 2);
+                  const isSplit2Active = isScreenSharingActive && !isSplit3Active && (screenSplitLayout === '50-50' || activeInvitedList.length === 1);
+                  const guest1 = activeInvitedList[0] || FINANZAS_USERS[0];
+                  const guest2 = activeInvitedList[1] || FINANZAS_USERS[1];
+
+                  if (isSplit2Active) {
+                    return (
+                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px] grid grid-cols-2 gap-1.5 p-2 pt-14 pb-20 bg-[#070b14] opacity-85">
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-rose-500/70 bg-black flex flex-col justify-between p-1.5">
+                          <video
+                            src={getParticipantLiveCameraVideo(presenter)}
+                            onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
+                            autoPlay loop playsInline muted
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <span className="relative z-10 bg-rose-600/90 text-white text-[7.5px] font-black uppercase px-1.5 py-0.2 rounded w-max">
+                            🔴 Anfitrión
+                          </span>
+                          <span className="relative z-10 bg-black/80 text-rose-300 text-[8px] font-bold px-1 py-0.2 rounded w-max truncate max-w-full">
+                            👤 {presenter.name}
+                          </span>
+                        </div>
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/70 bg-black flex flex-col justify-between p-1.5">
+                          <video
+                            src={getParticipantLiveCameraVideo(guest1)}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            autoPlay loop playsInline muted
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <img
+                            src={guest1.avatar}
+                            alt={guest1.name}
+                            className="absolute inset-0 w-full h-full object-cover -z-1"
+                          />
+                          <span className="relative z-10 bg-emerald-600/90 text-white text-[7.5px] font-black uppercase px-1.5 py-0.2 rounded w-max">
+                            🟢 Invitado 1
+                          </span>
+                          <span className="relative z-10 bg-black/80 text-emerald-300 text-[8px] font-bold px-1 py-0.2 rounded w-max truncate max-w-full">
+                            👥 {guest1.name}
+                          </span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#070b14]/70 via-transparent to-[#070b14]/85 pointer-events-none" />
+                      </div>
+                    );
+                  }
+
+                  if (isSplit3Active) {
+                    return (
+                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px] grid grid-cols-2 grid-rows-2 gap-1.5 p-2 pt-14 pb-20 bg-[#070b14] opacity-85">
+                        <div className="col-span-2 relative rounded-2xl overflow-hidden border-2 border-rose-500/70 bg-black flex flex-col justify-between p-1.5">
+                          <video
+                            src={getParticipantLiveCameraVideo(presenter)}
+                            onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
+                            autoPlay loop playsInline muted
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <span className="relative z-10 bg-rose-600/90 text-white text-[7.5px] font-black uppercase px-1.5 py-0.2 rounded w-max">
+                            🔴 Anfitrión
+                          </span>
+                          <span className="relative z-10 bg-black/80 text-rose-300 text-[8px] font-bold px-1 py-0.2 rounded w-max truncate max-w-full">
+                            👤 {presenter.name}
+                          </span>
+                        </div>
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/70 bg-black flex flex-col justify-between p-1.5">
+                          <video
+                            src={getParticipantLiveCameraVideo(guest1)}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            autoPlay loop playsInline muted
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <img
+                            src={guest1.avatar}
+                            alt={guest1.name}
+                            className="absolute inset-0 w-full h-full object-cover -z-1"
+                          />
+                          <span className="relative z-10 bg-emerald-600/90 text-white text-[7.5px] font-black uppercase px-1.5 py-0.2 rounded w-max">
+                            🟢 Invitado 1
+                          </span>
+                          <span className="relative z-10 bg-black/80 text-emerald-300 text-[8px] font-bold px-1 py-0.2 rounded w-max truncate max-w-full">
+                            👥 {guest1.name}
+                          </span>
+                        </div>
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-cyan-500/70 bg-black flex flex-col justify-between p-1.5">
+                          <video
+                            src={getParticipantLiveCameraVideo(guest2)}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            autoPlay loop playsInline muted
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <img
+                            src={guest2.avatar}
+                            alt={guest2.name}
+                            className="absolute inset-0 w-full h-full object-cover -z-1"
+                          />
+                          <span className="relative z-10 bg-cyan-600/90 text-white text-[7.5px] font-black uppercase px-1.5 py-0.2 rounded w-max">
+                            🟣 Invitado 2
+                          </span>
+                          <span className="relative z-10 bg-black/80 text-cyan-300 text-[8px] font-bold px-1 py-0.2 rounded w-max truncate max-w-full">
+                            👥 {guest2.name}
+                          </span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#070b14]/70 via-transparent to-[#070b14]/85 pointer-events-none" />
+                      </div>
+                    );
+                  }
+
+                  return isLiveActive ? (
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px]">
+                      {isPresenter && userLiveMediaStream ? (
+                        <LiveUserStreamVideo
+                          stream={userLiveMediaStream}
+                          facingMode={liveCameraFacingMode}
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                      ) : (
+                        <video
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover opacity-50 transition-opacity duration-700"
+                          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#070b14]/80 via-[#070b14]/50 to-[#070b14]/90" />
+                    </div>
+                  ) : null;
+                })()}
                 {/* 🔴 TOP BANNER (z.png): RONDA EN CURSO • REF:X */}
                 <div 
                   className="w-full flex flex-col items-center justify-center text-center pt-0.5 sm:pt-1 relative z-30 pointer-events-auto shrink-0"
-                  onMouseEnter={() => handleMouseEnterRonda(session.id)}
-                  onMouseLeave={handleMouseLeaveRonda}
+                  onMouseEnter={!isSessionInVoting ? () => handleMouseEnterRonda(session.id) : undefined}
+                  onMouseLeave={!isSessionInVoting ? handleMouseLeaveRonda : undefined}
                 >
-                  {/* Red badge with pulsing dot - hover to open channels menu */}
+                  {/* Red badge with pulsing dot - hover to open channels menu (desactivado durante votación) */}
                   <button
                     type="button"
-                    onMouseEnter={() => handleMouseEnterRonda(session.id)}
-                    onMouseLeave={handleMouseLeaveRonda}
+                    onMouseEnter={!isSessionInVoting ? () => handleMouseEnterRonda(session.id) : undefined}
+                    onMouseLeave={!isSessionInVoting ? handleMouseLeaveRonda : undefined}
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleChannelsMenu(session.id);
+                      if (!isSessionInVoting) {
+                        toggleChannelsMenu(session.id);
+                      }
                     }}
-                    className="inline-flex items-center gap-1.5 bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/50 hover:border-rose-400 text-rose-300 px-2.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs cursor-pointer transition-all hover:scale-105 active:scale-95 group/ronda-pill"
-                    title="Pasa el ratón o pulsa para abrir el menú de opciones"
+                    className={`inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs transition-all ${
+                      !isSessionInVoting
+                        ? 'hover:bg-rose-500/35 hover:border-rose-400 cursor-pointer hover:scale-105 active:scale-95 group/ronda-pill'
+                        : 'cursor-default opacity-90'
+                    }`}
+                    title={!isSessionInVoting ? "Pasa el ratón o pulsa para abrir el menú de opciones" : undefined}
                     id={`ronda-en-curso-pill-${session.id}`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
                     <span>{isUserEnrolledInThisRound ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
-                    <span className="text-[7.5px] text-rose-400 opacity-70 group-hover/ronda-pill:opacity-100 transition-transform group-hover/ronda-pill:translate-y-0.5">▼</span>
+                    {!isSessionInVoting && (
+                      <span className="text-[7.5px] text-rose-400 opacity-70 group-hover/ronda-pill:opacity-100 transition-transform group-hover/ronda-pill:translate-y-0.5">▼</span>
+                    )}
                   </button>
 
                   {/* Main Round Title */}

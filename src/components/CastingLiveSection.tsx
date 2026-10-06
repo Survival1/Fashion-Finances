@@ -2750,12 +2750,14 @@ export default function CastingLiveSection({
         const targetFeeStr = localStorage.getItem('finanzas_active_session_fee');
         const targetFee = targetFeeStr ? Number(targetFeeStr) : null;
 
-        const savedSessions = localStorage.getItem('open_finanzas_sessions_list_v43');
+        const savedSessions = localStorage.getItem('open_finanzas_sessions_list_v44') || localStorage.getItem('open_finanzas_sessions_list_v43');
         if (savedSessions) {
           try {
             const parsed = JSON.parse(savedSessions);
             if (Array.isArray(parsed) && parsed.length >= 6) {
-              const cleaned = parsed.map((sess: any, idx: number) => {
+              const cleaned = parsed
+                .filter((sess: any) => sess.id !== 'sess-streetwear-ref-2')
+                .map((sess: any, idx: number) => {
                 const defaultParticipants = (
                   sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
                   sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
@@ -3031,7 +3033,7 @@ export default function CastingLiveSection({
             setTimeout(() => {
               setShowFinanzasRecount(false);
               setShowFinanzasResults(true); // Final results page (zas.png)
-              handleFinishCurrentSessionAndNext();
+              // 🛑 La página de Resultados Finales permanece fija hasta que el usuario pulse 'Cerrar Concurso'
             }, 1200);
             return 10;
           }
@@ -3202,21 +3204,6 @@ export default function CastingLiveSection({
       status: 'active' as const
     },
     {
-      id: 'sess-streetwear-ref-2',
-      reference: 'REF: 2',
-      roundNumber: 2,
-      roundIndex: 1,
-      title: 'Round STREETWEAR & URBAN',
-      brand: 'Estilo moderno, sneakers, denim y cultura street.',
-      category: 'Round STREETWEAR & URBAN',
-      entryFee: 10,
-      presenter: TRABAJADORES_USERS[0],
-      participants: [
-        ...TRABAJADORES_USERS.slice(0, 10)
-      ],
-      status: 'active' as const
-    },
-    {
       id: 'sess-emprendedores-1',
       reference: 'REF: 1',
       roundNumber: 1,
@@ -3307,12 +3294,14 @@ export default function CastingLiveSection({
     status: 'active' | 'completed';
   }>>(() => {
     try {
-      const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
+      const saved = localStorage.getItem('open_finanzas_sessions_list_v44') || localStorage.getItem('open_finanzas_sessions_list_v43');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Strictly ensure user is NOT enrolled by default in unjoined rounds, but PRESERVE joined REF: 2 session
-          const cleaned = parsed.map((sess: any, idx: number) => {
+          // Strictly ensure user is NOT enrolled by default in unjoined rounds, and filter out any default REF: 2 session
+          const cleaned = parsed
+            .filter((sess: any) => sess.id !== 'sess-streetwear-ref-2')
+            .map((sess: any, idx: number) => {
             const isUserEnrolledInThis = Boolean(
               typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${sess.id}`) === 'true'
             );
@@ -3366,10 +3355,6 @@ export default function CastingLiveSection({
       const savedIdx = localStorage.getItem('finanzas_active_session_index');
       if (savedIdx !== null && !isNaN(Number(savedIdx))) {
         return Number(savedIdx);
-      }
-      const targetId = localStorage.getItem('finanzas_target_session_id');
-      if (targetId === 'sess-streetwear-ref-2') {
-        return 1;
       }
     } catch (e) {}
     return 0;
@@ -3948,15 +3933,14 @@ export default function CastingLiveSection({
     localStorage.removeItem('came_from_finanzas');
 
     // Identify target session
-    const targetSessionId = localStorage.getItem('finanzas_target_session_id') || 'sess-streetwear-ref-2';
-    const activeSess = (targetSessionId ? openFinanzasSessions.find(s => s.id === targetSessionId) : null) || 
-      activeSessionsOnly.find(s => s.id === targetSessionId) ||
-      (targetSessionId === 'sess-streetwear-ref-2' ? activeSessionsOnly[1] : null) ||
+    const targetSessionId = localStorage.getItem('finanzas_target_session_id');
+    const activeSess = (targetSessionId && targetSessionId !== 'sess-streetwear-ref-2' ? openFinanzasSessions.find(s => s.id === targetSessionId) : null) || 
+      activeSessionsOnly.find(s => s.id === targetSessionId && s.id !== 'sess-streetwear-ref-2') ||
       activeSessionsOnly[activeFinanzasSessionIndex] || 
       currentFinanzasSession || 
       openFinanzasSessions[0];
 
-    const sessionStartKey = `finanzas_active_session_start_${activeSess?.id || 'sess-streetwear-ref-2'}`;
+    const sessionStartKey = `finanzas_active_session_start_${activeSess?.id || 'sess-trabajadores-1'}`;
     localStorage.setItem(sessionStartKey, String(Date.now()));
 
     const myId = userProfile?.id || "user-adriana";
@@ -3994,7 +3978,7 @@ export default function CastingLiveSection({
       sessionParticipants = copy.slice(0, 10);
     }
 
-    const enrolledId = targetSessionId || activeSess?.id || 'sess-streetwear-ref-2';
+    const enrolledId = (targetSessionId && targetSessionId !== 'sess-streetwear-ref-2') || activeSess?.id || 'sess-trabajadores-1';
     setJoinedPresenterIds(sessionParticipants.map((p: any) => p.id));
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
@@ -4053,12 +4037,10 @@ export default function CastingLiveSection({
       });
     }
 
-    // Explicitly guarantee active session index points to the enrolled round (index 1 for REF: 2)
+    // Explicitly guarantee active session index points to the enrolled round
     const targetIdx = activeSessionsOnly.findIndex(s => s.id === enrolledId);
     if (targetIdx !== -1) {
       setActiveFinanzasSessionIndex(targetIdx);
-    } else if (enrolledId === 'sess-streetwear-ref-2') {
-      setActiveFinanzasSessionIndex(1);
     }
 
     setFinanzasTimerActive({
@@ -4756,32 +4738,45 @@ export default function CastingLiveSection({
   };
 
   const handleToggleScreenShare = async () => {
-    if (isScreenSharingActive) {
-      if (screenShareStream) {
-        try {
-          screenShareStream.getTracks().forEach(track => track.stop());
-        } catch (e) {}
-        setScreenShareStream(null);
+    if (selectedCategoryFilter === 'Finanzas') {
+      const isPresenter = Boolean(
+        sessionCurrentActiveUser?.isSelf ||
+        sessionCurrentActiveUser?.id === 'user-adriana' ||
+        sessionCurrentActiveUser?.id === userProfile?.id ||
+        sessionCurrentActiveUser?.name?.includes('Adriana')
+      );
+      const isExpositionPhase = !isVotingPhaseActive && !showFinanzasResults && !showFinanzasRecount;
+      if (!isPresenter || !isExpositionPhase) {
+        alert('⚠️ La opción del botón dividir pantalla solo funciona y puede decidirlo la persona que está dando su exposición de 5 minutos en el momento.');
+        return;
       }
-      setIsScreenSharingActive(false);
-      setScreenSplitLayout('single');
-      setShowScreenShareMenu(false);
-      alert('🖥️ Compartición de pantalla finalizada.');
-    } else {
-      setShowScreenShareMenu(prev => !prev);
     }
+    // Al hacer click en Pantalla / Pantalla ON, abrir directamente el modal de Distribución de Pantalla
+    setShowScreenShareMenu(true);
   };
 
   const renderScreenShareOptionsModal = () => {
     if (!showScreenShareMenu) return null;
-    const activeInvitedList = FINANZAS_USERS.filter(u => invitedUsersMap[u.id]);
+
+    // Available users pool combining finanzas, trabajadores, and current session participants (excluding self)
+    const allAvailableUsers = [
+      ...FINANZAS_USERS,
+      ...(currentFinanzasSession?.participants || []).filter(
+        cp => !FINANZAS_USERS.some(fu => fu.id === cp.id || fu.name === cp.name)
+      ),
+      ...TRABAJADORES_USERS.filter(
+        tu => !FINANZAS_USERS.some(fu => fu.id === tu.id || fu.name === tu.name)
+      )
+    ].filter(u => !u.name?.includes('(Tú)') && u.id !== userProfile?.id && u.id !== 'user-adriana');
+
+    const activeInvitedList = allAvailableUsers.filter(u => invitedUsersMap[u.id]);
     const invitedCount = activeInvitedList.length;
 
-    const handleToggleGuest = (user: typeof FINANZAS_USERS[0]) => {
+    const handleToggleGuest = (user: { id: string; name: string; avatar: string; role?: string }) => {
       const isCurrentlyInvited = Boolean(invitedUsersMap[user.id]);
       if (!isCurrentlyInvited) {
         if (invitedCount >= 2) {
-          alert('⚠️ Límite alcanzado: Solo puedes elegir hasta dos invitados. Desmarca uno para añadir a otro.');
+          alert('⚠️ Límite alcanzado: Solo puedes compartir la pantalla con hasta dos usuarios.');
           return;
         }
         const newCount = invitedCount + 1;
@@ -4790,10 +4785,8 @@ export default function CastingLiveSection({
         setActiveScreenSharer('host');
         if (newCount === 1) {
           setScreenSplitLayout('50-50');
-          alert(`👥 ¡Has elegido a ${user.name}! La pantalla se ha dividido en dos.`);
         } else if (newCount === 2) {
           setScreenSplitLayout('grid-3');
-          alert(`👥 ¡Has elegido a ${user.name}! La pantalla se ha dividido en tres con tus dos invitados.`);
         }
       } else {
         const newCount = invitedCount - 1;
@@ -4801,14 +4794,27 @@ export default function CastingLiveSection({
         if (newCount === 1) {
           setScreenSplitLayout('50-50');
           setIsScreenSharingActive(true);
-          alert(`🔄 Se ha retirado a ${user.name}. La pantalla se mantiene dividida en dos con el invitado restante.`);
         } else {
           setScreenSplitLayout('single');
           setIsScreenSharingActive(false);
-          alert(`🔄 Se ha retirado a ${user.name}. Pantalla completa restablecida.`);
         }
       }
     };
+
+    // Filtered users for real-time search
+    const filteredUsers = allAvailableUsers.filter(user => {
+      if (!inviteSearchQueryInScreenModal.trim()) return true;
+      const q = inviteSearchQueryInScreenModal.toLowerCase().trim();
+      return (
+        user.name.toLowerCase().includes(q) ||
+        (user.role && user.role.toLowerCase().includes(q)) ||
+        ((user as any).username && (user as any).username.toLowerCase().includes(q))
+      );
+    });
+
+    const isOptionSinCompartirActive = invitedCount === 0 && (!isScreenSharingActive || screenSplitLayout === 'single');
+    const isOption1UsuarioActive = isScreenSharingActive && (screenSplitLayout === '50-50' || invitedCount === 1);
+    const isOption2UsuariosActive = isScreenSharingActive && (screenSplitLayout === 'grid-3' || invitedCount === 2);
 
     return (
       <div 
@@ -4827,7 +4833,7 @@ export default function CastingLiveSection({
                 Distribución de Pantalla
               </h4>
               <span className="text-[11px] sm:text-xs text-indigo-700 font-bold block truncate mt-0.5">
-                Elige entre 10 ventanas en 2 columnas o pantalla completa
+                Sin compartir (por defecto), compartir con 1 usuario o con 2
               </span>
             </div>
           </div>
@@ -4844,42 +4850,15 @@ export default function CastingLiveSection({
 
         {/* 2. Scrollable Body in full size */}
         <div className="flex-1 overflow-y-auto min-h-0 space-y-4 py-2.5 pr-1 custom-scrollbar">
-          {/* Opciones directas de Pantalla: 10 Ventanas, Pantalla Completa, Dividida en 2 y Dividida en 3 */}
+          {/* Tres opciones únicas: 1. Sin compartir (por defecto), 2. Compartir con 1 usuario, 3. Compartir con 2 usuarios */}
           <div className="space-y-1.5">
-            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-2.5">
-              {/* 1. Botón para dividir la pantalla en 10 ventanas */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+              
+              {/* Opción 1: Sin compartir (Por defecto) */}
               <button
                 type="button"
                 onClick={() => {
-                  setScreenSplitLayout('grid-10');
-                  setScreenShareMode('window');
-                  setIsScreenSharingActive(true);
-                  setActiveScreenSharer('host');
-                  setShowScreenShareMenu(false);
-                }}
-                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                  isScreenSharingActive && screenSplitLayout === 'grid-10'
-                    ? 'bg-purple-50/90 border-purple-600 text-purple-950 font-black ring-2 ring-purple-400 shadow-md'
-                    : 'bg-white hover:bg-purple-50/60 border-slate-200 hover:border-purple-300 text-slate-900 font-bold shadow-2xs'
-                }`}
-                id="btn-split-10-windows"
-              >
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-xl sm:text-2xl">👥</span>
-                  {isScreenSharingActive && screenSplitLayout === 'grid-10' && (
-                    <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
-                  )}
-                </div>
-                <div>
-                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">10 Ventanas</span>
-                  <span className="text-[10px] sm:text-[11px] text-purple-700 font-bold block leading-snug mt-0.5">2 cols en horizontal</span>
-                </div>
-              </button>
-
-              {/* 2. Botón para ponerla en pantalla completa */}
-              <button
-                type="button"
-                onClick={() => {
+                  setInvitedUsersMap({});
                   setScreenSplitLayout('single');
                   setIsScreenSharingActive(false);
                   setActiveScreenSharer('host');
@@ -4889,97 +4868,145 @@ export default function CastingLiveSection({
                     } catch (e) {}
                     setScreenShareStream(null);
                   }
-                  setShowScreenShareMenu(false);
-                  try {
-                    const videoElem = document.getElementById('main-live-video-player') || document.documentElement;
-                    if (videoElem && !document.fullscreenElement) {
-                      videoElem.requestFullscreen?.().catch(() => {});
-                    }
-                  } catch (e) {}
                 }}
-                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                  screenSplitLayout === 'single' && !isScreenSharingActive
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-2 active:scale-95 min-h-[96px] sm:min-h-[105px] overflow-hidden relative box-border w-full ${
+                  isOptionSinCompartirActive
                     ? 'bg-indigo-50/90 border-indigo-600 text-indigo-950 font-black ring-2 ring-indigo-400 shadow-md'
                     : 'bg-white hover:bg-indigo-50/60 border-slate-200 hover:border-indigo-300 text-slate-900 font-bold shadow-2xs'
                 }`}
-                id="btn-full-screen"
+                id="btn-option-sin-compartir"
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-xl sm:text-2xl">🖥️</span>
-                  {screenSplitLayout === 'single' && !isScreenSharingActive && (
-                    <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
-                  )}
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="text-xl sm:text-2xl leading-none">🖥️</span>
+                    <span className="text-[7.5px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 leading-none">
+                      Por defecto
+                    </span>
+                  </div>
+                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 mr-0.5 ${
+                    isOptionSinCompartirActive
+                      ? 'border-indigo-600 bg-indigo-50'
+                      : 'border-slate-300 bg-white'
+                  }`}>
+                    {isOptionSinCompartirActive && (
+                      <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                    )}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Pantalla Completa</span>
-                  <span className="text-[10px] sm:text-[11px] text-indigo-700 font-bold block leading-snug mt-0.5">Modo único</span>
+                <div className="w-full">
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight break-words">
+                    Sin compartir
+                  </span>
+                  <span className="text-[9.5px] sm:text-[10.5px] text-indigo-700 font-bold block leading-snug mt-0.5 break-words">
+                    Pantalla completa (modo individual)
+                  </span>
                 </div>
               </button>
 
-              {/* 3. Botón para dividir en dos (1 invitado) */}
+              {/* Opción 2: Compartir con 1 usuario */}
               <button
                 type="button"
                 onClick={() => {
                   if (invitedCount === 0) {
-                    const firstUser = FINANZAS_USERS[0];
-                    setInvitedUsersMap({ [firstUser.id]: true });
-                    alert(`👥 Se ha seleccionado a ${firstUser.name} como invitado. ¡Pantalla dividida en dos!`);
+                    const firstUser = allAvailableUsers[0] || FINANZAS_USERS[0];
+                    if (firstUser) {
+                      setInvitedUsersMap({ [firstUser.id]: true });
+                    }
+                  } else if (invitedCount > 1) {
+                    const firstActiveId = Object.keys(invitedUsersMap).find(k => invitedUsersMap[k]);
+                    if (firstActiveId) {
+                      setInvitedUsersMap({ [firstActiveId]: true });
+                    }
                   }
                   setScreenSplitLayout('50-50');
                   setIsScreenSharingActive(true);
                   setActiveScreenSharer('host');
-                  setShowScreenShareMenu(false);
                 }}
-                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                  screenSplitLayout === '50-50'
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-2 active:scale-95 min-h-[96px] sm:min-h-[105px] overflow-hidden relative box-border w-full ${
+                  isOption1UsuarioActive
                     ? 'bg-emerald-50/90 border-emerald-600 text-emerald-950 font-black ring-2 ring-emerald-400 shadow-md'
                     : 'bg-white hover:bg-emerald-50/60 border-slate-200 hover:border-emerald-300 text-slate-900 font-bold shadow-2xs'
                 }`}
-                id="btn-split-2-screens"
+                id="btn-option-compartir-1-usuario"
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-xl sm:text-2xl">🌓</span>
-                  {screenSplitLayout === '50-50' && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
-                  )}
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="text-xl sm:text-2xl leading-none">🌓</span>
+                    <span className="text-[7.5px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 leading-none">
+                      50 / 50
+                    </span>
+                  </div>
+                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 mr-0.5 ${
+                    isOption1UsuarioActive
+                      ? 'border-emerald-600 bg-emerald-50'
+                      : 'border-slate-300 bg-white'
+                  }`}>
+                    {isOption1UsuarioActive && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                    )}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Dividida en 2</span>
-                  <span className="text-[10px] sm:text-[11px] text-emerald-700 font-bold block leading-snug mt-0.5">1 Invitado (50/50)</span>
+                <div className="w-full">
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight break-words">
+                    Compartir con 1 usuario
+                  </span>
+                  <span className="text-[9.5px] sm:text-[10.5px] text-emerald-700 font-bold block leading-snug mt-0.5 break-words">
+                    Dividida en 2 (50/50)
+                  </span>
                 </div>
               </button>
 
-              {/* 4. Botón para dividir en tres (2 invitados) */}
+              {/* Opción 3: Compartir con 2 usuarios */}
               <button
                 type="button"
                 onClick={() => {
                   if (invitedCount < 2) {
-                    const u1 = FINANZAS_USERS[0];
-                    const u2 = FINANZAS_USERS[1];
-                    setInvitedUsersMap({ [u1.id]: true, [u2.id]: true });
-                    alert(`👥 Se ha seleccionado a ${u1.name} y ${u2.name}. ¡Pantalla dividida en tres!`);
+                    const newMap = { ...invitedUsersMap };
+                    let count = Object.keys(newMap).filter(k => newMap[k]).length;
+                    for (const u of allAvailableUsers) {
+                      if (!newMap[u.id]) {
+                        newMap[u.id] = true;
+                        count++;
+                        if (count >= 2) break;
+                      }
+                    }
+                    setInvitedUsersMap(newMap);
                   }
                   setScreenSplitLayout('grid-3');
                   setIsScreenSharingActive(true);
                   setActiveScreenSharer('host');
-                  setShowScreenShareMenu(false);
                 }}
-                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-1 active:scale-95 min-h-[95px] sm:min-h-[110px] ${
-                  screenSplitLayout === 'grid-3'
+                className={`p-2.5 sm:p-3 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-2 active:scale-95 min-h-[96px] sm:min-h-[105px] overflow-hidden relative box-border w-full ${
+                  isOption2UsuariosActive
                     ? 'bg-cyan-50/90 border-cyan-600 text-cyan-950 font-black ring-2 ring-cyan-400 shadow-md'
                     : 'bg-white hover:bg-cyan-50/60 border-slate-200 hover:border-cyan-300 text-slate-900 font-bold shadow-2xs'
                 }`}
-                id="btn-split-3-screens"
+                id="btn-option-compartir-2-usuarios"
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-xl sm:text-2xl">📐</span>
-                  {screenSplitLayout === 'grid-3' && (
-                    <span className="w-2 h-2 rounded-full bg-cyan-600 animate-ping" />
-                  )}
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="text-xl sm:text-2xl leading-none">📐</span>
+                    <span className="text-[7.5px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-700 border border-cyan-200 leading-none">
+                      Trío
+                    </span>
+                  </div>
+                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 mr-0.5 ${
+                    isOption2UsuariosActive
+                      ? 'border-cyan-600 bg-cyan-50'
+                      : 'border-slate-300 bg-white'
+                  }`}>
+                    {isOption2UsuariosActive && (
+                      <span className="w-2 h-2 rounded-full bg-cyan-600" />
+                    )}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight">Dividida en 3</span>
-                  <span className="text-[10px] sm:text-[11px] text-cyan-700 font-bold block leading-snug mt-0.5">2 Invitados</span>
+                <div className="w-full">
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 block leading-tight break-words">
+                    Compartir con 2 usuarios
+                  </span>
+                  <span className="text-[9.5px] sm:text-[10.5px] text-cyan-700 font-bold block leading-snug mt-0.5 break-words">
+                    Dividida en 3 (2 invitados)
+                  </span>
                 </div>
               </button>
             </div>
@@ -5011,45 +5038,50 @@ export default function CastingLiveSection({
               </span>
             </div>
 
-            {/* Chips de invitados activos actualmente con opción de quitar rápida */}
+            {/* Chips de invitados activos actualmente con opción de quitar rápida (Botones más grandes acorde a z.png) */}
             {invitedCount > 0 && (
-              <div className="bg-indigo-50/80 border border-indigo-200 rounded-xl p-2.5 flex items-center justify-between gap-2 flex-wrap animate-fade-in">
-                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                  <span className="text-[10.5px] font-black text-indigo-900">
+              <div className="bg-indigo-50/80 border border-indigo-200 rounded-2xl p-3 sm:p-3.5 space-y-3 animate-fade-in shadow-2xs">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs sm:text-[13px] font-black text-indigo-950 flex items-center gap-1.5">
                     {invitedCount === 1 ? '📺 En pantalla dividida en 2:' : '📺 En pantalla dividida en 3:'}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvitedUsersMap({});
+                      setScreenSplitLayout('single');
+                      setIsScreenSharingActive(false);
+                    }}
+                    className="px-4 py-2 sm:px-4.5 sm:py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 border-2 border-rose-200 hover:border-rose-400 font-black text-xs sm:text-[13px] uppercase tracking-wider transition cursor-pointer shadow-xs active:scale-95 flex items-center gap-2 ml-auto"
+                    id="btn-limpiar-todos-invitados"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>Limpiar todos</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap min-w-0">
                   {activeInvitedList.map((invUser, idx) => (
-                    <span
+                    <div
                       key={invUser.id}
-                      className="inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 text-[10.5px] font-black text-indigo-950 shadow-2xs"
+                      className="inline-flex items-center gap-2.5 bg-white px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-indigo-200/90 text-xs sm:text-sm font-black text-slate-900 shadow-xs"
                     >
-                      <img src={invUser.avatar} className="w-4 h-4 rounded-full object-cover shrink-0" alt={invUser.name} />
-                      <span className="truncate max-w-[100px]">{invUser.name}</span>
-                      <span className="text-[8.5px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-extrabold">
+                      <img src={invUser.avatar} className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0 border border-indigo-100" alt={invUser.name} />
+                      <span className="truncate max-w-[120px]">{invUser.name}</span>
+                      <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-extrabold shrink-0">
                         {idx === 0 ? 'Inv 1' : 'Inv 2'}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleToggleGuest(invUser)}
-                        className="text-slate-400 hover:text-rose-600 font-black ml-0.5 cursor-pointer text-xs"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-600 flex items-center justify-center transition cursor-pointer shrink-0 border border-rose-200 hover:border-rose-500 shadow-2xs active:scale-90 ml-0.5"
                         title={`Quitar a ${invUser.name}`}
                       >
-                        ✕
+                        <X className="w-4 h-4 stroke-[2.5]" />
                       </button>
-                    </span>
+                    </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInvitedUsersMap({});
-                    setScreenSplitLayout('single');
-                    setIsScreenSharingActive(false);
-                  }}
-                  className="text-[10px] text-rose-600 hover:text-rose-800 font-extrabold underline shrink-0 cursor-pointer ml-auto"
-                >
-                  Limpiar todos
-                </button>
               </div>
             )}
 
@@ -5077,14 +5109,24 @@ export default function CastingLiveSection({
             </div>
 
             {/* Lista de usuarios con botón de invitar a la presentación */}
-            <div className="space-y-2 pr-1">
-              {FINANZAS_USERS
-                .filter(user => {
-                  if (!inviteSearchQueryInScreenModal) return true;
-                  const q = inviteSearchQueryInScreenModal.toLowerCase();
-                  return user.name.toLowerCase().includes(q) || (user.role && user.role.toLowerCase().includes(q));
-                })
-                .map((user) => {
+            {filteredUsers.length === 0 ? (
+              <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                  <Search className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-bold text-slate-700">No se encontraron usuarios para "{inviteSearchQueryInScreenModal}"</p>
+                <p className="text-[11px] text-slate-400">Prueba con otro nombre, usuario o especialidad.</p>
+                <button
+                  type="button"
+                  onClick={() => setInviteSearchQueryInScreenModal('')}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                >
+                  Limpiar búsqueda
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 pr-1">
+                {filteredUsers.map((user) => {
                   const isInvited = Boolean(invitedUsersMap[user.id]);
                   const userIndexInActive = activeInvitedList.findIndex(u => u.id === user.id);
                   const isMaxReached = invitedCount >= 2 && !isInvited;
@@ -5163,7 +5205,8 @@ export default function CastingLiveSection({
                     </div>
                   );
                 })}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -5190,7 +5233,51 @@ export default function CastingLiveSection({
           )}
           <button
             type="button"
-            onClick={() => setShowScreenShareMenu(false)}
+            onClick={() => {
+              if (screenSplitLayout === '50-50' || invitedCount === 1) {
+                setScreenSplitLayout('50-50');
+                setIsScreenSharingActive(true);
+                setActiveScreenSharer('host');
+                if (invitedCount === 0) {
+                  const firstUser = allAvailableUsers[0] || FINANZAS_USERS[0];
+                  if (firstUser) {
+                    setInvitedUsersMap({ [firstUser.id]: true });
+                  }
+                }
+              } else if (screenSplitLayout === 'grid-3' || invitedCount >= 2) {
+                setScreenSplitLayout('grid-3');
+                setIsScreenSharingActive(true);
+                setActiveScreenSharer('host');
+                if (invitedCount < 2) {
+                  const newMap = { ...invitedUsersMap };
+                  let count = Object.keys(newMap).filter(k => newMap[k]).length;
+                  for (const u of allAvailableUsers) {
+                    if (!newMap[u.id]) {
+                      newMap[u.id] = true;
+                      count++;
+                      if (count >= 2) break;
+                    }
+                  }
+                  setInvitedUsersMap(newMap);
+                }
+              } else {
+                setScreenSplitLayout('single');
+                setIsScreenSharingActive(false);
+                setInvitedUsersMap({});
+              }
+              setIsWatchingPresenterCamera(true);
+              setIsPresenterCameraFullscreen(true);
+              setShowScreenShareMenu(false);
+              window.dispatchEvent(new CustomEvent('open-shared-screen-live', {
+                detail: {
+                  layout: (screenSplitLayout === '50-50' || invitedCount === 1)
+                    ? '50-50'
+                    : (screenSplitLayout === 'grid-3' || invitedCount >= 2)
+                    ? 'grid-3'
+                    : 'single'
+                }
+              }));
+            }}
             className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95 text-center"
             id="btn-done-screen-share"
           >
@@ -5958,14 +6045,6 @@ export default function CastingLiveSection({
         p => p.id === selectedFinanzasUser.id || p.name === selectedFinanzasUser.name
       );
       if (matched) return matched;
-    }
-
-    // 2.b In trabajadores / 10€ round, Adriana Lima is the default presenter giving her exposition in Turn 10 of 10
-    if (currentFinanzasSession?.id === 'sess-trabajadores-1' || currentFinanzasSession?.entryFee === 10) {
-      const adriana = currentSessionParticipants10.find(
-        p => p.id === 'user-adriana' || p.id === userProfile?.id || p.name?.includes('Adriana') || p.isSelf
-      );
-      if (adriana) return adriana;
     }
 
     // 3. Check presenting item in presentation queue
@@ -11607,6 +11686,20 @@ export default function CastingLiveSection({
                     <button
                       type="button"
                       onClick={() => {
+                        if (selectedCategoryFilter === 'Finanzas') {
+                          const isPresenter = Boolean(
+                            sessionCurrentActiveUser?.isSelf ||
+                            sessionCurrentActiveUser?.id === 'user-adriana' ||
+                            sessionCurrentActiveUser?.id === userProfile?.id ||
+                            sessionCurrentActiveUser?.name?.includes('Adriana')
+                          );
+                          const isExpositionPhase = !isVotingPhaseActive && !showFinanzasResults && !showFinanzasRecount;
+                          if (!isPresenter || !isExpositionPhase) {
+                            alert('⚠️ El botón Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación.');
+                            return;
+                          }
+                          handleToggleUserCameraLiveBroadcast();
+                        }
                         setIsBroadcastCamOn(!isBroadcastCamOn);
                         alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
                       }}
@@ -13441,39 +13534,25 @@ export default function CastingLiveSection({
                 setShowFinanzasRecount(false);
                 setShowFinanzasResults(false);
 
-                // 🎯 Redirigir directamente a la página de la captura z.png (REF: 1 con Marina Serrano)
-                const ref1Session = activeSessionsOnly.find(s => s.id === 'sess-trabajadores-1' || s.reference === 'REF: 1') || activeSessionsOnly[0];
-                const activeSessionId = ref1Session?.id || 'sess-trabajadores-1';
-                
-                setIsVotingPhaseActive(false);
+                // 🎯 Redirigir a la página de la imagen.png donde los participantes están en la cuenta atrás de 10 minutos para votar
+                setIsVotingPhaseActive(true);
+                const curSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0];
+                const activeSessionId = curSession?.id || 'sess-trabajadores-1';
                 try {
-                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'false');
-                  localStorage.removeItem(`finanzas_is_voting_phase_active_${activeSessionId}`);
-                  localStorage.removeItem('finanzas_is_voting_phase_active');
-                  localStorage.setItem(`finanzas_active_session_start_${activeSessionId}`, String(Date.now() - 41 * 1000));
+                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+                  localStorage.setItem('finanzas_is_voting_phase_active', 'true');
                 } catch (err) {}
 
-                // Asegurar que Marina Serrano esté seleccionada como presentadora del Turno 10 de 10 (z.png)
-                const marinaSerrano = {
-                  id: 'trab-10',
-                  name: 'Marina Serrano',
-                  role: 'PATRONISTA SOSTENIBLE',
-                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                  username: 'marina_serrano_mod'
-                };
-                if (setSelectedFinanzasUser) setSelectedFinanzasUser(marinaSerrano);
-
-                // Despachar evento para sincronizar TikTokFinanzasFeed hacia la vista de z.png
-                window.dispatchEvent(new CustomEvent('exit-voting-to-z-page', {
+                // Despachar evento para sincronizar hacia la cuenta atrás de 10 minutos (image.png)
+                window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
                   detail: {
-                    sessionId: activeSessionId,
-                    targetRef: 'REF: 1'
+                    sessionId: activeSessionId
                   }
                 }));
               }}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 shadow-xs pointer-events-auto"
-              title="Cerrar ventana y volver a la página de la ronda REF: 1 (z.png)"
-              aria-label="Cerrar ventana y volver a la página de la ronda REF: 1 (z.png)"
+              title="Cerrar ventana y volver a la cuenta atrás de 10 minutos para votar (image.png)"
+              aria-label="Cerrar ventana y volver a la cuenta atrás de 10 minutos para votar (image.png)"
               id="btn-close-voting-projects-modal"
             >
               <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
@@ -13946,7 +14025,7 @@ export default function CastingLiveSection({
               className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] px-3 py-1.5 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-1.5 border border-rose-500/40 active:scale-95"
             >
               <span>🛑</span>
-              <span>Sesión Finalizada</span>
+              <span>Cerrar Concurso</span>
             </button>
             <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Directo Finalizado
@@ -14046,8 +14125,15 @@ export default function CastingLiveSection({
         id="voting-projects-modal-backdrop"
         onClick={() => {
           setShowVotingProjectsModal(false);
-          window.dispatchEvent(new CustomEvent('exit-voting-to-z-page', {
-            detail: { sessionId: 'sess-trabajadores-1', targetRef: 'REF: 1' }
+          setIsVotingPhaseActive(true);
+          const curSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0];
+          const activeSessionId = curSession?.id || 'sess-trabajadores-1';
+          try {
+            localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+            localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+          } catch (err) {}
+          window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
+            detail: { sessionId: activeSessionId }
           }));
         }}
       >
@@ -26208,6 +26294,8 @@ try {
                   enlargedWindowUser={enlargedWindowUser}
                   setEnlargedWindowUser={setEnlargedWindowUser}
                   renderEnlargedParticipantWindow={renderEnlargedParticipantWindow}
+                  screenSplitLayout={screenSplitLayout}
+                  invitedUsersMap={invitedUsersMap}
                 />
               ) : (
                 <div 
@@ -26532,6 +26620,20 @@ try {
                       <button
                         type="button"
                         onClick={() => {
+                          if (selectedCategoryFilter === 'Finanzas') {
+                            const isPresenter = Boolean(
+                              sessionCurrentActiveUser?.isSelf ||
+                              sessionCurrentActiveUser?.id === 'user-adriana' ||
+                              sessionCurrentActiveUser?.id === userProfile?.id ||
+                              sessionCurrentActiveUser?.name?.includes('Adriana')
+                            );
+                            const isExpositionPhase = !isVotingPhaseActive && !showFinanzasResults && !showFinanzasRecount;
+                            if (!isPresenter || !isExpositionPhase) {
+                              alert('⚠️ El botón Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación.');
+                              return;
+                            }
+                            handleToggleUserCameraLiveBroadcast();
+                          }
                           setIsBroadcastCamOn(!isBroadcastCamOn);
                           alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
                         }}
@@ -30523,7 +30625,8 @@ try {
 
                     {/* Layout Renderers */}
                     {screenSplitLayout === '50-50' && (() => {
-                      const activeInvitedList = FINANZAS_USERS.filter(u => invitedUsersMap[u.id]);
+                      const allPool = [...FINANZAS_USERS, ...TRABAJADORES_USERS];
+                      const activeInvitedList = allPool.filter(u => invitedUsersMap[u.id]);
                       const guest1 = activeInvitedList[0] || {
                         name: 'Isabela Dubois',
                         role: 'Co-Presentadora',
@@ -30670,7 +30773,8 @@ try {
                     )}
 
                     {screenSplitLayout === 'grid-3' && (() => {
-                      const activeInvitedList = FINANZAS_USERS.filter(u => invitedUsersMap[u.id]);
+                      const allPool = [...FINANZAS_USERS, ...TRABAJADORES_USERS];
+                      const activeInvitedList = allPool.filter(u => invitedUsersMap[u.id]);
                       const guest1 = activeInvitedList[0] || {
                         name: 'Isabela Dubois',
                         role: 'Co-Presentadora',
@@ -34214,12 +34318,10 @@ try {
         onComplete={handleGatheringComplete}
         onClose={() => {
           setShowParticipantsGatheringModal(false);
-          const enrolledId = localStorage.getItem('finanzas_target_session_id') || 'sess-streetwear-ref-2';
+          const enrolledId = localStorage.getItem('finanzas_target_session_id') || 'sess-trabajadores-1';
           const targetIdx = activeSessionsOnly.findIndex(s => s.id === enrolledId);
           if (targetIdx !== -1) {
             setActiveFinanzasSessionIndex(targetIdx);
-          } else if (enrolledId === 'sess-streetwear-ref-2') {
-            setActiveFinanzasSessionIndex(1);
           }
         }}
       />

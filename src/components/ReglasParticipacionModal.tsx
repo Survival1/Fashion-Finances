@@ -245,7 +245,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                 {[
                   {
                     name: 'Round Streetwear & Urban',
-                    ref: 'REF: 1 / REF: 2',
+                    ref: 'REF: 1',
                     fee: '10,00 €',
                     pool: '100,00 €',
                     desc: 'Sneakers, denim sostenible, upcycling y marcas emergentes de moda urbana.',

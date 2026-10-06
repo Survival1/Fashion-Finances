@@ -2166,7 +2166,7 @@ export default function SessionResultsPodium({
                setIsCastingPublished(false);
              }
              try {
-               window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next' } }));
+               window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next', force: true } }));
              } catch (e) {}
            }}
            className="px-5 py-2.5 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 text-black border border-pink-250 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-md"

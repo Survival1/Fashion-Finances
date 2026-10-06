@@ -278,20 +278,20 @@ export default function ProjectForm({
   };
 
   return (
-    <div className="bg-[#00BFFF] rounded-3xl border border-[#009cd9] p-6 sm:p-8 space-y-8 shadow-xl text-left relative overflow-hidden" id="premium-project-form-container">
+    <div className="bg-[#B9E2FC] rounded-3xl border border-[#9fd3f2] p-6 sm:p-8 space-y-8 shadow-xl text-left relative overflow-hidden" id="premium-project-form-container">
       
       {/* Visual background accents */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-white/15 rounded-full blur-3xl -z-0 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-300/20 rounded-full blur-3xl -z-0 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-white/40 rounded-full blur-3xl -z-0 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-200/50 rounded-full blur-3xl -z-0 pointer-events-none" />
 
       {/* Elegant Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-white/25 relative z-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-sky-300/60 relative z-10">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-white/20 text-white rounded-2xl shadow-sm backdrop-blur-md border border-white/30">
+          <div className="p-3 bg-white text-[#0284c7] rounded-2xl shadow-sm backdrop-blur-md border border-white/80">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-black font-display text-white tracking-tight drop-shadow-sm">Portal de Registro de Proyectos</h2>
+            <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 tracking-tight drop-shadow-xs">Portal de Registro de Proyectos</h2>
           </div>
         </div>
 
@@ -301,15 +301,15 @@ export default function ProjectForm({
             <button
               type="button"
               onClick={() => onNavigateToTab('saved_projects')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-[#0077b6] hover:text-[#005f92] border border-white/80 rounded-xl font-bold transition-all active:scale-95 cursor-pointer font-sans text-xs shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-[#0284c7] hover:text-[#0369a1] border border-white/80 rounded-xl font-bold transition-all active:scale-95 cursor-pointer font-sans text-xs shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver a Proyectos Guardados</span>
             </button>
           )}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-xl border border-white/30 backdrop-blur-sm text-white">
-            <Lock className="w-3.5 h-3.5 text-white/90" />
-            <span className="text-[10px] font-bold text-white uppercase font-mono tracking-wider">Cifrado de Seguridad SSL</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/85 rounded-xl border border-white/80 backdrop-blur-sm text-slate-800 shadow-2xs">
+            <Lock className="w-3.5 h-3.5 text-sky-600" />
+            <span className="text-[10px] font-bold text-slate-700 uppercase font-mono tracking-wider">Cifrado de Seguridad SSL</span>
           </div>
         </div>
       </div>
@@ -336,8 +336,8 @@ export default function ProjectForm({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
           
           {/* STEPPER NAVIGATION SIDEBAR */}
-          <div className="lg:col-span-3 space-y-2 lg:border-r lg:border-white/25 lg:pr-6" id="form-stepper-sidebar">
-            <span className="text-[9px] font-extrabold text-white/95 uppercase tracking-widest block mb-4 drop-shadow-xs">
+          <div className="lg:col-span-3 space-y-2 lg:border-r lg:border-sky-300/60 lg:pr-6" id="form-stepper-sidebar">
+            <span className="text-[9px] font-extrabold text-slate-700 uppercase tracking-widest block mb-4">
               Progreso de Calificación
             </span>
 
@@ -388,85 +388,10 @@ export default function ProjectForm({
               </div>
               {teamMembers.length > 0 && <Check className="w-3.5 h-3.5 text-emerald-500" />}
             </button>
-
-            {/* Active Project Card if loaded */}
-            {userProjects.length > 0 && (
-              <div className="mt-8 p-4 bg-white/95 border border-white/80 rounded-2xl space-y-2 shadow-sm">
-                <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase tracking-wider inline-block">
-                  {userProjects.length === 1 ? '✓ Registrado' : `✓ ${userProjects.length} Registrados`}
-                </span>
-                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                  {userProjects.map((p) => (
-                    <p key={p.id} className="text-xs font-bold text-slate-800 line-clamp-1 flex items-center gap-1.5" title={p.title}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="truncate">{p.title}</span>
-                    </p>
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-600 leading-relaxed block">
-                  {userProjects.length === 1 
-                    ? 'Ya has subido un proyecto calificado para ingresar en las rondas.' 
-                    : 'Ya has subido proyectos calificados para ingresar en las rondas.'
-                  }
-                </p>
-              </div>
-            )}
           </div>
 
           {/* ACTIVE STEP CONTENT CONTAINER */}
           <div className="lg:col-span-9 bg-white/95 rounded-2xl border border-white/80 p-5 sm:p-7 space-y-6 shadow-sm backdrop-blur-sm">
-            
-            {/* Horizontal Step Pills matching image.png */}
-            <div className="bg-slate-100/90 border border-slate-200/80 rounded-2xl p-2 flex flex-wrap sm:grid sm:grid-cols-3 gap-2 text-center text-[10px] sm:text-[11px] font-black">
-              <button
-                type="button"
-                onClick={() => setActiveStep('basic')}
-                className={`py-2 px-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer font-sans ${
-                  activeStep === 'basic'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50'
-                }`}
-                title="Paso 1: Identidad Creativa"
-              >
-                <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono ${
-                  activeStep === 'basic' ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'
-                }`}>1</span>
-                <span className="truncate">IDENTIDAD CREATIVA</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveStep('finance')}
-                className={`py-2 px-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer font-sans ${
-                  activeStep === 'finance'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50'
-                }`}
-                title="Paso 2: Economía y Fondos"
-              >
-                <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono ${
-                  activeStep === 'finance' ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'
-                }`}>2</span>
-                <span className="truncate">ECONOMÍA Y FONDOS</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveStep('team')}
-                className={`py-2 px-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer font-sans ${
-                  activeStep === 'team'
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md scale-[1.02]'
-                    : 'bg-emerald-50 text-emerald-800 border-emerald-200/80 hover:bg-emerald-100'
-                }`}
-                title="Paso 3: Equipo Humano"
-              >
-                <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-mono ${
-                  activeStep === 'team' ? 'bg-white text-emerald-800' : 'bg-emerald-600 text-white'
-                }`}>3</span>
-                <span className="truncate">EQUIPO HUMANO ✓</span>
-              </button>
-            </div>
-
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               
               {/* STEP 1: IDENTIDAD CREATIVA */}

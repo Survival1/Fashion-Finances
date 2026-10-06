@@ -749,8 +749,11 @@ export default function App() {
       localStorage.removeItem('finanzas_user_slot_index');
       localStorage.removeItem('user_paid_finanzas_session');
       localStorage.removeItem('finanzas_target_session_id');
+      localStorage.removeItem('user_paid_session_sess-streetwear-ref-2');
+      localStorage.removeItem('ronda_db_sess-streetwear-ref-2');
       localStorage.removeItem('open_finanzas_sessions_list_v43');
       localStorage.removeItem('open_finanzas_sessions_list_v44');
+      localStorage.removeItem('finanzas_active_session_index');
     } catch (e) {}
   }, []);
 
@@ -3374,7 +3377,7 @@ export default function App() {
           )}
 
           {activeTab === 'create_project' && (
-            <div className="space-y-6 animate-fade-in bg-gradient-to-b from-[#00BFFF]/15 via-[#00BFFF]/5 to-transparent p-1.5 sm:p-3 rounded-3xl">
+            <div className="space-y-6 animate-fade-in bg-gradient-to-b from-[#B9E2FC]/30 via-[#B9E2FC]/10 to-transparent p-1.5 sm:p-3 rounded-3xl">
               <ProjectForm
                 userProjects={projects}
                 userId={userProfile.id}
