@@ -460,7 +460,7 @@ export default function HeartRainOverlay() {
             let customContent: React.ReactNode = el.emojiChar;
 
             if (el.sequenceMode === 5) {
-              filterStyle = 'drop-shadow(0 4px 10px rgba(0,0,0,0.35))';
+              filterStyle = 'drop-shadow(0 0 16px rgba(255,255,255,0.95)) drop-shadow(0 0 26px rgba(254,44,85,0.9)) brightness(1.25) contrast(1.15)';
             } else if (el.sequenceMode === 0 || el.sequenceMode === 4) {
               filterStyle = 'drop-shadow(0 0 8px rgba(244,63,94,0.75)) saturate(1.3)';
             } else if (el.sequenceMode === 1) {

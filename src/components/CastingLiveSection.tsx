@@ -3858,49 +3858,6 @@ export default function CastingLiveSection({
       return;
     }
 
-    // Check if user is already participating in ANOTHER active session
-    const activeParticipatingSession = openFinanzasSessions.find(s => 
-      s.id !== currentFinanzasSession.id &&
-      (s.participants || []).some(
-        p => (myId && p.id === myId && p.id !== 'trab-10') || 
-             (myUsername && p.username === myUsername && p.username !== 'adrianalima' && p.username !== 'marina_social') || 
-             (myName && p.name === myName && p.name !== 'Adriana Lima' && p.name !== 'Marina Soler') ||
-             p.role?.includes('(Tú)') ||
-             p.role?.includes('(10º Participante)')
-      )
-    );
-
-    if (activeParticipatingSession) {
-      // Play a soft attention audio tone
-      try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(330, audioCtx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
-      } catch (e) {}
-
-      // Trigger informative modal notification
-      setCannotJoinMultipleSessionsModal({
-        show: true,
-        activeSessionTitle: activeParticipatingSession.title,
-        activeSessionCategory: activeParticipatingSession.category || 'Ronda de Emprendimiento',
-        activeSessionFee: activeParticipatingSession.entryFee || 100,
-        activeSessionId: activeParticipatingSession.id,
-        attemptedSessionTitle: currentFinanzasSession.title,
-        attemptedSessionFee: currentFinanzasSession.entryFee || 1000
-      });
-      return;
-    }
-
     // Open inscription & payment page inside the channel (captura z.png)
     setShowFinanzasInscriptionInChannel(true);
   };
@@ -4114,25 +4071,6 @@ export default function CastingLiveSection({
       openFinanzasSessions[0];
 
     const fee = explicitFee !== undefined ? explicitFee : (targetSession?.entryFee || 10);
-
-    // 🛑 Comprobar si el usuario ya está participando en otra ronda
-    const otherEnrolledSession = activeSessionsOnly.find(s => {
-      if (s.id === targetSession?.id) return false;
-      return Boolean(
-        userPaidSessions[s.id] ||
-        (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${s.id}`) === 'true')
-      );
-    });
-
-    if (otherEnrolledSession) {
-      if (setSystemVoiceNotification) {
-        setSystemVoiceNotification({
-          show: true,
-          message: `⚠️ Ya estás participando en ${otherEnrolledSession.title}. No puedes inscribirte en otra ronda simultáneamente.`
-        });
-      }
-      return;
-    }
 
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
     const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
@@ -4448,6 +4386,11 @@ export default function CastingLiveSection({
     setIsFinanzasUserParticipatingState(false);
     setUserPaidSessions({});
     setForceShowParticipantsPanel(false);
+    setIsVotingPhaseActive(false);
+    setVotingCountdownSeconds(600);
+    setVotingPhaseTimer(600);
+
+    const closedSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
 
     try {
       localStorage.removeItem('finanzas_user_participating');
@@ -4460,6 +4403,23 @@ export default function CastingLiveSection({
       localStorage.removeItem('user_paid_session_sess-topmodels-1');
       localStorage.removeItem('user_paid_session_sess-inversores-1');
       localStorage.removeItem('user_paid_session_sess-millonarios-1');
+
+      // 🛑 Reset voting status ONLY for the finished session so other sessions keep their independent phase
+      localStorage.removeItem(`finanzas_is_voting_phase_active_${closedSessionId}`);
+      localStorage.setItem(`finanzas_is_voting_phase_active_${closedSessionId}`, 'false');
+      localStorage.removeItem(`finanzas_voting_end_time_${closedSessionId}`);
+      localStorage.removeItem(`finanzas_voting_phase_timer_${closedSessionId}`);
+      localStorage.removeItem('finanzas_is_voting_phase_active');
+      localStorage.setItem(`finanzas_active_session_start_${closedSessionId}`, String(Date.now()));
+
+      const savedPhaseMapStr = localStorage.getItem('finanzas_session_voting_phase_map');
+      if (savedPhaseMapStr) {
+        const parsedMap = JSON.parse(savedPhaseMapStr);
+        if (typeof parsedMap === 'object' && parsedMap !== null) {
+          parsedMap[closedSessionId] = false;
+          localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(parsedMap));
+        }
+      }
     } catch (e) {}
 
     const myId = userProfile?.id || 'user-adriana';
@@ -4477,6 +4437,25 @@ export default function CastingLiveSection({
         console.error('Error celebrating round database:', e);
       }
     }
+
+    if (nextCreatedRound?.id) {
+      try {
+        localStorage.removeItem(`finanzas_is_voting_phase_active_${nextCreatedRound.id}`);
+        localStorage.setItem(`finanzas_is_voting_phase_active_${nextCreatedRound.id}`, 'false');
+        localStorage.removeItem(`finanzas_voting_end_time_${nextCreatedRound.id}`);
+        localStorage.removeItem(`finanzas_voting_phase_timer_${nextCreatedRound.id}`);
+        localStorage.setItem(`finanzas_active_session_start_${nextCreatedRound.id}`, String(Date.now()));
+      } catch (e) {}
+    }
+
+    try {
+      window.dispatchEvent(new CustomEvent('finanzas-close-contest-reset-round', {
+        detail: {
+          closedSessionId,
+          nextRoundId: nextCreatedRound?.id
+        }
+      }));
+    } catch (e) {}
 
     // Mark current session as completed and reset user participation for upcoming active sessions
     setOpenFinanzasSessions(prev => {
@@ -5951,14 +5930,28 @@ export default function CastingLiveSection({
     localStorage.setItem('finanzas_presentation_timers', JSON.stringify(finanzasTimers));
   }, [finanzasTimers]);
 
-  // Persist voting phase states to localStorage por sessionId
+  // Synchronize isVotingPhaseActive to currentFinanzasSession's independent phase when session switches
+  useEffect(() => {
+    if (!currentFinanzasSession?.id) return;
+    const isSaved = localStorage.getItem(`finanzas_is_voting_phase_active_${currentFinanzasSession.id}`) === 'true';
+    setIsVotingPhaseActive(isSaved);
+    const savedTimer = localStorage.getItem(`finanzas_voting_phase_timer_${currentFinanzasSession.id}`);
+    if (savedTimer) {
+      const parsedTimer = parseInt(savedTimer, 10);
+      if (!isNaN(parsedTimer) && parsedTimer >= 0 && parsedTimer <= 600) {
+        setVotingPhaseTimer(parsedTimer);
+      }
+    }
+  }, [currentFinanzasSession?.id]);
+
+  // Persist voting phase states to localStorage por sessionId ONLY when phase changes
   useEffect(() => {
     if (currentFinanzasSession?.id) {
       localStorage.setItem(`finanzas_is_voting_phase_active_${currentFinanzasSession.id}`, String(isVotingPhaseActive));
       localStorage.setItem(`finanzas_voting_phase_timer_${currentFinanzasSession.id}`, String(votingPhaseTimer));
     }
     localStorage.removeItem('finanzas_is_voting_phase_active');
-  }, [isVotingPhaseActive, votingPhaseTimer, currentFinanzasSession?.id]);
+  }, [isVotingPhaseActive, votingPhaseTimer]);
 
   const buildFinanzasCompletedSession = (votesMap: Record<string, number>) => {
     const defaultParticipantVotes: Record<string, number> = {
@@ -9325,8 +9318,11 @@ export default function CastingLiveSection({
   };
 
   const handleSendChannelFreeEmojiReaction = (emoji: string) => {
+    setIsLiveLiked(true);
+    setLiveLikesCount(prev => prev + 1);
     triggerFullChannelGiftRain(emoji);
     triggerTikTokGiftBurst(emoji);
+    window.dispatchEvent(new CustomEvent('trigger-heart-rain', { detail: { emoji, icon: emoji, pureEmoji: true } }));
   };
 
   const handleSendFreeEmojiReaction = (emoji: string) => {
@@ -9799,6 +9795,23 @@ export default function CastingLiveSection({
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
+
+  // 📹 Listener to open the upload modal (z.png) from anywhere in the app (e.g. Canal Fashion in image.png)
+  useEffect(() => {
+    const handleOpenUploadModal = (e: any) => {
+      setShowUploadModal(true);
+      setShowCreatorStudio(true);
+      const cat = e?.detail?.category || 'Fashion';
+      if (cat) {
+        setUploadVideoCategory(cat as any);
+        setSelectedLiveCategory(cat as any);
+      }
+    };
+    window.addEventListener('open-casting-upload-modal', handleOpenUploadModal);
+    return () => {
+      window.removeEventListener('open-casting-upload-modal', handleOpenUploadModal);
+    };
+  }, []);
 
   // Dynamic World Cities searching logic using free Nominatim API with a debounce delay
   useEffect(() => {
@@ -10395,9 +10408,12 @@ export default function CastingLiveSection({
       sessionStorage.setItem('explicit_category_set_by_user', cat);
     } catch (e) {}
 
-    // CRITICAL: Immediately pause and mute ANY active HTML5 video elements across the whole DOM
+    // CRITICAL: Immediately pause and mute ANY active HTML5 video elements across the whole DOM EXCEPT inside the TikTok live feed stage
     document.querySelectorAll('video').forEach(v => {
       try {
+        if (v.closest('#main-feed-column-container') || v.closest('#tiktok-round-card') || v.closest('[id^="tiktok-round-card-"]') || v.closest('#tiktok-finanzas-feed-container')) {
+          return;
+        }
         v.pause();
         v.currentTime = 0;
       } catch (e) {}
@@ -10419,10 +10435,8 @@ export default function CastingLiveSection({
     setActiveVideoIndex(0);
     setSearchTerm('');
     setActiveSubTab('para-ti');
-    if (cat !== 'Finanzas') {
-      setActiveFinanzasPopupUser(null);
-      setIsFinanzasLiveConnected(false);
-    }
+    setActiveFinanzasPopupUser(null);
+    setIsFinanzasLiveConnected(true);
     setCategoryLiveConnectedMap((prev) => {
       const next = { ...prev, [cat]: true };
       localStorage.setItem('category_live_connected_map', JSON.stringify(next));
@@ -11114,6 +11128,7 @@ export default function CastingLiveSection({
     try {
       // Dispatch event to force update ModelFacebookProfile if active
       window.dispatchEvent(new Event('saved_videos_updated'));
+      window.dispatchEvent(new CustomEvent('coll_casting_live_videos_updated', { detail: { newVideo, updatedVideos } }));
     } catch (err) {
       console.error(err);
     }
@@ -12586,9 +12601,9 @@ export default function CastingLiveSection({
 
             </div>
 
-            {/* 🔴 TIKTOK STYLE RIGHT VERTICAL FLOATING ACTIONS PANEL (image.png) - Vertically centered in the Live channel */}
+            {/* 🔴 TIKTOK STYLE RIGHT VERTICAL FLOATING ACTIONS PANEL (image.png) - Positioned higher up in the Live channel */}
             <div 
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 select-none font-sans pointer-events-auto bg-[#0a0e1a]/85 backdrop-blur-md px-1.5 py-2 rounded-full border border-slate-700/50 shadow-xl" 
+              className="absolute right-2 sm:right-3 top-[26%] -translate-y-1/2 z-40 flex flex-col items-center gap-2 select-none font-sans pointer-events-auto bg-[#0a0e1a]/85 backdrop-blur-md px-1.5 py-2 rounded-full border border-slate-700/50 shadow-xl" 
               id="live-tiktok-right-actions"
             >
               
@@ -13986,13 +14001,13 @@ export default function CastingLiveSection({
     const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
     return (
       <div 
-        className="w-full h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-hidden no-scrollbar animate-fade-in select-none pointer-events-auto box-border" 
+        className="w-full h-full max-h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-hidden min-h-0 animate-fade-in pointer-events-auto box-border" 
         id="finanzas-results-in-channel"
         onWheel={(e) => {
           e.stopPropagation();
           const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-          if (wrapper) {
-            wrapper.scrollTop += e.deltaY;
+          if (wrapper && !e.target.closest('#podium-scrollable-content-wrapper')) {
+            wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
           }
         }}
       >
@@ -14003,7 +14018,7 @@ export default function CastingLiveSection({
             e.stopPropagation();
             const wrapper = document.getElementById('podium-scrollable-content-wrapper');
             if (wrapper) {
-              wrapper.scrollTop += e.deltaY;
+              wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
             }
           }}
         >
@@ -14045,20 +14060,17 @@ export default function CastingLiveSection({
           </div>
         </div>
 
-        {/* Podium content in dark luxury styling - Cómodo desplazamiento completo con rueda de ratón */}
+        {/* Podium content in dark luxury styling - Cómodo desplazamiento completo con rueda de ratón hasta abajo del todo */}
         <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-0 scrollbar-none no-scrollbar w-full max-w-full touch-pan-y overscroll-contain"
+          className="flex-1 min-h-0 w-full max-w-full overflow-y-auto overflow-x-hidden p-0 touch-pan-y overscroll-contain podium-results-scrollbar"
           id="podium-scrollable-content-wrapper"
           onWheel={(e) => {
             e.stopPropagation();
-            e.currentTarget.scrollTop += e.deltaY;
           }}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
-          onMouseMove={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
         >
           <SessionResultsPodium
             completedSessionToDisplay={activeSessionToDisplay}
@@ -26017,11 +26029,7 @@ try {
       {/* 🎬 CENTER COLUMN: Standard vertical Video Wall with playback, overlays, and controls */}
       <main 
         ref={feedContainerRef}
-        className={`flex-1 bg-white flex flex-col items-center justify-start p-0 px-0 relative w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container ${
-          selectedCategoryFilter === 'Finanzas'
-            ? 'pb-0 max-md:pb-0 min-h-0 max-md:h-full max-md:overflow-hidden'
-            : 'pb-16 md:pb-32 min-h-[680px]'
-        }`}
+        className="flex-1 bg-white flex flex-col items-center justify-start p-0 px-0 relative w-full max-w-full min-w-0 overflow-x-hidden mobile-snap-container pb-0 max-md:pb-0 min-h-0 max-md:h-full max-md:overflow-hidden"
       >
 
         {viewingTikTokProfileUsername ? (
@@ -26035,8 +26043,8 @@ try {
 
 
 
-            {/* 📸 STORIES SLIDER (HISTORIAS GRABADAS) - Hidden on Finanzas category so rounds fit 100% on mobile without scrollbar */}
-            {selectedCategoryFilter !== 'Finanzas' && (
+            {/* 📸 STORIES SLIDER (HISTORIAS GRABADAS) - Hidden on channel rounds so rounds fit 100% on mobile without scrollbar */}
+            {false && (
               <div className="w-full max-w-full mx-auto relative group/stories select-none mb-1.5 px-1 sm:px-2">
               
               {/* Left Slider Arrow - appears smoothly on hover */}
@@ -26189,10 +26197,10 @@ try {
             )}
 
             {/* Flex row wrapper to place sidebar inside the video window */}
-            <div className={`flex flex-col items-center justify-center w-full max-w-full px-0 sm:px-4 box-border min-w-0 mx-auto ${selectedCategoryFilter === 'Finanzas' ? 'max-md:h-full max-md:justify-center' : ''}`}>
+            <div className={`flex flex-col items-center justify-center w-full max-w-full px-0 sm:px-4 box-border min-w-0 mx-auto max-md:h-full max-md:justify-center`}>
               
-              {filteredVideos.length === 0 ? (
-                /* Empty Search results or empty category view */
+              {(searchTerm && searchTerm.trim() !== '' && filteredVideos.length === 0) ? (
+                /* Empty Search results */
                 <div className="text-center py-10 px-4 space-y-3 max-w-sm animate-fade-in text-slate-800 bg-slate-50/50 rounded-3xl border border-slate-100/70 shadow-xs mt-2 w-full">
                   <div className="text-4xl animate-bounce">🌌</div>
                   <h4 className="text-sm font-extrabold text-slate-900">No se encontraron vídeos</h4>
@@ -26205,15 +26213,15 @@ try {
                       setSearchTerm("");
                       setActiveSubTab("para-ti");
                       setActiveVideoIndex(0);
-                      setSelectedCategoryFilter("Todos");
+                      setSelectedCategoryFilter("Finanzas");
                     }}
                     className="bg-red-550 hover:bg-red-650 text-white py-1.5 px-3.5 rounded-xl text-[10px] font-extrabold font-display transition shadow-md cursor-pointer border-0"
                   >
-                    Ver todos los vídeos
+                    Ver canal principal
                   </button>
                 </div>
-              ) : (selectedCategoryFilter === 'Finanzas') ? (
-                /* 📱 TIKTOK-STYLE VERTICAL FEED FOR FINANZAS ROUNDS (image.png & z.png) */
+              ) : true ? (
+                /* 📱 TIKTOK-STYLE VERTICAL FEED FOR ALL CHANNELS (image.png & z.png) */
                 <TikTokFinanzasFeed
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
@@ -26272,6 +26280,7 @@ try {
                   renderFinanzasRecountContent={renderFinanzasRecountContent}
                   showFinanzasResults={showFinanzasResults}
                   renderFinanzasResultsContent={renderFinanzasResultsContent}
+                  completedSessionToDisplay={completedSessionToDisplay}
                   setShowFinanzasResults={setShowFinanzasResults}
                   setShowFinanzasRecount={setShowFinanzasRecount}
                   onOpenComments={() => setIsCommentsOpen(true)}
@@ -26364,7 +26373,7 @@ try {
                     id="video-feed-main-card"
                   >
                 
-                {/* 📱 RIGHT SIDEBAR ELEMENTS BAR (Captura aa.png) - Visible on hover or touch tap for non-Finanzas feeds */}
+                {/* 📱 RIGHT SIDEBAR ELEMENTS BAR (Captura aa.png & z.png) - Centrada a la mitad de la página */}
                 {selectedCategoryFilter !== 'Finanzas' && !isUserLiveStreamingWithCamera && hasChannelVideos && activeVideo && !(showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showProjectDetailsInPopup || detailProjectUser || showFinanzasInscriptionInChannel) && (
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-[58px] xs:w-[66px] sm:w-[76px] z-[90] flex items-center justify-end pr-1 xs:pr-1.5 sm:pr-2 pointer-events-auto group/channel-right-hover box-border"
@@ -26405,7 +26414,7 @@ try {
                       {/* 1. Like button with count (43.2K) - Queda marcado y lanza lluvia de corazones */}
                       <div className="flex flex-col items-center relative group/channel-heart-zone shrink-0">
                         {/* Recuadro de emojis dentro del canal */}
-                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
+                        <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] hidden group-hover/channel-heart-zone:flex flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/10 animate-fade-in w-[272px] min-w-[272px] max-w-[272px] box-border select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6">
                           {/* Cabecera del recuadro */}
                           <div className="w-full flex items-center justify-between pb-2 mb-1.5 border-b border-white/10 px-1">
                             <div className="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wider">
@@ -26415,15 +26424,14 @@ try {
                             <span className="text-[10px] text-slate-400 font-bold">Toca para enviar</span>
                           </div>
 
-                          {/* Rejilla de emojis centrada y cómoda */}
-                          <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
+                          {/* Rejilla de 30 emojis centrada (captura image.png) */}
+                          <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
                             {[
-                              '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                              '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                              '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                              '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                              '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                              '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
+                              '❤️', '💖', '🔥', '👏', '🤩', '🎉',
+                              '👍', '⭐', '🥰', '😘', '💕', '💘',
+                              '💗', '💓', '💞', '😍', '🥳', '😎',
+                              '🤣', '😂', '😜', '🤤', '🤯', '🥵',
+                              '😻', '🙌', '🙏', '💪', '👀', '✨'
                             ].map((emoji) => (
                               <button
                                 key={emoji}
@@ -26432,7 +26440,7 @@ try {
                                   e.stopPropagation();
                                   handleSendFreeEmojiReaction(emoji);
                                 }}
-                                className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                                className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
                                 title={`Enviar ${emoji}`}
                               >
                                 {emoji}
@@ -26452,16 +26460,16 @@ try {
                           }}
                           className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 cursor-pointer ${
                             isLiveLiked
-                              ? 'bg-[#fe2c55]/20 ring-2 ring-[#fe2c55] shadow-[0_0_16px_rgba(254,44,85,0.6)] text-[#fe2c55] scale-105'
+                              ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
                               : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
                           }`}
-                          title={isLiveLiked ? "¡Marcado! Pulsa para enviar más corazones" : "Me gusta"}
+                          title={isLiveLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
                           id="btn-live-like-heart"
                         >
                           <Heart 
                             className={`w-4.5 h-4.5 transition-transform duration-200 ${
                               isLiveLiked 
-                                ? 'fill-[#fe2c55] text-[#fe2c55] scale-110 drop-shadow-[0_0_8px_rgba(254,44,85,0.9)]' 
+                                ? 'fill-white text-white scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.9)] animate-heart-beat' 
                                 : 'text-white'
                             }`} 
                           />
@@ -26728,7 +26736,7 @@ try {
                             CANALES EN DIRECTO
                           </span>
                           <span className="text-[10px] sm:text-[11px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-3 py-0.5 rounded-full border border-[#fe2c55]/60">
-                            {selectedCategoryFilter}
+                            {selectedCategoryFilter === 'Modelos' ? 'Runway' : selectedCategoryFilter === 'Investors' ? 'Jewellery' : selectedCategoryFilter}
                           </span>
                         </div>
 
@@ -28607,113 +28615,7 @@ try {
                     className="absolute inset-0 flex flex-col justify-between bg-[#0a0e1a] z-0 animate-fade-in p-2 sm:p-3 pt-4 sm:pt-6 pb-2 select-none overflow-y-auto w-full max-w-full min-w-0" 
                     id="finanzas-empty-state-logo"
                   >
-                    {/* ⚠️ MODAL: AVISO DE RESTRICCIÓN DE PARTICIPACIÓN SIMULTÁNEA EN DOS SESIONES */}
-
-
-                    {cannotJoinMultipleSessionsModal?.show && (
-                      <div 
-                        className="fixed inset-0 z-[700] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 text-white font-sans animate-fade-in select-none"
-                        onClick={() => setCannotJoinMultipleSessionsModal(null)}
-                      >
-                        <div 
-                          className="bg-[#0e1628] border border-amber-500/80 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.95)] max-w-sm sm:max-w-md w-full text-center space-y-4 animate-scale-in relative overflow-hidden"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {/* Ambient lighting glow */}
-                          <div className="absolute -top-16 -left-16 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
-                          <div className="absolute -bottom-16 -right-16 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
-
-                          {/* Close X button */}
-                          <button
-                            type="button"
-                            onClick={() => setCannotJoinMultipleSessionsModal(null)}
-                            className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-90 cursor-pointer"
-                            title="Cerrar aviso"
-                          >
-                            ✕
-                          </button>
-
-                          {/* Warning Alert Icon */}
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/15 border border-amber-500/60 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
-                            <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-amber-400" />
-                          </div>
-
-                          {/* Modal Header */}
-                          <div className="space-y-1">
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-400 block font-mono">
-                              ⚠️ RESTRICCIÓN DE PARTICIPACIÓN
-                            </span>
-                            <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-tight leading-snug m-0">
-                              No puedes participar en otra sesión sin haber acabado la sesión actual
-                            </h3>
-                          </div>
-
-                          {/* Active Session Info Details */}
-                          <div className="bg-slate-950/90 border border-slate-800/90 rounded-2xl p-3.5 text-left space-y-2.5 shadow-inner">
-                            <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
-                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
-                                Tu Sesión Activa en Curso
-                              </span>
-                              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                PARTICIPANDO AHORA
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-slate-800 border border-emerald-400/60 flex items-center justify-center text-lg shrink-0 shadow-sm">
-                                💼
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h4 className="text-xs sm:text-sm font-black text-white truncate m-0">
-                                  {cannotJoinMultipleSessionsModal.activeSessionTitle}
-                                </h4>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-[10px] text-emerald-400 font-bold font-mono">
-                                    {cannotJoinMultipleSessionsModal.activeSessionFee.toLocaleString('es-ES')} €
-                                  </span>
-                                  <span className="text-slate-500 text-[10px] font-bold">•</span>
-                                  <span className="text-[10px] text-slate-300 font-bold">
-                                    10º Participante ({userProfile?.name || 'Adriana Lima'})
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <p className="text-[10.5px] sm:text-[11px] text-slate-300 leading-relaxed m-0 pt-1 border-t border-slate-800/60 font-medium">
-                              Actualmente ya estás participando en <strong className="text-white">{cannotJoinMultipleSessionsModal.activeSessionTitle}</strong>. Ningún usuario puede participar en otra sesión sin haber acabado la sesión en la que está participando. Debes esperar a que concluyan los turnos de exposición, la votación y el escrutinio antes de inscribirte en <strong className="text-amber-300">{cannotJoinMultipleSessionsModal.attemptedSessionTitle || 'otra mesa'}</strong>.
-                            </p>
-                          </div>
-
-                          {/* Modal Actions */}
-                          <div className="space-y-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const targetIdx = activeSessionsOnly.findIndex(s => s.id === cannotJoinMultipleSessionsModal.activeSessionId);
-                                if (targetIdx !== -1) {
-                                  setActiveFinanzasSessionIndex(targetIdx);
-                                  setShowRondaNotice(true);
-                                }
-                                setShowFinanzasInscriptionInChannel(false);
-                                setCannotJoinMultipleSessionsModal(null);
-                              }}
-                              className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition border border-emerald-400 flex items-center justify-center gap-2 cursor-pointer"
-                            >
-                              <span>Ir a mi Sesión Activa ({cannotJoinMultipleSessionsModal.activeSessionTitle})</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setCannotJoinMultipleSessionsModal(null)}
-                              className="w-full py-2 px-4 bg-slate-900/90 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-xl transition border border-slate-700 cursor-pointer"
-                            >
-                              Entendido, Continuar Viendo
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* ⚠️ MODAL DE AVISO DESACTIVADO: PARTICIPACIÓN LIBRE */}
 
                     {/* CONDITIONAL RENDER: SIMULATED EMPTY CHANNEL WITH LOGO OR ACTIVE CHANNEL */}
                     {(simulateEmptyFinanzasChannel || activeSessionsOnly.length === 0) ? (
@@ -28761,19 +28663,6 @@ try {
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                               <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
                                 <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes</span>
-                                <span className="text-slate-500">•</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setRoundDatabaseModalTargetId(currentFinanzasSession?.id);
-                                    setIsRoundDatabaseModalOpen(true);
-                                  }}
-                                  className="text-amber-300 font-black hover:text-amber-200 transition-all flex items-center gap-1 cursor-pointer hover:underline"
-                                  title="Ver base de datos independiente de esta ronda"
-                                >
-                                  <Database className="w-2.5 h-2.5 text-cyan-400" />
-                                  <span>{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
-                                </button>
                               </span>
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                             </div>
@@ -29532,20 +29421,6 @@ try {
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                               <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-300 font-mono tracking-wider uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-700/80 flex items-center gap-1.5">
                                 <span>{currentFinanzasSession?.entryFee ? `${currentFinanzasSession.entryFee}€ Inscripción` : '10€ Inscripción'} • 10 Participantes</span>
-                                <span className="text-slate-500">•</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setRoundDatabaseModalTargetId(currentFinanzasSession?.id);
-                                    setIsRoundDatabaseModalOpen(true);
-                                  }}
-                                  className="text-amber-300 font-black tracking-wider hover:text-amber-200 transition-all flex items-center gap-1 cursor-pointer hover:underline"
-                                  title="Ver base de datos independiente de esta ronda"
-                                  id="finanzas-round-ref-badge-bottom"
-                                >
-                                  <Database className="w-2.5 h-2.5 text-cyan-400" />
-                                  <span>{getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex)}</span>
-                                </button>
                               </span>
                               <span className="h-0.5 w-4 sm:w-6 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                             </div>
@@ -34248,7 +34123,7 @@ try {
             <div className="w-full bg-slate-900/90 border border-rose-500/30 p-3.5 rounded-2xl text-left space-y-1.5 shadow-inner">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
-                  📌 Ir a la Página de Pago (captura z.png):
+                  📌 Ir a la Página de Pago:
                 </span>
                 <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                   10.00€
@@ -34273,7 +34148,7 @@ try {
                 className="w-full py-3.5 px-4 bg-gradient-to-r from-[#fe2c55] via-rose-600 to-pink-600 hover:from-rose-600 hover:to-[#fe2c55] text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-rose-500/30 cursor-pointer border-0 active:scale-95 flex items-center justify-center gap-2 font-sans"
               >
                 <span>💳</span>
-                <span>Ir a Pagar Sesión en Captura z.png (10€)</span>
+                <span>Ir a Pagar Sesión (10€)</span>
               </button>
 
               <button

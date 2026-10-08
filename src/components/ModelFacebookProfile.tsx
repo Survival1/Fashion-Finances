@@ -769,7 +769,32 @@ export default function ModelFacebookProfile({
     setHideProfileMetrics(nextVal);
     localStorage.setItem(`hide_profile_metrics_${userProfile.id}`, String(nextVal));
   };
-  const [activeGalleryTab, setActiveGalleryTab] = useState<'grid' | 'saved' | 'reposts' | 'tagged' | 'saved_videos'>('grid');
+  const [activeGalleryTab, setActiveGalleryTab] = useState<'grid' | 'saved' | 'reposts' | 'tagged' | 'saved_videos' | 'shared'>('grid');
+  const [sharedVideosList, setSharedVideosList] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('user_shared_videos');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [];
+  });
+
+  useEffect(() => {
+    const handleVideoShared = () => {
+      try {
+        const saved = localStorage.getItem('user_shared_videos');
+        if (saved) setSharedVideosList(JSON.parse(saved));
+      } catch (_) {}
+    };
+    const handleOpenSharedTab = () => {
+      setActiveGalleryTab('shared');
+    };
+    window.addEventListener('channel-video-shared', handleVideoShared);
+    window.addEventListener('open-profile-shared-tab', handleOpenSharedTab);
+    return () => {
+      window.removeEventListener('channel-video-shared', handleVideoShared);
+      window.removeEventListener('open-profile-shared-tab', handleOpenSharedTab);
+    };
+  }, []);
   const [blockedUserIds, setBlockedUserIds] = useState<string[]>(() => {
     const saved = localStorage.getItem(`blocked_users_${userProfile.id}`);
     return saved ? JSON.parse(saved) : [];
@@ -4598,6 +4623,22 @@ export default function ModelFacebookProfile({
                       <span>Casting Live</span>
                     </button>
 
+                    {/* Botón nuevo llamado Compartir con el mismo icono que en la captura z.png (Share2) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveGalleryTab('shared')}
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer select-none active:scale-95 border shadow-xs uppercase tracking-wider ${
+                        activeGalleryTab === 'shared'
+                          ? 'bg-rose-50 text-rose-600 border-rose-300 ring-2 ring-rose-400/30 font-black'
+                          : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
+                      }`}
+                      title="Compartir"
+                      id="btn-header-compartir"
+                    >
+                      <Share2 className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Compartir</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -7078,8 +7119,8 @@ export default function ModelFacebookProfile({
                   </div>
                 </div>
 
-                  {/* Navigation Tabs supporting saved videos, and private stories archive */}
-                  <div className={`grid ${isOwnProfile ? 'grid-cols-6' : 'grid-cols-5'} py-2.5 text-center select-none gap-2 px-1`}>
+                  {/* Navigation Tabs supporting saved videos, shared videos, and private stories archive */}
+                  <div className={`grid ${isOwnProfile ? 'grid-cols-7' : 'grid-cols-6'} py-2.5 text-center select-none gap-2 px-1`}>
                     <button
                       type="button"
                       onClick={() => setActiveGalleryTab('grid')}
@@ -7129,6 +7170,21 @@ export default function ModelFacebookProfile({
                         <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                         <polygon points="6 9 11 12 6 15 6 9" fill="currentColor" />
                       </svg>
+                    </button>
+
+                    {/* Botón nuevo llamado Compartir con el mismo icono que en la captura z.png (Share2) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveGalleryTab('shared')}
+                      className={`tab-trigger py-2.5 px-1.5 flex justify-center items-center gap-2 transition-all duration-150 cursor-pointer rounded-xl ${
+                        activeGalleryTab === 'shared' 
+                          ? 'bg-pink-50 text-pink-600 font-extrabold border border-pink-200/40 shadow-3xs scale-102 ring-2 ring-pink-400/30' 
+                          : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'
+                      }`}
+                      title="Compartir"
+                      id="tab-profile-compartir"
+                    >
+                      <Share2 className="w-5 h-5 shrink-0 text-current" />
                     </button>
 
                     <button
@@ -7746,6 +7802,185 @@ export default function ModelFacebookProfile({
                         </div>
                       )}
                       </div>
+                      );
+                    }
+
+                    if (activeGalleryTab === 'shared') {
+                      return (
+                        <div className="space-y-6 w-full text-left animate-fade-in" id="profile-shared-videos-section">
+                          {/* Top Header Card */}
+                          <div className="bg-gradient-to-r from-rose-50 via-pink-50 to-slate-50 border border-rose-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fe2c55] to-rose-500 text-white flex items-center justify-center shadow-md shrink-0">
+                                <Share2 className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 tracking-wide flex items-center gap-2">
+                                  <span>VÍDEOS COMPARTIDOS</span>
+                                  <span className="text-[10px] font-mono bg-rose-600 text-white px-2 py-0.5 rounded-full shadow-3xs">
+                                    {sharedVideosList.length}
+                                  </span>
+                                </h3>
+                                <p className="text-[11px] text-slate-500 font-medium">
+                                  Vídeos compartidos desde el reproductor de canales (captura z.png).
+                                </p>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onNavigateToTab) {
+                                  onNavigateToTab('casting_live');
+                                } else {
+                                  window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'casting_live' }));
+                                }
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+                            >
+                              <span>📺</span> Ver Canales
+                            </button>
+                          </div>
+
+                          {sharedVideosList.length === 0 ? (
+                            <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200 w-full p-6">
+                              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-200/60 shadow-xs">
+                                <Share2 className="w-7 h-7" />
+                              </div>
+                              <p className="text-sm font-black text-slate-800 mb-1">
+                                No tienes vídeos compartidos todavía
+                              </p>
+                              <p className="text-xs text-slate-500 max-w-md mx-auto mb-4 leading-relaxed">
+                                En la reproducción de vídeos de cualquier canal (captura z.png), pincha en el botón <strong>Compartir</strong> para verlos organizados aquí.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onNavigateToTab) {
+                                    onNavigateToTab('casting_live');
+                                  } else {
+                                    window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'casting_live' }));
+                                  }
+                                }}
+                                className="px-4 py-2 bg-gradient-to-r from-[#fe2c55] to-rose-600 hover:from-rose-500 hover:to-pink-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition active:scale-95 cursor-pointer inline-flex items-center gap-2"
+                              >
+                                <span>📺 Ir a los Canales en Directo</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                              {sharedVideosList.map((item, idx) => (
+                                <div
+                                  key={item.id || idx}
+                                  className="group bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col"
+                                >
+                                  {/* Media Thumbnail */}
+                                  <div className="relative aspect-[9/14] bg-slate-900 overflow-hidden">
+                                    <video
+                                      src={item.videoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-neon-light-40018-large.mp4'}
+                                      poster={item.poster || item.thumbnail}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                      muted
+                                      playsInline
+                                      loop
+                                      onMouseEnter={(e) => {
+                                        try { e.currentTarget.play(); } catch (_) {}
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        try { e.currentTarget.pause(); e.currentTarget.currentTime = 0; } catch (_) {}
+                                      }}
+                                    />
+                                    {/* Gradient overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+
+                                    {/* Channel Badge */}
+                                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-white border border-white/20">
+                                      {item.category || 'Fashion'} 👑
+                                    </span>
+
+                                    {/* Share badge */}
+                                    <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-rose-500/90 text-white flex items-center gap-1 shadow-sm">
+                                      <Share2 className="w-2.5 h-2.5" /> Compartido
+                                    </span>
+
+                                    {/* Author Info bottom overlay */}
+                                    <div className="absolute bottom-2.5 inset-x-2.5 flex items-center gap-2 text-white">
+                                      <img
+                                        src={item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                                        alt={item.username || 'user'}
+                                        className="w-7 h-7 rounded-full object-cover border border-white/40 shadow-sm shrink-0"
+                                      />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-[11px] font-black truncate drop-shadow-md">
+                                          @{item.username || 'modelo'}
+                                        </p>
+                                        <p className="text-[9.5px] text-slate-300 truncate drop-shadow-sm font-medium">
+                                          {item.title || item.name}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Details Card */}
+                                  <div className="p-3 flex flex-col justify-between flex-1 gap-2 bg-white">
+                                    {item.description && (
+                                      <p className="text-[11px] text-slate-600 line-clamp-2 leading-snug">
+                                        {item.description}
+                                      </p>
+                                    )}
+
+                                    {/* Stats row */}
+                                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-100">
+                                      <span className="flex items-center gap-1 font-bold text-slate-700">
+                                        <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
+                                        {item.likes || 1200}
+                                      </span>
+                                      <span className="flex items-center gap-1 font-bold text-slate-700">
+                                        <Share2 className="w-3 h-3 text-emerald-600" />
+                                        {item.shares || 49}
+                                      </span>
+                                      <span className="text-[9px] text-slate-400">
+                                        {item.sharedAt ? new Date(item.sharedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Reciente'}
+                                      </span>
+                                    </div>
+
+                                    {/* Action buttons */}
+                                    <div className="flex items-center gap-1.5 pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (navigator.clipboard) {
+                                            navigator.clipboard.writeText(item.videoUrl || window.location.href);
+                                            alert('¡Enlace del vídeo copiado al portapapeles!');
+                                          }
+                                        }}
+                                        className="flex-1 py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 cursor-pointer"
+                                        title="Copiar enlace"
+                                      >
+                                        <Share2 className="w-3 h-3" />
+                                        <span>Copiar</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const nextList = sharedVideosList.filter((v: any) => v.id !== item.id);
+                                          setSharedVideosList(nextList);
+                                          try {
+                                            localStorage.setItem('user_shared_videos', JSON.stringify(nextList));
+                                          } catch (_) {}
+                                        }}
+                                        className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition active:scale-95 cursor-pointer"
+                                        title="Eliminar de compartidos"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       );
                     }
 

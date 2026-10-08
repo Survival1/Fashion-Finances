@@ -820,11 +820,29 @@ export default function App() {
     window.addEventListener('movements-updated', handleProfileSync);
     window.addEventListener('storage', handleProfileSync);
 
+    const handleOpenSharedTabGlobal = () => {
+      setSelectedModelForView(null);
+      setActiveTabTab('profile');
+    };
+    const handleNavigateTabGlobal = (e: any) => {
+      const target = e.detail?.tab || e.detail;
+      if (target === 'profile') {
+        setSelectedModelForView(null);
+      }
+      if (target) {
+        setActiveTabTab(target);
+      }
+    };
+    window.addEventListener('open-profile-shared-tab', handleOpenSharedTabGlobal);
+    window.addEventListener('navigate-to-tab', handleNavigateTabGlobal);
+
     return () => {
       window.removeEventListener('user-profile-updated', handleProfileSync);
       window.removeEventListener('wallet-updated', handleProfileSync);
       window.removeEventListener('movements-updated', handleProfileSync);
       window.removeEventListener('storage', handleProfileSync);
+      window.removeEventListener('open-profile-shared-tab', handleOpenSharedTabGlobal);
+      window.removeEventListener('navigate-to-tab', handleNavigateTabGlobal);
     };
   }, []);
 

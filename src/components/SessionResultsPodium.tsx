@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BALMAIN_LOGO_DATA_URL, 
   CHANEL_LOGO_DATA_URL, 
@@ -850,6 +850,7 @@ export default function SessionResultsPodium({
   const [showFullTally, setShowFullTally] = useState(false);
   const [activeWinnerIndex, setActiveWinnerIndex] = useState(0);
   const [isSimulatedFiveWinners, setIsSimulatedFiveWinners] = useState(false);
+  const lastBottomScrollTimeRef = useRef<number>(0);
 
   // Immediately cancel any active speech synthesis and ongoing audio voiceovers when results page mounts
   useEffect(() => {
@@ -878,15 +879,18 @@ export default function SessionResultsPodium({
     };
   }, []);
 
-  // 🎯 Desplazamiento fluido y confiable con la rueda del ratón y teclado en la pantalla de resultados
+  // 🎯 Desplazamiento fluido y confiable con la rueda del ratón y teclado en la pantalla de resultados (permanece fija)
   useEffect(() => {
     const handleGlobalWheel = (e: WheelEvent) => {
       const wrapper = document.getElementById('podium-scrollable-content-wrapper');
       if (!wrapper) return;
       const target = e.target as HTMLElement;
       if (target && (target.closest('#finanzas-results-in-channel') || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('[id^="finanzas-results-in-channel"]'))) {
-        e.stopPropagation();
-        wrapper.scrollTop += e.deltaY;
+        // 🛑 La página de resultados permanece FIJA en pantalla.
+        // Permitir desplazarse cómodamente con el ratón hasta abajo del todo.
+        if (!target.closest('#podium-scrollable-content-wrapper')) {
+          wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
+        }
       }
     };
 
@@ -1338,15 +1342,8 @@ export default function SessionResultsPodium({
 
   return (
     <div 
-      className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-36 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
+      className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-6 sm:pb-8 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
       id="podium-results-screen"
-      onWheel={(e) => {
-        e.stopPropagation();
-        const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-        if (wrapper) {
-          wrapper.scrollTop += e.deltaY;
-        }
-      }}
     >
       
       {/* Immersive stadium visual background effects */}
@@ -1590,7 +1587,7 @@ export default function SessionResultsPodium({
                         <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-300 block">
                           FINANCIACIÓN CONSEGUIDA
                         </span>
-                        <div className="text-3xl sm:text-4xl font-sans font-black text-amber-300 tracking-tight block py-0.5">
+                        <div className="text-xl sm:text-2xl font-sans font-black text-amber-300 tracking-tight block py-0.5">
                           {formattedFunding}
                         </div>
                         <p className="text-[9.5px] text-slate-400 uppercase tracking-wider font-semibold">
@@ -1736,7 +1733,7 @@ export default function SessionResultsPodium({
                         <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-400 block">
                           FINANCIACIÓN CONSEGUIDA
                         </span>
-                        <div className="text-3xl sm:text-4xl font-sans font-black text-amber-300 tracking-tight block py-0.5">
+                        <div className="text-xl sm:text-2xl font-sans font-black text-amber-300 tracking-tight block py-0.5">
                           {formattedFunding}
                         </div>
                         <p className="text-[9.5px] text-slate-400 uppercase tracking-wider font-semibold">
@@ -2116,7 +2113,7 @@ export default function SessionResultsPodium({
       </div>
 
       {/* BOTTOM CONTROL ACTIONS */}
-      <div className="text-center pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80 relative z-10">
+      <div className="text-center pt-3.5 pb-1 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800/80 relative z-10">
         <div className="flex items-center gap-2 text-slate-400 text-[10px] text-left font-semibold">
           <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
           <span>Asignación del 10% de afiliación y 10% de comisión de plataforma ejecutado con éxito.</span>
@@ -2136,6 +2133,11 @@ export default function SessionResultsPodium({
                localStorage.removeItem('user_paid_session_sess-topmodels-1');
                localStorage.removeItem('user_paid_session_sess-inversores-1');
                localStorage.removeItem('user_paid_session_sess-millonarios-1');
+
+               const activeSessId = (completedSessionToDisplay as any)?.id || 'sess-trabajadores-1';
+               localStorage.removeItem(`finanzas_is_voting_phase_active_${activeSessId}`);
+               localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessId}`, 'false');
+               localStorage.removeItem('finanzas_is_voting_phase_active');
 
                const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
                if (saved) {

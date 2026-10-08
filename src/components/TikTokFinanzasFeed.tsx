@@ -22,7 +22,15 @@ import {
   MicOff,
   Database,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Play,
+  Pause,
+  Film,
+  Music,
+  Check,
+  CheckCircle2,
+  Video,
+  Globe
 } from 'lucide-react';
 import { 
   TRABAJADORES_USERS, 
@@ -45,6 +53,97 @@ const CHANNELS_LIST = [
   { id: 'Fitnes', label: 'Fitnes 💪' },
   { id: 'Beauty', label: 'Beauty 💄' },
   { id: 'Influencer', label: 'Influencer 📱' }
+];
+
+export const FITNES_USERS = [
+  { id: 'fit-1', name: 'Carlos Fit', username: 'carlos_fit_coach', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Entrenador Personal Pro' },
+  { id: 'fit-2', name: 'Sofia Wellness', username: 'sofia_yoga_pilates', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Instructora Yoga & Pilates' },
+  { id: 'fit-3', name: 'David Cross', username: 'david_cross_fit', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Coach Alta Intensidad' },
+  { id: 'fit-4', name: 'Laura Runner', username: 'laura_nutricion_run', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Nutricionista Deportiva' },
+  { id: 'fit-5', name: 'Elena Core', username: 'elena_biomecanica', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Especialista Biomecánica' },
+  { id: 'fit-6', name: 'Marcos Gym', username: 'marcos_preparador', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Preparador Físico' },
+  { id: 'fit-7', name: 'Valeria Power', username: 'valeria_crossfit', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Atleta Crossfit' },
+  { id: 'fit-8', name: 'Alex Kettle', username: 'alex_funcional', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Entrenador Funcional' },
+  { id: 'fit-9', name: 'Carmen Zen', username: 'carmen_mindfulness', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=650', role: 'Instructora Mindfulness' },
+  { id: 'fit-10', name: 'Roberto Force', username: 'roberto_fuerza', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Coach Fuerza' }
+];
+
+export const BEAUTY_USERS = [
+  { id: 'bty-1', name: 'Chloe Glam', username: 'chloe_makeup_artist', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Maquilladora Internacional' },
+  { id: 'bty-2', name: 'Mateo Glow', username: 'mateo_color_image', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Estilista de Imagen & Color' },
+  { id: 'bty-3', name: 'Valentina Skin', username: 'valentina_dermatologia', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Especialista Skincare' },
+  { id: 'bty-4', name: 'Sergio Barber', username: 'sergio_estilista_capilar', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Estilista Capilar VIP' },
+  { id: 'bty-5', name: 'Natalia Brow', username: 'natalia_microblading', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Especialista Microblading' },
+  { id: 'bty-6', name: 'Lucas Perfum', username: 'lucas_alta_perfumeria', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Diseñador Perfumes Alta Gama' },
+  { id: 'bty-7', name: 'Camilla Blush', username: 'camilla_runway_makeup', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Make-up Artist Pasarela' },
+  { id: 'bty-8', name: 'Hugo Lashes', username: 'hugo_pestañas_cejas', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Técnico Pestañas & Cejas' },
+  { id: 'bty-9', name: 'Paula Spa', username: 'paula_facial_wellness', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Terapeuta Facial' },
+  { id: 'bty-10', name: 'Andrés Cosmet', username: 'andres_cosmetica_pro', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Formador Cosmética Premium' }
+];
+
+export const INFLUENCER_USERS = [
+  { id: 'inf-1', name: 'Leo Viral', username: 'leo_viral_creator', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Creador Contenido & Tendencias' },
+  { id: 'inf-2', name: 'Mia Trend', username: 'mia_trend_lifestyle', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Tiktoker Lifestyle & Moda' },
+  { id: 'inf-3', name: 'Santi Stream', username: 'santi_live_streamer', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Streamer Top Tendencias' },
+  { id: 'inf-4', name: 'Zoe Vlogs', username: 'zoe_vlogs_reels', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Creadora YouTube & Reels' },
+  { id: 'inf-5', name: 'Daniel Buzz', username: 'daniel_buzz_growth', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Estratega Crecimiento Digital' },
+  { id: 'inf-6', name: 'Claudia Reels', username: 'claudia_digital_reels', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Diseñadora Digital & Reels' },
+  { id: 'inf-7', name: 'Nico Stories', username: 'nico_stories_visual', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Fotógrafo Móvil Creativo' },
+  { id: 'inf-8', name: 'Emma Challenge', username: 'emma_viral_challenges', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Creadora Retos Virales' },
+  { id: 'inf-9', name: 'Pablo Community', username: 'pablo_community_lead', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Gestor Comunidades Digitales' },
+  { id: 'inf-10', name: 'Sara Pop', username: 'sara_pop_podcast', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Podcaster & Entrevistadora' }
+];
+
+export const FASHION_USERS = [
+  { id: 'fsh-1', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' },
+  { id: 'fsh-2', name: 'Gigi Hadid', username: 'gigi_hadid_official', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Embajadora Global' },
+  { id: 'fsh-3', name: 'Bella Hadid', username: 'bella_hadid_runway', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Icono Pasarela' },
+  { id: 'fsh-4', name: 'Alexander Wright', username: 'alex_wright_ceo', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'CEO Haute Couture' },
+  { id: 'fsh-5', name: 'Victoria Sterling', username: 'victoria_sterling', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Dir. Expansión Global' },
+  { id: 'fsh-6', name: 'Bruno Rossi', username: 'bruno_rossi_milan', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Presidente Textil Milano' },
+  { id: 'fsh-7', name: 'Isabella Fontana', username: 'isabella_creative', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Directora Creativa' },
+  { id: 'fsh-8', name: 'Clara Vega', username: 'clara_patronaje', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Patronista Textil' },
+  { id: 'fsh-9', name: 'Cara Delevingne', username: 'cara_delevingne_live', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Actriz & Top Model' },
+  { id: 'fsh-10', name: 'Irina Shayk', username: 'irina_shayk_couture', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Alta Costura Model' }
+];
+
+export const MODELOS_USERS = [
+  { id: 'mod-1', name: 'Bella Hadid', username: 'bella_hadid_runway', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Icono Pasarela' },
+  { id: 'mod-2', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' },
+  { id: 'mod-3', name: 'Gigi Hadid', username: 'gigi_hadid_official', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Embajadora Global' },
+  { id: 'mod-4', name: 'Irina Shayk', username: 'irina_shayk_couture', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Alta Costura Model' },
+  { id: 'mod-5', name: 'Cara Delevingne', username: 'cara_delevingne_live', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Actriz & Top Model' },
+  { id: 'mod-6', name: 'Naomi Campbell', username: 'naomi_campbell_mentor', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Supermodelo & Mentora' },
+  { id: 'mod-7', name: 'Candice Swanepoel', username: 'candice_swim', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=650', role: 'Directora de Marca' },
+  { id: 'mod-8', name: 'Karlie Kloss', username: 'karlie_kloss_tech', avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=650', role: 'Empresaria & Modelo' },
+  { id: 'mod-9', name: 'Joan Smalls', username: 'joan_smalls_runway', avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=650', role: 'Líder de Pasarelas' },
+  { id: 'mod-10', name: 'Alessandra Ambrosio', username: 'alessandra_ambrosio', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Ejecutiva' }
+];
+
+export const CATWALK_USERS = [
+  { id: 'cat-1', name: 'Naomi Campbell', username: 'naomi_campbell_mentor', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Supermodelo & Mentora' },
+  { id: 'cat-2', name: 'Cara Delevingne', username: 'cara_delevingne_live', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Actriz & Top Model' },
+  { id: 'cat-3', name: 'Irina Shayk', username: 'irina_shayk_couture', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650', role: 'Alta Costura Model' },
+  { id: 'cat-4', name: 'Candice Swanepoel', username: 'candice_swim', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=650', role: 'Directora de Marca' },
+  { id: 'cat-5', name: 'Karlie Kloss', username: 'karlie_kloss_tech', avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=650', role: 'Empresaria & Modelo' },
+  { id: 'cat-6', name: 'Joan Smalls', username: 'joan_smalls_runway', avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=650', role: 'Líder de Pasarelas' },
+  { id: 'cat-7', name: 'Alessandra Ambrosio', username: 'alessandra_ambrosio', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Ejecutiva' },
+  { id: 'cat-8', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' },
+  { id: 'cat-9', name: 'Gigi Hadid', username: 'gigi_hadid_official', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Embajadora Global' },
+  { id: 'cat-10', name: 'Bella Hadid', username: 'bella_hadid_runway', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Icono Pasarela' }
+];
+
+export const TODOS_USERS = [
+  { id: 'tod-1', name: 'Lucas Torres', username: 'lucas_torres_design', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Diseñador Gráfico' },
+  { id: 'tod-2', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' },
+  { id: 'tod-3', name: 'Warren Buffett', username: 'warren_berkshire', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Pres. Fondo Berkshire' },
+  { id: 'tod-4', name: 'Alessia Vance', username: 'alessia_vance_w1', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', role: 'Modelo Directora' },
+  { id: 'tod-5', name: 'Carlos Fit', username: 'carlos_fit_coach', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Entrenador Personal Pro' },
+  { id: 'tod-6', name: 'Chloe Glam', username: 'chloe_makeup_artist', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Maquilladora Internacional' },
+  { id: 'tod-7', name: 'Leo Viral', username: 'leo_viral_creator', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Creador Contenido & Tendencias' },
+  { id: 'tod-8', name: 'Naomi Campbell', username: 'naomi_campbell_mentor', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Supermodelo & Mentora' },
+  { id: 'tod-9', name: 'Alexander Wright', username: 'alex_wright_ceo', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'CEO Haute Couture' },
+  { id: 'tod-10', name: 'Gisele Bündchen', username: 'gisele_invest', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Inversora Principal' }
 ];
 
 // Componente memoizado para renderizar de forma segura el stream de cámara en vivo sin bucles de re-render
@@ -128,6 +227,7 @@ interface TikTokFinanzasFeedProps {
   detailProjectUser?: any;
   showProjectDetailsInPopup?: boolean;
   renderProjectDetailsContent?: () => React.ReactNode;
+  completedSessionToDisplay?: any;
   showFinanzasRecount?: boolean;
   renderFinanzasRecountContent?: () => React.ReactNode;
   showFinanzasResults?: boolean;
@@ -205,6 +305,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   detailProjectUser = null,
   showProjectDetailsInPopup = false,
   renderProjectDetailsContent,
+  completedSessionToDisplay = null,
   showFinanzasRecount = false,
   renderFinanzasRecountContent,
   showFinanzasResults = false,
@@ -236,6 +337,414 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [activeChannelsMenuSessionId, setActiveChannelsMenuSessionId] = useState<string | null>(null);
   const channelsMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showCameraParticipantsGrid, setShowCameraParticipantsGrid] = useState<Record<string, boolean>>({});
+
+  // 📺 Canal seleccionado internamente para conmutar al instante dentro de esta misma pantalla
+  const [currentChannel, setCurrentChannel] = useState<string>(selectedCategoryFilter || 'Finanzas');
+  const [channelToastMessage, setChannelToastMessage] = useState<string | null>(null);
+
+  // 🌐 Traductor de descripciones a Inglés (solicitado sobre captura image.png)
+  const [translatedVideosMap, setTranslatedVideosMap] = useState<Record<string, boolean>>({});
+
+  const toggleVideoTranslation = (videoId: string) => {
+    setTranslatedVideosMap(prev => ({
+      ...prev,
+      [videoId]: !prev[videoId]
+    }));
+  };
+
+  const getEnglishTranslation = (text: string) => {
+    if (!text) return '';
+    const trimmed = text.trim();
+    if (trimmed.includes('alta costura futurista') || trimmed.includes('Glitter Makeup')) {
+      return 'Futuristic haute couture session. Presenting Glitter Makeup for the Barcelona show! ✨ #highfashion #mexicanfashion';
+    }
+    if (trimmed.includes('Pasarela exclusiva') || trimmed.includes('Colección de Primavera')) {
+      return 'Exclusive haute couture runway in Paris - Spring Collection 👗 #runway #fashionweek';
+    }
+    if (trimmed.includes('Backstage') || trimmed.includes('desfilar')) {
+      return 'Backstage and model preparation before stepping onto the runway ✨ #backstage #models';
+    }
+    if (trimmed.includes('Colección Urbana') || trimmed.includes('Streetwear')) {
+      return 'Urban Streetwear Collection 2026 - Outdoor photoshoot 🛹 #streetwear';
+    }
+    if (trimmed.includes('Casting') || trimmed.includes('noveles')) {
+      return 'Casting and interviews with aspiring models for international agencies 🌟 #casting';
+    }
+    return text
+      .replace(/Sesión de alta costura futurista/gi, 'Futuristic haute couture session')
+      .replace(/Sesión de alta costura/gi, 'Haute couture session')
+      .replace(/alta costura/gi, 'haute couture')
+      .replace(/Presentando Glitter Makeup para el show de Barcelona/gi, 'Presenting Glitter Makeup for the Barcelona show')
+      .replace(/Presentando/gi, 'Presenting')
+      .replace(/para el show de/gi, 'for the show in')
+      .replace(/Colección Urbana Streetwear/gi, 'Urban Streetwear Collection')
+      .replace(/Colección de Primavera/gi, 'Spring Collection')
+      .replace(/Pasarela exclusiva/gi, 'Exclusive runway')
+      .replace(/Pasarela/gi, 'Runway')
+      .replace(/desfile/gi, 'fashion show')
+      .replace(/preparación de modelos antes de salir a desfilar/gi, 'model preparation before stepping onto the runway')
+      .replace(/Sesión fotográfica en exteriores/gi, 'Outdoor photoshoot')
+      .replace(/Casting y entrevistas con modelos noveles/gi, 'Casting and interviews with aspiring models')
+      .replace(/para agencias internacionales/gi, 'for international agencies')
+      .replace(/#modamexicana/gi, '#mexicanfashion')
+      .replace(/#modaespanola/gi, '#spanishfashion');
+  };
+
+  useEffect(() => {
+    if (channelToastMessage) {
+      const t = setTimeout(() => setChannelToastMessage(null), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [channelToastMessage]);
+
+  useEffect(() => {
+    if (selectedCategoryFilter) {
+      setCurrentChannel(selectedCategoryFilter);
+      setSessionSelectedPresenterMap({});
+    }
+  }, [selectedCategoryFilter]);
+
+  const getChannelCleanName = (channelId?: string) => {
+    if (channelId === 'Modelos') return 'Runway';
+    if (channelId === 'Investors') return 'Jewellery';
+    return channelId || 'Finanzas';
+  };
+
+  // 🎥 Interface for channel multimedia videos (uploaded from z.png)
+  interface ChannelUploadedVideoItem {
+    id: string;
+    username: string;
+    name: string;
+    avatar: string;
+    videoUrl: string;
+    likes: number;
+    comments: { id: string; user: string; text: string; date: string; avatar: string }[];
+    shares: number;
+    favorites: number;
+    description: string;
+    music: string;
+    videoCategory?: string;
+    uploaderId?: string;
+    isLiked?: boolean;
+    isFavorited?: boolean;
+    isUserUploaded?: boolean;
+  }
+
+  // Preset videos for Fashion channel & other categories so the channel is always gorgeous
+  const DEFAULT_FASHION_PRESETS: ChannelUploadedVideoItem[] = [
+    {
+      id: 'fsh-preset-1',
+      username: 'kendall_jenner_vip',
+      name: 'Kendall Jenner',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 12450,
+      comments: [
+        { id: 'c-fsh-1', user: 'Vogue_Runway', text: '¡Increíble look de alta costura! ✨👠', date: 'Hace 5m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
+        { id: 'c-fsh-2', user: 'MarcJacobs_Pro', text: 'Look futurista impecable para la semana de la moda de París 🗼', date: 'Hace 18m', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 820,
+      favorites: 1940,
+      description: 'Nueva temporada Streetwear & Haute Couture 🗼✨ Glitter makeup y siluetas contemporáneas desfilando en exclusiva. #fashion #streetwear #parisfashion #castinglive',
+      music: 'Fashion Runway Anthem - Electronic Vibes',
+      videoCategory: 'Fashion'
+    },
+    {
+      id: 'fsh-preset-2',
+      username: 'gigi_hadid_official',
+      name: 'Gigi Hadid',
+      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
+      likes: 18920,
+      comments: [
+        { id: 'c-fsh-3', user: 'Bella', text: '¡Esa luz roja en estudio resalta la colección brutalmente! ❤️🔥', date: 'Hace 1h', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1450,
+      favorites: 3100,
+      description: 'Sesión editorial Red Lights Studio 🔴⚡ Tendencias urbanas de vanguardia. #streetwear #fashionweek #lighting',
+      music: 'Urban Synthwave Beats - LoFi Collective',
+      videoCategory: 'Fashion'
+    },
+    {
+      id: 'fsh-preset-3',
+      username: 'bella_hadid_runway',
+      name: 'Bella Hadid',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+      likes: 15300,
+      comments: [
+        { id: 'c-fsh-4', user: 'Alexander', text: 'Elegancia y porte internacional total.', date: 'Hace 2h', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 980,
+      favorites: 2400,
+      description: 'Catwalk & Studio flash moments 📸 Luces estroboscópicas y alta moda en París. #haute_couture #flash #runway',
+      music: 'Catwalk Bass Experience - Studio 9',
+      videoCategory: 'Fashion'
+    },
+    {
+      id: 'fsh-preset-4',
+      username: 'mia_kincaid',
+      name: 'Mia Kincaid',
+      avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
+      likes: 9840,
+      comments: [
+        { id: 'c-fsh-5', user: 'Charlie', text: 'El ambiente nocturno con neón es espectacular 🌧️💜', date: 'Hace 3h', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 610,
+      favorites: 1520,
+      description: 'Cyberpunk rain fashion en las noches de Madrid 🌧️💜 Luces de neón y estética futurista. #cyberpunk #neon #fashion',
+      music: 'Street Lights (Slowed) - Lofi Beats',
+      videoCategory: 'Fashion'
+    }
+  ];
+
+  // Helper to load videos from localStorage coll_casting_live_videos (from page z.png)
+  const loadChannelVideosFromStorage = (channelName: string): ChannelUploadedVideoItem[] => {
+    let stored: any[] = [];
+    try {
+      const raw = localStorage.getItem('coll_casting_live_videos');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          stored = parsed;
+        }
+      }
+    } catch (e) {}
+
+    const chanLower = (channelName || 'Fashion').toLowerCase();
+
+    // Match videos with this category
+    const matched = stored.filter(v => {
+      if (!v) return false;
+      const cat = (v.videoCategory || v.category || '').toLowerCase();
+      if (chanLower === 'todos') return true;
+      if (chanLower === 'fashion') {
+        return cat === 'fashion' || cat === 'moda' || cat.includes('fashion') || cat.includes('streetwear');
+      }
+      if (chanLower === 'modelos' || chanLower === 'runway') {
+        return cat === 'modelos' || cat === 'runway';
+      }
+      if (chanLower === 'backstage') {
+        return cat === 'backstage';
+      }
+      if (chanLower === 'investors' || chanLower === 'jewellery') {
+        return cat === 'investors' || cat === 'jewellery';
+      }
+      if (chanLower === 'catwalk') {
+        return cat === 'catwalk';
+      }
+      if (chanLower === 'fitnes') {
+        return cat === 'fitnes' || cat === 'fitness';
+      }
+      if (chanLower === 'beauty') {
+        return cat === 'beauty';
+      }
+      if (chanLower === 'influencer') {
+        return cat === 'influencer';
+      }
+      return cat === chanLower;
+    }).map(v => ({
+      ...v,
+      isUserUploaded: true
+    }));
+
+    // Other user uploads (e.g. uploaded clips that might not specify exact category)
+    const otherUserUploads = stored.filter(v => {
+      if (!v) return false;
+      const isUpload = v.id && (String(v.id).includes('uploaded') || String(v.id).includes('user'));
+      return isUpload && !matched.some(m => m.id === v.id);
+    }).map(v => ({
+      ...v,
+      isUserUploaded: true
+    }));
+
+    const presets = DEFAULT_FASHION_PRESETS.map(p => ({
+      ...p,
+      videoCategory: channelName
+    }));
+
+    // Prioritize user uploads from z.png right at the top
+    const combined = [...matched, ...otherUserUploads, ...presets];
+    const unique: ChannelUploadedVideoItem[] = [];
+    const seen = new Set<string>();
+
+    for (const item of combined) {
+      if (!item || !item.videoUrl) continue;
+      const key = item.id || item.videoUrl;
+      if (!seen.has(key) && !seen.has(item.videoUrl)) {
+        seen.add(key);
+        seen.add(item.videoUrl);
+        unique.push(item);
+      }
+    }
+
+    return unique.length > 0 ? unique : presets;
+  };
+
+  // State for multimedia channel video player (Fashion, Runway, BackStage, etc.)
+  const [channelUploadedVideos, setChannelUploadedVideos] = useState<ChannelUploadedVideoItem[]>(() => {
+    return loadChannelVideosFromStorage(currentChannel);
+  });
+  const [activeChannelVideoIdx, setActiveChannelVideoIdx] = useState<number>(0);
+  const [isChannelVideoPlaying, setIsChannelVideoPlaying] = useState<boolean>(true);
+  const [isChannelVideoAudioMuted, setIsChannelVideoAudioMuted] = useState<boolean>(false);
+  const [channelVideoProgress, setChannelVideoProgress] = useState<number>(0);
+  const [channelVideoLikesMap, setChannelVideoLikesMap] = useState<Record<string, { count: number; userLiked: boolean }>>({});
+  const [channelVideoCommentsOpen, setChannelVideoCommentsOpen] = useState<boolean>(false);
+  const [channelVideoNewComment, setChannelVideoNewComment] = useState<string>('');
+  const [channelVideoCommentsMap, setChannelVideoCommentsMap] = useState<Record<string, any[]>>({});
+  const [channelFollowedCreatorsMap, setChannelFollowedCreatorsMap] = useState<Record<string, boolean>>({});
+  const [channelVideoShareToast, setChannelVideoShareToast] = useState<string | null>(null);
+
+  const channelVideoRef = useRef<HTMLVideoElement | null>(null);
+  const channelVideoCardRef = useRef<HTMLDivElement | null>(null);
+  const lastChannelWheelTimeRef = useRef<number>(0);
+
+  // Auto-sync uploaded videos from z.png via event and storage
+  useEffect(() => {
+    const handleSyncChannelVideos = () => {
+      const vids = loadChannelVideosFromStorage(currentChannel);
+      setChannelUploadedVideos(vids);
+    };
+
+    handleSyncChannelVideos();
+
+    window.addEventListener('coll_casting_live_videos_updated', handleSyncChannelVideos);
+    window.addEventListener('storage', handleSyncChannelVideos);
+    window.addEventListener('saved_videos_updated', handleSyncChannelVideos);
+
+    return () => {
+      window.removeEventListener('coll_casting_live_videos_updated', handleSyncChannelVideos);
+      window.removeEventListener('storage', handleSyncChannelVideos);
+      window.removeEventListener('saved_videos_updated', handleSyncChannelVideos);
+    };
+  }, [currentChannel]);
+
+  // Video playback sync on active index or channel change
+  useEffect(() => {
+    if (channelVideoRef.current) {
+      channelVideoRef.current.currentTime = 0;
+      if (isChannelVideoPlaying) {
+        const p = channelVideoRef.current.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            if (channelVideoRef.current) {
+              channelVideoRef.current.muted = true;
+              channelVideoRef.current.play().catch(() => {});
+            }
+          });
+        }
+      }
+    }
+  }, [activeChannelVideoIdx, currentChannel]);
+
+  const handleToggleChannelVideoLike = (video: ChannelUploadedVideoItem) => {
+    const cur = channelVideoLikesMap[video.id] || { count: video.likes || 120, userLiked: Boolean(video.isLiked) };
+    const nextLiked = !cur.userLiked;
+    const nextCount = nextLiked ? cur.count + 1 : Math.max(0, cur.count - 1);
+    setChannelVideoLikesMap(prev => ({ ...prev, [video.id]: { count: nextCount, userLiked: nextLiked } }));
+
+    if (nextLiked) {
+      window.dispatchEvent(new CustomEvent('trigger-hearts-shower'));
+    }
+  };
+
+  const handleAddChannelVideoComment = (video: ChannelUploadedVideoItem) => {
+    if (!channelVideoNewComment.trim()) return;
+    const newCommentObj = {
+      id: `comm-${Date.now()}`,
+      user: userProfile?.name || 'Usuario Fashion',
+      text: channelVideoNewComment.trim(),
+      date: 'Ahora mismo',
+      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
+    };
+
+    const existingComments = channelVideoCommentsMap[video.id] || video.comments || [];
+    const updated = [newCommentObj, ...existingComments];
+    setChannelVideoCommentsMap(prev => ({ ...prev, [video.id]: updated }));
+    setChannelVideoNewComment('');
+
+    try {
+      const raw = localStorage.getItem('coll_casting_live_videos');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const vIdx = parsed.findIndex(v => v.id === video.id);
+          if (vIdx !== -1) {
+            parsed[vIdx].comments = updated;
+            localStorage.setItem('coll_casting_live_videos', JSON.stringify(parsed));
+          }
+        }
+      }
+    } catch (e) {}
+  };
+
+  const handleNextChannelVideo = () => {
+    if (activeChannelVideoIdx < channelUploadedVideos.length - 1) {
+      setActiveChannelVideoIdx(prev => prev + 1);
+      setChannelVideoProgress(0);
+      setIsChannelVideoPlaying(true);
+    }
+  };
+
+  const handlePrevChannelVideo = () => {
+    if (activeChannelVideoIdx > 0) {
+      setActiveChannelVideoIdx(prev => prev - 1);
+      setChannelVideoProgress(0);
+      setIsChannelVideoPlaying(true);
+    }
+  };
+
+  const handleShareChannelVideo = (video: ChannelUploadedVideoItem) => {
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(video.videoUrl || window.location.href);
+      }
+    } catch (e) {}
+
+    const v = video as any;
+    // Increment share counter
+    v.shares = (v.shares || 48) + 1;
+
+    // Save to shared videos in localStorage so it appears in the new "Compartir" tab on the profile page (z1.png)
+    const sharedItem = {
+      id: v.id || `shared-${Date.now()}`,
+      title: v.title || `Vídeo de @${v.username || 'sofia_sensations'}`,
+      description: v.description || '',
+      videoUrl: v.videoUrl,
+      poster: v.thumbnail || v.avatar,
+      thumbnail: v.thumbnail || v.avatar,
+      avatar: v.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      username: v.username || 'sofia_sensations',
+      name: v.name || v.username || 'Sofía Sensations',
+      music: v.music || 'Aesthetic Synthwave - LoFi Collective',
+      views: (v.views || 1420) + 1,
+      shares: v.shares || 49,
+      likes: v.likes || 1200,
+      sharedAt: new Date().toISOString(),
+      category: currentChannel || 'Fashion'
+    };
+
+    try {
+      const existingRaw = localStorage.getItem('user_shared_videos');
+      const existingList = existingRaw ? JSON.parse(existingRaw) : [];
+      const filtered = existingList.filter((item: any) => item.id !== sharedItem.id);
+      const updated = [sharedItem, ...filtered];
+      localStorage.setItem('user_shared_videos', JSON.stringify(updated));
+    } catch (_) {}
+
+    window.dispatchEvent(new CustomEvent('channel-video-shared', { detail: sharedItem }));
+    window.dispatchEvent(new CustomEvent('open-profile-shared-tab', { detail: sharedItem }));
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'profile' }));
+
+    setChannelVideoShareToast('¡Vídeo compartido! Abriendo tu pestaña Compartir en tu perfil 🔗');
+    setTimeout(() => {
+      setChannelVideoShareToast(null);
+      window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'profile' }));
+      window.dispatchEvent(new CustomEvent('open-profile-shared-tab', { detail: sharedItem }));
+    }, 500);
+  };
 
   const lastWheelTimeRef = useRef<number>(0);
   // ⚠️ Aviso cuando el usuario intenta inscribirse en otra ronda estando ya participando en una
@@ -297,25 +806,38 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   const handleWheelFeed = (e: React.WheelEvent) => {
     const target = e.target as HTMLElement;
+
+    // 🛑 Si estamos dentro del contenedor del podio de resultados finales o escrutinio:
+    // La página permanece FIJA en pantalla. NO salir de la pantalla ni cambiar de ronda por scroll.
+    // Permitir desplazarse cómodamente con el ratón hasta abajo del todo.
+    if (showFinanzasResults || showFinanzasRecount || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('#finanzas-results-in-channel') || target.closest('[id^="finanzas-results-in-channel"]')) {
+      const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+      if (wrapper && !target.closest('#podium-scrollable-content-wrapper')) {
+        wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
+      }
+      return;
+    }
+
     if (
       showVotingProjectsModal ||
-      showFinanzasResults ||
-      showFinanzasRecount ||
       target.closest('.overflow-y-auto:not(#tiktok-rounds-vertical-feed)') ||
       target.closest('#voting-projects-scrollable-container') ||
       target.closest('[id^="voting-projects-in-channel"]') ||
-      target.closest('[id^="finanzas-results-in-channel"]') ||
-      target.closest('#podium-scrollable-content-wrapper') ||
-      target.closest('#podium-results-screen') ||
       target.closest('#ten-windows-live-modal') ||
       target.closest('#in-channel-comments-window')
     ) {
       return;
     }
+
     const now = Date.now();
-    if (now - lastWheelTimeRef.current < 350) return;
-    if (Math.abs(e.deltaY) > 25) {
+    if (now - lastWheelTimeRef.current < 300) return;
+    if (Math.abs(e.deltaY) > 15) {
       lastWheelTimeRef.current = now;
+      // 🛑 Al hacer scroll con el ratón por las rondas (z1.png):
+      // NO deben salir las páginas de Escrutinio (image.png) ni Resultados Finales (z.png).
+      // Solo deben salir rondas.
+      if (setShowFinanzasResults) setShowFinanzasResults(false);
+      if (setShowFinanzasRecount) setShowFinanzasRecount(false);
       if (e.deltaY > 0) {
         scrollToRound(activeFinanzasSessionIndex + 1);
       } else {
@@ -380,8 +902,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // Listen to global feed scroll events from child views (such as z.png results screen)
   useEffect(() => {
     const handleCustomFeedScroll = (e: any) => {
-      // 🛡️ Si estamos en la pantalla de resultados finales (image.png), no permitir cambio involuntario de ronda
-      if (showFinanzasResults && !e.detail?.force) return;
+      // 🛡️ Si estamos en la pantalla de resultados finales (z.png), permanecer fija en pantalla
+      if (showFinanzasResults) return;
       const now = Date.now();
       if (now - lastWheelTimeRef.current < 300) return;
       lastWheelTimeRef.current = now;
@@ -430,6 +952,44 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       window.removeEventListener('exit-voting-to-exposition', handleExitVotingToImagePage);
     };
   }, [activeSessionsOnly, activeFinanzasSessionIndex]);
+
+  // 🛑 Al pulsar "Cerrar Concurso": resetear la ronda que terminó a la fase de exposición de 5 minutos, manteniendo la independencia de las demás
+  useEffect(() => {
+    const handleCloseContestReset = (e: any) => {
+      const closedId = e.detail?.closedSessionId;
+      const nextId = e.detail?.nextRoundId;
+      setSessionVotingPhaseMap(prev => {
+        const next = { ...prev };
+        if (closedId) next[closedId] = false;
+        if (nextId) next[nextId] = false;
+        try {
+          localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
+        } catch (err) {}
+        return next;
+      });
+
+      if (closedId) {
+        setSessionVotingTimerMap(prev => ({ ...prev, [closedId]: 600 }));
+        setSessionExpositionTimerMap(prev => ({ ...prev, [closedId]: 300 }));
+        const sess = activeSessionsOnly.find(s => s.id === closedId);
+        if (sess) {
+          const parts = getSessionParticipants(sess);
+          if (parts.length > 0) {
+            setSessionSelectedPresenterMap(prev => ({ ...prev, [closedId]: parts[0] }));
+          }
+        }
+      }
+      if (nextId) {
+        setSessionVotingTimerMap(prev => ({ ...prev, [nextId]: 600 }));
+        setSessionExpositionTimerMap(prev => ({ ...prev, [nextId]: 300 }));
+      }
+    };
+
+    window.addEventListener('finanzas-close-contest-reset-round', handleCloseContestReset);
+    return () => {
+      window.removeEventListener('finanzas-close-contest-reset-round', handleCloseContestReset);
+    };
+  }, [activeSessionsOnly]);
 
   // Sync feed scroll position whenever activeFinanzasSessionIndex changes from outside
   useEffect(() => {
@@ -531,6 +1091,69 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   };
 
   const EMOJI_LIST = ['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '🏆', '✨', '👍', '🌟', '🤩', '💎', '📈', '🎯', '💪', '🎉', '😎', '🥳', '👑', '💸'];
+
+  // 💖 Glosario de 30 emojis (6 columnas x 5 filas) idéntico a la captura image.png
+  const TIKTOK_HEART_HOVER_EMOJIS = [
+    '❤️', '💖', '🔥', '👏', '🤩', '🎉',
+    '👍', '⭐', '🥰', '😘', '💕', '💘',
+    '💗', '💓', '💞', '😍', '🥳', '😎',
+    '🤣', '😂', '😜', '🤤', '🤯', '🥵',
+    '😻', '🙌', '🙏', '💪', '👀', '✨'
+  ];
+
+  // 🌐 Nombres de los emojis en inglés para el traductor solicitado sobre captura image.png
+  const EMOJI_ENGLISH_NAMES: Record<string, string> = {
+    '❤️': 'Red Heart',
+    '💖': 'Sparkling Heart',
+    '🔥': 'Fire',
+    '👏': 'Clapping Hands',
+    '🤩': 'Star-Struck',
+    '🎉': 'Party Popper',
+    '👍': 'Thumbs Up',
+    '⭐': 'Star',
+    '🥰': 'Smiling Face with Hearts',
+    '😘': 'Face Blowing a Kiss',
+    '💕': 'Two Hearts',
+    '💘': 'Heart with Arrow',
+    '💗': 'Growing Heart',
+    '💓': 'Beating Heart',
+    '💞': 'Revolving Hearts',
+    '😍': 'Heart Eyes',
+    '🥳': 'Partying Face',
+    '😎': 'Smiling Face with Sunglasses',
+    '🤣': 'Rolling on Floor Laughing',
+    '😂': 'Face with Tears of Joy',
+    '😜': 'Winking Face with Tongue',
+    '🤤': 'Drooling Face',
+    '🤯': 'Exploding Head',
+    '🥵': 'Hot Face',
+    '😻': 'Smiling Cat with Heart-Eyes',
+    '🙌': 'Raising Hands',
+    '🙏': 'Folded Hands',
+    '💪': 'Flexed Biceps',
+    '👀': 'Eyes',
+    '✨': 'Sparkles'
+  };
+
+  const [isEmojiEnglish, setIsEmojiEnglish] = useState<boolean>(false);
+  const [hoveredEmojiName, setHoveredEmojiName] = useState<string | null>(null);
+
+  const [isChannelHeartHovered, setIsChannelHeartHovered] = useState<boolean>(false);
+  const channelHeartHoverTimeoutRef = useRef<any>(null);
+
+  const handleChannelHeartMouseEnter = () => {
+    if (channelHeartHoverTimeoutRef.current) {
+      clearTimeout(channelHeartHoverTimeoutRef.current);
+      channelHeartHoverTimeoutRef.current = null;
+    }
+    setIsChannelHeartHovered(true);
+  };
+
+  const handleChannelHeartMouseLeave = () => {
+    channelHeartHoverTimeoutRef.current = setTimeout(() => {
+      setIsChannelHeartHovered(false);
+    }, 280);
+  };
 
   const EMOJI_GLOSSARY: Array<{ category: string; icon: string; emojis: string[] }> = [
     {
@@ -824,6 +1447,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       playVolumeBeep(channelVolume);
     }
   };
+
+  // 🎥 Asegurar que el vídeo de la cámara del escenario principal cargue y reproduzca inmediatamente al conmutar canal dentro de esta misma pantalla
+  useEffect(() => {
+    if (liveVideoRef.current) {
+      try {
+        liveVideoRef.current.load();
+        const p = liveVideoRef.current.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            if (liveVideoRef.current) {
+              liveVideoRef.current.muted = true;
+              liveVideoRef.current.play().catch(() => {});
+            }
+          });
+        }
+      } catch (e) {}
+    }
+  }, [currentChannel]);
 
   const handleVolumeWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -1237,45 +1878,85 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     } catch (e) {}
   };
 
-  const triggerHeartsShower = () => {
+  const continuousRainIntervalRef = useRef<any>(null);
+
+  const triggerContinuousRain = (customEmoji?: string) => {
     playHeartSound();
-    const count = 42;
-    const baseTime = Date.now();
-    const emojis = ['❤️', '💖', '💕', '💓', '💗', '💘', '💝', '✨', '🌹'];
-    const newHearts: typeof showerHearts = [];
-
-    for (let i = 0; i < count; i++) {
-      const isRain = Math.random() < 0.75; // 75% cae desde arriba como lluvia, 25% asciende
-      const size = Math.floor(Math.random() * 32) + 24; // 24px - 56px
-      const duration = +(1.8 + Math.random() * 1.3).toFixed(2);
-      const delay = +(Math.random() * 0.35).toFixed(2);
-      const left = Math.floor(Math.random() * 92) + 4; // 4% a 96% de la pantalla
-
-      newHearts.push({
-        id: baseTime + i + Math.floor(Math.random() * 1000000),
-        left,
-        size,
-        duration,
-        delay,
-        drift1: Math.floor(Math.random() * 30) - 15,
-        drift2: Math.floor(Math.random() * 50) - 25,
-        drift3: Math.floor(Math.random() * 40) - 20,
-        drift4: Math.floor(Math.random() * 60) - 30,
-        rot1: Math.floor(Math.random() * 40) - 20,
-        rot2: Math.floor(Math.random() * 50) - 25,
-        rot3: Math.floor(Math.random() * 60) - 30,
-        rot4: Math.floor(Math.random() * 70) - 35,
-        emoji: emojis[Math.floor(Math.random() * emojis.length)],
-        type: isRain ? 'rain' : 'rise'
-      });
+    if (continuousRainIntervalRef.current) {
+      clearInterval(continuousRainIntervalRef.current);
+      continuousRainIntervalRef.current = null;
     }
 
-    setShowerHearts(prev => [...prev.slice(-90), ...newHearts]);
+    const selectedEmoji = customEmoji || '❤️';
+    // 85% selected emoji, 15% high-shine sparkles ✨ to accentuate brightness and HD glow
+    const emojiPool = [selectedEmoji, selectedEmoji, selectedEmoji, selectedEmoji, '✨'];
 
-    setTimeout(() => {
-      setShowerHearts(prev => prev.filter(h => !newHearts.some(nh => nh.id === h.id)));
-    }, 3800);
+    const spawnContinuousWave = (waveIdx: number) => {
+      const count = 28;
+      const baseTime = Date.now();
+      const waveHearts: typeof showerHearts = [];
+
+      for (let i = 0; i < count; i++) {
+        const isRain = Math.random() < 0.88; // 88% continuous waterfall cascade from top
+        const size = Math.floor(Math.random() * 32) + 34; // 34px - 66px (Large, crisp, ultra HD definition)
+        const duration = +(1.9 + Math.random() * 1.5).toFixed(2);
+        const delay = +(Math.random() * 0.45).toFixed(2);
+        const left = Math.floor(Math.random() * 94) + 3; // 3% to 97% width
+
+        waveHearts.push({
+          id: baseTime + waveIdx * 10000 + i + Math.floor(Math.random() * 100000),
+          left,
+          size,
+          duration,
+          delay,
+          drift1: Math.floor(Math.random() * 40) - 20,
+          drift2: Math.floor(Math.random() * 60) - 30,
+          drift3: Math.floor(Math.random() * 50) - 25,
+          drift4: Math.floor(Math.random() * 70) - 35,
+          rot1: Math.floor(Math.random() * 40) - 20,
+          rot2: Math.floor(Math.random() * 50) - 25,
+          rot3: Math.floor(Math.random() * 60) - 30,
+          rot4: Math.floor(Math.random() * 70) - 35,
+          emoji: emojiPool[Math.floor(Math.random() * emojiPool.length)],
+          type: isRain ? 'rain' : 'rise'
+        });
+      }
+
+      setShowerHearts(prev => [...prev.slice(-140), ...waveHearts]);
+
+      setTimeout(() => {
+        setShowerHearts(prev => prev.filter(h => !waveHearts.some(nh => nh.id === h.id)));
+      }, 4800);
+    };
+
+    // Instant initial burst
+    spawnContinuousWave(0);
+
+    // Continuous waves spawned every 480ms for 14 continuous waves = over 7 seconds of dense, steady rain
+    let wave = 1;
+    continuousRainIntervalRef.current = setInterval(() => {
+      spawnContinuousWave(wave);
+      wave++;
+      if (wave >= 14) {
+        clearInterval(continuousRainIntervalRef.current);
+        continuousRainIntervalRef.current = null;
+      }
+    }, 480);
   };
+
+  const triggerHeartsShower = (customEmoji?: string) => {
+    triggerContinuousRain(customEmoji);
+  };
+
+  useEffect(() => {
+    const handleTriggerShower = () => {
+      triggerHeartsShower();
+    };
+    window.addEventListener('trigger-hearts-shower', handleTriggerShower);
+    return () => {
+      window.removeEventListener('trigger-hearts-shower', handleTriggerShower);
+    };
+  }, []);
 
   const [activeHoveredParticipantsSession, setActiveHoveredParticipantsSession] = useState<string | null>(null);
   // 🎛️ Synchronized selected presenter per session for direct turn switching (Marina Serrano by default for Streetwear & Urban matching z.png)
@@ -1288,31 +1969,44 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // 🗳️ State for 10-minute voting phase per session (matching zq.png)
   // 🛑 CADA RONDA ES ESTRICTAMENTE INDEPENDIENTE DE LA OTRA: guardado por sessionId
   const [sessionVotingPhaseMap, setSessionVotingPhaseMap] = useState<Record<string, boolean>>(() => {
+    // Configuración independiente por Ronda:
+    // Cada ronda tiene su propia fase: o bien fase de exposición de 5 minutos, o bien fase de descuento final de 10 minutos para votar.
+    const defaultPhaseMap: Record<string, boolean> = {
+      'sess-trabajadores-1': false, // Ronda 1 (10€): 5 min exposición de proyectos (Lucas Torres)
+      'sess-emprendedores-1': true,  // Ronda 2 (100€): 10 min de cuenta atrás / descuento final para votar
+      'sess-empresarios-1': false,   // Ronda 3 (1.000€): 5 min exposición de proyectos
+      'sess-topmodels-1': true,      // Ronda 4 (10.000€): 10 min de cuenta atrás / descuento final para votar
+      'sess-inversores-1': false,    // Ronda 5 (100.000€): 5 min exposición de proyectos
+      'sess-millonarios-1': false,   // Ronda 6 (1.000.000€): 5 min exposición de proyectos
+    };
+
     try {
       localStorage.removeItem('finanzas_is_voting_phase_active');
       const saved = localStorage.getItem('finanzas_session_voting_phase_map');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed === 'object' && parsed !== null) {
-          const filtered: Record<string, boolean> = {};
+          const result = { ...defaultPhaseMap };
           Object.keys(parsed).forEach(k => {
-            if (parsed[k] && localStorage.getItem(`finanzas_is_voting_phase_active_${k}`) === 'true') {
-              filtered[k] = true;
+            const lsVal = localStorage.getItem(`finanzas_is_voting_phase_active_${k}`);
+            if (lsVal === 'true') {
+              result[k] = true;
+            } else if (lsVal === 'false') {
+              result[k] = false;
+            } else if (typeof parsed[k] === 'boolean') {
+              result[k] = parsed[k];
             }
           });
-          return filtered;
+          return result;
         }
       }
     } catch (e) {}
-    return {};
+    return defaultPhaseMap;
   });
 
+  // 🛑 Cada ronda es estrictamente independiente de la otra: comprobación por sessionId
   const isSessionInVotingPhase = (sessionId: string) => {
-    return Boolean(
-      sessionVotingPhaseMap[sessionId] || 
-      (sessionId === activeSessionsOnly[activeFinanzasSessionIndex]?.id && isVotingPhaseActive) ||
-      (sessionId === 'sess-trabajadores-1' && isVotingPhaseActive)
-    );
+    return Boolean(sessionVotingPhaseMap[sessionId]);
   };
 
   const handleMouseEnterRonda = (sessionId: string) => {
@@ -1331,15 +2025,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
     channelsMenuTimeoutRef.current = setTimeout(() => {
       setActiveChannelsMenuSessionId(null);
-    }, 280);
+    }, 450);
   };
 
-  // 🛡️ Al abrir la ventana en grande o durante la fase de votación de 10 minutos, cerrar inmediatamente el menú de canales
+  // 🛡️ Al abrir la ventana en grande o durante la fase de votación de 10 minutos de la ronda actual, cerrar inmediatamente el menú de canales
   useEffect(() => {
-    if (enlargedWindowUser || isVotingPhaseActive || Object.values(sessionVotingPhaseMap).some(Boolean)) {
+    const curSession = activeSessionsOnly[activeFinanzasSessionIndex];
+    if (enlargedWindowUser || (curSession && isSessionInVotingPhase(curSession.id))) {
       setActiveChannelsMenuSessionId(null);
     }
-  }, [enlargedWindowUser, isVotingPhaseActive, sessionVotingPhaseMap]);
+  }, [enlargedWindowUser, activeFinanzasSessionIndex, sessionVotingPhaseMap]);
 
   const toggleChannelsMenu = (sessionId: string) => {
     // 🚫 Durante el tiempo de votación final de 10 minutos, no permitir abrir el menú de canales
@@ -1398,37 +2093,25 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       const endVal = localStorage.getItem(endKey);
       if (endVal) {
         const endMs = parseInt(endVal, 10);
-        if (!isNaN(endMs) && endMs > 0) {
-          return Math.max(0, Math.floor((endMs - Date.now()) / 1000));
-        }
-      }
-      
-      const startKey = `finanzas_active_session_start_${sessionId}`;
-      const startVal = localStorage.getItem(startKey);
-      if (startVal) {
-        const startMs = parseInt(startVal, 10);
-        if (!isNaN(startMs) && startMs > 0) {
-          const elapsed = Math.floor((Date.now() - startMs) / 1000);
-          const rem = Math.max(0, 3600 - elapsed);
-          localStorage.setItem(endKey, String(Date.now() + rem * 1000));
-          return rem;
+        if (!isNaN(endMs) && endMs > Date.now() && endMs <= Date.now() + 660 * 1000) {
+          return Math.max(1, Math.floor((endMs - Date.now()) / 1000));
         }
       }
 
       const savedTimer = localStorage.getItem(`finanzas_voting_phase_timer_${sessionId}`);
       if (savedTimer) {
         const s = parseInt(savedTimer, 10);
-        if (!isNaN(s) && s >= 0 && s <= 600) {
+        if (!isNaN(s) && s > 0 && s <= 600) {
           localStorage.setItem(endKey, String(Date.now() + s * 1000));
           return s;
         }
       }
 
-      // Si la votación está activa en este canal, establecemos el timestamp final
-      const isVoting = localStorage.getItem(`finanzas_is_voting_phase_active_${sessionId}`) === 'true';
-      if (isVoting) {
-        localStorage.setItem(endKey, String(Date.now() + 600 * 1000));
-      }
+      // Default fresh 10-minute countdown (600s)
+      const defaultSecs = 600;
+      localStorage.setItem(endKey, String(Date.now() + defaultSecs * 1000));
+      localStorage.setItem(`finanzas_voting_phase_timer_${sessionId}`, String(defaultSecs));
+      return defaultSecs;
     } catch (e) {}
     return 600;
   };
@@ -1585,7 +2268,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           setVotingPhaseTimer(nextSecs);
         }
 
-        if (nextSecs === 0) {
+        if (nextSecs === 0 && (sessionVotingTimerMap[sId] !== undefined && sessionVotingTimerMap[sId] > 0)) {
           if (triggerScrutinyAndRecount) {
             triggerScrutinyAndRecount();
           }
@@ -1741,6 +2424,54 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const getRoundTitle = (session: any, index: number) => {
     const fee = session?.entryFee;
     const cat = (session?.category || session?.title || '').toUpperCase();
+    const activeChan = currentChannel || selectedCategoryFilter || 'Finanzas';
+
+    if (activeChan === 'Fashion') {
+      if (fee === 10) return 'ROUND FASHION STREETWEAR ✨';
+      if (fee === 100) return 'ROUND CASUAL & COUTURE ✨';
+      if (fee === 1000) return 'ROUND HAUTE COUTURE LUXE ✨';
+      if (fee === 10000) return 'ROUND PARIS FASHION WEEK 🗼';
+      return 'ROUND FASHION & LIFESTYLE ✨';
+    }
+    if (activeChan === 'Modelos') {
+      if (fee === 10) return 'ROUND RUNWAY NEW FACES 👑';
+      if (fee === 100) return 'ROUND RUNWAY EDITORIAL 👑';
+      if (fee === 1000) return 'ROUND TOP MODELS RUNWAY 👑';
+      if (fee === 10000) return 'ROUND SUPERMODELS VIP 👑';
+      return 'ROUND RUNWAY & TOP MODELS 👑';
+    }
+    if (activeChan === 'BackStage') {
+      if (fee === 10) return 'ROUND BACKSTAGE CREW 🎬';
+      if (fee === 100) return 'ROUND STYLING & MAKEUP 🎬';
+      if (fee === 1000) return 'ROUND PRODUCTION MASTER 🎬';
+      return 'ROUND BACKSTAGE & PRODUCCIÓN 🎬';
+    }
+    if (activeChan === 'Investors') {
+      if (fee === 10) return 'ROUND JEWELLERY STARTER 💎';
+      if (fee === 100) return 'ROUND LUXURY GEMSTONES 💎';
+      if (fee === 1000) return 'ROUND HIGH JEWELLERY CLUB 💎';
+      if (fee === 10000) return 'ROUND PRIVATE EQUITY JEWELS 💎';
+      return 'ROUND JEWELLERY & LUXURY ASSETS 💎';
+    }
+    if (activeChan === 'Catwalk') {
+      if (fee === 10) return 'ROUND CATWALK PASARELA 👠';
+      if (fee === 100) return 'ROUND MILAN CATWALK 👠';
+      if (fee === 1000) return 'ROUND HAUTE CATWALK 👠';
+      return 'ROUND CATWALK & PASARELA 👠';
+    }
+    if (activeChan === 'Fitnes') {
+      return 'ROUND FITNES & ACTIVEWEAR 💪';
+    }
+    if (activeChan === 'Beauty') {
+      return 'ROUND BEAUTY & COSMETICS 💄';
+    }
+    if (activeChan === 'Influencer') {
+      return 'ROUND INFLUENCER & VIRAL 📱';
+    }
+    if (activeChan === 'Todos') {
+      return 'ROUND GLOBAL MULTI-CANAL 🌍';
+    }
+
     if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'ROUND STREETWEAR & URBAN';
     if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'ROUND CASUAL & LIFESTYLE';
     if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'RONDA GLAMOUR ✨';
@@ -1766,8 +2497,30 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const getSessionParticipants = (session: any) => {
     const sId = session?.id || '';
     const fee = session?.entryFee;
+    const activeChan = currentChannel || selectedCategoryFilter || 'Finanzas';
     let list: any[] = [];
-    if (Array.isArray(session?.participants) && session.participants.length >= 10) {
+
+    if (activeChan === 'Fashion') {
+      list = [...FASHION_USERS];
+    } else if (activeChan === 'Modelos') {
+      list = [...MODELOS_USERS];
+    } else if (activeChan === 'Catwalk') {
+      list = [...CATWALK_USERS];
+    } else if (activeChan === 'Investors') {
+      list = [...INVERSORES_USERS.slice(0, 10)];
+    } else if (activeChan === 'BackStage') {
+      list = [...TRABAJADORES_USERS.slice(0, 10)];
+    } else if (activeChan === 'Fitnes') {
+      list = [...FITNES_USERS];
+    } else if (activeChan === 'Beauty') {
+      list = [...BEAUTY_USERS];
+    } else if (activeChan === 'Influencer') {
+      list = [...INFLUENCER_USERS];
+    } else if (activeChan === 'Todos') {
+      list = [...TODOS_USERS];
+    } else if (activeChan === 'Finanzas') {
+      list = [...FINANZAS_USERS.slice(0, 10)];
+    } else if (Array.isArray(session?.participants) && session.participants.length >= 10) {
       list = [...session.participants.slice(0, 10)];
     } else if (sId.includes('trabajadores') || fee === 10) list = [...TRABAJADORES_USERS.slice(0, 10)];
     else if (sId.includes('emprendedores') || fee === 100) list = [...FINANZAS_USERS.slice(0, 10)];
@@ -1775,7 +2528,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     else if (sId.includes('topmodels') || fee === 10000) list = [...TOPMODELS_USERS.slice(0, 10)];
     else if (sId.includes('inversores') || fee === 100000) list = [...INVERSORES_USERS.slice(0, 10)];
     else if (sId.includes('millonarios') || fee === 1000000) list = [...MILLONARIOS_USERS.slice(0, 10)];
-    else list = [...TRABAJADORES_USERS.slice(0, 10)];
+    else list = [...FINANZAS_USERS.slice(0, 10)];
 
     const isEnrolled = Boolean(
       userPaidSessions[session.id] ||
@@ -1960,17 +2713,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     if (!targetSession) return;
     const container = feedContainerRef.current;
     const el = document.getElementById(`tiktok-round-card-${targetSession.id}`);
+    setActiveFinanzasSessionIndex(targetIndex);
     if (container && el) {
       isProgrammaticScrollRef.current = true;
-      const targetTop = el.offsetTop - (container.clientHeight - el.clientHeight) / 2;
+      // 🎯 Scroll preciso para que la siguiente pantalla quede fija y perfectamente centrada
+      const targetTop = el.offsetTop - Math.max(0, (container.clientHeight - el.clientHeight) / 2);
       container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
-      setActiveFinanzasSessionIndex(targetIndex);
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (err) {}
       setTimeout(() => {
         isProgrammaticScrollRef.current = false;
+        if (container && el) {
+          const finalTop = el.offsetTop - Math.max(0, (container.clientHeight - el.clientHeight) / 2);
+          container.scrollTo({ top: Math.max(0, finalTop), behavior: 'auto' });
+        }
       }, 550);
     } else if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setActiveFinanzasSessionIndex(targetIndex);
     }
   };
 
@@ -1991,28 +2751,39 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeFinanzasSessionIndex, activeSessionsOnly, effectiveCameraFullscreen]);
 
-  // 🎛️ Helper to render the channels & broadcast controls menu window (strictly matching z.png)
-  const renderChannelsOverlay = (session: any) => {
+  // 🎛️ Helper to render the channels & broadcast controls menu window (strictly matching z.png & image.png)
+  const renderChannelsOverlay = (session?: any) => {
+    const sId = session?.id || 'fashion-overlay';
     // 🚫 Durante el tiempo de votación final de 10 minutos (captura z.png), NO abrir la ventana de menú de canales (captura image.png)
-    if (isSessionInVotingPhase(session.id)) return null;
+    if (session?.id && isSessionInVotingPhase(session.id)) return null;
     // 🚫 Solo en la ventana en grande del participante (image.png), NO abrir la ventana de canales (z.png)
-    if (enlargedWindowUser || activeChannelsMenuSessionId !== session.id) return null;
-    const presenter = getSessionPresenter(session, activeFinanzasSessionIndex);
-    const overlayRoundRef = getFinanzasRoundRef ? getFinanzasRoundRef(session) : (session.reference || 'REF: 1');
+    if (enlargedWindowUser) return null;
+    const isTargetOverlay = (
+      activeChannelsMenuSessionId === sId ||
+      (session?.id && activeChannelsMenuSessionId === session.id) ||
+      activeChannelsMenuSessionId === 'fashion-menu' ||
+      activeChannelsMenuSessionId === 'fashion-overlay' ||
+      activeChannelsMenuSessionId === 'multimedia-channel-menu'
+    );
+    if (!isTargetOverlay) return null;
+    const presenter = session ? getSessionPresenter(session, activeFinanzasSessionIndex) : { id: 'user-fashion', name: 'Canal ' + getChannelCleanName(currentChannel), avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' };
+    const overlayRoundRef = (session && getFinanzasRoundRef) ? getFinanzasRoundRef(session) : (session?.reference || 'REF: 1');
     return (
       <div 
         className="absolute top-0 inset-x-0 z-[170] p-2.5 sm:p-3 pointer-events-auto animate-slide-down-tiktok"
-        onMouseEnter={() => handleMouseEnterRonda(session.id)}
+        onMouseEnter={() => {
+          handleMouseEnterRonda(session?.id || 'fashion-overlay');
+        }}
         onMouseLeave={handleMouseLeaveRonda}
         onClick={(e) => e.stopPropagation()}
-        id={`embedded-channels-menu-overlay-${session.id}`}
+        id={`embedded-channels-menu-overlay-${sId}`}
       >
         {/* Subtle top indicator bar */}
         <div className="w-16 h-1 bg-white/40 rounded-full mx-auto mb-1.5 opacity-80" />
 
         <div 
           className="w-full bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-3.5 rounded-3xl border border-slate-700/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 select-none"
-          onMouseEnter={() => handleMouseEnterRonda(session.id)}
+          onMouseEnter={() => handleMouseEnterRonda(session?.id || 'fashion-overlay')}
           onMouseLeave={handleMouseLeaveRonda}
         >
           {/* Top Row: Volver, current channel badge, and Close */}
@@ -2021,10 +2792,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               type="button"
               onClick={() => {
                 setActiveChannelsMenuSessionId(null);
-                if (onCategoryFilterChange) onCategoryFilterChange('Todos');
               }}
               className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#181d2a] hover:bg-[#22293b] text-white text-[11px] font-black rounded-full transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-md shrink-0"
-              title="Volver a Todos"
+              title="Volver"
             >
               <ArrowLeft className="w-3.5 h-3.5 text-[#fe2c55] stroke-[3]" />
               <span className="font-black">Volver</span>
@@ -2033,7 +2803,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[10px] font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               <span className="text-slate-400 font-medium">Canal:</span>
-              <span className="text-rose-400 font-black">{selectedCategoryFilter || 'Finanzas'}</span>
+              <span className="text-rose-400 font-black">{getChannelCleanName(currentChannel)}</span>
             </div>
 
             <button
@@ -2174,49 +2944,71 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             </button>
           </div>
 
-          {/* Quick Round Database Access Button */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveChannelsMenuSessionId(null);
-              if (onOpenRoundDatabaseModal) {
-                onOpenRoundDatabaseModal(session.id);
-              } else {
-                window.dispatchEvent(new CustomEvent('open-round-database-modal', { detail: { roundId: session.id } }));
-              }
-            }}
-            className="w-full py-2 px-3 rounded-2xl bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-200 text-xs font-black uppercase tracking-wider flex items-center justify-between cursor-pointer transition active:scale-95 shadow-md"
-            title="Ver base de datos independiente de esta ronda"
-          >
-            <div className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-cyan-400" />
-              <span>Base de Datos ({overlayRoundRef})</span>
-            </div>
-            <span className="text-[9.5px] font-mono bg-cyan-500/20 px-2 py-0.5 rounded-full text-cyan-300 border border-cyan-400/30">
-              Ronda #{session.roundIndex ?? 0}
-            </span>
-          </button>
-
-          {/* Bottom Row: 10 Live Channels in 2 Columns */}
+          {/* Bottom Row: 10 Live Channels */}
           <div className="pt-2 border-t border-slate-800/80 w-full">
-            <div className="flex items-center justify-between px-1 mb-1.5">
-              <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-white">
-                CANALES EN DIRECTO
+            <div className="flex items-center justify-between px-1 mb-2">
+              <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                <span>📺</span> CANALES EN DIRECTO
               </span>
               <span className="text-[9px] sm:text-[9.5px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-2.5 py-0.5 rounded-full border border-[#fe2c55]/60">
-                {selectedCategoryFilter || 'Finanzas'}
+                {getChannelCleanName(currentChannel)}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5 w-full max-h-[46vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/90 border border-slate-800 shadow-inner scrollbar-none">
+            {/* Selector de categorías en carrusel horizontal (idéntico al selector de categorías de captura z.png) */}
+            <div className="w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-2 mb-1.5 px-0.5 select-none">
+              {[
+                { id: 'Fashion', label: 'Fashion ✨', bg: 'bg-[#fff0f3] text-[#be185d]', activeBg: 'bg-gradient-to-r from-pink-500 to-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/30' },
+                { id: 'Finanzas', label: 'Finanzas 📈', bg: 'bg-[#ecfdf5] text-[#047857]', activeBg: 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30' },
+                { id: 'Modelos', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309]', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-600/30' },
+                { id: 'BackStage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2]', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-md' },
+                { id: 'Investors', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf]', activeBg: 'bg-purple-600 text-white border-purple-500 shadow-md' },
+                { id: 'Catwalk', label: 'Catwalk 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed]', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-md' },
+                { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669]', activeBg: 'bg-emerald-600 text-white border-emerald-500 shadow-md' },
+                { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48]', activeBg: 'bg-rose-600 text-white border-rose-500 shadow-md' },
+                { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04]', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-md' },
+                { id: 'Todos', label: 'Todos 🌍', bg: 'bg-slate-800 text-slate-300', activeBg: 'bg-slate-700 text-white border-slate-500 shadow-md' }
+              ].map(cat => {
+                const isActive = (currentChannel || 'Finanzas') === cat.id;
+                return (
+                  <button
+                    key={`pill-cat-${cat.id}`}
+                    type="button"
+                    onClick={() => {
+                      setCurrentChannel(cat.id);
+                      setSessionSelectedPresenterMap({});
+                      setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
+                      setActiveChannelsMenuSessionId(null);
+                      setChannelToastMessage(`Canal ${cat.label} activado`);
+                      if (onCategoryFilterChange) {
+                        onCategoryFilterChange(cat.id);
+                      }
+                    }}
+                    className={`shrink-0 px-2.5 py-1 rounded-full text-[9.5px] font-black transition-all cursor-pointer border active:scale-95 ${
+                      isActive 
+                        ? `${cat.activeBg} scale-105 font-black ring-1 ring-white/40` 
+                        : 'bg-[#181d2a] hover:bg-[#22293b] text-slate-300 border-slate-700/80 hover:text-white'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 w-full max-h-[40vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/90 border border-slate-800 shadow-inner scrollbar-none">
               {CHANNELS_LIST.map(cat => {
-                const isActive = (selectedCategoryFilter || 'Finanzas') === cat.id;
+                const isActive = (currentChannel || 'Finanzas') === cat.id;
                 return (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => {
+                      setCurrentChannel(cat.id);
+                      setSessionSelectedPresenterMap({});
+                      setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
                       setActiveChannelsMenuSessionId(null);
+                      setChannelToastMessage(`Canal ${cat.label} activado`);
                       if (onCategoryFilterChange) {
                         onCategoryFilterChange(cat.id);
                       }
@@ -2239,8 +3031,536 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     );
   };
 
+  // 🎬 Renderizador del Feed de Vídeos del Canal (Fashion, Runway, BackStage, etc.)
+  // Cero rondas, únicamente vídeos subidos por los usuarios desde la página z.png con reproductor vertical TikTok/Reels
+  const renderMultimediaChannelVideoFeed = () => {
+    const videos = channelUploadedVideos;
+    const currentVid = videos[activeChannelVideoIdx] || videos[0] || DEFAULT_FASHION_PRESETS[0];
+    const likesData = channelVideoLikesMap[currentVid.id] || { count: currentVid.likes || 120, userLiked: Boolean(currentVid.isLiked) };
+    const commentsList = channelVideoCommentsMap[currentVid.id] || currentVid.comments || [];
+    const isFollowed = channelFollowedCreatorsMap[currentVid.username] || currentVid.isLiked;
+
+    return (
+      <div
+        key={`multimedia-feed-wrapper-${currentChannel}`}
+        id={`tiktok-round-card-multimedia-${currentChannel}`}
+        className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[580px] my-0 py-0 sm:py-0.5 relative px-0 sm:px-2 overflow-x-hidden h-full max-md:h-[100dvh] min-h-[calc(100dvh-20px)]"
+      >
+        {/* 📦 Relative anchor for the channel card and its external navigator */}
+        <div className="relative flex items-center justify-center w-full max-w-[430px] md:max-w-[440px] overflow-x-hidden lg:overflow-x-visible h-full max-md:h-[100dvh]">
+          {/* 📱 Smartphone video frame container styled matching z.png & image.png */}
+          <div
+            ref={channelVideoCardRef}
+            onWheel={(e) => {
+              const now = Date.now();
+              if (now - lastChannelWheelTimeRef.current < 280) return;
+              if (Math.abs(e.deltaY) > 15) {
+                lastChannelWheelTimeRef.current = now;
+                if (e.deltaY > 0) {
+                  handleNextChannelVideo();
+                } else {
+                  handlePrevChannelVideo();
+                }
+              }
+            }}
+            className="w-full max-w-full sm:max-w-[420px] md:max-w-[430px] h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] sm:max-h-[820px] bg-[#070b14] border-0 sm:border border-black rounded-none sm:rounded-[36px] md:rounded-[44px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between box-border select-none"
+            id="multimedia-video-feed-card"
+          >
+            {/* 📱 Subtle top speaker notch */}
+            <div className="w-16 h-1 bg-white/30 rounded-full mx-auto mt-1.5 mb-0.5 opacity-70 shrink-0 pointer-events-none z-40" />
+
+            {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Despliega las opciones de los canales de la captura z.png al pasar el puntero) */}
+            <div 
+              className="absolute top-0 inset-x-0 h-24 sm:h-28 z-40 pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
+              id="multimedia-top-margin-hover-sensor"
+              onMouseEnter={() => handleMouseEnterRonda('fashion-overlay')}
+              onMouseLeave={handleMouseLeaveRonda}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveChannelsMenuSessionId(prev => prev === 'fashion-overlay' ? null : 'fashion-overlay');
+              }}
+              title="Pasa el puntero por la parte superior para desplegar las opciones de los canales"
+            >
+              {/* Subtle top indicator bar */}
+              <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 group-hover/top-margin-sensor:scale-105 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+            </div>
+
+            {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (Strictly matching image.png & z.png) */}
+            {renderChannelsOverlay({ id: 'fashion-overlay' })}
+
+            {/* 📹 Main Fullscreen Vertical Video Element */}
+            <div
+              className="absolute inset-0 w-full h-full cursor-pointer overflow-hidden bg-black flex items-center justify-center"
+              onClick={() => {
+                if (channelVideoRef.current) {
+                  if (isChannelVideoPlaying) {
+                    channelVideoRef.current.pause();
+                    setIsChannelVideoPlaying(false);
+                  } else {
+                    channelVideoRef.current.play().catch(() => {});
+                    setIsChannelVideoPlaying(true);
+                  }
+                }
+              }}
+            >
+              <video
+                ref={channelVideoRef}
+                src={currentVid.videoUrl}
+                autoPlay
+                loop
+                playsInline
+                muted={isChannelVideoAudioMuted}
+                onTimeUpdate={() => {
+                  if (channelVideoRef.current) {
+                    const cur = channelVideoRef.current.currentTime;
+                    const dur = channelVideoRef.current.duration || 1;
+                    setChannelVideoProgress((cur / dur) * 100);
+                  }
+                }}
+                className="w-full h-full object-cover select-none"
+              />
+
+              {/* Pause icon overlay */}
+              {!isChannelVideoPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none animate-fade-in z-20">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-2xl">
+                    <Play className="w-8 h-8 fill-white text-white translate-x-0.5" />
+                  </div>
+                </div>
+              )}
+
+              {/* Top & Bottom dark subtle gradients for readability */}
+              <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none z-10" />
+              <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-10" />
+            </div>
+
+            {/* 🔝 CABECERA SUPERIOR: CANAL Y BOTONES DE ACCIÓN (Matching image.png - Hover abre opciones de canales z.png) */}
+            <div 
+              className="relative z-30 w-full pt-2 pb-1.5 px-3 flex items-center justify-between gap-1.5 select-none pointer-events-auto"
+              onMouseEnter={() => handleMouseEnterRonda('fashion-overlay')}
+              onMouseLeave={handleMouseLeaveRonda}
+            >
+              {/* Channel Selector Pill Button (Clicking opens channels menu overlay from image.png) */}
+              <button
+                type="button"
+                onMouseEnter={() => handleMouseEnterRonda('fashion-overlay')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveChannelsMenuSessionId('fashion-overlay');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0B0F19]/90 hover:bg-[#181d2a] border border-rose-500/70 text-white shadow-lg active:scale-95 transition cursor-pointer backdrop-blur-md"
+                title="Cambiar de canal en directo (captura image.png y z.png)"
+                id="btn-open-channels-menu-multimedia"
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
+                <span className="text-[11px] font-black uppercase tracking-wider text-rose-300">
+                  Canal: {getChannelCleanName(currentChannel)}
+                </span>
+                <span className="text-[9px] text-rose-400">▼</span>
+              </button>
+            </div>
+
+            {/* 📱 BARRA LATERAL DERECHA ESTILO TIKTOK: Me gusta, Comentarios, Compartir - Centrada a la mitad de la página */}
+            <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-3 select-none pointer-events-auto">
+              {/* Creator Avatar with follow (+) badge */}
+              <div className="relative group cursor-pointer mb-1">
+                <img
+                  src={currentVid.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                  alt={currentVid.name}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white shadow-xl transition-transform group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChannelFollowedCreatorsMap(prev => ({ ...prev, [currentVid.username]: !isFollowed }));
+                  }}
+                  className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-black border border-slate-900 shadow-md transition-all ${
+                    isFollowed ? 'bg-emerald-500 scale-90' : 'bg-[#fe2c55] hover:scale-110 active:scale-90'
+                  }`}
+                  title={isFollowed ? "Siguiendo" : "Seguir a este creador"}
+                >
+                  {isFollowed ? '✓' : '+'}
+                </button>
+              </div>
+
+              {/* Like / Corazón con Glosario de Emojis al pasar el puntero (captura image.png sobre z.png) */}
+              <div 
+                className="flex flex-col items-center relative group/channel-heart-zone"
+                onMouseEnter={handleChannelHeartMouseEnter}
+                onMouseLeave={handleChannelHeartMouseLeave}
+              >
+                {/* 💖 Glosario de 30 Emojis que se abre al pasar el puntero por encima del corazón (captura image.png) */}
+                <div 
+                  className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[500] w-[284px] min-w-[284px] max-w-[284px] box-border bg-[#090d16]/98 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.98)] ring-1 ring-white/10 select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-5 transition-all duration-200 pointer-events-auto ${
+                    isChannelHeartHovered
+                      ? 'opacity-100 scale-100 pointer-events-auto flex flex-col'
+                      : 'opacity-0 scale-95 pointer-events-none hidden group-hover/channel-heart-zone:flex group-hover/channel-heart-zone:flex-col group-hover/channel-heart-zone:opacity-100 group-hover/channel-heart-zone:scale-100 group-hover/channel-heart-zone:pointer-events-auto'
+                  }`}
+                  id="tiktok-heart-hover-emoji-glossary"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* 🌐 Traductor a Inglés en el Glosario de Emojis (solicitado sobre captura image.png) */}
+                  <div className="flex items-center justify-between px-1 pb-2 mb-1.5 border-b border-white/10">
+                    <div className="flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="text-[10px] font-black uppercase text-slate-200 tracking-wider">
+                        {isEmojiEnglish ? 'ENGLISH TRANSLATOR' : 'TRADUCTOR A INGLÉS'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsEmojiEnglish(prev => !prev);
+                      }}
+                      className="px-2 py-0.5 rounded-full text-[9px] font-black border transition active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40"
+                      title="Activar o desactivar traductor a inglés"
+                    >
+                      <span className="text-[10px]">🌐</span>
+                      <span>{isEmojiEnglish ? 'EN ✓' : 'Inglés'}</span>
+                    </button>
+                  </div>
+
+                  {/* Rejilla de 30 emojis (6 columnas x 5 filas) idéntica a la captura image.png */}
+                  <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
+                    {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => {
+                      const englishName = EMOJI_ENGLISH_NAMES[emoji] || emoji;
+                      return (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onMouseEnter={() => setHoveredEmojiName(englishName)}
+                          onMouseLeave={() => setHoveredEmojiName(null)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            currentVid.isLiked = true;
+                            setChannelVideoLikesMap(prev => {
+                              const cur = prev[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
+                              return {
+                                ...prev,
+                                [currentVid.id]: {
+                                  count: cur.userLiked ? cur.count : cur.count + 1,
+                                  userLiked: true
+                                }
+                              };
+                            });
+                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                              detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
+                            }));
+                            triggerContinuousRain(emoji);
+                            setIsChannelHeartHovered(false);
+                          }}
+                          className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
+                          title={isEmojiEnglish ? `${emoji} ${englishName} (English)` : `Reaccionar con ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pie informativo de traducción activa */}
+                  <div className="mt-1.5 pt-1.5 border-t border-white/10 px-1 flex items-center justify-between text-[9px] text-slate-300 font-mono">
+                    <span className="truncate text-rose-300 font-bold">
+                      {hoveredEmojiName ? `English: ${hoveredEmojiName}` : isEmojiEnglish ? 'Traducido a Inglés ✓' : 'Traductor disponible'}
+                    </span>
+                    <span className="text-[8px] text-slate-400 uppercase font-black">30 Emojis</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleChannelVideoLike(currentVid);
+                  }}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-75 cursor-pointer backdrop-blur-md ${
+                    likesData.userLiked
+                      ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
+                      : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
+                  }`}
+                  title={likesData.userLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
+                >
+                  <Heart className={`w-5 h-5 ${likesData.userLiked ? 'fill-white text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.9)] animate-heart-beat' : 'text-white'}`} />
+                </button>
+                <span className={`text-[10.5px] sm:text-xs font-black mt-1 drop-shadow-md ${likesData.userLiked ? 'text-[#fe2c55] font-black' : 'text-white'}`}>
+                  {likesData.count > 999 ? `${(likesData.count / 1000).toFixed(1)}K` : likesData.count}
+                </span>
+              </div>
+
+              {/* Comentarios */}
+              <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChannelVideoCommentsOpen(!channelVideoCommentsOpen);
+                  }}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
+                    channelVideoCommentsOpen
+                      ? 'bg-rose-600 text-white ring-2 ring-rose-400'
+                      : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
+                  }`}
+                  title="Comentarios"
+                >
+                  <MessageCircle className="w-5 h-5 text-white" />
+                </button>
+                <span className="text-[10px] font-black text-white mt-1 drop-shadow-md">
+                  {commentsList.length}
+                </span>
+              </div>
+
+              {/* Compartir */}
+              <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShareChannelVideo(currentVid);
+                  }}
+                  className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 border border-white/20 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md"
+                  title="Compartir enlace de vídeo"
+                >
+                  <Share2 className="w-4 h-4 text-white" />
+                </button>
+                <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
+                  {currentVid.shares || 48}
+                </span>
+              </div>
+
+              {/* Guardar / Bookmark */}
+              <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const curFav = !currentVid.isFavorited;
+                    currentVid.isFavorited = curFav;
+                    setChannelVideoShareToast(curFav ? 'Guardado en tus favoritos 🔖' : 'Eliminado de favoritos');
+                    setTimeout(() => setChannelVideoShareToast(null), 2000);
+                  }}
+                  className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 border border-white/20 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md"
+                  title="Guardar vídeo"
+                >
+                  <Bookmark className={`w-4 h-4 ${currentVid.isFavorited ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+                </button>
+                <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
+                  {currentVid.favorites || 112}
+                </span>
+              </div>
+
+              {/* Spinning Music Disc */}
+              <div className="w-9 h-9 rounded-full bg-black/80 border-2 border-slate-700/80 p-1 flex items-center justify-center shadow-xl animate-spin duration-[4000ms] pointer-events-none mt-1">
+                <Music className="w-4 h-4 text-[#fe2c55]" />
+              </div>
+            </div>
+
+            {/* 📝 PANEL DE INFORMACIÓN INFERIOR DEL VÍDEO (Datos del Creador y Descripción) */}
+            <div className="relative z-20 w-full mt-auto p-3 sm:p-4 text-white select-none pointer-events-auto pr-16">
+              {/* Creator username & verification badge */}
+              <div className="flex items-center gap-1.5 mb-1">
+                <h4 className="text-xs sm:text-[13px] font-black text-white tracking-tight drop-shadow-md flex items-center gap-1">
+                  <span>@{currentVid.username}</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20" />
+                </h4>
+                <span className="text-[8px] bg-white/20 backdrop-blur-md text-white font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                  {getChannelCleanName(currentChannel)}
+                </span>
+              </div>
+
+              {/* User upload badge if uploaded from z.png */}
+              {currentVid.isUserUploaded && (
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500/80 to-pink-500/80 text-[8.5px] font-mono font-black uppercase tracking-wider mb-1 shadow-sm">
+                  <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
+                  <span>Subido desde Casting Live</span>
+                </div>
+              )}
+
+              {/* Video Caption & Hashtags */}
+              <p className="text-[11px] sm:text-xs text-slate-100 font-medium leading-relaxed drop-shadow-md line-clamp-2 mb-1">
+                {translatedVideosMap[currentVid.id] 
+                  ? getEnglishTranslation(currentVid.description) 
+                  : currentVid.description}
+              </p>
+
+              {/* 🌐 Traductor a Inglés (solicitado sobre captura image.png) */}
+              <div className="flex items-center gap-2 mb-2 select-none">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleVideoTranslation(currentVid.id);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-rose-300 hover:text-white bg-black/50 hover:bg-black/70 px-2.5 py-0.5 rounded-full border border-rose-500/40 hover:border-rose-400 shadow-sm transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+                  title="Traducir descripción a inglés"
+                >
+                  <Globe className="w-3 h-3 text-rose-400" />
+                  <span>{translatedVideosMap[currentVid.id] ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
+                </button>
+                {translatedVideosMap[currentVid.id] && (
+                  <span className="text-[8.5px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                    <span>✓</span> En inglés
+                  </span>
+                )}
+              </div>
+
+              {/* Music Marquee */}
+              <div className="flex items-center gap-1.5 text-[9.5px] font-bold text-slate-300 drop-shadow-md">
+                <Music className="w-3 h-3 text-rose-400 shrink-0" />
+                <span className="truncate max-w-[200px]">{currentVid.music || 'Música Original - Fashion Finances Studio'}</span>
+              </div>
+            </div>
+
+            {/* 🔴 Horizontal Progress scrubber line at bottom */}
+            <div className="w-full bg-white/20 h-1 overflow-hidden relative z-30 shrink-0 cursor-pointer">
+              <div
+                className="h-full bg-gradient-to-r from-rose-500 to-[#fe2c55] transition-all duration-150"
+                style={{ width: `${Math.min(100, Math.max(0, channelVideoProgress))}%` }}
+              />
+            </div>
+
+            {/* 💬 Slide-up Comments Drawer */}
+            {channelVideoCommentsOpen && (
+              <div
+                className="absolute inset-x-0 bottom-0 top-1/3 z-50 bg-[#0d121f]/98 backdrop-blur-xl rounded-t-3xl border-t border-slate-700/80 shadow-2xl flex flex-col p-3 text-white animate-slide-up-tiktok pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-rose-400" />
+                    <span className="text-xs font-black uppercase tracking-wider">
+                      Comentarios ({commentsList.length})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setChannelVideoCommentsOpen(false)}
+                    className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* List of comments */}
+                <div className="flex-1 overflow-y-auto py-2 space-y-2.5 scrollbar-none pr-1">
+                  {commentsList.length === 0 ? (
+                    <div className="text-center py-6 text-slate-400 text-xs">
+                      Sé el primero en comentar este vídeo de {getChannelCleanName(currentChannel)}.
+                    </div>
+                  ) : (
+                    commentsList.map((c: any) => (
+                      <div key={c.id} className="flex items-start gap-2 text-left">
+                        <img
+                          src={c.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
+                          alt={c.user}
+                          className="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-700"
+                        />
+                        <div className="flex-1 min-w-0 bg-[#141b2d] p-2 rounded-xl border border-slate-800">
+                          <div className="flex items-center justify-between gap-1 mb-0.5">
+                            <span className="text-[10.5px] font-black text-rose-300">{c.user}</span>
+                            <span className="text-[8px] text-slate-400">{c.date}</span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-200 break-words leading-tight">{c.text}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Input box */}
+                <div className="pt-2 border-t border-slate-800 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={channelVideoNewComment}
+                    onChange={(e) => setChannelVideoNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddChannelVideoComment(currentVid);
+                      }
+                    }}
+                    placeholder="Añadir comentario..."
+                    className="flex-1 bg-[#141b2d] border border-slate-700 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-rose-500 placeholder:text-slate-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddChannelVideoComment(currentVid)}
+                    disabled={!channelVideoNewComment.trim()}
+                    className="p-2 bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:from-rose-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-white font-bold transition active:scale-95 cursor-pointer shadow-md"
+                    title="Publicar comentario"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Toast feedback for copying link */}
+            {channelVideoShareToast && (
+              <div className="absolute top-16 inset-x-4 z-50 bg-[#0d121f]/95 text-white px-3 py-2 rounded-xl border border-rose-500/80 shadow-2xl flex items-center justify-center gap-2 animate-fade-in text-xs font-bold pointer-events-none">
+                <span>{channelVideoShareToast}</span>
+              </div>
+            )}
+          </div>
+
+          {/* 🧭 NAVEGADOR VERTICAL DE VÍDEOS EN PANTALLAS GRANDES (Oculto en móvil y tablet) */}
+          <div
+            className="hidden lg:flex absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-2 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-3 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
+            id="floating-channel-videos-navigator"
+          >
+            <button
+              type="button"
+              disabled={activeChannelVideoIdx <= 0}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevChannelVideo();
+              }}
+              className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
+              title="Vídeo anterior (desplazar arriba)"
+            >
+              <ChevronUp className="w-4 h-4 text-white stroke-[2.5]" />
+            </button>
+
+            <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
+              <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">VÍDEO</span>
+              <span className="text-xs sm:text-[13px] font-black font-mono text-[#fe2c55]">
+                {activeChannelVideoIdx + 1}/{videos.length}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={activeChannelVideoIdx >= videos.length - 1}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextChannelVideo();
+              }}
+              className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
+              title="Siguiente vídeo (desplazar abajo)"
+            >
+              <ChevronDown className="w-4 h-4 text-white stroke-[2.5]" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="relative w-full flex flex-col items-center justify-center">
+      {/* 📺 Toast flotante que confirma el cambio de canal en el centro del canal */}
+      {channelToastMessage && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none p-4 select-none">
+          <div className="bg-[#0d121f]/95 backdrop-blur-xl text-white px-5 py-3 rounded-2xl border-2 border-rose-500 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2.5 pointer-events-none animate-fade-in font-sans max-w-sm">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+            <span className="text-xs sm:text-sm font-black tracking-wide">{channelToastMessage}</span>
+          </div>
+        </div>
+      )}
+
       {/* 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA */}
       {showerHearts.length > 0 && (
         <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden select-none">
@@ -2266,7 +3586,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 ['--rot-2' as any]: `${heart.rot2}deg`,
                 ['--rot-3' as any]: `${heart.rot3}deg`,
                 ['--rot-4' as any]: `${heart.rot4}deg`,
-                filter: 'drop-shadow(0 0 12px rgba(254, 44, 85, 0.8))',
+                filter: 'drop-shadow(0 0 16px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 28px rgba(254, 44, 85, 0.9)) brightness(1.25) contrast(1.15)',
+                textShadow: '0 0 18px rgba(255, 255, 255, 0.9), 0 0 32px rgba(254, 44, 85, 0.85)',
+                WebkitFontSmoothing: 'antialiased',
+                transform: 'translateZ(0)',
               }}
             >
               {heart.emoji}
@@ -2289,7 +3612,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         id="tiktok-rounds-vertical-feed"
         className="w-full max-w-full h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] overflow-x-hidden overflow-y-hidden md:overflow-y-auto md:snap-y md:snap-mandatory scroll-smooth py-0 sm:py-0.5 flex flex-col items-center select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative"
       >
-        {activeSessionsOnly.map((session, index) => {
+        {currentChannel !== 'Finanzas' ? (
+          renderMultimediaChannelVideoFeed()
+        ) : (
+          activeSessionsOnly.map((session, index) => {
           const roundRef = getFinanzasRoundRef(session, index);
           const roundTitle = getRoundTitle(session, index);
           const feeInfo = getSessionFeeInfo(session);
@@ -2362,10 +3688,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div
               key={session.id}
               id={`tiktok-round-card-${session.id}`}
-              className="snap-center shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[580px] my-0 py-0 sm:py-0.5 relative px-0 sm:px-2 overflow-x-hidden h-full max-md:h-[100dvh]"
+              className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[580px] my-0 py-0 sm:py-0.5 relative px-0 sm:px-2 overflow-x-hidden h-full max-md:h-[100dvh] min-h-[calc(100dvh-20px)]"
             >
               {/* 📦 Relative anchor for the channel card and its external right-side navigator */}
-              <div className="relative flex items-center justify-center w-full max-w-[430px] md:max-w-[440px] overflow-x-hidden md:overflow-x-visible h-full max-md:h-[100dvh]">
+              <div className="relative flex items-center justify-center w-full max-w-[430px] md:max-w-[440px] overflow-x-hidden lg:overflow-x-visible h-full max-md:h-[100dvh]">
                 {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) */}
                 <div 
                   className="w-full max-w-full sm:max-w-[420px] md:max-w-[430px] h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] sm:max-h-[820px] bg-[#070b14] border-0 sm:border border-black rounded-none sm:rounded-[36px] md:rounded-[44px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
@@ -2376,12 +3702,18 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página y por encima de Ronda en Curso) - DESACTIVADA DURANTE LA VOTACIÓN FINAL */}
                 {!isSessionInVoting && (
                   <div 
-                    className="absolute top-0 inset-x-0 h-16 sm:h-20 z-40 pointer-events-auto cursor-pointer"
+                    className="absolute top-0 inset-x-0 h-24 sm:h-28 z-40 pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
                     onMouseEnter={() => handleMouseEnterRonda(session.id)}
                     onMouseLeave={handleMouseLeaveRonda}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveChannelsMenuSessionId(prev => prev === session.id ? null : session.id);
+                    }}
                     id={`top-hover-trigger-zone-${session.id}`}
-                    title="Pasa el ratón para abrir el menú de opciones"
-                  />
+                    title="Pasa el puntero por la parte superior para desplegar las opciones de los canales"
+                  >
+                    <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 group-hover/top-margin-sensor:scale-105 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+                  </div>
                 )}
                 {/* 🗳️ VENTANA DE VOTACIÓN DENTRO DEL CANAL EN PANTALLA COMPLETA (captura image.png) */}
                 {showVotingProjectsModal && isCurrentlyActiveRound && (
@@ -2405,7 +3737,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 )}
 
                 {/* 📊 ESCRUTINIO DESCENTRALIZADO (captura imagen.png) EN EL MISMO DISEÑO Y FORMATO DE za.png */}
-                {showFinanzasRecount && isCurrentlyActiveRound && (
+                {showFinanzasRecount && isCurrentlyActiveRound && (!completedSessionToDisplay?.id || completedSessionToDisplay.id === session.id) && (
                   <div 
                     className="absolute inset-0 z-[130] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
                     id={`finanzas-recount-in-channel-${session.id}`}
@@ -2422,23 +3754,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 )}
 
                 {/* 🏆 RESULTADOS FINALES (captura zr.png) EN EL MISMO DISEÑO Y FORMATO DE za.png */}
-                {showFinanzasResults && isCurrentlyActiveRound && (
+                {showFinanzasResults && isCurrentlyActiveRound && (!completedSessionToDisplay?.id || completedSessionToDisplay.id === session.id) && (
                   <div 
-                    className="absolute inset-0 z-[140] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[140] bg-[#070b14] w-full h-full max-h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col min-h-0 shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
                     id={`finanzas-results-in-channel-${session.id}`}
                     onWheel={(e) => {
                       e.stopPropagation();
                       const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-                      if (wrapper) {
-                        wrapper.scrollTop += e.deltaY;
+                      if (wrapper && !e.target.closest('#podium-scrollable-content-wrapper')) {
+                        wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
                       }
                     }}
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
-                    onMouseMove={(e) => e.stopPropagation()}
-                    onMouseUp={(e) => e.stopPropagation()}
                   >
                     {renderFinanzasResultsContent ? (
                       renderFinanzasResultsContent()
@@ -2584,11 +3914,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página) */}
                     {!enlargedWindowUser && (
                       <div 
-                        className="absolute top-0 inset-x-0 h-16 sm:h-20 z-30 pointer-events-auto cursor-pointer"
+                        className="absolute top-0 inset-x-0 h-24 sm:h-28 z-40 pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
                         onMouseEnter={() => handleMouseEnterRonda(session.id)}
                         onMouseLeave={handleMouseLeaveRonda}
-                        title="Pasa el ratón para abrir el menú de opciones"
-                      />
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveChannelsMenuSessionId(prev => prev === session.id ? null : session.id);
+                        }}
+                        title="Pasa el puntero por la parte superior para desplegar las opciones de los canales"
+                      >
+                        <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 group-hover/top-margin-sensor:scale-105 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+                      </div>
                     )}
 
                     {/* Background Live Media: Single vs Split with 1 Guest (50/50) vs Split with 2 Guests (Trío) */}
@@ -2791,6 +4127,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             />
                           ) : (
                             <video
+                              key={`live-stage-video-${currentChannel}-${presenter.id}`}
                               ref={liveVideoRef}
                               src={getParticipantLiveCameraVideo(presenter)}
                               onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
@@ -3220,7 +4557,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     id={`ronda-en-curso-pill-${session.id}`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                    <span>{isUserEnrolledInThisRound ? 'Ronda en la que estás participando' : 'Ronda en Curso'}</span>
+                    <span>{isUserEnrolledInThisRound ? 'Ronda en la que estás participando' : `Canal ${getChannelCleanName(currentChannel)} • Ronda en Curso`}</span>
                     {!isSessionInVoting && (
                       <span className="text-[7.5px] text-rose-400 opacity-70 group-hover/ronda-pill:opacity-100 transition-transform group-hover/ronda-pill:translate-y-0.5">▼</span>
                     )}
@@ -3231,31 +4568,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <span>{roundTitle}</span>
                   </h3>
 
-                  {/* Subtitle with accent lines: 10€ Inscripción • 10 Participantes • Ref:1 */}
+                  {/* Subtitle with accent lines: 10€ Inscripción • 10 Participantes */}
                   <div className="flex items-center justify-center gap-1.5 mt-1">
                     <span className="h-0.5 w-5 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                     <span className="text-[8px] sm:text-[9px] font-bold text-slate-300 font-mono tracking-wider uppercase flex items-center gap-1 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
                       <span>{feeInfo.feeShort} Inscripción</span>
                       <span className="text-slate-500">•</span>
                       <span>10 Participantes</span>
-                      <span className="text-slate-500">•</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onOpenRoundDatabaseModal) {
-                            onOpenRoundDatabaseModal(session.id);
-                          } else {
-                            window.dispatchEvent(new CustomEvent('open-round-database-modal', { detail: { roundId: session.id } }));
-                          }
-                        }}
-                        className="text-amber-300 font-black hover:text-amber-200 transition-all flex items-center gap-1 cursor-pointer hover:underline"
-                        title={`Ver base de datos independiente de esta ronda (${roundRef})`}
-                        id={`round-ref-pill-${session.id}`}
-                      >
-                        <Database className="w-2.5 h-2.5 text-cyan-400" />
-                        <span>{roundRef}</span>
-                      </button>
                     </span>
                     <span className="h-0.5 w-6 sm:w-8 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
                   </div>
@@ -3708,97 +5027,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     })}
                   </div>
 
-                  {/* ⚠️ AVISO: YA ESTÁS PARTICIPANDO EN OTRA RONDA (Dentro de la pantalla del canal, justo encima del botón que se pulsa, fondo sin opacidad y transparente) */}
-                  {alreadyParticipatingNotice?.show && (alreadyParticipatingNotice.targetSessionId === session.id || !alreadyParticipatingNotice.targetSessionId) && (
-                    <div 
-                      className="w-full relative z-40 mb-2 p-3.5 sm:p-4 rounded-3xl border-2 border-amber-400 text-white animate-slide-up flex flex-col items-center text-center space-y-2 select-none shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
-                      style={{
-                        backgroundColor: 'transparent',
-                        background: 'transparent'
-                      }}
-                      id={`aviso-ya-participando-${session.id}`}
-                    >
-                      {/* Close button X */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAlreadyParticipatingNotice(null);
-                        }}
-                        className="absolute top-2.5 right-2.5 text-amber-300 hover:text-white p-1 rounded-full hover:bg-white/10 transition cursor-pointer"
-                        title="Cerrar aviso"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-
-                      {/* Icono de advertencia */}
-                      <div className="w-10 h-10 rounded-full border-2 border-amber-400 flex items-center justify-center text-xl shadow-md" style={{ backgroundColor: 'transparent' }}>
-                        ⚠️
-                      </div>
-
-                      {/* Badge */}
-                      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-amber-400 text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider text-amber-300 font-mono" style={{ backgroundColor: 'transparent' }}>
-                        <span>●</span>
-                        <span>PARTICIPACIÓN SIMULTÁNEA NO PERMITIDA</span>
-                      </div>
-
-                      {/* Título */}
-                      <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                        Ya estás participando en otra Ronda
-                      </h3>
-
-                      {/* Descripción detallada */}
-                      <div className="border border-amber-400/50 p-2.5 rounded-2xl text-[11px] sm:text-[11.5px] text-white leading-snug text-left space-y-1.5 w-full" style={{ backgroundColor: 'transparent' }}>
-                        <p className="m-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                          Tu usuario <strong className="text-amber-300 font-black">{userProfile?.name || 'Adriana Lima'}</strong> ya está inscrito activamente en la ronda:
-                        </p>
-                        <div className="border border-amber-400 rounded-xl px-2.5 py-1 flex items-center gap-1.5 text-amber-300 font-black text-xs drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" style={{ backgroundColor: 'transparent' }}>
-                          <span>📍</span>
-                          <span className="truncate">{alreadyParticipatingNotice.currentRoundTitle}</span>
-                        </div>
-                        <p className="text-[10px] text-amber-200/90 m-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                          Las normas de la mesa financiera estipulan que debes finalizar tu participación en la ronda en curso antes de poder inscribirte en una nueva.
-                        </p>
-                      </div>
-
-                      {/* Botones de acción */}
-                      <div className="w-full flex flex-col gap-1.5 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            scrollToRound(alreadyParticipatingNotice.enrolledIndex);
-                            setAlreadyParticipatingNotice(null);
-                          }}
-                          className="w-full py-2.5 px-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5 border border-amber-200"
-                        >
-                          <span>🔄</span>
-                          <span>Ir a mi Ronda Activa</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setAlreadyParticipatingNotice(null)}
-                          className="w-full py-2 px-3 rounded-2xl text-white hover:text-amber-200 font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer border border-white/50 hover:border-amber-400"
-                          style={{ backgroundColor: 'transparent' }}
-                        >
-                          <span>Entendido</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Inscription Button: ✍️ Inscribirse en una sesión de (10 Euros) */}
                   <button
                     type="button"
-                    disabled={isUserParticipating}
                     onClick={(e) => {
-                      if (isUserParticipating) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // 🛑 Mientras el usuario esté participando en una Ronda o Sesión, el botón NO funciona
-                        return;
-                      }
-
                       setActiveFinanzasSessionIndex(index);
                       setShowVotingProjectsModal(false);
                       setShowProjectDetailsInPopup(false);
@@ -4090,7 +5322,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 </div>
 
-                {/* 📱 ZONA CENTRAL DERECHA SENSIBLE AL RATÓN Y BOTONES DE ACCIÓN (APARECEN AL PASAR EL RATÓN POR EL LADO DERECHO CENTRAL) */}
+                {/* 📱 ZONA CENTRAL DERECHA SENSIBLE AL RATÓN Y BOTONES DE ACCIÓN (Centrada a la mitad de la página) */}
                 <div 
                   className="absolute right-0 top-1/2 -translate-y-1/2 h-[340px] sm:h-[380px] w-20 sm:w-24 z-[350] flex items-center justify-end pr-2 sm:pr-3.5 group/actionszone pointer-events-auto select-none"
                   id={`actions-hover-zone-${session.id}`}
@@ -4109,7 +5341,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     {/* Like button with count (e.g. 43.2K) - Queda marcado y lanza lluvia de corazones */}
                     <div className="flex flex-col items-center relative group/channel-heart-zone">
                       {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda SIEMPRE por delante */}
-                      <div className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 sm:p-3 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] ring-1 ring-white/10 animate-fade-in w-[260px] xs:w-[280px] sm:w-[300px] max-w-[calc(100vw-80px)] select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 ${
+                      <div className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] w-[272px] min-w-[272px] max-w-[272px] box-border flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] ring-1 ring-white/10 animate-fade-in select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 ${
                         showEmojiPickerSessionId === session.id ? 'flex' : 'hidden group-hover/channel-heart-zone:flex'
                       }`}>
                         {/* Cabecera del recuadro */}
@@ -4134,26 +5366,22 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           </div>
                         </div>
 
-                        {/* Rejilla de emojis centrada y cómoda */}
-                        <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-h-[220px] overflow-y-auto custom-scrollbar p-1 justify-items-center">
-                          {[
-                            '❤️', '💖', '🔥', '👏', '🤩', '🎉', '👍', '⭐', '🥰', '😘',
-                            '💕', '💘', '💗', '💓', '💞', '😍', '🥳', '😎', '🤣', '😂',
-                            '😜', '🤤', '🤯', '🥵', '😻', '🙌', '🙏', '💪', '👀', '✨',
-                            '🌟', '💎', '👑', '👠', '👗', '💄', '🌹', '🌸', '🌺', '🌷',
-                            '💋', '🏆', '🥂', '🍿', '🛍️', '💃', '🚀', '💯', '💰', '💸',
-                            '🤑', '📈', '🎯', '💥', '⚡', '💡', '🤝', '🎈', '🎁', '🪄'
-                          ].map((emoji) => (
+                        {/* Rejilla de emojis centrada y cómoda (captura image.png) */}
+                        <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
+                          {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => (
                             <button
                               key={emoji}
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                handleToggleLike(session.id);
                                 window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                                  detail: { emoji, icon: emoji }
+                                  detail: { emoji, icon: emoji, pureEmoji: true }
                                 }));
+                                triggerContinuousRain(emoji);
+                                setShowEmojiPickerSessionId(null);
                               }}
-                              className="w-9 h-9 sm:w-10 sm:h-10 text-2xl flex items-center justify-center hover:scale-130 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none"
+                              className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
                               title={`Enviar ${emoji}`}
                             >
                               {emoji}
@@ -4167,16 +5395,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         onClick={() => handleToggleLike(session.id)}
                         className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 cursor-pointer ${
                           likesData.userLiked
-                            ? 'bg-[#fe2c55]/20 ring-2 ring-[#fe2c55] shadow-[0_0_16px_rgba(254,44,85,0.6)] text-[#fe2c55] scale-105'
+                            ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
                             : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
                         }`}
-                        title={likesData.userLiked ? "¡Marcado! Pulsa para enviar más corazones" : "Me gusta"}
+                        title={likesData.userLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
                         id={`btn-like-heart-${session.id}`}
                       >
                         <Heart 
                           className={`w-5 h-5 transition-transform duration-200 ${
                             likesData.userLiked 
-                              ? 'fill-[#fe2c55] text-[#fe2c55] scale-110 drop-shadow-[0_0_8px_rgba(254,44,85,0.9)]' 
+                              ? 'fill-white text-white scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.9)] animate-heart-beat' 
                               : 'text-white'
                           }`} 
                         />
@@ -4238,9 +5466,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                 </div>
 
-                {/* 🧭 NAVEGADOR VERTICAL DE RONDAS (Solo en pantallas medianas/grandes para evitar desborde horizontal en móvil) */}
+                {/* 🧭 NAVEGADOR VERTICAL DE RONDAS (Solo en pantallas grandes para evitar desborde en móvil y tablet) */}
                 <div 
-                  className="hidden md:flex absolute left-[calc(100%+10px)] sm:left-[calc(100%+14px)] md:left-[calc(100%+18px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-1.5 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-2.5 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
+                  className="hidden lg:flex absolute left-[calc(100%+10px)] sm:left-[calc(100%+14px)] lg:left-[calc(100%+18px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-1.5 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-2.5 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
                   id={`floating-finanzas-rounds-navigator-${session.id}`}
                 >
                   <button
@@ -4280,7 +5508,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );

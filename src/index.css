@@ -536,34 +536,32 @@ body {
   -webkit-overflow-scrolling: touch !important;
 }
 
-/* Hide visible lateral scrollbar on podium results screen while preserving smooth scrolling functionality */
-#podium-scrollable-content-wrapper::-webkit-scrollbar,
-#podium-results-screen::-webkit-scrollbar,
-.custom-scrollbar::-webkit-scrollbar {
-  display: none !important;
-  width: 0px !important;
-  height: 0px !important;
-}
-
-#podium-scrollable-content-wrapper::-webkit-scrollbar-track,
-#podium-results-screen::-webkit-scrollbar-track,
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-
-#podium-scrollable-content-wrapper::-webkit-scrollbar-thumb,
-#podium-results-screen::-webkit-scrollbar-thumb,
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: transparent !important;
-}
-
-#podium-scrollable-content-wrapper,
-#podium-results-screen,
-.custom-scrollbar {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+/* Luxury sleek scrollbar on podium results screen for comfortable scrolling */
+.podium-results-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(244, 63, 94, 0.6) rgba(15, 23, 42, 0.5) !important;
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch !important;
 }
+
+.podium-results-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 5px !important;
+}
+
+.podium-results-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-radius: 9999px !important;
+}
+
+.podium-results-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #f43f5e, #fb7185) !important;
+  border-radius: 9999px !important;
+}
+
+.podium-results-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f43f5e !important;
+}
+
 
 
