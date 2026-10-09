@@ -159,7 +159,7 @@ interface CastingLiveSectionProps {
   selectedLiveModelId?: string;
   onOpenChatWithModel?: (modelId: string) => void;
   onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
-  onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live', targetStoreId?: string) => void;
+  onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu', targetStoreId?: string) => void;
   onUpdateUserProfile?: (profile: UserSessionProfile) => void;
   onAddMovement?: (movement: any) => void;
   onGiftTransaction?: (giftCostInCoins: number, recipientName: string, recipientIdOrUsername: string) => void;
@@ -1892,6 +1892,11 @@ export const getParticipantLiveCameraVideo = (user: any) => {
   const name = (user?.name || '').toLowerCase();
   const id = (user?.id || '').toLowerCase();
 
+  // Video en directo para Alessia Vance (Modelo Directora)
+  if (name.includes('alessia') || name.includes('vance') || id === 'f-1') {
+    return 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4';
+  }
+
   const femaleVideos = [
     'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
     'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
@@ -1907,7 +1912,9 @@ export const getParticipantLiveCameraVideo = (user: any) => {
     'https://assets.mixkit.co/videos/preview/mixkit-man-with-neon-makeup-posing-with-red-light-40490-large.mp4'
   ];
 
-  const isFemale = name.includes('clara') || name.includes('paula') || name.includes('natalia') || 
+  const isFemale = name.includes('alessia') || name.includes('vance') || name.includes('gisele') || 
+                   name.includes('sienna') || name.includes('sofia') || name.includes('yasmine') ||
+                   name.includes('clara') || name.includes('paula') || name.includes('natalia') || 
                    name.includes('lucía') || name.includes('lucia') || name.includes('marina') || 
                    name.includes('victoria') || name.includes('isabella') || name.includes('claudia') || 
                    name.includes('valeria') || name.includes('adriana') || name.includes('elena') || 
@@ -3552,6 +3559,11 @@ export default function CastingLiveSection({
                       ? MILLONARIOS_USERS
                       : FINANZAS_USERS))));
 
+    // Si Alessia Vance es la ponente activa o seleccionada, priorizar estrictamente FINANZAS_USERS (Alessia, Gisele, Marcus, etc.)
+    if (selectedFinanzasUser?.name?.includes('Alessia') || selectedFinanzasUser?.id === 'f-1') {
+      return FINANZAS_USERS.slice(0, 10);
+    }
+
     // For Round STREETWEAR & URBAN (10€), if user is not enrolled, strictly return TRABAJADORES_USERS (Lucas, Clara, Mateo, Paula, Hugo, Natalia, Álvaro, Lucía, Daniel, Marina)
     if (isThisSession10 && !hasPaidThisSession) {
       return TRABAJADORES_USERS.slice(0, 10);
@@ -4270,15 +4282,24 @@ export default function CastingLiveSection({
     } catch (e) {}
 
     setIsFinanzasUserParticipatingState(true);
+    setIsVotingPhaseActive(false);
+    setShowParticipantsGatheringModal(false);
+    setScreenSplitLayout('single');
+    setIsScreenSharingActive(false);
     setUserPaidSessions(prev => ({
       ...prev,
-      [effectiveTargetSessionId]: true
+      [effectiveTargetSessionId]: true,
+      [targetSessionId]: true
     }));
     try {
       localStorage.setItem(`user_paid_session_${effectiveTargetSessionId}`, 'true');
+      localStorage.setItem(`user_paid_session_${targetSessionId}`, 'true');
       localStorage.setItem('finanzas_target_session_id', effectiveTargetSessionId);
       localStorage.setItem('finanzas_user_participating', 'true');
       localStorage.setItem('finanzas_user_slot_index', String(userSlotIndex));
+      localStorage.setItem(`finanzas_is_voting_phase_active_${effectiveTargetSessionId}`, 'false');
+      localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'false');
+      localStorage.removeItem('finanzas_is_voting_phase_active');
     } catch (e) {}
     setForceShowParticipantsPanel(true);
 
@@ -4286,6 +4307,7 @@ export default function CastingLiveSection({
     setShowFinanzasInscriptionInChannel(false);
     setShowFinanzasPayModal(false);
     setShowVotingProjectsModal(false);
+    setShowParticipantsGatheringModal(false);
 
     // Update presentation queue so participant at index userSlotIndex is Adriana Lima
     const nowTimestamp = Date.now();
@@ -4351,7 +4373,7 @@ export default function CastingLiveSection({
     setGatheringSessionRef(is10EuroStreetwear ? 'REF: 2' : getFinanzasRoundRef(targetSession, resolvedSessionIndex));
     setGatheringParticipantsList(finalTen);
     setShowFinanzasInscriptionInChannel(false);
-    setShowParticipantsGatheringModal(true);
+    setShowParticipantsGatheringModal(false);
 
     // Audio confirmation tone
     try {
@@ -5482,63 +5504,12 @@ export default function CastingLiveSection({
 
   // 🎯 REDIRECCIÓN DIRECTA A LA PÁGINA DE 10 VENTANAS EN VIVO (captura image.png)
   const handleNavigateTo10WindowsLivePage = async () => {
-    // 1. Activar el diseño de 10 ventanas en 2 columnas (captura image.png)
+    // 1. Activar el diseño de 10 ventanas en 2 columnas para ver a los 10 participantes (captura z.png / 10 ventanas)
+    setSimulateEmptyFinanzasChannel(false);
     setScreenSplitLayout('grid-10');
     setIsScreenSharingActive(true);
-
-    // 2. Establecer como presentadora activa a Adriana Lima (Tú) con rol de participante activa
-    const adrianaLimaUser = {
-      id: userProfile?.id || 'f-adriana-lima',
-      name: `${userProfile?.name || 'Adriana Lima'} (Tú)`,
-      username: 'adrianalima_w1',
-      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-      role: 'Participante Activa (Tú)',
-      isHost: true,
-      isSelf: true
-    };
-    setSelectedFinanzasUser(adrianaLimaUser);
-    setActiveFinanzasPopupUser(adrianaLimaUser);
-
-    // 3. Activar emisión de cámara en directo
-    setIsUserLiveStreamingWithCamera(true);
     setIsWatchingPresenterCamera(false);
-    setIsPresenterCameraFullscreen(true);
-    setIsPresenterCameraBrowserFullscreen(false);
-
-    // 4. Intentar conectar cámara en vivo (sin alertas intrusivas y con fallback a stream/foto)
-    if (!userLiveMediaStream) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: liveCameraFacingMode,
-            width: { ideal: 1080 },
-            height: { ideal: 1920 }
-          },
-          audio: true
-        });
-        setUserLiveMediaStream(stream);
-        setIsLiveStreamAudioMuted(false);
-      } catch (err1) {
-        try {
-          const stream2 = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          setUserLiveMediaStream(stream2);
-          setIsLiveStreamAudioMuted(false);
-        } catch (err2) {
-          try {
-            const stream3 = await navigator.mediaDevices.getUserMedia({ video: true });
-            setUserLiveMediaStream(stream3);
-            setIsLiveStreamAudioMuted(true);
-          } catch (err3) {
-            console.warn('Live stream using simulated/virtual camera:', err3);
-          }
-        }
-      }
-    }
-
-    // 5. Categoría Finanzas activa
-    setSelectedCategoryFilter('Finanzas');
-
-    // 6. Cerrar cualquier modal o menú superpuesto
+    setIsPresenterCameraFullscreen(false);
     setShowVotingProjectsModal(false);
     setShowFinanzasInscriptionInChannel(false);
     setShowProjectDetailsInPopup(false);
@@ -14307,6 +14278,13 @@ export default function CastingLiveSection({
               onClick={() => {
                 setEnlargedWindowUser(null);
                 setIsTopControlsMenuHovered(false);
+                setIsWatchingPresenterCamera(false);
+                setIsPresenterCameraFullscreen(false);
+                setIsPresenterCameraBrowserFullscreen(false);
+                setIsUserLiveStreamingWithCamera(false);
+                try {
+                  window.dispatchEvent(new CustomEvent('close-presenter-live-camera'));
+                } catch (e) {}
               }}
               className="bg-white hover:bg-slate-100 text-slate-950 text-[10px] sm:text-[11px] font-black px-3 sm:px-4 py-1.5 rounded-xl shadow-md transition active:scale-95 cursor-pointer uppercase tracking-wider flex items-center justify-center border border-white"
               title="Volver a las ventanas"
@@ -26223,6 +26201,7 @@ try {
               ) : true ? (
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR ALL CHANNELS (image.png & z.png) */
                 <TikTokFinanzasFeed
+                  onNavigateToTab={onNavigateToTab}
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
                   setActiveFinanzasSessionIndex={setActiveFinanzasSessionIndex}
@@ -29863,20 +29842,15 @@ try {
                                             handleNavigateTo10WindowsLivePage();
                                           }}
                                           className={`w-full py-2.5 sm:py-3 px-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
-                                            (isPresenterUser ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera)
+                                            (screenSplitLayout === 'grid-10' && isScreenSharingActive)
                                               ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.55)] animate-pulse'
                                               : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                                           }`}
                                           id="btn-camara-voting"
-                                          title="LIVE"
+                                          title="LIVE: Ver las 10 ventanas en vivo de los participantes"
                                         >
                                           <Camera className="w-4 h-4 shrink-0 text-current" />
                                           <span>LIVE</span>
-                                          {(isPresenterUser ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera) && (
-                                            <span className="ml-1.5 px-2 py-0.5 bg-red-950/90 text-white text-[9px] font-mono rounded-full border border-red-400/80 animate-pulse">
-                                              🔴 EN DIRECTO
-                                            </span>
-                                          )}
                                         </button>
                                       </div>
 
@@ -30112,6 +30086,13 @@ try {
                                         }
 
                                         handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
+                                        setIsVotingPhaseActive(false);
+                                        setShowParticipantsGatheringModal(false);
+                                        setScreenSplitLayout('single');
+                                        setIsScreenSharingActive(false);
+                                        const firstUser = (currentSessionParticipants10 && currentSessionParticipants10[0]) || FINANZAS_USERS[0];
+                                        setSelectedFinanzasUser(firstUser);
+                                        setActiveFinanzasPopupUser(firstUser);
                                       }}
                                       disabled={isUserParticipating}
                                       className={`w-full max-w-[400px] font-black text-[10.5px] xs:text-[11.5px] sm:text-[13px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${

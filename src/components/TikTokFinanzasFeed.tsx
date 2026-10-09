@@ -255,6 +255,7 @@ interface TikTokFinanzasFeedProps {
   onNavigateTo10WindowsLive?: () => void;
   screenSplitLayout?: 'single' | '50-50' | 'pip' | 'grid-3' | 'grid-4' | 'presentation' | 'grid' | 'grid-10';
   invitedUsersMap?: Record<string, boolean>;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
@@ -273,6 +274,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   getFinanzasRoundRef,
   onOpenRoundDatabaseModal,
   onNavigateTo10WindowsLive,
+  onNavigateToTab,
   handleFinishRetransmissionAndPassToNextParticipant,
   isBroadcastMicOn,
   isMuted,
@@ -1536,6 +1538,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     'sess-millonarios-1': 12600
   };
 
+  // 🎙️ GUION DE EXPOSICIÓN EN VIVO DE ALESSIA VANCE (MODELO DIRECTORA • CASUAL & LIFESTYLE)
+  const ALESSIA_VANCE_SPEECH_SEGMENTS = [
+    "Hola a todos los inversores y compañeros de la mesa de Fashion Finances. Soy Alessia Vance, Modelo Directora del proyecto Casual Chic Essentials.",
+    "Durante estos cinco minutos de retransmisión en directo, os presento nuestra propuesta de moda contemporánea sostenible y de confección europea ética.",
+    "Hemos validado una fuerte demanda en el mercado casual de alta gama, alcanzando una tasa de recurrencia del setenta y cinco por ciento.",
+    "Nuestro modelo combina catálogo interactivo digital con colaboraciones exclusivas de modelos y embajadoras verificadas.",
+    "Con la financiación de esta ronda, ampliaremos la red de distribución logística y optimizaremos la producción de la nueva temporada.",
+    "Agradezco enormemente vuestra presencia y apoyo en estos 5 minutos. Quedo a vuestra disposición para responder a todas vuestras preguntas."
+  ];
+
   // 🎙️ GUION DE EXPOSICIÓN EN VIVO DE LUCAS TORRES (DISEÑADOR GRÁFICO • STREETWEAR & URBAN)
   const LUCAS_TORRES_SPEECH_SEGMENTS = [
     "Hola a todos los presentes y a los miembros e inversores de la sala. Soy Lucas Torres, diseñador gráfico y director creativo del proyecto KORVEX Urban Studio.",
@@ -1590,7 +1602,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
 
     const currentPresenter = getSessionPresenter(curSession, activeFinanzasSessionIndex);
-    if (!currentPresenter?.name?.includes('Lucas') && currentPresenter?.id !== 'trab-1') {
+    const isAlessia = currentPresenter?.name?.includes('Alessia') || currentPresenter?.id === 'f-1';
+    const isLucas = currentPresenter?.name?.includes('Lucas') || currentPresenter?.id === 'trab-1';
+    if (!isAlessia && !isLucas) {
       stopLucasTorresSpeech();
       return;
     }
@@ -1603,19 +1617,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         window.speechSynthesis.resume();
       }
 
-      const segments = LUCAS_TORRES_SPEECH_SEGMENTS;
+      const segments = isAlessia ? ALESSIA_VANCE_SPEECH_SEGMENTS : LUCAS_TORRES_SPEECH_SEGMENTS;
       const text = segments[speechSegmentIndexRef.current % segments.length];
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
       utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      utterance.pitch = isAlessia ? 1.05 : 1.0;
       // Volumen pleno cuando el micro está encendido
       utterance.volume = Math.max(0.7, (channelVolume || 80) / 100);
 
       const voices = window.speechSynthesis.getVoices();
-      const spanishVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Jorge') || v.name.includes('Pablo') || v.name.includes('Diego') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Spain') || v.name.includes('Castilian') || v.name.includes('Monica') || v.name.includes('Carlos')))
-        || voices.find(v => v.lang.startsWith('es'))
-        || voices[0];
+      const spanishVoice = isAlessia
+        ? (voices.find(v => v.lang.startsWith('es') && (v.name.includes('Monica') || v.name.includes('Laura') || v.name.includes('Helena') || v.name.includes('Lucia') || v.name.includes('Paulina') || v.name.includes('Female') || v.name.includes('Google español') || v.name.includes('Natural'))) || voices.find(v => v.lang.startsWith('es')) || voices[0])
+        : (voices.find(v => v.lang.startsWith('es') && (v.name.includes('Jorge') || v.name.includes('Pablo') || v.name.includes('Diego') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Spain') || v.name.includes('Castilian') || v.name.includes('Monica') || v.name.includes('Carlos'))) || voices.find(v => v.lang.startsWith('es')) || voices[0]);
       if (spanishVoice) {
         utterance.voice = spanishVoice;
       }
@@ -1818,6 +1832,26 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     window.addEventListener('open-shared-screen-live', handleOpenSharedScreen);
     return () => window.removeEventListener('open-shared-screen-live', handleOpenSharedScreen);
   }, []);
+
+  useEffect(() => {
+    const handleCloseLiveCamera = () => {
+      setLocalCameraFullscreenOverride(false);
+      if (setIsPresenterCameraFullscreen) setIsPresenterCameraFullscreen(false);
+      if (setIsWatchingPresenterCamera) setIsWatchingPresenterCamera(false);
+    };
+    window.addEventListener('close-presenter-live-camera', handleCloseLiveCamera);
+    return () => window.removeEventListener('close-presenter-live-camera', handleCloseLiveCamera);
+  }, [setIsPresenterCameraFullscreen, setIsWatchingPresenterCamera]);
+
+  const prevEnlargedUserRef = useRef(enlargedWindowUser);
+  useEffect(() => {
+    if (prevEnlargedUserRef.current && !enlargedWindowUser) {
+      setLocalCameraFullscreenOverride(false);
+      if (setIsPresenterCameraFullscreen) setIsPresenterCameraFullscreen(false);
+      if (setIsWatchingPresenterCamera) setIsWatchingPresenterCamera(false);
+    }
+    prevEnlargedUserRef.current = enlargedWindowUser;
+  }, [enlargedWindowUser, setIsPresenterCameraFullscreen, setIsWatchingPresenterCamera]);
 
   const effectiveCameraFullscreen = (isScreenSharingActive && (screenSplitLayout === '50-50' || screenSplitLayout === 'grid-3'))
     ? (localCameraFullscreenOverride !== false)
@@ -2313,12 +2347,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => clearInterval(interval);
   }, [activeSessionsOnly, activeFinanzasSessionIndex, sessionVotingPhaseMap, isVotingPhaseActive]);
 
-  // 🎙️ Effect to start Lucas Torres live exposition speech as soon as page opens and countdown begins (Micro ON)
+  // 🎙️ Effect to start presenter (Alessia Vance / Lucas Torres) live exposition speech as soon as page opens and countdown begins (Micro ON)
   useEffect(() => {
     const curSession = activeSessionsOnly[activeFinanzasSessionIndex];
     const isVoting = Boolean(curSession && sessionVotingPhaseMap[curSession.id]);
     const currentPresenter = curSession ? getSessionPresenter(curSession, activeFinanzasSessionIndex) : null;
     const isLucas = currentPresenter?.name?.includes('Lucas') || currentPresenter?.id === 'trab-1';
+    const isAlessia = currentPresenter?.name?.includes('Alessia') || currentPresenter?.id === 'f-1';
     const isMicOn = Boolean(
       isPresenterLiveMicActive &&
       isBroadcastMicOn &&
@@ -2327,7 +2362,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       channelVolume > 0
     );
 
-    if (!isVoting && !showFinanzasResults && !showFinanzasRecount && isLucas && isMicOn) {
+    if (!isVoting && !showFinanzasResults && !showFinanzasRecount && (isLucas || isAlessia) && isMicOn) {
       isSpeechActiveRef.current = true;
       speakLucasTorresSegment();
 
@@ -2580,8 +2615,95 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return list;
   };
 
-  // 👥 Lista de 10 participantes para la vista de 10 ventanas en vivo (captura z.png)
-  const tenVotingLiveParticipants = useMemo(() => {
+  // 👥 Función para obtener la lista de 10 participantes para la vista de 10 ventanas en vivo (captura z.png)
+  const getTenVotingLiveParticipants = (currentSess: any) => {
+    const isEnrolled = Boolean(
+      (currentSess?.id && userPaidSessions[currentSess.id]) ||
+      (typeof window !== 'undefined' && (
+        localStorage.getItem(`user_paid_session_${currentSess?.id}`) === 'true' ||
+        localStorage.getItem('finanzas_user_participating') === 'true'
+      ))
+    );
+
+    // 🚫 Si el usuario todavía NO está inscrito en la ronda:
+    // NO participa en la página de 10 ventanas (captura z.png).
+    // Se muestran estrictamente los 10 participantes del canal/ronda (Alessia, Gisele, Marcus, etc.) sin Adriana Lima (Tú).
+    if (!isEnrolled) {
+      return [
+        {
+          id: 'f-1',
+          name: 'Alessia Vance',
+          role: 'Modelo Directora',
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-2',
+          name: 'Gisele Bündchen',
+          role: 'Inversora Principal',
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-3',
+          name: 'Marcus Vance',
+          role: 'Asesor Fintech',
+          avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-4',
+          name: 'Sienna Cole',
+          role: 'Diseñadora Streetwear',
+          avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-5',
+          name: 'Liam Cooper',
+          role: 'Socio Inversor',
+          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-6',
+          name: 'Elena Rostova',
+          role: 'Emprendedora Textil',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-7',
+          name: 'David Gandy',
+          role: 'Inversor de Moda',
+          avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-8',
+          name: 'Sofia Vergara',
+          role: 'Productora Ejecutiva',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-9',
+          name: 'Yasmine Bleeth',
+          role: 'Directora Creativa',
+          avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        },
+        {
+          id: 'f-10',
+          name: 'Carlos Sainz',
+          role: 'Piloto & Mecenas',
+          avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650',
+          isSelf: false
+        }
+      ];
+    }
+
+    // ✅ Si el usuario SÍ está inscrito en la ronda, aparece como participante activo
     return [
       {
         id: userProfile?.id || 'f-adriana-lima',
@@ -2614,49 +2736,49 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         isSelf: false
       },
       {
-        id: 'trab-1',
-        name: 'Lucas Torres',
-        role: 'Diseñador Gráfico',
-        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
-        isSelf: false
-      },
-      {
-        id: 'trab-2',
-        name: 'Clara Vega',
-        role: 'Patronista Textil',
+        id: 'f-4',
+        name: 'Sienna Cole',
+        role: 'Diseñadora Streetwear',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
         isSelf: false
       },
       {
-        id: 'trab-3',
-        name: 'Mateo Ruiz',
-        role: 'Fotógrafo de Moda',
-        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
-        isSelf: false
-      },
-      {
-        id: 'trab-4',
-        name: 'Paula Ortiz',
-        role: 'Estilista Creativa',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
-        isSelf: false
-      },
-      {
-        id: 'trab-5',
-        name: 'Hugo Silva',
-        role: 'Diseñador de Calzado',
+        id: 'f-5',
+        name: 'Liam Cooper',
+        role: 'Socio Inversor',
         avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
         isSelf: false
       },
       {
-        id: 'trab-6',
-        name: 'Natalia Vega',
-        role: 'Diseñadora de Joyas',
+        id: 'f-6',
+        name: 'Elena Rostova',
+        role: 'Emprendedora Textil',
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'f-7',
+        name: 'David Gandy',
+        role: 'Inversor de Moda',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'f-8',
+        name: 'Sofia Vergara',
+        role: 'Productora Ejecutiva',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        isSelf: false
+      },
+      {
+        id: 'f-9',
+        name: 'Yasmine Bleeth',
+        role: 'Directora Creativa',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
         isSelf: false
       }
     ];
-  }, [userProfile]);
+  };
 
   // Helper to get presenter for each session
   const getSessionPresenter = (session: any, index: number) => {
@@ -2792,9 +2914,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               type="button"
               onClick={() => {
                 setActiveChannelsMenuSessionId(null);
+                if (onNavigateToTab) {
+                  onNavigateToTab('menu');
+                }
+                window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'menu' }));
               }}
               className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#181d2a] hover:bg-[#22293b] text-white text-[11px] font-black rounded-full transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-md shrink-0"
               title="Volver"
+              id="btn-channels-menu-volver"
             >
               <ArrowLeft className="w-3.5 h-3.5 text-[#fe2c55] stroke-[3]" />
               <span className="font-black">Volver</span>
@@ -3421,57 +3548,60 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               />
             </div>
 
-            {/* 💬 Slide-up Comments Drawer */}
+            {/* 💬 Slide-up Comments Drawer (Fondo blanco y comentarios comenzando por abajo) */}
             {channelVideoCommentsOpen && (
               <div
-                className="absolute inset-x-0 bottom-0 top-1/3 z-50 bg-[#0d121f]/98 backdrop-blur-xl rounded-t-3xl border-t border-slate-700/80 shadow-2xl flex flex-col p-3 text-white animate-slide-up-tiktok pointer-events-auto"
+                className="absolute inset-x-0 bottom-0 top-1/3 z-50 bg-white rounded-t-3xl border-t border-slate-200/90 shadow-[0_-15px_45px_rgba(0,0,0,0.35)] flex flex-col p-3.5 text-slate-900 animate-slide-up-tiktok pointer-events-auto"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                {/* Header con título COMENTARIOS y botón cerrar */}
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
                   <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-rose-400" />
-                    <span className="text-xs font-black uppercase tracking-wider">
-                      Comentarios ({commentsList.length})
+                    <MessageCircle className="w-4 h-4 text-rose-500" />
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-900">
+                      COMENTARIOS ({commentsList.length})
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setChannelVideoCommentsOpen(false)}
-                    className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer active:scale-95"
+                    title="Cerrar comentarios"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
                   </button>
                 </div>
 
-                {/* List of comments */}
-                <div className="flex-1 overflow-y-auto py-2 space-y-2.5 scrollbar-none pr-1">
+                {/* List of comments - Comienzan por abajo del recuadro */}
+                <div className="flex-1 overflow-y-auto py-2 scrollbar-none pr-1 flex flex-col select-text">
                   {commentsList.length === 0 ? (
-                    <div className="text-center py-6 text-slate-400 text-xs">
+                    <div className="text-center py-6 text-slate-400 text-xs mt-auto">
                       Sé el primero en comentar este vídeo de {getChannelCleanName(currentChannel)}.
                     </div>
                   ) : (
-                    commentsList.map((c: any) => (
-                      <div key={c.id} className="flex items-start gap-2 text-left">
-                        <img
-                          src={c.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
-                          alt={c.user}
-                          className="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-700"
-                        />
-                        <div className="flex-1 min-w-0 bg-[#141b2d] p-2 rounded-xl border border-slate-800">
-                          <div className="flex items-center justify-between gap-1 mb-0.5">
-                            <span className="text-[10.5px] font-black text-rose-300">{c.user}</span>
-                            <span className="text-[8px] text-slate-400">{c.date}</span>
+                    <div className="mt-auto space-y-2.5">
+                      {commentsList.map((c: any) => (
+                        <div key={c.id} className="flex items-start gap-2.5 text-left">
+                          <img
+                            src={c.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
+                            alt={c.user}
+                            className="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-200 shadow-2xs mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0 bg-slate-50 hover:bg-slate-100/90 p-2.5 rounded-2xl border border-slate-200/80 shadow-3xs transition">
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <span className="text-[11px] font-black text-rose-600 truncate">{c.user}</span>
+                              <span className="text-[9px] text-slate-400 font-mono shrink-0">{c.date}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-800 break-words leading-snug font-medium">{c.text}</p>
                           </div>
-                          <p className="text-[10.5px] text-slate-200 break-words leading-tight">{c.text}</p>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   )}
                 </div>
 
                 {/* Input box */}
-                <div className="pt-2 border-t border-slate-800 flex items-center gap-2">
+                <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2 shrink-0">
                   <input
                     type="text"
                     value={channelVideoNewComment}
@@ -3483,13 +3613,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       }
                     }}
                     placeholder="Añadir comentario..."
-                    className="flex-1 bg-[#141b2d] border border-slate-700 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-rose-500 placeholder:text-slate-500"
+                    className="flex-1 bg-slate-100 border border-slate-200 text-slate-900 text-xs px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 placeholder:text-slate-400 transition"
                   />
                   <button
                     type="button"
                     onClick={() => handleAddChannelVideoComment(currentVid)}
                     disabled={!channelVideoNewComment.trim()}
-                    className="p-2 bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:from-rose-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-white font-bold transition active:scale-95 cursor-pointer shadow-md"
+                    className="p-2.5 bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:from-rose-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-white font-bold transition active:scale-95 cursor-pointer shadow-md shrink-0 flex items-center justify-center"
                     title="Publicar comentario"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -3822,8 +3952,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                     {/* 👥 GRID DE 10 VENTANAS EN 2 COLUMNAS (Aspecto y tamaño mejorados idéntico a z.png) */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-2.5 grid grid-cols-2 gap-2 sm:gap-2.5 w-full pb-6">
-                      {tenVotingLiveParticipants.map((u, i) => {
-                        const isSelfUser = i === 0 || Boolean(u.isSelf || u.id === userProfile?.id || u.name?.includes('(Tú)'));
+                      {getTenVotingLiveParticipants(session).map((u, i) => {
+                        const isSelfUser = Boolean(isUserEnrolledInThisRound && (u.isSelf || u.id === userProfile?.id || u.name?.includes('(Tú)')));
                         return (
                           <div
                             key={u.id || i}
@@ -3835,7 +3965,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 avatar: u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
                                 role: u.role || 'Participante',
                                 isSelf: isSelfUser,
-                                isHost: i === 0
+                                isHost: i === 0 && isUserEnrolledInThisRound
                               };
                               if (setEnlargedWindowUser) {
                                 setEnlargedWindowUser(clickedUser);
@@ -3843,6 +3973,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               if (setSelectedFinanzasUser) setSelectedFinanzasUser(clickedUser);
                               if (setActiveFinanzasPopupUser) setActiveFinanzasPopupUser(clickedUser);
                               if (setDetailProjectUser) setDetailProjectUser(clickedUser);
+
+                              // Si se pulsa en la ventana de Alessia Vance, abrir directamente su retransmisión de 5 minutos en directo
+                              if (clickedUser.name?.includes('Alessia') || i === 0) {
+                                setShowTenWindowsVotingLive(false);
+                                setLocalCameraFullscreenOverride(true);
+                                if (setIsWatchingPresenterCamera) setIsWatchingPresenterCamera(true);
+                                if (setIsPresenterCameraFullscreen) setIsPresenterCameraFullscreen(true);
+                                resumeOrStartLucasSpeech();
+                              }
                             }}
                             className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 hover:border-purple-400/80 bg-slate-900 shadow-2xl group transition cursor-pointer aspect-[9/13.5] min-h-[250px] sm:min-h-[285px] flex flex-col justify-between"
                             id={`voting-user-window-${i + 1}`}
@@ -3855,15 +3994,28 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                   facingMode={liveCameraFacingMode} 
                                 />
                               ) : (
-                                <img
-                                  src={u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'}
-                                  alt={u.name}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => {
-                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
-                                  }}
-                                />
+                                <>
+                                  {(i === 0 || u.name?.includes('Alessia')) && (
+                                    <video
+                                      src={getParticipantLiveCameraVideo(u)}
+                                      autoPlay
+                                      loop
+                                      playsInline
+                                      muted
+                                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  )}
+                                  <img
+                                    src={u.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650'}
+                                    alt={u.name}
+                                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${(i === 0 || u.name?.includes('Alessia')) ? '-z-1 opacity-0' : ''}`}
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                      e.currentTarget.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650';
+                                    }}
+                                  />
+                                </>
                               )}
 
                               {/* Badge EN VIVO (Strictly matching z.png) */}
@@ -4288,37 +4440,39 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         </div>
 
                         {/* Scrollable Comments List */}
-                        <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300">
-                          {sessionComments.map((comm) => (
-                            <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition">
-                              <img
-                                src={comm.userAvatar}
-                                alt={comm.userName}
-                                className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-300 mt-0.5"
-                                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="text-[10px] font-black text-rose-600 truncate">{comm.userName}</span>
-                                  <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                        <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300 flex flex-col">
+                          <div className="mt-auto space-y-1.5">
+                            {sessionComments.map((comm) => (
+                              <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition">
+                                <img
+                                  src={comm.userAvatar}
+                                  alt={comm.userName}
+                                  className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-300 mt-0.5"
+                                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[10px] font-black text-rose-600 truncate">{comm.userName}</span>
+                                    <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-800 mt-0.5 leading-snug break-words font-medium">
+                                    {comm.text}
+                                  </p>
                                 </div>
-                                <p className="text-[10px] text-slate-800 mt-0.5 leading-snug break-words font-medium">
-                                  {comm.text}
-                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleCommentLike(session.id, comm.id)}
+                                  className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
+                                    comm.userLiked ? 'text-rose-600 scale-110' : 'text-slate-400 hover:text-rose-500'
+                                  }`}
+                                  title="Me gusta"
+                                >
+                                  <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-600 text-rose-600' : ''}`} />
+                                  <span className="text-[8px] font-mono text-slate-500 font-bold">{comm.likes}</span>
+                                </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleCommentLike(session.id, comm.id)}
-                                className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                                  comm.userLiked ? 'text-rose-600 scale-110' : 'text-slate-400 hover:text-rose-500'
-                                }`}
-                                title="Me gusta"
-                              >
-                                <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-600 text-rose-600' : ''}`} />
-                                <span className="text-[8px] font-mono text-slate-500 font-bold">{comm.likes}</span>
-                              </button>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
 
                         {/* Quick Emojis strip - Tap to send directly! */}
@@ -4697,24 +4851,25 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           type="button"
                           onClick={() => {
                             setActiveFinanzasSessionIndex(index);
-                            if (setSelectedFinanzasUser) setSelectedFinanzasUser(presenter);
                             setShowTenWindowsVotingLive(true);
+                            setIsWatchingPresenterCamera(false);
+                            setIsPresenterCameraFullscreen(false);
+                            setLocalCameraFullscreenOverride(false);
+                            stopLucasTorresSpeech();
+                            if (onNavigateTo10WindowsLive) {
+                              onNavigateTo10WindowsLive();
+                            }
                           }}
-                          className={`w-full font-black text-xs sm:text-[13px] py-2 sm:py-2.5 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
+                          className={`w-full font-black text-xs sm:text-[13px] py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
                             showTenWindowsVotingLive
                               ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
                               : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                           }`}
                           id={`btn-live-voting-${session.id}`}
-                          title="Ver las 10 ventanas en vivo de los participantes (captura z.png)"
+                          title="LIVE: Ver las 10 ventanas en vivo de los participantes"
                         >
                           <Camera className="w-3.5 h-3.5 shrink-0 text-current" />
                           <span>LIVE</span>
-                          {showTenWindowsVotingLive && (
-                            <span className="ml-1 px-1.5 py-0.5 bg-red-950 text-white text-[8px] font-mono rounded-full border border-red-400/80">
-                              10 EN VIVO
-                            </span>
-                          )}
                         </button>
                       </div>
                     </div>
@@ -4772,28 +4927,34 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         <span className="text-[7px] xs:text-[7.5px] sm:text-[8px] text-slate-400 italic">
                           Exposición de 5 minutos en directo
                         </span>
-                        {/* Audio exposition live indicator (Clic para escuchar o reactivar la voz de Lucas Torres) */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            resumeOrStartLucasSpeech();
-                          }}
-                          title="Voz en directo de Lucas Torres activa. Pulsa para escuchar la presentación."
-                          className={`flex items-center gap-1.5 mt-0.5 px-2.5 py-0.5 rounded-full border text-[7.5px] sm:text-[8px] font-bold shadow-xs transition active:scale-95 cursor-pointer select-none ${
-                            isLucasTorresSpeaking
-                              ? 'bg-emerald-950/90 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                              : 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/80'
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
-                          <span className="font-extrabold">{isLucasTorresSpeaking ? 'Hablando en directo...' : 'Voz en directo conectada'}</span>
-                          <span className="flex items-end gap-0.5 h-2 ml-0.5">
-                            <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse' : 'h-1'}`} />
-                            <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse delay-75' : 'h-1.5'}`} />
-                            <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2 animate-pulse delay-150' : 'h-1'}`} />
-                          </span>
-                        </button>
+                        {/* Audio exposition live indicator (Clic para escuchar o reactivar la voz de Alessia Vance / Lucas Torres) */}
+                        {(() => {
+                          const isAlessiaVoice = presenter.name?.includes('Alessia') || presenter.id === 'f-1';
+                          const voicePresenterName = isAlessiaVoice ? 'Alessia Vance' : (presenter.name?.includes('Lucas') ? 'Lucas Torres' : presenter.name);
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                resumeOrStartLucasSpeech();
+                              }}
+                              title={`Voz en directo de ${voicePresenterName} activa. Pulsa para escuchar la presentación.`}
+                              className={`flex items-center gap-1.5 mt-0.5 px-2.5 py-0.5 rounded-full border text-[7.5px] sm:text-[8px] font-bold shadow-xs transition active:scale-95 cursor-pointer select-none ${
+                                isLucasTorresSpeaking
+                                  ? 'bg-emerald-950/90 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                                  : 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/80'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
+                              <span className="font-extrabold">{isLucasTorresSpeaking ? `${voicePresenterName} hablando en directo...` : 'Voz en directo conectada'}</span>
+                              <span className="flex items-end gap-0.5 h-2 ml-0.5">
+                                <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse' : 'h-1'}`} />
+                                <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse delay-75' : 'h-1.5'}`} />
+                                <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2 animate-pulse delay-150' : 'h-1'}`} />
+                              </span>
+                            </button>
+                          );
+                        })()}
                       </div>
 {/* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: white digital pill timer) */}
                         <div className="w-full bg-[#070b14] border border-emerald-500/40 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col gap-1 shadow-inner mb-1.5">
@@ -4889,20 +5050,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               type="button"
                               onClick={() => {
                                 setActiveFinanzasSessionIndex(index);
+                                const currentPresenterUser = presenter || FINANZAS_USERS[0];
                                 if (setSelectedFinanzasUser) {
-                                  setSelectedFinanzasUser(presenter);
-                                }
-                                if (onNavigateTo10WindowsLive) {
-                                  onNavigateTo10WindowsLive();
-                                  return;
+                                  setSelectedFinanzasUser(currentPresenterUser);
                                 }
                                 if (isPresenter) {
                                   handleToggleUserCameraLiveBroadcast();
                                 } else {
-                                  if (isPresenterCameraFullscreen) {
+                                  if (isPresenterCameraFullscreen || isWatchingPresenterCamera) {
                                     setIsPresenterCameraFullscreen(false);
                                     setIsWatchingPresenterCamera(false);
+                                    setLocalCameraFullscreenOverride(false);
+                                    stopLucasTorresSpeech();
                                   } else {
+                                    setLocalCameraFullscreenOverride(true);
                                     setIsWatchingPresenterCamera(true);
                                     setIsPresenterCameraFullscreen(true);
                                     resumeOrStartLucasSpeech();
@@ -5031,28 +5192,67 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <button
                     type="button"
                     onClick={(e) => {
+                      e.stopPropagation();
                       setActiveFinanzasSessionIndex(index);
+
+                      // 1. Guardar en localStorage que el usuario está inscrito
+                      try {
+                        localStorage.setItem(`user_paid_session_${session.id}`, 'true');
+                        localStorage.setItem('finanzas_user_participating', 'true');
+                        localStorage.setItem('finanzas_user_is_participating', 'true');
+                        localStorage.setItem('finanzas_target_session_id', session.id);
+                        localStorage.setItem(`finanzas_is_voting_phase_active_${session.id}`, 'false');
+                        localStorage.removeItem('finanzas_is_voting_phase_active');
+                      } catch (err) {}
+
+                      // 2. Redirigir inmediatamente a la ventana image.png (fase de exposición de 5 min)
+                      setSessionVotingPhaseMap(prev => ({
+                        ...prev,
+                        [session.id]: false
+                      }));
+                      setShowTenWindowsVotingLive(false);
+                      setLocalCameraFullscreenOverride(false);
+                      if (setIsWatchingPresenterCamera) setIsWatchingPresenterCamera(false);
+                      if (setIsPresenterCameraFullscreen) setIsPresenterCameraFullscreen(false);
+
+                      // 3. Establecer a Alessia Vance (o primer participante de la lista) como ponente del Turno 1 de 10
+                      const firstPresenter = participants[0] || FINANZAS_USERS[0];
+                      setSessionSelectedPresenterMap(prev => ({
+                        ...prev,
+                        [session.id]: firstPresenter
+                      }));
+                      if (setSelectedFinanzasUser) setSelectedFinanzasUser(firstPresenter);
+                      if (setActiveFinanzasPopupUser) setActiveFinanzasPopupUser(firstPresenter);
+
+                      // 4. Temporizador de 5 minutos para la exposición (iniciando en 4:49 / 289s como en image.png)
+                      setSessionExpositionTimerMap(prev => ({
+                        ...prev,
+                        [session.id]: 289
+                      }));
+
+                      // 5. Activar voz en directo del ponente
+                      if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(false);
+                      resumeOrStartLucasSpeech();
+
+                      // 6. Cerrar modales y paneles superpuestos para mostrar directamente image.png
                       setShowVotingProjectsModal(false);
+                      setShowFinanzasInscriptionInChannel(false);
                       setShowProjectDetailsInPopup(false);
                       setDetailProjectUser(null);
-                      setActiveFinanzasPopupUser(null);
                       if (setShowFinanzasResults) setShowFinanzasResults(false);
                       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
+                      if (setShowParticipantsGatheringModal) setShowParticipantsGatheringModal(false);
 
-                      const isStreetwear10 = Boolean(session.entryFee === 10 || session.title?.toUpperCase().includes('STREETWEAR'));
-                      if (isStreetwear10) {
-                        if (onExecutePaymentAndJoinSession) {
-                          onExecutePaymentAndJoinSession(session);
-                        } else {
-                          setShowFinanzasInscriptionInChannel(true);
-                        }
-                        return;
-                      }
-
+                      // 7. Notificar al componente padre para procesar inscripción y pago
                       if (onExecutePaymentAndJoinSession) {
                         onExecutePaymentAndJoinSession(session);
-                      } else {
-                        setShowFinanzasInscriptionInChannel(true);
+                      }
+
+                      if (setSystemVoiceNotification) {
+                        setSystemVoiceNotification({
+                          show: true,
+                          message: '🎉 ¡Inscripción confirmada (10€)! Estás dentro de la ronda. Turno 1 de 10: Alessia Vance (5 min de exposición).'
+                        });
                       }
                     }}
                     className={`w-full font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border shadow-md flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 ${
@@ -5155,37 +5355,39 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     </div>
 
                     {/* Comments List */}
-                    <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300">
-                      {sessionComments.map((comm) => (
-                        <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition">
-                          <img
-                            src={comm.userAvatar}
-                            alt={comm.userName}
-                            className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-300 mt-0.5"
-                            onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-[10px] font-black text-rose-600 truncate">{comm.userName}</span>
-                              <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                    <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300 flex flex-col">
+                      <div className="mt-auto space-y-1.5">
+                        {sessionComments.map((comm) => (
+                          <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition">
+                            <img
+                              src={comm.userAvatar}
+                              alt={comm.userName}
+                              className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-300 mt-0.5"
+                              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-[10px] font-black text-rose-600 truncate">{comm.userName}</span>
+                                <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                              </div>
+                              <p className="text-[10px] text-slate-800 mt-0.5 leading-snug break-words font-medium">
+                                {comm.text}
+                              </p>
                             </div>
-                            <p className="text-[10px] text-slate-800 mt-0.5 leading-snug break-words font-medium">
-                              {comm.text}
-                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCommentLike(session.id, comm.id)}
+                              className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
+                                comm.userLiked ? 'text-rose-600 scale-110' : 'text-slate-400 hover:text-rose-500'
+                              }`}
+                              title="Me gusta"
+                            >
+                              <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-600 text-rose-600' : ''}`} />
+                              <span className="text-[8px] font-mono text-slate-500 font-bold">{comm.likes}</span>
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleCommentLike(session.id, comm.id)}
-                            className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
-                              comm.userLiked ? 'text-rose-600 scale-110' : 'text-slate-400 hover:text-rose-500'
-                            }`}
-                            title="Me gusta"
-                          >
-                            <Heart className={`w-3 h-3 ${comm.userLiked ? 'fill-rose-600 text-rose-600' : ''}`} />
-                            <span className="text-[8px] font-mono text-slate-500 font-bold">{comm.likes}</span>
-                          </button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
 
                     {/* Quick Emojis strip - Tap to send directly! */}

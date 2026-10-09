@@ -403,7 +403,7 @@ export default function App() {
   const menSliderRef = useRef<HTMLDivElement>(null);
 
   // --- UI/Navigation State Hooks ---
-  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live'>('profile');
+  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu'>('profile');
   const [initialSelectedStoreId, setInitialSelectedStoreId] = useState<string | null>(null);
   const [selectedLiveModelId, setSelectedLiveModelId] = useState<string | undefined>(undefined);
   const [selectedModelForView, setSelectedModelForView] = useState<ModelProfile | null>(null);
@@ -826,10 +826,11 @@ export default function App() {
     };
     const handleNavigateTabGlobal = (e: any) => {
       const target = e.detail?.tab || e.detail;
-      if (target === 'profile') {
+      if (target === 'profile' || target === 'menu') {
         setSelectedModelForView(null);
       }
       if (target) {
+        setPreviousTab(activeTab);
         setActiveTabTab(target);
       }
     };
@@ -2920,7 +2921,7 @@ export default function App() {
           : 'p-4 sm:p-6 max-md:p-3 gap-6'
       }`}>
         {/* LEFT NAV PANEL - Styled with high contrast and desktop responsiveness */}
-        <aside className="lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden">
+        <aside className={`lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden ${activeTab === 'menu' ? 'hidden' : ''}`}>
           {/* User profile segment */}
           <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs space-y-3">
             <div className="flex items-center gap-3">
@@ -3134,7 +3135,7 @@ export default function App() {
         {/* RIGHT MASTER DETAIL CONTENT VIEWPORT */}
         <section className={`flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'gap-0 max-md:h-full max-md:overflow-hidden' : 'gap-6'} no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`} id="master-viewport">
           {/* 📱 MOBILE NAVIGATION MENU - Visible on general tabs; hidden on casting_live to prevent overflow and lateral scrollbar */}
-          {activeTab !== 'casting_live' && (
+          {(activeTab !== 'casting_live' || activeTab === 'menu') && (
             <MobileNavigationMenu
               activeTab={activeTab}
               userRole={userProfile.role}

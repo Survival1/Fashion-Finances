@@ -30,7 +30,7 @@ export default function MobileNavigationMenu({
   const isProfileActive = (activeTab === 'home' && !selectedModelForView) || activeTab === 'profile';
 
   return (
-    <div className="md:hidden w-full max-w-[360px] xs:max-w-[400px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[640px] mx-auto px-1.5 xs:px-2 sm:px-3 space-y-2.5 pt-1 pb-2 animate-fade-in box-border" id="mobile-navigation-image-menu">
+    <div className={`${activeTab === 'menu' ? 'w-full' : 'md:hidden w-full'} max-w-[360px] xs:max-w-[400px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[640px] mx-auto px-1.5 xs:px-2 sm:px-3 space-y-2.5 pt-1 pb-2 animate-fade-in box-border`} id="mobile-navigation-image-menu">
       {/* 👑 ACCESO MASTER ADMINISTRADOR EN MÓVIL */}
       {userRole === 'admin' && (
         <button
