@@ -621,24 +621,15 @@ export default function Top1ModelDonationCard({
             
             {/* Arch Container with Anchor for Suspended Crown */}
             <div className="relative z-10">
-              {/* 1. Opulent Royal Crown atop the Arch (Positioned cleanly 3px above the arch without touching) */}
+              {/* 1. Opulent Royal Crown atop the Arch (Corona Real de la captura z.png pura, sin tocarla ni modificarla) */}
               <div 
                 style={{ bottom: 'calc(100% + 3px)' }}
                 className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 hover:scale-105"
               >
-                {top1Model?.gender === 'male' ? (
-                  <RoyalMaleCrown 
-                    imgClassName="w-32 sm:w-40 h-auto"
-                    showSparkles={true}
-                  />
-                ) : (
-                  <img
-                    src="https://gallery.yopriceville.com/var/albums/Free-Clipart-Pictures/Crowns-PNG/Diamond_Tiara_with_Rubies_PNG_Clipart.png"
-                    alt="Corona Real de Diamantes y Rubíes"
-                    referrerPolicy="no-referrer"
-                    className="w-32 sm:w-40 h-auto object-contain filter drop-shadow-[0_8px_20px_rgba(225,29,72,0.5)]"
-                  />
-                )}
+                <RoyalMaleCrown 
+                  imgClassName="w-32 sm:w-40 h-auto"
+                  showSparkles={true}
+                />
               </div>
 
               {/* 3. The Royal Vaulted Arch Frame (Grand high-fashion portrait) */}

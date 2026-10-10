@@ -3396,29 +3396,29 @@ export default function CastingLiveSection({
       else resolvedFee = 10;
     }
 
-    let feeInWords = `${resolvedFee} Euros`;
+    let feeInWords = `${resolvedFee} euros`;
     let feeShort = `${resolvedFee}€`;
     if (resolvedFee === 10) {
-      feeInWords = '10 Euros';
+      feeInWords = '10 euros';
       feeShort = '10€';
     } else if (resolvedFee === 100) {
-      feeInWords = '100 Euros';
+      feeInWords = '100 euros';
       feeShort = '100€';
     } else if (resolvedFee === 1000) {
-      feeInWords = '1.000 Euros';
+      feeInWords = '1.000 euros';
       feeShort = '1.000€';
     } else if (resolvedFee === 10000) {
-      feeInWords = '10.000 Euros';
+      feeInWords = '10.000 euros';
       feeShort = '10.000€';
     } else if (resolvedFee === 100000) {
-      feeInWords = '100.000 Euros';
+      feeInWords = '100.000 euros';
       feeShort = '100.000€';
     } else if (resolvedFee === 1000000) {
-      feeInWords = '1.000.000 Euros';
+      feeInWords = '1.000.000 euros';
       feeShort = '1.000.000€';
     } else {
       const formattedNum = new Intl.NumberFormat('es-ES').format(resolvedFee);
-      feeInWords = `${formattedNum} Euros`;
+      feeInWords = `${formattedNum} euros`;
       feeShort = `${formattedNum}€`;
     }
 
@@ -4283,7 +4283,6 @@ export default function CastingLiveSection({
 
     setIsFinanzasUserParticipatingState(true);
     setIsVotingPhaseActive(false);
-    setShowParticipantsGatheringModal(false);
     setScreenSplitLayout('single');
     setIsScreenSharingActive(false);
     setUserPaidSessions(prev => ({
@@ -4303,11 +4302,10 @@ export default function CastingLiveSection({
     } catch (e) {}
     setForceShowParticipantsPanel(true);
 
-    // Close any modal
+    // Close overlays to display gathering waiting room
     setShowFinanzasInscriptionInChannel(false);
     setShowFinanzasPayModal(false);
     setShowVotingProjectsModal(false);
-    setShowParticipantsGatheringModal(false);
 
     // Update presentation queue so participant at index userSlotIndex is Adriana Lima
     const nowTimestamp = Date.now();
@@ -4373,7 +4371,7 @@ export default function CastingLiveSection({
     setGatheringSessionRef(is10EuroStreetwear ? 'REF: 2' : getFinanzasRoundRef(targetSession, resolvedSessionIndex));
     setGatheringParticipantsList(finalTen);
     setShowFinanzasInscriptionInChannel(false);
-    setShowParticipantsGatheringModal(false);
+    setShowParticipantsGatheringModal(true);
 
     // Audio confirmation tone
     try {
@@ -4619,6 +4617,44 @@ export default function CastingLiveSection({
   });
   const [newMediaImageUrl, setNewMediaImageUrl] = useState('');
   const [newMediaVideoUrl, setNewMediaVideoUrl] = useState('');
+
+  // 🎬 Estado del vídeo entero compartido desde z.png hacia la página de la captura image.png
+  const [sharedFullVideoOnImagePage, setSharedFullVideoOnImagePage] = useState<any>(() => {
+    try {
+      const raw = localStorage.getItem('shared_full_video_image_png') || localStorage.getItem('project_shared_full_video');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleVideoSharedToImagePage = (e: any) => {
+      const item = e?.detail;
+      if (!item) return;
+      setSharedFullVideoOnImagePage(item);
+      const mediaItem = {
+        id: item.id || `shared-video-${Date.now()}`,
+        type: 'video' as const,
+        url: item.videoUrl,
+        title: item.title || 'Vídeo Entero de Pasarela'
+      };
+      setCustomProjectMedia(prev => {
+        const next = { ...prev };
+        const curDefault = next['default'] || [];
+        next['default'] = [mediaItem, ...curDefault.filter((m: any) => m.url !== mediaItem.url)];
+        return next;
+      });
+      setShowVotingProjectsModal(true);
+    };
+
+    window.addEventListener('video-shared-to-image-page', handleVideoSharedToImagePage);
+    window.addEventListener('channel-video-shared-to-image-page', handleVideoSharedToImagePage);
+    return () => {
+      window.removeEventListener('video-shared-to-image-page', handleVideoSharedToImagePage);
+      window.removeEventListener('channel-video-shared-to-image-page', handleVideoSharedToImagePage);
+    };
+  }, []);
 
   // --- Broadcast / Crear Retransmisión States ---
   const [showCreateBroadcastModal, setShowCreateBroadcastModal] = useState<boolean>(false);
@@ -10711,13 +10747,49 @@ export default function CastingLiveSection({
             views: '1.2K',
             avatar: targetVideo.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
             name: targetVideo.username || 'anonymous',
-            videoCategory: targetVideo.videoCategory || 'Fashion' // store video category!
+            videoCategory: targetVideo.videoCategory || selectedCategoryFilter || 'Fashion' // store video category!
           };
           existingSavedVideos = [savedVideoItem, ...existingSavedVideos];
         }
+
+        // Sincronizar también con profile_saved_bookmarks (captura z.png)
+        try {
+          const rawBookmarks = localStorage.getItem('profile_saved_bookmarks');
+          let bookmarks: any[] = rawBookmarks ? JSON.parse(rawBookmarks) : [];
+          const bItem = {
+            id: targetVideo.id || `saved-${Date.now()}`,
+            type: 'video',
+            title: targetVideo.name || targetVideo.title || 'Vídeo Guardado',
+            description: targetVideo.description || 'Vídeo guardado desde el canal',
+            videoUrl: targetVideo.videoUrl,
+            poster: targetVideo.avatar || targetVideo.thumbnail || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+            thumbnail: targetVideo.avatar || targetVideo.thumbnail,
+            avatar: targetVideo.avatar,
+            username: targetVideo.username || 'creador',
+            name: targetVideo.name || targetVideo.username,
+            videoCategory: targetVideo.videoCategory || selectedCategoryFilter || 'Fashion',
+            category: targetVideo.videoCategory || selectedCategoryFilter || 'Fashion',
+            likes: targetVideo.likes || 18920,
+            favorites: targetVideo.favorites + 1,
+            savedAt: new Date().toISOString()
+          };
+          bookmarks = [bItem, ...bookmarks.filter(b => b.videoUrl !== targetVideo.videoUrl && b.id !== targetVideo.id)];
+          localStorage.setItem('profile_saved_bookmarks', JSON.stringify(bookmarks));
+          window.dispatchEvent(new CustomEvent('video-saved-bookmark', { detail: { video: targetVideo, category: bItem.category, isFavorited: true } }));
+        } catch (_) {}
       } else {
         // Remove from saved videos
         existingSavedVideos = existingSavedVideos.filter(v => v.videoUrl !== targetVideo.videoUrl);
+
+        try {
+          const rawBookmarks = localStorage.getItem('profile_saved_bookmarks');
+          if (rawBookmarks) {
+            let bookmarks: any[] = JSON.parse(rawBookmarks);
+            bookmarks = bookmarks.filter(b => b.videoUrl !== targetVideo.videoUrl && b.id !== targetVideo.id);
+            localStorage.setItem('profile_saved_bookmarks', JSON.stringify(bookmarks));
+            window.dispatchEvent(new CustomEvent('video-saved-bookmark', { detail: { video: targetVideo, isFavorited: false } }));
+          }
+        } catch (_) {}
       }
       
       localStorage.setItem(`saved_videos_${currentUserId}`, JSON.stringify(existingSavedVideos));
@@ -13660,6 +13732,34 @@ export default function CastingLiveSection({
               </div>
             </div>
           </div>
+
+          {/* 🎬 VÍDEO ENTERO COMPARTIDO DESDE Z.PNG HACIA LA PÁGINA DE LA CAPTURA IMAGE.PNG */}
+          {sharedFullVideoOnImagePage && (
+            <div className="bg-slate-900 border-2 border-rose-500/80 rounded-2xl p-3 sm:p-3.5 shadow-xl flex flex-col gap-2.5 text-white animate-fade-in" id="shared-full-video-card-image-page">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-rose-400 tracking-wider flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                  🎬 VÍDEO ENTERO COMPARTIDO (Canal en Directo)
+                </span>
+                <span className="text-[9px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-slate-300">
+                  @{sharedFullVideoOnImagePage.username || 'canal'}
+                </span>
+              </div>
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-black shadow-inner">
+                <video
+                  src={sharedFullVideoOnImagePage.videoUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-200">
+                <p className="font-bold truncate m-0">{sharedFullVideoOnImagePage.title}</p>
+                <span className="text-[10px] text-rose-300 font-mono shrink-0">1080p HD</span>
+              </div>
+            </div>
+          )}
 
           {/* Project Core Details */}
           <div className="bg-white rounded-2xl border-2 border-slate-200/90 hover:border-[#fe2c55]/60 p-3.5 sm:p-4 shadow-xs space-y-3">
@@ -26488,10 +26588,47 @@ try {
                         <button
                           type="button"
                           onClick={() => {
-                            setIsLiveBookmarked(prev => !prev);
-                            setLiveBookmarksCount(prev => isLiveBookmarked ? prev - 1 : prev + 1);
+                            const nextFav = !isLiveBookmarked;
+                            setIsLiveBookmarked(nextFav);
+                            setLiveBookmarksCount(prev => nextFav ? prev + 1 : Math.max(0, prev - 1));
+                            if (activeVideo) {
+                              const category = activeVideo.videoCategory || selectedCategoryFilter || 'Fashion';
+                              try {
+                                const rawBookmarks = localStorage.getItem('profile_saved_bookmarks');
+                                let bookmarks: any[] = rawBookmarks ? JSON.parse(rawBookmarks) : [];
+                                if (nextFav) {
+                                  const bItem = {
+                                    id: activeVideo.id || `saved-${Date.now()}`,
+                                    type: 'video',
+                                    title: activeVideo.name || activeVideo.title || 'Vídeo del Canal',
+                                    description: activeVideo.description || 'Vídeo guardado desde el canal',
+                                    videoUrl: activeVideo.videoUrl,
+                                    poster: activeVideo.avatar || activeVideo.thumbnail || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                    thumbnail: activeVideo.avatar || activeVideo.thumbnail,
+                                    avatar: activeVideo.avatar,
+                                    username: activeVideo.username || 'creador',
+                                    name: activeVideo.name || activeVideo.username,
+                                    videoCategory: category,
+                                    category: category,
+                                    likes: activeVideo.likes || 18920,
+                                    favorites: (liveBookmarksCount || 592) + 1,
+                                    savedAt: new Date().toISOString()
+                                  };
+                                  bookmarks = [bItem, ...bookmarks.filter(b => b.videoUrl !== activeVideo.videoUrl && b.id !== activeVideo.id)];
+                                } else {
+                                  bookmarks = bookmarks.filter(b => b.videoUrl !== activeVideo.videoUrl && b.id !== activeVideo.id);
+                                }
+                                localStorage.setItem('profile_saved_bookmarks', JSON.stringify(bookmarks));
+                                window.dispatchEvent(new CustomEvent('video-saved-bookmark', { detail: { video: activeVideo, category, isFavorited: nextFav } }));
+                                window.dispatchEvent(new Event('saved_videos_updated'));
+                              } catch (_) {}
+                            }
                           }}
-                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer"
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer ${
+                            isLiveBookmarked
+                              ? 'bg-amber-500/30 border border-amber-400 text-amber-400 shadow-amber-500/30'
+                              : 'bg-slate-800/80 hover:bg-slate-700/90 text-white'
+                          }`}
                           title="Guardar"
                           id="btn-live-bookmark"
                         >
@@ -30081,33 +30218,26 @@ try {
                                         setShowFinanzasRecount(false);
 
                                         if (isUserParticipating) {
-                                          // 🛑 Mientras el usuario esté participando en una Ronda o Sesión, el botón NO funciona
+                                          setShowParticipantsGatheringModal(true);
                                           return;
                                         }
 
                                         handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
-                                        setIsVotingPhaseActive(false);
-                                        setShowParticipantsGatheringModal(false);
-                                        setScreenSplitLayout('single');
-                                        setIsScreenSharingActive(false);
-                                        const firstUser = (currentSessionParticipants10 && currentSessionParticipants10[0]) || FINANZAS_USERS[0];
-                                        setSelectedFinanzasUser(firstUser);
-                                        setActiveFinanzasPopupUser(firstUser);
+                                        setShowParticipantsGatheringModal(true);
                                       }}
-                                      disabled={isUserParticipating}
                                       className={`w-full max-w-[400px] font-black text-[10.5px] xs:text-[11.5px] sm:text-[13px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
                                         isUserParticipating
                                           ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] animate-pulse ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
-                                      title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
+                                      title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una ronda de (${currentSessionFeeInfo.feeInWords})`}
                                     >
                                       <span className={`text-sm shrink-0 ${isUserParticipating ? 'animate-bounce' : ''}`}>✍️</span>
                                       <span className={`truncate min-w-0 font-black tracking-tight ${isUserParticipating ? 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]' : ''}`}>
                                         {isUserParticipating 
                                           ? `Estás inscrita como participante (${currentSessionFeeInfo.feeInWords})` 
-                                          : `Inscribirse en una sesión de (${currentSessionFeeInfo.feeInWords})`}
+                                          : `Inscribirse en una ronda de (${currentSessionFeeInfo.feeInWords})`}
                                       </span>
                                     </button>
 
@@ -32248,6 +32378,31 @@ try {
                           );
                         })()}
 
+                        {/* 🎬 VÍDEO ENTERO COMPARTIDO (captura image.png con fondo blanco) */}
+                        {sharedFullVideoOnImagePage && (
+                          <div className="bg-slate-900 border-2 border-rose-500/80 rounded-2xl p-3 sm:p-3.5 shadow-xl flex flex-col gap-2 text-white animate-fade-in my-1.5" id="shared-full-video-in-participant-popup">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] sm:text-[11px] font-black uppercase text-rose-400 tracking-wider flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                                🎬 VÍDEO ENTERO COMPARTIDO DESDE EL CANAL
+                              </span>
+                              <span className="text-[9px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-slate-300">
+                                @{sharedFullVideoOnImagePage.username || 'canal'}
+                              </span>
+                            </div>
+                            <div className="relative aspect-video rounded-xl overflow-hidden bg-black shadow-inner">
+                              <video
+                                src={sharedFullVideoOnImagePage.videoUrl}
+                                controls
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-xs text-slate-200 font-bold m-0 truncate">{sharedFullVideoOnImagePage.title}</p>
+                          </div>
+                        )}
+
                         {/* Card 2: Project Details matching image.png (White Background) */}
                         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-1.5 text-left my-1 overflow-y-auto max-h-[160px] scrollbar-none text-slate-800 shadow-xs">
                           <div className="flex items-center justify-between mb-0.5">
@@ -33304,22 +33459,57 @@ try {
                     </div>
                   )}
 
-                  {/* Share button Area */}
+                  {/* Share button Area: Compartir enlace de vídeo */}
                   {true && (
                     <div className="flex flex-col items-center shrink-0 relative">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setIsSharePopoverOpen(!isSharePopoverOpen);
+                          const sharedItem = {
+                            id: activeVideo.id || `shared-${Date.now()}`,
+                            title: activeVideo.title || `Vídeo de @${activeVideo.username || 'modelo'}`,
+                            description: activeVideo.description || 'Vídeo entero de pasarela compartido desde el canal en directo.',
+                            videoUrl: activeVideo.videoUrl || activeVideo.url || 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-neon-light-40018-large.mp4',
+                            poster: activeVideo.thumbnail || activeVideo.poster,
+                            thumbnail: activeVideo.thumbnail || activeVideo.poster,
+                            avatar: activeVideo.avatar,
+                            username: activeVideo.username || 'modelo',
+                            name: activeVideo.name || activeVideo.username,
+                            shares: (activeVideo.shares || 48) + 1,
+                            sharedAt: new Date().toISOString(),
+                            category: selectedLiveCategory || 'Fashion'
+                          };
+                          try {
+                            localStorage.setItem('shared_full_video_image_png', JSON.stringify(sharedItem));
+                            localStorage.setItem('project_shared_full_video', JSON.stringify(sharedItem));
+
+                            const storedMediaRaw = localStorage.getItem('custom_project_media');
+                            const storedMedia = storedMediaRaw ? JSON.parse(storedMediaRaw) : {};
+                            const newMediaItem = {
+                              id: `shared-video-${Date.now()}`,
+                              type: 'video',
+                              url: sharedItem.videoUrl,
+                              title: sharedItem.title
+                            };
+                            storedMedia['default'] = [newMediaItem, ...(storedMedia['default'] || []).filter((m: any) => m.url !== newMediaItem.url)];
+                            localStorage.setItem('custom_project_media', JSON.stringify(storedMedia));
+                          } catch (_) {}
+
+                          setSharedFullVideoOnImagePage(sharedItem);
+                          window.dispatchEvent(new CustomEvent('video-shared-to-image-page', { detail: sharedItem }));
+                          window.dispatchEvent(new CustomEvent('channel-video-shared', { detail: sharedItem }));
+                          if (activeVideo) {
+                            (activeVideo as any).shares = ((activeVideo as any).shares || 48) + 1;
+                          }
+
+                          // 🎯 Redirigir y compartir el vídeo entero en la página de la captura image.png
+                          setShowVotingProjectsModal(true);
+                          setVotingProjectSlideIndex(0);
                         }}
-                        className={`w-8.5 h-8.5 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-105 active:scale-90 cursor-pointer share-trigger-btn ${
-                          isSharePopoverOpen 
-                            ? 'bg-rose-550 border-rose-550 text-white animate-pulse' 
-                            : 'bg-[#fff1f3] hover:bg-white text-slate-900'
-                        }`}
-                        title="Compartir enlace"
+                        className="w-8.5 h-8.5 rounded-full border border-rose-100 flex items-center justify-center shadow-md transition hover:scale-105 active:scale-90 cursor-pointer share-trigger-btn bg-[#fff1f3] hover:bg-white text-slate-900"
+                        title="Compartir enlace de vídeo"
                       >
-                        <Share2 className={`w-4 h-4 ${isSharePopoverOpen ? 'text-white' : 'text-slate-705'}`} />
+                        <Share2 className="w-4 h-4 text-slate-705" />
                       </button>
                       <span className="text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">{activeVideo.shares}</span>
                     </div>

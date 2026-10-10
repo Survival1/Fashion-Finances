@@ -298,7 +298,34 @@ export default function DirectMessageChat({
 
   const [isBlocked, setIsBlocked] = useState(false);
   const [isReported, setIsReported] = useState(false);
-  
+
+  // Fullscreen container expansion state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Synchronize with native fullscreen API and Escape key
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isDocFs = Boolean(document.fullscreenElement);
+      setIsFullscreen(isDocFs);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen]);
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Sync contacts if models or patrocinados list gets modified
@@ -516,170 +543,199 @@ export default function DirectMessageChat({
   };
 
   return (
-    <div className="bg-white border border-slate-150 rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row h-[620px]" id="private-messages-viewport">
-      
-      {/* LEFT PANE: CONTACT LIST WITH FILTERS & SEARCH */}
-      <div className={`w-full md:w-80 border-r border-slate-100 flex flex-col bg-white ${activeContactId ? 'hidden md:flex' : 'flex'}`}>
+    <>
+      {/* Fullscreen Backdrop when maximized */}
+      {isFullscreen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-[240] animate-fade-in"
+          onClick={() => setIsFullscreen(false)}
+        />
+      )}
+
+      <div 
+        className={`bg-white border border-slate-150 rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row transition-all duration-300 ${
+          isFullscreen
+            ? 'fixed inset-2 sm:inset-4 md:inset-6 z-[250] h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] shadow-2xl ring-2 ring-black/20'
+            : 'w-full h-[calc(100vh-140px)] min-h-[680px] max-h-[960px] 2xl:min-h-[820px] 2xl:max-h-[1200px]'
+        }`} 
+        id="private-messages-viewport"
+      >
         
-        {/* Header containing name and Add user option */}
-        <div className="p-4 border-b border-slate-100 bg-white space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {onBack && (
-                <button
-                  onClick={onBack}
-                  className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition cursor-pointer shadow-3xs"
-                  title="Volver"
-                >
-                  <span>← Volver</span>
-                </button>
-              )}
-              <span className="p-1.5 bg-zinc-100 text-zinc-650 rounded-lg">
-                <MessageCircle className="w-4 h-4" />
-              </span>
-              <h3 className="font-bold text-slate-800 text-sm tracking-tight">Mensajes</h3>
-            </div>
-          </div>
-
-          {/* Search Contacts input */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="Buscar por alias, nombre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-slate-100 border-none text-[11px] rounded-xl w-full pl-8 pr-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-zinc-300 placeholder-slate-400"
-            />
-          </div>
-        </div>
-
-        {/* Filter Categories Tabs */}
-        <div className="flex border-b border-slate-100 bg-white p-1 gap-1 text-[10px] font-bold">
-          <button
-            onClick={() => setSelectedFilter('all')}
-            className={`tab-trigger flex-1 py-1.5 rounded-lg text-center transition ${selectedFilter === 'all' ? 'bg-zinc-900 text-white border border-zinc-900' : 'text-zinc-500 hover:bg-zinc-100 border border-transparent'}`}
-          >
-            Todos
-          </button>
-          <button
-            onClick={() => setSelectedFilter('models')}
-            className={`tab-trigger flex-1 py-1.5 rounded-lg text-center transition ${selectedFilter === 'models' ? 'bg-zinc-900 text-white border border-zinc-900' : 'text-zinc-500 hover:bg-zinc-100 border border-transparent'}`}
-          >
-            Sponsores
-          </button>
-          <button
-            onClick={() => setSelectedFilter('referred')}
-            className={`tab-trigger flex-1 py-1.5 rounded-lg text-center transition ${selectedFilter === 'referred' ? 'bg-zinc-900 text-white border border-zinc-900' : 'text-zinc-500 hover:bg-zinc-100 border border-transparent'}`}
-          >
-            Referidos
-          </button>
-          <button
-            onClick={() => setSelectedFilter('others')}
-            className={`tab-trigger flex-1 py-1.5 rounded-lg text-center transition ${selectedFilter === 'others' ? 'bg-zinc-900 text-white border border-zinc-900' : 'text-zinc-500 hover:bg-zinc-100 border border-transparent'}`}
-          >
-            Otros
-          </button>
-        </div>
-
-        {/* List scroll container */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-white">
-          {filteredContacts.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-[11px] space-y-1">
-              <Users className="w-6 h-6 mx-auto text-slate-300" />
-              <p>Ningún contacto coincide.</p>
-              <button 
-                onClick={() => setShowCustomContactModal(true)} 
-                className="tab-trigger text-zinc-600 font-semibold underline text-[10px] border-0 bg-transparent"
-              >
-                Escribir a @usuario personalizado
-              </button>
-            </div>
-          ) : (
-            filteredContacts.map((contact) => {
-              const isActive = contact.id === activeContactId;
-              // Check last message Preview
-              const lastMsg = initialMessages
-                .filter(m => (m.senderId === currentUserId && m.receiverId === contact.id) || (m.senderId === contact.id && m.receiverId === currentUserId))
-                .slice(-1)[0];
-
-              return (
-                <div key={contact.id} className="relative group">
+        {/* LEFT PANE: CONTACT LIST WITH FILTERS & SEARCH */}
+        <div className={`w-full md:w-60 lg:w-64 xl:w-72 shrink-0 border-r border-slate-100 flex flex-col bg-white ${activeContactId ? 'hidden md:flex' : 'flex'}`}>
+          
+          {/* Header containing name and Add user option */}
+          <div className="p-3 sm:p-3.5 border-b border-slate-100 bg-white space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {onBack && (
                   <button
-                    onClick={() => {
-                      if (activeContactId === contact.id) {
-                        setUnfoldedContactIds(prev => ({ ...prev, [contact.id]: false }));
-                      } else {
+                    onClick={onBack}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition cursor-pointer shadow-3xs"
+                    title="Volver"
+                  >
+                    <span>← Volver</span>
+                  </button>
+                )}
+                <span className="p-1.5 bg-zinc-100 text-zinc-700 rounded-lg">
+                  <MessageCircle className="w-4 h-4" />
+                </span>
+                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight">Mensajes</h3>
+              </div>
+            </div>
+
+            {/* Search Contacts input */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Buscar por alias, nombre..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-slate-100 border-none text-xs rounded-xl w-full pl-8.5 pr-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-zinc-300 placeholder-slate-400 font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Filter Categories Tabs */}
+          <div className="flex border-b border-slate-100 bg-white p-1.5 sm:p-2 gap-1 text-xs select-none">
+            <button
+              onClick={() => setSelectedFilter('all')}
+              className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
+                selectedFilter === 'all' 
+                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
+                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setSelectedFilter('models')}
+              className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
+                selectedFilter === 'models' 
+                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
+                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+              }`}
+            >
+              Sponsores
+            </button>
+            <button
+              onClick={() => setSelectedFilter('referred')}
+              className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
+                selectedFilter === 'referred' 
+                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
+                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+              }`}
+            >
+              Referidos
+            </button>
+            <button
+              onClick={() => setSelectedFilter('others')}
+              className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
+                selectedFilter === 'others' 
+                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
+                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+              }`}
+            >
+              Otros
+            </button>
+          </div>
+
+          {/* List scroll container */}
+          <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-1 sm:space-y-1.5 bg-white">
+            {filteredContacts.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 text-xs space-y-2">
+                <Users className="w-7 h-7 mx-auto text-slate-300" />
+                <p className="font-semibold text-slate-600 text-[11px]">Ningún contacto coincide.</p>
+                <button 
+                  onClick={() => setShowCustomContactModal(true)} 
+                  className="tab-trigger text-zinc-700 hover:text-zinc-950 font-bold underline text-[11px] border-0 bg-transparent cursor-pointer"
+                >
+                  Escribir a @usuario personalizado
+                </button>
+              </div>
+            ) : (
+              filteredContacts.map((contact) => {
+                const isActive = contact.id === activeContactId;
+                // Check last message Preview
+                const lastMsg = initialMessages
+                  .filter(m => (m.senderId === currentUserId && m.receiverId === contact.id) || (m.senderId === contact.id && m.receiverId === currentUserId))
+                  .slice(-1)[0];
+
+                return (
+                  <div key={contact.id} className="relative group">
+                    <button
+                      onClick={() => {
                         setActiveContactId(contact.id);
+                        setUnfoldedContactIds(prev => ({ ...prev, [contact.id]: true }));
                         setIsBlocked(false);
                         setIsReported(false);
-                      }
-                    }}
-                    className={`tab-trigger w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition border ${
-                      isActive
-                        ? 'bg-zinc-100 border-zinc-200 shadow-xs text-zinc-900 font-bold'
-                        : 'hover:bg-zinc-50/80 border-transparent text-zinc-600'
-                    }`}
-                  >
-                    <div className="relative shrink-0">
-                      <img
-                        src={contact.avatar}
-                        alt={contact.name}
-                        referrerPolicy="no-referrer"
-                        className="w-10 h-10 rounded-xl object-cover border border-slate-200"
-                      />
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                        contact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'
-                      }`} />
-                    </div>
-
-                    <div className="truncate flex-1 min-w-0 pr-6">
-                      <div className="flex justify-between items-baseline">
-                        <p className="text-xs font-bold text-slate-800 truncate">{contact.name}</p>
-                        
-                        {/* Label Category badge */}
-                        <span className="text-[8px] font-mono tracking-wider text-slate-400 capitalize bg-slate-100 px-1 py-0.2 rounded font-semibold shrink-0">
-                          {contact.role === 'model' ? 'Sponsor' : 'User'}
-                        </span>
+                      }}
+                      className={`tab-trigger w-full flex items-center gap-2.5 p-2 sm:p-2.5 rounded-xl text-left transition border cursor-pointer ${
+                        isActive
+                          ? 'bg-zinc-100 border-zinc-300 shadow-xs text-zinc-900 font-bold'
+                          : 'hover:bg-zinc-50/90 border-transparent text-zinc-700'
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        <img
+                          src={contact.avatar}
+                          alt={contact.name}
+                          referrerPolicy="no-referrer"
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-slate-200/90 shadow-2xs transition-transform group-hover:scale-102"
+                        />
+                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-xs ${
+                          contact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`} />
                       </div>
-                      
-                      <p className="text-[10px] text-slate-400 font-mono truncate">@{contact.username}</p>
-                      
-                      {lastMsg ? (
-                        <p className="text-[10px] text-slate-500 truncate mt-0.5 max-w-[150px]">
-                          {lastMsg.senderId === currentUserId ? 'Tú: ' : ''}{lastMsg.text || '📍 Imagen enviada'}
-                        </p>
-                      ) : (
-                        <p className="text-[9px] text-zinc-500/80 italic mt-0.5 truncate">¡Escríbele un privado!</p>
-                      )}
-                    </div>
-                  </button>
 
-                  <button
-                    onClick={(e) => handleDeleteConversation(e, contact.id)}
-                    className="tab-trigger absolute right-2 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 md:opacity-0 group-hover:opacity-100 focus:opacity-100 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-400 hover:text-rose-600 p-1 rounded-md transition-all duration-150 cursor-pointer z-10 shadow-3xs"
-                    title="Eliminar conversación"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 6h18" />
-                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                  </button>
-                </div>
-              );
-            })
-          )}
+                      <div className="truncate flex-1 min-w-0 pr-4">
+                        <div className="flex justify-between items-baseline gap-1">
+                          <p className="text-xs sm:text-[13px] font-bold text-slate-900 truncate leading-snug">{contact.name}</p>
+                          
+                          {/* Label Category badge */}
+                          <span className="text-[8.5px] sm:text-[9px] font-mono tracking-wider text-slate-500 capitalize bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded font-bold shrink-0">
+                            {contact.role === 'model' ? 'Sponsor' : 'User'}
+                          </span>
+                        </div>
+                        
+                        <p className="text-[10.5px] sm:text-[11px] text-slate-400 font-mono truncate mt-0.5 font-medium leading-tight">@{contact.username}</p>
+                        
+                        {lastMsg ? (
+                          <p className="text-[10.5px] sm:text-[11px] text-slate-600 truncate mt-0.5 font-medium leading-tight">
+                            {lastMsg.senderId === currentUserId ? 'Tú: ' : ''}{lastMsg.text || '📍 Imagen enviada'}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] sm:text-[10.5px] text-zinc-500 font-medium mt-0.5 truncate leading-tight">¡Escríbele un privado!</p>
+                        )}
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={(e) => handleDeleteConversation(e, contact.id)}
+                      className="tab-trigger absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus:opacity-100 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-400 hover:text-rose-600 p-1 rounded-md transition-all duration-150 cursor-pointer z-10 shadow-3xs"
+                      title="Eliminar conversación"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
-      </div>
 
       {/* RIGHT PANE: ACTIVE MESSAGE CHAT GRID viewport */}
-      <div className={`flex-1 flex flex-col bg-slate-50/50 relative ${activeContactId ? 'flex' : 'hidden md:flex'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col bg-slate-50/50 relative ${activeContactId ? 'flex' : 'hidden md:flex'}`}>
         {activeContact ? (
           <>
             {/* Header chat detail bar */}
-            <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between z-10 shadow-3xs">
-              <div className="flex items-center gap-3 max-w-[65%]">
+            <div className="p-3 sm:p-4 border-b border-slate-100 bg-white flex items-center justify-between z-10 shadow-3xs gap-2">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 {/* Back to Contacts List button on Mobile */}
                 <button
                   type="button"
@@ -702,12 +758,12 @@ export default function DirectMessageChat({
                           }
                         }}
                         referrerPolicy="no-referrer"
-                        className={`w-9 h-9 rounded-xl object-cover border border-slate-150 transition-transform ${
+                        className={`w-9 h-9 rounded-xl object-cover border border-slate-150 shrink-0 transition-transform ${
                           matchedModel ? 'cursor-pointer hover:scale-105 hover:border-indigo-400' : ''
                         }`}
                         title={matchedModel ? `Ver perfil completo de ${activeContact.name}` : undefined}
                       />
-                      <div className="truncate">
+                      <div className="truncate min-w-0">
                         <h4 
                           onClick={() => {
                             if (matchedModel && onSelectModel) {
@@ -720,9 +776,9 @@ export default function DirectMessageChat({
                           title={matchedModel ? `Ver perfil completo de ${activeContact.name}` : undefined}
                         >
                           <span>{activeContact.name}</span>
-                          <span className={`w-2 h-2 rounded-full inline-block ${activeContact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                          <span className={`w-2 h-2 rounded-full inline-block shrink-0 ${activeContact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                         </h4>
-                        <p className="text-[10px] text-slate-400 font-mono">@{activeContact.username}</p>
+                        <p className="text-[10px] text-slate-400 font-mono truncate">@{activeContact.username}</p>
                       </div>
                     </>
                   );
@@ -730,19 +786,7 @@ export default function DirectMessageChat({
               </div>
 
               {/* Private messaging safety utilities */}
-              <div className="flex items-center gap-1.5 text-xs">
-                {Boolean(unfoldedContactIds[activeContact.id]) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUnfoldedContactIds(prev => ({ ...prev, [activeContact.id]: false }));
-                    }}
-                    className="tab-trigger px-2.5 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition cursor-pointer"
-                    title="Ver ficha de presentación"
-                  >
-                    Ficha
-                  </button>
-                )}
+              <div className="flex items-center gap-1.5 text-xs shrink-0">
                 <button
                   onClick={() => setIsBlocked(!isBlocked)}
                   className={`tab-trigger px-2.5 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider transition ${
@@ -777,14 +821,16 @@ export default function DirectMessageChat({
                   : "Perfil oficial verificado en la plataforma. Conéctate conmigo para explorar alianzas, patrocinios y proyectos exclusivos.");
 
                 return (
-                  <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-white border border-slate-100/50 rounded-2xl m-4 shadow-3xs space-y-6 overflow-y-auto">
+                  <div className={`flex-1 flex flex-col items-center justify-center p-6 text-center bg-white border border-slate-100/50 rounded-2xl m-4 shadow-3xs overflow-y-auto ${
+                    isFullscreen ? 'p-8 sm:p-12 space-y-7' : 'space-y-6'
+                  }`}>
                     {/* Model Avatar Details */}
                     <div className="relative inline-block mt-4 select-none">
                       <img
                         src={activeContact.avatar}
                         alt={activeContact.name}
                         referrerPolicy="no-referrer"
-                        className="w-24 h-24 rounded-2xl object-cover border-4 border-indigo-50 shadow-md mx-auto"
+                        className={`${isFullscreen ? 'w-28 h-28 sm:w-36 sm:h-36' : 'w-24 h-24 sm:w-28 sm:h-28'} rounded-3xl object-cover border-4 border-indigo-50 shadow-md mx-auto transition-all`}
                       />
                       <span className={`absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border-2 border-white uppercase ${
                         activeContact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'
@@ -794,19 +840,21 @@ export default function DirectMessageChat({
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 font-display flex items-center justify-center gap-2">
+                      <h3 className={`${isFullscreen ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl'} font-bold text-slate-900 font-display flex items-center justify-center gap-2`}>
                         <span>{activeContact.name}</span>
                         <span className="bg-slate-100 text-slate-700 text-[10px] font-black tracking-wider px-2 py-0.5 rounded border border-slate-200 uppercase">
                           {activeContact.role === 'model' || activeContact.id.startsWith('top') ? 'SPONSOR' : activeContact.role.toUpperCase()}
                         </span>
                       </h3>
-                      <p className="text-xs text-slate-400 font-mono">@{activeContact.username}</p>
+                      <p className={`${isFullscreen ? 'text-sm' : 'text-xs'} text-slate-400 font-mono`}>@{activeContact.username}</p>
                     </div>
 
                     {/* Custom personalized description by model */}
-                    <div className="bg-slate-50 border border-slate-100/80 rounded-2xl p-5 text-slate-600 text-xs sm:text-sm leading-relaxed italic max-w-md mx-auto relative shadow-3xs">
+                    <div className={`bg-slate-50 border border-slate-100/80 rounded-2xl text-slate-600 ${
+                      isFullscreen ? 'p-6 sm:p-7 text-sm sm:text-base max-w-xl xl:max-w-2xl' : 'p-5 text-xs sm:text-sm max-w-md'
+                    } leading-relaxed italic mx-auto relative shadow-3xs transition-all`}>
                       <span className="absolute -top-3 left-6 text-2xl text-indigo-200 font-serif select-none">“</span>
-                      <p className="font-sans font-medium text-slate-700 md:max-w-xs xl:max-w-md mx-auto leading-relaxed">
+                      <p className="font-sans font-medium text-slate-700 max-w-lg mx-auto leading-relaxed">
                         {bioText}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-2 font-mono not-italic uppercase tracking-wider font-bold">
@@ -815,7 +863,7 @@ export default function DirectMessageChat({
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm mx-auto pt-2 select-none pb-4">
+                    <div className={`flex flex-col sm:flex-row gap-3 justify-center items-center w-full ${isFullscreen ? 'max-w-md' : 'max-w-sm'} mx-auto pt-2 select-none pb-4`}>
                       {currentUserRole === 'visitor' && (
                         <button
                           type="button"
@@ -834,7 +882,7 @@ export default function DirectMessageChat({
                         onClick={() => {
                           setUnfoldedContactIds(prev => ({ ...prev, [activeContact.id]: true }));
                         }}
-                        className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-bold tracking-wider uppercase bg-white hover:bg-slate-50 text-slate-900 transition-all shadow-xs hover:shadow-sm active:translate-y-px cursor-pointer border border-slate-200"
+                        className={`w-full ${isFullscreen ? 'py-4 px-8 text-sm sm:text-base' : 'py-3.5 px-6 text-xs sm:text-sm'} font-bold tracking-wider uppercase bg-white hover:bg-slate-50 text-slate-900 transition-all shadow-xs hover:shadow-sm active:translate-y-px cursor-pointer border border-slate-200 rounded-xl`}
                       >
                         CHATEA CONMIGO
                       </button>
@@ -938,14 +986,14 @@ export default function DirectMessageChat({
 
                       return (
                         <div key={msg.id} className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                          <div className={`max-w-[78%] sm:max-w-[70%] rounded-2xl p-3.5 space-y-1.5 ${
+                          <div className={`max-w-[85%] ${isFullscreen ? 'sm:max-w-[65%] p-4 text-sm sm:text-[14.5px]' : 'sm:max-w-[70%] p-3.5 text-xs'} rounded-2xl space-y-1.5 transition-all ${
                             isMine
                               ? isGiftMsg
                                 ? 'bg-amber-50 text-amber-950 rounded-tr-none shadow-3xs border border-amber-200 ml-auto'
                                 : 'bg-zinc-900 text-white rounded-tr-none shadow-3xs ml-auto'
                               : 'bg-zinc-100 text-zinc-900 rounded-tl-none border border-zinc-200/80 shadow-3xs mr-auto'
                           }`}>
-                            {msg.text && <p className="text-xs sm:text-xs font-medium whitespace-pre-wrap leading-relaxed">{msg.text}</p>}
+                            {msg.text && <p className={`${isFullscreen ? 'text-sm sm:text-[14px]' : 'text-xs'} font-medium whitespace-pre-wrap leading-relaxed`}>{msg.text}</p>}
                             {msg.imageUrl && (
                                <div className="rounded-xl overflow-hidden border border-slate-150/50 mt-1 max-w-[200px]">
                                 <img src={msg.imageUrl} alt="attachment" referrerPolicy="no-referrer" className="w-[200px] h-auto object-cover" />
@@ -968,7 +1016,7 @@ export default function DirectMessageChat({
                   </div>
 
                   {/* SEND INPUT CONTAINER - HOLDS PREMIUM EMOJI-LIKE GIFTS SELECTOR ON HOVER */}
-                  <form onSubmit={(e) => handleSend(e)} className="p-3 border-t border-slate-110 bg-white flex gap-2 items-center shadow-3xs relative overflow-visible">
+                  <form onSubmit={(e) => handleSend(e)} className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex gap-2 items-center shadow-3xs relative overflow-visible w-full min-w-0">
                     
                     {selectedAttachmentImage && (
                       <div className="absolute bottom-full left-0 right-0 bg-white/95 backdrop-blur-xs border-t border-b border-pink-100 p-2.5 px-4 flex items-center justify-between gap-3 animate-fade-in z-40 shadow-md">
@@ -1005,7 +1053,7 @@ export default function DirectMessageChat({
                     <button
                       type="button"
                       onClick={attachImage}
-                      className="tab-trigger w-[42px] h-[42px] rounded-2xl flex items-center justify-center shrink-0 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 shadow-xs hover:scale-105 active:scale-95 duration-150 transition cursor-pointer"
+                      className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 shadow-xs hover:scale-105 active:scale-95 duration-150 transition cursor-pointer"
                       title="Adjuntar Imagen para el destinatario"
                     >
                       <Image className="w-4 h-4 text-zinc-500" />
@@ -1013,14 +1061,14 @@ export default function DirectMessageChat({
 
                     {/* 🎁 DETALLES / EXTRA GIFTS HOVER POPUP SELECTOR (ELEGANT EMOJI PICKER STYLE) */}
                     <div 
-                      className="relative z-50"
+                      className="relative z-50 shrink-0"
                       onMouseEnter={() => setShowGiftsHoverMenu(true)}
                       onMouseLeave={() => setShowGiftsHoverMenu(false)}
                     >
                       {/* FIRST GIFT REPRESENTING THE SELECTABLE EMOJI TRIGGER */}
                       <button
                         type="button"
-                        className="tab-trigger w-[42px] h-[42px] rounded-2xl flex items-center justify-center shrink-0 border border-amber-300 bg-gradient-to-tr from-amber-50 to-orange-100/90 hover:from-amber-100 hover:to-orange-200/90 shadow-xs transition-all duration-150 cursor-pointer text-xl relative group"
+                        className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-amber-300 bg-gradient-to-tr from-amber-50 to-orange-100/90 hover:from-amber-100 hover:to-orange-200/90 shadow-xs transition-all duration-150 cursor-pointer text-lg relative group"
                         title="Enviar Regalo Extra (Pasa el ratón para ver más)"
                       >
                         <span className="animate-pulse">{EXTRA_GIFTS[0].icon}</span>
@@ -1187,14 +1235,18 @@ export default function DirectMessageChat({
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       placeholder={`Escribe un mensaje privado a @${activeContact?.username || 'user'}...`}
-                      className="flex-1 bg-slate-50 border border-slate-150 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-100 placeholder-slate-400"
+                      className={`flex-1 min-w-0 bg-slate-50 border border-slate-150 rounded-xl ${
+                        isFullscreen ? 'px-4 py-3 text-sm' : 'px-3 py-2 text-xs'
+                      } text-slate-800 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-100 placeholder-slate-400 transition-all`}
                     />
 
                     <button
                       type="submit"
-                      className="tab-trigger bg-zinc-900 hover:bg-zinc-800 text-white p-2.5 rounded-xl transition flex items-center justify-center cursor-pointer active:scale-95 shadow-3xs border-none"
+                      className={`tab-trigger bg-zinc-900 hover:bg-zinc-800 text-white shrink-0 ${
+                        isFullscreen ? 'p-3 px-4' : 'p-2 px-3'
+                      } rounded-xl transition flex items-center justify-center cursor-pointer active:scale-95 shadow-3xs border-none`}
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className={isFullscreen ? "w-4.5 h-4.5" : "w-3.5 h-3.5"} />
                     </button>
                   </form>
                 </>
@@ -1298,6 +1350,7 @@ export default function DirectMessageChat({
         </div>
       )}
 
-    </div>
+      </div>
+    </>
   );
 }

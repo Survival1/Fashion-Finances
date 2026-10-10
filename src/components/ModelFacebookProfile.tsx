@@ -90,6 +90,7 @@ import {
   BoutiqueStoreMeta, 
   renderBoutiqueEmblem 
 } from './VictoriaSecretRanking';
+import RoyalMaleCrown from './RoyalMaleCrown';
 
 interface FBComment {
   id: string;
@@ -1824,6 +1825,86 @@ export default function ModelFacebookProfile({
     const saved = localStorage.getItem(key) || localStorage.getItem('bookmarked_photos');
     return saved ? JSON.parse(saved) : {};
   });
+
+  // 🔖 Lista de elementos guardados (imágenes y vídeos con su categoría) para la captura z.png
+  const DEFAULT_SAVED_BOOKMARKS = [
+    {
+      id: 'default-saved-1',
+      type: 'photo',
+      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      poster: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      title: 'Editorial Neon Look',
+      category: 'Fashion',
+      videoCategory: 'Fashion'
+    },
+    {
+      id: 'default-saved-2',
+      type: 'photo',
+      url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+      poster: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+      title: 'Studio Portrait Golden',
+      category: 'Fashion',
+      videoCategory: 'Fashion'
+    }
+  ];
+
+  const [savedBookmarksList, setSavedBookmarksList] = useState<any[]>(() => {
+    try {
+      const raw = localStorage.getItem('profile_saved_bookmarks');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return DEFAULT_SAVED_BOOKMARKS;
+  });
+
+  const [playingSavedVideoUrl, setPlayingSavedVideoUrl] = useState<string | null>(null);
+
+  // Normalizador de categoría para sincronizar con los botones de z.png
+  const normalizeSavedCategory = (cat: string) => {
+    const c = (cat || '').toLowerCase().trim();
+    if (c.includes('finanz')) return 'Finanzas';
+    if (c.includes('fash')) return 'Fashion';
+    if (c.includes('reel')) return 'Reels';
+    if (c.includes('runway') || c.includes('model')) return 'Modelos';
+    if (c.includes('backstage')) return 'BackStage';
+    if (c.includes('jewel') || c.includes('invest')) return 'Investors';
+    if (c.includes('catwalk')) return 'Catwalk';
+    if (c.includes('fitn')) return 'Fitnes';
+    if (c.includes('beauty') || c.includes('belleza')) return 'Beauty';
+    if (c.includes('influenc')) return 'Influencer';
+    return 'Fashion';
+  };
+
+  useEffect(() => {
+    const handleBookmarkUpdate = () => {
+      try {
+        const raw = localStorage.getItem('profile_saved_bookmarks');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setSavedBookmarksList(parsed);
+          }
+        }
+      } catch (_) {}
+    };
+
+    window.addEventListener('video-saved-bookmark', handleBookmarkUpdate);
+    window.addEventListener('saved_videos_updated', handleBookmarkUpdate);
+    return () => {
+      window.removeEventListener('video-saved-bookmark', handleBookmarkUpdate);
+      window.removeEventListener('saved_videos_updated', handleBookmarkUpdate);
+    };
+  }, []);
+
+  const handleDeleteSavedBookmark = (idOrUrl: string) => {
+    const next = savedBookmarksList.filter(item => item.id !== idOrUrl && item.url !== idOrUrl && item.videoUrl !== idOrUrl);
+    setSavedBookmarksList(next);
+    try {
+      localStorage.setItem('profile_saved_bookmarks', JSON.stringify(next));
+    } catch (_) {}
+  };
 
   const [repostCounts, setRepostCounts] = useState<{[key: string]: number}>(() => {
     const saved = localStorage.getItem('repost_counts');
@@ -4623,22 +4704,6 @@ export default function ModelFacebookProfile({
                       <span>Casting Live</span>
                     </button>
 
-                    {/* Botón nuevo llamado Compartir con el mismo icono que en la captura z.png (Share2) */}
-                    <button
-                      type="button"
-                      onClick={() => setActiveGalleryTab('shared')}
-                      className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer select-none active:scale-95 border shadow-xs uppercase tracking-wider ${
-                        activeGalleryTab === 'shared'
-                          ? 'bg-rose-50 text-rose-600 border-rose-300 ring-2 ring-rose-400/30 font-black'
-                          : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
-                      }`}
-                      title="Compartir"
-                      id="btn-header-compartir"
-                    >
-                      <Share2 className="w-3.5 h-3.5 text-rose-500" />
-                      <span>Compartir</span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => {
@@ -5169,42 +5234,9 @@ export default function ModelFacebookProfile({
                           className="bg-gradient-to-br from-[#FFFDF8] via-[#FFFBF2] to-[#FFF6E3] hover:from-[#FFF9ED] hover:to-[#FFEFCC] text-[#C9A24A] rounded-2xl border border-[#C9A24A]/80 hover:border-[#C9A24A] shadow-[0_2px_12px_rgba(201,162,74,0.18)] hover:shadow-[0_4px_20px_rgba(201,162,74,0.3)] transition-all duration-300 flex items-center justify-center py-3 px-5 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
                           title="Explorar el Podio de Modelos TOP 100"
                         >
-                          {/* Beautiful Elegant Crown SVG on the left */}
+                          {/* Beautiful Elegant Crown from capture z.png pura, sin tocarla ni modificarla */}
                           <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-                            <svg className="w-7 h-5 text-[#C9A24A] fill-current" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M22,48 L78,48 L75,44 L25,44 Z" fill="#C9A24A" />
-                              <rect x="20" y="49" width="60" height="3.5" fill="#C9A24A" rx="1" />
-                              <path 
-                                d="M 21.5 43 
-                                   C 11 31, 23 23, 27 26 
-                                   C 33 20, 36 32, 40 35 
-                                   C 43.5 10, 50 13, 50 13 
-                                   C 50 13, 56.5 10, 60 35 
-                                   C 64 32, 67 20, 73 26 
-                                   C 77 23, 89 31, 78.5 43 
-                                   Z" 
-                                fill="#C9A24A" 
-                              />
-                              <path 
-                                d="M 50 13 
-                                   C 44 24, 44 36, 50 43 
-                                   C 56 36, 56 24, 50 13 
-                                   Z" 
-                                fill="#8E7238" 
-                              />
-                              <path d="M46.5,21 C43,24 40,21 38,18 C42,19 47,25 48.5,31 Z M53.5,21 C57,24 60,21 62,18 C58,19 53,25 51.5,31 Z" fill="#C9A24A" />
-                              <path d="M50,11.5 C48,20 43,28 43,34 C43,43 57,43 57,34 C57,28 52,20 50,11.5 Z" fill="#C9A24A" stroke="#705625" strokeWidth="0.5" />
-                              <circle cx="17.5" cy="28.5" r="2" fill="#FFF" stroke="#C9A24A" strokeWidth="1" />
-                              <circle cx="28.5" cy="20.5" r="1.8" fill="#FFF" stroke="#C9A24A" strokeWidth="1" />
-                              <circle cx="50" cy="9.5" r="2.5" fill="#FFF" stroke="#C9A24A" strokeWidth="1.2" />
-                              <circle cx="71.5" cy="20.5" r="1.8" fill="#FFF" stroke="#C9A24A" strokeWidth="1" />
-                              <circle cx="82.5" cy="28.5" r="2" fill="#FFF" stroke="#C9A24A" strokeWidth="1" />
-                              <polygon points="30,46.5 32,44.5 30,42.5 28,44.5" fill="#FFF" />
-                              <polygon points="40,46.5 42,44.5 40,42.5 38,44.5" fill="#FFF" />
-                              <polygon points="50,46.5 52,44.5 50,42.5 48,44.5" fill="#FFF" />
-                              <polygon points="60,46.5 62,44.5 60,42.5 58,44.5" fill="#FFF" />
-                              <polygon points="70,46.5 72,44.5 70,42.5 68,44.5" fill="#FFF" />
-                            </svg>
+                            <RoyalMaleCrown imgClassName="w-7 h-5.5 object-contain" />
                           </div>
                           <div className="h-4 w-[1px] bg-[#E7D39B] mx-3" />
                           <span className="font-serif text-xs font-bold text-[#C9A24A] tracking-[0.2em] select-none">
@@ -5489,41 +5521,9 @@ export default function ModelFacebookProfile({
                       className="bg-[#FDFBF7] hover:bg-white text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_15px_-4px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.25)] transition-all duration-300 flex items-center justify-center py-2 px-5 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
                       title="Explorar el Podio de Modelos TOP 100"
                     >
+                      {/* Corona Real de la captura z.png pura, sin tocarla ni modificarla */}
                       <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                        <svg className="w-9 h-7 text-[#B4975A] fill-current" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M22,48 L78,48 L75,44 L25,44 Z" fill="#B4975A" />
-                          <rect x="20" y="49" width="60" height="3.5" fill="#8E7238" rx="1" />
-                          <path 
-                            d="M 21.5 43 
-                               C 11 31, 23 23, 27 26 
-                               C 33 20, 36 32, 40 35 
-                               C 43.5 10, 50 13, 50 13 
-                               C 50 13, 56.5 10, 60 35 
-                               C 64 32, 67 20, 73 26 
-                               C 77 23, 89 31, 78.5 43 
-                               Z" 
-                            fill="#B4975A" 
-                          />
-                          <path 
-                            d="M 50 13 
-                               C 44 24, 44 36, 50 43 
-                               C 56 36, 56 24, 50 13 
-                               Z" 
-                            fill="#8E7238" 
-                          />
-                          <path d="M46.5,21 C43,24 40,21 38,18 C42,19 47,25 48.5,31 Z M53.5,21 C57,24 60,21 62,18 C58,19 53,25 51.5,31 Z" fill="#B4975A" />
-                          <path d="M50,11.5 C48,20 43,28 43,34 C43,43 57,43 57,34 C57,28 52,20 50,11.5 Z" fill="#B4975A" stroke="#705625" strokeWidth="0.5" />
-                          <circle cx="17.5" cy="28.5" r="2" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                          <circle cx="28.5" cy="20.5" r="1.8" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                          <circle cx="50" cy="9.5" r="2.5" fill="#FFF" stroke="#B4975A" strokeWidth="1.2" />
-                          <circle cx="71.5" cy="20.5" r="1.8" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                          <circle cx="82.5" cy="28.5" r="2" fill="#FFF" stroke="#B4975A" strokeWidth="1" />
-                          <polygon points="30,46.5 32,44.5 30,42.5 28,44.5" fill="#FFF" />
-                          <polygon points="40,46.5 42,44.5 40,42.5 38,44.5" fill="#FFF" />
-                          <polygon points="50,46.5 52,44.5 50,42.5 48,44.5" fill="#FFF" />
-                          <polygon points="60,46.5 62,44.5 60,42.5 58,44.5" fill="#FFF" />
-                          <polygon points="70,46.5 72,44.5 70,42.5 68,44.5" fill="#FFF" />
-                        </svg>
+                        <RoyalMaleCrown imgClassName="w-8 h-6.5 object-contain" />
                       </div>
                       <div className="h-5 w-[1px] bg-[#D3B470]/60 mx-3" />
                       <span className="font-serif text-xs font-bold text-[#B4975A] tracking-[0.15em] select-none">
@@ -8015,19 +8015,19 @@ export default function ModelFacebookProfile({
                       <div className="space-y-5 w-full text-left">
                         {/* Categories Bar matching image.png & z.png request */}
                         {activeGalleryTab === 'saved' && (
-                          <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-3 flex flex-wrap items-center justify-center gap-1.5 shadow-2xs w-full">
+                          <div className="bg-white border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-center gap-1.5 shadow-2xs w-full">
                             {[
-                              { id: 'Todos', label: 'TODOS 🪐', color: 'bg-slate-100 hover:bg-slate-200 text-slate-800' },
-                              { id: 'Reels', label: 'REELS 🎥', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                              { id: 'Fashion', label: 'FASHION ✨', color: 'bg-pink-50 hover:bg-pink-100 text-pink-700' },
-                              { id: 'Finanzas', label: 'FINANZAS 📈', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
-                              { id: 'Modelos', label: 'RUNWAY 👑', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
-                              { id: 'BackStage', label: 'BACKSTAGE 🎬', color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700' },
-                              { id: 'Investors', label: 'JEWELLERY 💎', color: 'bg-purple-50 hover:bg-purple-100 text-purple-700' },
-                              { id: 'Catwalk', label: 'CATWALK 👠', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
-                              { id: 'Fitnes', label: 'FITNES 💪', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
-                              { id: 'Beauty', label: 'BEAUTY 💄', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                              { id: 'Influencer', label: 'INFLUENCER 📱', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' }
+                              { id: 'Todos', label: 'TODOS 💅', color: 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200' },
+                              { id: 'Reels', label: 'REELS 🎬', color: 'bg-rose-50/70 hover:bg-rose-100 text-rose-700 border-rose-200/60' },
+                              { id: 'Fashion', label: 'FASHION ✈️', color: 'bg-pink-50/70 hover:bg-pink-100 text-pink-700 border-pink-200/60' },
+                              { id: 'Finanzas', label: 'FINANZAS 📉', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 border-emerald-200/60' },
+                              { id: 'Modelos', label: 'RUNWAY 👑', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' },
+                              { id: 'BackStage', label: 'BACKSTAGE 🎬', color: 'bg-cyan-50/70 hover:bg-cyan-100 text-cyan-800 border-cyan-200/60' },
+                              { id: 'Investors', label: 'JEWELLERY 💎', color: 'bg-purple-50/70 hover:bg-purple-100 text-purple-800 border-purple-200/60' },
+                              { id: 'Catwalk', label: 'CATWALK 👠', color: 'bg-violet-50/70 hover:bg-violet-100 text-violet-800 border-violet-200/60' },
+                              { id: 'Fitnes', label: 'FITNES 💪', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 border-emerald-200/60' },
+                              { id: 'Beauty', label: 'BEAUTY 💄', color: 'bg-rose-50/70 hover:bg-rose-100 text-rose-800 border-rose-200/60' },
+                              { id: 'Influencer', label: 'INFLUENCER 🏢', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' }
                             ].map(cat => {
                               const isActive = savedCategoryFilter === cat.id;
                               return (
@@ -8035,10 +8035,10 @@ export default function ModelFacebookProfile({
                                   key={cat.id}
                                   type="button"
                                   onClick={() => setSavedCategoryFilter(cat.id as any)}
-                                  className={`px-3.5 py-1.5 rounded-xl text-[11px] font-black tracking-wide border cursor-pointer transition-all duration-200 active:scale-95 uppercase ${
+                                  className={`px-3 py-1.5 rounded-xl text-[11px] font-black tracking-wide border cursor-pointer transition-all duration-200 active:scale-95 uppercase ${
                                     isActive 
                                       ? 'bg-slate-900 border-slate-900 text-white shadow-sm scale-105' 
-                                      : `${cat.color} border-transparent`
+                                      : `${cat.color}`
                                   }`}
                                 >
                                   {cat.label}
@@ -8048,7 +8048,93 @@ export default function ModelFacebookProfile({
                           </div>
                         )}
 
-                        {displayedPhotos.length > 0 ? (
+                        {activeGalleryTab === 'saved' ? (() => {
+                          const displayedSavedItems = savedBookmarksList.filter((item: any) => {
+                            if (savedCategoryFilter === 'Todos') return true;
+                            const itemCat = normalizeSavedCategory(item.category || item.videoCategory || '');
+                            const filterCat = normalizeSavedCategory(savedCategoryFilter);
+                            return itemCat === filterCat;
+                          });
+
+                          return displayedSavedItems.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+                              {displayedSavedItems.map((item, idx) => (
+                                <div
+                                  key={item.id || idx}
+                                  className="relative aspect-[4/5] sm:aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 group shadow-md border border-slate-200/60 cursor-pointer select-none"
+                                  onClick={() => {
+                                    if (item.videoUrl) {
+                                      setPlayingSavedVideoUrl(item.videoUrl);
+                                    } else {
+                                      setSelectedPhotoForLightbox(item.url || item.poster);
+                                    }
+                                  }}
+                                >
+                                  {item.videoUrl ? (
+                                    <div className="w-full h-full relative">
+                                      <video
+                                        src={item.videoUrl}
+                                        poster={item.poster || item.thumbnail}
+                                        className="w-full h-full object-cover"
+                                        muted
+                                        playsInline
+                                        loop
+                                        onMouseEnter={(e) => (e.target as HTMLVideoElement).play().catch(() => {})}
+                                        onMouseLeave={(e) => {
+                                          const v = e.target as HTMLVideoElement;
+                                          v.pause();
+                                          v.currentTime = 0;
+                                        }}
+                                      />
+                                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all pointer-events-none" />
+                                      <div className="absolute bottom-2.5 left-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/70 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold shadow-md pointer-events-none">
+                                        <span>🎬</span>
+                                        <span className="truncate max-w-[110px] sm:max-w-[140px]">{item.title || item.name || 'Vídeo'}</span>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={item.url || item.poster}
+                                      alt={item.title || 'Foto Guardada'}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                  )}
+
+                                  {/* Botón X superior derecho para eliminar (idéntico a la captura z.png) */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteSavedBookmark(item.id || item.url);
+                                    }}
+                                    className="absolute top-2.5 right-2.5 z-30 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/60 hover:bg-rose-600 text-white flex items-center justify-center transition-all duration-200 active:scale-90 hover:scale-110 cursor-pointer shadow-md backdrop-blur-xs"
+                                    title="Eliminar de guardados"
+                                  >
+                                    <X className="w-4 h-4 stroke-[3]" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 w-full col-span-2">
+                              <span className="text-3xl block mb-2">🔖</span>
+                              <p className="text-xs font-black text-slate-700">
+                                No hay vídeos guardados en la categoría {savedCategoryFilter}
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-1">
+                                Haz clic en el icono guardar de cualquier vídeo de {savedCategoryFilter} para que quede guardado aquí.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setSavedCategoryFilter('Todos')}
+                                className="mt-3 px-3.5 py-1.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold cursor-pointer hover:bg-slate-800 transition active:scale-95"
+                              >
+                                Ver todos los guardados
+                              </button>
+                            </div>
+                          );
+                        })() : displayedPhotos.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {displayedPhotos.map((ph, idx) => {
                           const interaction = getPhotoInteraction(ph);
@@ -10341,6 +10427,35 @@ export default function ModelFacebookProfile({
         gift={selectedLuxuryWatchCelebration}
         onClose={() => setSelectedLuxuryWatchCelebration(null)}
       />
+
+      {/* 🎬 Modal de reproducción para vídeos guardados en la página z.png */}
+      {playingSavedVideoUrl && (
+        <div
+          className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setPlayingSavedVideoUrl(null)}
+        >
+          <div
+            className="relative max-w-sm sm:max-w-md w-full aspect-[9/16] max-h-[90vh] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/20 flex flex-col justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              src={playingSavedVideoUrl}
+              className="w-full h-full object-cover"
+              autoPlay
+              controls
+              playsInline
+            />
+            <button
+              type="button"
+              onClick={() => setPlayingSavedVideoUrl(null)}
+              className="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center cursor-pointer shadow-lg backdrop-blur-md transition active:scale-90"
+              title="Cerrar reproductor"
+            >
+              <X className="w-5 h-5 stroke-[2.5]" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

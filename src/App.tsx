@@ -2851,7 +2851,9 @@ export default function App() {
 
       {/* PRIMARY HEADER BRANDING (Hidden on mobile when in casting_live so the live round screen fits 100% without scrolling) */}
       <header className={`bg-white border-b border-slate-100 py-2 sm:py-4 px-3 sm:px-6 sticky top-0 z-[100] shrink-0 shadow-sm ${activeTab === 'casting_live' ? 'max-md:hidden' : ''}`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className={`mx-auto flex justify-between items-center transition-all ${
+          activeTab === 'chat' ? 'max-w-[1720px] 2xl:max-w-[1920px]' : 'max-w-7xl'
+        }`}>
           <div className="flex items-center gap-3">
             <FashionsFinanceLogo mode="light" className="w-10 h-10" />
             <div>
@@ -2915,10 +2917,12 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER TABS WRAPPER */}
-      <main className={`max-w-7xl w-full mx-auto flex-1 flex flex-col lg:flex-row min-h-0 ${
-        activeTab === 'casting_live'
-          ? 'p-0 max-md:p-0 sm:px-0 md:px-0 lg:p-4 max-md:h-full max-md:gap-0 max-md:overflow-hidden'
-          : 'p-4 sm:p-6 max-md:p-3 gap-6'
+      <main className={`w-full mx-auto flex-1 flex flex-col lg:flex-row min-h-0 transition-all ${
+        activeTab === 'chat'
+          ? 'max-w-[1720px] 2xl:max-w-[1920px] p-2 sm:p-4 lg:p-6 gap-6'
+          : activeTab === 'casting_live'
+          ? 'max-w-7xl p-0 max-md:p-0 sm:px-0 md:px-0 lg:p-4 max-md:h-full max-md:gap-0 max-md:overflow-hidden'
+          : 'max-w-7xl p-4 sm:p-6 max-md:p-3 gap-6'
       }`}>
         {/* LEFT NAV PANEL - Styled with high contrast and desktop responsiveness */}
         <aside className={`lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden ${activeTab === 'menu' ? 'hidden' : ''}`}>
@@ -3425,7 +3429,7 @@ export default function App() {
           )}
 
           {activeTab === 'chat' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="flex-1 w-full flex flex-col animate-fade-in min-h-0">
               <DirectMessageChat
                 models={models}
                 patrocinados={patrocinadosList}

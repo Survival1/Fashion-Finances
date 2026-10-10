@@ -342,9 +342,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   // 📺 Canal seleccionado internamente para conmutar al instante dentro de esta misma pantalla
   const [currentChannel, setCurrentChannel] = useState<string>(selectedCategoryFilter || 'Finanzas');
-  const [channelToastMessage, setChannelToastMessage] = useState<string | null>(null);
-
-  // 🌐 Traductor de descripciones a Inglés (solicitado sobre captura image.png)
+  // 🌐 Traductor de descripciones a Inglés (solicitado sobre captura z.png)
   const [translatedVideosMap, setTranslatedVideosMap] = useState<Record<string, boolean>>({});
 
   const toggleVideoTranslation = (videoId: string) => {
@@ -354,25 +352,61 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }));
   };
 
-  const getEnglishTranslation = (text: string) => {
-    if (!text) return '';
-    const trimmed = text.trim();
-    if (trimmed.includes('alta costura futurista') || trimmed.includes('Glitter Makeup')) {
-      return 'Futuristic haute couture session. Presenting Glitter Makeup for the Barcelona show! ✨ #highfashion #mexicanfashion';
+  const getEnglishTranslation = (text: string, videoId?: string) => {
+    if (!text && !videoId) return '';
+    const trimmed = (text || '').trim();
+
+    // Direct mappings by video ID and exact key phrases
+    if (videoId === 'vid-4' || trimmed.includes('Gran Vía') || trimmed.includes('Paseando por') || trimmed.includes('madrileña')) {
+      return "Walking along Madrid's Gran Vía. Genuine smile and golden sunset light 🌇 #madridoutfit #casualmodel #streetstyle";
     }
-    if (trimmed.includes('Pasarela exclusiva') || trimmed.includes('Colección de Primavera')) {
-      return 'Exclusive haute couture runway in Paris - Spring Collection 👗 #runway #fashionweek';
+    if (videoId === 'vid-5' || trimmed.includes('estroboscopios') || trimmed.includes('retiniana')) {
+      return "Studio and strobe lights. Playing with retinal persistence in post-production 📽️ #flashstudio #studiography #retroaesthetic";
     }
-    if (trimmed.includes('Backstage') || trimmed.includes('desfilar')) {
-      return 'Backstage and model preparation before stepping onto the runway ✨ #backstage #models';
+    if (videoId === 'vid-1' || trimmed.includes('alta costura futurista') || trimmed.includes('Glitter Makeup')) {
+      return 'Futuristic haute couture session. Presenting Glitter Makeup for the Barcelona show! ✨ #highfashion #mexicanfashion #futuristic';
     }
-    if (trimmed.includes('Colección Urbana') || trimmed.includes('Streetwear')) {
-      return 'Urban Streetwear Collection 2026 - Outdoor photoshoot 🛹 #streetwear';
+    if (videoId === 'vid-2' || trimmed.includes('CapCut') || trimmed.includes('luces de neón')) {
+      return 'CapCut - An easier edit 🎬 Under the neon lights on a humid night in Madrid. #retro #neonvibes #photomodel';
     }
-    if (trimmed.includes('Casting') || trimmed.includes('noveles')) {
+    if (videoId === 'vid-3' || trimmed.includes('Finanzas para creadores') || trimmed.includes('optimizar tus ganancias')) {
+      return 'Finances for fashion creators: How to optimize your sponsorship earnings and reinvest ROI into stable sessions. 📈💰 #finances #fashioninvest #growth';
+    }
+    if (videoId === 'vid-6' || (trimmed.includes('Catwalk & Studio') && trimmed.includes('Luces estroboscópicas'))) {
+      return 'Catwalk & Studio flash moments 📸 Strobe lights and haute couture in Paris. #haute_couture #flash #runway';
+    }
+    if (videoId === 'vid-7' || trimmed.includes('Cyberpunk rain fashion')) {
+      return 'Cyberpunk rain fashion in Madrid nights 🌧️💜 Neon lights and futuristic aesthetic. #cyberpunk #neon #fashion';
+    }
+    if (videoId === 'vid-8' || trimmed.includes('Nueva temporada Streetwear')) {
+      return 'New season Streetwear & Haute Couture 🗼✨ Glitter makeup and contemporary silhouettes walking exclusively. #fashion #streetwear #parisfashion #castinglive';
+    }
+    if (videoId === 'vid-9' || trimmed.includes('Red Lights Studio')) {
+      return 'Red Lights Studio editorial session 🔴⚡ Avant-garde urban trends. #streetwear #fashionweek #lighting';
+    }
+    if (videoId === 'vid-10' || trimmed.includes('Casting y entrevistas') || (trimmed.includes('Casting') && trimmed.includes('noveles'))) {
       return 'Casting and interviews with aspiring models for international agencies 🌟 #casting';
     }
-    return text
+    if (videoId === 'vid-11' || trimmed.includes('Pasarela exclusiva') || trimmed.includes('Colección de Primavera')) {
+      return 'Exclusive haute couture runway in Paris - Spring Collection 👗 #runway #fashionweek';
+    }
+    if (videoId === 'vid-12' || trimmed.includes('Backstage') || trimmed.includes('desfilar')) {
+      return 'Backstage and model preparation before stepping onto the runway ✨ #backstage #models';
+    }
+    if (videoId === 'vid-13' || trimmed.includes('Colección Urbana Streetwear')) {
+      return 'Urban Streetwear Collection 2026 - Outdoor photoshoot 🛹 #streetwear';
+    }
+
+    let translated = text
+      .replace(/Paseando por la Gran Vía madrileña/gi, "Walking along Madrid's Gran Vía")
+      .replace(/Paseando por la Gran Vía/gi, "Walking along Gran Vía")
+      .replace(/Paseando por/gi, "Walking along")
+      .replace(/Sonrisa sincera y luz de atardecer dorada/gi, "Genuine smile and golden sunset light")
+      .replace(/Sonrisa sincera/gi, "Genuine smile")
+      .replace(/luz de atardecer dorada/gi, "golden sunset light")
+      .replace(/luz de atardecer/gi, "sunset light")
+      .replace(/atardecer dorado/gi, "golden sunset")
+      .replace(/atardecer/gi, "sunset")
       .replace(/Sesión de alta costura futurista/gi, 'Futuristic haute couture session')
       .replace(/Sesión de alta costura/gi, 'Haute couture session')
       .replace(/alta costura/gi, 'haute couture')
@@ -383,21 +417,40 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       .replace(/Colección de Primavera/gi, 'Spring Collection')
       .replace(/Pasarela exclusiva/gi, 'Exclusive runway')
       .replace(/Pasarela/gi, 'Runway')
-      .replace(/desfile/gi, 'fashion show')
+      .replace(/desfile de moda/gi, 'fashion show')
+      .replace(/desfile/gi, 'runway show')
+      .replace(/desfilar/gi, 'walk the runway')
       .replace(/preparación de modelos antes de salir a desfilar/gi, 'model preparation before stepping onto the runway')
       .replace(/Sesión fotográfica en exteriores/gi, 'Outdoor photoshoot')
+      .replace(/Sesión fotográfica/gi, 'Photoshoot')
       .replace(/Casting y entrevistas con modelos noveles/gi, 'Casting and interviews with aspiring models')
       .replace(/para agencias internacionales/gi, 'for international agencies')
+      .replace(/bajo las luces de neón/gi, 'under the neon lights')
+      .replace(/luces de neón/gi, 'neon lights')
+      .replace(/en una noche húmeda/gi, 'on a humid night')
+      .replace(/en las noches de/gi, 'in the nights of')
+      .replace(/estética futurista/gi, 'futuristic aesthetic')
+      .replace(/siluetas contemporáneas/gi, 'contemporary silhouettes')
+      .replace(/en exclusiva/gi, 'exclusively')
       .replace(/#modamexicana/gi, '#mexicanfashion')
-      .replace(/#modaespanola/gi, '#spanishfashion');
-  };
+      .replace(/#modaespanola/gi, '#spanishfashion')
+      .replace(/#estilo/gi, '#style');
 
-  useEffect(() => {
-    if (channelToastMessage) {
-      const t = setTimeout(() => setChannelToastMessage(null), 2500);
-      return () => clearTimeout(t);
+    if (translated === text) {
+      translated = text
+        .replace(/hola/gi, 'hello')
+        .replace(/nuevo/gi, 'new')
+        .replace(/nueva/gi, 'new')
+        .replace(/modelo/gi, 'model')
+        .replace(/vídeo/gi, 'video')
+        .replace(/foto/gi, 'photo')
+        .replace(/increíble/gi, 'incredible')
+        .replace(/hermosa/gi, 'beautiful')
+        .replace(/gracias/gi, 'thank you');
     }
-  }, [channelToastMessage]);
+
+    return translated;
+  };
 
   useEffect(() => {
     if (selectedCategoryFilter) {
@@ -598,6 +651,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [channelVideoCommentsMap, setChannelVideoCommentsMap] = useState<Record<string, any[]>>({});
   const [channelFollowedCreatorsMap, setChannelFollowedCreatorsMap] = useState<Record<string, boolean>>({});
   const [channelVideoShareToast, setChannelVideoShareToast] = useState<string | null>(null);
+  const [channelVideoFavoritesMap, setChannelVideoFavoritesMap] = useState<Record<string, { count: number; userFavorited: boolean }>>(() => {
+    try {
+      const raw = localStorage.getItem('channel_video_favorites_map');
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return {};
+  });
 
   const channelVideoRef = useRef<HTMLVideoElement | null>(null);
   const channelVideoCardRef = useRef<HTMLDivElement | null>(null);
@@ -709,12 +769,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     // Increment share counter
     v.shares = (v.shares || 48) + 1;
 
-    // Save to shared videos in localStorage so it appears in the new "Compartir" tab on the profile page (z1.png)
+    // Build complete video package to share the entire video on the capture page (image.png)
     const sharedItem = {
       id: v.id || `shared-${Date.now()}`,
       title: v.title || `Vídeo de @${v.username || 'sofia_sensations'}`,
-      description: v.description || '',
-      videoUrl: v.videoUrl,
+      description: v.description || 'Vídeo entero de pasarela compartido desde el canal en directo.',
+      videoUrl: v.videoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-neon-light-40018-large.mp4',
       poster: v.thumbnail || v.avatar,
       thumbnail: v.thumbnail || v.avatar,
       avatar: v.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
@@ -729,6 +789,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     };
 
     try {
+      localStorage.setItem('shared_full_video_image_png', JSON.stringify(sharedItem));
+      localStorage.setItem('project_shared_full_video', JSON.stringify(sharedItem));
+
+      const storedMediaRaw = localStorage.getItem('custom_project_media');
+      const storedMedia = storedMediaRaw ? JSON.parse(storedMediaRaw) : {};
+      const newMediaItem = {
+        id: `shared-video-${Date.now()}`,
+        type: 'video',
+        url: sharedItem.videoUrl,
+        title: sharedItem.title
+      };
+      storedMedia['default'] = [newMediaItem, ...(storedMedia['default'] || []).filter((m: any) => m.url !== newMediaItem.url)];
+      localStorage.setItem('custom_project_media', JSON.stringify(storedMedia));
+
       const existingRaw = localStorage.getItem('user_shared_videos');
       const existingList = existingRaw ? JSON.parse(existingRaw) : [];
       const filtered = existingList.filter((item: any) => item.id !== sharedItem.id);
@@ -737,15 +811,132 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     } catch (_) {}
 
     window.dispatchEvent(new CustomEvent('channel-video-shared', { detail: sharedItem }));
-    window.dispatchEvent(new CustomEvent('open-profile-shared-tab', { detail: sharedItem }));
-    window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'profile' }));
+    window.dispatchEvent(new CustomEvent('channel-video-shared-to-image-page', { detail: sharedItem }));
+    window.dispatchEvent(new CustomEvent('video-shared-to-image-page', { detail: sharedItem }));
 
-    setChannelVideoShareToast('¡Vídeo compartido! Abriendo tu pestaña Compartir en tu perfil 🔗');
+    // 🎯 Abrir y compartir el vídeo entero en la página de la captura image.png (Mesa de Votación y Proyectos)
+    setShowVotingProjectsModal(true);
+    if (setVotingProjectSlideIndex) {
+      setVotingProjectSlideIndex(0);
+    }
+    if (selectedFinanzasUser && setActiveFinanzasPopupUser) {
+      setActiveFinanzasPopupUser(selectedFinanzasUser);
+    }
+
+    setChannelVideoShareToast('¡Vídeo entero compartido con éxito en la página de la captura (image.png)! 🎬');
     setTimeout(() => {
       setChannelVideoShareToast(null);
-      window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'profile' }));
-      window.dispatchEvent(new CustomEvent('open-profile-shared-tab', { detail: sharedItem }));
-    }, 500);
+    }, 2800);
+  };
+
+  // 🏷️ Helper para normalizar la categoría del vídeo con las categorías exactas de la captura z.png
+  const normalizeChannelVideoCategory = (cat: string) => {
+    const c = (cat || '').toLowerCase().trim();
+    if (c.includes('finanz')) return 'Finanzas';
+    if (c.includes('fash')) return 'Fashion';
+    if (c.includes('reel')) return 'Reels';
+    if (c.includes('runway') || c.includes('model')) return 'Modelos';
+    if (c.includes('backstage')) return 'BackStage';
+    if (c.includes('jewel') || c.includes('invest')) return 'Investors';
+    if (c.includes('catwalk')) return 'Catwalk';
+    if (c.includes('fitn')) return 'Fitnes';
+    if (c.includes('beauty') || c.includes('belleza')) return 'Beauty';
+    if (c.includes('influenc')) return 'Influencer';
+    return 'Fashion';
+  };
+
+  // 🔖 Guardar vídeo de la captura imagen.png para que quede guardado en la página z.png en su categoría
+  const handleToggleBookmarkChannelVideo = (video: ChannelUploadedVideoItem) => {
+    const curFav = channelVideoFavoritesMap[video.id] || {
+      count: video.favorites || 112,
+      userFavorited: Boolean(video.isFavorited)
+    };
+    const nextFavorited = !curFav.userFavorited;
+    const nextCount = nextFavorited ? curFav.count + 1 : Math.max(0, curFav.count - 1);
+
+    const updatedMap = {
+      ...channelVideoFavoritesMap,
+      [video.id]: { count: nextCount, userFavorited: nextFavorited }
+    };
+    setChannelVideoFavoritesMap(updatedMap);
+    try {
+      localStorage.setItem('channel_video_favorites_map', JSON.stringify(updatedMap));
+    } catch (_) {}
+
+    // Categoría clasificada del vídeo
+    const rawCat = video.videoCategory || (video as any).category || currentChannel || 'Fashion';
+    const category = normalizeChannelVideoCategory(rawCat);
+
+    try {
+      // 1. Guardar en profile_saved_bookmarks para la pestaña Guardado de la captura z.png
+      const rawBookmarks = localStorage.getItem('profile_saved_bookmarks');
+      let bookmarks: any[] = rawBookmarks ? JSON.parse(rawBookmarks) : [];
+
+      if (nextFavorited) {
+        const savedItem = {
+          id: video.id || `saved-vid-${Date.now()}`,
+          type: 'video',
+          title: video.name || (video as any).title || `Vídeo de @${video.username || 'canal'}`,
+          description: video.description || 'Vídeo guardado desde el canal en directo',
+          videoUrl: video.videoUrl,
+          poster: video.avatar || (video as any).thumbnail || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          thumbnail: video.avatar || (video as any).thumbnail,
+          avatar: video.avatar,
+          username: video.username || 'creador',
+          name: video.name || video.username,
+          videoCategory: category,
+          category: category,
+          likes: video.likes || 18920,
+          favorites: nextCount,
+          shares: video.shares || 48,
+          savedAt: new Date().toISOString()
+        };
+        bookmarks = [savedItem, ...bookmarks.filter(b => b.videoUrl !== video.videoUrl && b.id !== video.id)];
+      } else {
+        bookmarks = bookmarks.filter(b => b.videoUrl !== video.videoUrl && b.id !== video.id);
+      }
+      localStorage.setItem('profile_saved_bookmarks', JSON.stringify(bookmarks));
+
+      // 2. Sincronizar también con saved_videos_
+      const currentUserId = userProfile?.id || 'anonymous';
+      const rawSavedVids = localStorage.getItem(`saved_videos_${currentUserId}`);
+      let savedVids: any[] = rawSavedVids ? JSON.parse(rawSavedVids) : [];
+      if (nextFavorited) {
+        const svItem = {
+          id: `sv-${Date.now()}-${video.id}`,
+          title: video.name || (video as any).title || 'Vídeo Guardado',
+          description: video.description || 'Vídeo guardado desde el canal',
+          videoUrl: video.videoUrl,
+          music: video.music || 'Música original',
+          likes: video.likes || 18920,
+          avatar: video.avatar,
+          name: video.username || 'anonymous',
+          videoCategory: category,
+          category: category
+        };
+        savedVids = [svItem, ...savedVids.filter(v => v.videoUrl !== video.videoUrl)];
+      } else {
+        savedVids = savedVids.filter(v => v.videoUrl !== video.videoUrl);
+      }
+      localStorage.setItem(`saved_videos_${currentUserId}`, JSON.stringify(savedVids));
+
+      // 3. Notificar a toda la app mediante eventos
+      window.dispatchEvent(new CustomEvent('video-saved-bookmark', {
+        detail: { video, category, isFavorited: nextFavorited }
+      }));
+      window.dispatchEvent(new Event('saved_videos_updated'));
+    } catch (err) {
+      console.error('Error al guardar vídeo en marcadores:', err);
+    }
+
+    setChannelVideoShareToast(
+      nextFavorited
+        ? `🔖 Guardado en la página de la captura z.png en la categoría ${category}`
+        : 'Eliminado de vídeos guardados'
+    );
+    setTimeout(() => {
+      setChannelVideoShareToast(null);
+    }, 2800);
   };
 
   const lastWheelTimeRef = useRef<number>(0);
@@ -1872,6 +2063,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // 👥 Vista de 10 ventanas de participantes en vivo durante la fase de votación (captura z.png)
   const [showTenWindowsVotingLive, setShowTenWindowsVotingLive] = useState<boolean>(false);
 
+  // Silenciar completamente cualquier sonido y cancelar síntesis de voz al estar en las 10 ventanas
+  useEffect(() => {
+    if (showTenWindowsVotingLive) {
+      isSpeechActiveRef.current = false;
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch {}
+      }
+      stopLucasTorresSpeech();
+    }
+  }, [showTenWindowsVotingLive]);
+
   // 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA
   const [showerHearts, setShowerHearts] = useState<Array<{
     id: number;
@@ -2362,13 +2564,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       channelVolume > 0
     );
 
-    if (!isVoting && !showFinanzasResults && !showFinanzasRecount && (isLucas || isAlessia) && isMicOn) {
+    if (!isVoting && !showTenWindowsVotingLive && !enlargedWindowUser && !showFinanzasResults && !showFinanzasRecount && (isLucas || isAlessia) && isMicOn) {
       isSpeechActiveRef.current = true;
       speakLucasTorresSegment();
 
       // In case browser requires a gesture to unlock speech synthesis on cold start:
       const handleUserGesture = () => {
-        resumeOrStartLucasSpeech();
+        if (!showTenWindowsVotingLive && !enlargedWindowUser) {
+          resumeOrStartLucasSpeech();
+        }
       };
 
       window.addEventListener('click', handleUserGesture, { once: true });
@@ -2519,13 +2723,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // Helper to get fee descriptions
   const getSessionFeeInfo = (session: any) => {
     const fee = session?.entryFee || 10;
-    if (fee === 10) return { feeShort: '10€', feeInWords: '10 Euros' };
-    if (fee === 100) return { feeShort: '100€', feeInWords: '100 Euros' };
-    if (fee === 1000) return { feeShort: '1.000€', feeInWords: '1.000 Euros' };
-    if (fee === 10000) return { feeShort: '10.000€', feeInWords: '10.000 Euros' };
-    if (fee === 100000) return { feeShort: '100.000€', feeInWords: '100.000 Euros' };
-    if (fee === 1000000) return { feeShort: '1.000.000€', feeInWords: '1.000.000 Euros' };
-    return { feeShort: `${fee}€`, feeInWords: `${fee} Euros` };
+    if (fee === 10) return { feeShort: '10€', feeInWords: '10 euros' };
+    if (fee === 100) return { feeShort: '100€', feeInWords: '100 euros' };
+    if (fee === 1000) return { feeShort: '1.000€', feeInWords: '1.000 euros' };
+    if (fee === 10000) return { feeShort: '10.000€', feeInWords: '10.000 euros' };
+    if (fee === 100000) return { feeShort: '100.000€', feeInWords: '100.000 euros' };
+    if (fee === 1000000) return { feeShort: '1.000.000€', feeInWords: '1.000.000 euros' };
+    return { feeShort: `${fee}€`, feeInWords: `${fee} euros` };
   };
 
   // Helper to get participants for each session
@@ -3106,7 +3310,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       setSessionSelectedPresenterMap({});
                       setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
                       setActiveChannelsMenuSessionId(null);
-                      setChannelToastMessage(`Canal ${cat.label} activado`);
                       if (onCategoryFilterChange) {
                         onCategoryFilterChange(cat.id);
                       }
@@ -3135,7 +3338,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       setSessionSelectedPresenterMap({});
                       setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
                       setActiveChannelsMenuSessionId(null);
-                      setChannelToastMessage(`Canal ${cat.label} activado`);
                       if (onCategoryFilterChange) {
                         onCategoryFilterChange(cat.id);
                       }
@@ -3463,18 +3665,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const curFav = !currentVid.isFavorited;
-                    currentVid.isFavorited = curFav;
-                    setChannelVideoShareToast(curFav ? 'Guardado en tus favoritos 🔖' : 'Eliminado de favoritos');
-                    setTimeout(() => setChannelVideoShareToast(null), 2000);
+                    handleToggleBookmarkChannelVideo(currentVid);
                   }}
-                  className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 border border-white/20 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md"
+                  className={`w-10 h-10 rounded-full border text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
+                    (channelVideoFavoritesMap[currentVid.id]?.userFavorited ?? Boolean(currentVid.isFavorited))
+                      ? 'bg-amber-500/30 border-amber-400 text-amber-400 shadow-amber-500/30'
+                      : 'bg-black/50 hover:bg-black/70 border-white/20'
+                  }`}
                   title="Guardar vídeo"
+                  id="btn-bookmark-channel-video"
                 >
-                  <Bookmark className={`w-4 h-4 ${currentVid.isFavorited ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+                  <Bookmark className={`w-4 h-4 ${(channelVideoFavoritesMap[currentVid.id]?.userFavorited ?? Boolean(currentVid.isFavorited)) ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
                 </button>
                 <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
-                  {currentVid.favorites || 112}
+                  {channelVideoFavoritesMap[currentVid.id]?.count ?? (currentVid.favorites || 112)}
                 </span>
               </div>
 
@@ -3506,13 +3710,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               )}
 
               {/* Video Caption & Hashtags */}
-              <p className="text-[11px] sm:text-xs text-slate-100 font-medium leading-relaxed drop-shadow-md line-clamp-2 mb-1">
+              <p className="text-[11px] sm:text-xs text-slate-100 font-medium leading-relaxed drop-shadow-md line-clamp-3 mb-1">
                 {translatedVideosMap[currentVid.id] 
-                  ? getEnglishTranslation(currentVid.description) 
+                  ? getEnglishTranslation(currentVid.description, currentVid.id) 
                   : currentVid.description}
               </p>
 
-              {/* 🌐 Traductor a Inglés (solicitado sobre captura image.png) */}
+              {/* 🌐 Traductor a Inglés (solicitado sobre captura z.png) */}
               <div className="flex items-center gap-2 mb-2 select-none">
                 <button
                   type="button"
@@ -3520,14 +3724,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     e.stopPropagation();
                     toggleVideoTranslation(currentVid.id);
                   }}
-                  className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-rose-300 hover:text-white bg-black/50 hover:bg-black/70 px-2.5 py-0.5 rounded-full border border-rose-500/40 hover:border-rose-400 shadow-sm transition-all active:scale-95 cursor-pointer backdrop-blur-md"
-                  title="Traducir descripción a inglés"
+                  className={`inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm transition-all active:scale-95 cursor-pointer backdrop-blur-md ${
+                    translatedVideosMap[currentVid.id]
+                      ? 'text-white bg-rose-600/70 border-rose-400 hover:bg-rose-600/90'
+                      : 'text-rose-300 hover:text-white bg-black/50 hover:bg-black/70 border-rose-500/40 hover:border-rose-400'
+                  }`}
+                  title={translatedVideosMap[currentVid.id] ? "Ver texto original (Español)" : "Traducir descripción a inglés"}
+                  id={`btn-translate-caption-${currentVid.id}`}
                 >
                   <Globe className="w-3 h-3 text-rose-400" />
                   <span>{translatedVideosMap[currentVid.id] ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
                 </button>
                 {translatedVideosMap[currentVid.id] && (
-                  <span className="text-[8.5px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                  <span className="text-[8.5px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-full animate-fade-in">
                     <span>✓</span> En inglés
                   </span>
                 )}
@@ -3681,16 +3890,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   return (
     <div className="relative w-full flex flex-col items-center justify-center">
-      {/* 📺 Toast flotante que confirma el cambio de canal en el centro del canal */}
-      {channelToastMessage && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none p-4 select-none">
-          <div className="bg-[#0d121f]/95 backdrop-blur-xl text-white px-5 py-3 rounded-2xl border-2 border-rose-500 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2.5 pointer-events-none animate-fade-in font-sans max-w-sm">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-            <span className="text-xs sm:text-sm font-black tracking-wide">{channelToastMessage}</span>
-          </div>
-        </div>
-      )}
-
       {/* 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA */}
       {showerHearts.length > 0 && (
         <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden select-none">
@@ -3974,19 +4173,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               if (setActiveFinanzasPopupUser) setActiveFinanzasPopupUser(clickedUser);
                               if (setDetailProjectUser) setDetailProjectUser(clickedUser);
 
-                              // Si se pulsa en la ventana de Alessia Vance, abrir directamente su retransmisión de 5 minutos en directo
-                              if (clickedUser.name?.includes('Alessia') || i === 0) {
-                                setShowTenWindowsVotingLive(false);
-                                setLocalCameraFullscreenOverride(true);
-                                if (setIsWatchingPresenterCamera) setIsWatchingPresenterCamera(true);
-                                if (setIsPresenterCameraFullscreen) setIsPresenterCameraFullscreen(true);
-                                resumeOrStartLucasSpeech();
+                              // Silenciar completamente la ventana al hacer clic (sin sonido)
+                              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                                try { window.speechSynthesis.cancel(); } catch {}
                               }
+                              stopLucasTorresSpeech();
                             }}
                             className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 hover:border-purple-400/80 bg-slate-900 shadow-2xl group transition cursor-pointer aspect-[9/13.5] min-h-[250px] sm:min-h-[285px] flex flex-col justify-between"
                             id={`voting-user-window-${i + 1}`}
                           >
-                            {/* Live Media Content */}
+                            {/* Live Media Content - Todas las ventanas iguales mostrando al participante en directo */}
                             <div className="relative w-full h-full bg-slate-950 overflow-hidden">
                               {isSelfUser && userLiveMediaStream ? (
                                 <LiveUserStreamVideo 
@@ -3994,29 +4190,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                   facingMode={liveCameraFacingMode} 
                                 />
                               ) : (
-                                <>
-                                  {(i === 0 || u.name?.includes('Alessia')) && (
-                                    <video
-                                      src={getParticipantLiveCameraVideo(u)}
-                                      autoPlay
-                                      loop
-                                      playsInline
-                                      muted
-                                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                    />
-                                  )}
-                                  <img
-                                    src={u.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650'}
-                                    alt={u.name}
-                                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${(i === 0 || u.name?.includes('Alessia')) ? '-z-1 opacity-0' : ''}`}
-                                    referrerPolicy="no-referrer"
-                                    onError={(e) => {
-                                      e.currentTarget.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650';
-                                    }}
-                                  />
-                                </>
+                                <img
+                                  src={u.avatar || (isSelfUser ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650' : 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650')}
+                                  alt={u.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.currentTarget.src = isSelfUser
+                                      ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
+                                      : 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650';
+                                  }}
+                                />
                               )}
+                            </div>
 
                               {/* Badge EN VIVO (Strictly matching z.png) */}
                               <div className="absolute top-2.5 left-2.5 z-20">
@@ -4035,7 +4221,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 </p>
                               </div>
                             </div>
-                          </div>
                         );
                       })}
                     </div>
@@ -5188,7 +5373,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     })}
                   </div>
 
-                  {/* Inscription Button: ✍️ Inscribirse en una sesión de (10 Euros) */}
+                  {/* Inscription Button: ✍️ Inscribirse en una ronda de (10 euros) */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -5201,78 +5386,46 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         localStorage.setItem('finanzas_user_participating', 'true');
                         localStorage.setItem('finanzas_user_is_participating', 'true');
                         localStorage.setItem('finanzas_target_session_id', session.id);
-                        localStorage.setItem(`finanzas_is_voting_phase_active_${session.id}`, 'false');
-                        localStorage.removeItem('finanzas_is_voting_phase_active');
                       } catch (err) {}
 
-                      // 2. Redirigir inmediatamente a la ventana image.png (fase de exposición de 5 min)
-                      setSessionVotingPhaseMap(prev => ({
-                        ...prev,
-                        [session.id]: false
-                      }));
-                      setShowTenWindowsVotingLive(false);
-                      setLocalCameraFullscreenOverride(false);
-                      if (setIsWatchingPresenterCamera) setIsWatchingPresenterCamera(false);
-                      if (setIsPresenterCameraFullscreen) setIsPresenterCameraFullscreen(false);
-
-                      // 3. Establecer a Alessia Vance (o primer participante de la lista) como ponente del Turno 1 de 10
-                      const firstPresenter = participants[0] || FINANZAS_USERS[0];
-                      setSessionSelectedPresenterMap(prev => ({
-                        ...prev,
-                        [session.id]: firstPresenter
-                      }));
-                      if (setSelectedFinanzasUser) setSelectedFinanzasUser(firstPresenter);
-                      if (setActiveFinanzasPopupUser) setActiveFinanzasPopupUser(firstPresenter);
-
-                      // 4. Temporizador de 5 minutos para la exposición (iniciando en 4:49 / 289s como en image.png)
-                      setSessionExpositionTimerMap(prev => ({
-                        ...prev,
-                        [session.id]: 289
-                      }));
-
-                      // 5. Activar voz en directo del ponente
-                      if (setIsPresenterCameraAudioMuted) setIsPresenterCameraAudioMuted(false);
-                      resumeOrStartLucasSpeech();
-
-                      // 6. Cerrar modales y paneles superpuestos para mostrar directamente image.png
+                      // 2. Cerrar modales superpuestos para mostrar limpia la sala de espera
                       setShowVotingProjectsModal(false);
                       setShowFinanzasInscriptionInChannel(false);
                       setShowProjectDetailsInPopup(false);
                       setDetailProjectUser(null);
                       if (setShowFinanzasResults) setShowFinanzasResults(false);
                       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
-                      if (setShowParticipantsGatheringModal) setShowParticipantsGatheringModal(false);
 
-                      // 7. Notificar al componente padre para procesar inscripción y pago
+                      // 3. Notificar al componente padre para procesar inscripción y pago
                       if (onExecutePaymentAndJoinSession) {
                         onExecutePaymentAndJoinSession(session);
+                      }
+
+                      // 4. Redirigir SIEMPRE a la sala de espera (ParticipantsGatheringModal)
+                      if (setShowParticipantsGatheringModal) {
+                        setShowParticipantsGatheringModal(true);
                       }
 
                       if (setSystemVoiceNotification) {
                         setSystemVoiceNotification({
                           show: true,
-                          message: '🎉 ¡Inscripción confirmada (10€)! Estás dentro de la ronda. Turno 1 de 10: Alessia Vance (5 min de exposición).'
+                          message: `🎉 ¡Inscripción confirmada (${feeInfo.feeShort})! Redirigiendo a la sala de espera de la ronda.`
                         });
                       }
                     }}
-                    className={`w-full font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border shadow-md flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 ${
-                      isUserParticipating
-                        ? 'cursor-default active:scale-100 select-none'
-                        : 'cursor-pointer active:scale-95'
-                    } ${
+                    className={`w-full font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border shadow-md flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 cursor-pointer active:scale-95 ${
                       isUserEnrolledInThisRound
                         ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
                         : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9]'
                     }`}
                     id={`btn-inscribirse-ronda-${session.id}`}
-                    title={isUserParticipating ? "Ya estás participando en una ronda o sesión activa" : `Inscribirse en una sesión de (${feeInfo.feeInWords})`}
-                    aria-disabled={isUserParticipating}
+                    title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una ronda de (${feeInfo.feeInWords})`}
                   >
                     <span className="text-base shrink-0">✍️</span>
                     <span className="truncate min-w-0 font-black">
                       {isUserEnrolledInThisRound
                         ? `Estás inscrita como participante (${feeInfo.feeInWords})`
-                        : `Inscribirse en una sesión de (${feeInfo.feeInWords})`}
+                        : `Inscribirse en una ronda de (${feeInfo.feeInWords})`}
                     </span>
                   </button>
 

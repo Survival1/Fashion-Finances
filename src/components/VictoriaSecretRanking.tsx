@@ -1847,19 +1847,11 @@ export default function VictoriaSecretRanking({
                         
                         {/* Elegant Crown hovered closely above image frame without touching */}
                         <div className="absolute -top-11 sm:-top-13 z-30 transition duration-500 group-hover:scale-105 pointer-events-none">
-                          {(firstPlace as any)?.gender === 'male' ? (
-                            <RoyalMaleCrown 
-                              imgClassName="w-26 sm:w-30 h-auto"
-                              showSparkles={true}
-                            />
-                          ) : (
-                            <img 
-                              src="https://gallery.yopriceville.com/var/albums/Free-Clipart-Pictures/Crowns-PNG/Diamond_Tiara_with_Rubies_PNG_Clipart.png" 
-                              alt="Corona de Diamantes y Rubíes" 
-                              referrerPolicy="no-referrer"
-                              className="w-24 sm:w-28 h-auto object-contain drop-shadow-[0_4px_14px_rgba(239,68,68,0.5)]"
-                            />
-                          )}
+                          {/* Corona Real de la captura z.png pura, sin tocarla ni modificarla */}
+                          <RoyalMaleCrown 
+                            imgClassName="w-26 sm:w-30 h-auto"
+                            showSparkles={true}
+                          />
                         </div>
 
                         {/* Large pink butterfly studio wings peeking from behind the arch */}
