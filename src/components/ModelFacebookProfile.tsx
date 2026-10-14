@@ -1412,8 +1412,8 @@ export default function ModelFacebookProfile({
   };
 
   // Profile Saved Videos Premium Interactions
-  const [savedVideoCategoryFilter, setSavedVideoCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>('Todos');
-  const [savedCategoryFilter, setSavedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>('Todos');
+  const [savedVideoCategoryFilter, setSavedVideoCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview'>('Todos');
+  const [savedCategoryFilter, setSavedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview'>('Todos');
   const [giftExplosions, setGiftExplosions] = useState<Record<string, { show: boolean; emoji: string }>>({});
   const [copiedVideoId, setCopiedVideoId] = useState<string | null>(null);
   const [openCommentsVideoId, setOpenCommentsVideoId] = useState<string | null>(null);
@@ -1870,7 +1870,9 @@ export default function ModelFacebookProfile({
     if (c.includes('runway') || c.includes('model')) return 'Modelos';
     if (c.includes('backstage')) return 'BackStage';
     if (c.includes('jewel') || c.includes('invest')) return 'Investors';
-    if (c.includes('catwalk')) return 'Catwalk';
+    if (c.includes('catwalk') || c.includes('casting')) return 'Casting';
+    if (c.includes('luxur') || c.includes('lujo')) return 'Luxury';
+    if (c.includes('interview') || c.includes('entrevist')) return 'Interview';
     if (c.includes('fitn')) return 'Fitnes';
     if (c.includes('beauty') || c.includes('belleza')) return 'Beauty';
     if (c.includes('influenc')) return 'Influencer';
@@ -7349,10 +7351,12 @@ export default function ModelFacebookProfile({
                               { id: 'Modelos', label: 'Runway 👑', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
                               { id: 'BackStage', label: 'BackStage 🎬', color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700' },
                               { id: 'Investors', label: 'Jewellery 💎', color: 'bg-purple-50 hover:bg-purple-100 text-purple-700' },
-                              { id: 'Catwalk', label: 'Catwalk 👠', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
+                              { id: 'Casting', label: 'Casting 👠', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
                               { id: 'Fitnes', label: 'Fitnes 💪', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
                               { id: 'Beauty', label: 'Beauty 💄', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                              { id: 'Influencer', label: 'Influencer 📱', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' }
+                              { id: 'Influencer', label: 'Influencer 📱', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
+                              { id: 'Luxury', label: 'Luxury 🍸', color: 'bg-orange-50 hover:bg-orange-100 text-orange-700' },
+                              { id: 'Interview', label: 'Interview 🎙️', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800' }
                             ].map(cat => {
                               const isActive = savedVideoCategoryFilter === cat.id;
                               return (
@@ -8024,10 +8028,12 @@ export default function ModelFacebookProfile({
                               { id: 'Modelos', label: 'RUNWAY 👑', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' },
                               { id: 'BackStage', label: 'BACKSTAGE 🎬', color: 'bg-cyan-50/70 hover:bg-cyan-100 text-cyan-800 border-cyan-200/60' },
                               { id: 'Investors', label: 'JEWELLERY 💎', color: 'bg-purple-50/70 hover:bg-purple-100 text-purple-800 border-purple-200/60' },
-                              { id: 'Catwalk', label: 'CATWALK 👠', color: 'bg-violet-50/70 hover:bg-violet-100 text-violet-800 border-violet-200/60' },
+                              { id: 'Casting', label: 'CASTING 👠', color: 'bg-violet-50/70 hover:bg-violet-100 text-violet-800 border-violet-200/60' },
                               { id: 'Fitnes', label: 'FITNES 💪', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 border-emerald-200/60' },
                               { id: 'Beauty', label: 'BEAUTY 💄', color: 'bg-rose-50/70 hover:bg-rose-100 text-rose-800 border-rose-200/60' },
-                              { id: 'Influencer', label: 'INFLUENCER 🏢', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' }
+                              { id: 'Influencer', label: 'INFLUENCER 🏢', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' },
+                              { id: 'Luxury', label: 'LUXURY 🍸', color: 'bg-orange-50/70 hover:bg-orange-100 text-orange-800 border-orange-200/60' },
+                              { id: 'Interview', label: 'INTERVIEW 🎙️', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-900 border-emerald-200/60' }
                             ].map(cat => {
                               const isActive = savedCategoryFilter === cat.id;
                               return (

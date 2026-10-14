@@ -797,17 +797,6 @@ export default function DirectMessageChat({
                 >
                   {isBlocked ? 'Bloqueado' : 'Bloquear'}
                 </button>
-                <button
-                  onClick={() => {
-                    setIsReported(true);
-                    alert(`Has reportado esta conversación privada con @${activeContact.username}. Revisaremos el histórico de abuso.`);
-                  }}
-                  disabled={isReported}
-                  className="tab-trigger p-1.5 text-zinc-400 hover:text-rose-600 bg-zinc-100 hover:bg-rose-50 rounded-xl transition"
-                  title="Reportar mensaje"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 text-zinc-500" />
-                </button>
               </div>
             </div>
 

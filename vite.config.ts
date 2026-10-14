@@ -49,6 +49,8 @@ export default defineConfig(() => {
       watch: null,
     },
     build: {
+      outDir: 'dist',
+      emptyOutDir: true,
       chunkSizeWarningLimit: 5000,
     },
   };

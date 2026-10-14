@@ -334,7 +334,7 @@ function ModelRankingCard({
         transition: 'transform 600ms cubic-bezier(0.25, 1, 0.5, 1), opacity 600ms'
       }}
     >
-      {/* 1. Crown positioned atop the frame (Corona Real de la captura z.png pura, sin tocarla ni modificarla) */}
+      {/* 1. Crown positioned atop the frame: Misma corona anterior para Top Modelos Femeninas y Top Modelos Masculinos */}
       <div 
         style={{ bottom: 'calc(100% + 2px)' }}
         className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 group-hover:scale-105"

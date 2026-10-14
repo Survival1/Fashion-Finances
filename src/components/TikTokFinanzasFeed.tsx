@@ -30,7 +30,10 @@ import {
   Check,
   CheckCircle2,
   Video,
-  Globe
+  Globe,
+  Trash2,
+  CornerDownRight,
+  Reply
 } from 'lucide-react';
 import { 
   TRABAJADORES_USERS, 
@@ -49,10 +52,12 @@ const CHANNELS_LIST = [
   { id: 'Modelos', label: 'Runway 👑' },
   { id: 'BackStage', label: 'BackStage 🎬' },
   { id: 'Investors', label: 'Jewellery 💎' },
-  { id: 'Catwalk', label: 'Catwalk 👠' },
+  { id: 'Casting', label: 'Casting 👠' },
   { id: 'Fitnes', label: 'Fitnes 💪' },
   { id: 'Beauty', label: 'Beauty 💄' },
-  { id: 'Influencer', label: 'Influencer 📱' }
+  { id: 'Influencer', label: 'Influencer 📱' },
+  { id: 'Luxury', label: 'Luxury 🍸' },
+  { id: 'Interview', label: 'Interview 🎙️' }
 ];
 
 export const FITNES_USERS = [
@@ -133,6 +138,34 @@ export const CATWALK_USERS = [
   { id: 'cat-10', name: 'Bella Hadid', username: 'bella_hadid_runway', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Icono Pasarela' }
 ];
 
+export const CASTING_USERS = CATWALK_USERS;
+
+export const LUXURY_USERS = [
+  { id: 'lux-1', name: 'Victoria Swarovski', username: 'victoria_swarovski_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Heredera & Joyería Luxury' },
+  { id: 'lux-2', name: 'François Pinault', username: 'pinault_kering_lux', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Presidente Grupo Kering Luxury' },
+  { id: 'lux-3', name: 'Delphine Arnault', username: 'arnault_dior_haute', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', role: 'Directora Ejecutiva Dior' },
+  { id: 'lux-4', name: 'Laurent Martinez', username: 'laurent_watches_geneva', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Maestro Relojero Ginebra' },
+  { id: 'lux-5', name: 'Helena Rothschild', username: 'helena_high_society', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Coleccionista Alta Joyería' },
+  { id: 'lux-6', name: 'Matteo Bulgari', username: 'matteo_bulgari_diamonds', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Diseñador Gemas & Diamantes' },
+  { id: 'lux-7', name: 'Sophia Cartier', username: 'sophia_cartier_paris', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Embajadora Cartier Vendôme' },
+  { id: 'lux-8', name: 'Alexander Sterling', username: 'sterling_yachts_monaco', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Broker Superyates Mónaco' },
+  { id: 'lux-9', name: 'Camilla Valmont', username: 'camilla_private_concierge', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Luxury Lifestyle Concierge' },
+  { id: 'lux-10', name: 'Charles Vane', username: 'charles_mayfair_club', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Director Club Mayfair Privé' }
+];
+
+export const INTERVIEW_USERS = [
+  { id: 'int-1', name: 'Derek Blasberg', username: 'derek_talks_fashion', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650', role: 'Entrevistador VIP & Editor' },
+  { id: 'int-2', name: 'Alexa Chung', username: 'alexa_chung_interviews', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Presentadora & Host TV' },
+  { id: 'int-3', name: 'Zane Lowe', username: 'zane_exclusive_sessions', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Host Entrevistas Exclusivas' },
+  { id: 'int-4', name: 'Amelia Dimoldenberg', username: 'amelia_chicken_date', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Entrevistadora de Celebridades' },
+  { id: 'int-5', name: 'Graham Norton', username: 'graham_live_couch', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Talk Show Host Legendario' },
+  { id: 'int-6', name: 'Loic Prigent', username: 'loic_prigent_podium', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', role: 'Periodista Detrás de Pasarela' },
+  { id: 'int-7', name: 'Oprah Winfrey', username: 'oprah_master_interviews', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', role: 'Icono de las Entrevistas' },
+  { id: 'int-8', name: 'Jimmy Fallon', username: 'jimmy_fallon_backstage', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Host Televisión & Comedia' },
+  { id: 'int-9', name: 'Eva Chen', username: 'eva_chen_chats', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650', role: 'Directora Contenido & Moda' },
+  { id: 'int-10', name: 'Tim Blanks', username: 'tim_blanks_critique', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=650', role: 'Crítico & Periodista Pasarela' }
+];
+
 export const TODOS_USERS = [
   { id: 'tod-1', name: 'Lucas Torres', username: 'lucas_torres_design', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650', role: 'Diseñador Gráfico' },
   { id: 'tod-2', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' },
@@ -182,6 +215,7 @@ const LiveUserStreamVideo = React.memo(({
 });
 
 interface TikTokFinanzasFeedProps {
+  isActiveTab?: boolean;
   activeSessionsOnly: any[];
   activeFinanzasSessionIndex: number;
   setActiveFinanzasSessionIndex: (index: number) => void;
@@ -259,6 +293,7 @@ interface TikTokFinanzasFeedProps {
 }
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
+  isActiveTab = true,
   activeSessionsOnly,
   activeFinanzasSessionIndex,
   setActiveFinanzasSessionIndex,
@@ -462,6 +497,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const getChannelCleanName = (channelId?: string) => {
     if (channelId === 'Modelos') return 'Runway';
     if (channelId === 'Investors') return 'Jewellery';
+    if (channelId === 'Catwalk' || channelId === 'Casting') return 'Casting';
     return channelId || 'Finanzas';
   };
 
@@ -488,11 +524,29 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // Preset videos for Fashion channel & other categories so the channel is always gorgeous
   const DEFAULT_FASHION_PRESETS: ChannelUploadedVideoItem[] = [
     {
+      id: 'fsh-preset-sofia',
+      username: 'sofia_sensations',
+      name: 'Sofía Sensations',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 24500,
+      comments: [
+        { id: 'c-fsh-0-1', user: 'Vogue_Runway', text: '¡Increíble look de alta costura futurista! ✨👠', date: 'Hace 5m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
+        { id: 'c-fsh-0-2', user: 'MarcJacobs_Pro', text: 'Look futurista impecable para la semana de la moda de París 🗼', date: 'Hace 18m', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1120,
+      favorites: 3420,
+      description: 'Sesión de alta costura futurista. Presentando Glitter Makeup para el show de Barcelona! ✨ #highfashion #modamexicana #futuristic',
+      music: 'Aesthetic Synthwave - LoFi Collective',
+      videoCategory: 'Fashion',
+      isUserUploaded: true
+    },
+    {
       id: 'fsh-preset-1',
       username: 'kendall_jenner_vip',
       name: 'Kendall Jenner',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
       likes: 12450,
       comments: [
         { id: 'c-fsh-1', user: 'Vogue_Runway', text: '¡Increíble look de alta costura! ✨👠', date: 'Hace 5m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
@@ -500,7 +554,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       ],
       shares: 820,
       favorites: 1940,
-      description: 'Nueva temporada Streetwear & Haute Couture 🗼✨ Glitter makeup y siluetas contemporáneas desfilando en exclusiva. #fashion #streetwear #parisfashion #castinglive',
+      description: 'Nueva temporada Streetwear & Haute Couture 🗼✨ Siluetas contemporáneas desfilando en exclusiva. #fashion #streetwear #parisfashion #castinglive',
       music: 'Fashion Runway Anthem - Electronic Vibes',
       videoCategory: 'Fashion'
     },
@@ -643,11 +697,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   });
   const [activeChannelVideoIdx, setActiveChannelVideoIdx] = useState<number>(0);
   const [isChannelVideoPlaying, setIsChannelVideoPlaying] = useState<boolean>(true);
+  const [isUserPaused, setIsUserPaused] = useState<boolean>(false);
   const [isChannelVideoAudioMuted, setIsChannelVideoAudioMuted] = useState<boolean>(false);
+  const [channelVideoVolume, setChannelVideoVolume] = useState<number>(88);
+  const [prevChannelVideoVolume, setPrevChannelVideoVolume] = useState<number>(88);
+  const [isDraggingChannelVolume, setIsDraggingChannelVolume] = useState<boolean>(false);
+  const [isChannelVolumeHovered, setIsChannelVolumeHovered] = useState<boolean>(false);
+  const [isChannelActionsHovered, setIsChannelActionsHovered] = useState<boolean>(false);
+  const channelVolumeTrackRef = useRef<HTMLDivElement | null>(null);
   const [channelVideoProgress, setChannelVideoProgress] = useState<number>(0);
   const [channelVideoLikesMap, setChannelVideoLikesMap] = useState<Record<string, { count: number; userLiked: boolean }>>({});
   const [channelVideoCommentsOpen, setChannelVideoCommentsOpen] = useState<boolean>(false);
   const [channelVideoNewComment, setChannelVideoNewComment] = useState<string>('');
+  const [channelVideoReplyingTo, setChannelVideoReplyingTo] = useState<{ id: string; user: string } | null>(null);
+  const [showChannelVideoEmojiPicker, setShowChannelVideoEmojiPicker] = useState<boolean>(false);
   const [channelVideoCommentsMap, setChannelVideoCommentsMap] = useState<Record<string, any[]>>({});
   const [channelFollowedCreatorsMap, setChannelFollowedCreatorsMap] = useState<Record<string, boolean>>({});
   const [channelVideoShareToast, setChannelVideoShareToast] = useState<string | null>(null);
@@ -660,6 +723,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   });
 
   const channelVideoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRefsMap = useRef<Record<string, HTMLVideoElement | null>>({});
+  const [activeCommentsVideoId, setActiveCommentsVideoId] = useState<string | null>(null);
+  const [hoveredVolumeVideoId, setHoveredVolumeVideoId] = useState<string | null>(null);
+  const [hoveredActionsVideoId, setHoveredActionsVideoId] = useState<string | null>(null);
+  const [hoveredHeartVideoId, setHoveredHeartVideoId] = useState<string | null>(null);
+  const [channelVideosProgressMap, setChannelVideosProgressMap] = useState<Record<string, number>>({});
   const channelVideoCardRef = useRef<HTMLDivElement | null>(null);
   const lastChannelWheelTimeRef = useRef<number>(0);
 
@@ -683,23 +752,200 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     };
   }, [currentChannel]);
 
-  // Video playback sync on active index or channel change
+  const [userPausedVideosMap, setUserPausedVideosMap] = useState<Record<string, boolean>>({});
+
+  // ⏸️ Detener y parar el vídeo y audio automáticamente al cambiar de página
   useEffect(() => {
-    if (channelVideoRef.current) {
-      channelVideoRef.current.currentTime = 0;
-      if (isChannelVideoPlaying) {
-        const p = channelVideoRef.current.play();
-        if (p !== undefined) {
-          p.catch(() => {
-            if (channelVideoRef.current) {
-              channelVideoRef.current.muted = true;
-              channelVideoRef.current.play().catch(() => {});
+    const handleStopFeedVideo = () => {
+      (Object.values(videoRefsMap.current) as Array<HTMLVideoElement | null>).forEach(v => {
+        if (v) try { v.pause(); } catch {}
+      });
+      if (channelVideoRef.current) {
+        try { channelVideoRef.current.pause(); } catch {}
+      }
+      if (liveVideoRef.current) {
+        try { liveVideoRef.current.pause(); } catch {}
+      }
+      setIsChannelVideoPlaying(false);
+      setIsUserPaused(true);
+      stopLucasTorresSpeech();
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {}
+      }
+    };
+
+    if (isActiveTab === false) {
+      handleStopFeedVideo();
+    }
+
+    window.addEventListener('pause-all-media-playback', handleStopFeedVideo);
+    window.addEventListener('pause-channel-video', handleStopFeedVideo);
+    return () => {
+      window.removeEventListener('pause-all-media-playback', handleStopFeedVideo);
+      window.removeEventListener('pause-channel-video', handleStopFeedVideo);
+    };
+  }, [isActiveTab]);
+
+  // Video playback sync on active index or channel change - volumen activo por defecto si está en la pestaña activa
+  useEffect(() => {
+    if (!isActiveTab) {
+      (Object.values(videoRefsMap.current) as Array<HTMLVideoElement | null>).forEach(v => {
+        if (v) try { v.pause(); } catch {}
+      });
+      setIsChannelVideoPlaying(false);
+      setIsUserPaused(true);
+      return;
+    }
+
+    const vids = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
+    vids.forEach((vid, idx) => {
+      const el = videoRefsMap.current[vid.id];
+      if (el) {
+        if (idx === activeChannelVideoIdx) {
+          channelVideoRef.current = el;
+          if (!isUserPaused) {
+            el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
+            const vol = channelVideoVolume > 0 ? channelVideoVolume / 100 : 0.88;
+            el.volume = isChannelVideoAudioMuted ? 0 : vol;
+            const p = el.play();
+            if (p !== undefined) {
+              p.catch(() => {
+                el.muted = true;
+                el.play().catch(() => {});
+              });
             }
-          });
+            setIsChannelVideoPlaying(true);
+          }
+        } else {
+          try { el.pause(); } catch {}
         }
       }
+    });
+  }, [activeChannelVideoIdx, currentChannel, isActiveTab, isUserPaused, channelUploadedVideos, isChannelVideoAudioMuted, channelVideoVolume]);
+
+  // Asegurar que el volumen suene por defecto en cuanto haya interacción en la pantalla (solo en la pestaña activa)
+  useEffect(() => {
+    const handleFirstUserInteraction = () => {
+      if (!isActiveTab) return;
+      if (channelVideoRef.current && !isUserPaused) {
+        channelVideoRef.current.muted = false;
+        channelVideoRef.current.volume = Math.max(0.1, (channelVideoVolume || 88) / 100);
+      }
+      setIsChannelVideoAudioMuted(false);
+    };
+
+    window.addEventListener('click', handleFirstUserInteraction, { passive: true });
+    window.addEventListener('pointerdown', handleFirstUserInteraction, { passive: true });
+    window.addEventListener('touchstart', handleFirstUserInteraction, { passive: true });
+    window.addEventListener('keydown', handleFirstUserInteraction, { passive: true });
+
+    return () => {
+      window.removeEventListener('click', handleFirstUserInteraction);
+      window.removeEventListener('pointerdown', handleFirstUserInteraction);
+      window.removeEventListener('touchstart', handleFirstUserInteraction);
+      window.removeEventListener('keydown', handleFirstUserInteraction);
+    };
+  }, [channelVideoVolume, isActiveTab, isUserPaused]);
+
+  // Synchronize master video element volume when channelVideoVolume or mute changes
+  useEffect(() => {
+    if (channelVideoRef.current) {
+      channelVideoRef.current.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
+      channelVideoRef.current.volume = isChannelVideoAudioMuted ? 0 : Math.max(0, Math.min(1, channelVideoVolume / 100));
     }
-  }, [activeChannelVideoIdx, currentChannel]);
+  }, [channelVideoVolume, isChannelVideoAudioMuted]);
+
+  const updateChannelVolumeFromClientY = (clientY: number, trackEl?: HTMLElement | null) => {
+    const el = trackEl || channelVolumeTrackRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const height = rect.height;
+    if (height <= 0) return;
+    const offsetY = rect.bottom - clientY;
+    const percentage = Math.round(Math.max(0, Math.min(100, (offsetY / height) * 100)));
+    setChannelVideoVolume(percentage);
+    if (percentage > 0) {
+      setIsChannelVideoAudioMuted(false);
+      setPrevChannelVideoVolume(percentage);
+    } else {
+      setIsChannelVideoAudioMuted(true);
+    }
+    if (channelVideoRef.current) {
+      channelVideoRef.current.muted = percentage === 0;
+      channelVideoRef.current.volume = percentage / 100;
+    }
+  };
+
+  const handleChannelVolumePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const trackEl = (e.currentTarget.querySelector('[data-channel-volume-track]') as HTMLElement) || e.currentTarget;
+    channelVolumeTrackRef.current = trackEl as HTMLDivElement;
+    setIsDraggingChannelVolume(true);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    updateChannelVolumeFromClientY(e.clientY, trackEl);
+  };
+
+  const handleChannelVolumePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDraggingChannelVolume || e.buttons === 1) {
+      e.stopPropagation();
+      updateChannelVolumeFromClientY(e.clientY);
+    }
+  };
+
+  const handleChannelVolumePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDraggingChannelVolume) {
+      e.stopPropagation();
+      setIsDraggingChannelVolume(false);
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+      } catch (_) {}
+      playVolumeBeep(channelVideoVolume);
+    }
+  };
+
+  const handleChannelVolumeWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const delta = e.deltaY < 0 ? 5 : -5;
+    setChannelVideoVolume(prev => {
+      const next = Math.max(0, Math.min(100, prev + delta));
+      if (next > 0) {
+        setIsChannelVideoAudioMuted(false);
+        setPrevChannelVideoVolume(next);
+      } else {
+        setIsChannelVideoAudioMuted(true);
+      }
+      if (channelVideoRef.current) {
+        channelVideoRef.current.muted = next === 0;
+        channelVideoRef.current.volume = next / 100;
+      }
+      playVolumeBeep(next);
+      return next;
+    });
+  };
+
+  const handleToggleChannelVideoMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isChannelVideoAudioMuted || channelVideoVolume === 0) {
+      const restore = prevChannelVideoVolume > 0 ? prevChannelVideoVolume : 88;
+      setIsChannelVideoAudioMuted(false);
+      setChannelVideoVolume(restore);
+      if (channelVideoRef.current) {
+        channelVideoRef.current.muted = false;
+        channelVideoRef.current.volume = restore / 100;
+      }
+      playVolumeBeep(restore);
+    } else {
+      setPrevChannelVideoVolume(channelVideoVolume);
+      setIsChannelVideoAudioMuted(true);
+      setChannelVideoVolume(0);
+      if (channelVideoRef.current) {
+        channelVideoRef.current.muted = true;
+        channelVideoRef.current.volume = 0;
+      }
+    }
+  };
 
   const handleToggleChannelVideoLike = (video: ChannelUploadedVideoItem) => {
     const cur = channelVideoLikesMap[video.id] || { count: video.likes || 120, userLiked: Boolean(video.isLiked) };
@@ -712,20 +958,27 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   };
 
-  const handleAddChannelVideoComment = (video: ChannelUploadedVideoItem) => {
-    if (!channelVideoNewComment.trim()) return;
+  const handleAddChannelVideoComment = (video: ChannelUploadedVideoItem, directEmoji?: string) => {
+    const textToSend = (directEmoji !== undefined ? directEmoji : channelVideoNewComment).trim();
+    if (!textToSend) return;
     const newCommentObj = {
       id: `comm-${Date.now()}`,
       user: userProfile?.name || 'Usuario Fashion',
-      text: channelVideoNewComment.trim(),
+      text: textToSend,
       date: 'Ahora mismo',
-      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
+      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      replyTo: channelVideoReplyingTo ? channelVideoReplyingTo.user : undefined,
+      replyToId: channelVideoReplyingTo ? channelVideoReplyingTo.id : undefined
     };
 
     const existingComments = channelVideoCommentsMap[video.id] || video.comments || [];
     const updated = [newCommentObj, ...existingComments];
     setChannelVideoCommentsMap(prev => ({ ...prev, [video.id]: updated }));
-    setChannelVideoNewComment('');
+    if (directEmoji === undefined) {
+      setChannelVideoNewComment('');
+      setChannelVideoReplyingTo(null);
+    }
+    setShowChannelVideoEmojiPicker(false);
 
     try {
       const raw = localStorage.getItem('coll_casting_live_videos');
@@ -742,20 +995,100 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     } catch (e) {}
   };
 
+  const handleDeleteChannelVideoComment = (videoId: string, commentId: string) => {
+    const existing = channelVideoCommentsMap[videoId] || [];
+    const updated = existing.filter((c: any) => c.id !== commentId);
+    setChannelVideoCommentsMap(prev => ({ ...prev, [videoId]: updated }));
+    if (channelVideoReplyingTo?.id === commentId) {
+      setChannelVideoReplyingTo(null);
+    }
+
+    try {
+      const raw = localStorage.getItem('coll_casting_live_videos');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const vIdx = parsed.findIndex(v => v.id === videoId);
+          if (vIdx !== -1) {
+            parsed[vIdx].comments = updated;
+            localStorage.setItem('coll_casting_live_videos', JSON.stringify(parsed));
+          }
+        }
+      }
+    } catch (e) {}
+  };
+
   const handleNextChannelVideo = () => {
-    if (activeChannelVideoIdx < channelUploadedVideos.length - 1) {
-      setActiveChannelVideoIdx(prev => prev + 1);
+    const vids = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
+    if (activeChannelVideoIdx < vids.length - 1) {
+      const nextIdx = activeChannelVideoIdx + 1;
+      setActiveChannelVideoIdx(nextIdx);
       setChannelVideoProgress(0);
       setIsChannelVideoPlaying(true);
+      setIsUserPaused(false);
+      const targetVid = vids[nextIdx];
+      if (targetVid) {
+        const el = document.getElementById(`tiktok-round-card-multimedia-${targetVid.id}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   };
 
   const handlePrevChannelVideo = () => {
+    const vids = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
     if (activeChannelVideoIdx > 0) {
-      setActiveChannelVideoIdx(prev => prev - 1);
+      const prevIdx = activeChannelVideoIdx - 1;
+      setActiveChannelVideoIdx(prevIdx);
       setChannelVideoProgress(0);
       setIsChannelVideoPlaying(true);
+      setIsUserPaused(false);
+      const targetVid = vids[prevIdx];
+      if (targetVid) {
+        const el = document.getElementById(`tiktok-round-card-multimedia-${targetVid.id}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
+  };
+
+  const channelVideoLastClickTimeRef = useRef<number>(0);
+
+  const handleChannelVideoTogglePlayPause = (forcePlay?: boolean) => {
+    if (!channelVideoRef.current) return;
+    if (forcePlay === true) {
+      channelVideoRef.current.play().catch(() => {});
+      setIsChannelVideoPlaying(true);
+      setIsUserPaused(false);
+      return;
+    }
+    if (isUserPaused || !isChannelVideoPlaying) {
+      channelVideoRef.current.play().catch(() => {});
+      setIsChannelVideoPlaying(true);
+      setIsUserPaused(false);
+    } else {
+      channelVideoRef.current.pause();
+      setIsChannelVideoPlaying(false);
+      setIsUserPaused(true);
+    }
+  };
+
+  // Manejar clic o doble clic / doble toque en el centro del vídeo
+  const handleChannelVideoAreaClick = (e: React.MouseEvent) => {
+    const now = Date.now();
+    const diff = now - channelVideoLastClickTimeRef.current;
+    if (diff < 350) {
+      // Doble clic detectado -> pausar o reanudar
+      e.stopPropagation();
+      channelVideoLastClickTimeRef.current = 0;
+      handleChannelVideoTogglePlayPause();
+    } else {
+      channelVideoLastClickTimeRef.current = now;
+    }
+  };
+
+  const handleChannelVideoAreaDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    channelVideoLastClickTimeRef.current = 0;
+    handleChannelVideoTogglePlayPause();
   };
 
   const handleShareChannelVideo = (video: ChannelUploadedVideoItem) => {
@@ -838,7 +1171,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     if (c.includes('runway') || c.includes('model')) return 'Modelos';
     if (c.includes('backstage')) return 'BackStage';
     if (c.includes('jewel') || c.includes('invest')) return 'Investors';
-    if (c.includes('catwalk')) return 'Catwalk';
+    if (c.includes('catwalk') || c.includes('casting')) return 'Casting';
+    if (c.includes('luxur') || c.includes('lujo')) return 'Luxury';
+    if (c.includes('interview') || c.includes('entrevist')) return 'Interview';
     if (c.includes('fitn')) return 'Fitnes';
     if (c.includes('beauty') || c.includes('belleza')) return 'Beauty';
     if (c.includes('influenc')) return 'Influencer';
@@ -1418,19 +1753,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     };
   }, []);
   const [commentInputMap, setCommentInputMap] = useState<Record<string, string>>({});
+  const [sessionReplyingToMap, setSessionReplyingToMap] = useState<Record<string, { id: string; userName: string } | null>>({});
   const [showEmojiPickerSessionId, setShowEmojiPickerSessionId] = useState<string | null>(null);
   const [glossaryCategory, setGlossaryCategory] = useState<string>('Populares');
 
   const handleAddSessionComment = (sessionId: string, customText?: string) => {
     const text = (customText !== undefined ? customText : (commentInputMap[sessionId] || '')).trim();
     if (!text) return;
+    const replying = sessionReplyingToMap[sessionId];
     const newComment = {
       id: `comm-${Date.now()}`,
       userName: userProfile?.name || 'Adriana Lima',
       userAvatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
       text,
       timeAgo: 'Ahora mismo',
-      likes: 0
+      likes: 0,
+      replyTo: replying ? replying.userName : undefined,
+      replyToId: replying ? replying.id : undefined
     };
     setSessionCommentsMap(prev => ({
       ...prev,
@@ -1438,8 +1777,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }));
     if (customText === undefined) {
       setCommentInputMap(prev => ({ ...prev, [sessionId]: '' }));
+      setSessionReplyingToMap(prev => ({ ...prev, [sessionId]: null }));
     }
     setShowEmojiPickerSessionId(null);
+  };
+
+  const handleDeleteSessionComment = (sessionId: string, commentId: string) => {
+    setSessionCommentsMap(prev => ({
+      ...prev,
+      [sessionId]: (prev[sessionId] || INITIAL_COMMENTS_MAP['sess-trabajadores-1'] || []).filter(c => c.id !== commentId)
+    }));
+    if (sessionReplyingToMap[sessionId]?.id === commentId) {
+      setSessionReplyingToMap(prev => ({ ...prev, [sessionId]: null }));
+    }
   };
 
   const handleInsertEmoji = (sessionId: string, emoji: string) => {
@@ -1641,14 +1991,25 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   };
 
-  // 🎥 Asegurar que el vídeo de la cámara del escenario principal cargue y reproduzca inmediatamente al conmutar canal dentro de esta misma pantalla
+  // 🎥 Asegurar que el vídeo de la cámara del escenario principal cargue y reproduzca con volumen por defecto (captura z.png) si está activa la pestaña
   useEffect(() => {
+    if (!isActiveTab) {
+      if (liveVideoRef.current) {
+        try { liveVideoRef.current.pause(); } catch {}
+      }
+      return;
+    }
+
     if (liveVideoRef.current) {
       try {
         liveVideoRef.current.load();
+        const shouldMute = Boolean(isPresenterCameraAudioMuted || channelVolume === 0);
+        liveVideoRef.current.muted = shouldMute;
+        liveVideoRef.current.volume = shouldMute ? 0 : Math.max(0.2, (channelVolume || 80) / 100);
         const p = liveVideoRef.current.play();
         if (p !== undefined) {
           p.catch(() => {
+            // Si el navegador bloquea autoplay con sonido hasta el primer clic, iniciamos silenciado y se desmuteará al interactuar
             if (liveVideoRef.current) {
               liveVideoRef.current.muted = true;
               liveVideoRef.current.play().catch(() => {});
@@ -1657,7 +2018,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         }
       } catch (e) {}
     }
-  }, [currentChannel]);
+
+    // Desmutear automáticamente al primer clic/interacción del usuario si el navegador lo bloqueó (solo en pestaña activa)
+    const handleFirstGestureUnmute = () => {
+      if (!isActiveTab) return;
+      if (liveVideoRef.current && !isPresenterCameraAudioMuted && channelVolume > 0) {
+        liveVideoRef.current.muted = false;
+        liveVideoRef.current.volume = Math.max(0.2, (channelVolume || 80) / 100);
+        liveVideoRef.current.play().catch(() => {});
+      }
+    };
+    window.addEventListener('click', handleFirstGestureUnmute, { once: true });
+    window.addEventListener('touchstart', handleFirstGestureUnmute, { once: true });
+    return () => {
+      window.removeEventListener('click', handleFirstGestureUnmute);
+      window.removeEventListener('touchstart', handleFirstGestureUnmute);
+    };
+  }, [currentChannel, activeFinanzasSessionIndex, isActiveTab]);
 
   const handleVolumeWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -1923,12 +2300,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     setIsPresenterLiveMicActive(!isMutedEffective);
     if (isMutedEffective) {
       stopLucasTorresSpeech();
-      if (liveVideoRef.current) {
-        liveVideoRef.current.muted = true;
-        liveVideoRef.current.volume = 0;
-      }
     }
-  }, [isPresenterCameraAudioMuted, isMuted, isBroadcastMicOn]);
+    if (liveVideoRef.current) {
+      const isVidMuted = Boolean(isPresenterCameraAudioMuted || channelVolume === 0);
+      liveVideoRef.current.muted = isVidMuted;
+      liveVideoRef.current.volume = isVidMuted ? 0 : Math.max(0.2, (channelVolume || 80) / 100);
+    }
+  }, [isPresenterCameraAudioMuted, isMuted, isBroadcastMicOn, channelVolume]);
 
   const handleTogglePresenterLiveMic = (e?: React.MouseEvent) => {
     if (e) {
@@ -2606,10 +2984,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     );
     if (!isMicOn) {
       stopLucasTorresSpeech();
-      if (liveVideoRef.current) {
-        liveVideoRef.current.muted = true;
-        liveVideoRef.current.volume = 0;
-      }
     } else {
       if (isSpeechActiveRef.current && !window.speechSynthesis?.speaking) {
         speakLucasTorresSegment();
@@ -2692,11 +3066,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (fee === 10000) return 'ROUND PRIVATE EQUITY JEWELS 💎';
       return 'ROUND JEWELLERY & LUXURY ASSETS 💎';
     }
-    if (activeChan === 'Catwalk') {
-      if (fee === 10) return 'ROUND CATWALK PASARELA 👠';
-      if (fee === 100) return 'ROUND MILAN CATWALK 👠';
-      if (fee === 1000) return 'ROUND HAUTE CATWALK 👠';
-      return 'ROUND CATWALK & PASARELA 👠';
+    if (activeChan === 'Catwalk' || activeChan === 'Casting') {
+      if (fee === 10) return 'ROUND CASTING PASARELA 👠';
+      if (fee === 100) return 'ROUND MILAN CASTING 👠';
+      if (fee === 1000) return 'ROUND HAUTE CASTING 👠';
+      return 'ROUND CASTING & AUDICIONES 👠';
+    }
+    if (activeChan === 'Luxury') {
+      if (fee === 10) return 'ROUND LUXURY LIFESTYLE 🍸';
+      if (fee === 100) return 'ROUND HIGH LUXURY CLUB 🍸';
+      if (fee === 1000) return 'ROUND VIP PRIVATE LUXURY 🍸';
+      return 'ROUND LUXURY & EXCELLENCE 🍸';
+    }
+    if (activeChan === 'Interview') {
+      if (fee === 10) return 'ROUND INTERVIEW & CHAT 🎙️';
+      if (fee === 100) return 'ROUND CELEBRITY INTERVIEW 🎙️';
+      if (fee === 1000) return 'ROUND EXCLUSIVE TALK SHOW 🎙️';
+      return 'ROUND INTERVIEW & PRENSA 🎙️';
     }
     if (activeChan === 'Fitnes') {
       return 'ROUND FITNES & ACTIVEWEAR 💪';
@@ -2743,8 +3129,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       list = [...FASHION_USERS];
     } else if (activeChan === 'Modelos') {
       list = [...MODELOS_USERS];
-    } else if (activeChan === 'Catwalk') {
+    } else if (activeChan === 'Catwalk' || activeChan === 'Casting') {
       list = [...CATWALK_USERS];
+    } else if (activeChan === 'Luxury') {
+      list = [...LUXURY_USERS];
+    } else if (activeChan === 'Interview') {
+      list = [...INTERVIEW_USERS];
     } else if (activeChan === 'Investors') {
       list = [...INVERSORES_USERS.slice(0, 10)];
     } else if (activeChan === 'BackStage') {
@@ -3017,18 +3407,34 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     const container = feedContainerRef.current;
     const containerCenter = container.scrollTop + container.clientHeight / 2;
 
-    activeSessionsOnly.forEach((sess, idx) => {
-      const cardEl = document.getElementById(`tiktok-round-card-${sess.id}`);
-      if (cardEl) {
-        const top = cardEl.offsetTop;
-        const bottom = top + cardEl.offsetHeight;
-        if (containerCenter >= top && containerCenter <= bottom) {
-          if (activeFinanzasSessionIndex !== idx) {
-            setActiveFinanzasSessionIndex(idx);
+    if (currentChannel === 'Finanzas') {
+      activeSessionsOnly.forEach((sess, idx) => {
+        const cardEl = document.getElementById(`tiktok-round-card-${sess.id}`);
+        if (cardEl) {
+          const top = cardEl.offsetTop;
+          const bottom = top + cardEl.offsetHeight;
+          if (containerCenter >= top && containerCenter <= bottom) {
+            if (activeFinanzasSessionIndex !== idx) {
+              setActiveFinanzasSessionIndex(idx);
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      const vids = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
+      vids.forEach((vid, idx) => {
+        const cardEl = document.getElementById(`tiktok-round-card-multimedia-${vid.id}`);
+        if (cardEl) {
+          const top = cardEl.offsetTop;
+          const bottom = top + cardEl.offsetHeight;
+          if (containerCenter >= top && containerCenter <= bottom) {
+            if (activeChannelVideoIdx !== idx) {
+              setActiveChannelVideoIdx(idx);
+            }
+          }
+        }
+      });
+    }
   };
 
   // Programmatic scroll to next / prev round
@@ -3294,10 +3700,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 { id: 'Modelos', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309]', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-600/30' },
                 { id: 'BackStage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2]', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-md' },
                 { id: 'Investors', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf]', activeBg: 'bg-purple-600 text-white border-purple-500 shadow-md' },
-                { id: 'Catwalk', label: 'Catwalk 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed]', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-md' },
+                { id: 'Casting', label: 'Casting 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed]', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-md' },
                 { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669]', activeBg: 'bg-emerald-600 text-white border-emerald-500 shadow-md' },
                 { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48]', activeBg: 'bg-rose-600 text-white border-rose-500 shadow-md' },
                 { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04]', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-md' },
+                { id: 'Luxury', label: 'Luxury 🍸', bg: 'bg-[#fff7ed] text-[#c2410c]', activeBg: 'bg-gradient-to-r from-amber-600 to-orange-600 text-white border-orange-500 shadow-md' },
+                { id: 'Interview', label: 'Interview 🎙️', bg: 'bg-[#f0fdf4] text-[#15803d]', activeBg: 'bg-emerald-700 text-white border-emerald-600 shadow-md' },
                 { id: 'Todos', label: 'Todos 🌍', bg: 'bg-slate-800 text-slate-300', activeBg: 'bg-slate-700 text-white border-slate-500 shadow-md' }
               ].map(cat => {
                 const isActive = (currentChannel || 'Finanzas') === cat.id;
@@ -3360,26 +3768,63 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     );
   };
 
-  // 🎬 Renderizador del Feed de Vídeos del Canal (Fashion, Runway, BackStage, etc.)
-  // Cero rondas, únicamente vídeos subidos por los usuarios desde la página z.png con reproductor vertical TikTok/Reels
-  const renderMultimediaChannelVideoFeed = () => {
-    const videos = channelUploadedVideos;
-    const currentVid = videos[activeChannelVideoIdx] || videos[0] || DEFAULT_FASHION_PRESETS[0];
+  // 🎬 Renderizador de Pantalla Individual para cada Vídeo de Canal (Fashion, Runway, BackStage, etc.)
+  // Cada vídeo se visualiza en una pantalla independiente (separadas por 3cm idéntico a las rondas de image.png)
+  const renderSingleMultimediaVideoScreen = (
+    currentVid: ChannelUploadedVideoItem,
+    vidIdx: number,
+    videos: ChannelUploadedVideoItem[]
+  ) => {
+    const isCardActive = vidIdx === activeChannelVideoIdx;
     const likesData = channelVideoLikesMap[currentVid.id] || { count: currentVid.likes || 120, userLiked: Boolean(currentVid.isLiked) };
     const commentsList = channelVideoCommentsMap[currentVid.id] || currentVid.comments || [];
     const isFollowed = channelFollowedCreatorsMap[currentVid.username] || currentVid.isLiked;
+    const isCardCommentsOpen = channelVideoCommentsOpen && (activeCommentsVideoId === currentVid.id || (!activeCommentsVideoId && isCardActive));
+    const isCardHeartHovered = hoveredHeartVideoId === currentVid.id;
+    const isCardActionsHovered = hoveredActionsVideoId === currentVid.id || (isChannelActionsHovered && isCardActive);
+    const isCardVolumeHovered = hoveredVolumeVideoId === currentVid.id || (isChannelVolumeHovered && isCardActive);
+    const cardProgress = channelVideosProgressMap[currentVid.id] ?? (isCardActive ? channelVideoProgress : 0);
+    const isCardPaused = userPausedVideosMap[currentVid.id] ?? (isCardActive ? isUserPaused : false);
+    const overlayId = `fashion-overlay-${currentVid.id}`;
 
     return (
       <div
-        key={`multimedia-feed-wrapper-${currentChannel}`}
-        id={`tiktok-round-card-multimedia-${currentChannel}`}
-        className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[580px] my-0 py-0 sm:py-0.5 relative px-0 sm:px-2 overflow-x-hidden h-full max-md:h-[100dvh] min-h-[calc(100dvh-20px)]"
+        key={`multimedia-feed-card-${currentVid.id}`}
+        id={`tiktok-round-card-multimedia-${currentVid.id}`}
+        className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[500px] my-0 py-1 sm:py-2 relative px-0 sm:px-2 overflow-x-hidden min-h-[calc(660px+4cm)] max-h-[calc(680px+4cm)]"
+        style={{ minHeight: 'calc(660px + 4cm)', maxHeight: 'calc(680px + 4cm)' }}
       >
-        {/* 📦 Relative anchor for the channel card and its external navigator */}
-        <div className="relative flex items-center justify-center w-full max-w-[430px] md:max-w-[440px] overflow-x-hidden lg:overflow-x-visible h-full max-md:h-[100dvh]">
-          {/* 📱 Smartphone video frame container styled matching z.png & image.png */}
+        {/* 📦 Relative anchor for the channel card and its external navigator - 4cm más larga */}
+        <div 
+          className="relative flex items-center justify-center w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] overflow-x-hidden lg:overflow-x-visible h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)]"
+          style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
+        >
+          {/* 📱 Smartphone video frame container styled matching z.png & image.png - 4cm más larga sin tocar ancho */}
           <div
-            ref={channelVideoCardRef}
+            ref={(el) => {
+              if (isCardActive) {
+                channelVideoCardRef.current = el;
+              }
+            }}
+            onMouseEnter={() => {
+              const el = videoRefsMap.current[currentVid.id];
+              if (el && el.muted && isCardActive) {
+                el.muted = false;
+                el.volume = Math.max(0.1, (channelVideoVolume || 88) / 100);
+                setIsChannelVideoAudioMuted(false);
+              }
+            }}
+            onClick={() => {
+              if (activeChannelVideoIdx !== vidIdx) {
+                setActiveChannelVideoIdx(vidIdx);
+              }
+              const el = videoRefsMap.current[currentVid.id];
+              if (el && el.muted) {
+                el.muted = false;
+                el.volume = Math.max(0.1, (channelVideoVolume || 88) / 100);
+                setIsChannelVideoAudioMuted(false);
+              }
+            }}
             onWheel={(e) => {
               const now = Date.now();
               if (now - lastChannelWheelTimeRef.current < 280) return;
@@ -3392,8 +3837,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 }
               }
             }}
-            className="w-full max-w-full sm:max-w-[420px] md:max-w-[430px] h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] sm:max-h-[820px] bg-[#070b14] border-0 sm:border border-black rounded-none sm:rounded-[36px] md:rounded-[44px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between box-border select-none"
-            id="multimedia-video-feed-card"
+            className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border border-slate-800 rounded-3xl shadow-xl overflow-hidden relative flex flex-col justify-between box-border select-none"
+            style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
+            id={`multimedia-video-feed-card-${currentVid.id}`}
           >
             {/* 📱 Subtle top speaker notch */}
             <div className="w-16 h-1 bg-white/30 rounded-full mx-auto mt-1.5 mb-0.5 opacity-70 shrink-0 pointer-events-none z-40" />
@@ -3401,12 +3847,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Despliega las opciones de los canales de la captura z.png al pasar el puntero) */}
             <div 
               className="absolute top-0 inset-x-0 h-24 sm:h-28 z-40 pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/top-margin-sensor select-none"
-              id="multimedia-top-margin-hover-sensor"
-              onMouseEnter={() => handleMouseEnterRonda('fashion-overlay')}
+              id={`multimedia-top-margin-hover-sensor-${currentVid.id}`}
+              onMouseEnter={() => handleMouseEnterRonda(overlayId)}
               onMouseLeave={handleMouseLeaveRonda}
               onClick={(e) => {
                 e.stopPropagation();
-                setActiveChannelsMenuSessionId(prev => prev === 'fashion-overlay' ? null : 'fashion-overlay');
+                setActiveChannelsMenuSessionId(prev => prev === overlayId ? null : overlayId);
               }}
               title="Pasa el puntero por la parte superior para desplegar las opciones de los canales"
             >
@@ -3415,45 +3861,112 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             </div>
 
             {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (Strictly matching image.png & z.png) */}
-            {renderChannelsOverlay({ id: 'fashion-overlay' })}
+            {renderChannelsOverlay({ id: overlayId })}
 
             {/* 📹 Main Fullscreen Vertical Video Element */}
             <div
-              className="absolute inset-0 w-full h-full cursor-pointer overflow-hidden bg-black flex items-center justify-center"
-              onClick={() => {
-                if (channelVideoRef.current) {
-                  if (isChannelVideoPlaying) {
-                    channelVideoRef.current.pause();
-                    setIsChannelVideoPlaying(false);
-                  } else {
-                    channelVideoRef.current.play().catch(() => {});
-                    setIsChannelVideoPlaying(true);
+              className="absolute inset-0 w-full h-full cursor-pointer overflow-hidden bg-black flex items-center justify-center select-none"
+              onClick={(e) => {
+                const now = Date.now();
+                const diff = now - channelVideoLastClickTimeRef.current;
+                if (diff < 350) {
+                  e.stopPropagation();
+                  channelVideoLastClickTimeRef.current = 0;
+                  const el = videoRefsMap.current[currentVid.id];
+                  if (el) {
+                    if (el.paused) {
+                      el.play().catch(() => {});
+                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                    } else {
+                      el.pause();
+                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: true }));
+                    }
+                  }
+                } else {
+                  channelVideoLastClickTimeRef.current = now;
+                  if (activeChannelVideoIdx !== vidIdx) {
+                    setActiveChannelVideoIdx(vidIdx);
                   }
                 }
               }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                channelVideoLastClickTimeRef.current = 0;
+                const el = videoRefsMap.current[currentVid.id];
+                if (el) {
+                  if (el.paused) {
+                    el.play().catch(() => {});
+                    setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                  } else {
+                    el.pause();
+                    setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: true }));
+                  }
+                }
+              }}
+              title="Haz doble clic en el centro del vídeo para pausar o reproducir"
+              id={`multimedia-channel-video-container-${currentVid.id}`}
             >
               <video
-                ref={channelVideoRef}
+                ref={(el) => {
+                  if (el) {
+                    videoRefsMap.current[currentVid.id] = el;
+                    if (isCardActive) {
+                      channelVideoRef.current = el;
+                    }
+                  }
+                }}
                 src={currentVid.videoUrl}
-                autoPlay
+                autoPlay={isCardActive}
                 loop
                 playsInline
-                muted={isChannelVideoAudioMuted}
+                muted={isChannelVideoAudioMuted || !isCardActive}
+                onPlay={() => {
+                  if (isCardActive) setIsChannelVideoPlaying(true);
+                }}
                 onTimeUpdate={() => {
-                  if (channelVideoRef.current) {
-                    const cur = channelVideoRef.current.currentTime;
-                    const dur = channelVideoRef.current.duration || 1;
-                    setChannelVideoProgress((cur / dur) * 100);
+                  const el = videoRefsMap.current[currentVid.id];
+                  if (el) {
+                    const cur = el.currentTime;
+                    const dur = el.duration || 1;
+                    const prog = (cur / dur) * 100;
+                    setChannelVideosProgressMap(prev => ({ ...prev, [currentVid.id]: prog }));
+                    if (isCardActive) {
+                      setChannelVideoProgress(prog);
+                    }
                   }
                 }}
                 className="w-full h-full object-cover select-none"
               />
 
-              {/* Pause icon overlay */}
-              {!isChannelVideoPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none animate-fade-in z-20">
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-2xl">
-                    <Play className="w-8 h-8 fill-white text-white translate-x-0.5" />
+              {/* ⏸️ ICONO DE PLAY EN EL CENTRO DE LA PANTALLA CUANDO ESTÁ EN PAUSA */}
+              {isCardPaused && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px] z-30 transition-all duration-300 animate-fade-in cursor-pointer select-none"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const el = videoRefsMap.current[currentVid.id];
+                    if (el) {
+                      el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
+                      el.volume = isChannelVideoAudioMuted ? 0 : Math.max(0.1, (channelVideoVolume || 88) / 100);
+                      el.play().catch(() => {});
+                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                    }
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    const el = videoRefsMap.current[currentVid.id];
+                    if (el) {
+                      el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
+                      el.volume = isChannelVideoAudioMuted ? 0 : Math.max(0.1, (channelVideoVolume || 88) / 100);
+                      el.play().catch(() => {});
+                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                    }
+                  }}
+                  title="Haz clic o doble clic para reanudar el vídeo"
+                  id={`multimedia-channel-paused-play-overlay-${currentVid.id}`}
+                >
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black/65 backdrop-blur-md flex items-center justify-center border-2 border-white/90 shadow-[0_0_35px_rgba(255,255,255,0.4),0_15px_35px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 transition-all duration-200 group">
+                    <Play className="w-10 h-10 sm:w-12 sm:h-12 fill-white text-white translate-x-1 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] group-hover:scale-105 transition-transform" />
                   </div>
                 </div>
               )}
@@ -3466,20 +3979,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             {/* 🔝 CABECERA SUPERIOR: CANAL Y BOTONES DE ACCIÓN (Matching image.png - Hover abre opciones de canales z.png) */}
             <div 
               className="relative z-30 w-full pt-2 pb-1.5 px-3 flex items-center justify-between gap-1.5 select-none pointer-events-auto"
-              onMouseEnter={() => handleMouseEnterRonda('fashion-overlay')}
+              onMouseEnter={() => handleMouseEnterRonda(overlayId)}
               onMouseLeave={handleMouseLeaveRonda}
             >
               {/* Channel Selector Pill Button (Clicking opens channels menu overlay from image.png) */}
               <button
                 type="button"
-                onMouseEnter={() => handleMouseEnterRonda('fashion-overlay')}
+                onMouseEnter={() => handleMouseEnterRonda(overlayId)}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveChannelsMenuSessionId('fashion-overlay');
+                  setActiveChannelsMenuSessionId(overlayId);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0B0F19]/90 hover:bg-[#181d2a] border border-rose-500/70 text-white shadow-lg active:scale-95 transition cursor-pointer backdrop-blur-md"
                 title="Cambiar de canal en directo (captura image.png y z.png)"
-                id="btn-open-channels-menu-multimedia"
+                id={`btn-open-channels-menu-multimedia-${currentVid.id}`}
               >
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
                 <span className="text-[11px] font-black uppercase tracking-wider text-rose-300">
@@ -3487,204 +4000,305 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 </span>
                 <span className="text-[9px] text-rose-400">▼</span>
               </button>
+
+              {/* Badge de número de pantalla / vídeo */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white font-mono text-[9px] font-bold">
+                <span className="text-rose-400">PANTALLA</span>
+                <span className="text-white font-black">{vidIdx + 1}/{videos.length}</span>
+              </div>
             </div>
 
-            {/* 📱 BARRA LATERAL DERECHA ESTILO TIKTOK: Me gusta, Comentarios, Compartir - Centrada a la mitad de la página */}
-            <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-3 select-none pointer-events-auto">
-              {/* Creator Avatar with follow (+) badge */}
-              <div className="relative group cursor-pointer mb-1">
-                <img
-                  src={currentVid.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
-                  alt={currentVid.name}
-                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white shadow-xl transition-transform group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
+            {/* 🔊 ZONA SENSIBLE AL RATÓN EN LA PARTE IZQUIERDA DEL CANAL Y BARRA DE VOLUMEN (MÁS FINA Y LARGA) */}
+            <div 
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[380px] sm:h-[460px] w-28 sm:w-36 z-30 flex items-center pl-2 sm:pl-3 group/channelvolzone pointer-events-auto select-none"
+              id={`multimedia-channel-volume-zone-${currentVid.id}`}
+              onMouseEnter={() => {
+                setHoveredVolumeVideoId(currentVid.id);
+                setIsChannelVolumeHovered(true);
+              }}
+              onMouseLeave={() => {
+                setHoveredVolumeVideoId(null);
+                if (!isDraggingChannelVolume) setIsChannelVolumeHovered(false);
+              }}
+              onWheel={handleChannelVolumeWheel}
+            >
+              {/* Cápsula de volumen vertical más fina y larga - Aparece al pasar el puntero por la izquierda */}
+              <div 
+                className={`flex flex-col items-center bg-[#070b14]/95 backdrop-blur-2xl border-[1.5px] border-[#00f2fe]/80 rounded-full py-2.5 px-1 sm:px-1.5 shadow-[0_0_20px_rgba(0,242,254,0.4),0_15px_40px_rgba(0,0,0,0.92)] hover:border-[#00f2fe] hover:shadow-[0_0_25px_rgba(0,242,254,0.65)] transition-all duration-300 transform select-none cursor-pointer ${
+                  (isDraggingChannelVolume && isCardActive) || isCardVolumeHovered
+                    ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto ring-1 ring-[#00f2fe]/40'
+                    : 'opacity-0 -translate-x-3 scale-95 pointer-events-none group-hover/channelvolzone:opacity-100 group-hover/channelvolzone:translate-x-0 group-hover/channelvolzone:scale-100 group-hover/channelvolzone:pointer-events-auto'
+                }`}
+                onPointerDown={handleChannelVolumePointerDown}
+                onPointerMove={handleChannelVolumePointerMove}
+                onPointerUp={handleChannelVolumePointerUp}
+                title={`Volumen: ${isChannelVideoAudioMuted ? 0 : channelVideoVolume}% (Arrastra o usa la rueda del ratón)`}
+                id={`multimedia-channel-volume-bar-${currentVid.id}`}
+              >
+                {/* Altavoz Cian / Mute */}
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setChannelFollowedCreatorsMap(prev => ({ ...prev, [currentVid.username]: !isFollowed }));
-                  }}
-                  className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-black border border-slate-900 shadow-md transition-all ${
-                    isFollowed ? 'bg-emerald-500 scale-90' : 'bg-[#fe2c55] hover:scale-110 active:scale-90'
-                  }`}
-                  title={isFollowed ? "Siguiendo" : "Seguir a este creador"}
+                  onClick={handleToggleChannelVideoMute}
+                  className="p-0.5 text-[#00f2fe] hover:scale-110 active:scale-90 transition cursor-pointer"
+                  title={isChannelVideoAudioMuted || channelVideoVolume === 0 ? "Activar audio" : "Silenciar audio"}
                 >
-                  {isFollowed ? '✓' : '+'}
+                  {isChannelVideoAudioMuted || channelVideoVolume === 0 ? (
+                    <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.7)]" />
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.8)]" />
+                  )}
                 </button>
-              </div>
 
-              {/* Like / Corazón con Glosario de Emojis al pasar el puntero (captura image.png sobre z.png) */}
-              <div 
-                className="flex flex-col items-center relative group/channel-heart-zone"
-                onMouseEnter={handleChannelHeartMouseEnter}
-                onMouseLeave={handleChannelHeartMouseLeave}
-              >
-                {/* 💖 Glosario de 30 Emojis que se abre al pasar el puntero por encima del corazón (captura image.png) */}
+                {/* Barra vertical de volumen (Track) - Más fina (w-1.5 sm:w-2) y más larga (h-36 sm:h-44) */}
                 <div 
-                  className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[500] w-[284px] min-w-[284px] max-w-[284px] box-border bg-[#090d16]/98 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.98)] ring-1 ring-white/10 select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-5 transition-all duration-200 pointer-events-auto ${
-                    isChannelHeartHovered
-                      ? 'opacity-100 scale-100 pointer-events-auto flex flex-col'
-                      : 'opacity-0 scale-95 pointer-events-none hidden group-hover/channel-heart-zone:flex group-hover/channel-heart-zone:flex-col group-hover/channel-heart-zone:opacity-100 group-hover/channel-heart-zone:scale-100 group-hover/channel-heart-zone:pointer-events-auto'
-                  }`}
-                  id="tiktok-heart-hover-emoji-glossary"
-                  onClick={(e) => e.stopPropagation()}
+                  data-channel-volume-track="true"
+                  ref={channelVolumeTrackRef}
+                  className="relative w-1.5 sm:w-2 h-36 sm:h-44 bg-[#0a1526]/95 border border-slate-700/80 rounded-full cursor-pointer overflow-hidden my-1.5 flex flex-col justify-end shadow-inner touch-none select-none"
+                  title={`Volumen: ${isChannelVideoAudioMuted ? 0 : channelVideoVolume}%`}
                 >
-                  {/* 🌐 Traductor a Inglés en el Glosario de Emojis (solicitado sobre captura image.png) */}
-                  <div className="flex items-center justify-between px-1 pb-2 mb-1.5 border-b border-white/10">
-                    <div className="flex items-center gap-1.5">
-                      <Globe className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                      <span className="text-[10px] font-black uppercase text-slate-200 tracking-wider">
-                        {isEmojiEnglish ? 'ENGLISH TRANSLATOR' : 'TRADUCTOR A INGLÉS'}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsEmojiEnglish(prev => !prev);
-                      }}
-                      className="px-2 py-0.5 rounded-full text-[9px] font-black border transition active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40"
-                      title="Activar o desactivar traductor a inglés"
-                    >
-                      <span className="text-[10px]">🌐</span>
-                      <span>{isEmojiEnglish ? 'EN ✓' : 'Inglés'}</span>
-                    </button>
-                  </div>
-
-                  {/* Rejilla de 30 emojis (6 columnas x 5 filas) idéntica a la captura image.png */}
-                  <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
-                    {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => {
-                      const englishName = EMOJI_ENGLISH_NAMES[emoji] || emoji;
-                      return (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onMouseEnter={() => setHoveredEmojiName(englishName)}
-                          onMouseLeave={() => setHoveredEmojiName(null)}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            currentVid.isLiked = true;
-                            setChannelVideoLikesMap(prev => {
-                              const cur = prev[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
-                              return {
-                                ...prev,
-                                [currentVid.id]: {
-                                  count: cur.userLiked ? cur.count : cur.count + 1,
-                                  userLiked: true
-                                }
-                              };
-                            });
-                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                              detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
-                            }));
-                            triggerContinuousRain(emoji);
-                            setIsChannelHeartHovered(false);
-                          }}
-                          className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
-                          title={isEmojiEnglish ? `${emoji} ${englishName} (English)` : `Reaccionar con ${emoji}`}
-                        >
-                          {emoji}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Pie informativo de traducción activa */}
-                  <div className="mt-1.5 pt-1.5 border-t border-white/10 px-1 flex items-center justify-between text-[9px] text-slate-300 font-mono">
-                    <span className="truncate text-rose-300 font-bold">
-                      {hoveredEmojiName ? `English: ${hoveredEmojiName}` : isEmojiEnglish ? 'Traducido a Inglés ✓' : 'Traductor disponible'}
-                    </span>
-                    <span className="text-[8px] text-slate-400 uppercase font-black">30 Emojis</span>
-                  </div>
+                  {/* Relleno cian/turquesa brillante desde abajo */}
+                  <div 
+                    className={`w-full rounded-full transition-all duration-75 ${
+                      isChannelVideoAudioMuted || channelVideoVolume === 0
+                        ? 'bg-rose-500/40'
+                        : 'bg-gradient-to-t from-emerald-400 via-teal-300 to-[#00f2fe] shadow-[0_0_12px_rgba(0,242,254,0.9)]'
+                    }`}
+                    style={{ height: `${isChannelVideoAudioMuted ? 0 : channelVideoVolume}%` }}
+                  />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleChannelVideoLike(currentVid);
-                  }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-75 cursor-pointer backdrop-blur-md ${
-                    likesData.userLiked
-                      ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
-                      : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
-                  }`}
-                  title={likesData.userLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
-                >
-                  <Heart className={`w-5 h-5 ${likesData.userLiked ? 'fill-white text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.9)] animate-heart-beat' : 'text-white'}`} />
-                </button>
-                <span className={`text-[10.5px] sm:text-xs font-black mt-1 drop-shadow-md ${likesData.userLiked ? 'text-[#fe2c55] font-black' : 'text-white'}`}>
-                  {likesData.count > 999 ? `${(likesData.count / 1000).toFixed(1)}K` : likesData.count}
+                {/* Porcentaje en texto: 88%, etc. */}
+                <span className="text-[7.5px] sm:text-[8px] font-mono font-black text-white tracking-tighter drop-shadow-md select-none mt-0.5">
+                  {isChannelVideoAudioMuted ? '0%' : `${channelVideoVolume}%`}
                 </span>
               </div>
+            </div>
 
-              {/* Comentarios */}
-              <div className="flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setChannelVideoCommentsOpen(!channelVideoCommentsOpen);
+            {/* 📱 ZONA SENSIBLE AL RATÓN EN EL LADO DERECHO DEL CANAL Y BARRA DE ACCIÓN TIKTOK (CAPTURA IMAGEN.PNG) */}
+            <div 
+              className="absolute right-0 top-1/2 -translate-y-1/2 h-[420px] sm:h-[500px] w-24 sm:w-32 z-30 flex items-center justify-end pr-2 sm:pr-3 group/channelactionszone pointer-events-auto select-none"
+              id={`multimedia-channel-actions-zone-${currentVid.id}`}
+              onMouseEnter={() => {
+                setHoveredActionsVideoId(currentVid.id);
+                setIsChannelActionsHovered(true);
+              }}
+              onMouseLeave={() => {
+                setHoveredActionsVideoId(null);
+                setIsChannelActionsHovered(false);
+              }}
+            >
+              {/* Barra lateral derecha estilo TikTok - Aparece solo al pasar el puntero por el lado derecho */}
+              <div 
+                className={`flex flex-col items-center gap-3 transition-all duration-300 transform select-none ${
+                  isCardActionsHovered || isCardHeartHovered || isCardCommentsOpen
+                    ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
+                    : 'opacity-0 translate-x-4 scale-95 pointer-events-none group-hover/channelactionszone:opacity-100 group-hover/channelactionszone:translate-x-0 group-hover/channelactionszone:scale-100 group-hover/channelactionszone:pointer-events-auto'
+                }`}
+                id={`multimedia-channel-actions-bar-${currentVid.id}`}
+              >
+                {/* Creator Avatar with follow (+) badge */}
+                <div className="relative group cursor-pointer mb-1">
+                  <img
+                    src={currentVid.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                    alt={currentVid.name}
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white shadow-xl transition-transform group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setChannelFollowedCreatorsMap(prev => ({ ...prev, [currentVid.username]: !isFollowed }));
+                    }}
+                    className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-black border border-slate-900 shadow-md transition-all ${
+                      isFollowed ? 'bg-emerald-500 scale-90' : 'bg-[#fe2c55] hover:scale-110 active:scale-90'
+                    }`}
+                    title={isFollowed ? "Siguiendo" : "Seguir a este creador"}
+                  >
+                    {isFollowed ? '✓' : '+'}
+                  </button>
+                </div>
+
+                {/* Like / Corazón con Glosario de Emojis al pasar el puntero (captura image.png sobre z.png) */}
+                <div 
+                  className="flex flex-col items-center relative group/channel-heart-zone"
+                  onMouseEnter={() => {
+                    setHoveredHeartVideoId(currentVid.id);
+                    handleChannelHeartMouseEnter();
                   }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
-                    channelVideoCommentsOpen
-                      ? 'bg-rose-600 text-white ring-2 ring-rose-400'
-                      : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
-                  }`}
-                  title="Comentarios"
-                >
-                  <MessageCircle className="w-5 h-5 text-white" />
-                </button>
-                <span className="text-[10px] font-black text-white mt-1 drop-shadow-md">
-                  {commentsList.length}
-                </span>
-              </div>
-
-              {/* Compartir */}
-              <div className="flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShareChannelVideo(currentVid);
+                  onMouseLeave={() => {
+                    setHoveredHeartVideoId(null);
+                    handleChannelHeartMouseLeave();
                   }}
-                  className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 border border-white/20 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md"
-                  title="Compartir enlace de vídeo"
                 >
-                  <Share2 className="w-4 h-4 text-white" />
-                </button>
-                <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
-                  {currentVid.shares || 48}
-                </span>
-              </div>
+                  {/* 💖 Glosario de 30 Emojis que se abre al pasar el puntero por encima del corazón (captura image.png) */}
+                  <div 
+                    className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[500] w-[284px] min-w-[284px] max-w-[284px] box-border bg-[#090d16]/98 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.98)] ring-1 ring-white/10 select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-5 transition-all duration-200 pointer-events-auto ${
+                      isCardHeartHovered
+                        ? 'opacity-100 scale-100 pointer-events-auto flex flex-col'
+                        : 'opacity-0 scale-95 pointer-events-none hidden group-hover/channel-heart-zone:flex group-hover/channel-heart-zone:flex-col group-hover/channel-heart-zone:opacity-100 group-hover/channel-heart-zone:scale-100 group-hover/channel-heart-zone:pointer-events-auto'
+                    }`}
+                    id={`tiktok-heart-hover-emoji-glossary-${currentVid.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* 🌐 Traductor a Inglés en el Glosario de Emojis (solicitado sobre captura image.png) */}
+                    <div className="flex items-center justify-between px-1 pb-2 mb-1.5 border-b border-white/10">
+                      <div className="flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        <span className="text-[10px] font-black uppercase text-slate-200 tracking-wider">
+                          {isEmojiEnglish ? 'ENGLISH TRANSLATOR' : 'TRADUCTOR A INGLÉS'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEmojiEnglish(prev => !prev);
+                        }}
+                        className="px-2 py-0.5 rounded-full text-[9px] font-black border transition active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40"
+                        title="Activar o desactivar traductor a inglés"
+                      >
+                        <span className="text-[10px]">🌐</span>
+                        <span>{isEmojiEnglish ? 'EN ✓' : 'Inglés'}</span>
+                      </button>
+                    </div>
 
-              {/* Guardar / Bookmark */}
-              <div className="flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleBookmarkChannelVideo(currentVid);
-                  }}
-                  className={`w-10 h-10 rounded-full border text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
-                    (channelVideoFavoritesMap[currentVid.id]?.userFavorited ?? Boolean(currentVid.isFavorited))
-                      ? 'bg-amber-500/30 border-amber-400 text-amber-400 shadow-amber-500/30'
-                      : 'bg-black/50 hover:bg-black/70 border-white/20'
-                  }`}
-                  title="Guardar vídeo"
-                  id="btn-bookmark-channel-video"
-                >
-                  <Bookmark className={`w-4 h-4 ${(channelVideoFavoritesMap[currentVid.id]?.userFavorited ?? Boolean(currentVid.isFavorited)) ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
-                </button>
-                <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
-                  {channelVideoFavoritesMap[currentVid.id]?.count ?? (currentVid.favorites || 112)}
-                </span>
-              </div>
+                    {/* Rejilla de 30 emojis (6 columnas x 5 filas) idéntica a la captura image.png */}
+                    <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
+                      {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => {
+                        const englishName = EMOJI_ENGLISH_NAMES[emoji] || emoji;
+                        return (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onMouseEnter={() => setHoveredEmojiName(englishName)}
+                            onMouseLeave={() => setHoveredEmojiName(null)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              currentVid.isLiked = true;
+                              setChannelVideoLikesMap(prev => {
+                                const cur = prev[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
+                                return {
+                                  ...prev,
+                                  [currentVid.id]: {
+                                    count: cur.userLiked ? cur.count : cur.count + 1,
+                                    userLiked: true
+                                  }
+                                };
+                              });
+                              window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
+                              }));
+                              triggerContinuousRain(emoji);
+                              setIsChannelHeartHovered(false);
+                              setHoveredHeartVideoId(null);
+                            }}
+                            className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
+                            title={isEmojiEnglish ? `${emoji} ${englishName} (English)` : `Reaccionar con ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        );
+                      })}
+                    </div>
 
-              {/* Spinning Music Disc */}
-              <div className="w-9 h-9 rounded-full bg-black/80 border-2 border-slate-700/80 p-1 flex items-center justify-center shadow-xl animate-spin duration-[4000ms] pointer-events-none mt-1">
-                <Music className="w-4 h-4 text-[#fe2c55]" />
+                    {/* Pie informativo de traducción activa */}
+                    <div className="mt-1.5 pt-1.5 border-t border-white/10 px-1 flex items-center justify-between text-[9px] text-slate-300 font-mono">
+                      <span className="truncate text-rose-300 font-bold">
+                        {hoveredEmojiName ? `English: ${hoveredEmojiName}` : isEmojiEnglish ? 'Traducido a Inglés ✓' : 'Traductor disponible'}
+                      </span>
+                      <span className="text-[8px] text-slate-400 uppercase font-black">30 Emojis</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleChannelVideoLike(currentVid);
+                    }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-75 cursor-pointer backdrop-blur-md ${
+                      likesData.userLiked
+                        ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
+                        : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
+                    }`}
+                    title={likesData.userLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
+                  >
+                    <Heart className={`w-5 h-5 ${likesData.userLiked ? 'fill-white text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.9)] animate-heart-beat' : 'text-white'}`} />
+                  </button>
+                  <span className={`text-[10.5px] sm:text-xs font-black mt-1 drop-shadow-md ${likesData.userLiked ? 'text-[#fe2c55] font-black' : 'text-white'}`}>
+                    {likesData.count > 999 ? `${(likesData.count / 1000).toFixed(1)}K` : likesData.count}
+                  </span>
+                </div>
+
+                {/* Comentarios */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveCommentsVideoId(prev => (prev === currentVid.id && channelVideoCommentsOpen) ? null : currentVid.id);
+                      setChannelVideoCommentsOpen(prev => (activeCommentsVideoId === currentVid.id ? !prev : true));
+                    }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
+                      isCardCommentsOpen
+                        ? 'bg-rose-600 text-white ring-2 ring-rose-400'
+                        : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
+                    }`}
+                    title="Comentarios"
+                  >
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </button>
+                  <span className="text-[10px] font-black text-white mt-1 drop-shadow-md">
+                    {commentsList.length}
+                  </span>
+                </div>
+
+                {/* Compartir */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShareChannelVideo(currentVid);
+                    }}
+                    className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 border border-white/20 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md"
+                    title="Compartir enlace de vídeo"
+                  >
+                    <Share2 className="w-4 h-4 text-white" />
+                  </button>
+                  <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
+                    {currentVid.shares || 48}
+                  </span>
+                </div>
+
+                {/* Guardar / Bookmark */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleBookmarkChannelVideo(currentVid);
+                    }}
+                    className={`w-10 h-10 rounded-full border text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
+                      (channelVideoFavoritesMap[currentVid.id]?.userFavorited ?? Boolean(currentVid.isFavorited))
+                        ? 'bg-amber-500/30 border-amber-400 text-amber-400 shadow-amber-500/30'
+                        : 'bg-black/50 hover:bg-black/70 border-white/20'
+                    }`}
+                    title="Guardar vídeo"
+                    id={`btn-bookmark-channel-video-${currentVid.id}`}
+                  >
+                    <Bookmark className={`w-4 h-4 ${(channelVideoFavoritesMap[currentVid.id]?.userFavorited ?? Boolean(currentVid.isFavorited)) ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+                  </button>
+                  <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">
+                    {channelVideoFavoritesMap[currentVid.id]?.count ?? (currentVid.favorites || 112)}
+                  </span>
+                </div>
+
+                {/* Spinning Music Disc */}
+                <div className="w-9 h-9 rounded-full bg-black/80 border-2 border-slate-700/80 p-1 flex items-center justify-center shadow-xl animate-spin duration-[4000ms] pointer-events-none mt-1">
+                  <Music className="w-4 h-4 text-[#fe2c55]" />
+                </div>
               </div>
             </div>
 
@@ -3753,18 +4367,29 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div className="w-full bg-white/20 h-1 overflow-hidden relative z-30 shrink-0 cursor-pointer">
               <div
                 className="h-full bg-gradient-to-r from-rose-500 to-[#fe2c55] transition-all duration-150"
-                style={{ width: `${Math.min(100, Math.max(0, channelVideoProgress))}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, cardProgress))}%` }}
               />
             </div>
 
-            {/* 💬 Slide-up Comments Drawer (Fondo blanco y comentarios comenzando por abajo) */}
-            {channelVideoCommentsOpen && (
+            {/* 💬 Slide-up Comments Drawer */}
+            {isCardCommentsOpen && (
               <div
-                className="absolute inset-x-0 bottom-0 top-1/3 z-50 bg-white rounded-t-3xl border-t border-slate-200/90 shadow-[0_-15px_45px_rgba(0,0,0,0.35)] flex flex-col p-3.5 text-slate-900 animate-slide-up-tiktok pointer-events-auto"
+                className={`absolute inset-x-0 bottom-0 z-50 bg-white/98 backdrop-blur-md rounded-t-3xl border-t border-slate-200/90 shadow-[0_-15px_45px_rgba(0,0,0,0.45)] flex flex-col p-3 sm:p-3.5 text-slate-900 animate-slide-up-tiktok pointer-events-auto transition-all duration-300 ${
+                  commentsList.length === 0
+                    ? 'max-h-[22%] sm:max-h-[160px]'
+                    : commentsList.length === 1
+                    ? 'max-h-[30%] sm:max-h-[220px]'
+                    : commentsList.length === 2
+                    ? 'max-h-[40%] sm:max-h-[290px]'
+                    : commentsList.length === 3
+                    ? 'max-h-[50%] sm:max-h-[360px]'
+                    : 'top-1/3 max-h-[67%]'
+                }`}
                 onClick={(e) => e.stopPropagation()}
+                id={`channel-video-comments-drawer-${currentVid.id}`}
               >
                 {/* Header con título COMENTARIOS y botón cerrar */}
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
+                <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 shrink-0">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-rose-500" />
                     <span className="text-xs font-black uppercase tracking-wider text-slate-900">
@@ -3773,7 +4398,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setChannelVideoCommentsOpen(false)}
+                    onClick={() => {
+                      setChannelVideoCommentsOpen(false);
+                      setActiveCommentsVideoId(null);
+                      setChannelVideoReplyingTo(null);
+                      setShowChannelVideoEmojiPicker(false);
+                    }}
                     className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer active:scale-95"
                     title="Cerrar comentarios"
                   >
@@ -3781,27 +4411,56 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </button>
                 </div>
 
-                {/* List of comments - Comienzan por abajo del recuadro */}
-                <div className="flex-1 overflow-y-auto py-2 scrollbar-none pr-1 flex flex-col select-text">
+                {/* List of comments - Ocupa solo el espacio necesario */}
+                <div className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-slate-300 pr-1 flex flex-col select-text min-h-0">
                   {commentsList.length === 0 ? (
-                    <div className="text-center py-6 text-slate-400 text-xs mt-auto">
+                    <div className="text-center py-3 text-slate-400 text-xs my-auto">
                       Sé el primero en comentar este vídeo de {getChannelCleanName(currentChannel)}.
                     </div>
                   ) : (
-                    <div className="mt-auto space-y-2.5">
+                    <div className="space-y-2">
                       {commentsList.map((c: any) => (
-                        <div key={c.id} className="flex items-start gap-2.5 text-left">
+                        <div key={c.id} className="flex items-start gap-2 text-left group/comment-item">
                           <img
                             src={c.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'}
                             alt={c.user}
                             className="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-200 shadow-2xs mt-0.5"
                           />
-                          <div className="flex-1 min-w-0 bg-slate-50 hover:bg-slate-100/90 p-2.5 rounded-2xl border border-slate-200/80 shadow-3xs transition">
+                          <div className="flex-1 min-w-0 bg-slate-50 hover:bg-slate-100/90 p-2 sm:p-2.5 rounded-2xl border border-slate-200/80 shadow-3xs transition">
                             <div className="flex items-center justify-between gap-1 mb-0.5">
                               <span className="text-[11px] font-black text-rose-600 truncate">{c.user}</span>
-                              <span className="text-[9px] text-slate-400 font-mono shrink-0">{c.date}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[9px] text-slate-400 font-mono">{c.date}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteChannelVideoComment(currentVid.id, c.id)}
+                                  className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition cursor-pointer"
+                                  title="Eliminar comentario"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
                             </div>
+                            {c.replyTo && (
+                              <div className="text-[9px] text-slate-500 font-semibold mb-0.5 flex items-center gap-1">
+                                <span>↩️</span>
+                                <span>En respuesta a <span className="text-rose-600 font-bold">@{c.replyTo}</span></span>
+                              </div>
+                            )}
                             <p className="text-[11px] text-slate-800 break-words leading-snug font-medium">{c.text}</p>
+                            
+                            <div className="mt-1 flex items-center justify-end">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setChannelVideoReplyingTo({ id: c.id, user: c.user });
+                                }}
+                                className="text-[10px] text-slate-500 hover:text-rose-600 font-bold flex items-center gap-1 transition cursor-pointer"
+                                title={`Responder a @${c.user}`}
+                              >
+                                <span>↩ Responder</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -3809,21 +4468,65 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   )}
                 </div>
 
-                {/* Input box */}
-                <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2 shrink-0">
-                  <input
-                    type="text"
-                    value={channelVideoNewComment}
-                    onChange={(e) => setChannelVideoNewComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddChannelVideoComment(currentVid);
-                      }
-                    }}
-                    placeholder="Añadir comentario..."
-                    className="flex-1 bg-slate-100 border border-slate-200 text-slate-900 text-xs px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 placeholder:text-slate-400 transition"
-                  />
+                {channelVideoReplyingTo && (
+                  <div className="flex items-center justify-between bg-rose-50 px-2 py-1 rounded-lg border border-rose-200 text-[10px] text-rose-700 font-semibold mb-1 shrink-0">
+                    <span>Respondiendo a <strong>@{channelVideoReplyingTo.user}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => setChannelVideoReplyingTo(null)}
+                      className="text-rose-500 hover:text-rose-800 text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-slate-100 flex items-center gap-2 shrink-0">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowChannelVideoEmojiPicker(!showChannelVideoEmojiPicker)}
+                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95 cursor-pointer text-sm"
+                      title="Insertar emoji rápido"
+                    >
+                      😊
+                    </button>
+
+                    {showChannelVideoEmojiPicker && (
+                      <div className="absolute bottom-10 left-0 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 grid grid-cols-5 gap-1.5 z-50">
+                        {['❤️', '🔥', '👏', '😍', '✨', '👗', '👠', '👑', '💯', '🙌'].map((em) => (
+                          <button
+                            key={em}
+                            type="button"
+                            onClick={() => {
+                              handleAddChannelVideoComment(currentVid, em);
+                              setShowChannelVideoEmojiPicker(false);
+                            }}
+                            className="text-lg hover:scale-125 transition active:scale-90 p-1 cursor-pointer"
+                          >
+                            {em}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 bg-slate-100 rounded-2xl flex items-center px-3 py-1.5 border border-slate-200 focus-within:border-rose-500 focus-within:bg-white transition min-w-0">
+                    <input
+                      type="text"
+                      placeholder="Añadir comentario..."
+                      value={channelVideoNewComment}
+                      onChange={(e) => setChannelVideoNewComment(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddChannelVideoComment(currentVid);
+                        }
+                      }}
+                      className="flex-1 bg-transparent text-slate-900 text-xs px-1.5 py-1 focus:outline-none placeholder:text-slate-400 min-w-0"
+                    />
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => handleAddChannelVideoComment(currentVid)}
@@ -3837,7 +4540,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               </div>
             )}
 
-            {/* Toast feedback for copying link */}
             {channelVideoShareToast && (
               <div className="absolute top-16 inset-x-4 z-50 bg-[#0d121f]/95 text-white px-3 py-2 rounded-xl border border-rose-500/80 shadow-2xl flex items-center justify-center gap-2 animate-fade-in text-xs font-bold pointer-events-none">
                 <span>{channelVideoShareToast}</span>
@@ -3848,14 +4550,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           {/* 🧭 NAVEGADOR VERTICAL DE VÍDEOS EN PANTALLAS GRANDES (Oculto en móvil y tablet) */}
           <div
             className="hidden lg:flex absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-2 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-3 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
-            id="floating-channel-videos-navigator"
+            id={`floating-channel-videos-navigator-${currentVid.id}`}
           >
             <button
               type="button"
-              disabled={activeChannelVideoIdx <= 0}
+              disabled={vidIdx <= 0}
               onClick={(e) => {
                 e.stopPropagation();
-                handlePrevChannelVideo();
+                if (vidIdx > 0) {
+                  const prevVid = videos[vidIdx - 1];
+                  setActiveChannelVideoIdx(vidIdx - 1);
+                  setChannelVideoProgress(0);
+                  setIsChannelVideoPlaying(true);
+                  setIsUserPaused(false);
+                  document.getElementById(`tiktok-round-card-multimedia-${prevVid.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
               }}
               className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
               title="Vídeo anterior (desplazar arriba)"
@@ -3866,16 +4575,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
               <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">VÍDEO</span>
               <span className="text-xs sm:text-[13px] font-black font-mono text-[#fe2c55]">
-                {activeChannelVideoIdx + 1}/{videos.length}
+                {vidIdx + 1}/{videos.length}
               </span>
             </div>
 
             <button
               type="button"
-              disabled={activeChannelVideoIdx >= videos.length - 1}
+              disabled={vidIdx >= videos.length - 1}
               onClick={(e) => {
                 e.stopPropagation();
-                handleNextChannelVideo();
+                if (vidIdx < videos.length - 1) {
+                  const nextVid = videos[vidIdx + 1];
+                  setActiveChannelVideoIdx(vidIdx + 1);
+                  setChannelVideoProgress(0);
+                  setIsChannelVideoPlaying(true);
+                  setIsUserPaused(false);
+                  document.getElementById(`tiktok-round-card-multimedia-${nextVid.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
               }}
               className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
               title="Siguiente vídeo (desplazar abajo)"
@@ -3887,6 +4603,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       </div>
     );
   };
+
+  // 🎬 Renderizador del Feed de Vídeos del Canal (Fashion, Runway, BackStage, etc.)
+  // Renderiza cada vídeo de la categoría en una pantalla independiente (separadas por 3cm idéntico a image.png)
+  const renderMultimediaChannelVideoFeed = () => {
+    const videos = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
+    return videos.map((currentVid, vidIdx) => renderSingleMultimediaVideoScreen(currentVid, vidIdx, videos));
+  };
+
+
+
 
   return (
     <div className="relative w-full flex flex-col items-center justify-center">
@@ -3939,7 +4665,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         onMouseUp={handleMouseUpFeed}
         onMouseLeave={handleMouseUpFeed}
         id="tiktok-rounds-vertical-feed"
-        className="w-full max-w-full h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] overflow-x-hidden overflow-y-hidden md:overflow-y-auto md:snap-y md:snap-mandatory scroll-smooth py-0 sm:py-0.5 flex flex-col items-center select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative"
+        className="w-full max-w-full h-full max-md:min-h-[calc(100dvh-20px)] sm:h-[calc(100dvh-20px)] overflow-x-hidden overflow-y-auto md:snap-y md:snap-mandatory scroll-smooth py-0 sm:py-0.5 flex flex-col items-center select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative gap-[3cm]"
+        style={{ rowGap: '3cm' }}
       >
         {currentChannel !== 'Finanzas' ? (
           renderMultimediaChannelVideoFeed()
@@ -4017,13 +4744,18 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div
               key={session.id}
               id={`tiktok-round-card-${session.id}`}
-              className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[580px] my-0 py-0 sm:py-0.5 relative px-0 sm:px-2 overflow-x-hidden h-full max-md:h-[100dvh] min-h-[calc(100dvh-20px)]"
+              className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[500px] my-0 py-1 sm:py-2 relative px-0 sm:px-2 overflow-x-hidden min-h-[calc(660px+4cm)] max-h-[calc(680px+4cm)]"
+              style={{ minHeight: 'calc(660px + 4cm)', maxHeight: 'calc(680px + 4cm)' }}
             >
-              {/* 📦 Relative anchor for the channel card and its external right-side navigator */}
-              <div className="relative flex items-center justify-center w-full max-w-[430px] md:max-w-[440px] overflow-x-hidden lg:overflow-x-visible h-full max-md:h-[100dvh]">
-                {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) */}
+              {/* 📦 Relative anchor for the channel card and its external right-side navigator - 4cm más larga */}
+              <div 
+                className="relative flex items-center justify-center w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] overflow-x-hidden lg:overflow-x-visible h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)]"
+                style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
+              >
+                {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) - 4cm más larga sin tocar ancho */}
                 <div 
-                  className="w-full max-w-full sm:max-w-[420px] md:max-w-[430px] h-full max-md:h-[100dvh] sm:h-[calc(100dvh-20px)] sm:max-h-[820px] bg-[#070b14] border-0 sm:border border-black rounded-none sm:rounded-[36px] md:rounded-[44px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
+                  className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border border-slate-800 rounded-3xl shadow-xl overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
+                  style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
                   id={`round-container-box-${session.id}`}
                 >
                 {/* 📱 Subtle top speaker notch matching z.png */}
@@ -4288,7 +5020,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 autoPlay
                                 loop
                                 playsInline
-                                muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
+                                muted={isPresenterCameraAudioMuted || channelVolume === 0}
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
                               <div className="relative z-10 flex items-center justify-between">
@@ -4360,7 +5092,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 autoPlay
                                 loop
                                 playsInline
-                                muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
+                                muted={isPresenterCameraAudioMuted || channelVolume === 0}
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
                               <div className="relative z-10 flex items-center justify-between">
@@ -4471,7 +5203,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               autoPlay
                               loop
                               playsInline
-                              muted={!isPresenterLiveMicActive || isPresenterCameraAudioMuted || !isBroadcastMicOn || isMuted || channelVolume === 0}
+                              muted={isPresenterCameraAudioMuted || channelVolume === 0}
                               className="absolute inset-0 w-full h-full object-cover z-0"
                             />
                           )}
@@ -4597,7 +5329,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     {/* 💬 COMENTARIOS DE USUARIOS EN LA PARTE INFERIOR - OCUPA TODO EL ANCHO DEL CANAL */}
                     {isCommentsOpenForThisSession && (
                       <div 
-                        className="absolute inset-x-0 bottom-0 z-50 w-full bg-white rounded-t-3xl border-t border-slate-200/90 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] p-3 sm:p-4 pb-3.5 flex flex-col gap-2 animate-slide-up text-left pointer-events-auto"
+                        className={`absolute inset-x-0 bottom-0 z-50 w-full bg-white rounded-t-3xl border-t border-slate-200/90 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] flex flex-col gap-1.5 animate-slide-up text-left pointer-events-auto transition-all duration-300 ${
+                          sessionComments.length <= 1 ? 'p-2.5 sm:p-3 pb-2.5' : 'p-3 sm:p-3.5 pb-3'
+                        }`}
                         id={`live-exposition-comments-${session.id}`}
                       >
                         {/* Header con botón para cerrar */}
@@ -4615,6 +5349,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               e.preventDefault();
                               e.stopPropagation();
                               setActiveCommentsSessionId(null);
+                              setSessionReplyingToMap(prev => ({ ...prev, [session.id]: null }));
                             }}
                             className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition active:scale-90"
                             title="Cerrar comentarios"
@@ -4624,11 +5359,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           </button>
                         </div>
 
-                        {/* Scrollable Comments List */}
-                        <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300 flex flex-col">
+                        {/* Scrollable Comments List - Altura dinámica compacta cuando hay pocos comentarios */}
+                        <div className={`w-full overflow-y-auto pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300 flex flex-col transition-all duration-300 ${
+                          sessionComments.length === 0
+                            ? 'max-h-[36px]'
+                            : sessionComments.length === 1
+                            ? 'max-h-[54px]'
+                            : sessionComments.length === 2
+                            ? 'max-h-[105px]'
+                            : 'max-h-[140px] sm:max-h-[160px]'
+                        }`}>
                           <div className="mt-auto space-y-1.5">
                             {sessionComments.map((comm) => (
-                              <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition">
+                              <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition group/session-comm">
                                 <img
                                   src={comm.userAvatar}
                                   alt={comm.userName}
@@ -4638,11 +5381,41 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between gap-1">
                                     <span className="text-[10px] font-black text-rose-600 truncate">{comm.userName}</span>
-                                    <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <span className="text-[8px] text-slate-400 font-mono">{comm.timeAgo}</span>
+                                      {/* Botón eliminar comentario */}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteSessionComment(session.id, comm.id)}
+                                        className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition cursor-pointer"
+                                        title="Eliminar comentario"
+                                      >
+                                        <Trash2 className="w-2.5 h-2.5" />
+                                      </button>
+                                    </div>
                                   </div>
+                                  {comm.replyTo && (
+                                    <div className="text-[8.5px] text-slate-500 font-semibold mb-0.5 flex items-center gap-1">
+                                      <span>↩️</span>
+                                      <span>En respuesta a <span className="text-rose-600 font-bold">@{comm.replyTo}</span></span>
+                                    </div>
+                                  )}
                                   <p className="text-[10px] text-slate-800 mt-0.5 leading-snug break-words font-medium">
                                     {comm.text}
                                   </p>
+                                  {/* Botón para responder */}
+                                  <div className="mt-0.5 flex items-center justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSessionReplyingToMap(prev => ({ ...prev, [session.id]: { id: comm.id, userName: comm.userName } }));
+                                      }}
+                                      className="text-[9px] font-bold text-slate-500 hover:text-rose-600 flex items-center gap-0.5 transition cursor-pointer px-1 py-0.2 rounded hover:bg-rose-50"
+                                    >
+                                      <Reply className="w-2.5 h-2.5" />
+                                      <span>Responder</span>
+                                    </button>
+                                  </div>
                                 </div>
                                 <button
                                   type="button"
@@ -4659,6 +5432,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             ))}
                           </div>
                         </div>
+
+                        {/* Banner de respuesta si se está respondiendo a un comentario */}
+                        {sessionReplyingToMap[session.id] && (
+                          <div className="flex items-center justify-between bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-lg text-[9.5px] text-rose-700 shrink-0 animate-fade-in">
+                            <div className="flex items-center gap-1 font-bold truncate">
+                              <Reply className="w-3 h-3 text-rose-500 shrink-0" />
+                              <span className="truncate">Respondiendo a @{sessionReplyingToMap[session.id]?.userName}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSessionReplyingToMap(prev => ({ ...prev, [session.id]: null }))}
+                              className="text-rose-500 hover:text-rose-800 p-0.5 cursor-pointer ml-1 shrink-0"
+                              title="Cancelar respuesta"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        )}
 
                         {/* Quick Emojis strip - Tap to send directly! */}
                         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1.5 shrink-0 bg-slate-100 rounded-full border border-slate-200/90 shadow-xs">
@@ -4712,7 +5503,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               type="text"
                               value={commentInputMap[session.id] || ''}
                               onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
-                              placeholder="Escribe un comentario o emoji..."
+                              placeholder={sessionReplyingToMap[session.id] ? `Responder a @${sessionReplyingToMap[session.id]?.userName}...` : "Escribe un comentario o emoji..."}
                               className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
                             />
                           </div>
@@ -5481,7 +6272,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 💬 COMENTARIOS DE USUARIOS Y POSIBILIDAD DE COMENTAR - OCUPA TODO EL ANCHO DEL CANAL CON FONDO BLANCO */}
                 {isCommentsOpenForThisSession && (
                   <div 
-                    className="absolute inset-x-0 bottom-0 z-50 w-full bg-white rounded-t-3xl border-t border-slate-200/90 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] p-3 sm:p-4 pb-3.5 flex flex-col gap-2 animate-slide-up pointer-events-auto text-left"
+                    className={`absolute inset-x-0 bottom-0 z-50 w-full bg-white rounded-t-3xl border-t border-slate-200/90 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] flex flex-col gap-1.5 animate-slide-up pointer-events-auto text-left transition-all duration-300 ${
+                      sessionComments.length <= 1 ? 'p-2.5 sm:p-3 pb-2.5' : 'p-3 sm:p-3.5 pb-3'
+                    }`}
                     id={`normal-card-comments-${session.id}`}
                   >
                     <div className="flex items-center justify-between pb-1 shrink-0 px-1 border-b border-slate-100">
@@ -5498,6 +6291,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           e.preventDefault();
                           e.stopPropagation();
                           setActiveCommentsSessionId(null);
+                          setSessionReplyingToMap(prev => ({ ...prev, [session.id]: null }));
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition active:scale-90"
                         title="Cerrar comentarios"
@@ -5507,11 +6301,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       </button>
                     </div>
 
-                    {/* Comments List */}
-                    <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300 flex flex-col">
+                    {/* Comments List - Altura dinámica compacta cuando hay pocos comentarios */}
+                    <div className={`w-full overflow-y-auto pr-1 text-left select-text scrollbar-thin scrollbar-thumb-slate-300 flex flex-col transition-all duration-300 ${
+                      sessionComments.length === 0
+                        ? 'max-h-[36px]'
+                        : sessionComments.length === 1
+                        ? 'max-h-[54px]'
+                        : sessionComments.length === 2
+                        ? 'max-h-[105px]'
+                        : 'max-h-[140px] sm:max-h-[160px]'
+                    }`}>
                       <div className="mt-auto space-y-1.5">
                         {sessionComments.map((comm) => (
-                          <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition">
+                          <div key={comm.id} className="flex items-start gap-2 bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200/80 shadow-xs transition group/normal-comm">
                             <img
                               src={comm.userAvatar}
                               alt={comm.userName}
@@ -5521,11 +6323,41 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
                                 <span className="text-[10px] font-black text-rose-600 truncate">{comm.userName}</span>
-                                <span className="text-[8px] text-slate-400 shrink-0 font-mono">{comm.timeAgo}</span>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <span className="text-[8px] text-slate-400 font-mono">{comm.timeAgo}</span>
+                                  {/* Botón eliminar comentario */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSessionComment(session.id, comm.id)}
+                                    className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition cursor-pointer"
+                                    title="Eliminar comentario"
+                                  >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
                               </div>
+                              {comm.replyTo && (
+                                <div className="text-[8.5px] text-slate-500 font-semibold mb-0.5 flex items-center gap-1">
+                                  <span>↩️</span>
+                                  <span>En respuesta a <span className="text-rose-600 font-bold">@{comm.replyTo}</span></span>
+                                </div>
+                              )}
                               <p className="text-[10px] text-slate-800 mt-0.5 leading-snug break-words font-medium">
                                 {comm.text}
                               </p>
+                              {/* Botón para responder */}
+                              <div className="mt-0.5 flex items-center justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSessionReplyingToMap(prev => ({ ...prev, [session.id]: { id: comm.id, userName: comm.userName } }));
+                                  }}
+                                  className="text-[9px] font-bold text-slate-500 hover:text-rose-600 flex items-center gap-0.5 transition cursor-pointer px-1 py-0.2 rounded hover:bg-rose-50"
+                                >
+                                  <Reply className="w-2.5 h-2.5" />
+                                  <span>Responder</span>
+                                </button>
+                              </div>
                             </div>
                             <button
                               type="button"
@@ -5542,6 +6374,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         ))}
                       </div>
                     </div>
+
+                    {/* Banner de respuesta si se está respondiendo a un comentario */}
+                    {sessionReplyingToMap[session.id] && (
+                      <div className="flex items-center justify-between bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-lg text-[9.5px] text-rose-700 shrink-0 animate-fade-in">
+                        <div className="flex items-center gap-1 font-bold truncate">
+                          <Reply className="w-3 h-3 text-rose-500 shrink-0" />
+                          <span className="truncate">Respondiendo a @{sessionReplyingToMap[session.id]?.userName}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSessionReplyingToMap(prev => ({ ...prev, [session.id]: null }))}
+                          className="text-rose-500 hover:text-rose-800 p-0.5 cursor-pointer ml-1 shrink-0"
+                          title="Cancelar respuesta"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Quick Emojis strip - Tap to send directly! */}
                     <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1.5 shrink-0 bg-slate-100 rounded-full border border-slate-200/90 shadow-xs">
@@ -5595,7 +6445,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           type="text"
                           value={commentInputMap[session.id] || ''}
                           onChange={(e) => setCommentInputMap(prev => ({ ...prev, [session.id]: e.target.value }))}
-                          placeholder="Escribe un comentario o emoji..."
+                          placeholder={sessionReplyingToMap[session.id] ? `Responder a @${sessionReplyingToMap[session.id]?.userName}...` : "Escribe un comentario o emoji..."}
                           className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
                         />
                       </div>
@@ -5619,7 +6469,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               
                 {/* 🔊 ZONA CENTRAL IZQUIERDA SENSIBLE AL RATÓN Y BARRA DE VOLUMEN (APARECE SOLO AL PASAR EL PUNTERO POR EL CENTRO-IZQUIERDA) */}
                 <div 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-[340px] sm:h-[380px] w-24 sm:w-28 z-[170] flex items-center pl-2.5 sm:pl-3 group/volumezone pointer-events-auto select-none"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-[380px] sm:h-[460px] w-28 sm:w-36 z-[170] flex items-center pl-2.5 sm:pl-3 group/volumezone pointer-events-auto select-none"
                   id={`volume-hover-zone-${session.id}`}
                   onMouseEnter={() => setIsVolumeHovered(true)}
                   onMouseLeave={() => {
@@ -5627,13 +6477,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   }}
                   onWheel={handleVolumeWheel}
                 >
-                  {/* Cápsula de volumen vertical (idéntica a captura image.png) */}
+                  {/* Cápsula de volumen vertical más fina y larga */}
                   <div 
-                    className={`flex flex-col items-center bg-[#070b14]/95 backdrop-blur-2xl border border-white/20 rounded-full py-3 px-1.5 sm:px-2 shadow-[0_15px_45px_rgba(0,0,0,0.95)] transition-all duration-300 transform ${
+                    className={`flex flex-col items-center bg-[#070b14]/95 backdrop-blur-2xl border-[1.5px] border-[#00f2fe]/80 rounded-full py-2.5 px-1 sm:px-1.5 shadow-[0_0_20px_rgba(0,242,254,0.4),0_15px_45px_rgba(0,0,0,0.95)] transition-all duration-300 transform ${
                       isDraggingVolume || isVolumeHovered
                         ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto ring-1 ring-[#00f2fe]/40'
                         : 'opacity-0 -translate-x-4 scale-95 pointer-events-none group-hover/volumezone:opacity-100 group-hover/volumezone:translate-x-0 group-hover/volumezone:scale-100 group-hover/volumezone:pointer-events-auto'
-                    } hover:border-[#00f2fe]/50 hover:bg-[#070b14]/98`}
+                    } hover:border-[#00f2fe] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)]`}
                     id={`channel-volume-bar-${session.id}`}
                     onPointerDown={handleVolumePointerDown}
                     onPointerMove={handleVolumePointerMove}
@@ -5643,20 +6493,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <button
                       type="button"
                       onClick={handleToggleMute}
-                      className="p-1 text-white hover:scale-110 transition cursor-pointer active:scale-90"
+                      className="p-0.5 text-white hover:scale-110 transition cursor-pointer active:scale-90"
                       title={isPresenterCameraAudioMuted || channelVolume === 0 ? "Activar audio" : "Silenciar audio"}
                     >
                       {isPresenterCameraAudioMuted || channelVolume === 0 ? (
-                        <VolumeX className="w-4 h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
+                        <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
                       ) : (
-                        <Volume2 className="w-4 h-4 text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.6)]" />
+                        <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.6)]" />
                       )}
                     </button>
 
-                    {/* Barra deslizante vertical de volumen (Track) */}
+                    {/* Barra deslizante vertical de volumen (Track) - Más fina y larga */}
                     <div 
                       data-volume-track="true"
-                      className="relative w-2 sm:w-2.5 h-28 sm:h-32 bg-slate-900/95 border border-slate-700/80 rounded-full cursor-pointer overflow-hidden my-1 flex flex-col justify-end shadow-inner touch-none select-none"
+                      className="relative w-1.5 sm:w-2 h-36 sm:h-44 bg-slate-900/95 border border-slate-700/80 rounded-full cursor-pointer overflow-hidden my-1 flex flex-col justify-end shadow-inner touch-none select-none"
                       title={`Volumen: ${isPresenterCameraAudioMuted ? 0 : channelVolume}%`}
                     >
                       {/* Relleno cian/verde neón brillante desde la base hacia arriba */}

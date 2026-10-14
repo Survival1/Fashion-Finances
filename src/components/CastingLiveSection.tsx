@@ -146,7 +146,7 @@ interface CastingLiveVideo {
   isFollower?: boolean;
   music: string;
   category: 'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live';
-  videoCategory?: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer';
+  videoCategory?: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview';
   uploaderId?: string; // ID of the user who uploaded the video
   pinnedProduct?: any;
   trimStart?: number;
@@ -154,6 +154,7 @@ interface CastingLiveVideo {
 }
 
 interface CastingLiveSectionProps {
+  isActiveTab?: boolean;
   models: ModelProfile[];
   userProfile: UserSessionProfile | null;
   selectedLiveModelId?: string;
@@ -1841,12 +1842,36 @@ const CHANNEL_DESCRIPTIONS: Record<string, { icon: string; title: string; desc: 
     text: 'text-sky-900'
   },
   Catwalk: {
-    icon: '🚶',
-    title: 'Catwalk',
-    desc: 'En este canal se publicarán vídeos de desfiles de moda, pasarelas y eventos en los que participen los modelos, mostrando su trabajo sobre la pasarela y sus colaboraciones con diferentes marcas y diseñadores.',
+    icon: '👠',
+    title: 'Casting',
+    desc: 'En este canal se publicarán vídeos de audiciones, casting de modelos, pruebas de pasarela y selección de talentos para marcas y agencias internacionales.',
     bg: 'bg-violet-50/90',
     border: 'border-violet-200/90',
     text: 'text-violet-900'
+  },
+  Casting: {
+    icon: '👠',
+    title: 'Casting',
+    desc: 'En este canal se publicarán vídeos de audiciones, casting de modelos, pruebas de pasarela y selección de talentos para marcas y agencias internacionales.',
+    bg: 'bg-violet-50/90',
+    border: 'border-violet-200/90',
+    text: 'text-violet-900'
+  },
+  Luxury: {
+    icon: '🍸',
+    title: 'Luxury',
+    desc: 'En este canal exclusivo se publicarán contenidos de alta gama, alta relojería, superyates, moda de lujo, eventos VIP y estilo de vida premium.',
+    bg: 'bg-amber-50/90',
+    border: 'border-amber-200/90',
+    text: 'text-amber-900'
+  },
+  Interview: {
+    icon: '🎙️',
+    title: 'Interview',
+    desc: 'En este canal se transmitirán entrevistas exclusivas a modelos, diseñadores, fotógrafos, directores de casting y celebridades de la industria de la moda.',
+    bg: 'bg-emerald-50/90',
+    border: 'border-emerald-200/90',
+    text: 'text-emerald-900'
   },
   Fitnes: {
     icon: '💪',
@@ -1881,10 +1906,13 @@ const CANONICAL_CHANNELS = [
   'Backstage',
   'Jewellery',
   'Tiendas',
+  'Casting',
   'Catwalk',
   'Fitnes',
   'Beauty',
-  'Influencer'
+  'Influencer',
+  'Luxury',
+  'Interview'
 ] as const;
 
 export const getParticipantLiveCameraVideo = (user: any) => {
@@ -1934,6 +1962,7 @@ export const getParticipantLiveCameraVideo = (user: any) => {
 };
 
 export default function CastingLiveSection({ 
+  isActiveTab = true,
   models, 
   userProfile, 
   selectedLiveModelId,
@@ -1946,6 +1975,23 @@ export default function CastingLiveSection({
   initialSelectedStoreId,
   onClearSelectedStoreId
 }: CastingLiveSectionProps) {
+  // ⏸️ Pausar vídeos de CastingLive cuando la pestaña no está activa
+  useEffect(() => {
+    if (!isActiveTab) {
+      if (fullscreenChannelVideoRef.current) {
+        try { fullscreenChannelVideoRef.current.pause(); } catch {}
+      }
+      if (userLiveVideoElementRef.current) {
+        try { userLiveVideoElementRef.current.pause(); } catch {}
+      }
+      if (userLiveFeedVideoElementRef.current) {
+        try { userLiveFeedVideoElementRef.current.pause(); } catch {}
+      }
+      if (quickCameraVideoRef.current) {
+        try { quickCameraVideoRef.current.pause(); } catch {}
+      }
+    }
+  }, [isActiveTab]);
   // Built-in looping fashion & model-themed vertical videos from Mixkit CDN
   const initialVideos: CastingLiveVideo[] = [
     {
@@ -2375,13 +2421,13 @@ export default function CastingLiveSection({
       ],
       shares: 89,
       favorites: 354,
-      description: 'Detrás de escena ensayando el Catwalk final para el desfile de primavera. ¡Los nervios y la emoción a flor de piel! 👠✨ #catwalk #runwaywalk #modelorevelacion',
+      description: 'Detrás de escena ensayando el Casting final para el desfile de primavera. ¡Los nervios y la emoción a flor de piel! 👠✨ #casting #runwaywalk #modelorevelacion',
       isLiked: false,
       isFavorited: false,
       isFollowing: false,
       music: 'Runway Runway (Club Mix) - Fashion DJ',
       category: 'explorar',
-      videoCategory: 'Catwalk'
+      videoCategory: 'Casting'
     },
     {
       id: 'vid-9',
@@ -2445,6 +2491,48 @@ export default function CastingLiveSection({
       music: 'City Lights & Viral Vibes - Influencer Mix',
       category: 'explorar',
       videoCategory: 'Influencer'
+    },
+    {
+      id: 'vid-12',
+      modelId: 'model-5',
+      username: 'victoria_luxury_life',
+      name: 'Victoria Royale',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-with-luxury-jewelry-posing-in-a-studio-41718-large.mp4',
+      likes: 6420,
+      comments: [
+        { id: 'c-lux-1', user: 'luxury_buyer', text: 'Elegancia pura y detalles de alta relojería insuperables 🍸✨', date: 'Hace 45 minutos', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 310,
+      favorites: 920,
+      description: 'Presentación exclusiva en Mónaco: Alta joyería, acabados en oro blanco y piezas de coleccionista. 🍸💎 #luxury #vip #hautecouture #elegance',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Monaco Midnight Lounge - Luxury Sound',
+      category: 'explorar',
+      videoCategory: 'Luxury'
+    },
+    {
+      id: 'vid-13',
+      modelId: 'model-6',
+      username: 'derek_fashion_talks',
+      name: 'Derek Interviewer',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-talking-in-a-studio-interview-41720-large.mp4',
+      likes: 4780,
+      comments: [
+        { id: 'c-int-1', user: 'fashion_critic', text: 'Gran entrevista sobre la evolución del modelaje y directores de casting 🎙️👏', date: 'Hace 2 horas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 195,
+      favorites: 540,
+      description: 'Entrevista en profundidad con los directores de casting más prestigiosos de la semana de la moda. Claves para triunfar en audiciones. 🎙️✨ #interview #podcast #castingcall #fashiontalks',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Studio Talk Sessions - Interview Beats',
+      category: 'explorar',
+      videoCategory: 'Interview'
     }
   ];
 
@@ -2572,7 +2660,10 @@ export default function CastingLiveSection({
         investors: 'Investors',
         jewellery: 'Investors',
         tiendas: 'Tiendas',
-        catwalk: 'Catwalk',
+        catwalk: 'Casting',
+        casting: 'Casting',
+        luxury: 'Luxury',
+        interview: 'Interview',
         fitnes: 'Fitnes',
         fitness: 'Fitnes',
         beauty: 'Beauty',
@@ -2643,7 +2734,10 @@ export default function CastingLiveSection({
         investors: 'Investors',
         jewellery: 'Investors',
         tiendas: 'Tiendas',
-        catwalk: 'Catwalk',
+        catwalk: 'Casting',
+        casting: 'Casting',
+        luxury: 'Luxury',
+        interview: 'Interview',
         fitnes: 'Fitnes',
         fitness: 'Fitnes',
         beauty: 'Beauty',
@@ -2711,12 +2805,12 @@ export default function CastingLiveSection({
     };
   }, []);
 
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>(() => {
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview'>(() => {
     if (initialSelectedStoreId === 'fashion' || initialSelectedStoreId === 'Fashion' || initialSelectedStoreId === 'canal_fashion') {
       return 'Fashion';
     }
     const cached = typeof window !== 'undefined' ? localStorage.getItem('casting_live_default_category_filter') : null;
-    if (cached && ['Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'].includes(cached)) {
+    if (cached && ['Reels', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'].includes(cached)) {
       localStorage.removeItem('casting_live_default_category_filter');
       return cached as any;
     }
@@ -2860,7 +2954,7 @@ export default function CastingLiveSection({
       clearInterval(timer);
     };
   }, []);
-  const [modalVideoCategoryFilter, setModalVideoCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>('Todos');
+  const [modalVideoCategoryFilter, setModalVideoCategoryFilter] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview'>('Todos');
   const [isActivityDrawerOpen, setIsActivityDrawerOpen] = useState(false);
 
   // States for the Finanzas Category Live interactive streaming simulation
@@ -5417,6 +5511,11 @@ export default function CastingLiveSection({
         fullscreenChannelVideoRef.current.srcObject = userLiveMediaStream;
         fullscreenChannelVideoRef.current.play().catch(() => {});
       }
+      if (heroVideoRef.current) {
+        heroVideoRef.current.srcObject = userLiveMediaStream;
+        heroVideoRef.current.muted = true;
+        heroVideoRef.current.play().catch(() => {});
+      }
     }
   }, [userLiveMediaStream, isUserLiveStreamingWithCamera]);
 
@@ -7039,7 +7138,154 @@ export default function CastingLiveSection({
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
 
   const [activeSubTab, setActiveSubTab] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live'>('para-ti');
-  const [selectedLiveCategory, setSelectedLiveCategory] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer'>('Todos');
+  const [liveViewMode, setLiveViewMode] = useState<'grid' | 'stream'>('grid');
+  const [liveHeroMuted, setLiveHeroMuted] = useState<boolean>(true);
+  const [heroCaptionTranslated, setHeroCaptionTranslated] = useState<boolean>(false);
+  const [isHeroTopChannelsDropdownOpen, setIsHeroTopChannelsDropdownOpen] = useState<boolean>(false);
+  const [heroChannelsSliderIdx, setHeroChannelsSliderIdx] = useState<number>(0);
+  const [liveChannelsCategoryFilter, setLiveChannelsCategoryFilter] = useState<string>('todos');
+  const [selectedHeroChannelId, setSelectedHeroChannelId] = useState<string | null>(null);
+  const [liveHeroVolume, setLiveHeroVolume] = useState<number>(80);
+  const [isHeroLeftVolumeVisible, setIsHeroLeftVolumeVisible] = useState<boolean>(false);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isHeroRightActionsVisible, setIsHeroRightActionsVisible] = useState<boolean>(false);
+  const [isHeroFollowed, setIsHeroFollowed] = useState<boolean>(false);
+  const [heroLikesCount, setHeroLikesCount] = useState<number>(1200);
+  const [isHeroLiked, setIsHeroLiked] = useState<boolean>(false);
+  const [heroCommentsCount, setHeroCommentsCount] = useState<number>(2);
+  const [heroSharesCount, setHeroSharesCount] = useState<number>(48);
+  const [heroBookmarksCount, setHeroBookmarksCount] = useState<number>(112);
+  const [isHeroBookmarked, setIsHeroBookmarked] = useState<boolean>(false);
+  const [isUserRetransmittingToAtelier, setIsUserRetransmittingToAtelier] = useState<boolean>(false);
+  const [isUserRetransmitting, setIsUserRetransmitting] = useState<boolean>(false);
+  const [userRetransmittingChannelId, setUserRetransmittingChannelId] = useState<string | null>(null);
+  const [retransmissionLiveViewers, setRetransmissionLiveViewers] = useState<number>(19850);
+
+  const handleStartLiveRetransmission = async (targetChannel: { id: string; label: string; image?: string }) => {
+    let stream = userLiveMediaStream;
+    if (!stream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: liveCameraFacingMode || 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true
+        });
+      } catch (err1) {
+        console.warn('Could not start camera with ideal constraints, trying standard:', err1);
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (err2) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          } catch (err3) {
+            console.warn('Camera access unavailable:', err3);
+          }
+        }
+      }
+    }
+
+    if (stream) {
+      setUserLiveMediaStream(stream);
+    }
+    setIsUserLiveStreamingWithCamera(true);
+    setIsUserRetransmitting(true);
+    setUserRetransmittingChannelId(targetChannel.id);
+    if (targetChannel.id === 'atelier') {
+      setIsUserRetransmittingToAtelier(true);
+    }
+    setLiveChannelsCategoryFilter(targetChannel.id);
+    setSelectedHeroChannelId(`live-user-retransmision-${targetChannel.id}`);
+    setShowStreamOptionsModal(false);
+    setIsHeroTopChannelsDropdownOpen(false);
+
+    if (heroVideoRef.current && stream) {
+      heroVideoRef.current.srcObject = stream;
+      heroVideoRef.current.muted = true;
+      heroVideoRef.current.play().catch(() => {});
+    }
+
+    setSystemVoiceNotification({
+      show: true,
+      message: `🔴 ¡Cámara conectada en directo! Emitiendo en todo el canal ${targetChannel.label} para todos los usuarios.`
+    });
+    setTimeout(() => {
+      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+    }, 4500);
+
+    const heroEl = document.getElementById('live-videos-screen-root');
+    if (heroEl) {
+      heroEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (heroVideoRef.current && userLiveMediaStream && isUserRetransmitting) {
+      if (heroVideoRef.current.srcObject !== userLiveMediaStream) {
+        heroVideoRef.current.srcObject = userLiveMediaStream;
+      }
+      heroVideoRef.current.muted = true;
+      heroVideoRef.current.play().catch(() => {});
+    }
+  }, [userLiveMediaStream, isUserRetransmitting, selectedHeroChannelId]);
+
+  useEffect(() => {
+    if (!isUserRetransmitting) return;
+    const interval = setInterval(() => {
+      setRetransmissionLiveViewers(prev => Math.max(18000, prev + Math.floor(Math.random() * 7) - 2));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isUserRetransmitting]);
+
+  const handleStopLiveRetransmission = () => {
+    if (userLiveMediaStream) {
+      userLiveMediaStream.getTracks().forEach(track => track.stop());
+      setUserLiveMediaStream(null);
+    }
+    setIsUserLiveStreamingWithCamera(false);
+    setIsUserRetransmitting(false);
+    setUserRetransmittingChannelId(null);
+    setIsUserRetransmittingToAtelier(false);
+    setSelectedHeroChannelId(null);
+    if (heroVideoRef.current) {
+      heroVideoRef.current.srcObject = null;
+    }
+    setShowStreamOptionsModal(false);
+    setSystemVoiceNotification({
+      show: true,
+      message: '⏹️ Retransmisión de tu cámara finalizada.'
+    });
+    setTimeout(() => {
+      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+    }, 3500);
+  };
+  const [fashionViewMode, setFashionViewMode] = useState<'screens' | 'grid'>('screens');
+  const [hoveredFashionVolumeId, setHoveredFashionVolumeId] = useState<string | null>(null);
+  const [fashionLikedChannelsMap, setFashionLikedChannelsMap] = useState<Record<string, boolean>>({});
+  const [fashionLikesMap, setFashionLikesMap] = useState<Record<string, number>>({});
+  const [fashionSavedMap, setFashionSavedMap] = useState<Record<string, boolean>>({});
+  const [fashionCommentsOpenId, setFashionCommentsOpenId] = useState<string | null>(null);
+  const [fashionCommentsMap, setFashionCommentsMap] = useState<Record<string, Array<{ id: string; user: string; text: string; time: string; avatar: string }>>>({});
+  const [fashionNewCommentText, setFashionNewCommentText] = useState<string>('');
+  const [fashionChannelVolumeMap, setFashionChannelVolumeMap] = useState<Record<string, number>>({});
+  const [fashionChannelMutedMap, setFashionChannelMutedMap] = useState<Record<string, boolean>>({});
+  const [showStreamOptionsModal, setShowStreamOptionsModal] = useState<boolean>(false);
+  const [streamOptionsTargetChannel, setStreamOptionsTargetChannel] = useState<{ id: string; label: string; image?: string } | null>(null);
+  const [streamOptionsTab, setStreamOptionsTab] = useState<'camera' | 'mic' | 'screen' | 'rtmp' | 'multistream'>('camera');
+  const [streamTitleInput, setStreamTitleInput] = useState<string>('');
+  const [streamResolution, setStreamResolution] = useState<'1080p' | '720p' | '4k'>('1080p');
+  const [streamNoiseSuppression, setStreamNoiseSuppression] = useState<boolean>(true);
+  const [streamMultistreamPlatforms, setStreamMultistreamPlatforms] = useState<Record<string, boolean>>({
+    tiktok: true,
+    youtube: true,
+    instagram: false,
+    twitch: false,
+    facebook: false
+  });
+  const [showRtmpKeySecret, setShowRtmpKeySecret] = useState<boolean>(false);
+  const [selectedLiveCategory, setSelectedLiveCategory] = useState<'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview'>('Todos');
   const [localLiveModelId, setLocalLiveModelId] = useState<string | null>(null);
   const [viewingTikTokProfileUsername, setViewingTikTokProfileUsername] = useState<string | null>(null);
   const [isProfileFollowing, setIsProfileFollowing] = useState<Record<string, boolean>>({});
@@ -7075,24 +7321,26 @@ export default function CastingLiveSection({
     return null;
   });
 
-  const getModelCategory = (m: any): 'Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer' => {
+  const getModelCategory = (m: any): 'Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' => {
     const name = m.name?.toLowerCase() || '';
     const bio = m.bio?.toLowerCase() || '';
     if (name.includes('reel') || name.includes('short') || name.includes('clip') || bio.includes('reels') || bio.includes('cortos')) return 'Reels';
+    if (name.includes('luxury') || bio.includes('luxury') || bio.includes('lujo') || bio.includes('alta gama')) return 'Luxury';
+    if (name.includes('interview') || bio.includes('entrevista') || bio.includes('podcast')) return 'Interview';
     if (name.includes('dubois') || name.includes('isabella') || bio.includes('lujo') || bio.includes('estilo de vida')) return 'Fashion';
     if (name.includes('victor') || name.includes('finanzas') || bio.includes('invers') || bio.includes('defi') || bio.includes('bolsa') || bio.includes('blockchain') || name.includes('gracia')) return 'Finanzas';
     if (name.includes('rostova') || name.includes('elena') || name.includes('modelo') || bio.includes('profesional') || bio.includes('miss')) return 'Modelos';
     if (name.includes('sofia') || name.includes('backstage') || bio.includes('detrás') || bio.includes('cine') || bio.includes('comerciales')) return 'BackStage';
     if (name.includes('marcus') || name.includes('sterling') || name.includes('diego') || bio.includes('private') || bio.includes('estratégico') || bio.includes('incubadora') || bio.includes('ceo')) return 'Investors';
     if (name.includes('charlotte') || name.includes('tienda') || name.includes('luxe') || bio.includes('kylie') || bio.includes('cosmetics') || bio.includes('brand')) return 'Tiendas';
-    if (name.includes('yuki') || name.includes('tanaka') || name.includes('valentina') || name.includes('rossi') || bio.includes('pasarela') || bio.includes('urbana') || name.includes('catwalk') || bio.includes('desfile')) return 'Catwalk';
+    if (name.includes('yuki') || name.includes('tanaka') || name.includes('valentina') || name.includes('rossi') || bio.includes('pasarela') || bio.includes('urbana') || name.includes('catwalk') || name.includes('casting') || bio.includes('desfile')) return 'Casting';
     if (name.includes('fit') || bio.includes('fitness') || bio.includes('gym') || bio.includes('entreno') || bio.includes('saludable')) return 'Fitnes';
     if (name.includes('beauty') || bio.includes('belleza') || bio.includes('maquillaje') || bio.includes('skincare') || bio.includes('estética')) return 'Beauty';
     if (name.includes('influencer') || bio.includes('influencer') || bio.includes('creador') || bio.includes('tiktok') || bio.includes('viral')) return 'Influencer';
     
     // Default distribution by index
-    const categories: ('Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer')[] = [
-      'Fashion', 'Reels', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'
+    const categories: ('Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview')[] = [
+      'Fashion', 'Reels', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Tiendas', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'
     ];
     const hash = (m.name || m.username || '').length % categories.length;
     return categories[hash];
@@ -9793,7 +10041,7 @@ export default function CastingLiveSection({
   const [uploadDescription, setUploadDescription] = useState('Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25');
   const [uploadMusic, setUploadMusic] = useState('');
   const [uploadCategory, setUploadCategory] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos'>('para-ti');
-  const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer' | ''>('');
+  const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' | ''>('');
   const [showAllChannelGuide, setShowAllChannelGuide] = useState(false);
   const [uploadModelId, setUploadModelId] = useState('');
   const [uploadModalStage, setUploadModalStage] = useState<'review' | 'details'>('review');
@@ -10097,7 +10345,7 @@ export default function CastingLiveSection({
   const rawFilteredVideos = videosList.filter(vid => {
     // Stage 0: Interest category filter (Finanzas, Fashion, Models, Backstage, etc.)
     if (selectedCategoryFilter === 'Todos') {
-      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer', 'Fashion', 'Investors', 'Tiendas'];
+      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Fashion', 'Investors', 'Tiendas', 'Luxury', 'Interview'];
       const vidCat = vid.videoCategory || vid.category;
       if (vidCat && !allowedCategoriesForTodos.includes(vidCat)) {
         return false;
@@ -10124,6 +10372,8 @@ export default function CastingLiveSection({
         isMatch = vidCat === 'investors' || vidCat === 'jewellery';
       } else if (targetCat === 'tiendas') {
         isMatch = vidCat === 'tiendas' || !!vid.pinnedProduct;
+      } else if (targetCat === 'catwalk' || targetCat === 'casting') {
+        isMatch = vidCat === 'catwalk' || vidCat === 'casting';
       } else {
         isMatch = vidCat === targetCat;
       }
@@ -10173,6 +10423,7 @@ export default function CastingLiveSection({
         if (targetCat === 'modelos') return c === 'modelos' || c === 'runway';
         if (targetCat === 'investors') return c === 'investors' || c === 'jewellery';
         if (targetCat === 'tiendas') return c === 'tiendas' || !!v.pinnedProduct;
+        if (targetCat === 'catwalk' || targetCat === 'casting') return c === 'catwalk' || c === 'casting';
         return c === targetCat;
       });
     }
@@ -10359,7 +10610,7 @@ export default function CastingLiveSection({
     const exists = videosList.some(v => v.username.toLowerCase().trim() === formattedUsername);
     
     if (!exists) {
-      let videoCategory: 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer' = 'Fashion';
+      let videoCategory: 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' = 'Fashion';
       let description = `¡Bienvenidos a mi canal oficial en Fashion Finances! ✨ Descubre mis looks diarios, patrocina mis desfiles y adquiere productos exclusivos en el live shop.`;
       let videoUrl = 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4';
       let titleMusic = 'Sonido original - ' + fullName;
@@ -10410,7 +10661,7 @@ export default function CastingLiveSection({
     }
   };
 
-  const handleCategoryFilterChange = (cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Fitnes' | 'Beauty' | 'Influencer') => {
+  const handleCategoryFilterChange = (cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview') => {
     try {
       sessionStorage.setItem('explicit_category_set_by_user', cat);
     } catch (e) {}
@@ -10450,8 +10701,8 @@ export default function CastingLiveSection({
       return next;
     });
     const matchingModel = cat === 'Todos'
-      ? models.find(m => ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer', 'Fashion'].includes(getModelCategory(m)))
-      : models.find(m => getModelCategory(m) === cat);
+      ? models.find(m => ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Fashion', 'Luxury', 'Interview'].includes(getModelCategory(m)))
+      : models.find(m => getModelCategory(m) === cat || (cat === 'Casting' && getModelCategory(m) === 'Catwalk'));
     if (matchingModel) {
       setLocalLiveModelId(matchingModel.id);
       localStorage.setItem('selectedLiveModelId', matchingModel.id);
@@ -11279,7 +11530,7 @@ export default function CastingLiveSection({
 
   const hasChannelVideos = Boolean(activeVideo && activeVideo.videoUrl && filteredVideos.length > 0);
 
-  if (activeSubTab === 'live') {
+  if (activeSubTab === 'live' && liveViewMode === 'stream') {
     const recommendedCreators = [
       { username: 'vozdeldestinho', name: 'vozdeldest...', viewers: '10', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', subtitle: 'Voz Del Desti...' },
       { username: 'raquelsanzn', name: 'raquelsanzn', viewers: '58', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', subtitle: 'Raquel SR ✍' },
@@ -11509,6 +11760,18 @@ export default function CastingLiveSection({
               </span>
             </div>
 
+            {/* Back to Live Videos Grid button */}
+            <button
+              onClick={() => {
+                setLiveViewMode('grid');
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-rose-600 to-[#fe2c55] hover:opacity-95 transition-all text-left cursor-pointer border border-rose-400 shadow-md"
+              title="Volver a la cuadrícula de videos en directo"
+            >
+              <ArrowLeft className="w-4 h-4 text-white stroke-[2.5]" />
+              <span className="text-[11px] font-black uppercase tracking-wider">Ver Todos los Directos</span>
+            </button>
+
             {/* Back to feed button matching exact Atrás row */}
             <button
               onClick={() => {
@@ -11521,10 +11784,10 @@ export default function CastingLiveSection({
                 setIsDuoShoppingActive(false);
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors text-left cursor-pointer border border-slate-700"
-              title="Volver"
+              title="Volver al feed"
             >
               <ArrowLeft className="w-4 h-4 text-rose-400 stroke-[2.5]" />
-              <span className="text-xs font-black">Volver</span>
+              <span className="text-xs font-black">Volver al Feed</span>
             </button>
 
             {/* Menu options exactly matching screenshot */}
@@ -11874,10 +12137,12 @@ export default function CastingLiveSection({
                           { id: 'Modelos', label: 'Runway 👑' },
                           { id: 'BackStage', label: 'BackStage 🎬' },
                           { id: 'Investors', label: 'Jewellery 💎' },
-                          { id: 'Catwalk', label: 'Catwalk 👠' },
+                          { id: 'Casting', label: 'Casting 👠' },
                           { id: 'Fitnes', label: 'Fitnes 💪' },
                           { id: 'Beauty', label: 'Beauty 💄' },
-                          { id: 'Influencer', label: 'Influencer 📱' }
+                          { id: 'Influencer', label: 'Influencer 📱' },
+                          { id: 'Luxury', label: 'Luxury 🍸' },
+                          { id: 'Interview', label: 'Interview 🎙️' }
                         ].map(cat => {
                           const isActive = selectedCategoryFilter === cat.id;
                           return (
@@ -14655,10 +14920,12 @@ export default function CastingLiveSection({
       { id: 'Modelos', label: 'RUNWAY 👑' },
       { id: 'BackStage', label: 'BACKSTAGE 🎬' },
       { id: 'Investors', label: 'JEWELLERY 💎' },
-      { id: 'Catwalk', label: 'CATWALK 👠' },
+      { id: 'Casting', label: 'CASTING 👠' },
       { id: 'Fitnes', label: 'FITNES 💪' },
       { id: 'Beauty', label: 'BEAUTY 💄' },
-      { id: 'Influencer', label: 'INFLUENCER 📱' }
+      { id: 'Influencer', label: 'INFLUENCER 📱' },
+      { id: 'Luxury', label: 'LUXURY 🍸' },
+      { id: 'Interview', label: 'INTERVIEW 🎙️' }
     ];
 
     const filteredModalVideos = videosList.filter((vid) => {
@@ -14671,8 +14938,13 @@ export default function CastingLiveSection({
         (userProfile && vid.username && userProfile.username && vid.username.toLowerCase().trim() === userProfile.username.toLowerCase().trim()) ||
         (userProfile && vid.name && userProfile.name && vid.name.toLowerCase().trim() === userProfile.name.toLowerCase().trim())
       );
-      return vid.videoCategory === modalVideoCategoryFilter || 
-             vid.category === modalVideoCategoryFilter ||
+      const vidCat = (vid.videoCategory || vid.category || '').toLowerCase();
+      const filterCat = modalVideoCategoryFilter.toLowerCase();
+      const isCatMatch = (filterCat === 'catwalk' || filterCat === 'casting')
+        ? (vidCat === 'catwalk' || vidCat === 'casting')
+        : (vidCat === filterCat || vid.videoCategory === modalVideoCategoryFilter);
+
+      return isCatMatch || 
              (modalVideoCategoryFilter === 'Modelos' && (!vid.videoCategory || vid.videoCategory === 'Todos') && isUploaded);
     });
 
@@ -14993,7 +15265,7 @@ export default function CastingLiveSection({
                       type="button"
                       className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
                       onClick={() => {
-                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
+                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'] as const;
                         const currentIdx = order.indexOf(
                           (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory === 'BackStage' ? 'Backstage' : uploadVideoCategory === 'Investors' ? 'Jewellery' : uploadVideoCategory) as any
                         );
@@ -15028,10 +15300,12 @@ export default function CastingLiveSection({
                         { id: 'Runway', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309] border-[#fef3c7]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
                         { id: 'Backstage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2] border-[#cffafe]/50', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-[0_4px_12px_rgba(6,182,212,0.35)]' },
                         { id: 'Jewellery', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf] border-[#f3e8ff]/50', activeBg: 'bg-purple-500 text-white border-purple-500 shadow-[0_4px_12px_rgba(168,85,247,0.35)]' },
-                        { id: 'Catwalk', label: 'Catwalk 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]/50', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-[0_4px_12px_rgba(124,58,237,0.35)]' },
+                        { id: 'Casting', label: 'Casting 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]/50', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-[0_4px_12px_rgba(124,58,237,0.35)]' },
                         { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]/50', activeBg: 'bg-emerald-600 text-white border-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.35)]' },
                         { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48] border-[#fecdd3]/50', activeBg: 'bg-rose-500 text-white border-rose-500 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
-                        { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04] border-[#fef08a]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' }
+                        { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04] border-[#fef08a]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
+                        { id: 'Luxury', label: 'Luxury 🍸', bg: 'bg-[#fff7ed] text-[#c2410c] border-[#ffedd5]/50', activeBg: 'bg-gradient-to-r from-amber-600 to-orange-600 text-white border-orange-500 shadow-[0_4px_12px_rgba(234,88,12,0.35)]' },
+                        { id: 'Interview', label: 'Interview 🎙️', bg: 'bg-[#f0fdf4] text-[#15803d] border-[#dcfce7]/50', activeBg: 'bg-emerald-700 text-white border-emerald-600 shadow-[0_4px_12px_rgba(21,128,61,0.35)]' }
                       ].map((cat, idx) => {
                         const isNormalizedActive = uploadVideoCategory === cat.id ||
                           (cat.id === 'Runway' && uploadVideoCategory === 'Modelos') ||
@@ -15070,7 +15344,7 @@ export default function CastingLiveSection({
                       type="button"
                       className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
                       onClick={() => {
-                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const;
+                        const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'] as const;
                         const currentIdx = order.indexOf(
                           (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory === 'BackStage' ? 'Backstage' : uploadVideoCategory === 'Investors' ? 'Jewellery' : uploadVideoCategory) as any
                         );
@@ -25356,6 +25630,2622 @@ try {
     );
   };
 
+  // 🔘 Navigation Buttons matching exact pixel-perfect design from image.png
+  const renderSidebarNavigationButtons = () => {
+    return (
+      <div className="space-y-2.5 w-full" id="casting-live-sidebar-buttons-container">
+        {/* 1. PARA TI */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubTab('para-ti');
+            setActiveVideoIndex(0);
+            setViewingTikTokProfileUsername(null);
+            setLiveViewMode('grid');
+          }}
+          className={`w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border rounded-2xl shadow-2xs transition-all text-left cursor-pointer group ${
+            activeSubTab === 'para-ti'
+              ? 'border-rose-500/80 ring-2 ring-rose-500/20 bg-rose-50/20'
+              : 'border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Home className={`w-4.5 h-4.5 ${activeSubTab === 'para-ti' ? 'text-rose-600' : 'text-rose-500'} stroke-[2.2]`} />
+            <span className={`text-[12px] font-black uppercase tracking-wide font-sans ${activeSubTab === 'para-ti' ? 'text-rose-600' : 'text-slate-850'}`}>
+              PARA TI
+            </span>
+          </div>
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-400/40 shrink-0 group-hover:scale-125 transition-transform" />
+        </button>
+
+        {/* 2. EXPLORAR */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubTab('explorar');
+            setActiveVideoIndex(0);
+            setViewingTikTokProfileUsername(null);
+          }}
+          className={`w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border rounded-2xl shadow-2xs transition-all text-left cursor-pointer group ${
+            activeSubTab === 'explorar'
+              ? 'border-rose-500/80 ring-2 ring-rose-500/20 bg-rose-50/20'
+              : 'border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Compass className={`w-4.5 h-4.5 ${activeSubTab === 'explorar' ? 'text-rose-600' : 'text-slate-600'} stroke-[2]`} />
+            <span className={`text-[12px] font-black uppercase tracking-wide font-sans ${activeSubTab === 'explorar' ? 'text-rose-600' : 'text-slate-850'}`}>
+              EXPLORAR
+            </span>
+          </div>
+        </button>
+
+        {/* 3. AMIGOS */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubTab('amigos');
+            setActiveVideoIndex(0);
+            setViewingTikTokProfileUsername(null);
+          }}
+          className={`w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border rounded-2xl shadow-2xs transition-all text-left cursor-pointer group ${
+            activeSubTab === 'amigos'
+              ? 'border-rose-500/80 ring-2 ring-rose-500/20 bg-rose-50/20'
+              : 'border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Users className={`w-4.5 h-4.5 ${activeSubTab === 'amigos' ? 'text-rose-600' : 'text-slate-600'} stroke-[2]`} />
+            <span className={`text-[12px] font-black uppercase tracking-wide font-sans ${activeSubTab === 'amigos' ? 'text-rose-600' : 'text-slate-850'}`}>
+              AMIGOS
+            </span>
+          </div>
+        </button>
+
+        {/* 4. LIVE (Abre la pantalla de videos en directo) */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubTab('live');
+            setLiveViewMode('grid');
+            setActiveVideoIndex(0);
+            setViewingTikTokProfileUsername(null);
+          }}
+          className={`w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border rounded-2xl shadow-2xs transition-all text-left cursor-pointer group ${
+            activeSubTab === 'live'
+              ? 'border-rose-500/80 ring-2 ring-rose-500/20 bg-rose-50/20'
+              : 'border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Tv className={`w-4.5 h-4.5 ${activeSubTab === 'live' ? 'text-rose-600' : 'text-slate-600'} stroke-[2]`} />
+            <span className={`text-[12px] font-black uppercase tracking-wide font-sans ${activeSubTab === 'live' ? 'text-rose-600' : 'text-slate-850'}`}>
+              LIVE
+            </span>
+          </div>
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-400/40 shrink-0 group-hover:scale-125 transition-transform" />
+        </button>
+
+        {/* 5. MENSAJES */}
+        <button
+          type="button"
+          onClick={() => {
+            if (onNavigateToTab) {
+              onNavigateToTab('chat');
+            } else {
+              alert('💬 Accede al apartado principal de "Mensajes" para tener chats fluidos con las modelos.');
+            }
+          }}
+          className="w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-2xl shadow-2xs transition-all text-left cursor-pointer group"
+        >
+          <div className="flex items-center gap-3">
+            <MessageCircle className="w-4.5 h-4.5 text-slate-600 stroke-[2]" />
+            <span className="text-[12px] font-black uppercase tracking-wide font-sans text-slate-850">
+              MENSAJES
+            </span>
+          </div>
+        </button>
+
+        {/* 6. CARGAR VÍDEO */}
+        <button
+          type="button"
+          onClick={() => setShowCreationTypeModal(true)}
+          className="w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-2xl shadow-2xs transition-all text-left cursor-pointer group"
+        >
+          <div className="flex items-center gap-3">
+            <Plus className="w-4.5 h-4.5 text-rose-500 stroke-[2.5]" />
+            <span className="text-[12px] font-black uppercase tracking-wide font-sans text-slate-850">
+              CARGAR VÍDEO
+            </span>
+          </div>
+        </button>
+
+        {/* 7. MÁS */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowMoreDropdown(!showMoreDropdown)}
+            className={`w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border rounded-2xl shadow-2xs transition-all text-left cursor-pointer group ${
+              showMoreDropdown ? 'border-slate-400 bg-slate-50' : 'border-slate-200/90 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <MoreHorizontal className="w-4.5 h-4.5 text-slate-600 stroke-[2]" />
+              <span className="text-[12px] font-black uppercase tracking-wide font-sans text-slate-850">
+                MÁS
+              </span>
+            </div>
+          </button>
+
+          {showMoreDropdown && (
+            <div className="absolute left-0 bottom-full mb-3 w-72 bg-white border border-slate-200 shadow-xl rounded-2xl p-3 z-[99] animate-fade-in space-y-2 text-slate-800 font-sans">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-1">
+                <span className="text-sm font-extrabold text-slate-900 tracking-tight">Opciones Adicionales</span>
+                <button 
+                  type="button"
+                  onClick={() => setShowMoreDropdown(false)}
+                  className="text-slate-400 hover:text-slate-700 text-xs font-bold p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowMoreDropdown(false);
+                  setShowCreateBroadcastModal(true);
+                }}
+                className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 text-xs font-bold text-slate-700 text-left transition"
+              >
+                <Tv className="w-4 h-4 text-rose-500" />
+                <span>Emitir en Directo</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowMoreDropdown(false);
+                  setShowUploadModal(true);
+                }}
+                className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 text-xs font-bold text-slate-700 text-left transition"
+              >
+                <Plus className="w-4 h-4 text-indigo-500" />
+                <span>Publicar Contenido</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // 📺 Pantalla de Videos en Directo completa
+  const renderLiveVideosScreen = () => {
+    // 🎨 15 Categorías solicitadas con imagen propia de alta fidelidad para cada una
+    const channelCategories = [
+      {
+        id: 'todos',
+        label: 'Todos en Directo',
+        image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
+        count: '16 Canales'
+      },
+      {
+        id: 'atelier',
+        label: 'Atelier',
+        image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=300',
+        count: ''
+      },
+      {
+        id: 'haute_couture',
+        label: 'Haute Couture',
+        image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=300',
+        count: '4 en Vivo'
+      },
+      {
+        id: 'streetwear',
+        label: 'Streetwear & Urban',
+        image: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'fashion_model',
+        label: 'Fashion Model',
+        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        count: '5 en Vivo'
+      },
+      {
+        id: 'runway_model',
+        label: 'Runway Model',
+        image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=300',
+        count: '4 en Vivo'
+      },
+      {
+        id: 'catalog_model',
+        label: 'Catalog Model',
+        image: 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'commercial_model',
+        label: 'Commercial Model',
+        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300',
+        count: '3 en Vivo'
+      },
+      {
+        id: 'plus_size_model',
+        label: 'Plus-size Model',
+        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'petite_model',
+        label: 'Petite Model',
+        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'lingerie_model',
+        label: 'Lingerie Model',
+        image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=300',
+        count: '3 en Vivo'
+      },
+      {
+        id: 'swimsuit_model',
+        label: 'Swimsuit Model',
+        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=300',
+        count: '3 en Vivo'
+      },
+      {
+        id: 'fitness_model',
+        label: 'Fitness Model',
+        image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'parts_model',
+        label: 'Parts Model',
+        image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'mature_model',
+        label: 'Mature Model',
+        image: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&q=80&w=300',
+        count: '2 en Vivo'
+      },
+      {
+        id: 'real_people_models',
+        label: 'Real People Models',
+        image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=300',
+        count: '3 en Vivo'
+      }
+    ];
+
+    const liveStreamChannels = [
+      // 1. Haute Couture
+      {
+        id: 'live-adriana',
+        modelId: 'topf-1',
+        name: 'Adriana Lima',
+        username: 'adrianalima',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        title: "🌟 Pasarela Internacional Victoria's Secret & Alta Costura 2026",
+        category: 'haute_couture',
+        categoryLabel: 'Haute Couture',
+        viewers: 3420,
+        likes: 28400,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        tags: ['#HauteCouture', '#VictoriaSecret', '#AltaCostura'],
+        isVerified: true
+      },
+      // 2. Runway Model
+      {
+        id: 'live-candice-runway',
+        modelId: 'topf-3',
+        name: 'Candice Swanepoel',
+        username: 'candiceswanepoel',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        title: '✨ Desfile Catwalk Oficial en París Fashion Week LIVE',
+        category: 'runway_model',
+        categoryLabel: 'Runway Model',
+        viewers: 3120,
+        likes: 24500,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+        tags: ['#RunwayModel', '#Catwalk', '#PFW2026'],
+        isVerified: true
+      },
+      // 3. Atelier
+      // 3. Atelier & Retransmisión activa de la cámara del usuario en cualquier canal
+      ...(isUserRetransmitting && userRetransmittingChannelId ? [{
+        id: `live-user-retransmision-${userRetransmittingChannelId}`,
+        modelId: 'user-retransmission',
+        name: userProfile?.name ? `${userProfile.name} (TÚ)` : 'Tú (Retransmisión en Vivo)',
+        username: userProfile?.username || 'mi_camara_live',
+        avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        title: `🔴 En Directo: Mi Cámara Ocupando Todo el Canal (${channelCategories.find(c => c.id === userRetransmittingChannelId)?.label || userRetransmittingChannelId})`,
+        category: userRetransmittingChannelId,
+        categoryLabel: channelCategories.find(c => c.id === userRetransmittingChannelId)?.label || 'Canal en Vivo',
+        viewers: retransmissionLiveViewers,
+        likes: 24890,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        tags: ['#MiCamaraEnDirecto', '#OcupandoTodoElCanal', '#EnVivoParaTodos'],
+        isVerified: true,
+        isUserStream: true
+      }] : (isUserRetransmittingToAtelier ? [{
+        id: 'live-user-retransmision-atelier',
+        modelId: 'user-retransmission',
+        name: userProfile?.name ? `${userProfile.name} (TÚ)` : 'Tu Retransmisión',
+        username: userProfile?.username || 'mi_retransmision_live',
+        avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        title: '🔴 En Directo: Mi Retransmisión Exclusiva en el Canal Atelier',
+        category: 'atelier',
+        categoryLabel: 'Atelier',
+        viewers: 2480,
+        likes: 19500,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        tags: ['#MiRetransmision', '#AtelierLive', '#EnDirecto'],
+        isVerified: true,
+        isUserStream: true
+      }] : [])),
+      {
+        id: 'live-isabella-atelier',
+        modelId: 'topf-6',
+        name: 'Isabella Dubois',
+        username: 'isabelladubois',
+        avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=200',
+        title: '✂️ Taller de Patronaje, Corte y Confección Artesanal en Vivo',
+        category: 'atelier',
+        categoryLabel: 'Atelier',
+        viewers: 1890,
+        likes: 14200,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-talking-in-a-studio-interview-41720-large.mp4',
+        tags: ['#Atelier', '#Confección', '#Artesanal'],
+        isVerified: true
+      },
+      {
+        id: 'live-elena-atelier',
+        modelId: 'topf-11',
+        name: 'Elena Rostova',
+        username: 'elenarostova',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        title: '🧵 Ajustes Finales de Vestidos Exclusivos en el Atelier',
+        category: 'atelier',
+        categoryLabel: 'Atelier',
+        viewers: 1420,
+        likes: 11800,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
+        tags: ['#Atelier', '#PruebasDeVestuario', '#Taller'],
+        isVerified: true
+      },
+      {
+        id: 'live-chloe-atelier',
+        modelId: 'topf-4',
+        name: 'Chloe Laurent',
+        username: 'chloelaurent_couture',
+        avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200',
+        title: '👗 Confección de Vestidos de Gala y Costura de Precisión en Vivo',
+        category: 'atelier',
+        categoryLabel: 'Atelier',
+        viewers: 1680,
+        likes: 12900,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
+        tags: ['#Atelier', '#AltaCostura', '#DiseñoDeModa'],
+        isVerified: true
+      },
+      // 4. Streetwear & Urban
+      {
+        id: 'live-jon-streetwear',
+        modelId: 'topm-1',
+        name: 'Jon Kortajarena',
+        username: 'jonkortajarena',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+        title: '⚡ Vanguardia Urbana & Streetwear en Milán Fashion District',
+        category: 'streetwear',
+        categoryLabel: 'Streetwear & Urban',
+        viewers: 2240,
+        likes: 18900,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stylish-young-man-walking-in-a-urban-setting-41712-large.mp4',
+        tags: ['#Streetwear', '#UrbanFashion', '#Milán'],
+        isVerified: true
+      },
+      // 5. FashionModel (Colección de 5 canales para la categoría Fashion en vivo)
+      {
+        id: 'live-gisele-fashion',
+        modelId: 'topf-2',
+        name: 'Gisele Bündchen',
+        username: 'gisele',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        title: '💄 Sesión de Portada Editorial de Alta Moda & Estudio Glamour',
+        category: 'fashion_model',
+        categoryLabel: 'Fashion Model',
+        viewers: 2890,
+        likes: 22100,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
+        tags: ['#FashionModel', '#Editorial', '#Glamour'],
+        isVerified: true
+      },
+      {
+        id: 'live-kendall-fashion',
+        modelId: 'topf-1',
+        name: 'Kendall Jenner',
+        username: 'kendalljenner',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        title: '✨ Pasarela Internacional Fashion Week & Backstage Haute Couture',
+        category: 'fashion_model',
+        categoryLabel: 'Fashion Model',
+        viewers: 3420,
+        likes: 38900,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-photo-shoot-41724-large.mp4',
+        tags: ['#FashionModel', '#Runway', '#FashionWeek'],
+        isVerified: true
+      },
+      {
+        id: 'live-gigi-fashion',
+        modelId: 'topf-3',
+        name: 'Gigi Hadid',
+        username: 'gigihadid',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        title: '👠 Desfile Exclusivo Paris Haute Couture & Vestidos Atelier',
+        category: 'fashion_model',
+        categoryLabel: 'Fashion Model',
+        viewers: 3120,
+        likes: 29400,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-model-walking-on-a-runway-41715-large.mp4',
+        tags: ['#FashionModel', '#ParisFashion', '#HauteCouture'],
+        isVerified: true
+      },
+      {
+        id: 'live-bella-fashion',
+        modelId: 'topf-5',
+        name: 'Bella Hadid',
+        username: 'bellahadid',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        title: '🔥 Runway Vanguardista & Tendencias de Alta Costura Milán',
+        category: 'fashion_model',
+        categoryLabel: 'Fashion Model',
+        viewers: 2980,
+        likes: 27800,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-red-dress-41719-large.mp4',
+        tags: ['#FashionModel', '#Vanguardia', '#Milano'],
+        isVerified: true
+      },
+      {
+        id: 'live-kaia-fashion',
+        modelId: 'topf-9',
+        name: 'Kaia Gerber',
+        username: 'kaiagerber',
+        avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200',
+        title: '💎 Vogue Runway & Estilismo de Alta Costura en Directo',
+        category: 'fashion_model',
+        categoryLabel: 'Fashion Model',
+        viewers: 2450,
+        likes: 19600,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        tags: ['#FashionModel', '#VogueRunway', '#Glamour'],
+        isVerified: true
+      },
+      // 6. Catalog Model
+      {
+        id: 'live-taylor-catalog',
+        modelId: 'topf-7',
+        name: 'Taylor Hill',
+        username: 'taylorhill',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        title: '📸 Grabación de Lookbook & Catálogo Internacional de Temporada',
+        category: 'catalog_model',
+        categoryLabel: 'Catalog Model',
+        viewers: 1760,
+        likes: 13400,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
+        tags: ['#CatalogModel', '#Lookbook', '#Temporada'],
+        isVerified: true
+      },
+      // 7. Commercial Model
+      {
+        id: 'live-alessandra-commercial',
+        modelId: 'topf-4',
+        name: 'Alessandra Ambrosio',
+        username: 'alessandraambrosio',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        title: '🎬 Rodaje en Directo para Campaña Global Comercial & TV Spot',
+        category: 'commercial_model',
+        categoryLabel: 'Commercial Model',
+        viewers: 2150,
+        likes: 16900,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-makeup-posing-under-neon-light-40478-large.mp4',
+        tags: ['#CommercialModel', '#AdCampaign', '#Lifestyle'],
+        isVerified: true
+      },
+      // 8. Plus-size Model
+      {
+        id: 'live-ashley-plus',
+        modelId: 'topf-8',
+        name: 'Ashley Graham',
+        username: 'ashleygraham',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+        title: '👑 Empoderamiento Curvy en la Pasarela de Nueva York LIVE',
+        category: 'plus_size_model',
+        categoryLabel: 'Plus-size Model',
+        viewers: 2640,
+        likes: 21500,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+        tags: ['#PlusSizeModel', '#CurvyRunway', '#BodyPositivity'],
+        isVerified: true
+      },
+      // 9. Petite Model
+      {
+        id: 'live-lily-petite',
+        modelId: 'topf-9',
+        name: 'Lily-Rose Depp',
+        username: 'lilyrosedepp',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        title: '✨ Vanguardia & Silueta Petite en Presentación Exclusiva',
+        category: 'petite_model',
+        categoryLabel: 'Petite Model',
+        viewers: 1980,
+        likes: 15700,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
+        tags: ['#PetiteModel', '#HauteFashion', '#Silueta'],
+        isVerified: true
+      },
+      // 10. Lingerie Model
+      {
+        id: 'live-adriana-lingerie',
+        modelId: 'topf-1',
+        name: 'Adriana Lima',
+        username: 'adrianalima',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        title: '💖 Sesión Especial Lingerie & Seda de Lujo en Backstage',
+        category: 'lingerie_model',
+        categoryLabel: 'Lingerie Model',
+        viewers: 3890,
+        likes: 31200,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        tags: ['#LingerieModel', '#SedaDeLujo', '#AngelsLive'],
+        isVerified: true
+      },
+      // 11. Swimsuit Model
+      {
+        id: 'live-sara-swimsuit',
+        modelId: 'topf-5',
+        name: 'Sara Sampaio',
+        username: 'sarasampaio',
+        avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200',
+        title: '☀️ Desfile Resort & Baño de Lujo en Costa Mediterránea',
+        category: 'swimsuit_model',
+        categoryLabel: 'Swimsuit Model',
+        viewers: 2480,
+        likes: 19800,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-with-luxury-jewelry-posing-in-a-studio-41718-large.mp4',
+        tags: ['#SwimsuitModel', '#ResortFashion', '#MiamiSwim'],
+        isVerified: true
+      },
+      // 12. Fitness Model
+      {
+        id: 'live-taylor-fitness',
+        modelId: 'topf-7',
+        name: 'Taylor Hill',
+        username: 'taylorhill',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        title: '🏃‍♀️ Rutina de Calentamiento, Tonificación & Fitness Pre-Desfile',
+        category: 'fitness_model',
+        categoryLabel: 'Fitness Model',
+        viewers: 1650,
+        likes: 12800,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-warm-up-exercises-in-a-gym-42999-large.mp4',
+        tags: ['#FitnessModel', '#Workout', '#ModelFitness'],
+        isVerified: true
+      },
+      // 13. Parts Model
+      {
+        id: 'live-sara-parts',
+        modelId: 'topf-5',
+        name: 'Sara Sampaio',
+        username: 'sarasampaio',
+        avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200',
+        title: '💎 Exposición de Manos, Alta Relojería Suiza y Diamantes VIP',
+        category: 'parts_model',
+        categoryLabel: 'Parts Model',
+        viewers: 2210,
+        likes: 17600,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-with-luxury-jewelry-posing-in-a-studio-41718-large.mp4',
+        tags: ['#PartsModel', '#JoyeríaFina', '#AltaRelojería'],
+        isVerified: true
+      },
+      // 14. Mature Model
+      {
+        id: 'live-maye-mature',
+        modelId: 'topf-10',
+        name: 'Maye Musk',
+        username: 'mayemusk',
+        avatar: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&q=80&w=200',
+        title: '💎 Pasarela Silver & Sofisticación Atemporal en Alta Costura',
+        category: 'mature_model',
+        categoryLabel: 'Mature Model',
+        viewers: 2790,
+        likes: 22400,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        tags: ['#MatureModel', '#SilverGlamour', '#Atemporal'],
+        isVerified: true
+      },
+      // 15. Real People Models
+      {
+        id: 'live-street-real',
+        modelId: 'topf-12',
+        name: 'Street Casting Project',
+        username: 'realpeoplecast',
+        avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200',
+        title: '🌍 Diversidad Auténtica & Modelos Reales en Fashion Week',
+        category: 'real_people_models',
+        categoryLabel: 'Real People Models',
+        viewers: 1840,
+        likes: 14700,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-makeup-posing-under-neon-light-40478-large.mp4',
+        tags: ['#RealPeopleModels', '#Diversidad', '#Autenticidad'],
+        isVerified: true
+      }
+    ];
+
+    const filteredLiveChannels = liveStreamChannels.filter(c => {
+      const matchesCat = liveChannelsCategoryFilter === 'todos' || c.category === liveChannelsCategoryFilter || (c.isUserStream && isUserRetransmitting && userRetransmittingChannelId === liveChannelsCategoryFilter);
+      const matchesSearch = !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesCat && matchesSearch;
+    });
+
+    const heroChannel = (selectedHeroChannelId && liveStreamChannels.find(c => c.id === selectedHeroChannelId)) 
+      || (isUserRetransmitting && liveStreamChannels.find(c => c.isUserStream && (c.category === liveChannelsCategoryFilter || liveChannelsCategoryFilter === 'todos')))
+      || filteredLiveChannels[0] 
+      || liveStreamChannels[0];
+
+    return (
+      <div className="w-full space-y-6 animate-fade-in font-sans" id="live-videos-screen-root">
+        {/* Top Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>PANTALLA DE VIDEOS EN DIRECTO</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight flex items-center gap-2">
+              <span>Canales en vivo</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+              Sigue a las top models en tiempo real con desfiles de moda, ensayos y backstage interactivo.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveSubTab('para-ti');
+              }}
+              className="px-3 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition cursor-pointer"
+              title="Volver al feed general"
+            >
+              Volver al Feed
+            </button>
+          </div>
+        </div>
+
+        {/* Live Counters Banner */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-black text-lg">
+              🔴
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Canales Activos</p>
+              <p className="text-lg font-black text-slate-900">{liveStreamChannels.length} en Vivo</p>
+            </div>
+          </div>
+
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-black text-lg">
+              👁️
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Audiencia en Vivo</p>
+              <p className="text-lg font-black text-slate-900">18,420</p>
+            </div>
+          </div>
+
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-black text-lg">
+              ❤️
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reacciones Hoy</p>
+              <p className="text-lg font-black text-slate-900">142.5K</p>
+            </div>
+          </div>
+        </div>
+        {/* HERO LIVE STREAM: Destacado Principal en Directo (Ajustado: +3cm de largo, chat eliminado, contenido de z.png abajo) */}
+        <div className="relative w-full rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl group">
+          {/* Canal de vídeo: 4 centímetros más largo adicional (+151px / calc(440px + 7cm)), sin tocar el ancho */}
+          <div 
+            className="relative w-full bg-black flex items-center justify-center overflow-hidden min-h-[570px] sm:min-h-[670px] lg:min-h-[705px]"
+            style={{ minHeight: 'calc(440px + 7cm)' }}
+          >
+            {heroChannel.isUserStream || (isUserRetransmitting && (userRetransmittingChannelId === heroChannel.category || heroChannel.id.includes('user-retransmision'))) ? (
+              <div className="relative w-full h-full min-h-[570px] sm:min-h-[670px] lg:min-h-[705px] bg-black flex items-center justify-center overflow-hidden">
+                {userLiveMediaStream ? (
+                  <video 
+                    ref={(el) => {
+                      heroVideoRef.current = el;
+                      if (el && el.srcObject !== userLiveMediaStream) {
+                        el.srcObject = userLiveMediaStream;
+                        el.play().catch(() => {});
+                      }
+                    }}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`w-full h-full object-cover select-none ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                  />
+                ) : (
+                  <div className="relative w-full h-full min-h-[570px] sm:min-h-[670px] lg:min-h-[705px] flex items-center justify-center overflow-hidden bg-slate-950">
+                    <video 
+                      ref={heroVideoRef}
+                      src="https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover select-none"
+                    />
+                    {/* Overlay de cámara conectada transmitiendo en directo ocupando todo el canal */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/60 pointer-events-none flex flex-col items-center justify-center p-6 text-center">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/30 border-2 border-red-500 flex items-center justify-center mb-3 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+                        <Camera className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                      </div>
+                      <span className="bg-red-600 text-white font-black text-[11px] sm:text-xs px-3.5 py-1 rounded-full uppercase tracking-widest mb-2 shadow-lg animate-pulse">
+                        🔴 CÁMARA EN DIRECTO ACTIVADA
+                      </span>
+                      <p className="text-white text-sm sm:text-base md:text-lg font-black max-w-lg drop-shadow-md">
+                        Transmitiendo tu imagen en directo ocupando todo el canal para todos los usuarios
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Controles flotantes de la cámara de retransmisión */}
+                <div className="absolute top-3 right-3 z-30 flex items-center gap-2 pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const nextMode = liveCameraFacingMode === 'user' ? 'environment' : 'user';
+                      setLiveCameraFacingMode(nextMode);
+                      if (userLiveMediaStream) {
+                        userLiveMediaStream.getTracks().forEach(t => t.stop());
+                      }
+                      try {
+                        const newStream = await navigator.mediaDevices.getUserMedia({
+                          video: { facingMode: nextMode },
+                          audio: true
+                        });
+                        setUserLiveMediaStream(newStream);
+                      } catch {}
+                    }}
+                    className="p-1.5 sm:px-2.5 sm:py-1 rounded-full bg-black/70 hover:bg-black text-white text-[10.5px] font-bold border border-white/20 transition cursor-pointer shadow-md flex items-center gap-1"
+                    title="Girar cámara (Frontal / Trasera)"
+                  >
+                    <span>🔄</span>
+                    <span className="hidden sm:inline">Girar</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStopLiveRetransmission}
+                    className="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-rose-700 text-white text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider transition cursor-pointer border border-white/20 shadow-lg active:scale-95"
+                    title="Detener retransmisión"
+                  >
+                    ⏹️ Detener
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <video 
+                ref={heroVideoRef}
+                key={heroChannel.id}
+                src={heroChannel.videoUrl}
+                autoPlay
+                loop
+                muted={liveHeroMuted}
+                playsInline
+                className="w-full h-full object-cover"
+                onLoadedMetadata={() => {
+                  if (heroVideoRef.current) {
+                    heroVideoRef.current.volume = (liveHeroMuted ? 0 : liveHeroVolume) / 100;
+                    heroVideoRef.current.muted = liveHeroMuted;
+                  }
+                }}
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none" />
+
+            {/* 🎯 SENSOR DEL MARGEN SUPERIOR DEL CANAL: Al pasar el puntero se despliega el menú de canales de imagen.png */}
+            <div
+              className="absolute top-0 inset-x-0 h-24 sm:h-28 z-30 pointer-events-auto cursor-pointer flex justify-center items-start pt-1.5 group/top-channels-sensor"
+              onMouseEnter={() => setIsHeroTopChannelsDropdownOpen(true)}
+              onClick={() => setIsHeroTopChannelsDropdownOpen(prev => !prev)}
+              title="Pasa el puntero por la parte superior para desplegar los canales en directo"
+            >
+              {/* Notita sutil superior indicadora */}
+              <div className="w-20 h-1.5 bg-white/40 group-hover/top-channels-sensor:bg-rose-400 group-hover/top-channels-sensor:w-28 rounded-full transition-all duration-300 pointer-events-none opacity-80 shadow-xs" />
+            </div>
+
+            {/* 📺 MENÚ DESPLEGABLE CON LOS CANALES DE imagen.png: DE UNO EN UNO Y EN UN TAMAÑO BASTANTE MAYOR */}
+            {isHeroTopChannelsDropdownOpen && (
+              <div
+                className="absolute top-0 inset-x-0 z-50 bg-[#090d18]/98 backdrop-blur-2xl border-b border-rose-500/50 p-3 sm:p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] animate-slide-down pointer-events-auto select-none"
+                onMouseEnter={() => setIsHeroTopChannelsDropdownOpen(true)}
+                onMouseLeave={() => setIsHeroTopChannelsDropdownOpen(false)}
+              >
+                {/* Cabecera del menú desplegable con contador y controles */}
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                    <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider font-sans">
+                      Canales & Pasarelas en Vivo ({heroChannelsSliderIdx + 1} de {channelCategories.length})
+                    </span>
+                    <span className="text-[10px] text-slate-400 hidden sm:inline">• Explora de uno en uno con las flechas o selecciona el canal</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHeroChannelsSliderIdx(prev => (prev === 0 ? channelCategories.length - 1 : prev - 1));
+                      }}
+                      className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition cursor-pointer"
+                      title="Canal anterior"
+                    >
+                      <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHeroChannelsSliderIdx(prev => (prev === channelCategories.length - 1 ? 0 : prev + 1));
+                      }}
+                      className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition cursor-pointer"
+                      title="Siguiente canal"
+                    >
+                      <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsHeroTopChannelsDropdownOpen(false);
+                      }}
+                      className="p-1.5 px-2.5 rounded-full bg-slate-800/90 hover:bg-rose-600 text-slate-300 hover:text-white text-xs font-bold transition cursor-pointer ml-1"
+                      title="Cerrar menú"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* Slider de canales: DE UNO EN UNO Y EN TAMAÑO BASTANTE MAYOR */}
+                {(() => {
+                  const currentCat = channelCategories[heroChannelsSliderIdx] || channelCategories[0];
+                  const isSelected = liveChannelsCategoryFilter === currentCat.id;
+
+                  const handlePrev = (e?: React.MouseEvent) => {
+                    if (e) e.stopPropagation();
+                    setHeroChannelsSliderIdx(prev => (prev === 0 ? channelCategories.length - 1 : prev - 1));
+                  };
+
+                  const handleNext = (e?: React.MouseEvent) => {
+                    if (e) e.stopPropagation();
+                    setHeroChannelsSliderIdx(prev => (prev === channelCategories.length - 1 ? 0 : prev + 1));
+                  };
+
+                  return (
+                    <div className="relative w-full py-1">
+                      {/* Tarjeta destacada de canal individual en tamaño bastante mayor */}
+                      <div 
+                        onClick={() => {
+                          setLiveChannelsCategoryFilter(currentCat.id);
+                          setIsHeroTopChannelsDropdownOpen(false);
+                        }}
+                        className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-center gap-5 sm:gap-7 shadow-2xl relative select-none group overflow-hidden ${
+                          isSelected
+                            ? 'bg-slate-950 text-white border-rose-500 ring-2 ring-rose-500/70 shadow-rose-950/60'
+                            : 'bg-slate-900/95 hover:bg-slate-850 text-white border-slate-700/80 hover:border-slate-500'
+                        }`}
+                      >
+                        {/* Miniatura en tamaño bastante mayor (w-28 h-28 / w-36 h-36) con punto de directo */}
+                        <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden shrink-0 shadow-2xl ring-2 ring-white/10 group-hover:scale-105 transition-transform duration-300">
+                          <img 
+                            src={currentCat.image} 
+                            alt={currentCat.label} 
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                          <div className={`absolute inset-0 bg-gradient-to-t ${isSelected ? 'from-slate-950/80' : 'from-black/60'} to-transparent`} />
+                          <span className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 rounded-full bg-red-500 ring-2 ring-white animate-pulse" />
+                        </div>
+
+                        {/* Información detallada y en tamaño bastante mayor */}
+                        <div className="flex-1 text-center sm:text-left min-w-0 space-y-2.5">
+                          <div className="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                            <span className="bg-gradient-to-r from-red-600 to-rose-600 text-white text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md animate-pulse">
+                              LIVE
+                            </span>
+                            {isSelected && (
+                              <span className="text-[11px] font-black text-emerald-400 bg-emerald-950/80 border border-emerald-500/50 px-3 py-0.5 rounded-full flex items-center gap-1">
+                                ✓ Canal Seleccionado
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className={`font-black text-white tracking-tight drop-shadow-md ${
+                            currentCat.id === 'haute_couture' || currentCat.label.toLowerCase().includes('haute')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'commercial_model' || currentCat.label.toLowerCase().includes('commercial')
+                              ? 'text-[11px] sm:text-xs md:text-[13px]'
+                              : currentCat.id === 'plus_size_model' || currentCat.label.toLowerCase().includes('plus')
+                              ? 'text-[11px] sm:text-xs md:text-[13px]'
+                              : currentCat.id === 'petite_model' || currentCat.label.toLowerCase().includes('petite')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'lingerie_model' || currentCat.label.toLowerCase().includes('lingerie')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'swimsuit_model' || currentCat.label.toLowerCase().includes('swimsuit')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'fitness_model' || currentCat.label.toLowerCase().includes('fitness')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'parts_model' || currentCat.label.toLowerCase().includes('parts')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'mature_model' || currentCat.label.toLowerCase().includes('mature')
+                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              : currentCat.id === 'real_people_models' || currentCat.label.toLowerCase().includes('real people')
+                              ? 'text-[11px] sm:text-xs md:text-[13px]'
+                              : currentCat.id === 'runway_model' || currentCat.label.toLowerCase().includes('runway')
+                              ? 'text-xs sm:text-sm md:text-base'
+                              : currentCat.id === 'catalog_model' || currentCat.label.toLowerCase().includes('catalog')
+                              ? 'text-xs sm:text-sm md:text-base'
+                              : currentCat.id === 'todos'
+                              ? 'text-sm sm:text-base md:text-lg'
+                              : currentCat.id === 'atelier'
+                              ? 'text-sm sm:text-base md:text-lg'
+                              : currentCat.id === 'fashion_model' || currentCat.label.toLowerCase().includes('fashion') || currentCat.id === 'streetwear' || currentCat.label.toLowerCase().includes('streetwear') || currentCat.label.toLowerCase().includes('urban')
+                              ? 'text-xs sm:text-sm md:text-base'
+                              : 'text-xs sm:text-sm md:text-sm'
+                          }`}>
+                            {currentCat.label}
+                          </h4>
+
+                          <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                            Transmisión temática exclusiva • Haz clic para sintonizar este canal
+                          </p>
+
+                          {/* Botones de acción: Sintonizar y Retransmitir abajo */}
+                          <div className="pt-1 flex flex-col items-center sm:items-start gap-2 w-full max-w-full">
+                            {/* Botón Sintonizar (solo pone Sintonizar) */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLiveChannelsCategoryFilter(currentCat.id);
+                                if (isUserRetransmitting && userRetransmittingChannelId === currentCat.id) {
+                                  setSelectedHeroChannelId(`live-user-retransmision-${currentCat.id}`);
+                                } else if (currentCat.id === 'atelier') {
+                                  if (isUserRetransmittingToAtelier || isUserRetransmitting) {
+                                    setSelectedHeroChannelId('live-user-retransmision-atelier');
+                                  } else {
+                                    setSelectedHeroChannelId('live-isabella-atelier');
+                                  }
+                                } else {
+                                  setSelectedHeroChannelId(null);
+                                }
+                                setIsHeroTopChannelsDropdownOpen(false);
+                              }}
+                              className={`w-full sm:w-auto max-w-full px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 ${
+                                isSelected
+                                  ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white ring-2 ring-rose-400/50'
+                                  : 'bg-white hover:bg-slate-100 text-slate-950 hover:text-black'
+                              }`}
+                              title={`Sintonizar canal ${currentCat.label}`}
+                            >
+                              <span>Sintonizar</span>
+                              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                            </button>
+
+                            {/* Botón Retransmitir (Abre opciones de stream dentro del canal) */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setStreamOptionsTargetChannel(currentCat);
+                                setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${currentCat.label}`);
+                                setLiveChannelsCategoryFilter(currentCat.id);
+                                if (isUserRetransmitting && userRetransmittingChannelId === currentCat.id) {
+                                  setSelectedHeroChannelId(`live-user-retransmision-${currentCat.id}`);
+                                } else if (currentCat.id === 'atelier' && !isUserRetransmittingToAtelier) {
+                                  setSelectedHeroChannelId('live-isabella-atelier');
+                                } else {
+                                  setSelectedHeroChannelId(null);
+                                }
+                                setIsHeroTopChannelsDropdownOpen(false);
+                                setShowStreamOptionsModal(true);
+                              }}
+                              className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10.5px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border truncate ${
+                                (isUserRetransmitting && userRetransmittingChannelId === currentCat.id) || (isUserRetransmittingToAtelier && currentCat.id === 'atelier')
+                                  ? 'bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-500/30'
+                                  : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
+                              }`}
+                              title={`Configurar opciones de stream para retransmitir en el canal ${currentCat.label}`}
+                            >
+                              {((isUserRetransmitting && userRetransmittingChannelId === currentCat.id) || (isUserRetransmittingToAtelier && currentCat.id === 'atelier')) && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                              )}
+                              <span className="truncate">
+                                {((isUserRetransmitting && userRetransmittingChannelId === currentCat.id) || (isUserRetransmittingToAtelier && currentCat.id === 'atelier')) 
+                                  ? 'Retransmitiendo' 
+                                  : 'Retransmitir'}
+                              </span>
+                              <Radio className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Flechas grandes de navegación lateral integradas */}
+                        <button
+                          type="button"
+                          onClick={handlePrev}
+                          className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/95 hover:bg-rose-600 border border-slate-700 hover:border-rose-400 text-white shadow-2xl flex items-center justify-center transition active:scale-90 cursor-pointer z-20 group/prev"
+                          title="Canal anterior"
+                        >
+                          <ChevronLeft className="w-5 h-5 stroke-[2.5] group-hover/prev:-translate-x-0.5 transition-transform" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/95 hover:bg-rose-600 border border-slate-700 hover:border-rose-400 text-white shadow-2xl flex items-center justify-center transition active:scale-90 cursor-pointer z-20 group/next"
+                          title="Siguiente canal"
+                        >
+                          <ChevronRight className="w-5 h-5 stroke-[2.5] group-hover/next:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+
+                      {/* Barra de puntos indicadores de progreso de canal */}
+                      <div className="flex items-center justify-center gap-1.5 pt-3.5 flex-wrap max-w-full overflow-hidden">
+                        {channelCategories.map((cat, idx) => (
+                          <button
+                            key={`dot-${cat.id}`}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHeroChannelsSliderIdx(idx);
+                            }}
+                            className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                              idx === heroChannelsSliderIdx 
+                                ? 'w-6 bg-gradient-to-r from-rose-500 to-pink-500 shadow-md ring-1 ring-white/30' 
+                                : 'w-2 bg-slate-700/80 hover:bg-slate-500'
+                            }`}
+                            title={`Ir a ${cat.label} (${idx + 1}/${channelCategories.length})`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* 📡 VENTANA DE OPCIONES DE STREAM PARA RETRANSMITIR EN DIRECTO (DENTRO DEL CANAL) */}
+            {showStreamOptionsModal && streamOptionsTargetChannel && (
+              <div 
+                className="absolute inset-0 z-[70] flex items-center justify-center p-2.5 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in font-sans overflow-y-auto pointer-events-auto select-none"
+                onClick={() => setShowStreamOptionsModal(false)}
+              >
+                <div 
+                  className="bg-slate-950 text-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-800 flex flex-col max-h-[96%] animate-scale-in my-auto pointer-events-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="bg-slate-900/95 border-b border-slate-800 p-3.5 sm:p-4 flex items-center justify-between gap-3 shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-slate-700 shadow-md">
+                        <img 
+                          src={streamOptionsTargetChannel.image || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=300'} 
+                          alt={streamOptionsTargetChannel.label} 
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-slate-950 animate-pulse" />
+                      </div>
+                      <div className="text-left min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            LIVE STREAM
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/60">
+                            Canal {streamOptionsTargetChannel.label}
+                          </span>
+                        </div>
+                        <h3 className="font-black text-sm sm:text-base text-white truncate m-0">
+                          Opciones de Stream para Retransmitir en Directo
+                        </h3>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setShowStreamOptionsModal(false)}
+                      className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-700/80 text-sm font-bold"
+                      title="Cerrar opciones"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Navigation Tabs Bar: 2 Filas Horizontales con botones y letras más chicos */}
+                  <div className="bg-slate-900/80 border-b border-slate-800 p-2 sm:p-2.5 shrink-0 space-y-1.5 sm:space-y-2">
+                    {/* Fila 1: Cámara, Micrófono, Pantalla (3 botones compactos) */}
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full">
+                      <button
+                        type="button"
+                        onClick={() => setStreamOptionsTab('camera')}
+                        className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                          streamOptionsTab === 'camera'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
+                            : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                        }`}
+                        title="Configuración de Cámara"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                        <span className="whitespace-nowrap">Cámara</span>
+                        {isBroadcastCamOn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStreamOptionsTab('mic')}
+                        className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                          streamOptionsTab === 'mic'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
+                            : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                        }`}
+                        title="Configuración de Micrófono"
+                      >
+                        <Mic className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                        <span className="whitespace-nowrap">Micrófono</span>
+                        {isBroadcastMicOn && !isMuted && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStreamOptionsTab('screen')}
+                        className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                          streamOptionsTab === 'screen'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
+                            : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                        }`}
+                        title="Compartir Pantalla"
+                      >
+                        <Monitor className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+                        <span className="whitespace-nowrap">Pantalla</span>
+                        {isScreenSharingActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping shrink-0" />}
+                      </button>
+                    </div>
+
+                    {/* Fila 2: OBS / Claves RTMP y Multistreaming Redes (2 botones compactos) */}
+                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full">
+                      <button
+                        type="button"
+                        onClick={() => setStreamOptionsTab('rtmp')}
+                        className={`w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                          streamOptionsTab === 'rtmp'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/40'
+                            : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                        }`}
+                        title="OBS Studio / Claves RTMP"
+                      >
+                        <Radio className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                        <span className="whitespace-nowrap">OBS / Claves RTMP</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStreamOptionsTab('multistream')}
+                        className={`w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                          streamOptionsTab === 'multistream'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/40'
+                            : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                        }`}
+                        title="Multistreaming en Redes Sociales"
+                      >
+                        <Globe className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                        <span className="whitespace-nowrap">Multistreaming Redes</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-3.5 sm:p-5 space-y-4 text-left flex-1 overflow-y-auto max-h-[50vh] sm:max-h-[56vh]">
+                    {/* Título de la transmisión general */}
+                    <div className="bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                        Título de tu Retransmisión en Vivo
+                      </label>
+                      <input 
+                        type="text" 
+                        value={streamTitleInput} 
+                        onChange={(e) => setStreamTitleInput(e.target.value)}
+                        placeholder={`Ej: Sesión en Vivo de Diseño en ${streamOptionsTargetChannel.label}`}
+                        className="w-full px-3.5 py-2 bg-slate-950 rounded-xl border border-slate-700/80 text-xs font-bold text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    {/* TAB 1: CÁMARA */}
+                    {streamOptionsTab === 'camera' && (
+                      <div className="space-y-3.5 animate-fade-in">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Dispositivo de cámara */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                              Cámara de Retransmisión
+                            </label>
+                            <select 
+                              value={broadcastCamDevice}
+                              onChange={(e) => setBroadcastCamDevice(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                            >
+                              <option value="Cámara Web HD (Logitech C920 Pro)">📷 Cámara Web HD (Logitech C920 Pro)</option>
+                              <option value="Cámara Frontal Móvil (12MP 4K HDR)">📱 Cámara Frontal Móvil (12MP 4K HDR)</option>
+                              <option value="Cámara Trasera Gran Angular (4K 60fps)">📱 Cámara Trasera Gran Angular (4K 60fps)</option>
+                              <option value="Capturadora HDMI Cam Link 4K (Sony Alpha)">🎥 Capturadora HDMI Cam Link 4K (Sony Alpha)</option>
+                            </select>
+                          </div>
+
+                          {/* Calidad de Vídeo */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                              Resolución y FPS
+                            </label>
+                            <select 
+                              value={streamResolution}
+                              onChange={(e) => setStreamResolution(e.target.value as any)}
+                              className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                            >
+                              <option value="1080p">1080p Full HD • 60 FPS (Recomendado)</option>
+                              <option value="720p">720p HD • 30 FPS (Bajo consumo de red)</option>
+                              <option value="4k">4K Ultra HD • 60 FPS (Ultra Fidelidad)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Estado de Cámara & Preview */}
+                        <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBroadcastCamOn ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'}`}>
+                              <Camera className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-black text-white m-0">
+                                {isBroadcastCamOn ? 'Cámara Activada y Lista' : 'Cámara en Modo Silencioso / Pausa'}
+                              </p>
+                              <p className="text-[10px] text-slate-400 m-0">
+                                {isBroadcastCamOn ? 'Transmite imagen directa al canal al emitir' : 'Haz clic para encender la vista previa'}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsBroadcastCamOn(!isBroadcastCamOn);
+                              setToastNotification({
+                                title: !isBroadcastCamOn ? 'Cámara' : 'Cámara',
+                                message: !isBroadcastCamOn ? '🎥 Cámara encendida y configurada.' : '🚫 Cámara pausada.'
+                              });
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer border ${
+                              isBroadcastCamOn
+                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                            }`}
+                          >
+                            {isBroadcastCamOn ? 'Encendida ✓' : 'Encender Cámara'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 2: MICRÓFONO */}
+                    {streamOptionsTab === 'mic' && (
+                      <div className="space-y-3.5 animate-fade-in">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                            Dispositivo de Entrada de Audio
+                          </label>
+                          <select 
+                            className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                          >
+                            <option>🎙️ Micrófono Predeterminado del Sistema</option>
+                            <option>🎙️ Micrófono de Solapa Inalámbrico (Røde Wireless GO II)</option>
+                            <option>🎙️ Micrófono de Estudio de Condensador (Shure SM7B)</option>
+                            <option>🎧 Auriculares con Micrófono (AirPods / Headset)</option>
+                          </select>
+                        </div>
+
+                        {/* VU Meter animado */}
+                        <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 space-y-2">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-300">Medidor de Nivel de Voz</span>
+                            <span className={`text-[10px] font-mono font-bold ${!isMuted ? 'text-emerald-400' : 'text-slate-500'}`}>
+                              {!isMuted ? '-6 dB (Óptimo)' : 'Mute'}
+                            </span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                            <div className={`h-full rounded-full transition-all duration-300 ${!isMuted ? 'w-3/4 bg-gradient-to-r from-emerald-500 via-yellow-400 to-rose-500 animate-pulse' : 'w-0'}`} />
+                          </div>
+                        </div>
+
+                        {/* Filtros de audio */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <label className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer">
+                            <span className="text-xs font-bold text-slate-200">Supresión de Ruido IA</span>
+                            <input 
+                              type="checkbox" 
+                              checked={streamNoiseSuppression}
+                              onChange={(e) => setStreamNoiseSuppression(e.target.checked)}
+                              className="accent-rose-500 rounded" 
+                            />
+                          </label>
+                          <label className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer">
+                            <span className="text-xs font-bold text-slate-200">Cancelación de Eco Acústico</span>
+                            <input type="checkbox" defaultChecked className="accent-rose-500 rounded" />
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 3: PANTALLA */}
+                    {streamOptionsTab === 'screen' && (
+                      <div className="space-y-3.5 animate-fade-in">
+                        <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                              <Monitor className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black text-white m-0">Compartición de Pantalla en Directo</h4>
+                              <p className="text-[10px] text-slate-400 m-0">Transmite bocetos de diseño, pasarelas 3D o tu escritorio al canal</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+                            <button
+                              type="button"
+                              onClick={handleToggleScreenShare}
+                              className={`w-full py-2.5 px-4 rounded-xl font-black text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
+                                isScreenSharingActive
+                                  ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-400 animate-pulse'
+                                  : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400'
+                              }`}
+                            >
+                              <Monitor className="w-4 h-4" />
+                              <span>{isScreenSharingActive ? 'Detener Compartir Pantalla' : 'Activar Captura de Pantalla'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 4: RTMP / OBS */}
+                    {streamOptionsTab === 'rtmp' && (
+                      <div className="space-y-3.5 animate-fade-in">
+                        <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+                              Codificador Externo (OBS / Streamlabs / vMix)
+                            </span>
+                            <span className="text-[9px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800">
+                              Servidor Online
+                            </span>
+                          </div>
+
+                          {/* Server URL */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 block">URL del Servidor RTMP</label>
+                            <div className="flex gap-2">
+                              <input 
+                                type="text" 
+                                readOnly 
+                                value={`rtmp://live.castinglive.com/app/${streamOptionsTargetChannel.id}`} 
+                                className="flex-1 px-3 py-1.5 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 focus:outline-none"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setToastNotification({
+                                  title: 'URL Copiada',
+                                  message: `📋 URL copiada: rtmp://live.castinglive.com/app/${streamOptionsTargetChannel.id}`
+                                })}
+                                className="px-3 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border border-slate-700"
+                              >
+                                Copiar
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Stream Key */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 block">Clave de Retransmisión (Stream Key)</label>
+                            <div className="flex gap-2">
+                              <input 
+                                type={showRtmpKeySecret ? 'text' : 'password'} 
+                                readOnly 
+                                value={`live_${streamOptionsTargetChannel.id}_secret_8492049`} 
+                                className="flex-1 px-3 py-1.5 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 focus:outline-none"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setShowRtmpKeySecret(!showRtmpKeySecret)}
+                                className="px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-xl transition cursor-pointer border border-slate-700"
+                              >
+                                {showRtmpKeySecret ? 'Ocultar' : 'Ver'}
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={() => setToastNotification({
+                                  title: 'Clave Copiada',
+                                  message: '📋 Clave de emisión copiada. Pégala en Ajustes > Emisión en OBS.'
+                                })}
+                                className="px-3 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border-0"
+                              >
+                                Copiar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 5: MULTISTREAMING */}
+                    {streamOptionsTab === 'multistream' && (
+                      <div className="space-y-3 animate-fade-in">
+                        <p className="text-[11px] text-slate-400 m-0">
+                          Emite simultáneamente en tus redes sociales vinculadas mientras transmites en el canal {streamOptionsTargetChannel.label}:
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {[
+                            { key: 'tiktok', name: 'TikTok Live' },
+                            { key: 'youtube', name: 'YouTube Live' },
+                            { key: 'instagram', name: 'Instagram Live' },
+                            { key: 'twitch', name: 'Twitch' },
+                            { key: 'facebook', name: 'Facebook Live' },
+                          ].map((platform) => {
+                            const isActive = streamMultistreamPlatforms[platform.key];
+                            return (
+                              <div 
+                                key={platform.key}
+                                onClick={() => setStreamMultistreamPlatforms(prev => ({ ...prev, [platform.key]: !prev[platform.key] }))}
+                                className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between select-none ${
+                                  isActive
+                                    ? 'bg-slate-900 border-rose-500 ring-1 ring-rose-500/40'
+                                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700 opacity-70'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-slate-600'}`} />
+                                  <span className="text-xs font-black text-white">{platform.name}</span>
+                                </div>
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-800 text-slate-400'}`}>
+                                  {isActive ? 'Conectado' : 'Desactivado'}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer with Actions */}
+                  <div className="bg-slate-900/95 border-t border-slate-800 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
+                    <button 
+                      type="button"
+                      onClick={() => setShowStreamOptionsModal(false)}
+                      className="w-full sm:w-auto px-5 py-2 text-slate-400 hover:text-white text-xs font-black uppercase transition cursor-pointer bg-slate-800/80 hover:bg-slate-800 rounded-xl border border-slate-700"
+                    >
+                      Cerrar
+                    </button>
+
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                      {isUserRetransmitting && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleStopLiveRetransmission();
+                          }}
+                          className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-red-950/80 text-rose-400 border border-rose-800/60 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95"
+                        >
+                          Detener Emisión
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleStartLiveRetransmission(streamOptionsTargetChannel);
+                        }}
+                        className="w-full sm:w-auto px-6 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xl active:scale-95 flex items-center justify-center gap-2 border border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.4)]"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
+                        <span>INICIAR RETRANSMISIÓN EN DIRECTO</span>
+                        <Radio className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Top Overlay: Badges and all info positioned right below "EN DIRECTO DESTACADO" */}
+            <div className="absolute top-4 inset-x-4 z-20 flex flex-col gap-3 pointer-events-none">
+              {/* Row 1: "EN DIRECTO DESTACADO" badge, viewers count, pill button & Sound Toggle */}
+              <div className="flex items-center justify-between gap-2 w-full">
+                <div className="flex items-center gap-2 flex-wrap pointer-events-auto">
+                  <div className={`bg-red-600 text-white font-black tracking-wider uppercase px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg border border-red-500 animate-pulse ${
+                    liveChannelsCategoryFilter === 'runway_model' || liveChannelsCategoryFilter === 'catalog_model' || liveChannelsCategoryFilter === 'haute_couture' || liveChannelsCategoryFilter === 'commercial_model' || liveChannelsCategoryFilter === 'plus_size_model' || liveChannelsCategoryFilter === 'petite_model' || liveChannelsCategoryFilter === 'lingerie_model' || liveChannelsCategoryFilter === 'swimsuit_model' || liveChannelsCategoryFilter === 'fitness_model' || liveChannelsCategoryFilter === 'parts_model' || liveChannelsCategoryFilter === 'mature_model' || liveChannelsCategoryFilter === 'real_people_models'
+                      ? 'text-[8px] sm:text-[8.5px]'
+                      : 'text-[9.5px] sm:text-[10px]'
+                  }`}>
+                    <span className="w-2 h-2 rounded-full bg-white" />
+                    <span>
+                      {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
+                        ? 'TU CÁMARA RETRANSMITIENDO EN DIRECTO'
+                        : liveChannelsCategoryFilter === 'atelier'
+                        ? 'CANAL ATELIER EN DIRECTO'
+                        : liveChannelsCategoryFilter === 'todos'
+                        ? 'CANAL TODOS EN DIRECTO'
+                        : (() => {
+                            const activeCat = channelCategories.find(c => c.id === liveChannelsCategoryFilter);
+                            return activeCat ? `CANAL ${activeCat.label.toUpperCase()} EN DIRECTO` : 'EN DIRECTO DESTACADO';
+                          })()}
+                    </span>
+                  </div>
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20 flex items-center gap-1">
+                    <span>👁️</span>
+                    <span>{heroChannel.viewers.toLocaleString()} espectadores</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Perfil y título en todo el ancho del canal (sin botón Entrar al Directo) */}
+              <div className="w-full pointer-events-auto">
+                <div className="space-y-2 w-full">
+                  {/* Avatar y Nombre de usuario */}
+                  <div className="flex items-center gap-2.5">
+                    <img 
+                      src={heroChannel.avatar} 
+                      alt={heroChannel.name}
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-rose-500 shadow-md"
+                    />
+                    <div>
+                      <h3 className="font-extrabold text-sm sm:text-base text-white flex items-center gap-1.5 drop-shadow-md">
+                        <span>{heroChannel.name}</span>
+                        <span className="text-cyan-400 text-xs font-bold">✓</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-200 drop-shadow-sm font-medium">@{heroChannel.username}</p>
+                    </div>
+                  </div>
+
+                  {/* Título en todo el ancho del canal (letra más chica) */}
+                  <h4 className="text-xs sm:text-sm font-bold text-white/95 leading-snug drop-shadow-md w-full block">
+                    {heroChannel.title}
+                  </h4>
+                </div>
+              </div>
+            </div>
+
+            {/* 🎯 SENSOR DEL MARGEN IZQUIERDO DEL CANAL (z.png): Al pasar el puntero por el lado izquierdo del canal aparece la barra de volumen de la captura image.png */}
+            <div
+              className="absolute top-20 bottom-8 left-0 w-28 sm:w-40 z-30 pointer-events-auto flex items-center justify-start pl-2 sm:pl-3 group/left-channel-sensor cursor-pointer"
+              onMouseEnter={() => setIsHeroLeftVolumeVisible(true)}
+              onMouseLeave={() => setIsHeroLeftVolumeVisible(false)}
+            >
+              {/* CÁPSULA VERTICAL DE VOLUMEN DE LA CAPTURA image.png */}
+              <div
+                className={`w-[52px] sm:w-[58px] bg-[#0d111a]/95 hover:bg-[#0d111a] backdrop-blur-md py-3.5 px-1 rounded-2xl border border-slate-700/60 flex flex-col items-center justify-center gap-2 select-none shadow-[0_8px_32px_rgba(0,0,0,0.8)] transition-all duration-300 ease-out cursor-default ${
+                  isHeroLeftVolumeVisible
+                    ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
+                    : 'opacity-0 -translate-x-8 scale-90 pointer-events-none group-hover/left-channel-sensor:opacity-100 group-hover/left-channel-sensor:translate-x-0 group-hover/left-channel-sensor:scale-100 group-hover/left-channel-sensor:pointer-events-auto'
+                }`}
+                onMouseEnter={() => setIsHeroLeftVolumeVisible(true)}
+                onMouseLeave={() => setIsHeroLeftVolumeVisible(false)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* 1. Botón superior Mute/Unmute */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const nextMuted = !liveHeroMuted;
+                    setLiveHeroMuted(nextMuted);
+                    if (heroVideoRef.current) {
+                      heroVideoRef.current.muted = nextMuted;
+                      if (!nextMuted && liveHeroVolume === 0) {
+                        setLiveHeroVolume(80);
+                        heroVideoRef.current.volume = 0.8;
+                      }
+                    }
+                    setToastNotification({
+                      message: nextMuted ? '🔇 Audio del canal silenciado' : `🔊 Volumen: ${liveHeroVolume === 0 ? 80 : liveHeroVolume}%`,
+                      title: 'Audio del canal'
+                    });
+                  }}
+                  className="w-8 h-8 rounded-full bg-[#1b1926] hover:bg-[#251e33] text-white flex items-center justify-center transition border border-[#fe2c55]/70 hover:border-[#fe2c55] hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+                  title={liveHeroMuted ? 'Activar sonido' : 'Silenciar'}
+                >
+                  {liveHeroMuted ? (
+                    <VolumeX className="w-4 h-4 text-rose-400 stroke-[2.5]" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-white stroke-[2.5]" />
+                  )}
+                </button>
+
+                {/* 2. Etiqueta VOL */}
+                <span className="text-[8.5px] font-black text-[#fe2c55] uppercase tracking-wider font-sans drop-shadow-sm">
+                  VOL
+                </span>
+
+                {/* 3. Cápsula y barra deslizadora vertical idéntica a image.png */}
+                {(() => {
+                  const currentVolVal = liveHeroMuted ? 0 : liveHeroVolume;
+                  const handleHeroVolumeDrag = (newPct: number) => {
+                    const clamped = Math.max(0, Math.min(100, Math.round(newPct)));
+                    setLiveHeroVolume(clamped);
+                    if (clamped === 0) {
+                      setLiveHeroMuted(true);
+                      if (heroVideoRef.current) {
+                        heroVideoRef.current.muted = true;
+                        heroVideoRef.current.volume = 0;
+                      }
+                    } else {
+                      if (liveHeroMuted) setLiveHeroMuted(false);
+                      if (heroVideoRef.current) {
+                        heroVideoRef.current.muted = false;
+                        heroVideoRef.current.volume = clamped / 100;
+                      }
+                    }
+                  };
+
+                  return (
+                    <div 
+                      className="relative h-36 sm:h-44 w-4 sm:w-4.5 flex items-center justify-center bg-[#181d28]/95 hover:bg-[#181d28] rounded-full py-2 border border-slate-600/50 shadow-inner cursor-pointer group/slider-container"
+                      onPointerDown={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const updateFromPointer = (clientY: number) => {
+                          const offsetY = clientY - rect.top;
+                          const pct = 100 - (offsetY / rect.height) * 100;
+                          handleHeroVolumeDrag(pct);
+                        };
+                        updateFromPointer(e.clientY);
+                        const onMove = (moveEvent: PointerEvent) => {
+                          updateFromPointer(moveEvent.clientY);
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('pointermove', onMove);
+                          window.removeEventListener('pointerup', onUp);
+                        };
+                        window.addEventListener('pointermove', onMove);
+                        window.addEventListener('pointerup', onUp);
+                      }}
+                    >
+                      {/* Pista vertical interior blanca */}
+                      <div className="absolute inset-y-2.5 w-1 rounded-full bg-white overflow-hidden flex flex-col justify-end pointer-events-none">
+                        {/* Relleno rojo desde abajo hacia arriba hasta el porcentaje actual */}
+                        <div 
+                          className="w-full bg-[#fe2c55] rounded-full transition-all duration-75"
+                          style={{ height: `${currentVolVal}%` }}
+                        />
+                      </div>
+
+                      {/* Pomo circular rojo como en image.png */}
+                      <div 
+                        className="absolute w-3.5 h-3.5 rounded-full bg-[#fe2c55] border border-white/20 shadow-md pointer-events-none transition-all duration-75 -translate-y-1/2"
+                        style={{ 
+                          bottom: `calc(${currentVolVal}% * 0.82 + 5px)`,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                        }}
+                      />
+
+                      {/* Input range nativo accesible */}
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={currentVolVal}
+                        onChange={(e) => handleHeroVolumeDrag(Number(e.target.value))}
+                        className="sr-only"
+                        title={`Volumen del canal: ${currentVolVal}%`}
+                      />
+                    </div>
+                  );
+                })()}
+
+                {/* 4. Porcentaje numérico */}
+                <span className="text-[9px] font-sans font-black text-white drop-shadow-md">
+                  {liveHeroMuted ? 0 : liveHeroVolume}%
+                </span>
+              </div>
+            </div>
+
+            {/* 🎯 SENSOR DEL MARGEN DERECHO DEL CANAL: Al pasar el puntero por la derecha del canal aparecen los botones de la captura image.png */}
+            <div
+              className="absolute top-20 bottom-8 right-0 w-32 sm:w-44 z-30 pointer-events-auto flex flex-col justify-center items-end pr-3 sm:pr-4 group/right-channel-sensor cursor-pointer"
+              onMouseEnter={() => setIsHeroRightActionsVisible(true)}
+              onMouseLeave={() => setIsHeroRightActionsVisible(false)}
+            >
+              {/* BARRA VERTICAL DE BOTONES DE LA CAPTURA image.png */}
+              <div
+                className={`flex flex-col items-center gap-3 sm:gap-3.5 transition-all duration-300 ease-out select-none ${
+                  isHeroRightActionsVisible
+                    ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
+                    : 'opacity-0 translate-x-10 scale-90 pointer-events-none group-hover/right-channel-sensor:opacity-100 group-hover/right-channel-sensor:translate-x-0 group-hover/right-channel-sensor:scale-100 group-hover/right-channel-sensor:pointer-events-auto'
+                }`}
+                onMouseEnter={() => setIsHeroRightActionsVisible(true)}
+                onMouseLeave={() => setIsHeroRightActionsVisible(false)}
+              >
+                {/* 1. Avatar de la creadora con botón '+' */}
+                <div className="relative flex flex-col items-center group/avatar mb-1">
+                  <div className="relative w-11 h-11 sm:w-12 sm:h-12">
+                    <img
+                      src={
+                        liveChannelsCategoryFilter === 'todos'
+                          ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'
+                          : heroChannel.avatar
+                      }
+                      alt={heroChannel.name}
+                      className="w-full h-full rounded-full object-cover ring-2 ring-white shadow-2xl transition-transform group-hover/avatar:scale-105"
+                    />
+                    {/* Botón '+' rojo en la parte inferior del avatar */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsHeroFollowed(prev => !prev);
+                        if (!isHeroFollowed) {
+                          setToastNotification({
+                            message: `¡Ahora sigues a ${liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : '@' + heroChannel.username}!`,
+                            title: 'Siguiendo'
+                          });
+                        }
+                      }}
+                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center text-white shadow-lg border border-[#0e1320] transition-all cursor-pointer ${
+                        isHeroFollowed
+                          ? 'bg-emerald-500 scale-95 hover:bg-emerald-600'
+                          : 'bg-[#ff2454] hover:bg-[#e01a45] hover:scale-110 active:scale-90'
+                      }`}
+                      title={isHeroFollowed ? "Siguiendo" : "Seguir"}
+                    >
+                      {isHeroFollowed ? (
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      ) : (
+                        <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Botón Me Gusta (Corazón) + 1.2K */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsHeroLiked(prev => !prev);
+                      setHeroLikesCount(prev => (isHeroLiked ? prev - 1 : prev + 1));
+                    }}
+                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer active:scale-90 ${
+                      isHeroLiked 
+                        ? 'bg-rose-600/80 hover:bg-rose-600 text-white border-rose-400' 
+                        : 'bg-black/50 hover:bg-black/70 hover:scale-105 text-white'
+                    }`}
+                    title="Me gusta"
+                  >
+                    <Heart
+                      className={`w-6 h-6 stroke-[2.2] transition-colors ${
+                        isHeroLiked ? 'fill-white text-white' : 'text-white'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
+                    {isHeroLiked ? '1.3K' : '1.2K'}
+                  </span>
+                </div>
+
+                {/* 3. Botón Comentarios (Bocadillo) + 2 */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setToastNotification({
+                        message: '💬 2 comentarios destacados en este directo.',
+                        title: 'Comentarios'
+                      });
+                    }}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/50 hover:bg-black/70 hover:scale-105 active:scale-90 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all duration-200 cursor-pointer"
+                    title="Comentarios"
+                  >
+                    <MessageCircle className="w-6 h-6 text-white stroke-[2.2]" />
+                  </button>
+                  <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
+                    {heroCommentsCount}
+                  </span>
+                </div>
+
+                {/* 4. Botón Compartir + 48 */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHeroSharesCount(prev => prev + 1);
+                      if (navigator?.clipboard) {
+                        navigator.clipboard.writeText(window.location.href).catch(() => {});
+                      }
+                      setToastNotification({
+                        message: '🔗 ¡Enlace del directo copiado al portapapeles!',
+                        title: 'Compartir'
+                      });
+                    }}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/50 hover:bg-black/70 hover:scale-105 active:scale-90 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all duration-200 cursor-pointer"
+                    title="Compartir"
+                  >
+                    <Share2 className="w-6 h-6 text-white stroke-[2.2]" />
+                  </button>
+                  <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
+                    {heroSharesCount}
+                  </span>
+                </div>
+
+                {/* 5. Botón Guardar / Favoritos + 112 */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsHeroBookmarked(prev => !prev);
+                      setToastNotification({
+                        message: isHeroBookmarked ? 'Eliminado de guardados' : '⭐ ¡Directo guardado en tus favoritos!',
+                        title: 'Guardar'
+                      });
+                    }}
+                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer active:scale-90 ${
+                      isHeroBookmarked 
+                        ? 'bg-amber-500/80 hover:bg-amber-500 text-white border-amber-300' 
+                        : 'bg-black/50 hover:bg-black/70 hover:scale-105 text-white'
+                    }`}
+                    title="Guardar directo"
+                  >
+                    <Bookmark
+                      className={`w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2] transition-colors ${
+                        isHeroBookmarked ? 'fill-white text-white' : 'text-white'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
+                    {isHeroBookmarked ? heroBookmarksCount + 1 : heroBookmarksCount}
+                  </span>
+                </div>
+
+                {/* 6. Disco de Sonido / Audio con icono estilizado rojo */}
+                <div className="flex flex-col items-center mt-0.5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLiveHeroMuted(prev => !prev);
+                      setToastNotification({
+                        message: liveHeroMuted ? '🔊 Audio activado' : '🔇 Audio silenciado',
+                        title: 'Música & Audio'
+                      });
+                    }}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#0a0f1d]/90 hover:bg-black backdrop-blur-md border border-slate-700/80 hover:border-rose-500/60 flex items-center justify-center shadow-xl transition-all duration-200 hover:scale-105 active:scale-90 cursor-pointer relative group/disc"
+                    title={liveHeroMuted ? "Activar audio" : "Silenciar audio"}
+                  >
+                    {/* Icono de audio en rojo idéntico a la captura image.png */}
+                    <div className="relative flex items-center justify-center">
+                      <svg
+                        className={`w-5 h-5 text-[#ff2454] transition-transform ${!liveHeroMuted ? 'animate-spin' : ''}`}
+                        style={{ animationDuration: '4s' }}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="8" cy="17" r="3" fill="#ff2454" />
+                        <circle cx="16" cy="9" r="3" fill="#ff2454" />
+                        <path d="M11 17V7c0-1.1.9-2 2-2h3v4h-3v8" />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CONTENIDO DE LA CAPTURA z.png (Abajo del canal) */}
+          <div className="w-full bg-[#0e1320] border-t border-slate-800/80 p-4 sm:p-5 text-white space-y-2.5">
+            {/* Usuario, Check de verificación y tag dinámico */}
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+                {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
+                  ? `@${userProfile?.username || 'mi_camara_live'}`
+                  : liveChannelsCategoryFilter === 'atelier' 
+                  ? `@${heroChannel.username}` 
+                  : (liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : `@${heroChannel.username}`)}
+              </span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
+              <span className={`font-black uppercase py-0.5 rounded-full bg-slate-700/80 text-white tracking-wider ${
+                isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
+                  ? 'text-[8px] px-2 bg-red-600/90 text-white animate-pulse'
+                  : (liveChannelsCategoryFilter === 'catalog_model' || heroChannel.category === 'catalog_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('catalog')))
+                  ? 'text-[7.5px] px-1.5'
+                  : (liveChannelsCategoryFilter === 'runway_model' || heroChannel.category === 'runway_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('runway')))
+                  ? 'text-[7.5px] px-1.5'
+                  : (heroChannel.category === 'commercial_model' || heroChannel.category === 'plus_size_model' || heroChannel.category === 'real_people_models' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('commercial') || heroChannel.categoryLabel.toLowerCase().includes('plus') || heroChannel.categoryLabel.toLowerCase().includes('real people'))))
+                  ? 'text-[7.5px] px-1.5'
+                  : (heroChannel.category === 'haute_couture' || heroChannel.category === 'petite_model' || heroChannel.category === 'lingerie_model' || heroChannel.category === 'swimsuit_model' || heroChannel.category === 'fitness_model' || heroChannel.category === 'parts_model' || heroChannel.category === 'mature_model' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('haute') || heroChannel.categoryLabel.toLowerCase().includes('petite') || heroChannel.categoryLabel.toLowerCase().includes('lingerie') || heroChannel.categoryLabel.toLowerCase().includes('swimsuit') || heroChannel.categoryLabel.toLowerCase().includes('fitness') || heroChannel.categoryLabel.toLowerCase().includes('parts') || heroChannel.categoryLabel.toLowerCase().includes('mature'))))
+                  ? 'text-[8px] px-1.5'
+                  : liveChannelsCategoryFilter === 'atelier'
+                  ? 'text-[8px] px-2'
+                  : 'text-[8.5px] px-2'
+              }`}>
+                {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
+                  ? 'TU CÁMARA EN VIVO'
+                  : liveChannelsCategoryFilter === 'atelier' 
+                  ? 'ATELIER' 
+                  : (liveChannelsCategoryFilter === 'todos' ? 'TODOS' : (heroChannel.categoryLabel || heroChannel.category).toUpperCase())}
+              </span>
+            </div>
+
+            {/* Badge: SUBIDO DESDE CASTING LIVE */}
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
+                <Sparkles className="w-3 h-3 text-yellow-300" />
+                <span>SUBIDO DESDE CASTING LIVE</span>
+              </span>
+            </div>
+
+            {/* Descripción con hashtags adaptada al canal */}
+            <p className="text-xs sm:text-[13px] text-slate-100 font-medium leading-relaxed">
+              {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter) ? (
+                <>
+                  🔴 Transmisión de tu cámara en vivo y en directo para todos los usuarios de CastingLive ocupando todo el canal.{' '}
+                  <span className="font-semibold text-rose-300">#micamara</span>{' '}
+                  <span className="font-semibold text-rose-300">#directo</span>{' '}
+                  <span className="font-semibold text-rose-300">#envivo</span>{' '}
+                  <span className="font-semibold text-rose-300">#castinglive</span>
+                </>
+              ) : liveChannelsCategoryFilter === 'atelier' ? (
+                heroCaptionTranslated ? (
+                  <>
+                    Live pattern making, cutting and tailoring session from the Atelier boutique: "{heroChannel.title}". Presenting the handcrafted Haute Couture Collection! ✂️✨{' '}
+                    <span className="font-semibold text-rose-300">#atelier</span>{' '}
+                    <span className="font-semibold text-rose-300">#confeccion</span>{' '}
+                    <span className="font-semibold text-rose-300">#altacostura</span>
+                  </>
+                ) : (
+                  <>
+                    Sesión de taller de patronaje, corte y confección en vivo desde el Atelier boutique: "{heroChannel.title}". Presentando la nueva Colección Atelier de Alta Costura confeccionada a mano! ✂️✨{' '}
+                    <span className="font-semibold text-rose-300">#atelier</span>{' '}
+                    <span className="font-semibold text-rose-300">#confeccion</span>{' '}
+                    <span className="font-semibold text-rose-300">#altacostura</span>
+                  </>
+                )
+              ) : (
+                heroCaptionTranslated ? (
+                  <>
+                    Futuristic high fashion session. Presenting Glitter Makeup for the Barcelona show! ✨{' '}
+                    <span className="font-semibold text-rose-300">#highfashion</span>{' '}
+                    <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
+                    <span className="font-semibold text-rose-300">#futuristic</span>
+                  </>
+                ) : (
+                  <>
+                    Sesión de alta costura futurista. Presentando Glitter Makeup para el show de Barcelona! ✨{' '}
+                    <span className="font-semibold text-rose-300">#highfashion</span>{' '}
+                    <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
+                    <span className="font-semibold text-rose-300">#futuristic</span>
+                  </>
+                )
+              )}
+            </p>
+
+            {/* Botón interactivo: Traducir a Inglés */}
+            <div className="flex items-center gap-2 pt-0.5">
+              <button
+                type="button"
+                onClick={() => setHeroCaptionTranslated(!heroCaptionTranslated)}
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border border-rose-500/50 bg-black/40 hover:bg-rose-500/20 text-rose-300 hover:text-white transition active:scale-95 cursor-pointer shadow-sm"
+                title={heroCaptionTranslated ? "Ver original (Español)" : "Traducir a Inglés"}
+              >
+                <Globe className="w-3.5 h-3.5 text-rose-400" />
+                <span>{heroCaptionTranslated ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
+              </button>
+              {heroCaptionTranslated && (
+                <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-full animate-fade-in">
+                  <span>✓</span> En inglés
+                </span>
+              )}
+            </div>
+
+            {/* Ticker musical adaptado */}
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-300 pt-1">
+              <Music className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              <span>
+                {liveChannelsCategoryFilter === 'atelier'
+                  ? 'Acoustic Lo-Fi Atelier Beats - LoFi Collective'
+                  : 'Aesthetic Synthwave - LoFi Collective'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION: Grid or Multi-screen of Live Video Broadcasts */}
+        <div className="space-y-4 pt-2">
+          {/* Header de la sección de transmisiones */}
+          <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-slate-200">
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                <span>
+                  {liveChannelsCategoryFilter === 'atelier'
+                    ? '✂️ Vídeos del Canal Atelier Emitiendo en Vivo'
+                    : liveChannelsCategoryFilter === 'fashion_model'
+                    ? '✨ Vídeos de la Categoría Fashion en Pantallas Separadas'
+                    : '🔴 Todos los Canales Emitiendo en Vivo'}
+                </span>
+                <span className="text-xs font-mono font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100">
+                  {filteredLiveChannels.length} {filteredLiveChannels.length === 1 ? 'Activo' : 'Activos'}
+                </span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                {liveChannelsCategoryFilter === 'atelier'
+                  ? 'Transmisiones exclusivas de patronaje, confección y diseño artesanal del canal Atelier.'
+                  : liveChannelsCategoryFilter === 'fashion_model'
+                  ? 'Cada vídeo de la categoría Fashion se visualiza en su propia pantalla con 3 centímetros de separación, idéntico a image.png.'
+                  : 'Haz clic en cualquier video para unirte al directo y chatear con la creadora.'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Botón para ver categoría Fashion en pantallas separadas de 3cm si estamos en todos */}
+              {liveChannelsCategoryFilter !== 'fashion_model' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLiveChannelsCategoryFilter('fashion_model');
+                    setFashionViewMode('screens');
+                  }}
+                  className="px-3 py-1.5 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
+                  title="Ver cada video de Fashion en diferentes pantallas con separación de 3cm como en image.png"
+                >
+                  <span>📱</span>
+                  <span>Ver Fashion en Pantallas Separadas (3cm)</span>
+                </button>
+              )}
+
+              {/* Selector de modo para Fashion: Pantallas 3cm vs Cuadrícula */}
+              {liveChannelsCategoryFilter === 'fashion_model' && (
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setFashionViewMode('screens')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      fashionViewMode === 'screens'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Ver cada video en pantallas independientes separadas 3cm (como en image.png)"
+                  >
+                    <span>📱</span>
+                    <span>Pantallas 3cm (image.png)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFashionViewMode('grid')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      fashionViewMode === 'grid'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Ver en formato cuadrícula"
+                  >
+                    <span>▦</span>
+                    <span>Cuadrícula</span>
+                  </button>
+                </div>
+              )}
+
+              {liveChannelsCategoryFilter !== 'todos' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLiveChannelsCategoryFilter('todos');
+                    setSelectedHeroChannelId(null);
+                  }}
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
+                >
+                  <span>✕</span>
+                  <span>Ver Todos</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* RENDERIZADO: Si es categoría Fashion y está en modo pantallas (o por defecto), renderizamos cada video en una pantalla independiente separada por 3cm */}
+          {liveChannelsCategoryFilter === 'fashion_model' && fashionViewMode === 'screens' ? (
+            <div
+              className="w-full flex flex-col items-center select-none relative py-4 scroll-smooth"
+              style={{ rowGap: '3cm', gap: '3cm' }}
+              id="fashion-live-category-screens-feed"
+            >
+              {filteredLiveChannels.map((channel, idx) => {
+                const isVolHovered = hoveredFashionVolumeId === channel.id;
+                const isLiked = Boolean(fashionLikedChannelsMap[channel.id]);
+                const likesCount = fashionLikesMap[channel.id] ?? channel.likes;
+                const isSaved = Boolean(fashionSavedMap[channel.id]);
+                const isCommentsOpen = fashionCommentsOpenId === channel.id;
+                const comments = fashionCommentsMap[channel.id] || [
+                  { id: '1', user: 'elena_style', text: '¡Ese vestido es una auténtica obra de arte! 😍✨', time: 'hace 2m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100' },
+                  { id: '2', user: 'marcos_runway', text: 'La iluminación de la pasarela es espectacular 👏🔥', time: 'hace 1m', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100' },
+                  { id: '3', user: 'isabella_couture', text: 'Transmisión impecable en vivo ❤️👗', time: 'ahora', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100' }
+                ];
+                const currentVol = fashionChannelVolumeMap[channel.id] ?? 80;
+                const isMuted = fashionChannelMutedMap[channel.id] ?? true;
+
+                return (
+                  <div
+                    key={`fashion-screen-${channel.id}`}
+                    id={`fashion-round-card-${channel.id}`}
+                    className="snap-center snap-always shrink-0 flex items-center justify-center w-full max-w-full sm:max-w-[500px] my-0 py-1 sm:py-2 relative px-0 sm:px-2 overflow-x-hidden min-h-[calc(660px+4cm)] max-h-[calc(680px+4cm)]"
+                    style={{ minHeight: 'calc(660px + 4cm)', maxHeight: 'calc(680px + 4cm)' }}
+                  >
+                    {/* 📦 Anchor del frame y navegador lateral */}
+                    <div
+                      className="relative flex items-center justify-center w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] overflow-x-hidden lg:overflow-x-visible h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)]"
+                      style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
+                    >
+                      {/* 📱 Frame de la pantalla de video (estilo z.png e image.png) */}
+                      <div className="relative w-full h-full bg-slate-950 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 flex items-center justify-center group/screen-card select-none">
+                        <video
+                          src={channel.videoUrl}
+                          autoPlay
+                          loop
+                          muted={isMuted}
+                          playsInline
+                          className="w-full h-full object-cover"
+                          ref={(el) => {
+                            if (el) {
+                              el.volume = (isMuted ? 0 : currentVol) / 100;
+                              el.muted = isMuted;
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
+
+                        {/* 🎯 SENSOR DEL MARGEN IZQUIERDO DEL CANAL: Al pasar el puntero por el lado izquierdo aparece la barra de volumen de la captura image.png (solicitud 1) */}
+                        <div
+                          className="absolute top-20 bottom-16 left-0 w-24 sm:w-32 z-30 pointer-events-auto flex items-center justify-start pl-2 sm:pl-3 cursor-pointer group/left-fashion-sensor"
+                          onMouseEnter={() => setHoveredFashionVolumeId(channel.id)}
+                          onMouseLeave={() => setHoveredFashionVolumeId(null)}
+                        >
+                          {/* CÁPSULA VERTICAL DE VOLUMEN DE LA CAPTURA image.png */}
+                          <div
+                            className={`w-[52px] sm:w-[56px] bg-[#0d111a]/95 hover:bg-[#0d111a] backdrop-blur-md py-3.5 px-1 rounded-2xl border border-slate-700/60 flex flex-col items-center justify-center gap-2 select-none shadow-[0_8px_32px_rgba(0,0,0,0.8)] transition-all duration-300 ease-out cursor-default ${
+                              isVolHovered
+                                ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
+                                : 'opacity-0 -translate-x-8 scale-90 pointer-events-none group-hover/left-fashion-sensor:opacity-100 group-hover/left-fashion-sensor:translate-x-0 group-hover/left-fashion-sensor:scale-100 group-hover/left-fashion-sensor:pointer-events-auto'
+                            }`}
+                            onMouseEnter={() => setHoveredFashionVolumeId(channel.id)}
+                            onMouseLeave={() => setHoveredFashionVolumeId(null)}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Mute/Unmute */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFashionChannelMutedMap(prev => ({ ...prev, [channel.id]: !isMuted }));
+                              }}
+                              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-600/50"
+                              title={isMuted ? 'Activar sonido' : 'Silenciar'}
+                            >
+                              {isMuted ? (
+                                <VolumeX className="w-4 h-4 text-rose-400" />
+                              ) : (
+                                <Volume2 className="w-4 h-4 text-cyan-400" />
+                              )}
+                            </button>
+
+                            {/* Slider vertical */}
+                            <div className="h-28 flex items-center justify-center py-1">
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={isMuted ? 0 : currentVol}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setFashionChannelVolumeMap(prev => ({ ...prev, [channel.id]: val }));
+                                  if (val > 0) {
+                                    setFashionChannelMutedMap(prev => ({ ...prev, [channel.id]: false }));
+                                  }
+                                }}
+                                className="accent-[#fe2c55] cursor-pointer w-24 h-1.5 -rotate-90 origin-center bg-slate-700/80 rounded-lg appearance-none"
+                              />
+                            </div>
+
+                            <span className="text-[10px] font-mono font-black text-slate-300">
+                              {isMuted ? '0%' : `${currentVol}%`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* TOP BAR: LIVE badge, Category, Viewers */}
+                        <div className="absolute top-3 inset-x-3.5 z-20 flex items-center justify-between pointer-events-none">
+                          <div className="flex items-center gap-2 pointer-events-auto">
+                            <span className="bg-red-600 text-white text-[9.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md border border-red-500">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                              LIVE
+                            </span>
+                            <span className="bg-black/60 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/20">
+                              FASHION MODEL
+                            </span>
+                          </div>
+
+                          <div className="bg-black/60 backdrop-blur-md text-white text-[10.5px] font-bold px-2.5 py-1 rounded-full border border-white/20 flex items-center gap-1 shadow-xs pointer-events-auto">
+                            <span>👁️</span>
+                            <span>{channel.viewers.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* RIGHT ACTION COLUMN: Avatar (+ follow), Likes, Comments, Share, Save */}
+                        <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-3.5 pointer-events-auto select-none">
+                          {/* Avatar con botón + */}
+                          <div className="relative group/avatar cursor-pointer">
+                            <img
+                              src={channel.avatar}
+                              alt={channel.name}
+                              className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-xl"
+                            />
+                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[#fe2c55] text-white flex items-center justify-center text-[11px] font-black shadow-md">
+                              +
+                            </div>
+                          </div>
+
+                          {/* Botón Me Gusta / Corazón */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFashionLikedChannelsMap(prev => ({ ...prev, [channel.id]: !isLiked }));
+                              setFashionLikesMap(prev => ({
+                                ...prev,
+                                [channel.id]: (prev[channel.id] ?? channel.likes) + (isLiked ? -1 : 1)
+                              }));
+                            }}
+                            className="flex flex-col items-center gap-0.5 group/like cursor-pointer transition active:scale-90"
+                          >
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition ${
+                              isLiked
+                                ? 'bg-rose-600/90 text-white border-rose-400'
+                                : 'bg-black/50 text-white border-white/20 hover:bg-black/70'
+                            }`}>
+                              <Heart className={`w-5 h-5 ${isLiked ? 'fill-current text-white' : 'text-white'}`} />
+                            </div>
+                            <span className="text-[10px] font-black text-white drop-shadow-md">
+                              {(likesCount / 1000).toFixed(1)}k
+                            </span>
+                          </button>
+
+                          {/* Botón Comentarios */}
+                          <button
+                            type="button"
+                            onClick={() => setFashionCommentsOpenId(isCommentsOpen ? null : channel.id)}
+                            className="flex flex-col items-center gap-0.5 group/comment cursor-pointer transition active:scale-90"
+                          >
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition ${
+                              isCommentsOpen
+                                ? 'bg-[#fe2c55] text-white border-pink-400'
+                                : 'bg-black/50 text-white border-white/20 hover:bg-black/70'
+                            }`}>
+                              <MessageCircle className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black text-white drop-shadow-md">
+                              {comments.length}
+                            </span>
+                          </button>
+
+                          {/* Botón Compartir */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (navigator.clipboard) {
+                                navigator.clipboard.writeText(window.location.href);
+                                alert(`¡Enlace del directo de ${channel.name} copiado al portapapeles!`);
+                              }
+                            }}
+                            className="flex flex-col items-center gap-0.5 cursor-pointer transition active:scale-90"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-md border border-white/20">
+                              <Share2 className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black text-white drop-shadow-md">Compartir</span>
+                          </button>
+
+                          {/* Botón Guardar */}
+                          <button
+                            type="button"
+                            onClick={() => setFashionSavedMap(prev => ({ ...prev, [channel.id]: !isSaved }))}
+                            className="flex flex-col items-center gap-0.5 cursor-pointer transition active:scale-90"
+                          >
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition ${
+                              isSaved
+                                ? 'bg-amber-500 text-white border-amber-300'
+                                : 'bg-black/50 text-white border-white/20 hover:bg-black/70'
+                            }`}>
+                              <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current text-white' : 'text-white'}`} />
+                            </div>
+                            <span className="text-[10px] font-black text-white drop-shadow-md">Guardar</span>
+                          </button>
+                        </div>
+
+                        {/* BOTTOM OVERLAY: Creator info, description, tags, music ticker */}
+                        <div className="absolute bottom-3 inset-x-3.5 z-20 space-y-1.5 pointer-events-auto">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-sm sm:text-base text-white tracking-tight drop-shadow">
+                              @{channel.username}
+                            </span>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
+                            <span className="text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-700/80 text-white tracking-wider">
+                              FASHION MODEL
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
+                              <Sparkles className="w-3 h-3 text-yellow-300" />
+                              <span>SUBIDO DESDE CASTING LIVE</span>
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-100 font-medium leading-snug drop-shadow line-clamp-2">
+                            {channel.title}{' '}
+                            {channel.tags.map(t => (
+                              <span key={t} className="text-rose-300 font-semibold mr-1">
+                                {t}
+                              </span>
+                            ))}
+                          </p>
+
+                          <div className="flex items-center gap-2 text-xs font-medium text-slate-300 pt-0.5">
+                            <Music className="w-3.5 h-3.5 text-rose-400 shrink-0 animate-spin" style={{ animationDuration: '4s' }} />
+                            <span className="truncate">Vogue Runway Paris Beats • Haute Couture Live</span>
+                          </div>
+                        </div>
+
+                        {/* Drawer de Comentarios interactivo */}
+                        {isCommentsOpen && (
+                          <div className="absolute inset-x-0 bottom-0 top-1/3 bg-[#0d121f]/95 backdrop-blur-2xl border-t border-slate-700/80 rounded-t-3xl z-40 p-4 flex flex-col justify-between shadow-2xl animate-slide-up">
+                            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                              <span className="text-xs font-black uppercase tracking-wider text-white">Comentarios en Directo</span>
+                              <button
+                                type="button"
+                                onClick={() => setFashionCommentsOpenId(null)}
+                                className="p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-2 py-2 pr-1 text-xs">
+                              {comments.map(c => (
+                                <div key={c.id} className="flex items-start gap-2 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                                  <img src={c.avatar} alt={c.user} className="w-6 h-6 rounded-full object-cover shrink-0" />
+                                  <div className="min-w-0">
+                                    <span className="font-bold text-[11px] text-rose-400">@{c.user}: </span>
+                                    <span className="text-slate-200 text-[11px]">{c.text}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                              <input
+                                type="text"
+                                placeholder="Añade un comentario..."
+                                value={fashionNewCommentText}
+                                onChange={(e) => setFashionNewCommentText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && fashionNewCommentText.trim()) {
+                                    const newC = {
+                                      id: Date.now().toString(),
+                                      user: userProfile?.username || 'mi_cuenta',
+                                      text: fashionNewCommentText.trim(),
+                                      time: 'ahora',
+                                      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'
+                                    };
+                                    setFashionCommentsMap(prev => ({
+                                      ...prev,
+                                      [channel.id]: [...(prev[channel.id] || []), newC]
+                                    }));
+                                    setFashionNewCommentText('');
+                                  }
+                                }}
+                                className="flex-1 bg-slate-900 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-rose-500"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (fashionNewCommentText.trim()) {
+                                    const newC = {
+                                      id: Date.now().toString(),
+                                      user: userProfile?.username || 'mi_cuenta',
+                                      text: fashionNewCommentText.trim(),
+                                      time: 'ahora',
+                                      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'
+                                    };
+                                    setFashionCommentsMap(prev => ({
+                                      ...prev,
+                                      [channel.id]: [...(prev[channel.id] || []), newC]
+                                    }));
+                                    setFashionNewCommentText('');
+                                  }
+                                }}
+                                className="p-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold"
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 🧭 NAVEGADOR VERTICAL DE PANTALLAS (Desktop/Tablet) */}
+                      <div
+                        className="hidden lg:flex absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-2 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-3 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
+                      >
+                        <button
+                          type="button"
+                          disabled={idx <= 0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (idx > 0) {
+                              const prevCh = filteredLiveChannels[idx - 1];
+                              document.getElementById(`fashion-round-card-${prevCh.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                          className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
+                          title="Pantalla anterior (arriba)"
+                        >
+                          <ChevronUp className="w-4 h-4 text-white stroke-[2.5]" />
+                        </button>
+
+                        <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
+                          <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">PANTALLA</span>
+                          <span className="text-xs sm:text-[13px] font-black font-mono text-[#fe2c55]">
+                            {idx + 1}/{filteredLiveChannels.length}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={idx >= filteredLiveChannels.length - 1}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (idx < filteredLiveChannels.length - 1) {
+                              const nextCh = filteredLiveChannels[idx + 1];
+                              document.getElementById(`fashion-round-card-${nextCh.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                          className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
+                          title="Siguiente pantalla (abajo)"
+                        >
+                          <ChevronDown className="w-4 h-4 text-white stroke-[2.5]" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Responsive Channels Grid (para otros canales o si se selecciona modo cuadrícula) */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredLiveChannels.map(channel => (
+                <div 
+                  key={channel.id}
+                  onClick={() => {
+                    setSelectedHeroChannelId(channel.id);
+                    setLocalLiveModelId(channel.modelId);
+                    const heroEl = document.getElementById('live-videos-screen-root');
+                    if (heroEl) {
+                      heroEl.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="group bg-white rounded-2xl border border-slate-200/90 hover:border-rose-400 overflow-hidden shadow-2xs hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1"
+                >
+                  {/* Video Container with preview */}
+                  <div className="relative aspect-[9/14] bg-slate-950 overflow-hidden">
+                    <video 
+                      src={channel.videoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/40 pointer-events-none" />
+
+                    {/* Top Badges */}
+                    <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
+                      <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md border border-red-500">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                        LIVE
+                      </span>
+                    </div>
+
+                    <div className="absolute top-3 right-3 z-10 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1">
+                      <span>👁️</span>
+                      <span>{channel.viewers.toLocaleString()}</span>
+                    </div>
+
+                    {/* Bottom Video Overlay */}
+                    <div className="absolute bottom-3 inset-x-3 z-10 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={channel.avatar} 
+                          alt={channel.name}
+                          className="w-8 h-8 rounded-full object-cover ring-2 ring-rose-500 shadow-md" 
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-white truncate drop-shadow flex items-center gap-1">
+                            <span>{channel.name}</span>
+                            <span className="text-cyan-400 text-[10px]">✓</span>
+                          </p>
+                          <p className="text-[10px] text-slate-300 truncate">@{channel.username}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Content Footer */}
+                  <div className="p-3 flex-1 flex flex-col justify-between space-y-2 bg-white">
+                    <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-rose-600 transition-colors">
+                      {channel.title}
+                    </h4>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                      <span className={`font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md ${
+                        channel.category === 'fashion_model' || (channel.categoryLabel && channel.categoryLabel.toLowerCase().includes('fashion')) || channel.category === 'streetwear' || (channel.categoryLabel && (channel.categoryLabel.toLowerCase().includes('streetwear') || channel.categoryLabel.toLowerCase().includes('urban'))) || channel.category === 'commercial_model' || channel.category === 'plus_size_model' || channel.category === 'real_people_models' || (channel.categoryLabel && (channel.categoryLabel.toLowerCase().includes('commercial') || channel.categoryLabel.toLowerCase().includes('plus') || channel.categoryLabel.toLowerCase().includes('real people') || channel.categoryLabel.toLowerCase().includes('haute') || channel.categoryLabel.toLowerCase().includes('petite') || channel.categoryLabel.toLowerCase().includes('lingerie') || channel.categoryLabel.toLowerCase().includes('swimsuit') || channel.categoryLabel.toLowerCase().includes('fitness') || channel.categoryLabel.toLowerCase().includes('parts') || channel.categoryLabel.toLowerCase().includes('mature')))
+                          ? 'text-[8px]'
+                          : 'text-[9.5px]'
+                      }`}>
+                        {channel.categoryLabel}
+                      </span>
+                      <span className="font-bold text-slate-700 group-hover:text-rose-600 transition-colors flex items-center gap-1">
+                        <span>Ver Directo</span>
+                        <span>→</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderExploreGrid = () => {
     return (
       <div className="w-full bg-white text-slate-900 select-none animate-fade-in font-sans p-4 sm:p-6 min-h-[750px] pb-36 overflow-y-auto scrollbar-thin scrollbar-thumb-rose-200/50 scrollbar-track-transparent rounded-2xl flex flex-col" id="explore-grid-container">
@@ -25423,19 +28313,19 @@ try {
 
           {/* Quick inline categories bubbles */}
           <div className="flex flex-wrap items-center gap-1.5" id="explore-categories-row">
-            {(['Todos', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Catwalk', 'Fitnes', 'Beauty', 'Influencer'] as const).map((cat) => {
-              const isSelected = selectedCategoryFilter === cat;
+            {(['Todos', 'Fashion', 'Finanzas', 'Modelos', 'BackStage', 'Investors', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'] as const).map((cat) => {
+              const isSelected = selectedCategoryFilter === (cat as any) || (cat === 'Casting' && selectedCategoryFilter === ('Catwalk' as any));
               return (
                 <button
                   key={cat}
-                  onClick={() => handleCategoryFilterChange(cat)}
+                  onClick={() => handleCategoryFilterChange(cat as any)}
                   className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer border-0 shadow-xs ${
                     isSelected 
                       ? 'bg-[#fe2c55] text-white' 
                       : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900'
                   }`}
                 >
-                  {cat === 'Todos' ? '🪐 Todos' : cat === 'Fashion' ? '✨ Fashion' : cat === 'Finanzas' ? '📈 Finanzas' : cat === 'Modelos' ? '👑 Runway' : cat === 'BackStage' ? '🎬 Backstage' : cat === 'Investors' ? '💎 Jewellery' : cat === 'Catwalk' ? '👠 Catwalk' : cat === 'Fitnes' ? '💪 Fitnes' : cat === 'Beauty' ? '💄 Beauty' : '📱 Influencer'}
+                  {cat === 'Todos' ? '🪐 Todos' : cat === 'Fashion' ? '✨ Fashion' : cat === 'Finanzas' ? '📈 Finanzas' : cat === 'Modelos' ? '👑 Runway' : cat === 'BackStage' ? '🎬 Backstage' : cat === 'Investors' ? '💎 Jewellery' : cat === 'Casting' ? '👠 Casting' : cat === 'Fitnes' ? '💪 Fitnes' : cat === 'Beauty' ? '💄 Beauty' : cat === 'Influencer' ? '📱 Influencer' : cat === 'Luxury' ? '🍸 Luxury' : '🎙️ Interview'}
                 </button>
               );
             })}
@@ -25584,6 +28474,61 @@ try {
     );
   }
 
+  if (activeSubTab === 'live') {
+    return (
+      <div className="bg-white rounded-2xl max-md:rounded-none border border-slate-200 max-md:border-none shadow-sm min-h-[750px] flex flex-col md:flex-row text-slate-800 relative w-full overflow-hidden animate-fade-in" id="casting_live-live-videos-fullscreen">
+        {/* LEFT COLUMN: Sidebar matching exact layout of image.png */}
+        <aside className="hidden md:flex md:w-[270px] border-r border-slate-100 p-4 shrink-0 flex-col justify-between bg-slate-50/50">
+          <div className="space-y-6">
+            {/* Brand Logo and Search bar matching image "Buscar" */}
+            <div className="space-y-3">
+              <div className="pb-2 flex flex-col items-center md:items-start">
+                <FashionsFinanceLogo mode="light" inlineText className="w-10 h-10" textClassName="text-slate-900" subTextClassName="text-rose-600" />
+                <span className="text-[7.5px] font-black text-white bg-red-600 px-1.5 py-0.5 rounded md:self-start mt-2 inline-block uppercase tracking-wider animate-pulse">
+                  EN DIRECTO
+                </span>
+              </div>
+
+              {/* Buscar input bar */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar canales en vivo" 
+                  value={searchTerm} 
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                  }} 
+                  className="w-full bg-slate-100 hover:bg-slate-200/80 focus:bg-white text-xs text-slate-800 rounded-full pl-9 pr-4 py-2 border border-transparent focus:border-red-500 focus:outline-none transition-all font-medium placeholder-slate-400" 
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')} 
+                    className="absolute right-3 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Core Sidebar buttons from image.png */}
+            {renderSidebarNavigationButtons()}
+          </div>
+
+          <div className="pt-4 border-t border-slate-200/60 text-center space-y-1">
+            <p className="text-[10px] text-slate-400 font-medium">Casting Live v2026</p>
+          </div>
+        </aside>
+
+        {/* MAIN: Pantalla de Videos en Directo */}
+        <main className="flex-1 min-w-0 bg-slate-50/40 overflow-y-auto max-h-[calc(100vh-140px)] p-3 sm:p-6 space-y-6 scrollbar-thin">
+          {renderLiveVideosScreen()}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl max-md:rounded-none border border-slate-200 max-md:border-none shadow-sm min-h-[750px] max-md:min-h-0 max-md:h-full max-md:overflow-hidden flex flex-col md:flex-row text-slate-800 relative w-full" id="casting_live-root-section">
       
@@ -25710,297 +28655,8 @@ try {
             </div>
           </div>
 
-          {/* Core Sidebar buttons from xzxzxzxz.png */}
-          <div className="space-y-1">
-            <button
-              onClick={() => {
-                setActiveSubTab('para-ti');
-                setActiveVideoIndex(0);
-                setViewingTikTokProfileUsername(null);
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
-                activeSubTab === 'para-ti'
-                  ? 'bg-red-50 text-red-500 font-extrabold'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Home className={`w-4 h-4 ${activeSubTab === 'para-ti' ? 'text-red-500' : 'text-slate-500'}`} />
-              <span className="flex-1">Para ti</span>
-              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveSubTab('explorar');
-                setActiveVideoIndex(0);
-                setViewingTikTokProfileUsername(null);
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
-                activeSubTab === 'explorar'
-                  ? 'bg-red-50 text-red-500 font-extrabold'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Compass className={`w-4 h-4 ${activeSubTab === 'explorar' ? 'text-red-500' : 'text-slate-500'}`} />
-              <span>Explorar</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveSubTab('amigos');
-                setActiveVideoIndex(0);
-                setViewingTikTokProfileUsername(null);
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
-                activeSubTab === 'amigos'
-                  ? 'bg-red-50 text-red-500 font-extrabold'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Users className={`w-4 h-4 ${activeSubTab === 'amigos' ? 'text-red-500' : 'text-slate-500'}`} />
-              <span>Amigos</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveSubTab('live');
-                setActiveVideoIndex(0);
-                setViewingTikTokProfileUsername(null);
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
-                activeSubTab === 'live'
-                  ? 'bg-red-550 text-white font-extrabold shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Tv className={`w-4 h-4 ${activeSubTab === 'live' ? 'text-white' : 'text-slate-500'}`} />
-              <span className="flex-1">LIVE</span>
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (onNavigateToTab) {
-                  onNavigateToTab('chat');
-                } else {
-                  alert('💬 Accede al apartado principal de "Mensajes" en el menú de la izquierda para tener chats fluidos con las modelos.');
-                }
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-slate-700 font-bold hover:bg-slate-100 text-left cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4 text-slate-500" />
-              <span>Mensajes</span>
-            </button>
-
-            {/* Quick access buttons under Cargar Vídeo */}
-            <div className="space-y-1.5" id="creator-studio-quick-shortcut">
-              <button
-                type="button"
-                onClick={() => setShowCreationTypeModal(true)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 text-left border border-slate-250 cursor-pointer shadow-sm transition"
-              >
-                <Plus className="w-4 h-4 text-[#fe2c55]" />
-                <span className="flex-1 font-semibold text-slate-700">Cargar Vídeo</span>
-              </button>
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => setShowMoreDropdown(!showMoreDropdown)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 text-left transition cursor-pointer ${
-                  showMoreDropdown ? 'bg-slate-150/80 text-black' : ''
-                }`}
-              >
-                <MoreHorizontal className="w-4 h-4 text-slate-500" />
-                <span>Más</span>
-              </button>
-
-              {showMoreDropdown && (
-                <div className="absolute left-0 bottom-full mb-3 w-72 bg-white border border-slate-200 shadow-xl rounded-2xl p-3 z-[99] animate-fade-in space-y-2 text-slate-800 font-sans">
-                  {/* Header: Logo, Title, and Close Button */}
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-5 h-5 rounded bg-black flex items-center justify-center overflow-hidden shrink-0">
-                        <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-xs border border-cyan-400 opacity-60 pointer-events-none" />
-                        <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-xs border border-rose-400 opacity-60 pointer-events-none" />
-                        <span className="text-[10px] font-black text-white z-10 leading-none tracking-tighter">d</span>
-                      </div>
-                      <span className="text-sm font-extrabold text-slate-900 tracking-tight">Más</span>
-                    </div>
-                    <button 
-                      onClick={() => setShowMoreDropdown(false)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer text-xs border-0"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Section: AJUSTES */}
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 py-0.5">
-                      Ajustes
-                    </div>
-
-                    {/* Item: General with expandable accordion for Quick Settings */}
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => setShowGeneralSettingsAccordion(!showGeneralSettingsAccordion)}
-                        className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer text-left border-0 bg-transparent justify-between`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Settings className="w-4 h-4 text-slate-800 shrink-0" />
-                          <span>General</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                          <span>Ajustes Rápidos</span>
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showGeneralSettingsAccordion ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-
-                      {showGeneralSettingsAccordion && (
-                        <div className="ml-6 mr-1 p-2 bg-slate-50 border border-slate-100 rounded-xl space-y-2 animate-fade-in text-left">
-                          {/* AutoPlay Toggle */}
-                          <button
-                            onClick={() => setAutoPlayEnabled(!autoPlayEnabled)}
-                            className="w-full flex items-center justify-between py-1 px-1.5 rounded-lg text-[10px] text-slate-700 hover:bg-slate-200/50 cursor-pointer font-semibold border-0 bg-transparent text-left"
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              Reproducción Automática
-                            </span>
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${autoPlayEnabled ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-150 text-slate-550'}`}>
-                              {autoPlayEnabled ? 'SÍ' : 'NO'}
-                            </span>
-                          </button>
-
-                          {/* Mute Toggle */}
-                          <button
-                            onClick={() => setIsMuted(!isMuted)}
-                            className="w-full flex items-center justify-between py-1 px-1.5 rounded-lg text-[10px] text-slate-700 hover:bg-slate-200/50 cursor-pointer font-semibold border-0 bg-transparent text-left"
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                              Silenciar Sonido
-                            </span>
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isMuted ? 'bg-rose-50 text-rose-600' : 'bg-slate-150 text-slate-550'}`}>
-                              {isMuted ? 'SÍ' : 'NO'}
-                            </span>
-                          </button>
-
-                          {/* Reset original videos */}
-                          <button
-                            onClick={() => {
-                              if (window.confirm('¿Quieres restaurar los vídeos originales de simulación?')) {
-                                localStorage.removeItem('coll_casting_live_videos');
-                                setVideosList(initialVideos);
-                                setActiveVideoIndex(0);
-                                alert('Vídeos restablecidos correctamente.');
-                              }
-                              setShowMoreDropdown(false);
-                            }}
-                            className="w-full flex items-center gap-1.5 py-1 px-1.5 rounded-lg text-[10px] text-rose-600 hover:bg-rose-50 cursor-pointer font-bold border-0 bg-transparent text-left"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                            Restablecer Galería
-                          </button>
-
-                          <div className="p-1.5 bg-white rounded border border-slate-150 text-[8.5px] text-slate-450 leading-relaxed">
-                            <span className="font-bold text-slate-600 block mb-0.5 uppercase tracking-wider text-[7.5px]">🎯 Atajos Teclado:</span>
-                            <p>• Rueda ratón para pasar vídeos</p>
-                            <p>• Flechas (Arriba / Abajo)</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Item: Español */}
-                    <button
-                      onClick={() => alert('🌐 Idioma establecido: Español. Puedes configurar traducciones automáticas en las descripciones de los vídeos.')}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Globe className="w-4 h-4 text-slate-800 shrink-0" />
-                        <span>Español</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
-
-                    {/* Item: Modo Oscuro */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition">
-                      <div className="flex items-center gap-2.5">
-                        <Moon className="w-4 h-4 text-slate-800 shrink-0" />
-                        <span>Modo oscuro</span>
-                      </div>
-                      {/* Segmented active sun/light selector like screenshot hghg.png */}
-                      <div className="bg-slate-100 p-0.5 rounded-full flex gap-0.5 items-center border border-slate-200 select-none">
-                        <button 
-                          type="button" 
-                          onClick={() => alert('🎛️ Configurando preferencias del sistema: predeterminado de sistema activo.')}
-                          className="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200 cursor-pointer transition border-0 bg-transparent"
-                          title="Auto/Sistema"
-                        >
-                          <Sliders className="w-3 h-3" />
-                        </button>
-                        <button 
-                          type="button" 
-                          onClick={() => alert('🌙 Modo oscuro: Esta sección utiliza un feed oscuro especial de simulación de Casting Live. El fondo general se mantendrá optimizado para visualización de modelaje.')}
-                          className="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200 cursor-pointer transition border-0 bg-transparent"
-                          title="Modo oscuro"
-                        >
-                          <Moon className="w-3 h-3" />
-                        </button>
-                        <button 
-                          type="button" 
-                          onClick={() => alert('☀️ Modo claro activo: Disfrutando de la interfaz principal de alta legibilidad.')}
-                          className="p-1 rounded-full bg-white text-slate-900 shadow-xs cursor-pointer transition border-0"
-                          title="Modo claro"
-                        >
-                          <Sun className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Horizontal divider line */}
-                  <hr className="border-slate-100" />
-
-                  {/* Section: HERRAMIENTAS */}
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 py-0.5">
-                      Herramientas
-                    </div>
-
-                    {/* Item: Crea efectos de TikTok */}
-                    <button
-                      onClick={() => {
-                        setShowEffectsModal(true);
-                        setShowMoreDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
-                      <span>Crea efectos de Casting Live</span>
-                    </button>
-
-                    {/* Item: Herramientas LIVE */}
-                    <button
-                      onClick={() => {
-                        setShowLiveToolsModal(true);
-                        setShowMoreDropdown(false);
-                      }}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50 transition cursor-pointer border-0 bg-transparent text-left"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Herramientas LIVE</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Core Sidebar buttons from image.png */}
+          {renderSidebarNavigationButtons()}
 
           {/* CUENTAS QUE SIGUES SECTION */}
           <div className="pt-2 border-t border-slate-100 space-y-2">
@@ -26301,6 +28957,7 @@ try {
               ) : true ? (
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR ALL CHANNELS (image.png & z.png) */
                 <TikTokFinanzasFeed
+                  isActiveTab={isActiveTab}
                   onNavigateToTab={onNavigateToTab}
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
@@ -26852,7 +29509,7 @@ try {
                             CANALES EN DIRECTO
                           </span>
                           <span className="text-[10px] sm:text-[11px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-3 py-0.5 rounded-full border border-[#fe2c55]/60">
-                            {selectedCategoryFilter === 'Modelos' ? 'Runway' : selectedCategoryFilter === 'Investors' ? 'Jewellery' : selectedCategoryFilter}
+                            {selectedCategoryFilter === 'Modelos' ? 'Runway' : selectedCategoryFilter === 'Investors' ? 'Jewellery' : (selectedCategoryFilter === 'Catwalk' || selectedCategoryFilter === 'Casting') ? 'Casting' : selectedCategoryFilter}
                           </span>
                         </div>
 
@@ -26868,12 +29525,14 @@ try {
                             { id: 'Modelos', label: 'Runway 👑' },
                             { id: 'BackStage', label: 'BackStage 🎬' },
                             { id: 'Investors', label: 'Jewellery 💎' },
-                            { id: 'Catwalk', label: 'Catwalk 👠' },
+                            { id: 'Casting', label: 'Casting 👠' },
                             { id: 'Fitnes', label: 'Fitnes 💪' },
                             { id: 'Beauty', label: 'Beauty 💄' },
-                            { id: 'Influencer', label: 'Influencer 📱' }
+                            { id: 'Influencer', label: 'Influencer 📱' },
+                            { id: 'Luxury', label: 'Luxury 🍸' },
+                            { id: 'Interview', label: 'Interview 🎙️' }
                           ].map(cat => {
-                            const isActive = selectedCategoryFilter === cat.id;
+                            const isActive = selectedCategoryFilter === cat.id || (cat.id === 'Casting' && selectedCategoryFilter === 'Catwalk');
                             return (
                               <button
                                 key={cat.id}
@@ -34906,6 +37565,8 @@ try {
           </div>
         </div>
       )}
+
+
 
 
 

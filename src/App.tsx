@@ -757,6 +757,35 @@ export default function App() {
     } catch (e) {}
   }, []);
 
+  // ⏸️ Detener y pausar toda la reproducción de vídeo y audio al cambiar de página
+  useEffect(() => {
+    if (activeTab !== 'casting_live') {
+      window.dispatchEvent(new CustomEvent('pause-all-media-playback', { detail: { activeTab } }));
+      window.dispatchEvent(new CustomEvent('pause-channel-video'));
+
+      try {
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+          try {
+            v.pause();
+          } catch {}
+        });
+        const audios = document.querySelectorAll('audio');
+        audios.forEach(a => {
+          try {
+            a.pause();
+          } catch {}
+        });
+      } catch {}
+
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {}
+      }
+    }
+  }, [activeTab]);
+
   // Sync rankings when custom videos are uploaded or published in CastingLiveSection
   useEffect(() => {
     const handleSyncRankings = () => {
@@ -3049,7 +3078,7 @@ export default function App() {
                   localStorage.removeItem('selectedLiveModelId');
                   setSelectedLiveModelId(undefined);
                   localStorage.setItem('casting_live_active_subtab', 'para-ti');
-                  localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
+                  localStorage.setItem('casting_live_default_category_filter', 'Todos');
                   localStorage.setItem('finanzas_scenario', 'present');
                   try {
                     sessionStorage.removeItem('explicit_category_set_by_user');
@@ -4082,6 +4111,7 @@ export default function App() {
 
           <div className={activeTab === 'casting_live' ? 'space-y-4 max-md:space-y-0 animate-fade-in pt-0 w-full max-w-full overflow-x-hidden min-w-0 max-md:h-full max-md:overflow-hidden flex-1 flex flex-col' : 'hidden'}>
             <CastingLiveSection
+              isActiveTab={activeTab === 'casting_live'}
               models={models}
               userProfile={userProfile}
               selectedLiveModelId={selectedLiveModelId}
