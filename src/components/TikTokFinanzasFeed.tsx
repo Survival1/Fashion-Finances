@@ -1456,16 +1456,26 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (setShowFinanzasResults) setShowFinanzasResults(false);
       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
 
-      const targetSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0];
-      const targetSessionId = e.detail?.sessionId || targetSession?.id || 'sess-trabajadores-1';
+      // Encontrar la ronda de la captura image.png (Round Streetwear & Urban de 10€ donde está inscrito)
+      const targetSessionId = e.detail?.sessionId || 'sess-trabajadores-1';
+      const roundIdx = activeSessionsOnly.findIndex(s => 
+        s.id === targetSessionId || 
+        s.entryFee === 10 || 
+        s.id === 'sess-trabajadores-1' || 
+        s.title?.toUpperCase().includes('STREETWEAR')
+      );
+      const resolvedIndex = e.detail?.sessionIndex !== undefined ? e.detail.sessionIndex : (roundIdx !== -1 ? roundIdx : 0);
 
-      // Mantener la fase de votación de 10 minutos activa (captura image.png con la cuenta atrás)
+      setActiveFinanzasSessionIndex(resolvedIndex);
+      scrollToRound(resolvedIndex);
+
+      // Volver a la ventana de la captura image.png: fase de exposición (no forzar fase de votación)
       setSessionVotingPhaseMap(prev => {
-        const next = { ...prev, [targetSessionId]: true };
+        const next = { ...prev, [targetSessionId]: false, 'sess-trabajadores-1': false };
         try {
           localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
-          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'true');
-          localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'false');
+          localStorage.setItem('finanzas_is_voting_phase_active', 'false');
         } catch (err) {}
         return next;
       });
@@ -2573,10 +2583,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   }, []);
 
   const [activeHoveredParticipantsSession, setActiveHoveredParticipantsSession] = useState<string | null>(null);
-  // 🎛️ Synchronized selected presenter per session for direct turn switching (Marina Serrano by default for Streetwear & Urban matching z.png)
+  // 🎛️ Synchronized selected presenter per session (David K. Turno 7 matching image.png)
   const [sessionSelectedPresenterMap, setSessionSelectedPresenterMap] = useState<Record<string, any>>(() => {
     return {
-      'sess-trabajadores-1': { id: 'trab-10', name: 'Marina Serrano', role: 'PATRONISTA SOSTENIBLE', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', username: 'marina_serrano_mod' }
+      'sess-trabajadores-1': { id: 'f-7', name: 'David K.', role: 'PATROCINADOR PREMIUM', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', username: 'david_growth_ff' }
     };
   });
 
@@ -3213,9 +3223,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const getTenVotingLiveParticipants = (currentSess: any) => {
     const isEnrolled = Boolean(
       (currentSess?.id && userPaidSessions[currentSess.id]) ||
-      (typeof window !== 'undefined' && (
-        localStorage.getItem(`user_paid_session_${currentSess?.id}`) === 'true' ||
-        localStorage.getItem('finanzas_user_participating') === 'true'
+      (typeof window !== 'undefined' && currentSess?.id && (
+        localStorage.getItem(`user_paid_session_${currentSess.id}`) === 'true'
       ))
     );
 
@@ -3724,8 +3733,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     }}
                     className={`shrink-0 px-2.5 py-1 rounded-full text-[9.5px] font-black transition-all cursor-pointer border active:scale-95 ${
                       isActive 
-                        ? `${cat.activeBg} scale-105 font-black ring-1 ring-white/40` 
-                        : 'bg-[#181d2a] hover:bg-[#22293b] text-slate-300 border-slate-700/80 hover:text-white'
+                        ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-rose-950 border-rose-400 ring-2 ring-rose-400/50 scale-105 font-black shadow-md' 
+                        : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] text-slate-800 border-rose-200/80 hover:border-rose-300'
                     }`}
                   >
                     {cat.label}
@@ -3752,8 +3761,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     }}
                     className={`py-2 sm:py-2.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-black transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm ${
                       isActive 
-                        ? 'bg-gradient-to-r from-rose-600 via-[#fe2c55] to-pink-600 text-white font-black shadow-lg shadow-rose-600/40 border-2 border-pink-400 ring-2 ring-rose-400/40' 
-                        : 'bg-[#181d2a] hover:bg-[#22293b] text-white border border-slate-700/70 hover:border-slate-500'
+                        ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-rose-950 font-black shadow-lg shadow-rose-300/40 border-2 border-rose-400 ring-2 ring-rose-400/40' 
+                        : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-slate-900 border border-rose-200/90 hover:border-rose-300'
                     }`}
                     id={`finanzas-feed-channel-btn-${cat.id}`}
                   >
@@ -4681,18 +4690,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             userPaidSessions[session.id] ||
             (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${session.id}`) === 'true')
           );
-          // Comprobar si el usuario está participando en esta ronda o en cualquier otra ronda/sesión
-          const isUserParticipating = Boolean(
-            isUserEnrolledInThisRound ||
-            userPaidSessions[session.id] ||
-            (typeof window !== 'undefined' && (
-              localStorage.getItem(`user_paid_session_${session.id}`) === 'true' ||
-              localStorage.getItem('finanzas_user_is_participating') === 'true' ||
-              Object.keys(localStorage).some(k => k.startsWith('user_paid_session_') && localStorage.getItem(k) === 'true')
-            )) ||
-            Object.values(userPaidSessions).some(Boolean) ||
-            participants.some(p => p.isSelf || p.id === 'user-adriana' || p.id === 'user' || p.name?.toLowerCase().includes('adriana'))
-          );
+          // Comprobar si el usuario está participando en esta ronda estrictamente (solo en la que pagó)
+          const isUserParticipating = isUserEnrolledInThisRound;
           const isCurrentlyActiveRound = index === activeFinanzasSessionIndex;
           const likesData = likesMap[session.id] || { count: 43200, userLiked: false };
           const savesData = savesMap[session.id] || { count: 592, userSaved: false };
@@ -6239,20 +6238,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       if (setSelectedFinanzasUser && lucasUser) {
                         setSelectedFinanzasUser(lucasUser);
                       }
-                      if (session.id === 'sess-trabajadores-1' || session.reference === 'REF: 1') {
-                        setSessionSelectedPresenterMap(prev => ({
-                          ...prev,
-                          [session.id]: {
-                            id: 'trab-10',
-                            name: 'Marina Serrano',
-                            role: 'PATRONISTA SOSTENIBLE',
-                            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-                            username: 'marina_serrano_mod'
-                          }
-                        }));
-                      } else {
-                        setSessionSelectedPresenterMap(prev => ({ ...prev, [session.id]: lucasUser }));
-                      }
+
                       setShowFinanzasInscriptionInChannel(false);
                       setShowProjectDetailsInPopup(false);
                       setDetailProjectUser(null);

@@ -1099,21 +1099,8 @@ export default function SessionResultsPodium({
     } catch (e) {
       console.error("Error reading model sponsors on podium:", e);
     }
-    // Fallback default single portfolio sponsor (Balmain Paris)
-    return [
-      {
-        id: 's-balmain',
-        name: 'BALMAIN PARIS',
-        amount: 15000,
-        logoInitials: 'BP',
-        logoStyle: 'bg-white text-black font-serif font-bold border border-amber-300',
-        sector: 'CALZADO DE PASARELA Y LUJO 👠',
-        hasExclusivity: true,
-        logoUrl: BALMAIN_LOGO_DATA_URL,
-        storeId: 'balmain_paris_paloma',
-        proposalDescription: 'Contrato de exclusividad para patrocinio de calzado de pasarela y lujo en la gala de resultados finales.'
-      }
-    ];
+    // Default empty sponsors list
+    return [];
   })();
 
   const handleSponsorClick = (sponsor: any) => {
@@ -1375,26 +1362,6 @@ export default function SessionResultsPodium({
           <span>Sesión Finalizada</span>
         </button>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
-          {resultsSponsors && resultsSponsors.length > 0 ? (
-            resultsSponsors.map((spon, idx) => (
-              <span 
-                key={spon.id || idx} 
-                className={`inline-flex items-center gap-1 text-[11px] font-sans font-black tracking-widest uppercase px-3.5 py-1.5 rounded-full shadow-md ${
-                  spon.hasExclusivity 
-                    ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-300 border border-amber-400/60 animate-pulse'
-                    : 'bg-slate-900 text-rose-400 border border-slate-800'
-                }`}
-              >
-                <span>♛</span> {spon.name} <span>♛</span>
-              </span>
-            ))
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-sans font-black tracking-widest text-amber-300 uppercase px-3.5 py-1.5 bg-amber-500/15 border border-amber-400/50 rounded-full shadow-md">
-              ♛ BALMAIN PARIS ♛
-            </span>
-          )}
-        </div>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-rose-300 to-amber-100 mt-2 mb-1.5 animate-fade-in">
           Resultados Finales
         </h2>
@@ -1453,9 +1420,6 @@ export default function SessionResultsPodium({
           
           {/* Decorative title - Desduplicado: Podio de Ganadores */}
           <div className="text-center space-y-2 relative z-10">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border border-amber-400/60 px-3.5 py-1 rounded-full text-[10px] sm:text-[10.5px] font-black uppercase tracking-[0.2em] text-amber-300 mx-auto shadow-sm">
-              <span>✦</span> RONDA DE CROWDFUNDING FINALIZADA • {completedSessionToDisplay.reference || 'REF: 1'} <span>✦</span>
-            </div>
             <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-white tracking-wide uppercase leading-snug break-words px-2 m-0">
               PODIO DE GANADORES • {completedSessionToDisplay.title}
             </h3>
@@ -1463,9 +1427,6 @@ export default function SessionResultsPodium({
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               <span>Base de Datos Archivada: {completedSessionToDisplay.reference || 'REF: 1'} (Ronda #{completedSessionToDisplay.roundNumber ? completedSessionToDisplay.roundNumber - 1 : 0})</span>
             </div>
-            <p className="text-[9.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold max-w-lg mx-auto">
-              ASIGNACIÓN OFICIAL DE CAPITAL DE INVERSIÓN Y RECONOCIMIENTO FINANCIERO
-            </p>
           </div>
 
             {/* Podium pedestal columns or Multi-winner Slider */}
@@ -2611,7 +2572,7 @@ export default function SessionResultsPodium({
                 }}
                 className="px-6 py-2.5 bg-slate-950 hover:bg-black text-amber-300 font-black text-xs rounded-xl shadow-md transition cursor-pointer border border-amber-400/40 hover:scale-[1.01] flex items-center justify-center gap-2"
               >
-                <span>🛍️ Visitar Tienda Balmain Paris</span>
+                <span>🛍️ Visitar Tienda Oficial</span>
               </button>
               <button
                 onClick={() => setSelectedPodiumSponsorDetail(null)}

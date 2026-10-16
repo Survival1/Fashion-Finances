@@ -3523,26 +3523,12 @@ export default function CastingLiveSection({
   const sessionScrollLockRef = useRef<boolean>(false);
 
   // States to guarantee instant reactivity when paying and joining sessions
-  // Por defecto al abrir la APP por primera vez, el usuario NO participa en ninguna ronda.
+  // Por defecto al entrar o reiniciar la aplicación, el usuario NUNCA está inscrito en ninguna ronda
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     try {
-      const isFreshAppOpen = typeof window !== 'undefined' && !sessionStorage.getItem('app_user_visited_session');
-      if (isFreshAppOpen) {
-        sessionStorage.setItem('app_user_visited_session', 'true');
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('user_paid_session_') || key.startsWith('finanzas_active_session_start_')) {
-            localStorage.removeItem(key);
-          }
-        });
-        localStorage.removeItem('finanzas_user_participating');
-        localStorage.removeItem('finanzas_user_slot_index');
-        localStorage.removeItem('user_paid_finanzas_session');
-        localStorage.removeItem('finanzas_target_session_id');
-        localStorage.removeItem('open_finanzas_sessions_list_v43');
-        localStorage.removeItem('open_finanzas_sessions_list_v44');
-        return initial;
-      }
+      // Limpiar cualquier residuo previo de sess-trabajadores-1 que pudiera haber quedado por defecto
+      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('user_paid_session_') && localStorage.getItem(key) === 'true') {
           const sId = key.replace('user_paid_session_', '');
@@ -3554,6 +3540,7 @@ export default function CastingLiveSection({
   });
   const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(() => {
     try {
+      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
       if (typeof window !== 'undefined' && !sessionStorage.getItem('app_user_visited_session')) {
         return false;
       }
@@ -3584,6 +3571,13 @@ export default function CastingLiveSection({
   // Es obligatorio pagar e inscribirse explícitamente para participar.
   useEffect(() => {
     try {
+      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+      setUserPaidSessions(prev => {
+        if (!prev['sess-trabajadores-1']) return prev;
+        const copy = { ...prev };
+        delete copy['sess-trabajadores-1'];
+        return copy;
+      });
       const hasAnyPaid = Object.keys(localStorage).some(k => k.startsWith('user_paid_session_') && localStorage.getItem(k) === 'true');
       if (!hasAnyPaid) {
         localStorage.removeItem('finanzas_user_participating');
@@ -4041,7 +4035,7 @@ export default function CastingLiveSection({
       sessionParticipants = copy.slice(0, 10);
     }
 
-    const enrolledId = (targetSessionId && targetSessionId !== 'sess-streetwear-ref-2') || activeSess?.id || 'sess-trabajadores-1';
+    const enrolledId = (targetSessionId && targetSessionId !== 'sess-streetwear-ref-2') ? targetSessionId : (activeSess?.id || 'sess-trabajadores-1');
     setJoinedPresenterIds(sessionParticipants.map((p: any) => p.id));
     setIsFinanzasUserParticipatingState(true);
     setUserPaidSessions(prev => ({
@@ -4349,8 +4343,9 @@ export default function CastingLiveSection({
         }
       }
     } else {
+      const targetId = targetSession?.id || targetSessionId;
       updatedSessions = updatedSessions.map(s => {
-        if (s.id === targetSessionId || s.id === targetSession?.id || s.id === currentFinanzasSession?.id) {
+        if (s.id === targetId) {
           return {
             ...s,
             status: 'active' as const,
@@ -4381,17 +4376,17 @@ export default function CastingLiveSection({
     setIsScreenSharingActive(false);
     setUserPaidSessions(prev => ({
       ...prev,
-      [effectiveTargetSessionId]: true,
-      [targetSessionId]: true
+      [effectiveTargetSessionId]: true
     }));
     try {
       localStorage.setItem(`user_paid_session_${effectiveTargetSessionId}`, 'true');
-      localStorage.setItem(`user_paid_session_${targetSessionId}`, 'true');
+      if (effectiveTargetSessionId !== targetSessionId) {
+        localStorage.removeItem(`user_paid_session_${targetSessionId}`);
+      }
       localStorage.setItem('finanzas_target_session_id', effectiveTargetSessionId);
       localStorage.setItem('finanzas_user_participating', 'true');
       localStorage.setItem('finanzas_user_slot_index', String(userSlotIndex));
       localStorage.setItem(`finanzas_is_voting_phase_active_${effectiveTargetSessionId}`, 'false');
-      localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'false');
       localStorage.removeItem('finanzas_is_voting_phase_active');
     } catch (e) {}
     setForceShowParticipantsPanel(true);
@@ -5607,20 +5602,26 @@ export default function CastingLiveSection({
   const handleFlipLiveCamera = async () => {
     const nextMode = liveCameraFacingMode === 'user' ? 'environment' : 'user';
     setLiveCameraFacingMode(nextMode);
-    if (isUserLiveStreamingWithCamera) {
+    if (isUserLiveStreamingWithCamera || isUserRetransmitting) {
       if (userLiveMediaStream) {
         userLiveMediaStream.getTracks().forEach(track => track.stop());
       }
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: nextMode,
-            width: { ideal: 1080 },
-            height: { ideal: 1920 }
-          },
-          audio: !isLiveStreamAudioMuted
-        });
-        setUserLiveMediaStream(newStream);
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: nextMode,
+              width: { ideal: 1080 },
+              height: { ideal: 1920 }
+            },
+            audio: !isLiveStreamAudioMuted
+          });
+          setUserLiveMediaStream(newStream);
+          if (heroVideoRef.current) {
+            heroVideoRef.current.srcObject = newStream;
+            heroVideoRef.current.play().catch(() => {});
+          }
+        }
       } catch (e) {
         console.warn('Could not switch camera:', e);
       }
@@ -7148,11 +7149,48 @@ export default function CastingLiveSection({
   const [liveHeroVolume, setLiveHeroVolume] = useState<number>(80);
   const [isHeroLeftVolumeVisible, setIsHeroLeftVolumeVisible] = useState<boolean>(false);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [isHeroRightActionsVisible, setIsHeroRightActionsVisible] = useState<boolean>(false);
+  const [isHeroRightActionsVisible, setIsHeroRightActionsVisible] = useState<boolean>(true);
   const [isHeroFollowed, setIsHeroFollowed] = useState<boolean>(false);
   const [heroLikesCount, setHeroLikesCount] = useState<number>(1200);
   const [isHeroLiked, setIsHeroLiked] = useState<boolean>(false);
-  const [heroCommentsCount, setHeroCommentsCount] = useState<number>(2);
+  const [isHeroHeartGlossaryOpen, setIsHeroHeartGlossaryOpen] = useState<boolean>(false);
+  const [isHeroEmojiEnglish, setIsHeroEmojiEnglish] = useState<boolean>(false);
+  const [hoveredHeroEmojiName, setHoveredHeroEmojiName] = useState<string | null>(null);
+  const heroHeartHoverTimeoutRef = useRef<any>(null);
+
+  // 💬 Comentarios interactivos del canal destacados (Idéntico a captura z.png)
+  const [isHeroCommentsOpen, setIsHeroCommentsOpen] = useState<boolean>(false);
+  const [heroCommentInputText, setHeroCommentInputText] = useState<string>('');
+  const [heroReplyingTo, setHeroReplyingTo] = useState<{ id: string; user: string } | null>(null);
+  const [showHeroEmojiPicker, setShowHeroEmojiPicker] = useState<boolean>(false);
+  const [heroCommentsList, setHeroCommentsList] = useState<Array<{
+    id: string;
+    user: string;
+    avatar: string;
+    text: string;
+    date: string;
+    replyTo?: string;
+    isLiked?: boolean;
+    likesCount?: number;
+  }>>([
+    {
+      id: 'h-comm-1',
+      user: 'elena_style',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100',
+      text: '¡Increíble la calidad del directo y la colección! 😍✨',
+      date: 'Hace 3 min',
+      likesCount: 5
+    },
+    {
+      id: 'h-comm-2',
+      user: 'marcos_design',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100',
+      text: 'Apoyando esta transmisión. Mucho éxito con la pasarela 👏',
+      date: 'Hace 8 min',
+      likesCount: 2
+    }
+  ]);
+
   const [heroSharesCount, setHeroSharesCount] = useState<number>(48);
   const [heroBookmarksCount, setHeroBookmarksCount] = useState<number>(112);
   const [isHeroBookmarked, setIsHeroBookmarked] = useState<boolean>(false);
@@ -7161,6 +7199,116 @@ export default function CastingLiveSection({
   const [userRetransmittingChannelId, setUserRetransmittingChannelId] = useState<string | null>(null);
   const [retransmissionLiveViewers, setRetransmissionLiveViewers] = useState<number>(19850);
 
+  // 💖 Helper para enviar reacciones del glosario de emojis
+  const handleHeroEmojiReaction = (emoji: string, e?: React.MouseEvent) => {
+    setIsHeroLiked(true);
+    setHeroLikesCount(prev => (isHeroLiked ? prev : prev + 1));
+    window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+      detail: { 
+        emoji, 
+        icon: emoji, 
+        pureEmoji: true,
+        x: e?.clientX,
+        y: e?.clientY
+      }
+    }));
+    setIsHeroHeartGlossaryOpen(false);
+  };
+
+  // 💬 Helper para publicar comentarios en el directo
+  const handleAddHeroComment = (customText?: string) => {
+    const textToSend = customText || heroCommentInputText;
+    if (!textToSend || !textToSend.trim()) return;
+
+    const newCommentItem = {
+      id: `hero-comm-${Date.now()}`,
+      user: userProfile?.username || 'mi_usuario',
+      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+      text: textToSend.trim(),
+      date: 'Ahora',
+      replyTo: heroReplyingTo ? heroReplyingTo.user : undefined,
+      likesCount: 0
+    };
+
+    setHeroCommentsList(prev => [newCommentItem, ...prev]);
+    setHeroCommentInputText('');
+    setHeroReplyingTo(null);
+    setShowHeroEmojiPicker(false);
+    setToastNotification({
+      message: '💬 ¡Comentario publicado en el directo!',
+      title: 'Comentarios'
+    });
+  };
+
+  const handleDeleteHeroComment = (id: string) => {
+    setHeroCommentsList(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleToggleLikeHeroComment = (id: string) => {
+    setHeroCommentsList(prev => prev.map(c => {
+      if (c.id === id) {
+        const nextLiked = !c.isLiked;
+        return {
+          ...c,
+          isLiked: nextLiked,
+          likesCount: (c.likesCount || 0) + (nextLiked ? 1 : -1)
+        };
+      }
+      return c;
+    }));
+  };
+
+  // 🔖 Helper para guardar / bookmark
+  const handleToggleHeroBookmark = (categoryName?: string) => {
+    const nextSaved = !isHeroBookmarked;
+    setIsHeroBookmarked(nextSaved);
+    setHeroBookmarksCount(prev => (nextSaved ? prev + 1 : Math.max(0, prev - 1)));
+    try {
+      const raw = localStorage.getItem('profile_saved_bookmarks');
+      let list = raw ? JSON.parse(raw) : [];
+      if (nextSaved) {
+        list = [{
+          id: `hero-saved-${Date.now()}`,
+          title: 'Directo en Alta Definición',
+          category: categoryName || 'Fashion',
+          savedAt: new Date().toISOString()
+        }, ...list];
+      }
+      localStorage.setItem('profile_saved_bookmarks', JSON.stringify(list));
+    } catch (_) {}
+    setToastNotification({
+      message: nextSaved 
+        ? `🔖 Guardado en la página de la captura z.png en la categoría ${categoryName || 'General'}` 
+        : 'Eliminado de guardados',
+      title: 'Guardar'
+    });
+  };
+
+  // 🔗 Helper para compartir
+  const handleHeroShare = () => {
+    setHeroSharesCount(prev => prev + 1);
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+    try {
+      const sharedItem = {
+        id: `hero-share-${Date.now()}`,
+        title: 'Directo en Alta Definición',
+        sharedAt: new Date().toISOString()
+      };
+      localStorage.setItem('project_shared_full_video', JSON.stringify(sharedItem));
+      const raw = localStorage.getItem('profile_shared_bookmarks');
+      let list = raw ? JSON.parse(raw) : [];
+      list = [sharedItem, ...list];
+      localStorage.setItem('profile_shared_bookmarks', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('channel-video-shared', { detail: sharedItem }));
+    } catch (_) {}
+    setToastNotification({
+      message: '🔗 ¡Enlace del directo copiado al portapapeles!',
+      title: 'Compartir'
+    });
+  };
+
   const handleStartLiveRetransmission = async (targetChannel: { id: string; label: string; image?: string }) => {
     let stream = userLiveMediaStream;
     if (!stream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
@@ -7168,20 +7316,31 @@ export default function CastingLiveSection({
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: liveCameraFacingMode || 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            aspectRatio: { ideal: 9 / 16 },
+            width: { ideal: 720 },
+            height: { ideal: 1280 }
           },
           audio: true
         });
       } catch (err1) {
-        console.warn('Could not start camera with ideal constraints, trying standard:', err1);
+        console.warn('Could not start camera with ideal vertical constraints, trying standard vertical:', err1);
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: liveCameraFacingMode || 'user',
+              aspectRatio: 9 / 16
+            },
+            audio: true
+          });
         } catch (err2) {
           try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
           } catch (err3) {
-            console.warn('Camera access unavailable:', err3);
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            } catch (err4) {
+              console.warn('Camera access unavailable:', err4);
+            }
           }
         }
       }
@@ -7201,8 +7360,13 @@ export default function CastingLiveSection({
     setShowStreamOptionsModal(false);
     setIsHeroTopChannelsDropdownOpen(false);
 
-    if (heroVideoRef.current && stream) {
-      heroVideoRef.current.srcObject = stream;
+    if (heroVideoRef.current) {
+      if (stream) {
+        heroVideoRef.current.srcObject = stream;
+      } else {
+        heroVideoRef.current.srcObject = null;
+        heroVideoRef.current.src = '/vertical_live_stream.mp4';
+      }
       heroVideoRef.current.muted = true;
       heroVideoRef.current.play().catch(() => {});
     }
@@ -7222,9 +7386,13 @@ export default function CastingLiveSection({
   };
 
   useEffect(() => {
-    if (heroVideoRef.current && userLiveMediaStream && isUserRetransmitting) {
-      if (heroVideoRef.current.srcObject !== userLiveMediaStream) {
-        heroVideoRef.current.srcObject = userLiveMediaStream;
+    if (heroVideoRef.current && isUserRetransmitting) {
+      if (userLiveMediaStream) {
+        if (heroVideoRef.current.srcObject !== userLiveMediaStream) {
+          heroVideoRef.current.srcObject = userLiveMediaStream;
+        }
+      } else if (!heroVideoRef.current.src && !heroVideoRef.current.srcObject) {
+        heroVideoRef.current.src = '/hero_video.mp4';
       }
       heroVideoRef.current.muted = true;
       heroVideoRef.current.play().catch(() => {});
@@ -13857,25 +14025,37 @@ export default function CastingLiveSection({
                 setShowFinanzasRecount(false);
                 setShowFinanzasResults(false);
 
-                // 🎯 Redirigir a la página de la imagen.png donde los participantes están en la cuenta atrás de 10 minutos para votar
-                setIsVotingPhaseActive(true);
-                const curSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0];
-                const activeSessionId = curSession?.id || 'sess-trabajadores-1';
+                // 🎯 Volver exactamente a la ventana de la captura image.png:
+                // Ronda Streetwear & Urban (10€) con el usuario inscrito como participante y en fase de exposición
+                setIsVotingPhaseActive(false);
+
+                // Buscar el índice de la ronda Streetwear & Urban (10€) donde el usuario hizo el pago (captura image.png)
+                const streetwearIndex = activeSessionsOnly.findIndex(s => 
+                  s.entryFee === 10 || 
+                  s.id === 'sess-trabajadores-1' || 
+                  s.id === 'sess-streetwear-ref-2' || 
+                  s.title?.toUpperCase().includes('STREETWEAR')
+                );
+                const targetIndex = streetwearIndex !== -1 ? streetwearIndex : 0;
+                setActiveFinanzasSessionIndex(targetIndex);
+
+                const activeSessionId = activeSessionsOnly[targetIndex]?.id || 'sess-trabajadores-1';
                 try {
-                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
-                  localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'false');
+                  localStorage.setItem('finanzas_is_voting_phase_active', 'false');
                 } catch (err) {}
 
-                // Despachar evento para sincronizar hacia la cuenta atrás de 10 minutos (image.png)
+                // Despachar evento para sincronizar hacia la captura image.png
                 window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
                   detail: {
-                    sessionId: activeSessionId
+                    sessionId: activeSessionId,
+                    sessionIndex: targetIndex
                   }
                 }));
               }}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0 shadow-xs pointer-events-auto"
-              title="Cerrar ventana y volver a la cuenta atrás de 10 minutos para votar (image.png)"
-              aria-label="Cerrar ventana y volver a la cuenta atrás de 10 minutos para votar (image.png)"
+              title="Cerrar ventana y volver a la ventana de la captura image.png"
+              aria-label="Cerrar ventana y volver a la ventana de la captura image.png"
               id="btn-close-voting-projects-modal"
             >
               <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
@@ -14473,15 +14653,22 @@ export default function CastingLiveSection({
         id="voting-projects-modal-backdrop"
         onClick={() => {
           setShowVotingProjectsModal(false);
-          setIsVotingPhaseActive(true);
-          const curSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0];
-          const activeSessionId = curSession?.id || 'sess-trabajadores-1';
+          setIsVotingPhaseActive(false);
+          const streetwearIndex = activeSessionsOnly.findIndex(s => 
+            s.entryFee === 10 || 
+            s.id === 'sess-trabajadores-1' || 
+            s.id === 'sess-streetwear-ref-2' || 
+            s.title?.toUpperCase().includes('STREETWEAR')
+          );
+          const targetIndex = streetwearIndex !== -1 ? streetwearIndex : 0;
+          setActiveFinanzasSessionIndex(targetIndex);
+          const activeSessionId = activeSessionsOnly[targetIndex]?.id || 'sess-trabajadores-1';
           try {
-            localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
-            localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+            localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'false');
+            localStorage.setItem('finanzas_is_voting_phase_active', 'false');
           } catch (err) {}
           window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
-            detail: { sessionId: activeSessionId }
+            detail: { sessionId: activeSessionId, sessionIndex: targetIndex }
           }));
         }}
       >
@@ -24270,22 +24457,7 @@ try {
               <span>Volver atrás</span>
             </button>
 
-            {/* 🎥 Botón Casting Live en barra superior */}
-            <button
-              type="button"
-              onClick={() => {
-                setViewingTikTokProfileUsername(null);
-                setIsWatchingPresenterCamera(true);
-                setIsPresenterCameraFullscreen(false);
-                setShowLivePresenterControls(false);
-              }}
-              className="flex items-center gap-2 text-xs font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-[#fe2c55] hover:from-red-500 hover:to-rose-500 px-4 py-2.5 rounded-full shadow-md transition-all border-0 cursor-pointer active:scale-95"
-              id="btn-casting-live-top-bar"
-              title="Ir a Casting Live (Ver emisión en directo manteniendo contenedores del canal)"
-            >
-              <Camera className="w-4 h-4 shrink-0 text-white" />
-              <span>Casting Live</span>
-            </button>
+
           </div>
           
           <div className="flex items-center gap-2">
@@ -24377,22 +24549,7 @@ try {
                   <span>MENSAJE</span>
                 </button>
 
-                {/* 🎥 BOTÓN CASTING LIVE */}
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setViewingTikTokProfileUsername(null);
-                    setIsWatchingPresenterCamera(true);
-                    setIsPresenterCameraFullscreen(false);
-                    setShowLivePresenterControls(false);
-                  }}
-                  className="bg-gradient-to-r from-red-600 via-rose-600 to-[#fe2c55] hover:from-red-500 hover:to-rose-500 text-white font-black text-xs px-4 py-1.5 rounded-md transition active:scale-95 cursor-pointer shrink-0 uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
-                  id="btn-casting-live-creator-profile"
-                  title="Ver emisión en directo dentro de los contenedores del canal"
-                >
-                  <Camera className="w-3.5 h-3.5 text-white" />
-                  <span>Casting Live</span>
-                </button>
+
 
                 {/* 3. USER PLUS BUTTON (Sugerencias & Favoritos) */}
                 <div className="relative">
@@ -25966,7 +26123,7 @@ try {
         categoryLabel: channelCategories.find(c => c.id === userRetransmittingChannelId)?.label || 'Canal en Vivo',
         viewers: retransmissionLiveViewers,
         likes: 24890,
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        videoUrl: '/hero_video.mp4',
         tags: ['#MiCamaraEnDirecto', '#OcupandoTodoElCanal', '#EnVivoParaTodos'],
         isVerified: true,
         isUserStream: true
@@ -25981,7 +26138,7 @@ try {
         categoryLabel: 'Atelier',
         viewers: 2480,
         likes: 19500,
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        videoUrl: '/hero_video.mp4',
         tags: ['#MiRetransmision', '#AtelierLive', '#EnDirecto'],
         isVerified: true,
         isUserStream: true
@@ -26296,6 +26453,15 @@ try {
       || filteredLiveChannels[0] 
       || liveStreamChannels[0];
 
+    const isRetransmissionActive = Boolean(
+      isUserRetransmitting && (
+        heroChannel.isUserStream ||
+        userRetransmittingChannelId === liveChannelsCategoryFilter ||
+        userRetransmittingChannelId === heroChannel.category ||
+        (selectedHeroChannelId && selectedHeroChannelId.includes('user-retransmision'))
+      )
+    );
+
     return (
       <div className="w-full space-y-6 animate-fade-in font-sans" id="live-videos-screen-root">
         {/* Top Header Bar */}
@@ -26359,15 +26525,26 @@ try {
             </div>
           </div>
         </div>
-        {/* HERO LIVE STREAM: Destacado Principal en Directo (Ajustado: +3cm de largo, chat eliminado, contenido de z.png abajo) */}
-        <div className="relative w-full rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl group">
-          {/* Canal de vídeo: 4 centímetros más largo adicional (+151px / calc(440px + 7cm)), sin tocar el ancho */}
+        {/* HERO LIVE STREAM: Destacado Principal en Directo (En retransmisión se ve en pantalla completa dentro del canal y la imagen en vertical) */}
+        <div className={`relative w-full rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl group transition-all duration-300 ${
+          isRetransmissionActive
+            ? 'ring-2 ring-rose-500/40 shadow-[0_20px_50px_rgba(244,63,94,0.3)]'
+            : ''
+        }`}>
+          {/* Canal de vídeo: En retransmisión ocupa pantalla completa dentro del canal con imagen vertical */}
           <div 
-            className="relative w-full bg-black flex items-center justify-center overflow-hidden min-h-[570px] sm:min-h-[670px] lg:min-h-[705px]"
-            style={{ minHeight: 'calc(440px + 7cm)' }}
+            className={`relative w-full bg-black flex items-center justify-center overflow-hidden transition-all duration-300 ${
+              isRetransmissionActive
+                ? 'min-h-[720px] sm:min-h-[820px] lg:min-h-[880px] h-[84vh] max-h-[960px]'
+                : 'min-h-[570px] sm:min-h-[670px] lg:min-h-[705px]'
+            }`}
+            style={{ 
+              minHeight: isRetransmissionActive ? 'min(86vh, 920px)' : 'calc(440px + 7cm)',
+              height: isRetransmissionActive ? 'min(86vh, 920px)' : undefined
+            }}
           >
-            {heroChannel.isUserStream || (isUserRetransmitting && (userRetransmittingChannelId === heroChannel.category || heroChannel.id.includes('user-retransmision'))) ? (
-              <div className="relative w-full h-full min-h-[570px] sm:min-h-[670px] lg:min-h-[705px] bg-black flex items-center justify-center overflow-hidden">
+            {isRetransmissionActive ? (
+              <div className="relative w-full h-full min-h-full bg-black flex items-center justify-center overflow-hidden">
                 {userLiveMediaStream ? (
                   <video 
                     ref={(el) => {
@@ -26381,66 +26558,30 @@ try {
                     playsInline
                     muted
                     className={`w-full h-full object-cover select-none ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                   />
                 ) : (
-                  <div className="relative w-full h-full min-h-[570px] sm:min-h-[670px] lg:min-h-[705px] flex items-center justify-center overflow-hidden bg-slate-950">
+                  <div className="relative w-full h-full min-h-full flex items-center justify-center overflow-hidden bg-slate-950">
                     <video 
                       ref={heroVideoRef}
-                      src="https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"
+                      src="/vertical_live_stream.mp4"
                       autoPlay
                       loop
                       muted
                       playsInline
                       className="w-full h-full object-cover select-none"
+                      style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.endsWith('/hero_video.mp4')) {
+                          target.src = '/hero_video.mp4';
+                          target.play().catch(() => {});
+                        }
+                      }}
                     />
-                    {/* Overlay de cámara conectada transmitiendo en directo ocupando todo el canal */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/60 pointer-events-none flex flex-col items-center justify-center p-6 text-center">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/30 border-2 border-red-500 flex items-center justify-center mb-3 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.5)]">
-                        <Camera className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                      </div>
-                      <span className="bg-red-600 text-white font-black text-[11px] sm:text-xs px-3.5 py-1 rounded-full uppercase tracking-widest mb-2 shadow-lg animate-pulse">
-                        🔴 CÁMARA EN DIRECTO ACTIVADA
-                      </span>
-                      <p className="text-white text-sm sm:text-base md:text-lg font-black max-w-lg drop-shadow-md">
-                        Transmitiendo tu imagen en directo ocupando todo el canal para todos los usuarios
-                      </p>
-                    </div>
                   </div>
                 )}
 
-                {/* Controles flotantes de la cámara de retransmisión */}
-                <div className="absolute top-3 right-3 z-30 flex items-center gap-2 pointer-events-auto">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const nextMode = liveCameraFacingMode === 'user' ? 'environment' : 'user';
-                      setLiveCameraFacingMode(nextMode);
-                      if (userLiveMediaStream) {
-                        userLiveMediaStream.getTracks().forEach(t => t.stop());
-                      }
-                      try {
-                        const newStream = await navigator.mediaDevices.getUserMedia({
-                          video: { facingMode: nextMode },
-                          audio: true
-                        });
-                        setUserLiveMediaStream(newStream);
-                      } catch {}
-                    }}
-                    className="p-1.5 sm:px-2.5 sm:py-1 rounded-full bg-black/70 hover:bg-black text-white text-[10.5px] font-bold border border-white/20 transition cursor-pointer shadow-md flex items-center gap-1"
-                    title="Girar cámara (Frontal / Trasera)"
-                  >
-                    <span>🔄</span>
-                    <span className="hidden sm:inline">Girar</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleStopLiveRetransmission}
-                    className="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-rose-700 text-white text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider transition cursor-pointer border border-white/20 shadow-lg active:scale-95"
-                    title="Detener retransmisión"
-                  >
-                    ⏹️ Detener
-                  </button>
-                </div>
               </div>
             ) : (
               <video 
@@ -26552,8 +26693,8 @@ try {
                         }}
                         className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-center gap-5 sm:gap-7 shadow-2xl relative select-none group overflow-hidden ${
                           isSelected
-                            ? 'bg-slate-950 text-white border-rose-500 ring-2 ring-rose-500/70 shadow-rose-950/60'
-                            : 'bg-slate-900/95 hover:bg-slate-850 text-white border-slate-700/80 hover:border-slate-500'
+                            ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-slate-900 border-2 border-rose-400 ring-2 ring-rose-400/60 shadow-[0_12px_36px_rgba(244,114,182,0.35)]'
+                            : 'bg-gradient-to-br from-white via-[#FFF5F8] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-slate-900 border border-rose-200/90 hover:border-rose-300 shadow-xl shadow-rose-100/50'
                         }`}
                       >
                         {/* Miniatura en tamaño bastante mayor (w-28 h-28 / w-36 h-36) con punto de directo */}
@@ -26564,7 +26705,7 @@ try {
                             className="w-full h-full object-cover"
                             loading="lazy"
                           />
-                          <div className={`absolute inset-0 bg-gradient-to-t ${isSelected ? 'from-slate-950/80' : 'from-black/60'} to-transparent`} />
+                          <div className={`absolute inset-0 bg-gradient-to-t ${isSelected ? 'from-rose-950/40' : 'from-black/40'} to-transparent`} />
                           <span className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 rounded-full bg-red-500 ring-2 ring-white animate-pulse" />
                         </div>
 
@@ -26575,13 +26716,13 @@ try {
                               LIVE
                             </span>
                             {isSelected && (
-                              <span className="text-[11px] font-black text-emerald-400 bg-emerald-950/80 border border-emerald-500/50 px-3 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="text-[11px] font-black text-emerald-800 bg-emerald-100 border border-emerald-400/80 px-3 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                                 ✓ Canal Seleccionado
                               </span>
                             )}
                           </div>
 
-                          <h4 className={`font-black text-white tracking-tight drop-shadow-md ${
+                          <h4 className={`font-black text-slate-950 tracking-tight drop-shadow-xs ${
                             currentCat.id === 'haute_couture' || currentCat.label.toLowerCase().includes('haute')
                               ? 'text-xs sm:text-[13px] md:text-sm'
                               : currentCat.id === 'commercial_model' || currentCat.label.toLowerCase().includes('commercial')
@@ -26617,7 +26758,7 @@ try {
                             {currentCat.label}
                           </h4>
 
-                          <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                          <p className="text-xs sm:text-sm text-slate-700 font-medium">
                             Transmisión temática exclusiva • Haz clic para sintonizar este canal
                           </p>
 
@@ -26644,8 +26785,8 @@ try {
                               }}
                               className={`w-full sm:w-auto max-w-full px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white ring-2 ring-rose-400/50'
-                                  : 'bg-white hover:bg-slate-100 text-slate-950 hover:text-black'
+                                  ? 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white ring-2 ring-rose-400/50 hover:opacity-95'
+                                  : 'bg-white hover:bg-rose-50 text-rose-950 border border-rose-300 shadow-sm font-black'
                               }`}
                               title={`Sintonizar canal ${currentCat.label}`}
                             >
@@ -26653,41 +26794,56 @@ try {
                               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
                             </button>
 
-                            {/* Botón Retransmitir (Abre opciones de stream dentro del canal) */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setStreamOptionsTargetChannel(currentCat);
-                                setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${currentCat.label}`);
-                                setLiveChannelsCategoryFilter(currentCat.id);
-                                if (isUserRetransmitting && userRetransmittingChannelId === currentCat.id) {
-                                  setSelectedHeroChannelId(`live-user-retransmision-${currentCat.id}`);
-                                } else if (currentCat.id === 'atelier' && !isUserRetransmittingToAtelier) {
-                                  setSelectedHeroChannelId('live-isabella-atelier');
-                                } else {
-                                  setSelectedHeroChannelId(null);
-                                }
-                                setIsHeroTopChannelsDropdownOpen(false);
-                                setShowStreamOptionsModal(true);
-                              }}
-                              className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10.5px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border truncate ${
-                                (isUserRetransmitting && userRetransmittingChannelId === currentCat.id) || (isUserRetransmittingToAtelier && currentCat.id === 'atelier')
-                                  ? 'bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-500/30'
-                                  : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
-                              }`}
-                              title={`Configurar opciones de stream para retransmitir en el canal ${currentCat.label}`}
-                            >
-                              {((isUserRetransmitting && userRetransmittingChannelId === currentCat.id) || (isUserRetransmittingToAtelier && currentCat.id === 'atelier')) && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
-                              )}
-                              <span className="truncate">
-                                {((isUserRetransmitting && userRetransmittingChannelId === currentCat.id) || (isUserRetransmittingToAtelier && currentCat.id === 'atelier')) 
-                                  ? 'Retransmitiendo' 
-                                  : 'Retransmitir'}
-                              </span>
-                              <Radio className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
-                            </button>
+                            {/* Botón Retransmitir / Retransmitiendo (Clic en Retransmitiendo para la retransmisión) */}
+                            {(() => {
+                              const isRetransmittingThis = Boolean(
+                                (isUserRetransmitting && (userRetransmittingChannelId === currentCat.id || (!userRetransmittingChannelId && liveChannelsCategoryFilter === currentCat.id))) ||
+                                (isUserRetransmittingToAtelier && currentCat.id === 'atelier')
+                              );
+
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isRetransmittingThis) {
+                                      handleStopLiveRetransmission();
+                                      return;
+                                    }
+                                    setStreamOptionsTargetChannel(currentCat);
+                                    setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${currentCat.label}`);
+                                    setLiveChannelsCategoryFilter(currentCat.id);
+                                    if (currentCat.id === 'atelier' && !isUserRetransmittingToAtelier) {
+                                      setSelectedHeroChannelId('live-isabella-atelier');
+                                    } else {
+                                      setSelectedHeroChannelId(null);
+                                    }
+                                    setIsHeroTopChannelsDropdownOpen(false);
+                                    setShowStreamOptionsModal(true);
+                                  }}
+                                  className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10.5px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border truncate ${
+                                    isRetransmittingThis
+                                      ? 'bg-rose-100 text-rose-800 border-rose-400 ring-2 ring-rose-500/30 font-black hover:bg-rose-200'
+                                      : 'bg-white hover:bg-rose-50 text-rose-950 border border-rose-200 shadow-sm font-black'
+                                  }`}
+                                  title={
+                                    isRetransmittingThis
+                                      ? 'Detener retransmisión en directo'
+                                      : `Configurar opciones de stream para retransmitir en el canal ${currentCat.label}`
+                                  }
+                                >
+                                  {isRetransmittingThis && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                                  )}
+                                  <span className="truncate">
+                                    {isRetransmittingThis 
+                                      ? 'Retransmitiendo' 
+                                      : 'Retransmitir'}
+                                  </span>
+                                  <Radio className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+                                </button>
+                              );
+                            })()}
                           </div>
                         </div>
 
@@ -26695,7 +26851,7 @@ try {
                         <button
                           type="button"
                           onClick={handlePrev}
-                          className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/95 hover:bg-rose-600 border border-slate-700 hover:border-rose-400 text-white shadow-2xl flex items-center justify-center transition active:scale-90 cursor-pointer z-20 group/prev"
+                          className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 hover:text-rose-950 shadow-xl flex items-center justify-center transition active:scale-90 cursor-pointer z-20 group/prev"
                           title="Canal anterior"
                         >
                           <ChevronLeft className="w-5 h-5 stroke-[2.5] group-hover/prev:-translate-x-0.5 transition-transform" />
@@ -26703,7 +26859,7 @@ try {
                         <button
                           type="button"
                           onClick={handleNext}
-                          className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900/95 hover:bg-rose-600 border border-slate-700 hover:border-rose-400 text-white shadow-2xl flex items-center justify-center transition active:scale-90 cursor-pointer z-20 group/next"
+                          className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 hover:text-rose-950 shadow-xl flex items-center justify-center transition active:scale-90 cursor-pointer z-20 group/next"
                           title="Siguiente canal"
                         >
                           <ChevronRight className="w-5 h-5 stroke-[2.5] group-hover/next:translate-x-0.5 transition-transform" />
@@ -27574,9 +27730,15 @@ try {
             </div>
           </div>
 
-          {/* CONTENIDO DE LA CAPTURA z.png (Abajo del canal) */}
-          <div className="w-full bg-[#0e1320] border-t border-slate-800/80 p-4 sm:p-5 text-white space-y-2.5">
-            {/* Usuario, Check de verificación y tag dinámico */}
+
+
+          {/* CONTENIDO DE LA CAPTURA z.png (En retransmisión se integra como overlay inferior sobre el vídeo vertical) */}
+          <div className={`w-full text-white space-y-2.5 transition-all duration-300 ${
+            isRetransmissionActive
+              ? 'absolute bottom-0 inset-x-0 z-20 p-4 sm:p-5 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-auto'
+              : 'bg-[#0e1320] border-t border-slate-800/80 p-4 sm:p-5'
+          }`}>
+            {/* Usuario, Check de verificación y tag dinámico (Contenedor "Tu cámara en vivo" eliminado) */}
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
                 {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
@@ -27586,27 +27748,26 @@ try {
                   : (liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : `@${heroChannel.username}`)}
               </span>
               <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
-              <span className={`font-black uppercase py-0.5 rounded-full bg-slate-700/80 text-white tracking-wider ${
-                isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
-                  ? 'text-[8px] px-2 bg-red-600/90 text-white animate-pulse'
-                  : (liveChannelsCategoryFilter === 'catalog_model' || heroChannel.category === 'catalog_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('catalog')))
-                  ? 'text-[7.5px] px-1.5'
-                  : (liveChannelsCategoryFilter === 'runway_model' || heroChannel.category === 'runway_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('runway')))
-                  ? 'text-[7.5px] px-1.5'
-                  : (heroChannel.category === 'commercial_model' || heroChannel.category === 'plus_size_model' || heroChannel.category === 'real_people_models' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('commercial') || heroChannel.categoryLabel.toLowerCase().includes('plus') || heroChannel.categoryLabel.toLowerCase().includes('real people'))))
-                  ? 'text-[7.5px] px-1.5'
-                  : (heroChannel.category === 'haute_couture' || heroChannel.category === 'petite_model' || heroChannel.category === 'lingerie_model' || heroChannel.category === 'swimsuit_model' || heroChannel.category === 'fitness_model' || heroChannel.category === 'parts_model' || heroChannel.category === 'mature_model' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('haute') || heroChannel.categoryLabel.toLowerCase().includes('petite') || heroChannel.categoryLabel.toLowerCase().includes('lingerie') || heroChannel.categoryLabel.toLowerCase().includes('swimsuit') || heroChannel.categoryLabel.toLowerCase().includes('fitness') || heroChannel.categoryLabel.toLowerCase().includes('parts') || heroChannel.categoryLabel.toLowerCase().includes('mature'))))
-                  ? 'text-[8px] px-1.5'
-                  : liveChannelsCategoryFilter === 'atelier'
-                  ? 'text-[8px] px-2'
-                  : 'text-[8.5px] px-2'
-              }`}>
-                {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
-                  ? 'TU CÁMARA EN VIVO'
-                  : liveChannelsCategoryFilter === 'atelier' 
-                  ? 'ATELIER' 
-                  : (liveChannelsCategoryFilter === 'todos' ? 'TODOS' : (heroChannel.categoryLabel || heroChannel.category).toUpperCase())}
-              </span>
+              {/* Contenedor "Tu cámara en vivo" eliminado según petición del usuario */}
+              {!(isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)) && (
+                <span className={`font-black uppercase py-0.5 rounded-full bg-slate-700/80 text-white tracking-wider ${
+                  (liveChannelsCategoryFilter === 'catalog_model' || heroChannel.category === 'catalog_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('catalog')))
+                    ? 'text-[7.5px] px-1.5'
+                    : (liveChannelsCategoryFilter === 'runway_model' || heroChannel.category === 'runway_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('runway')))
+                    ? 'text-[7.5px] px-1.5'
+                    : (heroChannel.category === 'commercial_model' || heroChannel.category === 'plus_size_model' || heroChannel.category === 'real_people_models' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('commercial') || heroChannel.categoryLabel.toLowerCase().includes('plus') || heroChannel.categoryLabel.toLowerCase().includes('real people'))))
+                    ? 'text-[7.5px] px-1.5'
+                    : (heroChannel.category === 'haute_couture' || heroChannel.category === 'petite_model' || heroChannel.category === 'lingerie_model' || heroChannel.category === 'swimsuit_model' || heroChannel.category === 'fitness_model' || heroChannel.category === 'parts_model' || heroChannel.category === 'mature_model' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('haute') || heroChannel.categoryLabel.toLowerCase().includes('petite') || heroChannel.categoryLabel.toLowerCase().includes('lingerie') || heroChannel.categoryLabel.toLowerCase().includes('swimsuit') || heroChannel.categoryLabel.toLowerCase().includes('fitness') || heroChannel.categoryLabel.toLowerCase().includes('parts') || heroChannel.categoryLabel.toLowerCase().includes('mature'))))
+                    ? 'text-[8px] px-1.5'
+                    : liveChannelsCategoryFilter === 'atelier'
+                    ? 'text-[8px] px-2'
+                    : 'text-[8.5px] px-2'
+                }`}>
+                  {liveChannelsCategoryFilter === 'atelier' 
+                    ? 'ATELIER' 
+                    : (liveChannelsCategoryFilter === 'todos' ? 'TODOS' : (heroChannel.categoryLabel || heroChannel.category).toUpperCase())}
+                </span>
+              )}
             </div>
 
             {/* Badge: SUBIDO DESDE CASTING LIVE */}

@@ -131,8 +131,8 @@ export const ChannelsSliderOverlayContent: React.FC<ChannelsSliderOverlayContent
               onClick={() => handleChannelClick(cat)}
               className={`shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none group relative snap-start active:scale-95 ${
                 isSelected
-                  ? 'bg-slate-900 text-white border-rose-500 shadow-lg shadow-rose-950/50 ring-2 ring-rose-500/40'
-                  : 'bg-[#141926] hover:bg-[#1c2336] text-slate-200 border-slate-800 hover:border-slate-700'
+                  ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-slate-900 border-2 border-rose-400 shadow-lg shadow-rose-300/40 ring-2 ring-rose-400/50'
+                  : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-slate-900 border border-rose-200/90 hover:border-rose-300'
               }`}
             >
               {/* Imagen propia del canal */}
@@ -143,7 +143,7 @@ export const ChannelsSliderOverlayContent: React.FC<ChannelsSliderOverlayContent
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   loading="lazy"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-t ${isSelected ? 'from-slate-950/80' : 'from-black/60'} to-transparent`} />
+                <div className={`absolute inset-0 bg-gradient-to-t ${isSelected ? 'from-rose-950/40' : 'from-black/40'} to-transparent`} />
                 <span className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-red-500 ring-1 ring-white animate-pulse" />
               </div>
 
@@ -152,18 +152,18 @@ export const ChannelsSliderOverlayContent: React.FC<ChannelsSliderOverlayContent
                 <div className="flex items-center gap-1 mb-0.5">
                   <span className={`text-[7.5px] font-black uppercase tracking-wider px-1 py-0.2 rounded leading-none ${
                     isSelected 
-                      ? 'bg-red-500/30 text-rose-300 border border-red-500/50' 
-                      : 'bg-red-950/60 text-rose-400 border border-red-900/40'
+                      ? 'bg-rose-500 text-white' 
+                      : 'bg-rose-100 text-rose-700 border border-rose-300'
                   }`}>
                     LIVE
                   </span>
                   {cat.count && cat.count !== '3 en Vivo' && (
-                    <span className="text-[8px] font-mono text-slate-400 font-bold">
+                    <span className="text-[8px] font-mono text-rose-800 font-bold">
                       {cat.count}
                     </span>
                   )}
                 </div>
-                <h4 className={`font-black truncate max-w-[120px] leading-tight text-white group-hover:text-rose-400 transition-colors ${
+                <h4 className={`font-black truncate max-w-[120px] leading-tight text-slate-900 group-hover:text-rose-700 transition-colors ${
                   cat.id === 'runway_model' || cat.label.toLowerCase().includes('runway')
                     ? 'text-[8.5px] sm:text-[9px]'
                     : cat.id === 'catalog_model' || cat.label.toLowerCase().includes('catalog')

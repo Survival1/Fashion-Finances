@@ -563,5 +563,24 @@ body {
   background: #f43f5e !important;
 }
 
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.8);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(-80px) scale(1.2) rotate(-6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-180px) scale(1.4) rotate(8deg);
+  }
+}
+
+.animate-float-up {
+  animation: floatUp 2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
 
 

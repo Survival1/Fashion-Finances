@@ -4686,26 +4686,6 @@ export default function ModelFacebookProfile({
               <div className="flex flex-wrap gap-2.5 items-center justify-center sm:justify-end shrink-0 sm:ml-auto z-10 pr-0 translate-y-7 sm:translate-y-9">
                 {isOwnProfile ? (
                   <>
-                    {/* 🎥 Botón Casting Live (Redirige al canal de Fashion) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('casting_live_default_category_filter', 'Fashion');
-                        } catch {}
-                        if (onNavigateToTab) {
-                          onNavigateToTab('casting_live', 'fashion');
-                        } else {
-                          alert('Navegando a Casting Live (Fashion)...');
-                        }
-                      }}
-                      className="px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer select-none bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 border border-slate-200/80 shadow-xs uppercase tracking-wider"
-                      title="Ir a Casting Live (Canal Fashion)"
-                    >
-                      <Video className="w-3.5 h-3.5 text-slate-700" />
-                      <span>Casting Live</span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => {
@@ -4722,24 +4702,6 @@ export default function ModelFacebookProfile({
                   </>
                 ) : (
                   <>
-                    {/* 🎥 Botón Casting Live (Redirige al canal viendo los contenedores como en z.png) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('casting_live_force_containers_view', 'true');
-                        } catch {}
-                        if (onNavigateToTab) {
-                          onNavigateToTab('casting_live');
-                        }
-                      }}
-                      className="px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer select-none bg-gradient-to-r from-red-600 via-rose-600 to-[#fe2c55] hover:from-red-500 hover:to-rose-500 active:scale-95 text-white border border-red-400 shadow-xs uppercase tracking-wider"
-                      title="Ir a Casting Live (Ver contenedores del canal en directo)"
-                      id="btn-casting-live-model-profile-guest"
-                    >
-                      <Video className="w-3.5 h-3.5 text-white" />
-                      <span>Casting Live</span>
-                    </button>
 
                     {/* 👤 Botón Seguir cuando Ernesto u otro usuario ve el perfil de otro creador */}
                     <button
