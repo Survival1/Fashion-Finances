@@ -108,8 +108,8 @@ import {
   Award,
   AlertCircle,
   Square,
-  Power,
-  FileText
+  FileText,
+  Reply
 } from 'lucide-react';
 import { ModelProfile, UserSessionProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
@@ -26454,11 +26454,13 @@ try {
       || liveStreamChannels[0];
 
     const isRetransmissionActive = Boolean(
-      isUserRetransmitting && (
+      (isUserRetransmitting || isUserLiveStreamingWithCamera) && (
         heroChannel.isUserStream ||
         userRetransmittingChannelId === liveChannelsCategoryFilter ||
         userRetransmittingChannelId === heroChannel.category ||
-        (selectedHeroChannelId && selectedHeroChannelId.includes('user-retransmision'))
+        (selectedHeroChannelId && selectedHeroChannelId.includes('user-retransmision')) ||
+        isUserRetransmitting ||
+        isUserLiveStreamingWithCamera
       )
     );
 
@@ -26535,12 +26537,12 @@ try {
           <div 
             className={`relative w-full bg-black flex items-center justify-center overflow-hidden transition-all duration-300 ${
               isRetransmissionActive
-                ? 'min-h-[720px] sm:min-h-[820px] lg:min-h-[880px] h-[84vh] max-h-[960px]'
+                ? 'w-full h-full min-h-[750px] sm:min-h-[850px] lg:min-h-[920px] h-[88vh] max-h-[980px]'
                 : 'min-h-[570px] sm:min-h-[670px] lg:min-h-[705px]'
             }`}
             style={{ 
-              minHeight: isRetransmissionActive ? 'min(86vh, 920px)' : 'calc(440px + 7cm)',
-              height: isRetransmissionActive ? 'min(86vh, 920px)' : undefined
+              minHeight: isRetransmissionActive ? 'min(90vh, 960px)' : 'calc(440px + 7cm)',
+              height: isRetransmissionActive ? 'min(90vh, 960px)' : undefined
             }}
           >
             {isRetransmissionActive ? (
@@ -26573,8 +26575,8 @@ try {
                       style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                       onError={(e) => {
                         const target = e.currentTarget;
-                        if (!target.src.endsWith('/hero_video.mp4')) {
-                          target.src = '/hero_video.mp4';
+                        if (!target.src.endsWith('/vertical_live_stream.mp4')) {
+                          target.src = '/vertical_live_stream.mp4';
                           target.play().catch(() => {});
                         }
                       }}
@@ -27589,21 +27591,82 @@ try {
                   </div>
                 </div>
 
-                {/* 2. Botón Me Gusta (Corazón) + 1.2K */}
-                <div className="flex flex-col items-center">
+                {/* 2. Botón Me Gusta (Corazón) con Glosario de 30 Emojis al pasar el puntero (idéntico a z.png) */}
+                <div 
+                  className="relative flex flex-col items-center group/hero-heart"
+                  onMouseEnter={() => {
+                    clearTimeout(heroHeartHoverTimeoutRef.current);
+                    setIsHeroHeartGlossaryOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    heroHeartHoverTimeoutRef.current = setTimeout(() => {
+                      setIsHeroHeartGlossaryOpen(false);
+                    }, 400);
+                  }}
+                >
+                  {/* 💖 Glosario de 30 Emojis idéntico a captura z.png */}
+                  {isHeroHeartGlossaryOpen && (
+                    <div 
+                      className="absolute right-full mr-2.5 bottom-0 z-50 bg-[#0e1320]/95 backdrop-blur-xl border border-rose-500/50 rounded-2xl p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col gap-1.5 w-[220px] animate-fade-in select-none pointer-events-auto"
+                      onMouseEnter={() => clearTimeout(heroHeartHoverTimeoutRef.current)}
+                      onMouseLeave={() => setIsHeroHeartGlossaryOpen(false)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-between pb-1 border-b border-white/10 px-0.5">
+                        <span className="text-[9px] font-black uppercase text-rose-300 tracking-wider">
+                          Reaccionar con emoji
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsHeroEmojiEnglish(prev => !prev)}
+                          className="text-[8px] font-mono text-slate-300 hover:text-white px-1.5 py-0.5 rounded bg-slate-800 cursor-pointer"
+                          title="Traducir nombres a inglés"
+                        >
+                          {isHeroEmojiEnglish ? 'ES' : 'EN'}
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-6 gap-1 p-0.5">
+                        {[
+                          '❤️', '💖', '🔥', '👏', '🚀', '💯',
+                          '💎', '✨', '😍', '😂', '🙌', '💡',
+                          '💰', '👍', '🎉', '🥂', '👑', '🌟',
+                          '🍾', '💃', '🎯', '👗', '👠', '🌹',
+                          '🏆', '⚡', '🤩', '🌸', '🥳', '💸'
+                        ].map((em) => (
+                          <button
+                            key={em}
+                            type="button"
+                            onClick={(e) => handleHeroEmojiReaction(em, e)}
+                            className="w-7 h-7 flex items-center justify-center text-sm rounded-lg hover:bg-white/10 hover:scale-125 active:scale-95 transition cursor-pointer"
+                            title={em}
+                          >
+                            {em}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsHeroLiked(prev => !prev);
-                      setHeroLikesCount(prev => (isHeroLiked ? prev - 1 : prev + 1));
+                      const nextLiked = !isHeroLiked;
+                      setIsHeroLiked(nextLiked);
+                      setHeroLikesCount(prev => (nextLiked ? prev + 1 : prev - 1));
+                      if (nextLiked) {
+                        window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                          detail: { emoji: '❤️', icon: '❤️', pureEmoji: true, x: e.clientX, y: e.clientY }
+                        }));
+                      }
                     }}
                     className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer active:scale-90 ${
                       isHeroLiked 
                         ? 'bg-rose-600/80 hover:bg-rose-600 text-white border-rose-400' 
                         : 'bg-black/50 hover:bg-black/70 hover:scale-105 text-white'
                     }`}
-                    title="Me gusta"
+                    title="Me gusta (pasa el ratón para abrir el glosario de emojis)"
                   >
                     <Heart
                       className={`w-6 h-6 stroke-[2.2] transition-colors ${
@@ -27612,28 +27675,29 @@ try {
                     />
                   </button>
                   <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
-                    {isHeroLiked ? '1.3K' : '1.2K'}
+                    {isHeroLiked ? (heroLikesCount >= 1000 ? `${(heroLikesCount/1000).toFixed(1)}K` : heroLikesCount) : '1.2K'}
                   </span>
                 </div>
 
-                {/* 3. Botón Comentarios (Bocadillo) + 2 */}
+                {/* 3. Botón Comentarios (Bocadillo) - Abre panel interactivo idéntico a z.png */}
                 <div className="flex flex-col items-center">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setToastNotification({
-                        message: '💬 2 comentarios destacados en este directo.',
-                        title: 'Comentarios'
-                      });
+                      setIsHeroCommentsOpen(prev => !prev);
                     }}
-                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/50 hover:bg-black/70 hover:scale-105 active:scale-90 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all duration-200 cursor-pointer"
-                    title="Comentarios"
+                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-md border flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer active:scale-90 ${
+                      isHeroCommentsOpen 
+                        ? 'bg-rose-600 text-white border-rose-400' 
+                        : 'bg-black/50 hover:bg-black/70 hover:scale-105 text-white border-white/20'
+                    }`}
+                    title="Abrir comentarios en directo"
                   >
                     <MessageCircle className="w-6 h-6 text-white stroke-[2.2]" />
                   </button>
                   <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
-                    {heroCommentsCount}
+                    {heroCommentsList.length}
                   </span>
                 </div>
 
@@ -27643,17 +27707,10 @@ try {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setHeroSharesCount(prev => prev + 1);
-                      if (navigator?.clipboard) {
-                        navigator.clipboard.writeText(window.location.href).catch(() => {});
-                      }
-                      setToastNotification({
-                        message: '🔗 ¡Enlace del directo copiado al portapapeles!',
-                        title: 'Compartir'
-                      });
+                      handleHeroShare();
                     }}
                     className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/50 hover:bg-black/70 hover:scale-105 active:scale-90 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all duration-200 cursor-pointer"
-                    title="Compartir"
+                    title="Compartir directo"
                   >
                     <Share2 className="w-6 h-6 text-white stroke-[2.2]" />
                   </button>
@@ -27662,24 +27719,20 @@ try {
                   </span>
                 </div>
 
-                {/* 5. Botón Guardar / Favoritos + 112 */}
+                {/* 5. Botón Guardar / Favoritos + 112 (Integrado con guardado de z.png) */}
                 <div className="flex flex-col items-center">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsHeroBookmarked(prev => !prev);
-                      setToastNotification({
-                        message: isHeroBookmarked ? 'Eliminado de guardados' : '⭐ ¡Directo guardado en tus favoritos!',
-                        title: 'Guardar'
-                      });
+                      handleToggleHeroBookmark(heroChannel.categoryLabel || heroChannel.name);
                     }}
                     className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer active:scale-90 ${
                       isHeroBookmarked 
                         ? 'bg-amber-500/80 hover:bg-amber-500 text-white border-amber-300' 
                         : 'bg-black/50 hover:bg-black/70 hover:scale-105 text-white'
                     }`}
-                    title="Guardar directo"
+                    title="Guardar directo en favoritos"
                   >
                     <Bookmark
                       className={`w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2] transition-colors ${
@@ -27688,7 +27741,7 @@ try {
                     />
                   </button>
                   <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
-                    {isHeroBookmarked ? heroBookmarksCount + 1 : heroBookmarksCount}
+                    {heroBookmarksCount}
                   </span>
                 </div>
 
@@ -27698,9 +27751,17 @@ try {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setLiveHeroMuted(prev => !prev);
+                      const nextMuted = !liveHeroMuted;
+                      setLiveHeroMuted(nextMuted);
+                      if (heroVideoRef.current) {
+                        heroVideoRef.current.muted = nextMuted;
+                        if (!nextMuted && liveHeroVolume === 0) {
+                          setLiveHeroVolume(80);
+                          heroVideoRef.current.volume = 0.8;
+                        }
+                      }
                       setToastNotification({
-                        message: liveHeroMuted ? '🔊 Audio activado' : '🔇 Audio silenciado',
+                        message: nextMuted ? '🔇 Audio silenciado' : '🔊 Audio activado',
                         title: 'Música & Audio'
                       });
                     }}
@@ -27728,129 +27789,300 @@ try {
                 </div>
               </div>
             </div>
-          </div>
 
-
-
-          {/* CONTENIDO DE LA CAPTURA z.png (En retransmisión se integra como overlay inferior sobre el vídeo vertical) */}
-          <div className={`w-full text-white space-y-2.5 transition-all duration-300 ${
-            isRetransmissionActive
-              ? 'absolute bottom-0 inset-x-0 z-20 p-4 sm:p-5 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-auto'
-              : 'bg-[#0e1320] border-t border-slate-800/80 p-4 sm:p-5'
-          }`}>
-            {/* Usuario, Check de verificación y tag dinámico (Contenedor "Tu cámara en vivo" eliminado) */}
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
-                {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
-                  ? `@${userProfile?.username || 'mi_camara_live'}`
-                  : liveChannelsCategoryFilter === 'atelier' 
-                  ? `@${heroChannel.username}` 
-                  : (liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : `@${heroChannel.username}`)}
-              </span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
-              {/* Contenedor "Tu cámara en vivo" eliminado según petición del usuario */}
-              {!(isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)) && (
-                <span className={`font-black uppercase py-0.5 rounded-full bg-slate-700/80 text-white tracking-wider ${
-                  (liveChannelsCategoryFilter === 'catalog_model' || heroChannel.category === 'catalog_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('catalog')))
-                    ? 'text-[7.5px] px-1.5'
-                    : (liveChannelsCategoryFilter === 'runway_model' || heroChannel.category === 'runway_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('runway')))
-                    ? 'text-[7.5px] px-1.5'
-                    : (heroChannel.category === 'commercial_model' || heroChannel.category === 'plus_size_model' || heroChannel.category === 'real_people_models' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('commercial') || heroChannel.categoryLabel.toLowerCase().includes('plus') || heroChannel.categoryLabel.toLowerCase().includes('real people'))))
-                    ? 'text-[7.5px] px-1.5'
-                    : (heroChannel.category === 'haute_couture' || heroChannel.category === 'petite_model' || heroChannel.category === 'lingerie_model' || heroChannel.category === 'swimsuit_model' || heroChannel.category === 'fitness_model' || heroChannel.category === 'parts_model' || heroChannel.category === 'mature_model' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('haute') || heroChannel.categoryLabel.toLowerCase().includes('petite') || heroChannel.categoryLabel.toLowerCase().includes('lingerie') || heroChannel.categoryLabel.toLowerCase().includes('swimsuit') || heroChannel.categoryLabel.toLowerCase().includes('fitness') || heroChannel.categoryLabel.toLowerCase().includes('parts') || heroChannel.categoryLabel.toLowerCase().includes('mature'))))
-                    ? 'text-[8px] px-1.5'
-                    : liveChannelsCategoryFilter === 'atelier'
-                    ? 'text-[8px] px-2'
-                    : 'text-[8.5px] px-2'
-                }`}>
-                  {liveChannelsCategoryFilter === 'atelier' 
-                    ? 'ATELIER' 
-                    : (liveChannelsCategoryFilter === 'todos' ? 'TODOS' : (heroChannel.categoryLabel || heroChannel.category).toUpperCase())}
-                </span>
-              )}
-            </div>
-
-            {/* Badge: SUBIDO DESDE CASTING LIVE */}
-            <div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
-                <Sparkles className="w-3 h-3 text-yellow-300" />
-                <span>SUBIDO DESDE CASTING LIVE</span>
-              </span>
-            </div>
-
-            {/* Descripción con hashtags adaptada al canal */}
-            <p className="text-xs sm:text-[13px] text-slate-100 font-medium leading-relaxed">
-              {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter) ? (
-                <>
-                  🔴 Transmisión de tu cámara en vivo y en directo para todos los usuarios de CastingLive ocupando todo el canal.{' '}
-                  <span className="font-semibold text-rose-300">#micamara</span>{' '}
-                  <span className="font-semibold text-rose-300">#directo</span>{' '}
-                  <span className="font-semibold text-rose-300">#envivo</span>{' '}
-                  <span className="font-semibold text-rose-300">#castinglive</span>
-                </>
-              ) : liveChannelsCategoryFilter === 'atelier' ? (
-                heroCaptionTranslated ? (
-                  <>
-                    Live pattern making, cutting and tailoring session from the Atelier boutique: "{heroChannel.title}". Presenting the handcrafted Haute Couture Collection! ✂️✨{' '}
-                    <span className="font-semibold text-rose-300">#atelier</span>{' '}
-                    <span className="font-semibold text-rose-300">#confeccion</span>{' '}
-                    <span className="font-semibold text-rose-300">#altacostura</span>
-                  </>
-                ) : (
-                  <>
-                    Sesión de taller de patronaje, corte y confección en vivo desde el Atelier boutique: "{heroChannel.title}". Presentando la nueva Colección Atelier de Alta Costura confeccionada a mano! ✂️✨{' '}
-                    <span className="font-semibold text-rose-300">#atelier</span>{' '}
-                    <span className="font-semibold text-rose-300">#confeccion</span>{' '}
-                    <span className="font-semibold text-rose-300">#altacostura</span>
-                  </>
-                )
-              ) : (
-                heroCaptionTranslated ? (
-                  <>
-                    Futuristic high fashion session. Presenting Glitter Makeup for the Barcelona show! ✨{' '}
-                    <span className="font-semibold text-rose-300">#highfashion</span>{' '}
-                    <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
-                    <span className="font-semibold text-rose-300">#futuristic</span>
-                  </>
-                ) : (
-                  <>
-                    Sesión de alta costura futurista. Presentando Glitter Makeup para el show de Barcelona! ✨{' '}
-                    <span className="font-semibold text-rose-300">#highfashion</span>{' '}
-                    <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
-                    <span className="font-semibold text-rose-300">#futuristic</span>
-                  </>
-                )
-              )}
-            </p>
-
-            {/* Botón interactivo: Traducir a Inglés */}
-            <div className="flex items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={() => setHeroCaptionTranslated(!heroCaptionTranslated)}
-                className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border border-rose-500/50 bg-black/40 hover:bg-rose-500/20 text-rose-300 hover:text-white transition active:scale-95 cursor-pointer shadow-sm"
-                title={heroCaptionTranslated ? "Ver original (Español)" : "Traducir a Inglés"}
+            {/* 💬 COMENTARIOS INTERACTIVOS DEL CANAL (Idéntico a captura z.png) */}
+            {isHeroCommentsOpen && (
+              <div 
+                className="absolute inset-x-0 bottom-0 z-40 w-full bg-[#0a0e1a]/95 backdrop-blur-2xl border-t-2 border-rose-500/70 rounded-t-3xl p-3 sm:p-4 flex flex-col gap-2 shadow-[0_-20px_60px_rgba(0,0,0,0.95)] animate-slide-up text-left pointer-events-auto"
+                id="hero-live-comments-drawer"
+                onClick={(e) => e.stopPropagation()}
               >
-                <Globe className="w-3.5 h-3.5 text-rose-400" />
-                <span>{heroCaptionTranslated ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
-              </button>
-              {heroCaptionTranslated && (
-                <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-full animate-fade-in">
-                  <span>✓</span> En inglés
-                </span>
-              )}
-            </div>
+                {/* Header con botón para cerrar */}
+                <div className="flex items-center justify-between pb-1.5 border-b border-white/10 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <MessageCircle className="w-3.5 h-3.5 text-rose-400" />
+                    <span className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider">
+                      Comentarios en directo
+                    </span>
+                    <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[8.5px] font-mono font-bold px-1.5 py-0.2 rounded-full">
+                      {heroCommentsList.length}
+                    </span>
+                  </div>
 
-            {/* Ticker musical adaptado */}
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-300 pt-1">
-              <Music className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-              <span>
-                {liveChannelsCategoryFilter === 'atelier'
-                  ? 'Acoustic Lo-Fi Atelier Beats - LoFi Collective'
-                  : 'Aesthetic Synthwave - LoFi Collective'}
-              </span>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsHeroCommentsOpen(false)}
+                    className="text-slate-400 hover:text-white p-1 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer transition hover:bg-slate-800"
+                    title="Cerrar comentarios"
+                  >
+                    <span className="text-[8px] font-mono text-slate-400">Cerrar</span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Scrollable Comments List */}
+                <div className="w-full max-h-[140px] sm:max-h-[160px] overflow-y-auto space-y-1.5 pr-1 select-text custom-scrollbar">
+                  {heroCommentsList.map((comm) => (
+                    <div key={comm.id} className="flex items-start gap-2 bg-slate-900/80 p-2 rounded-xl border border-slate-800/80 transition hover:bg-slate-900">
+                      <img
+                        src={comm.avatar}
+                        alt={comm.user}
+                        className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-700 mt-0.5"
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[10px] font-black text-rose-300 truncate">@{comm.user}</span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="text-[8px] text-slate-400 font-mono">{comm.date}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteHeroComment(comm.id)}
+                              className="text-slate-500 hover:text-rose-400 p-0.5 transition"
+                              title="Eliminar comentario"
+                            >
+                              <Trash2 className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        </div>
+                        {comm.replyTo && (
+                          <div className="text-[8.5px] text-slate-400 font-semibold mb-0.5 flex items-center gap-1">
+                            <span>↩️ En respuesta a</span>
+                            <span className="text-rose-400 font-bold">@{comm.replyTo}</span>
+                          </div>
+                        )}
+                        <p className="text-[10px] text-slate-200 mt-0.5 leading-snug break-words">
+                          {comm.text}
+                        </p>
+                        <div className="mt-1 flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setHeroReplyingTo({ id: comm.id, user: comm.user })}
+                            className="text-[9px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-0.5 transition cursor-pointer px-1 py-0.5 rounded hover:bg-rose-500/10"
+                          >
+                            <Reply className="w-2.5 h-2.5" />
+                            <span>Responder</span>
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleLikeHeroComment(comm.id)}
+                        className={`flex flex-col items-center gap-0.5 p-1 transition cursor-pointer shrink-0 ${
+                          comm.isLiked ? 'text-rose-500 scale-110' : 'text-slate-400 hover:text-rose-400'
+                        }`}
+                        title="Me gusta"
+                      >
+                        <Heart className={`w-3 h-3 ${comm.isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                        <span className="text-[7.5px] font-mono">{comm.likesCount || 0}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Banner de respuesta */}
+                {heroReplyingTo && (
+                  <div className="flex items-center justify-between bg-rose-950/60 border border-rose-500/40 px-2 py-0.5 rounded-lg text-[9.5px] text-rose-200 shrink-0 animate-fade-in">
+                    <div className="flex items-center gap-1 font-bold truncate">
+                      <Reply className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span className="truncate">Respondiendo a @{heroReplyingTo.user}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHeroReplyingTo(null)}
+                      className="text-rose-400 hover:text-white p-0.5 cursor-pointer ml-1 shrink-0"
+                      title="Cancelar respuesta"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Quick emojis bar */}
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 px-1 shrink-0 bg-slate-950/70 rounded-full border border-slate-800/80">
+                  <span className="text-[8px] text-amber-300 font-bold uppercase tracking-wider pl-1.5 pr-0.5 shrink-0 flex items-center gap-1">
+                    <span>⚡</span>
+                    <span>Emoji:</span>
+                  </span>
+                  {['❤️', '🔥', '👏', '🚀', '💯', '💎', '✨', '😍', '😂', '🙌', '💡', '💰', '👍', '🎉', '🥂', '👑'].map((em) => (
+                    <button
+                      key={em}
+                      type="button"
+                      onClick={() => {
+                        handleAddHeroComment(em);
+                        window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                          detail: { emoji: em, icon: em, pureEmoji: true }
+                        }));
+                      }}
+                      className="p-1 hover:bg-slate-800 rounded-lg transition active:scale-125 hover:scale-110 cursor-pointer text-xs shrink-0 select-none"
+                      title={`Enviar ${em}`}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Comment input form */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAddHeroComment();
+                  }}
+                  className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
+                >
+                  <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowHeroEmojiPicker(prev => !prev)}
+                      className="p-1 text-base hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none"
+                      title="Abrir emojis"
+                    >
+                      😊
+                    </button>
+                    <input
+                      type="text"
+                      value={heroCommentInputText}
+                      onChange={(e) => setHeroCommentInputText(e.target.value)}
+                      placeholder="Escribe un comentario..."
+                      className="flex-1 bg-transparent text-[10px] sm:text-[11px] text-white placeholder-slate-400 focus:outline-none min-w-0 px-1 py-0.5"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={!heroCommentInputText.trim()}
+                    className={`p-2 rounded-full transition cursor-pointer shrink-0 flex items-center justify-center ${
+                      heroCommentInputText.trim()
+                        ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
+                    title="Publicar comentario"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
+
+
+
+          {/* CONTENIDO DE LA CAPTURA z.png (Oculto cuando la ventana de mensajes/comentarios está abierta) */}
+          {!isHeroCommentsOpen && (
+            <div className={`w-full text-white space-y-2.5 transition-all duration-300 ${
+              isRetransmissionActive
+                ? 'absolute bottom-0 inset-x-0 z-20 p-4 sm:p-5 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-auto'
+                : 'bg-[#0e1320] border-t border-slate-800/80 p-4 sm:p-5'
+            }`}>
+              {/* Usuario, Check de verificación y tag dinámico (Contenedor "Tu cámara en vivo" eliminado) */}
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+                  {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
+                    ? `@${userProfile?.username || 'mi_camara_live'}`
+                    : liveChannelsCategoryFilter === 'atelier' 
+                    ? `@${heroChannel.username}` 
+                    : (liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : `@${heroChannel.username}`)}
+                </span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
+                {/* Contenedor "Tu cámara en vivo" eliminado según petición del usuario */}
+                {!(isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)) && (
+                  <span className={`font-black uppercase py-0.5 rounded-full bg-slate-700/80 text-white tracking-wider ${
+                    (liveChannelsCategoryFilter === 'catalog_model' || heroChannel.category === 'catalog_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('catalog')))
+                      ? 'text-[7.5px] px-1.5'
+                      : (liveChannelsCategoryFilter === 'runway_model' || heroChannel.category === 'runway_model' || (heroChannel.categoryLabel && heroChannel.categoryLabel.toLowerCase().includes('runway')))
+                      ? 'text-[7.5px] px-1.5'
+                      : (heroChannel.category === 'commercial_model' || heroChannel.category === 'plus_size_model' || heroChannel.category === 'real_people_models' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('commercial') || heroChannel.categoryLabel.toLowerCase().includes('plus') || heroChannel.categoryLabel.toLowerCase().includes('real people'))))
+                      ? 'text-[7.5px] px-1.5'
+                      : (heroChannel.category === 'haute_couture' || heroChannel.category === 'petite_model' || heroChannel.category === 'lingerie_model' || heroChannel.category === 'swimsuit_model' || heroChannel.category === 'fitness_model' || heroChannel.category === 'parts_model' || heroChannel.category === 'mature_model' || (heroChannel.categoryLabel && (heroChannel.categoryLabel.toLowerCase().includes('haute') || heroChannel.categoryLabel.toLowerCase().includes('petite') || heroChannel.categoryLabel.toLowerCase().includes('lingerie') || heroChannel.categoryLabel.toLowerCase().includes('swimsuit') || heroChannel.categoryLabel.toLowerCase().includes('fitness') || heroChannel.categoryLabel.toLowerCase().includes('parts') || heroChannel.categoryLabel.toLowerCase().includes('mature'))))
+                      ? 'text-[8px] px-1.5'
+                      : liveChannelsCategoryFilter === 'atelier'
+                      ? 'text-[8px] px-2'
+                      : 'text-[8.5px] px-2'
+                  }`}>
+                    {liveChannelsCategoryFilter === 'atelier' 
+                      ? 'ATELIER' 
+                      : (liveChannelsCategoryFilter === 'todos' ? 'TODOS' : (heroChannel.categoryLabel || heroChannel.category).toUpperCase())}
+                  </span>
+                )}
+              </div>
+
+              {/* Badge: SUBIDO DESDE CASTING LIVE */}
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
+                  <Sparkles className="w-3 h-3 text-yellow-300" />
+                  <span>SUBIDO DESDE CASTING LIVE</span>
+                </span>
+              </div>
+
+              {/* Descripción con hashtags adaptada al canal */}
+              <p className="text-xs sm:text-[13px] text-slate-100 font-medium leading-relaxed">
+                {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter) ? (
+                  <>
+                    🔴 Transmisión de tu cámara en vivo y en directo para todos los usuarios de CastingLive ocupando todo el canal.{' '}
+                    <span className="font-semibold text-rose-300">#micamara</span>{' '}
+                    <span className="font-semibold text-rose-300">#directo</span>{' '}
+                    <span className="font-semibold text-rose-300">#envivo</span>{' '}
+                    <span className="font-semibold text-rose-300">#castinglive</span>
+                  </>
+                ) : liveChannelsCategoryFilter === 'atelier' ? (
+                  heroCaptionTranslated ? (
+                    <>
+                      Live pattern making, cutting and tailoring session from the Atelier boutique: "{heroChannel.title}". Presenting the handcrafted Haute Couture Collection! ✂️✨{' '}
+                      <span className="font-semibold text-rose-300">#atelier</span>{' '}
+                      <span className="font-semibold text-rose-300">#confeccion</span>{' '}
+                      <span className="font-semibold text-rose-300">#altacostura</span>
+                    </>
+                  ) : (
+                    <>
+                      Sesión de taller de patronaje, corte y confección en vivo desde el Atelier boutique: "{heroChannel.title}". Presentando la nueva Colección Atelier de Alta Costura confeccionada a mano! ✂️✨{' '}
+                      <span className="font-semibold text-rose-300">#atelier</span>{' '}
+                      <span className="font-semibold text-rose-300">#confeccion</span>{' '}
+                      <span className="font-semibold text-rose-300">#altacostura</span>
+                    </>
+                  )
+                ) : (
+                  heroCaptionTranslated ? (
+                    <>
+                      Futuristic high fashion session. Presenting Glitter Makeup for the Barcelona show! ✨{' '}
+                      <span className="font-semibold text-rose-300">#highfashion</span>{' '}
+                      <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
+                      <span className="font-semibold text-rose-300">#futuristic</span>
+                    </>
+                  ) : (
+                    <>
+                      Sesión de alta costura futurista. Presentando Glitter Makeup para el show de Barcelona! ✨{' '}
+                      <span className="font-semibold text-rose-300">#highfashion</span>{' '}
+                      <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
+                      <span className="font-semibold text-rose-300">#futuristic</span>
+                    </>
+                  )
+                )}
+              </p>
+
+              {/* Botón interactivo: Traducir a Inglés */}
+              <div className="flex items-center gap-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setHeroCaptionTranslated(!heroCaptionTranslated)}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border border-rose-500/50 bg-black/40 hover:bg-rose-500/20 text-rose-300 hover:text-white transition active:scale-95 cursor-pointer shadow-sm"
+                  title={heroCaptionTranslated ? "Ver original (Español)" : "Traducir a Inglés"}
+                >
+                  <Globe className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{heroCaptionTranslated ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
+                </button>
+              </div>
+
+              {/* Ticker musical adaptado */}
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-300 pt-1">
+                <Music className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>
+                  {liveChannelsCategoryFilter === 'atelier'
+                    ? 'Acoustic Lo-Fi Atelier Beats - LoFi Collective'
+                    : 'Aesthetic Synthwave - LoFi Collective'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SECTION: Grid or Multi-screen of Live Video Broadcasts */}
@@ -32796,18 +33028,20 @@ try {
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            handleNavigateTo10WindowsLivePage();
+                                            handleToggleUserCameraLiveBroadcast();
+                                            setScreenSplitLayout('single');
+                                            setIsScreenSharingActive(false);
                                           }}
                                           className={`w-full py-2.5 sm:py-3 px-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 border shadow-md box-border ${
-                                            (screenSplitLayout === 'grid-10' && isScreenSharingActive)
+                                            isUserLiveStreamingWithCamera
                                               ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.55)] animate-pulse'
                                               : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                                           }`}
                                           id="btn-camara-voting"
-                                          title="LIVE: Ver las 10 ventanas en vivo de los participantes"
+                                          title={isUserLiveStreamingWithCamera ? "Detener cámara en directo" : "Conectar cámara en directo dentro del canal"}
                                         >
                                           <Camera className="w-4 h-4 shrink-0 text-current" />
-                                          <span>LIVE</span>
+                                          <span>{isUserLiveStreamingWithCamera ? 'DETENER LIVE' : 'LIVE'}</span>
                                         </button>
                                       </div>
 

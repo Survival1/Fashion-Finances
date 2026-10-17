@@ -4311,8 +4311,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               </div>
             </div>
 
-            {/* 📝 PANEL DE INFORMACIÓN INFERIOR DEL VÍDEO (Datos del Creador y Descripción) */}
-            <div className="relative z-20 w-full mt-auto p-3 sm:p-4 text-white select-none pointer-events-auto pr-16">
+            {/* 📝 PANEL DE INFORMACIÓN INFERIOR DEL VÍDEO (Datos del Creador y Descripción - Oculto si la ventana de comentarios está abierta) */}
+            <div className={`relative z-20 w-full mt-auto p-3 sm:p-4 text-white select-none pointer-events-auto pr-16 ${isCardCommentsOpen ? 'hidden' : ''}`}>
               {/* Creator username & verification badge */}
               <div className="flex items-center gap-1.5 mb-1">
                 <h4 className="text-xs sm:text-[13px] font-black text-white tracking-tight drop-shadow-md flex items-center gap-1">
@@ -4358,11 +4358,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <Globe className="w-3 h-3 text-rose-400" />
                   <span>{translatedVideosMap[currentVid.id] ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
                 </button>
-                {translatedVideosMap[currentVid.id] && (
-                  <span className="text-[8.5px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-full animate-fade-in">
-                    <span>✓</span> En inglés
-                  </span>
-                )}
               </div>
 
               {/* Music Marquee */}
@@ -5826,25 +5821,38 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           type="button"
                           onClick={() => {
                             setActiveFinanzasSessionIndex(index);
-                            setShowTenWindowsVotingLive(true);
-                            setIsWatchingPresenterCamera(false);
-                            setIsPresenterCameraFullscreen(false);
-                            setLocalCameraFullscreenOverride(false);
-                            stopLucasTorresSpeech();
-                            if (onNavigateTo10WindowsLive) {
-                              onNavigateTo10WindowsLive();
+                            setShowTenWindowsVotingLive(false);
+                            const currentPresenterUser = presenter || FINANZAS_USERS[0];
+                            if (setSelectedFinanzasUser) {
+                              setSelectedFinanzasUser(currentPresenterUser);
+                            }
+                            const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf;
+                            if (isPresenter) {
+                              handleToggleUserCameraLiveBroadcast();
+                            } else {
+                              if (isPresenterCameraFullscreen || isWatchingPresenterCamera) {
+                                setIsPresenterCameraFullscreen(false);
+                                setIsWatchingPresenterCamera(false);
+                                setLocalCameraFullscreenOverride(false);
+                                stopLucasTorresSpeech();
+                              } else {
+                                setLocalCameraFullscreenOverride(true);
+                                setIsWatchingPresenterCamera(true);
+                                setIsPresenterCameraFullscreen(true);
+                                resumeOrStartLucasSpeech();
+                              }
                             }
                           }}
                           className={`w-full font-black text-xs sm:text-[13px] py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
-                            showTenWindowsVotingLive
+                            Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera)
                               ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
                               : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                           }`}
                           id={`btn-live-voting-${session.id}`}
-                          title="LIVE: Ver las 10 ventanas en vivo de los participantes"
+                          title={Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera) ? "Detener emisión LIVE" : "Conectar emisión LIVE dentro del canal"}
                         >
                           <Camera className="w-3.5 h-3.5 shrink-0 text-current" />
-                          <span>LIVE</span>
+                          <span>{Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera) ? 'DETENER LIVE' : 'LIVE'}</span>
                         </button>
                       </div>
                     </div>

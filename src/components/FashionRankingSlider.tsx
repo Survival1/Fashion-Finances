@@ -9,6 +9,7 @@ import { ModelProfile } from '../types';
 
 import descargaImg from '../assets/images/descarga.jpg';
 import RoyalMaleCrown from './RoyalMaleCrown';
+import RoyalFemaleCrown from './RoyalFemaleCrown';
 
 interface FashionRankingSliderProps {
   models: ModelProfile[];
@@ -334,15 +335,22 @@ function ModelRankingCard({
         transition: 'transform 600ms cubic-bezier(0.25, 1, 0.5, 1), opacity 600ms'
       }}
     >
-      {/* 1. Crown positioned atop the frame: Misma corona anterior para Top Modelos Femeninas y Top Modelos Masculinos */}
+      {/* 1. Crown positioned atop the frame: Corona Real Femenina anterior para mujeres y Corona Real Masculina para hombres */}
       <div 
         style={{ bottom: 'calc(100% + 2px)' }}
         className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 group-hover:scale-105"
       >
-        <RoyalMaleCrown 
-          imgClassName="w-24 sm:w-28 h-auto"
-          showSparkles={true}
-        />
+        {isMale ? (
+          <RoyalMaleCrown 
+            imgClassName="w-24 sm:w-28 h-auto"
+            showSparkles={true}
+          />
+        ) : (
+          <RoyalFemaleCrown 
+            imgClassName="w-26 sm:w-32 h-auto"
+            showSparkles={true}
+          />
+        )}
       </div>
 
       {/* 2. Modern Portrait Frame - Fills with model photo or video */}

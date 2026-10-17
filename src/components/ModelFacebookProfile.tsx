@@ -91,6 +91,7 @@ import {
   renderBoutiqueEmblem 
 } from './VictoriaSecretRanking';
 import RoyalMaleCrown from './RoyalMaleCrown';
+import RoyalFemaleCrown from './RoyalFemaleCrown';
 
 interface FBComment {
   id: string;
@@ -5198,9 +5199,13 @@ export default function ModelFacebookProfile({
                           className="bg-gradient-to-br from-[#FFFDF8] via-[#FFFBF2] to-[#FFF6E3] hover:from-[#FFF9ED] hover:to-[#FFEFCC] text-[#C9A24A] rounded-2xl border border-[#C9A24A]/80 hover:border-[#C9A24A] shadow-[0_2px_12px_rgba(201,162,74,0.18)] hover:shadow-[0_4px_20px_rgba(201,162,74,0.3)] transition-all duration-300 flex items-center justify-center py-3 px-5 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
                           title="Explorar el Podio de Modelos TOP 100"
                         >
-                          {/* Beautiful Elegant Crown from capture z.png pura, sin tocarla ni modificarla */}
+                          {/* Crown button based on model gender */}
                           <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-                            <RoyalMaleCrown imgClassName="w-7 h-5.5 object-contain" />
+                            {userProfile?.gender === 'male' ? (
+                              <RoyalMaleCrown imgClassName="w-7 h-5.5 object-contain" />
+                            ) : (
+                              <RoyalFemaleCrown imgClassName="w-7 h-5.5 object-contain" />
+                            )}
                           </div>
                           <div className="h-4 w-[1px] bg-[#E7D39B] mx-3" />
                           <span className="font-serif text-xs font-bold text-[#C9A24A] tracking-[0.2em] select-none">
@@ -5485,9 +5490,13 @@ export default function ModelFacebookProfile({
                       className="bg-[#FDFBF7] hover:bg-white text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_15px_-4px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.25)] transition-all duration-300 flex items-center justify-center py-2 px-5 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
                       title="Explorar el Podio de Modelos TOP 100"
                     >
-                      {/* Corona Real de la captura z.png pura, sin tocarla ni modificarla */}
+                      {/* Corona según género del modelo */}
                       <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                        <RoyalMaleCrown imgClassName="w-8 h-6.5 object-contain" />
+                        {userProfile?.gender === 'male' ? (
+                          <RoyalMaleCrown imgClassName="w-8 h-6.5 object-contain" />
+                        ) : (
+                          <RoyalFemaleCrown imgClassName="w-8 h-6.5 object-contain" />
+                        )}
                       </div>
                       <div className="h-5 w-[1px] bg-[#D3B470]/60 mx-3" />
                       <span className="font-serif text-xs font-bold text-[#B4975A] tracking-[0.15em] select-none">

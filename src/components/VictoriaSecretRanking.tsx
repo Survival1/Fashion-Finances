@@ -45,6 +45,7 @@ import {
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
 import RoyalMaleCrown from './RoyalMaleCrown';
+import RoyalFemaleCrown from './RoyalFemaleCrown';
 
 export interface BoutiqueCatalogItem {
   id: string;
@@ -1847,11 +1848,17 @@ export default function VictoriaSecretRanking({
                         
                         {/* Elegant Crown hovered closely above image frame without touching */}
                         <div className="absolute -top-11 sm:-top-13 z-30 transition duration-500 group-hover:scale-105 pointer-events-none">
-                          {/* Corona Real de la captura z.png pura, sin tocarla ni modificarla */}
-                          <RoyalMaleCrown 
-                            imgClassName="w-26 sm:w-30 h-auto"
-                            showSparkles={true}
-                          />
+                          {firstPlace?.gender === 'male' ? (
+                            <RoyalMaleCrown 
+                              imgClassName="w-26 sm:w-30 h-auto"
+                              showSparkles={true}
+                            />
+                          ) : (
+                            <RoyalFemaleCrown 
+                              imgClassName="w-26 sm:w-30 h-auto"
+                              showSparkles={true}
+                            />
+                          )}
                         </div>
 
                         {/* Large pink butterfly studio wings peeking from behind the arch */}

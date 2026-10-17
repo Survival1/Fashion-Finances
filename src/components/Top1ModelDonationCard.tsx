@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RoyalMaleCrown from './RoyalMaleCrown';
+import RoyalFemaleCrown from './RoyalFemaleCrown';
 import { 
   Crown, 
   Sparkles, 
@@ -621,15 +622,22 @@ export default function Top1ModelDonationCard({
             
             {/* Arch Container with Anchor for Suspended Crown */}
             <div className="relative z-10">
-              {/* 1. Opulent Royal Crown atop the Arch (Corona Real de la captura z.png pura, sin tocarla ni modificarla) */}
+              {/* 1. Opulent Royal Crown atop the Arch */}
               <div 
                 style={{ bottom: 'calc(100% + 3px)' }}
                 className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 hover:scale-105"
               >
-                <RoyalMaleCrown 
-                  imgClassName="w-32 sm:w-40 h-auto"
-                  showSparkles={true}
-                />
+                {top1Model?.gender === 'male' ? (
+                  <RoyalMaleCrown 
+                    imgClassName="w-32 sm:w-40 h-auto"
+                    showSparkles={true}
+                  />
+                ) : (
+                  <RoyalFemaleCrown 
+                    imgClassName="w-32 sm:w-40 h-auto"
+                    showSparkles={true}
+                  />
+                )}
               </div>
 
               {/* 3. The Royal Vaulted Arch Frame (Grand high-fashion portrait) */}
