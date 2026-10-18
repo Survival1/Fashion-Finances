@@ -623,16 +623,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
     const chanLower = (channelName || 'Fashion').toLowerCase();
 
-    // Match videos with this category
+    // Match videos STRICTLY with this category - un vídeo subido a una categoría solo se ve en ella
     const matched = stored.filter(v => {
       if (!v) return false;
       const cat = (v.videoCategory || v.category || '').toLowerCase();
-      if (chanLower === 'todos') return true;
-      if (chanLower === 'fashion') {
-        return cat === 'fashion' || cat === 'moda' || cat.includes('fashion') || cat.includes('streetwear');
+      
+      // En 'todos', todos los vídeos subidos también deben de verse en el canal Todos
+      if (chanLower === 'todos') {
+        return true;
       }
       if (chanLower === 'modelos' || chanLower === 'runway') {
         return cat === 'modelos' || cat === 'runway';
+      }
+      if (chanLower === 'fashion') {
+        return cat === 'fashion' || cat === 'moda';
       }
       if (chanLower === 'backstage') {
         return cat === 'backstage';
@@ -640,10 +644,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (chanLower === 'investors' || chanLower === 'jewellery') {
         return cat === 'investors' || cat === 'jewellery';
       }
-      if (chanLower === 'catwalk') {
-        return cat === 'catwalk';
+      if (chanLower === 'catwalk' || chanLower === 'casting') {
+        return cat === 'catwalk' || cat === 'casting';
       }
-      if (chanLower === 'fitnes') {
+      if (chanLower === 'fitnes' || chanLower === 'fitness') {
         return cat === 'fitnes' || cat === 'fitness';
       }
       if (chanLower === 'beauty') {
@@ -652,17 +656,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (chanLower === 'influencer') {
         return cat === 'influencer';
       }
+      if (chanLower === 'luxury') {
+        return cat === 'luxury';
+      }
+      if (chanLower === 'interview') {
+        return cat === 'interview';
+      }
+      if (chanLower === 'finanzas') {
+        return cat === 'finanzas';
+      }
       return cat === chanLower;
-    }).map(v => ({
-      ...v,
-      isUserUploaded: true
-    }));
-
-    // Other user uploads (e.g. uploaded clips that might not specify exact category)
-    const otherUserUploads = stored.filter(v => {
-      if (!v) return false;
-      const isUpload = v.id && (String(v.id).includes('uploaded') || String(v.id).includes('user'));
-      return isUpload && !matched.some(m => m.id === v.id);
     }).map(v => ({
       ...v,
       isUserUploaded: true
@@ -673,8 +676,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       videoCategory: channelName
     }));
 
-    // Prioritize user uploads from z.png right at the top
-    const combined = [...matched, ...otherUserUploads, ...presets];
+    // Prioritize user uploads strictly matching this category right at the top
+    const combined = matched.length > 0 ? [...matched, ...presets] : presets;
     const unique: ChannelUploadedVideoItem[] = [];
     const seen = new Set<string>();
 
@@ -732,21 +735,65 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const channelVideoCardRef = useRef<HTMLDivElement | null>(null);
   const lastChannelWheelTimeRef = useRef<number>(0);
 
-  // Auto-sync uploaded videos from z.png via event and storage
+  // Auto-sync uploaded videos from z.png via event and storage & reproducción directa al publicar
   useEffect(() => {
-    const handleSyncChannelVideos = () => {
-      const vids = loadChannelVideosFromStorage(currentChannel);
+    const handleSyncChannelVideos = (e?: any) => {
+      const targetChan = e?.detail?.targetCategory || e?.detail?.channel || e?.detail?.newVideo?.videoCategory;
+      const channelToLoad = targetChan || currentChannel;
+      if (targetChan) {
+        setCurrentChannel(targetChan);
+        setActiveChannelVideoIdx(0);
+      }
+      const vids = loadChannelVideosFromStorage(channelToLoad);
       setChannelUploadedVideos(vids);
+
+      // Al publicar un vídeo o cambiar de canal con autoPlay, reiniciar pausas y reproducir directamente
+      if (e?.detail?.targetCategory || e?.detail?.channel || e?.detail?.autoPlay || e?.detail?.newVideo) {
+        setIsUserPaused(false);
+        setIsChannelVideoPlaying(true);
+        setUserPausedVideosMap({});
+
+        const triggerPlay = (attempt = 0) => {
+          const firstVid = vids[0];
+          if (!firstVid) return;
+          const el = videoRefsMap.current[firstVid.id] || channelVideoRef.current;
+          if (el) {
+            el.currentTime = 0;
+            const p = el.play();
+            if (p !== undefined) {
+              p.then(() => {
+                setIsChannelVideoPlaying(true);
+                setIsUserPaused(false);
+              }).catch(() => {
+                el.muted = true;
+                el.play().then(() => {
+                  setIsChannelVideoPlaying(true);
+                  setIsUserPaused(false);
+                }).catch(() => {});
+              });
+            }
+          } else if (attempt < 8) {
+            setTimeout(() => triggerPlay(attempt + 1), 40);
+          }
+        };
+        setTimeout(() => triggerPlay(0), 30);
+      }
     };
 
     handleSyncChannelVideos();
 
     window.addEventListener('coll_casting_live_videos_updated', handleSyncChannelVideos);
+    window.addEventListener('change_multimedia_channel', handleSyncChannelVideos);
+    window.addEventListener('resume-channel-video', handleSyncChannelVideos);
+    window.addEventListener('play-published-video', handleSyncChannelVideos);
     window.addEventListener('storage', handleSyncChannelVideos);
     window.addEventListener('saved_videos_updated', handleSyncChannelVideos);
 
     return () => {
       window.removeEventListener('coll_casting_live_videos_updated', handleSyncChannelVideos);
+      window.removeEventListener('change_multimedia_channel', handleSyncChannelVideos);
+      window.removeEventListener('resume-channel-video', handleSyncChannelVideos);
+      window.removeEventListener('play-published-video', handleSyncChannelVideos);
       window.removeEventListener('storage', handleSyncChannelVideos);
       window.removeEventListener('saved_videos_updated', handleSyncChannelVideos);
     };

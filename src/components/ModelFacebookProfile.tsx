@@ -7290,11 +7290,15 @@ export default function ModelFacebookProfile({
 
                     if (activeGalleryTab === 'saved_videos') {
                       const rawFiltered = savedVideos.filter((vid: any) => {
-                        if (savedVideoCategoryFilter === 'Todos') return true;
-                        const isUploaded = vid.id && (String(vid.id).includes('uploaded') || String(vid.id).includes('sv-'));
-                        const matchesCategory = vid.videoCategory === savedVideoCategoryFilter ||
-                                                (savedVideoCategoryFilter === 'Modelos' && isUploaded);
-                        return matchesCategory;
+                        const vidCat = (vid.videoCategory || '').toLowerCase();
+                        const filterCat = (savedVideoCategoryFilter || '').toLowerCase();
+                        if (filterCat === 'todos') {
+                          return !vidCat || vidCat === 'todos';
+                        }
+                        if (filterCat === 'modelos' || filterCat === 'runway') {
+                          return vidCat === 'modelos' || vidCat === 'runway';
+                        }
+                        return vidCat === filterCat;
                       });
 
                       const filteredSavedVideos: any[] = [];

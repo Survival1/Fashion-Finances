@@ -10513,35 +10513,26 @@ export default function CastingLiveSection({
   const rawFilteredVideos = videosList.filter(vid => {
     // Stage 0: Interest category filter (Finanzas, Fashion, Models, Backstage, etc.)
     if (selectedCategoryFilter === 'Todos') {
-      const allowedCategoriesForTodos = ['Reels', 'Modelos', 'BackStage', 'Catwalk', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Fashion', 'Investors', 'Tiendas', 'Luxury', 'Interview'];
-      const vidCat = vid.videoCategory || vid.category;
-      if (vidCat && !allowedCategoriesForTodos.includes(vidCat)) {
-        return false;
-      }
+      // En el canal 'Todos' se muestran todos los vídeos subidos y vídeos generales
     } else {
-      const isUploaded = vid.id && (
-        String(vid.id).includes('uploaded') || 
-        String(vid.id).includes('sv-') || 
-        vid.isUserUploaded || 
-        vid.uploaderId === userProfile?.id ||
-        (userProfile && vid.username && userProfile.username && vid.username.toLowerCase().trim() === userProfile.username.toLowerCase().trim()) ||
-        (userProfile && vid.name && userProfile.name && vid.name.toLowerCase().trim() === userProfile.name.toLowerCase().trim())
-      );
-      
       const targetCat = selectedCategoryFilter.toLowerCase();
-      const vidCat = (vid.videoCategory || '').toLowerCase();
+      const vidCat = (vid.videoCategory || vid.category || '').toLowerCase();
       
       let isMatch = false;
-      if (targetCat === 'modelos') {
-        isMatch = vidCat === 'modelos' || vidCat === 'runway' || ((!vidCat || vidCat === 'todos') && isUploaded);
+      if (targetCat === 'modelos' || targetCat === 'runway') {
+        isMatch = vidCat === 'modelos' || vidCat === 'runway';
       } else if (targetCat === 'backstage') {
-        isMatch = vidCat === 'backstage' || String(vid.id || '').includes('backstage');
-      } else if (targetCat === 'investors') {
+        isMatch = vidCat === 'backstage';
+      } else if (targetCat === 'investors' || targetCat === 'jewellery') {
         isMatch = vidCat === 'investors' || vidCat === 'jewellery';
       } else if (targetCat === 'tiendas') {
         isMatch = vidCat === 'tiendas' || !!vid.pinnedProduct;
       } else if (targetCat === 'catwalk' || targetCat === 'casting') {
         isMatch = vidCat === 'catwalk' || vidCat === 'casting';
+      } else if (targetCat === 'fashion') {
+        isMatch = vidCat === 'fashion' || vidCat === 'moda';
+      } else if (targetCat === 'fitnes') {
+        isMatch = vidCat === 'fitnes' || vidCat === 'fitness';
       } else {
         isMatch = vidCat === targetCat;
       }
@@ -10587,15 +10578,17 @@ export default function CastingLiveSection({
       const targetCat = selectedCategoryFilter.toLowerCase();
       list = videosList.filter(v => {
         const c = (v.videoCategory || '').toLowerCase();
-        if (targetCat === 'backstage') return c === 'backstage' || String(v.id || '').includes('backstage');
-        if (targetCat === 'modelos') return c === 'modelos' || c === 'runway';
-        if (targetCat === 'investors') return c === 'investors' || c === 'jewellery';
+        if (targetCat === 'backstage') return c === 'backstage';
+        if (targetCat === 'modelos' || targetCat === 'runway') return c === 'modelos' || c === 'runway';
+        if (targetCat === 'investors' || targetCat === 'jewellery') return c === 'investors' || c === 'jewellery';
         if (targetCat === 'tiendas') return c === 'tiendas' || !!v.pinnedProduct;
         if (targetCat === 'catwalk' || targetCat === 'casting') return c === 'catwalk' || c === 'casting';
+        if (targetCat === 'fashion') return c === 'fashion' || c === 'moda';
+        if (targetCat === 'fitnes') return c === 'fitnes' || c === 'fitness';
         return c === targetCat;
       });
     }
-    if (selectedCategoryFilter !== 'Modelos') return list;
+    if (selectedCategoryFilter !== 'Modelos' && selectedCategoryFilter !== 'Runway') return list;
     const groups = new Map<string, CastingLiveVideo[]>();
     for (const v of list) {
       const key = String(v.username || v.name || v.uploaderId || v.modelId || v.id).toLowerCase().trim();
@@ -10620,11 +10613,55 @@ export default function CastingLiveSection({
     return result;
   }, [rawFilteredVideos, selectedCategoryFilter, videosList]);
 
+  // ⏸️ Detener y pausar la reproducción de todos los vídeos al hacer clic en Cargar Vídeo o abrir modales
+  const handlePauseAllVideos = () => {
+    // 1. Notificar a componentes y feeds multimedia externos (TikTokFinanzasFeed)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pause-channel-video'));
+      window.dispatchEvent(new CustomEvent('pause-all-media-playback'));
+    }
+    // 2. Pausar directamente todos los elementos <video> presentes en el DOM
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('video').forEach(v => {
+        try {
+          v.pause();
+        } catch (e) {
+          console.warn('Error pausando video:', e);
+        }
+      });
+    }
+    // 3. Pausar refs locales de CastingLiveSection
+    videoRefs.current.forEach((video) => {
+      if (video) {
+        try { video.pause(); } catch {}
+      }
+    });
+    if (fullscreenChannelVideoRef.current) {
+      try { fullscreenChannelVideoRef.current.pause(); } catch {}
+    }
+    if (userLiveVideoElementRef.current) {
+      try { userLiveVideoElementRef.current.pause(); } catch {}
+    }
+    if (userLiveFeedVideoElementRef.current) {
+      try { userLiveFeedVideoElementRef.current.pause(); } catch {}
+    }
+    if (quickCameraVideoRef.current) {
+      try { quickCameraVideoRef.current.pause(); } catch {}
+    }
+  };
+
+  // Pausar vídeos inmediatamente al abrir el modal de Cargar Vídeo / Tipo de Creación o Upload
+  useEffect(() => {
+    if (showCreationTypeModal || showUploadModal) {
+      handlePauseAllVideos();
+    }
+  }, [showCreationTypeModal, showUploadModal]);
+
   // Handle Play/Pause when entering or switching videos
   useEffect(() => {
     videoRefs.current.forEach((video, index) => {
       if (video) {
-        if (index === activeVideoIndex && autoPlayEnabled && !showUploadModal) {
+        if (index === activeVideoIndex && autoPlayEnabled && !showUploadModal && !showCreationTypeModal) {
           video.play().catch((err) => {
             console.log("Autoplay blocked, attempting muted play:", err);
             video.muted = true;
@@ -10635,7 +10672,7 @@ export default function CastingLiveSection({
         }
       }
     });
-  }, [activeVideoIndex, filteredVideos.length, autoPlayEnabled, showUploadModal, activeSubTab, filteredVideos[activeVideoIndex]?.id, selectedCategoryFilter]);
+  }, [activeVideoIndex, filteredVideos.length, autoPlayEnabled, showUploadModal, showCreationTypeModal, activeSubTab, filteredVideos[activeVideoIndex]?.id, selectedCategoryFilter]);
 
   // Synchronize volume and mute states to HTML5 video elements
   useEffect(() => {
@@ -11445,7 +11482,7 @@ export default function CastingLiveSection({
       isFollowing: false,
       music: uploadMusic || 'Música original - Fashion Finances Studio',
       category: uploadCategory as any,
-      videoCategory: uploadVideoCategory,
+      videoCategory: (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory) || 'Runway',
       uploaderId: userProfile?.id || 'anonymous',
       trimStart: trimStart,
       trimEnd: trimEnd
@@ -11570,7 +11607,7 @@ export default function CastingLiveSection({
         views: '1.2K',
         avatar: selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
         name: finalUsername,
-        videoCategory: uploadVideoCategory
+        videoCategory: (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory) || 'Runway'
       };
 
       const filteredExisting = existingSavedVideos.filter((v: any) => {
@@ -11587,10 +11624,25 @@ export default function CastingLiveSection({
       }
     });
 
+    const finalCategory = (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory) || 'Runway';
+
     try {
-      // Dispatch event to force update ModelFacebookProfile if active
+      // Guardar 'Todos' como canal de navegación tras publicar
+      localStorage.setItem('last_selected_multimedia_channel', 'Todos');
+      // Dispatch events to force update ModelFacebookProfile and feeds
       window.dispatchEvent(new Event('saved_videos_updated'));
-      window.dispatchEvent(new CustomEvent('coll_casting_live_videos_updated', { detail: { newVideo, updatedVideos } }));
+      window.dispatchEvent(new CustomEvent('coll_casting_live_videos_updated', { 
+        detail: { newVideo, updatedVideos, targetCategory: 'Todos', autoPlay: true } 
+      }));
+      window.dispatchEvent(new CustomEvent('change_multimedia_channel', { 
+        detail: { channel: 'Todos', autoPlay: true } 
+      }));
+      window.dispatchEvent(new CustomEvent('resume-channel-video', { 
+        detail: { channel: 'Todos', targetCategory: 'Todos', autoPlay: true } 
+      }));
+      window.dispatchEvent(new CustomEvent('play-published-video', { 
+        detail: { channel: 'Todos', targetCategory: 'Todos', autoPlay: true } 
+      }));
     } catch (err) {
       console.error(err);
     }
@@ -11598,11 +11650,25 @@ export default function CastingLiveSection({
     setShowUploadModal(false);
     setShowCreatorStudio(false);
     setActiveSubTab('para-ti');
-    if (uploadVideoCategory && uploadVideoCategory !== 'Todos') {
-      setSelectedCategoryFilter(uploadVideoCategory as any);
-      setSelectedLiveCategory(uploadVideoCategory as any);
-    }
+    setSelectedCategoryFilter('Todos' as any);
+    setSelectedLiveCategory('Todos' as any);
     setActiveVideoIndex(0);
+    setAutoPlayEnabled(true);
+
+    // Reproducir directamente el vídeo al abrirse el canal
+    setTimeout(() => {
+      const v = videoRefs.current[0];
+      if (v) {
+        v.currentTime = 0;
+        const p = v.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            v.muted = true;
+            v.play().catch(() => {});
+          });
+        }
+      }
+    }, 50);
     
     // Clear variables
     setUploadVideoUrl('');
@@ -11962,7 +12028,10 @@ export default function CastingLiveSection({
             <div className="space-y-1">
               <button 
                 type="button"
-                onClick={() => setShowCreationTypeModal(true)}
+                onClick={() => {
+                  handlePauseAllVideos();
+                  setShowCreationTypeModal(true);
+                }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#fe2c55] to-rose-600 hover:from-rose-600 hover:to-[#fe2c55] text-left transition-all shadow-md cursor-pointer border-0 uppercase tracking-wider animate-pulse"
               >
                 <Video className="w-4 h-4 text-white" />
@@ -17436,7 +17505,10 @@ export default function CastingLiveSection({
               {/* "+ Cargar" button styled exactly like screenshot (pulsating pinkish-red) */}
               <button
                 type="button"
-                onClick={() => setShowCreationTypeModal(true)}
+                onClick={() => {
+                  handlePauseAllVideos();
+                  setShowCreationTypeModal(true);
+                }}
                 className="w-full py-2.5 px-4 bg-[#fe2c55] hover:bg-[#e02247] text-white text-xs font-black rounded-lg shadow-md shadow-rose-500/10 text-center flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer border-0 uppercase tracking-wider"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
@@ -25906,7 +25978,10 @@ try {
         {/* 6. CARGAR VÍDEO */}
         <button
           type="button"
-          onClick={() => setShowCreationTypeModal(true)}
+          onClick={() => {
+            handlePauseAllVideos();
+            setShowCreationTypeModal(true);
+          }}
           className="w-full flex items-center justify-between px-3.5 py-3 sm:px-4 sm:py-3.5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-2xl shadow-2xs transition-all text-left cursor-pointer group"
         >
           <div className="flex items-center gap-3">
