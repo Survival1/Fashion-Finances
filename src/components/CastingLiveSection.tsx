@@ -2862,7 +2862,7 @@ export default function CastingLiveSection({
                 const defaultParticipants = (
                   sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
                   sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
-                  sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? EMPRESARIOS_USERS.slice(0, 10) :
+                  sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? FINANZAS_USERS.slice(0, 10) :
                   sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 ? TOPMODELS_USERS.slice(0, 10) :
                   sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? INVERSORES_USERS.slice(0, 10) :
                   sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? MILLONARIOS_USERS.slice(0, 10) :
@@ -3328,9 +3328,9 @@ export default function CastingLiveSection({
       brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
       category: 'Ronda Glamour ✨',
       entryFee: 1000,
-      presenter: EMPRESARIOS_USERS[0],
+      presenter: FINANZAS_USERS[0],
       participants: [
-        ...EMPRESARIOS_USERS.slice(0, 10)
+        ...FINANZAS_USERS.slice(0, 10)
       ],
       status: 'active' as const
     },
@@ -3417,7 +3417,7 @@ export default function CastingLiveSection({
             const defaultParticipants = (
               sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
               sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
-              sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? EMPRESARIOS_USERS.slice(0, 10) :
+              sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? FINANZAS_USERS.slice(0, 10) :
               sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 ? TOPMODELS_USERS.slice(0, 10) :
               sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? INVERSORES_USERS.slice(0, 10) :
               sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? MILLONARIOS_USERS.slice(0, 10) :
@@ -4216,7 +4216,7 @@ export default function CastingLiveSection({
     } else if (fee === 100 || targetSession?.id === 'sess-emprendedores-1') {
       fallbackOthers = FINANZAS_USERS;
     } else if (fee === 1000 || targetSession?.id === 'sess-empresarios-1') {
-      fallbackOthers = EMPRESARIOS_USERS;
+      fallbackOthers = FINANZAS_USERS;
     } else if (fee === 10000 || targetSession?.id === 'sess-topmodels-1') {
       fallbackOthers = TOPMODELS_USERS;
     } else if (fee === 100000 || targetSession?.id === 'sess-inversores-1') {
@@ -4460,7 +4460,14 @@ export default function CastingLiveSection({
     setGatheringSessionRef(is10EuroStreetwear ? 'REF: 2' : getFinanzasRoundRef(targetSession, resolvedSessionIndex));
     setGatheringParticipantsList(finalTen);
     setShowFinanzasInscriptionInChannel(false);
-    setShowParticipantsGatheringModal(true);
+    if (fee === 1000 || targetSession?.entryFee === 1000) {
+      setShowParticipantsGatheringModal(false);
+      setShowVotingProjectsModal(false);
+      setShowFinanzasResults(false);
+      setShowFinanzasRecount(false);
+    } else {
+      setShowParticipantsGatheringModal(true);
+    }
 
     // Audio confirmation tone
     try {
@@ -32601,7 +32608,7 @@ try {
                                   id="btn-disparar-pago-inscribir-mesa"
                                 >
                                   <Play className="w-3.5 h-3.5 fill-current text-white shrink-0" />
-                                  <span className="truncate">Disparar Pago de {activeFee || 10}€ y Acceder a Sala de Espera</span>
+                                  <span className="truncate">{activeFee === 1000 ? 'Disparar Pago de 1.000€ y Comenzar Exposición' : `Disparar Pago de ${activeFee || 10}€ y Acceder a Sala de Espera`}</span>
                                 </button>
 
                                 <button
@@ -33345,6 +33352,16 @@ try {
                                         setActiveFinanzasPopupUser(null);
                                         setShowFinanzasResults(false);
                                         setShowFinanzasRecount(false);
+
+                                        if (currentSessionFeeInfo.fee === 1000) {
+                                          const targetIdx = activeSessionsOnly.findIndex(s => s.entryFee === 1000 || s.id === 'sess-empresarios-1' || s.title?.toUpperCase().includes('GLAMOUR'));
+                                          if (targetIdx !== -1) {
+                                            setActiveFinanzasSessionIndex(targetIdx);
+                                          }
+                                          handleExecutePaymentAndJoinSession(undefined, 1000, targetUserArrivalSlot, currentFinanzasSession);
+                                          setShowParticipantsGatheringModal(false);
+                                          return;
+                                        }
 
                                         if (isUserParticipating) {
                                           setShowParticipantsGatheringModal(true);

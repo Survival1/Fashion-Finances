@@ -2630,10 +2630,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   }, []);
 
   const [activeHoveredParticipantsSession, setActiveHoveredParticipantsSession] = useState<string | null>(null);
-  // 🎛️ Synchronized selected presenter per session (David K. Turno 7 matching image.png)
   const [sessionSelectedPresenterMap, setSessionSelectedPresenterMap] = useState<Record<string, any>>(() => {
     return {
-      'sess-trabajadores-1': { id: 'f-7', name: 'David K.', role: 'PATROCINADOR PREMIUM', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', username: 'david_growth_ff' }
+      'sess-trabajadores-1': { id: 'f-7', name: 'David K.', role: 'PATROCINADOR PREMIUM', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650', username: 'david_growth_ff' },
+      'sess-empresarios-1': { id: 'f-1', name: 'Alessia Vance', role: 'MODELO DIRECTORA', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', username: 'alessia_vance_w1' }
     };
   });
 
@@ -3210,7 +3210,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       list = [...session.participants.slice(0, 10)];
     } else if (sId.includes('trabajadores') || fee === 10) list = [...TRABAJADORES_USERS.slice(0, 10)];
     else if (sId.includes('emprendedores') || fee === 100) list = [...FINANZAS_USERS.slice(0, 10)];
-    else if (sId.includes('empresarios') || fee === 1000) list = [...EMPRESARIOS_USERS.slice(0, 10)];
+    else if (sId.includes('empresarios') || fee === 1000) list = [...FINANZAS_USERS.slice(0, 10)];
     else if (sId.includes('topmodels') || fee === 10000) list = [...TOPMODELS_USERS.slice(0, 10)];
     else if (sId.includes('inversores') || fee === 100000) list = [...INVERSORES_USERS.slice(0, 10)];
     else if (sId.includes('millonarios') || fee === 1000000) list = [...MILLONARIOS_USERS.slice(0, 10)];
@@ -5868,38 +5868,30 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           type="button"
                           onClick={() => {
                             setActiveFinanzasSessionIndex(index);
-                            setShowTenWindowsVotingLive(false);
-                            const currentPresenterUser = presenter || FINANZAS_USERS[0];
-                            if (setSelectedFinanzasUser) {
-                              setSelectedFinanzasUser(currentPresenterUser);
-                            }
-                            const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf;
-                            if (isPresenter) {
-                              handleToggleUserCameraLiveBroadcast();
-                            } else {
-                              if (isPresenterCameraFullscreen || isWatchingPresenterCamera) {
-                                setIsPresenterCameraFullscreen(false);
-                                setIsWatchingPresenterCamera(false);
-                                setLocalCameraFullscreenOverride(false);
-                                stopLucasTorresSpeech();
-                              } else {
-                                setLocalCameraFullscreenOverride(true);
-                                setIsWatchingPresenterCamera(true);
-                                setIsPresenterCameraFullscreen(true);
-                                resumeOrStartLucasSpeech();
-                              }
+                            const next = !showTenWindowsVotingLive;
+                            setShowTenWindowsVotingLive(next);
+                            setLocalCameraFullscreenOverride(false);
+                            setIsPresenterCameraFullscreen(false);
+                            setIsWatchingPresenterCamera(false);
+                            if (setEnlargedWindowUser) setEnlargedWindowUser(null);
+                            setShowVotingProjectsModal(false);
+                            setShowFinanzasInscriptionInChannel(false);
+                            stopLucasTorresSpeech();
+                            if (setSystemVoiceNotification) {
+                              setSystemVoiceNotification({
+                                show: true,
+                                message: next
+                                  ? '👥 Abriendo las 10 ventanas en vivo de los participantes online.'
+                                  : 'Cerrando las 10 ventanas en vivo.'
+                              });
                             }
                           }}
-                          className={`w-full font-black text-xs sm:text-[13px] py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer ${
-                            Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera)
-                              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
-                              : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
-                          }`}
+                          className="w-full font-black text-xs sm:text-[13px] py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer bg-white hover:bg-slate-100 text-slate-950 border-slate-200"
                           id={`btn-live-voting-${session.id}`}
-                          title={Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera) ? "Detener emisión LIVE" : "Conectar emisión LIVE dentro del canal"}
+                          title={showTenWindowsVotingLive ? "Cerrar las 10 ventanas en vivo" : "Abrir las 10 ventanas de los participantes online"}
                         >
                           <Camera className="w-3.5 h-3.5 shrink-0 text-current" />
-                          <span>{Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera) ? 'DETENER LIVE' : 'LIVE'}</span>
+                          <span>{showTenWindowsVotingLive ? 'DETENER LIVE' : 'LIVE'}</span>
                         </button>
                       </div>
                     </div>
@@ -6072,32 +6064,29 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                         {/* LIVE CAMERA BUTTON */}
                         {(() => {
-                          const isPresenter = presenter.id === userProfile?.id || presenter.name?.includes('Adriana');
-                          const isLiveActive = Boolean(isPresenter ? isUserLiveStreamingWithCamera : isWatchingPresenterCamera);
+                          const isLiveActive = showTenWindowsVotingLive;
 
                           return (
                             <button
                               type="button"
                               onClick={() => {
                                 setActiveFinanzasSessionIndex(index);
-                                const currentPresenterUser = presenter || FINANZAS_USERS[0];
-                                if (setSelectedFinanzasUser) {
-                                  setSelectedFinanzasUser(currentPresenterUser);
-                                }
-                                if (isPresenter) {
-                                  handleToggleUserCameraLiveBroadcast();
-                                } else {
-                                  if (isPresenterCameraFullscreen || isWatchingPresenterCamera) {
-                                    setIsPresenterCameraFullscreen(false);
-                                    setIsWatchingPresenterCamera(false);
-                                    setLocalCameraFullscreenOverride(false);
-                                    stopLucasTorresSpeech();
-                                  } else {
-                                    setLocalCameraFullscreenOverride(true);
-                                    setIsWatchingPresenterCamera(true);
-                                    setIsPresenterCameraFullscreen(true);
-                                    resumeOrStartLucasSpeech();
-                                  }
+                                const next = !showTenWindowsVotingLive;
+                                setShowTenWindowsVotingLive(next);
+                                setLocalCameraFullscreenOverride(false);
+                                setIsPresenterCameraFullscreen(false);
+                                setIsWatchingPresenterCamera(false);
+                                if (setEnlargedWindowUser) setEnlargedWindowUser(null);
+                                setShowVotingProjectsModal(false);
+                                setShowFinanzasInscriptionInChannel(false);
+                                stopLucasTorresSpeech();
+                                if (setSystemVoiceNotification) {
+                                  setSystemVoiceNotification({
+                                    show: true,
+                                    message: next
+                                      ? '👥 Abriendo las 10 ventanas en vivo de los participantes online.'
+                                      : 'Cerrando las 10 ventanas en vivo.'
+                                  });
                                 }
                               }}
                               className={`w-full py-1.5 px-2.5 rounded-xl font-black text-[9.5px] sm:text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
@@ -6106,11 +6095,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                   : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                               }`}
                               id={`btn-live-camera-${session.id}`}
-                              title={
-                                isPresenter
-                                  ? (isUserLiveStreamingWithCamera ? "Desactivar cámara en directo" : "Conectar cámara en directo")
-                                  : (isWatchingPresenterCamera ? `Detener visualización de cámara de ${presenter.name}` : `Ver cámara en directo de ${presenter.name}`)
-                              }
+                              title={showTenWindowsVotingLive ? "Cerrar las 10 ventanas en vivo" : "Abrir las 10 ventanas de los participantes online"}
                             >
                               {isLiveActive ? (
                                 <>
@@ -6223,6 +6208,82 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+
+                      const sessionFee = session?.entryFee || 10;
+                      const is1000EuroRound = sessionFee === 1000 || feeInfo?.feeInWords?.includes('1.000');
+
+                      if (is1000EuroRound) {
+                        // 🌟 En la ronda de 1.000 euros (RONDA GLAMOUR ✨), redirigir directamente a la ronda
+                        // y comenzar por la página de la captura image.png con 5 minutos de exposición por participante
+                        let targetIdx = activeSessionsOnly.findIndex(s => 
+                          s.entryFee === 1000 || 
+                          s.id === 'sess-empresarios-1' || 
+                          s.title?.toUpperCase().includes('GLAMOUR') || 
+                          s.category?.toUpperCase().includes('GLAMOUR')
+                        );
+                        if (targetIdx === -1) targetIdx = index;
+                        const targetSession = activeSessionsOnly[targetIdx] || session;
+
+                        setActiveFinanzasSessionIndex(targetIdx);
+                        scrollToRound(targetIdx);
+
+                        // Cerrar modales para ver limpia la pantalla de la captura image.png
+                        if (setShowParticipantsGatheringModal) {
+                          setShowParticipantsGatheringModal(false);
+                        }
+                        setShowVotingProjectsModal(false);
+                        setShowFinanzasInscriptionInChannel(false);
+                        setShowProjectDetailsInPopup(false);
+                        setDetailProjectUser(null);
+                        setActiveChannelsMenuSessionId(null);
+                        if (setShowFinanzasResults) setShowFinanzasResults(false);
+                        if (setShowFinanzasRecount) setShowFinanzasRecount(false);
+
+                        // Garantizar que la ronda comience en la fase de exposición de 5 minutos
+                        setSessionVotingPhaseMap(prev => {
+                          const next = { ...prev, [targetSession.id]: false };
+                          try {
+                            localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
+                            localStorage.setItem(`finanzas_is_voting_phase_active_${targetSession.id}`, 'false');
+                          } catch (err) {}
+                          return next;
+                        });
+
+                        // Reiniciar la cuenta atrás de 5 minutos (300 segundos) para el participante
+                        setSessionExpositionTimerMap(prev => ({ ...prev, [targetSession.id]: 300 }));
+
+                        // Asignar el Turno 1 con Alessia Vance como ponente en directo (captura image.png)
+                        const targetParticipants = getSessionParticipants(targetSession);
+                        const firstPresenter = targetParticipants[0] || FINANZAS_USERS[0];
+                        setSessionSelectedPresenterMap(prev => ({ ...prev, [targetSession.id]: firstPresenter }));
+                        if (setSelectedFinanzasUser) {
+                          setSelectedFinanzasUser(firstPresenter);
+                        }
+
+                        // Conectar e iniciar la voz en directo de la ponente
+                        resumeOrStartLucasSpeech();
+
+                        try {
+                          localStorage.setItem(`user_paid_session_${targetSession.id}`, 'true');
+                          localStorage.setItem('finanzas_user_participating', 'true');
+                          localStorage.setItem('finanzas_user_is_participating', 'true');
+                          localStorage.setItem('finanzas_target_session_id', targetSession.id);
+                          localStorage.setItem('finanzas_active_session_fee', '1000');
+                        } catch (err) {}
+
+                        if (onExecutePaymentAndJoinSession) {
+                          onExecutePaymentAndJoinSession(targetSession);
+                        }
+
+                        if (setSystemVoiceNotification) {
+                          setSystemVoiceNotification({
+                            show: true,
+                            message: '✨ Inscripción confirmada en la Ronda Glamour (1.000€). Comienza el Turno 1 con 5 minutos de exposición.'
+                          });
+                        }
+                        return;
+                      }
+
                       setActiveFinanzasSessionIndex(index);
 
                       // 1. Guardar en localStorage que el usuario está inscrito
