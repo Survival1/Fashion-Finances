@@ -40,7 +40,16 @@ import {
   BadgeCheck,
   Download,
   History,
-  Building2
+  Building2,
+  Lock,
+  Shield,
+  SlidersHorizontal,
+  Grid,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause
 } from 'lucide-react';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
@@ -503,12 +512,12 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     receiverName: 'Ernesto vs',
     receiverUsername: 'ernestovs',
     receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-    giftName: 'Reloj de oro',
+    giftName: 'Reloj de oro 18K',
     giftIcon: '⌚',
     price: 5000,
     euroCost: 5000,
     message: '¡Para mi mecenas de honor en Fashion Finances! Gracias por impulsar la pasarela de alta costura y mis castings de París. ✨👑',
-    dateFormatted: '16 ago 2026 • 14:30',
+    dateFormatted: 'Hoy • 14:30',
     timestamp: Date.now() - 1000 * 60 * 60 * 2, // Hace 2 horas
     status: 'confirmed',
     isExclusive: true,
@@ -527,7 +536,7 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     price: 2500,
     euroCost: 2500,
     message: 'Un detalle brillante para un seguidor excepcional. ¡Nos vemos en el próximo desfile de Milán! 💖',
-    dateFormatted: '15 ago 2026 • 19:15',
+    dateFormatted: 'Ayer • 19:15',
     timestamp: Date.now() - 1000 * 60 * 60 * 24, // Hace 1 día
     status: 'confirmed',
     isExclusive: true,
@@ -546,7 +555,7 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     price: 500,
     euroCost: 500,
     message: 'Certificación oficial de Membresía VIP otorgada por el Comité de Dirección de Pasarela Fashion Finances.',
-    dateFormatted: '14 ago 2026 • 11:00',
+    dateFormatted: 'Hace 2 días • 11:00',
     timestamp: Date.now() - 1000 * 60 * 60 * 48, // Hace 2 días
     status: 'confirmed',
     category: 'intermedio'
@@ -564,7 +573,7 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     price: 20,
     euroCost: 20,
     message: '¡Muchísimas gracias por tus votos en el ranking de hoy! Besos desde Milán 🌹✨',
-    dateFormatted: '13 ago 2026 • 18:40',
+    dateFormatted: 'Hace 3 días • 18:40',
     timestamp: Date.now() - 1000 * 60 * 60 * 72, // Hace 3 días
     status: 'confirmed',
     category: 'basico'
@@ -582,7 +591,7 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     price: 250,
     euroCost: 250,
     message: 'Invitación VIP a la mesa privada de patrocinadores tras el desfile internacional. 🥂',
-    dateFormatted: '12 ago 2026 • 21:00',
+    dateFormatted: 'Hace 4 días • 21:00',
     timestamp: Date.now() - 1000 * 60 * 60 * 96, // Hace 4 días
     status: 'confirmed',
     category: 'intermedio'
@@ -600,8 +609,45 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     price: 300,
     euroCost: 300,
     message: 'Bonificación institucional por alta fidelidad e interacción en transmisiones en vivo de la temporada.',
-    dateFormatted: '11 ago 2026 • 16:20',
-    timestamp: Date.now() - 1000 * 60 * 60 * 130, // Hace 5 días
+    dateFormatted: 'Hace 5 días • 16:20',
+    timestamp: Date.now() - 1000 * 60 * 60 * 120, // Hace 5 días
+    status: 'confirmed',
+    category: 'intermedio'
+  },
+  {
+    id: 'rec-6b',
+    senderName: 'Gigi Hadid',
+    senderUsername: 'gigihadid',
+    senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Corona Reina Runway',
+    giftIcon: '👑',
+    price: 4500,
+    euroCost: 4500,
+    message: 'Una tiara de alta joyería para conmemorar tu patrocinio histórico en Nueva York. ¡Inolvidable! 💫',
+    dateFormatted: 'Hace 5 días • 19:45',
+    timestamp: Date.now() - 1000 * 60 * 60 * 130, // Hace 5.4 días
+    status: 'confirmed',
+    isExclusive: true,
+    category: 'lujo'
+  },
+  {
+    id: 'rec-6c',
+    senderName: 'Karlie Kloss',
+    senderUsername: 'karliekloss',
+    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Gafas de Sol VIP Gold',
+    giftIcon: '🕶️',
+    price: 350,
+    euroCost: 350,
+    message: 'Edición limitada Runway Fashion. Gracias por seguir de cerca mis proyectos de innovación y moda.',
+    dateFormatted: 'Hace 6 días • 13:10',
+    timestamp: Date.now() - 1000 * 60 * 60 * 144, // Hace 6 días
     status: 'confirmed',
     category: 'intermedio'
   },
@@ -662,6 +708,43 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     status: 'confirmed',
     category: 'intermedio'
   },
+  {
+    id: 'rec-9b',
+    senderName: 'Irina Shayk',
+    senderUsername: 'irinashayk',
+    senderAvatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Anillo Esmeralda Imperial',
+    giftIcon: '💍',
+    price: 3800,
+    euroCost: 3800,
+    message: 'Esmeralda de talla brillante para un mecenas con verdadero gusto refinado.',
+    dateFormatted: '20 jul 2026 • 18:00',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 27, // Hace 27 días
+    status: 'confirmed',
+    isExclusive: true,
+    category: 'lujo'
+  },
+  {
+    id: 'rec-9c',
+    senderName: 'Elsa Hosk',
+    senderUsername: 'elsahosk',
+    senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Zapatillas Diamante',
+    giftIcon: '👠',
+    price: 1500,
+    euroCost: 1500,
+    message: 'Calzado joya de alta costura escandinava directo de la semana de la moda en Estocolmo.',
+    dateFormatted: '18 jul 2026 • 15:30',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 29, // Hace 29 días
+    status: 'confirmed',
+    category: 'lujo'
+  },
 
   // --- ANTIGUOS (Más de un mes: > 30 días) ---
   {
@@ -718,6 +801,97 @@ const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 91, // Hace 91 días
     status: 'confirmed',
     category: 'intermedio'
+  },
+  {
+    id: 'rec-13',
+    senderName: 'Heidi Klum',
+    senderUsername: 'heidiklum',
+    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Trofeo Golden Angel',
+    giftIcon: '🏆',
+    price: 2000,
+    euroCost: 2000,
+    message: 'Galardón honorífico por el apoyo continuo a las nuevas generaciones de modelos.',
+    dateFormatted: '02 may 2026 • 19:20',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 105, // Hace 105 días
+    status: 'confirmed',
+    category: 'lujo'
+  },
+  {
+    id: 'rec-14',
+    senderName: 'Bella Hadid',
+    senderUsername: 'bellahadid',
+    senderAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Champagne Vintage 1996',
+    giftIcon: '🍾',
+    price: 600,
+    euroCost: 600,
+    message: 'Para celebrar tus aportes en la apertura de la temporada de alta costura.',
+    dateFormatted: '20 abr 2026 • 22:00',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 118, // Hace 118 días
+    status: 'confirmed',
+    category: 'intermedio'
+  },
+  {
+    id: 'rec-15',
+    senderName: 'Barbara Palvin',
+    senderUsername: 'barbarapalvin',
+    senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Pañuelo de Seda Hermès',
+    giftIcon: '🧣',
+    price: 400,
+    euroCost: 400,
+    message: 'Con cariño desde Budapest y la semana de moda de Milán. ¡Muchas gracias por todo!',
+    dateFormatted: '10 abr 2026 • 17:15',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 128, // Hace 128 días
+    status: 'confirmed',
+    category: 'intermedio'
+  },
+  {
+    id: 'rec-16',
+    senderName: 'Miranda Kerr',
+    senderUsername: 'mirandakerr',
+    senderAvatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Kit Cosmética Real',
+    giftIcon: '💄',
+    price: 180,
+    euroCost: 180,
+    message: 'Edición orgánica exclusiva para nuestros ángeles y mecenas oficiales.',
+    dateFormatted: '28 mar 2026 • 14:00',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 141, // Hace 141 días
+    status: 'confirmed',
+    category: 'basico'
+  },
+  {
+    id: 'rec-17',
+    senderName: 'Jasmine Tookes',
+    senderUsername: 'jastookes',
+    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+    receiverName: 'Ernesto vs',
+    receiverUsername: 'ernestovs',
+    receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+    giftName: 'Broche de Zafiro',
+    giftIcon: '🧷',
+    price: 1200,
+    euroCost: 1200,
+    message: 'Broche histórico lucido en la gala Fantasy Bra. Una joya para la bóveda.',
+    dateFormatted: '15 mar 2026 • 11:30',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 154, // Hace 154 días
+    status: 'confirmed',
+    isExclusive: true,
+    category: 'lujo'
   }
 ];
 
@@ -1096,7 +1270,12 @@ export default function VictoriaSecretRanking({
       const stored = localStorage.getItem(RECEIVED_GIFTS_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge to ensure all vault gifts from different users are available
+          const existingIds = new Set(parsed.map((g: any) => g.id));
+          const missing = INITIAL_RECEIVED_GIFTS.filter(g => !existingIds.has(g.id));
+          return [...parsed, ...missing];
+        }
       }
     } catch (e) {
       console.error("Error loading received gifts:", e);
@@ -1123,10 +1302,95 @@ export default function VictoriaSecretRanking({
   const [sentSearchQuery, setSentSearchQuery] = useState<string>('');
   const [sentCategoryFilter, setSentCategoryFilter] = useState<'all' | 'basico' | 'intermedio' | 'lujo'>('all');
 
-  // Time filter: Actuales (≤ 7 days), Recientes (8 to 30 days), Antiguos (> 30 days)
-  const [giftTimeFilter, setGiftTimeFilter] = useState<'actuales' | 'recientes' | 'antiguos'>('actuales');
+  // Vault specific states (Slider/Grid/Dense view, Inspector toggle, Sort order)
+  const [vaultViewMode, setVaultViewMode] = useState<'slider' | 'grid' | 'dense'>('slider');
+  const [showVaultInspector, setShowVaultInspector] = useState<boolean>(false);
+  const [vaultSortOrder, setVaultSortOrder] = useState<'recent' | 'value_desc' | 'value_asc' | 'donor'>('recent');
 
-  const isGiftInTimePeriod = (timestamp: number, filter: 'actuales' | 'recientes' | 'antiguos') => {
+  // Slider controls & ref
+  const giftSliderRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
+  const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
+  const [sliderScrollProgress, setSliderScrollProgress] = useState<number>(0);
+  const [isSliderAutoplay, setIsSliderAutoplay] = useState<boolean>(false);
+
+  // Mouse drag support for slider
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const handleSliderMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    if (giftSliderRef.current) {
+      startXRef.current = e.pageX - giftSliderRef.current.offsetLeft;
+      scrollLeftRef.current = giftSliderRef.current.scrollLeft;
+    }
+  };
+
+  const handleSliderMouseUpOrLeave = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleSliderMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !giftSliderRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - giftSliderRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    giftSliderRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const scrollGiftSlider = (direction: 'left' | 'right') => {
+    if (giftSliderRef.current) {
+      const scrollOffset = giftSliderRef.current.clientWidth * 0.75;
+      giftSliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollOffset : scrollOffset,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleSliderScroll = () => {
+    if (giftSliderRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = giftSliderRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+      const maxScroll = scrollWidth - clientWidth;
+      setSliderScrollProgress(maxScroll > 0 ? Math.min(100, Math.max(0, (scrollLeft / maxScroll) * 100)) : 0);
+    }
+  };
+
+  // Time filter: all (Bóveda completa), Actuales (≤ 7 days), Recientes (8 to 30 days), Antiguos (> 30 days)
+  const [giftTimeFilter, setGiftTimeFilter] = useState<'all' | 'actuales' | 'recientes' | 'antiguos'>('all');
+
+  // Recalculate slider boundaries whenever filter/data changes
+  useEffect(() => {
+    if (vaultViewMode === 'slider' && giftSliderRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = giftSliderRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+      const maxScroll = scrollWidth - clientWidth;
+      setSliderScrollProgress(maxScroll > 0 ? Math.min(100, Math.max(0, (scrollLeft / maxScroll) * 100)) : 0);
+    }
+  }, [vaultViewMode, giftTimeFilter, receivedCategoryFilter, receivedSearchQuery, vaultSortOrder, receivedGifts.length]);
+
+  // Autoplay effect
+  useEffect(() => {
+    if (!isSliderAutoplay || vaultViewMode !== 'slider') return;
+    const timer = setInterval(() => {
+      if (giftSliderRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = giftSliderRef.current;
+        if (scrollLeft >= scrollWidth - clientWidth - 15) {
+          giftSliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          scrollGiftSlider('right');
+        }
+      }
+    }, 3200);
+    return () => clearInterval(timer);
+  }, [isSliderAutoplay, vaultViewMode]);
+
+  const isGiftInTimePeriod = (timestamp: number, filter: 'all' | 'actuales' | 'recientes' | 'antiguos') => {
+    if (filter === 'all') return true;
     const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
     const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
     const age = Date.now() - timestamp;
@@ -1140,6 +1404,100 @@ export default function VictoriaSecretRanking({
       return age > ONE_MONTH_MS; // Regalos de más de un mes (> 30 días)
     }
     return true;
+  };
+
+  const handleSimulateIncomingGift = () => {
+    const simulationPool = [
+      {
+        senderName: 'Naomi Campbell',
+        senderUsername: 'naomicampbell',
+        senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        giftName: 'Corona Imperial 18K',
+        giftIcon: '👑',
+        price: 6000,
+        euroCost: 6000,
+        message: 'Un reconocimiento a tu elegancia y patrocinio exclusivo en la pasarela internacional. Custódialo con honor. ✨',
+        category: 'lujo' as const,
+        isExclusive: true
+      },
+      {
+        senderName: 'Kendall Jenner',
+        senderUsername: 'kendalljenner',
+        senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        giftName: 'Gafas de Sol VIP Gold',
+        giftIcon: '🕶️',
+        price: 850,
+        euroCost: 850,
+        message: '¡Gracias por apoyar mis transmisiones en vivo y el backstage! Nos vemos en NY Fashion Week.',
+        category: 'intermedio' as const
+      },
+      {
+        senderName: 'Doutzen Kroes',
+        senderUsername: 'doutzen',
+        senderAvatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        giftName: 'Gargantilla Perlas del Mar',
+        giftIcon: '🦪',
+        price: 2200,
+        euroCost: 2200,
+        message: 'Una pieza única de orfebrería para guardar en la bóveda de honor. ¡Eres un mecenas inolvidable! 💎',
+        category: 'lujo' as const,
+        isExclusive: true
+      },
+      {
+        senderName: 'Bella Hadid',
+        senderUsername: 'bellahadid',
+        senderAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
+        giftName: 'Champagne Vintage 1996',
+        giftIcon: '🍾',
+        price: 750,
+        euroCost: 750,
+        message: 'Para brindar por todos los éxitos compartidos en Fashion Finances. ¡Salud y estilo de pasarela! 🥂',
+        category: 'intermedio' as const
+      },
+      {
+        senderName: 'Cindy Crawford',
+        senderUsername: 'cindycrawford',
+        senderAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+        giftName: 'Trofeo Leyenda Runway',
+        giftIcon: '🏆',
+        price: 5000,
+        euroCost: 5000,
+        message: 'Distinción honorífica directa a la bóveda por tu incondicional apoyo a la alta costura. 💫',
+        category: 'lujo' as const,
+        isExclusive: true
+      }
+    ];
+
+    const pick = simulationPool[Math.floor(Math.random() * simulationPool.length)];
+    const newGift: UserGiftItem = {
+      id: `rec-sim-${Date.now()}`,
+      senderName: pick.senderName,
+      senderUsername: pick.senderUsername,
+      senderAvatar: pick.senderAvatar,
+      receiverName: 'Ernesto vs',
+      receiverUsername: 'ernestovs',
+      receiverAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+      giftName: pick.giftName,
+      giftIcon: pick.giftIcon,
+      price: pick.price,
+      euroCost: pick.euroCost,
+      message: pick.message,
+      dateFormatted: 'Hoy • Hace un instante',
+      timestamp: Date.now(),
+      status: 'confirmed',
+      isExclusive: pick.isExclusive,
+      category: pick.category
+    };
+
+    setReceivedGifts(prev => [newGift, ...prev]);
+    setSelectedShowcaseGiftId(newGift.id);
+    setSentGiftToast({
+      name: newGift.giftName,
+      icon: newGift.giftIcon,
+      price: newGift.price,
+      recipientName: `Bóveda (de ${newGift.senderName})`
+    });
+    window.dispatchEvent(new CustomEvent('trigger-heart-rain', { detail: { icon: newGift.giftIcon } }));
   };
 
   const [sentGiftToast, setSentGiftToast] = useState<{ name: string; icon: string; price: number; recipientName?: string } | null>(null);
@@ -2880,12 +3238,31 @@ export default function VictoriaSecretRanking({
                   <span>Filtrar período:</span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2.5 w-full sm:w-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full sm:w-auto">
+                  {/* Botón 0: Todos (Bóveda Completa) */}
+                  <button
+                    type="button"
+                    onClick={() => setGiftTimeFilter('all')}
+                    className={`px-3 py-2 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${
+                      giftTimeFilter === 'all'
+                        ? 'bg-gradient-to-r from-amber-600 via-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30 ring-2 ring-pink-500 scale-[1.03]'
+                        : 'bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 border border-slate-200/90 shadow-2xs'
+                    }`}
+                  >
+                    <Lock className={`w-3.5 h-3.5 ${giftTimeFilter === 'all' ? 'text-white' : 'text-amber-500'}`} />
+                    <span>Todos</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                      giftTimeFilter === 'all' ? 'bg-white text-pink-600 shadow-xs' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {giftsSubTab === 'received' ? receivedGifts.length : sentGifts.length}
+                    </span>
+                  </button>
+
                   {/* Botón 1: Actuales (última semana) */}
                   <button
                     type="button"
                     onClick={() => setGiftTimeFilter('actuales')}
-                    className={`px-4 py-2.5 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer select-none ${
+                    className={`px-3 py-2 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${
                       giftTimeFilter === 'actuales'
                         ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white shadow-md shadow-pink-500/30 ring-2 ring-pink-500 scale-[1.03]'
                         : 'bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 border border-slate-200/90 shadow-2xs'
@@ -2893,7 +3270,7 @@ export default function VictoriaSecretRanking({
                   >
                     <Flame className={`w-3.5 h-3.5 ${giftTimeFilter === 'actuales' ? 'text-white' : 'text-slate-400'}`} />
                     <span>Actuales</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
                       giftTimeFilter === 'actuales' ? 'bg-white text-pink-600 shadow-xs' : 'bg-slate-100 text-slate-600'
                     }`}>
                       {giftsSubTab === 'received' 
@@ -2908,7 +3285,7 @@ export default function VictoriaSecretRanking({
                   <button
                     type="button"
                     onClick={() => setGiftTimeFilter('recientes')}
-                    className={`px-4 py-2.5 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer select-none ${
+                    className={`px-3 py-2 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${
                       giftTimeFilter === 'recientes'
                         ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white shadow-md shadow-pink-500/30 ring-2 ring-pink-500 scale-[1.03]'
                         : 'bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 border border-slate-200/90 shadow-2xs'
@@ -2916,7 +3293,7 @@ export default function VictoriaSecretRanking({
                   >
                     <Calendar className={`w-3.5 h-3.5 ${giftTimeFilter === 'recientes' ? 'text-white' : 'text-slate-400'}`} />
                     <span>Recientes</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
                       giftTimeFilter === 'recientes' ? 'bg-white text-pink-600 shadow-xs' : 'bg-slate-100 text-slate-600'
                     }`}>
                       {giftsSubTab === 'received' 
@@ -2931,7 +3308,7 @@ export default function VictoriaSecretRanking({
                   <button
                     type="button"
                     onClick={() => setGiftTimeFilter('antiguos')}
-                    className={`px-4 py-2.5 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer select-none ${
+                    className={`px-3 py-2 rounded-xl font-serif text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${
                       giftTimeFilter === 'antiguos'
                         ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white shadow-md shadow-pink-500/30 ring-2 ring-pink-500 scale-[1.03]'
                         : 'bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 border border-slate-200/90 shadow-2xs'
@@ -2939,7 +3316,7 @@ export default function VictoriaSecretRanking({
                   >
                     <History className={`w-3.5 h-3.5 ${giftTimeFilter === 'antiguos' ? 'text-white' : 'text-slate-400'}`} />
                     <span>Antiguos</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
                       giftTimeFilter === 'antiguos' ? 'bg-white text-pink-600 shadow-xs' : 'bg-slate-100 text-slate-600'
                     }`}>
                       {giftsSubTab === 'received' 
@@ -2953,6 +3330,7 @@ export default function VictoriaSecretRanking({
 
                 <div className="text-[11px] font-mono text-slate-500 hidden lg:flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+                  {giftTimeFilter === 'all' && <span>Período seleccionado: <strong>Bóveda Completa (Historial Total)</strong></span>}
                   {giftTimeFilter === 'actuales' && <span>Período seleccionado: <strong>Actuales (≤ 7 días)</strong></span>}
                   {giftTimeFilter === 'recientes' && <span>Período seleccionado: <strong>Recientes (8 a 30 días)</strong></span>}
                   {giftTimeFilter === 'antiguos' && <span>Período seleccionado: <strong>Antiguos (&gt; 1 mes)</strong></span>}
@@ -3000,503 +3378,832 @@ export default function VictoriaSecretRanking({
               {/* ======================================================== */}
               {/* SUB-VIEW 1: 🎁 REGALOS RECIBIDOS (GIFTS GIVEN TO ME)       */}
               {/* ======================================================== */}
+              {/* ======================================================== */}
+              {/* SUB-VIEW 1: 🏛️ BÓVEDA DE REGALOS RECIBIDOS (GIFT VAULT)  */}
+              {/* ======================================================== */}
               {giftsSubTab === 'received' && (
-                <div className="space-y-6 animate-fade-in">
+                <div className="space-y-4 animate-fade-in" id="boveda-regalos-container">
                   
-                  {/* Summary Metric Stats Banner */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-gradient-to-br from-pink-50 to-rose-50/60 p-4 rounded-2xl border border-pink-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-pink-600 block tracking-wider">Regalos Recibidos</span>
-                      <span className="text-2xl font-black font-serif text-slate-900 mt-1 block">{receivedGifts.length}</span>
-                      <span className="text-[11px] text-slate-500 font-medium">De modelos y patrocinadores</span>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-amber-50 to-yellow-50/60 p-4 rounded-2xl border border-amber-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-amber-700 block tracking-wider">Valor Acumulado</span>
-                      <span className="text-2xl font-black font-mono text-amber-600 mt-1 block">
-                        🪙 {receivedGifts.reduce((acc, g) => acc + g.price, 0).toLocaleString()}
-                      </span>
-                      <span className="text-[11px] text-emerald-600 font-bold font-mono">
-                        ≈ {receivedGifts.reduce((acc, g) => acc + g.euroCost, 0).toLocaleString()}€ en premios
-                      </span>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50/60 p-4 rounded-2xl border border-purple-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-purple-700 block tracking-wider">Donante Top</span>
-                      <span className="text-base font-extrabold font-serif text-slate-900 mt-1 truncate block flex items-center gap-1">
-                        <Crown className="w-4 h-4 text-amber-500 shrink-0" />
-                        Adriana Lima
-                      </span>
-                      <span className="text-[11px] text-purple-600 font-semibold font-mono">Mecenas de Honor</span>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-4 rounded-2xl border border-emerald-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-emerald-700 block tracking-wider">Regalo Más Valioso</span>
-                      <span className="text-base font-extrabold font-serif text-slate-900 mt-1 truncate block">
-                        Reloj de oro 18K ⌚
-                      </span>
-                      <span className="text-[11px] text-emerald-600 font-mono font-bold">5.000€ Oficial VIP</span>
-                    </div>
-                  </div>
-
-                  {/* 🌟 DYNAMIC FEATURED SHOWCASE CARD (Certificado Profesional / Reloj de Oro / etc.) */}
-                  <div className="bg-gradient-to-b from-[#1e1b18] via-[#141215] to-[#100f12] border-2 border-amber-500/40 rounded-3xl p-5 sm:p-6 text-white shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                    {/* Top bar header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-500/20">
+                  {/* 🏛️ VAULT MASTER HEADER & REPUTATION BANNER */}
+                  <div className="bg-gradient-to-r from-slate-950 via-[#18161e] to-slate-950 border border-amber-500/40 rounded-2xl p-4 sm:p-5 text-white shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-52 h-52 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 text-lg shadow-inner">
-                          {currentFeaturedGift.icon}
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500/30 via-pink-500/20 to-purple-500/30 border-2 border-amber-400/60 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                          🏛️
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[11px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1 font-mono">
-                              🎁 REGALO RECIBIDO EXCLUSIVO
+                            <h3 className="text-base sm:text-lg font-serif font-black text-amber-200 tracking-wide flex items-center gap-1.5">
+                              BÓVEDA DE REGALOS CUSTODIADOS
+                            </h3>
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+                              <Shield className="w-2.5 h-2.5 text-emerald-400" />
+                              Custodia Activa
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black tracking-wide font-mono">
-                              {currentFeaturedGift.badgeText}
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+                              <Lock className="w-2.5 h-2.5 text-amber-400" />
+                              18K Seal
                             </span>
                           </div>
-                          <h3 className="text-xl sm:text-2xl font-serif font-black text-white flex items-center gap-1.5">
-                            {currentFeaturedGift.name} <span className="text-base text-amber-400">{currentFeaturedGift.icon}</span>
-                          </h3>
+                          <p className="text-[11px] text-slate-300 font-mono mt-0.5">
+                            Caja fuerte oficial donde se custodian todos los regalos, certificados y distinciones recibidos de múltiples usuarios y mecenas.
+                          </p>
                         </div>
                       </div>
 
-                      {currentFeaturedGift.isCertificate ? (
+                      {/* Vault Action Buttons */}
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                         <button
-                          onClick={handleViewCertificateLarge}
-                          className="self-start sm:self-auto bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 tracking-wider font-mono uppercase"
+                          type="button"
+                          onClick={handleSimulateIncomingGift}
+                          className="px-3 py-1.5 bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 hover:from-pink-500 hover:to-rose-500 text-white rounded-xl text-xs font-serif font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer transform hover:scale-102 active:scale-98"
+                          title="Simular recepción de un nuevo regalo de otra modelo o patrocinador"
                         >
-                          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                          <span>+ VER CERTIFICADO EN GRANDE</span>
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Recibir Regalo</span>
                         </button>
-                      ) : currentFeaturedGift.isWatch ? (
+
                         <button
-                          onClick={() => {
-                            setActiveModalGift(receivedGifts.find(g => g.giftName.toLowerCase().includes('reloj')) || null);
-                            setShowLuxuryWatchModal(true);
-                          }}
-                          className="self-start sm:self-auto bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 tracking-wider font-mono uppercase"
+                          type="button"
+                          onClick={() => setShowVaultInspector(!showVaultInspector)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer border ${
+                            showVaultInspector
+                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs'
+                              : 'bg-white/10 hover:bg-white/15 text-amber-300 border-amber-500/30'
+                          }`}
                         >
-                          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                          <span>+ VER ANIMACIÓN DE LUJO</span>
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{showVaultInspector ? 'Ocultar Vitrina' : 'Previsualizar'}</span>
                         </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setSelectedGenericModalGift(currentFeaturedGift);
-                            setShowGenericGiftModal(true);
-                          }}
-                          className="self-start sm:self-auto bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 tracking-wider font-mono uppercase"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                          <span>+ VER EN GRANDE</span>
-                        </button>
-                      )}
+
+                        {/* View Mode Toggle: Slider vs Grid vs Dense Table */}
+                        <div className="flex items-center bg-black/50 p-0.5 rounded-xl border border-white/10">
+                          <button
+                            type="button"
+                            onClick={() => setVaultViewMode('slider')}
+                            className={`px-2.5 py-1.5 rounded-lg transition cursor-pointer text-xs font-mono font-bold flex items-center gap-1.5 ${
+                              vaultViewMode === 'slider' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                            }`}
+                            title="Vista Slider (Carrusel deslizante)"
+                          >
+                            <span>🎠 Slider</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setVaultViewMode('grid')}
+                            className={`p-1.5 rounded-lg transition cursor-pointer ${
+                              vaultViewMode === 'grid' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                            }`}
+                            title="Vista Cuadrícula (Grid completo)"
+                          >
+                            <Grid className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setVaultViewMode('dense')}
+                            className={`p-1.5 rounded-lg transition cursor-pointer ${
+                              vaultViewMode === 'dense' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                            }`}
+                            title="Vista Libro de Custodia (Lista compacta)"
+                          >
+                            <List className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* 2-Column Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mt-5 items-stretch">
-                      
-                      {/* Left Column: Interactive Display Preview */}
-                      {currentFeaturedGift.isCertificate ? (
-                        /* Parchment Certificate Card */
-                        <div 
-                          onClick={handleViewCertificateLarge}
-                          className="md:col-span-4 bg-gradient-to-b from-[#fbf8f1] via-[#f7f2e5] to-[#ebe1c7] border-2 border-amber-600/60 rounded-2xl p-4 flex flex-col items-center justify-between relative group hover:border-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] transition-all cursor-pointer shadow-inner overflow-hidden min-h-[220px]"
-                        >
-                          {/* Inner gold dashed border */}
-                          <div className="absolute inset-2 border border-dashed border-amber-700/30 rounded-xl pointer-events-none" />
-                          
-                          <div className="flex items-center justify-between w-full z-10 px-1">
-                            <span className="text-[10px] text-amber-800 font-serif">⚜️</span>
-                            <span className="text-[8px] font-mono font-black uppercase text-amber-900 tracking-widest">
-                              ACREDITACIÓN OFICIAL
-                            </span>
-                            <span className="text-[10px] text-amber-800 font-serif">⚜️</span>
-                          </div>
+                    {/* Vault Summary Metrics Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 pt-3 border-t border-amber-500/20 relative z-10">
+                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                          🏛️ Regalos Custodiados
+                        </span>
+                        <span className="text-xl font-black font-serif text-white block mt-0.5">
+                          {receivedGifts.length}
+                        </span>
+                        <span className="text-[10px] text-pink-300 font-mono">En depósito seguro</span>
+                      </div>
 
-                          {/* Certificate Layout */}
-                          <div className="text-center z-10 my-2 select-none">
-                            <div className="text-3xl mb-1 group-hover:scale-115 transition-transform duration-300">📜</div>
-                            <h4 className="text-xs font-serif font-black uppercase text-amber-950 tracking-wider">
-                              CERTIFICADO PROFESIONAL
-                            </h4>
-                            <span className="text-[8.5px] font-serif italic text-amber-900/80 block">
-                              Alta Costura & Pasarela VIP
-                            </span>
-                            <div className="my-1.5 py-0.5 px-2.5 bg-amber-200/70 border border-amber-400/50 rounded-md inline-block">
-                              <span className="text-[11px] font-serif font-black text-slate-950">
-                                {currentFeaturedGift.senderName}
-                              </span>
-                            </div>
-                          </div>
+                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                          👥 Donantes Únicos
+                        </span>
+                        <span className="text-xl font-black font-serif text-pink-300 block mt-0.5">
+                          {new Set(receivedGifts.map(g => g.senderUsername || g.senderName)).size}
+                        </span>
+                        <span className="text-[10px] text-slate-300 font-mono">De usuarios diferentes</span>
+                      </div>
 
-                          {/* Bottom Seal & Serial */}
-                          <div className="w-full flex items-center justify-between z-10 pt-1 border-t border-amber-700/20 px-1">
-                            <div className="flex items-center gap-1">
-                              <div className="w-5 h-5 rounded-full bg-red-700 text-amber-200 flex items-center justify-center text-[10px] border border-amber-300 shadow-xs">
-                                👑
-                              </div>
-                              <span className="text-[8px] font-mono font-bold text-amber-950">#VS-CERT-2026</span>
-                            </div>
-                            <span className="text-[8px] font-mono font-extrabold text-amber-800 bg-amber-200/90 px-1.5 py-0.5 rounded">
-                              🪙 500€
-                            </span>
-                          </div>
+                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                          🪙 Valor en Bóveda
+                        </span>
+                        <span className="text-xl font-black font-mono text-amber-400 block mt-0.5">
+                          🪙 {receivedGifts.reduce((acc, g) => acc + g.price, 0).toLocaleString()}
+                        </span>
+                        <span className="text-[10px] text-emerald-400 font-bold font-mono">
+                          ≈ {receivedGifts.reduce((acc, g) => acc + g.euroCost, 0).toLocaleString()}€
+                        </span>
+                      </div>
 
-                          <div className="mt-2 text-center z-10">
-                            <span className="text-[9.5px] font-mono font-black uppercase text-amber-900 tracking-wider flex items-center justify-center gap-1 group-hover:text-amber-950">
-                              ✦ TOCA PARA AMPLIAR DIPLOMA ✦
-                            </span>
-                          </div>
-                        </div>
-                      ) : currentFeaturedGift.isWatch ? (
-                        /* Realistic Gold Watch Dial */
-                        <div 
-                          onClick={() => {
-                            setActiveModalGift(receivedGifts.find(g => g.giftName.toLowerCase().includes('reloj')) || null);
-                            setShowLuxuryWatchModal(true);
-                          }}
-                          className="md:col-span-4 bg-[#0d0c0e]/90 border border-amber-500/30 rounded-2xl p-5 flex flex-col items-center justify-center relative group hover:border-amber-400/60 transition-all cursor-pointer shadow-inner overflow-hidden"
-                        >
-                          <div className="absolute top-2 right-2 text-amber-400 animate-pulse text-xs">✨</div>
-                          <div className="absolute bottom-2 left-2 text-amber-500/70 text-xs">⭐</div>
+                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                          👑 Donante Principal
+                        </span>
+                        <span className="text-sm font-black font-serif text-amber-300 truncate block mt-0.5 flex items-center gap-1">
+                          <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          Adriana Lima
+                        </span>
+                        <span className="text-[10px] text-amber-200/80 font-mono">5.000€ Reloj de Oro</span>
+                      </div>
+                    </div>
+                  </div>
 
-                          <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-700 p-1.5 shadow-[0_0_25px_rgba(245,158,11,0.3)] relative group-hover:scale-105 transition-transform duration-500">
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-14 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-t-sm border border-amber-300/40" />
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-14 h-4 bg-gradient-to-t from-amber-400 to-amber-600 rounded-b-sm border border-amber-300/40" />
-                            <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-2 h-4 bg-amber-400 rounded-r-xs border border-amber-600" />
-
-                            <div className="w-full h-full bg-[#0a090b] rounded-full border-2 border-amber-400/40 relative flex items-center justify-center overflow-hidden">
-                              <div className="absolute inset-1 rounded-full border border-dashed border-amber-500/20" />
-                              <span className="absolute top-1.5 text-[7px] font-mono text-amber-400 font-bold">12</span>
-                              <span className="absolute bottom-1.5 text-[7px] font-mono text-amber-400 font-bold">6</span>
-                              <span className="absolute left-2 text-[7px] font-mono text-amber-400 font-bold">9</span>
-                              <span className="absolute right-2 text-[7px] font-mono text-amber-400 font-bold">3</span>
-
-                              <div className="text-center z-10 -mt-5 select-none">
-                                <span className="text-[7.5px] font-mono font-black tracking-widest text-amber-200 block uppercase">CASTING LIVE</span>
-                                <span className="text-[5px] text-amber-500 font-mono tracking-tighter block">18K GOLD • CHRONOMETER</span>
-                              </div>
-
-                              <div className="absolute bottom-4 w-7 h-7 rounded-full border border-amber-500/40 bg-black/60 flex items-center justify-center">
-                                <div 
-                                  className="w-0.5 h-2.5 bg-amber-400 origin-bottom" 
-                                  style={{ transform: `rotate(${watchTickAngle * 2}deg)` }}
-                                />
-                              </div>
-
-                              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 z-20 shadow-xs flex items-center justify-center">
-                                <div className="w-1 h-1 rounded-full bg-black" />
-                              </div>
-                              <div 
-                                className="absolute w-1 h-8 bg-amber-300 rounded-full origin-bottom shadow-xs -translate-y-4" 
-                                style={{ transform: 'rotate(290deg)' }}
-                              />
-                              <div 
-                                className="absolute w-0.5 h-11 bg-amber-200 rounded-full origin-bottom shadow-xs -translate-y-5.5" 
-                                style={{ transform: 'rotate(70deg)' }}
-                              />
-                              <div 
-                                className="absolute w-[1px] h-12 bg-rose-500 rounded-full origin-bottom shadow-xs -translate-y-6" 
-                                style={{ transform: `rotate(${watchTickAngle}deg)` }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="mt-4 text-center">
-                            <span className="text-[10px] font-mono font-black uppercase text-amber-400 tracking-widest flex items-center justify-center gap-1 group-hover:text-yellow-300">
-                              ✦ TOCA PARA INSPECCIONAR ✦
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Dynamic 3D Display for Other Gifts */
-                        <div 
-                          onClick={() => {
-                            setSelectedGenericModalGift(currentFeaturedGift);
-                            setShowGenericGiftModal(true);
-                          }}
-                          className="md:col-span-4 bg-[#0d0c0e]/90 border border-amber-500/30 rounded-2xl p-5 flex flex-col items-center justify-center relative group hover:border-amber-400/60 transition-all cursor-pointer shadow-inner overflow-hidden min-h-[220px]"
-                        >
-                          <div className="absolute top-2 right-2 text-amber-400 animate-pulse text-xs">✨</div>
-                          <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-500/20 via-pink-500/20 to-purple-500/20 border-2 border-amber-400/50 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(245,158,11,0.25)] group-hover:scale-110 transition-transform duration-300">
+                  {/* 🔍 COMPACT VAULT INSPECTOR / VITRINA (Expandable, streamlined, without hogging the whole view) */}
+                  {showVaultInspector && (
+                    <div className="bg-gradient-to-r from-[#1a171d] via-[#131116] to-[#0f0e13] border border-amber-500/40 rounded-2xl p-3.5 sm:p-4 text-white shadow-lg animate-fade-in relative overflow-hidden">
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                        
+                        {/* Mini display thumbnail */}
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                          <div 
+                            onClick={() => {
+                              if (currentFeaturedGift.isCertificate) handleViewCertificateLarge();
+                              else if (currentFeaturedGift.isWatch) {
+                                setActiveModalGift(receivedGifts.find(g => g.giftName.toLowerCase().includes('reloj')) || null);
+                                setShowLuxuryWatchModal(true);
+                              } else {
+                                setSelectedGenericModalGift(currentFeaturedGift);
+                                setShowGenericGiftModal(true);
+                              }
+                            }}
+                            className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 via-pink-500/20 to-purple-500/20 border border-amber-400/60 flex items-center justify-center text-3xl shadow-inner cursor-pointer hover:scale-105 transition shrink-0"
+                            title="Toca para ver en grande"
+                          >
                             {currentFeaturedGift.icon}
                           </div>
-                          <span className="text-xs font-serif font-black text-amber-200 mt-3 block text-center">
-                            {currentFeaturedGift.name}
-                          </span>
-                          <span className="text-[10px] font-mono font-black uppercase text-amber-400 mt-2 tracking-wider">
-                            ✦ TOCA PARA INSPECCIONAR ✦
-                          </span>
-                        </div>
-                      )}
 
-                      {/* Right Column: Gift Info & Message Box */}
-                      <div className="md:col-span-8 flex flex-col justify-between space-y-3">
-                        
-                        {/* Top sub-box: Sender & Valuation */}
-                        <div className="bg-[#242228]/90 rounded-2xl p-4 border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-                          <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-full ring-2 ring-pink-500/80 p-0.5 overflow-hidden bg-slate-800 shrink-0">
-                              <img 
-                                src={currentFeaturedGift.senderAvatar || legendModel.avatar} 
-                                alt={currentFeaturedGift.senderName} 
-                                className="w-full h-full object-cover rounded-full"
-                              />
-                            </div>
-                            <div>
-                              <span className="text-[10px] uppercase font-mono font-bold text-amber-400 block tracking-wider">
-                                REGALADO POR:
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[9px] font-mono font-bold uppercase text-amber-400 tracking-wider">
+                                🔍 INSPECCIONANDO:
                               </span>
-                              <span className="text-base font-extrabold text-white font-serif flex items-center gap-1.5">
-                                {currentFeaturedGift.senderName}
-                                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                              <span className="px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 text-[9px] font-black font-mono">
+                                {currentFeaturedGift.badgeText}
                               </span>
-                              <span className="text-[11px] text-pink-300 font-mono">@{currentFeaturedGift.senderUsername}</span>
                             </div>
-                          </div>
-
-                          <div className="text-left sm:text-right">
-                            <span className="text-[10px] uppercase font-mono text-slate-400 block tracking-wider">
-                              Valoración
-                            </span>
-                            <div className="flex items-center sm:justify-end gap-1.5">
-                              <span className="text-lg font-black font-mono text-amber-400">🪙 {currentFeaturedGift.price.toLocaleString()} monedas</span>
+                            <h4 className="text-sm sm:text-base font-serif font-black text-white truncate flex items-center gap-1">
+                              {currentFeaturedGift.name} <span>{currentFeaturedGift.icon}</span>
+                            </h4>
+                            <div className="flex items-center gap-2 text-xs font-mono">
+                              <span className="text-pink-300">De: <strong>{currentFeaturedGift.senderName}</strong> (@{currentFeaturedGift.senderUsername})</span>
+                              <span className="text-amber-400 font-bold">🪙 {currentFeaturedGift.price.toLocaleString()} ({currentFeaturedGift.euroCost}€)</span>
                             </div>
-                            <span className="text-xs text-cyan-400 font-mono font-medium block">
-                              ({currentFeaturedGift.euroCost.toFixed(2)}€)
-                            </span>
                           </div>
                         </div>
 
-                        {/* Middle quote box */}
-                        <div className="bg-[#242228]/90 rounded-2xl p-4 border border-white/5 shadow-md">
-                          <p className="text-sm font-serif italic text-amber-200/95 leading-relaxed">
-                            <span className="text-amber-400 font-black text-lg mr-1">“</span>
-                            {currentFeaturedGift.message}
-                            <span className="text-amber-400 font-black text-lg ml-1">”</span>
-                          </p>
+                        {/* Middle: Short message quote */}
+                        <div className="hidden lg:block max-w-md bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-[11px] italic font-serif text-amber-100/90 truncate">
+                          "{currentFeaturedGift.message}"
                         </div>
 
-                        {/* Bottom actions & status row */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 px-1 text-xs font-mono">
-                          <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                            <Check className="w-4 h-4" />
-                            <span>Entrega confirmada en perfil</span>
-                            <span className="text-slate-400 font-normal">· {currentFeaturedGift.dateFormatted}</span>
-                          </div>
+                        {/* Right: Actions */}
+                        <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+                          {currentFeaturedGift.isCertificate ? (
+                            <button
+                              type="button"
+                              onClick={handleViewCertificateLarge}
+                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                            >
+                              <Sparkles className="w-3 h-3 text-slate-950" />
+                              <span>Ver Diploma</span>
+                            </button>
+                          ) : currentFeaturedGift.isWatch ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveModalGift(receivedGifts.find(g => g.giftName.toLowerCase().includes('reloj')) || null);
+                                setShowLuxuryWatchModal(true);
+                              }}
+                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                            >
+                              <Sparkles className="w-3 h-3 text-slate-950" />
+                              <span>Ver Reloj 3D</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedGenericModalGift(currentFeaturedGift);
+                                setShowGenericGiftModal(true);
+                              }}
+                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                            >
+                              <Sparkles className="w-3 h-3 text-slate-950" />
+                              <span>Ver en Grande</span>
+                            </button>
+                          )}
 
                           <button
-                            onClick={() => handleThankSender({
-                              senderName: currentFeaturedGift.senderName,
-                              giftName: currentFeaturedGift.name
-                            } as any)}
-                            className="px-3 py-1.5 rounded-xl bg-pink-600/80 hover:bg-pink-600 text-white font-serif font-black text-xs flex items-center gap-1.5 transition cursor-pointer border border-pink-400/30"
+                            type="button"
+                            onClick={() => setShowVaultInspector(false)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                            title="Ocultar vitrina"
                           >
-                            <Heart className="w-3.5 h-3.5 fill-current" />
-                            <span>Agradecer a {currentFeaturedGift.senderName.split(' ')[0]}</span>
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
 
                       </div>
-
                     </div>
-                  </div>
+                  )}
 
-                  {/* Filter & Search Bar for Received Gifts */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                    <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 scrollbar-none text-[11px] font-bold uppercase tracking-wider">
+                  {/* 🛠️ BÓVEDA CONTROLS: CATEGORY FILTERS, SEARCH & SORT */}
+                  <div className="bg-white p-3 rounded-2xl border border-pink-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+                    
+                    {/* Category Tabs */}
+                    <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none text-[11px] font-bold uppercase tracking-wider">
                       {[
                         { id: 'all', label: `Todos (${receivedGifts.length})`, icon: Gift },
+                        { id: 'lujo', label: `👑 Lujo (${receivedGifts.filter(g => g.category === 'lujo').length})`, icon: Crown },
+                        { id: 'intermedio', label: `💎 Joyas (${receivedGifts.filter(g => g.category === 'intermedio').length})`, icon: Gem },
+                        { id: 'basico', label: `⭐ Esenciales (${receivedGifts.filter(g => g.category === 'basico').length})`, icon: Star },
                       ].map(cat => {
-                        const Icon = cat.icon;
                         const isActive = receivedCategoryFilter === cat.id;
                         return (
                           <button
                             key={cat.id}
+                            type="button"
                             onClick={() => setReceivedCategoryFilter(cat.id as any)}
-                            className={`px-3 py-1.5 rounded-full border transition-all duration-200 shrink-0 flex items-center gap-1 cursor-pointer select-none ${
+                            className={`px-3 py-1.5 rounded-xl border transition-all duration-200 shrink-0 flex items-center gap-1 cursor-pointer select-none text-xs ${
                               isActive 
-                                ? 'bg-pink-600 text-white border-pink-600 shadow-xs' 
-                                : 'bg-white text-slate-600 border-slate-200 hover:border-pink-300 hover:text-pink-600'
+                                ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white border-pink-600 shadow-xs' 
+                                : 'bg-slate-50 text-slate-700 border-slate-200/90 hover:border-pink-300 hover:text-pink-600'
                             }`}
                           >
-                            <Icon className="w-3 h-3" />
                             <span>{cat.label}</span>
                           </button>
                         );
                       })}
                     </div>
 
-                    <div className="relative w-full sm:w-72">
-                      <input
-                        type="text"
-                        value={receivedSearchQuery}
-                        onChange={(e) => setReceivedSearchQuery(e.target.value)}
-                        placeholder="Buscar por donante, regalo o mensaje..."
-                        className="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-pink-500 transition shadow-2xs"
-                      />
-                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    {/* Search & Sort Container */}
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:w-64">
+                        <input
+                          type="text"
+                          value={receivedSearchQuery}
+                          onChange={(e) => setReceivedSearchQuery(e.target.value)}
+                          placeholder="Buscar por donante, regalo o mensaje..."
+                          className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-pink-500 transition shadow-2xs"
+                        />
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+
+                      {/* Sort Order Selector */}
+                      <select
+                        value={vaultSortOrder}
+                        onChange={(e) => setVaultSortOrder(e.target.value as any)}
+                        className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-mono font-medium rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-pink-500 cursor-pointer shadow-2xs"
+                        title="Ordenar regalos de la bóveda"
+                      >
+                        <option value="recent">⏱️ Recientes</option>
+                        <option value="value_desc">🪙 Mayor Valor</option>
+                        <option value="value_asc">🪙 Menor Valor</option>
+                        <option value="donor">👤 Por Donante</option>
+                      </select>
                     </div>
+
                   </div>
 
-                  {/* Received Gifts Grid / Cards List - Tamaño más chico y compacto */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                    {(() => {
-                      const filteredReceived = receivedGifts.filter(g => {
-                        if (!isGiftInTimePeriod(g.timestamp, giftTimeFilter)) return false;
-                        if (receivedCategoryFilter !== 'all' && g.category !== receivedCategoryFilter) return false;
-                        if (receivedSearchQuery) {
-                          const q = receivedSearchQuery.toLowerCase();
-                          return (
-                            g.giftName.toLowerCase().includes(q) ||
-                            g.senderName.toLowerCase().includes(q) ||
-                            g.senderUsername.toLowerCase().includes(q) ||
-                            g.message.toLowerCase().includes(q)
-                          );
-                        }
-                        return true;
-                      });
-
-                      if (filteredReceived.length === 0) {
+                  {/* 🎁 BÓVEDA GIFTS COLLECTION - TAMAÑO MÁS CHICO & COMPACTO */}
+                  {(() => {
+                    let filteredReceived = receivedGifts.filter(g => {
+                      if (!isGiftInTimePeriod(g.timestamp, giftTimeFilter)) return false;
+                      if (receivedCategoryFilter !== 'all' && g.category !== receivedCategoryFilter) return false;
+                      if (receivedSearchQuery) {
+                        const q = receivedSearchQuery.toLowerCase();
                         return (
-                          <div className="col-span-full bg-white rounded-2xl border border-dashed border-pink-200 p-6 text-center space-y-2">
-                            <Clock className="w-7 h-7 text-pink-400 mx-auto" />
-                            <h4 className="font-serif font-bold text-slate-800 text-xs sm:text-sm">
-                              No hay regalos recibidos en el período: {giftTimeFilter === 'actuales' ? 'Actuales (Última semana)' : giftTimeFilter === 'recientes' ? 'Recientes (Último mes)' : 'Antiguos (> 1 mes)'}
-                            </h4>
-                            <p className="text-[11px] text-slate-400 font-mono">
-                              Selecciona otro período en los botones superiores para explorar más registros.
-                            </p>
-                          </div>
+                          g.giftName.toLowerCase().includes(q) ||
+                          g.senderName.toLowerCase().includes(q) ||
+                          (g.senderUsername && g.senderUsername.toLowerCase().includes(q)) ||
+                          (g.message && g.message.toLowerCase().includes(q))
                         );
                       }
+                      return true;
+                    });
 
-                      return filteredReceived.map((gift) => {
-                        const isCert = gift.giftName.toLowerCase().includes('certificado');
-                        const isWatch = gift.giftName.toLowerCase().includes('reloj');
-                        const isSelected = selectedShowcaseGiftId === gift.id || (isCert && selectedShowcaseGiftId === 'g-1') || (isWatch && selectedShowcaseGiftId === 'g-5');
+                    // Sort according to vaultSortOrder
+                    if (vaultSortOrder === 'value_desc') {
+                      filteredReceived = [...filteredReceived].sort((a, b) => b.price - a.price);
+                    } else if (vaultSortOrder === 'value_asc') {
+                      filteredReceived = [...filteredReceived].sort((a, b) => a.price - b.price);
+                    } else if (vaultSortOrder === 'donor') {
+                      filteredReceived = [...filteredReceived].sort((a, b) => a.senderName.localeCompare(b.senderName));
+                    } else {
+                      filteredReceived = [...filteredReceived].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    }
 
-                        return (
-                          <div
-                            key={gift.id}
-                            onClick={() => setSelectedShowcaseGiftId(gift.id)}
-                            className={`rounded-xl border p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-2 relative group cursor-pointer text-left ${
-                              isSelected 
-                                ? 'bg-amber-50/70 border-amber-400 ring-2 ring-amber-400/80 shadow-xs' 
-                                : 'bg-white border-pink-100 hover:border-pink-300 hover:bg-pink-50/30'
-                            }`}
+                    if (filteredReceived.length === 0) {
+                      return (
+                        <div className="bg-white rounded-2xl border border-dashed border-pink-200 p-8 text-center space-y-2 shadow-2xs">
+                          <Lock className="w-8 h-8 text-pink-400 mx-auto" />
+                          <h4 className="font-serif font-bold text-slate-800 text-sm">
+                            No se encontraron regalos en la bóveda con el filtro actual
+                          </h4>
+                          <p className="text-xs text-slate-400 font-mono">
+                            Prueba seleccionando "Todos" en el período o limpiando la búsqueda.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGiftTimeFilter('all');
+                              setReceivedCategoryFilter('all');
+                              setReceivedSearchQuery('');
+                            }}
+                            className="mt-2 px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-bold font-mono transition cursor-pointer"
                           >
-                            {/* Selected Active Badge */}
-                            {isSelected && (
-                              <span className="absolute -top-2 right-2 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[8px] rounded-full uppercase tracking-wider font-mono shadow-xs">
-                                👁️ EN GRANDE
-                              </span>
-                            )}
+                            Mostrar todos los regalos
+                          </button>
+                        </div>
+                      );
+                    }
 
-                            {/* Top row: Sender Avatar & Details + Valuation */}
-                            <div className="flex items-start justify-between gap-2 pb-1.5 border-b border-slate-100">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <img
-                                  src={gift.senderAvatar}
-                                  alt={gift.senderName}
-                                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-pink-400/60 shrink-0"
-                                />
-                                <div className="min-w-0">
-                                  <span className="text-[7.5px] uppercase font-mono font-bold text-pink-600 block tracking-wider leading-none">
-                                    REGALADO POR:
-                                  </span>
-                                  <h4 className="text-[11px] font-bold text-slate-900 truncate font-serif flex items-center gap-1 leading-tight mt-0.5">
-                                    {gift.senderName}
-                                    {gift.isExclusive && <Crown className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
-                                  </h4>
-                                  <span className="text-[9px] text-slate-400 font-mono truncate block leading-none">@{gift.senderUsername}</span>
-                                </div>
-                              </div>
+                    {/* VISTA 1: 🎠 SLIDER DE REGALOS (CARRUSEL DESLIZANTE CON NAVEGACIÓN) */}
+                    if (vaultViewMode === 'slider') {
+                      return (
+                        <div className="space-y-3 relative group/slider">
+                          
+                          {/* Slider Track Wrapper with Floating Navigation Arrows */}
+                          <div className="relative">
+                            
+                            {/* Left Chevron Button */}
+                            <button
+                              type="button"
+                              onClick={() => scrollGiftSlider('left')}
+                              disabled={!canScrollLeft}
+                              className={`absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/90 text-amber-300 hover:bg-amber-500 hover:text-slate-950 border-2 border-amber-400/80 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
+                                !canScrollLeft ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'
+                              }`}
+                              title="Deslizar regalos a la izquierda"
+                            >
+                              <ChevronLeft className="w-5 h-5" />
+                            </button>
 
-                              <div className="text-right shrink-0">
-                                <span className="text-[11px] font-black font-mono text-amber-600 block leading-tight">🪙 {gift.price.toLocaleString()}</span>
-                                <span className="text-[9px] text-emerald-600 font-mono font-bold leading-tight">({gift.euroCost}€)</span>
-                              </div>
-                            </div>
+                            {/* Right Chevron Button */}
+                            <button
+                              type="button"
+                              onClick={() => scrollGiftSlider('right')}
+                              disabled={!canScrollRight}
+                              className={`absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/90 text-amber-300 hover:bg-amber-500 hover:text-slate-950 border-2 border-amber-400/80 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
+                                !canScrollRight ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'
+                              }`}
+                              title="Deslizar regalos a la derecha"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
 
-                            {/* Gift Badge & Name */}
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-sm shrink-0 group-hover:scale-105 transition-transform">
-                                {gift.giftIcon}
-                              </div>
-                              <div className="min-w-0">
-                                <span className="text-[11px] font-extrabold text-slate-800 block truncate font-serif leading-tight">
-                                  {gift.giftName}
-                                </span>
-                                <span className="text-[7.5px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-slate-100 text-slate-600 inline-block leading-tight">
-                                  {gift.category === 'lujo' ? '👑 Lujo VIP' : gift.category === 'intermedio' ? '💎 Joyería' : '⭐ Esencial'}
-                                </span>
-                              </div>
-                            </div>
+                            {/* Horizontal Slider Scroll Rail with Touch & Mouse Drag */}
+                            <div
+                              ref={giftSliderRef}
+                              onScroll={handleSliderScroll}
+                              onMouseDown={handleSliderMouseDown}
+                              onMouseLeave={handleSliderMouseUpOrLeave}
+                              onMouseUp={handleSliderMouseUpOrLeave}
+                              onMouseMove={handleSliderMouseMove}
+                              className="flex gap-2.5 sm:gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 px-1 scrollbar-none cursor-grab active:cursor-grabbing select-none"
+                              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            >
+                              {filteredReceived.map((gift) => {
+                                const isCert = gift.giftName.toLowerCase().includes('certificado');
+                                const isWatch = gift.giftName.toLowerCase().includes('reloj');
+                                const isSelected = selectedShowcaseGiftId === gift.id;
 
-                            {/* Message Quotation */}
-                            <div className="bg-slate-50/80 rounded-lg p-1.5 sm:p-2 border border-slate-100 text-[10px] italic text-slate-700 font-serif leading-snug line-clamp-2">
-                              "{gift.message}"
-                            </div>
+                                return (
+                                  <div
+                                    key={gift.id}
+                                    onClick={() => setSelectedShowcaseGiftId(gift.id)}
+                                    className={`w-[210px] sm:w-[230px] md:w-[245px] shrink-0 snap-start rounded-xl border p-2 sm:p-2.5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-1.5 relative group cursor-pointer text-left ${
+                                      isSelected 
+                                        ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/70 shadow-xs' 
+                                        : 'bg-white border-slate-200/90 hover:border-pink-300 hover:bg-pink-50/20'
+                                    }`}
+                                  >
+                                    {/* Active Indicator Dot */}
+                                    {isSelected && (
+                                      <span className="absolute -top-1.5 right-1.5 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[7.5px] rounded-full uppercase tracking-wider font-mono shadow-xs">
+                                        ★ ACTIVO
+                                      </span>
+                                    )}
 
-                            {/* Bottom Row Actions */}
-                            <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-slate-500">
-                              <span className="flex items-center gap-1 text-emerald-600 font-bold text-[8.5px]">
-                                <CheckCircle2 className="w-2.5 h-2.5" />
-                                <span className="truncate max-w-[80px] sm:max-w-none">{gift.dateFormatted}</span>
-                              </span>
+                                    {/* Card Header: Sender Mini-Avatar & Info + Price */}
+                                    <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                                      <div className="flex items-center gap-1.5 min-w-0">
+                                        <img
+                                          src={gift.senderAvatar}
+                                          alt={gift.senderName}
+                                          className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-pink-400/60 ring-1 ring-pink-500/20 shrink-0"
+                                        />
+                                        <div className="min-w-0">
+                                          <h5 className="text-[10px] font-bold text-slate-900 truncate font-serif leading-tight">
+                                            {gift.senderName}
+                                          </h5>
+                                          <span className="text-[8px] text-pink-600 font-mono truncate block leading-none">
+                                            @{gift.senderUsername}
+                                          </span>
+                                        </div>
+                                      </div>
 
-                              <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                                <button
-                                  onClick={() => {
-                                    setSelectedShowcaseGiftId(gift.id);
-                                    if (isCert) {
-                                      setShowCertificateModal(true);
-                                    } else if (isWatch) {
-                                      setActiveModalGift(gift);
-                                      setShowLuxuryWatchModal(true);
-                                    } else {
-                                      setSelectedGenericModalGift({
-                                        name: gift.giftName,
-                                        icon: gift.giftIcon,
-                                        price: gift.price,
-                                        euroCost: gift.euroCost,
-                                        senderName: gift.senderName,
-                                        senderUsername: gift.senderUsername,
-                                        senderAvatar: gift.senderAvatar,
-                                        message: gift.message,
-                                        dateFormatted: gift.dateFormatted,
-                                        badgeText: `${gift.euroCost}€ OFICIAL VIP`
-                                      });
-                                      setShowGenericGiftModal(true);
-                                    }
-                                  }}
-                                  className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5"
-                                  title="Ver en Grande"
-                                >
-                                  <Sparkles className="w-2 h-2" />
-                                  <span>{isCert ? '📜 Ver' : 'Ver'}</span>
-                                </button>
+                                      <div className="text-right shrink-0">
+                                        <span className="text-[10px] font-black font-mono text-amber-600 block leading-tight">
+                                          🪙 {gift.price >= 1000 ? `${(gift.price / 1000).toFixed(gift.price % 1000 === 0 ? 0 : 1)}k` : gift.price}
+                                        </span>
+                                        <span className="text-[8px] text-emerald-600 font-mono font-bold leading-none block">
+                                          ({gift.euroCost}€)
+                                        </span>
+                                      </div>
+                                    </div>
 
-                                <button
-                                  onClick={() => handleThankSender(gift)}
-                                  className="px-2 py-0.5 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded font-bold text-[8.5px] transition cursor-pointer flex items-center gap-0.5"
-                                >
-                                  <Heart className="w-2.5 h-2.5" />
-                                  <span>Agradecer</span>
-                                </button>
-                              </div>
+                                    {/* Card Body: Icon & Compact Title */}
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-50 to-pink-50 border border-amber-200/60 flex items-center justify-center text-base sm:text-lg shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
+                                        {gift.giftIcon}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <h4 className="text-[11px] font-black text-slate-900 truncate font-serif leading-tight">
+                                          {gift.giftName}
+                                        </h4>
+                                        <span className="text-[7px] font-mono uppercase font-bold text-amber-800 bg-amber-100/70 px-1 py-0.2 rounded inline-block leading-none mt-0.5">
+                                          {gift.category === 'lujo' ? '👑 Lujo' : gift.category === 'intermedio' ? '💎 Joya' : '⭐ Esencial'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Compact 1-line quotation */}
+                                    <div className="text-[8.5px] italic text-slate-500 truncate font-serif bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title={gift.message}>
+                                      "{gift.message}"
+                                    </div>
+
+                                    {/* Card Footer: Date & Quick Action Buttons */}
+                                    <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[8px] font-mono text-slate-400">
+                                      <span className="truncate max-w-[65px]">{gift.dateFormatted.split('•')[0]}</span>
+
+                                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedShowcaseGiftId(gift.id);
+                                            if (isCert) {
+                                              setShowCertificateModal(true);
+                                            } else if (isWatch) {
+                                              setActiveModalGift(gift);
+                                              setShowLuxuryWatchModal(true);
+                                            } else {
+                                              setSelectedGenericModalGift({
+                                                name: gift.giftName,
+                                                icon: gift.giftIcon,
+                                                price: gift.price,
+                                                euroCost: gift.euroCost,
+                                                senderName: gift.senderName,
+                                                senderUsername: gift.senderUsername,
+                                                senderAvatar: gift.senderAvatar,
+                                                message: gift.message,
+                                                dateFormatted: gift.dateFormatted,
+                                                badgeText: `${gift.euroCost}€ OFICIAL VIP`
+                                              });
+                                              setShowGenericGiftModal(true);
+                                            }
+                                          }}
+                                          className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
+                                          title="Inspeccionar en grande"
+                                        >
+                                          <Sparkles className="w-2 h-2" />
+                                          <span>{isCert ? '📜 Ver' : 'Ver'}</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleThankSender(gift)}
+                                          className="p-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded transition cursor-pointer"
+                                          title={`Agradecer a ${gift.senderName}`}
+                                        >
+                                          <Heart className="w-2.5 h-2.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
-                        );
-                      });
-                    })()}
-                  </div>
+
+                          {/* Slider Navigation Bar: Indicator, Progress Bar, Autoplay & Next/Prev Controls */}
+                          <div className="bg-slate-50 px-3 py-2.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs font-mono text-slate-600 shadow-2xs">
+                            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span className="text-[11px] font-medium text-slate-700">
+                                  🎠 Slider interactivo (<strong>{filteredReceived.length}</strong> regalos)
+                                </span>
+                              </div>
+
+                              {/* Progress bar */}
+                              <div className="flex items-center gap-1.5" title={`${Math.round(sliderScrollProgress)}% recorrido de la bóveda`}>
+                                <div className="w-20 sm:w-28 h-2 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-amber-500 via-rose-500 to-pink-500 rounded-full transition-all duration-150"
+                                    style={{ width: `${Math.max(8, sliderScrollProgress)}%` }}
+                                  />
+                                </div>
+                                <span className="text-[10px] text-slate-500 font-bold">{Math.round(sliderScrollProgress)}%</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                              {/* Autoplay button */}
+                              <button
+                                type="button"
+                                onClick={() => setIsSliderAutoplay(!isSliderAutoplay)}
+                                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                  isSliderAutoplay
+                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs animate-pulse'
+                                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 shadow-2xs'
+                                }`}
+                                title={isSliderAutoplay ? "Pausar carrusel automático" : "Iniciar carrusel automático de regalos"}
+                              >
+                                {isSliderAutoplay ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                                <span>{isSliderAutoplay ? 'Pausar' : 'Auto-Play'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => scrollGiftSlider('left')}
+                                disabled={!canScrollLeft}
+                                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                  canScrollLeft 
+                                    ? 'bg-white hover:bg-amber-50 text-slate-800 border-slate-300 shadow-2xs' 
+                                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
+                                }`}
+                              >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                <span>Anterior</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => scrollGiftSlider('right')}
+                                disabled={!canScrollRight}
+                                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                  canScrollRight 
+                                    ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 border-amber-500 shadow-2xs font-black' 
+                                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
+                                }`}
+                              >
+                                <span>Siguiente</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                        </div>
+                      );
+                    }
+
+                    {/* VISTA 2: GRID COMPACTO (CELDAS DE BÓVEDA - TAMAÑO CHICO) */}
+                    if (vaultViewMode === 'grid') {
+                      return (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2.5">
+                          {filteredReceived.map((gift) => {
+                            const isCert = gift.giftName.toLowerCase().includes('certificado');
+                            const isWatch = gift.giftName.toLowerCase().includes('reloj');
+                            const isSelected = selectedShowcaseGiftId === gift.id;
+
+                            return (
+                              <div
+                                key={gift.id}
+                                onClick={() => {
+                                  setSelectedShowcaseGiftId(gift.id);
+                                }}
+                                className={`rounded-xl border p-2 sm:p-2.5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-1.5 relative group cursor-pointer text-left ${
+                                  isSelected 
+                                    ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/70 shadow-xs' 
+                                    : 'bg-white border-slate-200/90 hover:border-pink-300 hover:bg-pink-50/20'
+                                }`}
+                              >
+                                {/* Active Indicator Dot */}
+                                {isSelected && (
+                                  <span className="absolute -top-1.5 right-1.5 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[7.5px] rounded-full uppercase tracking-wider font-mono shadow-xs">
+                                    ★ ACTIVO
+                                  </span>
+                                )}
+
+                                {/* Card Header: Sender Mini-Avatar & Info + Price */}
+                                <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <img
+                                      src={gift.senderAvatar}
+                                      alt={gift.senderName}
+                                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-pink-400/60 ring-1 ring-pink-500/20 shrink-0"
+                                    />
+                                    <div className="min-w-0">
+                                      <h5 className="text-[10px] font-bold text-slate-900 truncate font-serif leading-tight">
+                                        {gift.senderName}
+                                      </h5>
+                                      <span className="text-[8px] text-pink-600 font-mono truncate block leading-none">
+                                        @{gift.senderUsername}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right shrink-0">
+                                    <span className="text-[10px] font-black font-mono text-amber-600 block leading-tight">
+                                      🪙 {gift.price >= 1000 ? `${(gift.price / 1000).toFixed(gift.price % 1000 === 0 ? 0 : 1)}k` : gift.price}
+                                    </span>
+                                    <span className="text-[8px] text-emerald-600 font-mono font-bold leading-none block">
+                                      ({gift.euroCost}€)
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Card Body: Icon & Compact Title */}
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-50 to-pink-50 border border-amber-200/60 flex items-center justify-center text-base sm:text-lg shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
+                                    {gift.giftIcon}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="text-[11px] font-black text-slate-900 truncate font-serif leading-tight">
+                                      {gift.giftName}
+                                    </h4>
+                                    <span className="text-[7px] font-mono uppercase font-bold text-amber-800 bg-amber-100/70 px-1 py-0.2 rounded inline-block leading-none mt-0.5">
+                                      {gift.category === 'lujo' ? '👑 Lujo' : gift.category === 'intermedio' ? '💎 Joya' : '⭐ Esencial'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Compact 1-line quotation */}
+                                <div className="text-[8.5px] italic text-slate-500 truncate font-serif bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title={gift.message}>
+                                  "{gift.message}"
+                                </div>
+
+                                {/* Card Footer: Date & Quick Action Buttons */}
+                                <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[8px] font-mono text-slate-400">
+                                  <span className="truncate max-w-[65px]">{gift.dateFormatted.split('•')[0]}</span>
+
+                                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedShowcaseGiftId(gift.id);
+                                        if (isCert) {
+                                          setShowCertificateModal(true);
+                                        } else if (isWatch) {
+                                          setActiveModalGift(gift);
+                                          setShowLuxuryWatchModal(true);
+                                        } else {
+                                          setSelectedGenericModalGift({
+                                            name: gift.giftName,
+                                            icon: gift.giftIcon,
+                                            price: gift.price,
+                                            euroCost: gift.euroCost,
+                                            senderName: gift.senderName,
+                                            senderUsername: gift.senderUsername,
+                                            senderAvatar: gift.senderAvatar,
+                                            message: gift.message,
+                                            dateFormatted: gift.dateFormatted,
+                                            badgeText: `${gift.euroCost}€ OFICIAL VIP`
+                                          });
+                                          setShowGenericGiftModal(true);
+                                        }
+                                      }}
+                                      className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
+                                      title="Inspeccionar en grande"
+                                    >
+                                      <Sparkles className="w-2 h-2" />
+                                      <span>{isCert ? '📜 Ver' : 'Ver'}</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleThankSender(gift)}
+                                      className="p-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded transition cursor-pointer"
+                                      title={`Agradecer a ${gift.senderName}`}
+                                    >
+                                      <Heart className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    {/* VISTA 2: LIBRO DE CUSTODIA (TABLA DENSA PARA CIENTOS DE REGALOS) */}
+                    return (
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs font-mono">
+                            <thead className="bg-slate-900 text-amber-300 text-[10px] font-black uppercase tracking-wider border-b border-amber-500/20">
+                              <tr>
+                                <th className="px-3 py-2.5">Regalo / Pieza</th>
+                                <th className="px-3 py-2.5">Donante (@usuario)</th>
+                                <th className="px-3 py-2.5">Categoría</th>
+                                <th className="px-3 py-2.5">Valor Custodiado</th>
+                                <th className="px-3 py-2.5">Fecha</th>
+                                <th className="px-3 py-2.5 text-right">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700">
+                              {filteredReceived.map((gift) => {
+                                const isCert = gift.giftName.toLowerCase().includes('certificado');
+                                const isWatch = gift.giftName.toLowerCase().includes('reloj');
+
+                                return (
+                                  <tr 
+                                    key={gift.id}
+                                    onClick={() => setSelectedShowcaseGiftId(gift.id)}
+                                    className={`hover:bg-amber-50/40 transition cursor-pointer ${
+                                      selectedShowcaseGiftId === gift.id ? 'bg-amber-50/80 font-bold' : ''
+                                    }`}
+                                  >
+                                    <td className="px-3 py-2 flex items-center gap-2">
+                                      <span className="text-base">{gift.giftIcon}</span>
+                                      <span className="font-serif font-bold text-slate-900 text-xs truncate max-w-[140px] sm:max-w-xs">
+                                        {gift.giftName}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <div className="flex items-center gap-1.5">
+                                        <img src={gift.senderAvatar} alt={gift.senderName} className="w-5 h-5 rounded-full object-cover shrink-0" />
+                                        <span className="truncate max-w-[120px] font-serif font-bold text-slate-800">{gift.senderName}</span>
+                                        <span className="text-[9px] text-pink-600">@{gift.senderUsername}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-amber-100 text-amber-900">
+                                        {gift.category || 'lujo'}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <span className="font-bold text-amber-600 font-mono">🪙 {gift.price.toLocaleString()}</span>
+                                      <span className="text-[9px] text-emerald-600 ml-1">({gift.euroCost}€)</span>
+                                    </td>
+                                    <td className="px-3 py-2 text-[10px] text-slate-400">
+                                      {gift.dateFormatted}
+                                    </td>
+                                    <td className="px-3 py-2 text-right">
+                                      <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedShowcaseGiftId(gift.id);
+                                            if (isCert) {
+                                              setShowCertificateModal(true);
+                                            } else if (isWatch) {
+                                              setActiveModalGift(gift);
+                                              setShowLuxuryWatchModal(true);
+                                            } else {
+                                              setSelectedGenericModalGift({
+                                                name: gift.giftName,
+                                                icon: gift.giftIcon,
+                                                price: gift.price,
+                                                euroCost: gift.euroCost,
+                                                senderName: gift.senderName,
+                                                senderUsername: gift.senderUsername,
+                                                senderAvatar: gift.senderAvatar,
+                                                message: gift.message,
+                                                dateFormatted: gift.dateFormatted,
+                                                badgeText: `${gift.euroCost}€ OFICIAL VIP`
+                                              });
+                                              setShowGenericGiftModal(true);
+                                            }
+                                          }}
+                                          className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded text-[9px] font-bold uppercase transition"
+                                        >
+                                          {isCert ? '📜 Ver' : 'Ver'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleThankSender(gift)}
+                                          className="px-2 py-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded text-[9px] font-bold transition"
+                                        >
+                                          ❤️ Agradecer
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                 </div>
               )}

@@ -840,8 +840,8 @@ export default function SessionResultsPodium({
   setSimulationLogs = () => {},
   setIsCastingPublished = () => {},
   isCastingPublished = false,
-  pool = 100000,
-  prizePerWinner = 100000,
+  pool = 1000,
+  prizePerWinner = 800,
   isTie = false,
   winnersToDisplay = [],
   maxVotes = 5,
@@ -1030,7 +1030,7 @@ export default function SessionResultsPodium({
       window.removeEventListener('storage', handleBoutiqueChange);
     };
   }, []);
-  const prizeTotal80 = pool * 0.80;
+  const prizeTotal80 = pool > 0 ? (pool * 0.80) : 800;
 
   // Helper to reliably find and navigate to a model's profile when clicked
   const handleNavigateToModelProfile = (person: any) => {
@@ -1329,16 +1329,17 @@ export default function SessionResultsPodium({
 
   return (
     <div 
-      className="bg-[#070b14] text-white rounded-none border-0 px-[1px] py-3 pb-6 sm:pb-8 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
+      className="bg-[#fff0f3] text-slate-900 rounded-none border-0 px-[1px] py-3 pb-6 sm:pb-8 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
       id="podium-results-screen"
+      style={{ backgroundColor: '#fff0f3' }}
     >
       
-      {/* Immersive stadium visual background effects */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Immersive stadium visual background effects - Blanco Rosado Ambient Glow */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-rose-200/40 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-200/35 rounded-full blur-3xl pointer-events-none" />
 
       {/* SECTION 1: HEADER BRAND TITLE */}
-      <div className="text-center pt-4 sm:pt-6 pb-4 border-b border-slate-800/80 relative z-10 flex flex-col items-center">
+      <div className="text-center pt-4 sm:pt-6 pb-4 border-b border-rose-200/70 relative z-10 flex flex-col items-center">
         {/* Prominent Finish Session Button */}
         <button
           type="button"
@@ -1356,27 +1357,27 @@ export default function SessionResultsPodium({
               setCompletedSessionToDisplay(null);
             }
           }}
-          className="mb-3 bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-2xl shadow-xl border border-rose-400/50 uppercase tracking-wider transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2.5 z-20"
+          className="mb-3 bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-2xl shadow-md border border-rose-400/50 uppercase tracking-wider transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2.5 z-20"
         >
           <span className="text-base animate-pulse">🛑</span>
           <span>Sesión Finalizada</span>
         </button>
 
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-rose-300 to-amber-100 mt-2 mb-1.5 animate-fade-in">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black tracking-wider uppercase text-slate-900 mt-2 mb-1.5 animate-fade-in">
           Resultados Finales
         </h2>
-        <p className="text-[10px] sm:text-xs font-black font-mono tracking-widest text-slate-400 uppercase max-w-xl mx-auto leading-normal">
+        <p className="text-[10px] sm:text-xs font-black font-mono tracking-widest text-slate-500 uppercase max-w-xl mx-auto leading-normal">
           SISTEMA DE BLOQUES POR PUNTUACIÓN: AGRUPACIÓN DINÁMICA POR VOTOS DETECTADA
         </p>
       </div>
 
       {/* 🧪 TESTING CONTROLLER FOR MULTI-WINNER SCENARIOS */}
-      <div className="bg-[#0e1628]/95 border border-black p-3.5 sm:p-4 rounded-3xl relative z-10 flex flex-col items-center gap-3 text-center shadow-md animate-fade-in">
+      <div className="bg-white/90 border border-rose-200/90 p-3.5 sm:p-4 rounded-3xl relative z-10 flex flex-col items-center gap-3 text-center shadow-xs animate-fade-in">
         <div className="space-y-1 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs font-black text-amber-400 tracking-wider">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-black text-amber-800 tracking-wider">
             <span className="animate-pulse">✨</span> <span>SIMULADOR DE GANADORES MÚLTIPLES</span>
           </div>
-          <p className="text-[10.5px] sm:text-[11px] text-slate-300 leading-relaxed max-w-md font-medium">
+          <p className="text-[10.5px] sm:text-[11px] text-slate-600 leading-relaxed max-w-md font-medium">
             Prueba cómo responde la interfaz interactiva en tiempo real al haber un empate de <strong>5 ganadores</strong>. Cambia el escenario a continuación para explorar cada uno de sus proyectos.
           </p>
         </div>
@@ -1390,7 +1391,7 @@ export default function SessionResultsPodium({
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition duration-150 cursor-pointer ${
               !isSimulatedFiveWinners
                 ? 'bg-slate-900 text-white shadow-md font-black border border-slate-700'
-                : 'bg-[#070b14] hover:bg-slate-900 text-slate-300 border border-slate-800 shadow-3xs'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-3xs'
             }`}
           >
             Escenario Original
@@ -1404,7 +1405,7 @@ export default function SessionResultsPodium({
             className={`px-4 py-1.5 rounded-xl text-xs font-bold transition duration-150 flex items-center gap-1 cursor-pointer ${
               isSimulatedFiveWinners
                 ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black ring-2 ring-amber-300'
-                : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-400/40'
+                : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 border border-amber-400/40'
             }`}
           >
             🔥 Simular 5 Ganadores Empatados
@@ -1415,16 +1416,16 @@ export default function SessionResultsPodium({
       {/* 🏛️ CONTENEDORES ORDENADOS VERTICALMENTE CON DISEÑO COHESIVO Y ELEGANTE */}
       <div className="flex flex-col gap-6 relative z-10 w-full max-w-full">
         {/* 🏆 CONTENEDOR 1: EL PODIO DE NUESTROS GANADORES */}
-        <div className="bg-[#0e1628]/95 p-4 sm:p-6 rounded-3xl border border-black shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-5">
-          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
+        <div className="bg-white/95 p-4 sm:p-6 rounded-3xl border border-rose-200/90 shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-5" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}>
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-rose-200/20 to-transparent pointer-events-none" />
           
           {/* Decorative title - Desduplicado: Podio de Ganadores */}
           <div className="text-center space-y-2 relative z-10">
-            <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-white tracking-wide uppercase leading-snug break-words px-2 m-0">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-slate-900 tracking-wide uppercase leading-snug break-words px-2 m-0">
               PODIO DE GANADORES • {completedSessionToDisplay.title}
             </h3>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-[9.5px] sm:text-[10px] font-mono text-cyan-300 mx-auto">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-50 border border-cyan-400/60 rounded-full text-[9.5px] sm:text-[10px] font-mono text-cyan-800 mx-auto">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
               <span>Base de Datos Archivada: {completedSessionToDisplay.reference || 'REF: 1'} (Ronda #{completedSessionToDisplay.roundNumber ? completedSessionToDisplay.roundNumber - 1 : 0})</span>
             </div>
           </div>
@@ -1439,20 +1440,20 @@ export default function SessionResultsPodium({
                     <span>EMPATE HISTÓRICO</span>
                     <span className="text-amber-400 text-xs">✦</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-sans font-black text-white uppercase tracking-tight">
+                  <h4 className="text-base sm:text-lg font-sans font-black text-slate-900 uppercase tracking-tight">
                     {activeWinnersList.length} PROYECTOS HAN CONSEGUIDO FINANCIACIÓN
                   </h4>
                 </div>
 
                 {/* 🏆 MAIN SPOTLIGHT CARD FOR FUNDED PROJECT (LUXURY FINTECH REDESIGN) */}
-                <div className="max-w-md mx-auto bg-gradient-to-b from-[#0e1628] via-[#0b1020] to-[#070b14] border-2 border-amber-400/70 ring-4 ring-amber-500/20 rounded-3.5xl p-5 sm:p-7 shadow-2xl relative overflow-hidden transition-all duration-300 group/spotlight text-center space-y-4">
+                <div className="max-w-md mx-auto bg-gradient-to-b from-white via-[#fff7f9] to-[#fff0f4] border-2 border-amber-400 ring-4 ring-amber-300/30 rounded-3.5xl p-5 sm:p-7 shadow-xl relative overflow-hidden transition-all duration-300 group/spotlight text-center space-y-4">
                   
                   {/* Subtle golden ambient background glow */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-300/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-200/25 to-transparent rounded-full blur-3xl pointer-events-none" />
 
                   {/* 1. Top Badge: FUNDING AWARDED / FINANCIACIÓN CONCEDIDA */}
                   <div className="relative z-10 flex justify-center">
-                    <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-400/70 text-amber-300 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
+                    <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-500/60 text-amber-900 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
                       <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
                     </div>
                   </div>
@@ -1521,37 +1522,38 @@ export default function SessionResultsPodium({
                   {/* 4. Information of Creator & Votes (Secondary Hierarchy) */}
                   <div className="space-y-1 relative z-10">
                     <h4 
-                      className="text-xl sm:text-2xl font-serif font-black text-white cursor-pointer hover:text-amber-300 transition-colors tracking-tight block"
+                      className="text-xl sm:text-2xl font-serif font-black text-slate-900 cursor-pointer hover:text-amber-700 transition-colors tracking-tight block"
                       onClick={() => handleNavigateToModelProfile(firstPlace)}
                       title={`Ver perfil de ${firstPlace.name}`}
                     >
                       {firstPlace.name}
                     </h4>
-                    <p className="text-xs text-slate-400 font-semibold flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-slate-600 font-semibold flex items-center justify-center gap-1.5">
                       <span className="text-rose-500">❤️</span> 
                       <span>{firstPlace.votesReceived} votos recibidos</span>
                     </p>
                   </div>
 
                   {/* Subtle luxury divider */}
-                  <div className="border-t border-slate-800 my-2 relative z-10" />
+                  <div className="border-t border-rose-200/80 my-2 relative z-10" />
 
                   {/* 5. FINANCIACIÓN CONSEGUIDA (HIGHLIGHT FINANCIAL BLOCK) */}
                   {(() => {
-                    const winnerFundingAmount = prizePerWinner > 0 
-                      ? prizePerWinner 
-                      : (prizeTotal80 > 0 ? (prizeTotal80 / (activeWinnersList.length || 1)) : 10000);
+                    const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
+                    const winnerFundingAmount = isSingleWinner 
+                      ? 800 
+                      : (prizePerWinner > 0 ? (prizePerWinner / (activeWinnersList.length || 1)) : (800 / (activeWinnersList.length || 1)));
                     const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
 
                     return (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-500/15 via-[#070b14] to-amber-500/10 border border-amber-400/50 shadow-md relative z-10 space-y-1">
-                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-300 block">
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-50/60 to-amber-500/10 border border-amber-400/60 shadow-xs relative z-10 space-y-1">
+                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-800 block">
                           FINANCIACIÓN CONSEGUIDA
                         </span>
-                        <div className="text-xl sm:text-2xl font-sans font-black text-amber-300 tracking-tight block py-0.5">
+                        <div className="text-2xl sm:text-3xl font-sans font-black text-amber-700 tracking-tight block py-0.5">
                           {formattedFunding}
                         </div>
-                        <p className="text-[9.5px] text-slate-400 uppercase tracking-wider font-semibold">
+                        <p className="text-[9.5px] text-slate-600 uppercase tracking-wider font-semibold">
                           Capital asignado por selección comunitaria
                         </p>
                       </div>
@@ -1560,29 +1562,29 @@ export default function SessionResultsPodium({
 
                   {/* 8. Badge de Empate · Posición #1 */}
                   <div className="relative z-10 flex justify-center pt-1">
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/50 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-md">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-500/50 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-xs">
                       <span>✦</span> EMPATE · POSICIÓN #1 <span>✦</span>
                     </div>
                   </div>
 
                   {/* 7. Navegación entre los Ganadores */}
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-800 relative z-10">
+                  <div className="flex items-center justify-between pt-3 border-t border-rose-200/80 relative z-10">
                     <button 
                       onClick={() => setActiveWinnerIndex(prev => prev === 0 ? activeWinnersList.length - 1 : prev - 1)}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 hover:bg-slate-800 text-white transition-all border border-slate-700 shadow-md flex items-center justify-center cursor-pointer active:scale-90"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-rose-50 text-slate-800 transition-all border border-rose-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
                       title="Proyecto financiado anterior"
                       aria-label="Proyecto financiado anterior"
                     >
                       <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
                     </button>
                     
-                    <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-slate-300 font-bold uppercase">
+                    <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-slate-600 font-bold uppercase">
                       PROYECTO FINANCIADO · {activeWinnerIndex + 1} / {activeWinnersList.length}
                     </span>
 
                     <button 
                       onClick={() => setActiveWinnerIndex(prev => prev === activeWinnersList.length - 1 ? 0 : prev + 1)}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 hover:bg-slate-800 text-white transition-all border border-slate-700 shadow-md flex items-center justify-center cursor-pointer active:scale-90"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-rose-50 text-slate-800 transition-all border border-rose-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
                       title="Siguiente proyecto financiado"
                       aria-label="Siguiente proyecto financiado"
                     >
@@ -1593,7 +1595,7 @@ export default function SessionResultsPodium({
 
                 {/* Co-Winners List Selector Grid/Row below */}
                 <div className="space-y-2">
-                  <p className="text-[9px] font-black tracking-widest text-slate-400 uppercase font-mono">SELECCIONA PARA EXPLORAR SU PROYECTO</p>
+                  <p className="text-[9px] font-black tracking-widest text-slate-500 uppercase font-mono">SELECCIONA PARA EXPLORAR SU PROYECTO</p>
                   <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
                     {activeWinnersList.map((winner, idx) => {
                       const isSelected = idx === activeWinnerIndex;
@@ -1604,13 +1606,13 @@ export default function SessionResultsPodium({
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-200 cursor-pointer ${
                             isSelected 
                               ? 'bg-amber-400 text-slate-900 border-amber-400 font-extrabold shadow-sm scale-105' 
-                              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                              : 'bg-white hover:bg-rose-50 text-slate-700 border-rose-200'
                           }`}
                         >
                           <img 
                             src={winner.avatar} 
                             alt={winner.name} 
-                            className="w-4.5 h-4.5 rounded-full object-cover border border-slate-300"
+                            className="w-4.5 h-4.5 rounded-full object-cover border border-rose-200"
                           />
                           <span className="truncate max-w-[100px]">{winner.name}</span>
                           <span className="text-[10px] opacity-75">({winner.votesReceived} votos)</span>
@@ -1623,17 +1625,18 @@ export default function SessionResultsPodium({
             ) : (
               <div className="flex flex-col items-center justify-center pt-2 max-w-md mx-auto w-full relative z-10 animate-fade-in">
                 {firstPlace && (() => {
-                  const winnerFundingAmount = prizePerWinner > 0 ? prizePerWinner : (prizeTotal80 > 0 ? prizeTotal80 : 10000);
+                  const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
+                  const winnerFundingAmount = isSingleWinner ? 800 : (prizePerWinner > 0 ? prizePerWinner : 800);
                   const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
 
                   return (
-                    <div className="w-full bg-gradient-to-b from-[#0e1628] via-[#0b1020] to-[#070b14] border-2 border-amber-400/70 ring-4 ring-amber-500/20 rounded-3.5xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center space-y-4">
+                    <div className="w-full bg-gradient-to-b from-white via-[#fff7f9] to-[#fff0f4] border-2 border-amber-400 ring-4 ring-amber-300/30 rounded-3.5xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center space-y-4">
                       {/* Subtle golden ambient background glow */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-300/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-200/25 to-transparent rounded-full blur-3xl pointer-events-none" />
 
                       {/* Top Badge */}
                       <div className="relative z-10 flex justify-center">
-                        <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-400/70 text-amber-300 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
+                        <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-500/60 text-amber-900 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
                           <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
                         </div>
                       </div>
@@ -1648,7 +1651,14 @@ export default function SessionResultsPodium({
                             fill="none" 
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            <polygon points="20,16 44,16 54,26 10,26" fill="url(#goldTopGrad)" stroke="#B45309" strokeWidth="1" />
+                            <defs>
+                              <linearGradient id="goldTopGradSingle" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#FFF2A3" />
+                                <stop offset="50%" stopColor="#F59E0B" />
+                                <stop offset="100%" stopColor="#D97706" />
+                              </linearGradient>
+                            </defs>
+                            <polygon points="20,16 44,16 54,26 10,26" fill="url(#goldTopGradSingle)" stroke="#B45309" strokeWidth="1" />
                             <polygon points="24,17 40,17 48,25 16,25" fill="#FEF3C7" opacity="0.95" />
                             <polygon points="10,26 32,54 22,26" fill="#FDE68A" stroke="#B45309" strokeWidth="1" />
                             <polygon points="22,26 32,54 42,26" fill="#F59E0B" stroke="#B45309" strokeWidth="1" />
@@ -1665,7 +1675,7 @@ export default function SessionResultsPodium({
                             src={firstPlace.avatar} 
                             alt={firstPlace.name} 
                             onClick={() => handleNavigateToModelProfile(firstPlace)}
-                            className="w-28 h-28 sm:w-34 sm:h-34 rounded-full object-cover mx-auto border-4 border-amber-400/80 ring-4 ring-amber-500/30 shadow-xl cursor-pointer hover:scale-105 transition-all duration-300 relative z-10"
+                            className="w-28 h-28 sm:w-34 sm:h-34 rounded-full object-cover mx-auto border-4 border-amber-400/80 ring-4 ring-amber-300/40 shadow-xl cursor-pointer hover:scale-105 transition-all duration-300 relative z-10"
                             title={`Ver perfil de ${firstPlace.name}`}
                           />
                         </div>
@@ -1674,37 +1684,37 @@ export default function SessionResultsPodium({
                       {/* Name & votes */}
                       <div className="space-y-1 relative z-10">
                         <h4 
-                          className="text-xl sm:text-2xl font-serif font-black text-white cursor-pointer hover:text-amber-300 transition-colors tracking-tight block"
+                          className="text-xl sm:text-2xl font-serif font-black text-slate-900 cursor-pointer hover:text-amber-700 transition-colors tracking-tight block"
                           onClick={() => handleNavigateToModelProfile(firstPlace)}
                           title={`Ver perfil de ${firstPlace.name}`}
                         >
                           {firstPlace.name}
                         </h4>
-                        <p className="text-xs text-slate-300 font-semibold flex items-center justify-center gap-1.5">
-                          <span className="text-rose-400">❤️</span> 
+                        <p className="text-xs text-slate-600 font-semibold flex items-center justify-center gap-1.5">
+                          <span className="text-rose-500">❤️</span> 
                           <span>{firstPlace.votesReceived} votos recibidos</span>
                         </p>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-slate-800 my-2 relative z-10" />
+                      <div className="border-t border-rose-200/80 my-2 relative z-10" />
 
                       {/* Funding block */}
-                      <div className="p-4 sm:p-5 rounded-2xl bg-[#070b14]/90 border border-amber-400/40 shadow-xs relative z-10 space-y-1">
-                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-400 block">
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-50/60 to-amber-500/10 border border-amber-400/60 shadow-xs relative z-10 space-y-1">
+                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-800 block">
                           FINANCIACIÓN CONSEGUIDA
                         </span>
-                        <div className="text-xl sm:text-2xl font-sans font-black text-amber-300 tracking-tight block py-0.5">
+                        <div className="text-2xl sm:text-3xl font-sans font-black text-amber-700 tracking-tight block py-0.5">
                           {formattedFunding}
                         </div>
-                        <p className="text-[9.5px] text-slate-400 uppercase tracking-wider font-semibold">
+                        <p className="text-[9.5px] text-slate-600 uppercase tracking-wider font-semibold">
                           Capital asignado por selección comunitaria
                         </p>
                       </div>
 
                       {/* Position Badge */}
                       <div className="relative z-10 flex justify-center pt-1">
-                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/50 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-4xs">
+                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-500/50 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-xs">
                           <span>✦</span> POSICIÓN #1 · SELECCIONADO <span>✦</span>
                         </div>
                       </div>
@@ -1720,15 +1730,15 @@ export default function SessionResultsPodium({
             </p>
           </div>
 
-          {/* 👥 CONTENEDOR 2: 10 PARTICIPANTES TOTALES Y RECUENTO DE VOTOS (Diseño oscuro de lujo a ancho completo) */}
-          <div className="bg-[#0e1628]/95 border border-black rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-left" id="ranking-participantes-ronda">
-            <div className="flex items-center justify-between gap-2 px-1 border-b border-slate-800/80 pb-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-200 font-mono">
+          {/* 👥 CONTENEDOR 2: 10 PARTICIPANTES TOTALES Y RECUENTO DE VOTOS */}
+          <div className="bg-white/95 border border-rose-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-left" id="ranking-participantes-ronda">
+            <div className="flex items-center justify-between gap-2 px-1 border-b border-rose-200/80 pb-2.5">
+              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800 font-mono">
                 <span>👥</span>
                 <span>10 PARTICIPANTES TOTALES</span>
               </div>
-              <div className="inline-flex items-center gap-1 bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-400 text-emerald-800 text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>100% VOTOS EMITIDOS</span>
               </div>
             </div>
@@ -1742,31 +1752,31 @@ export default function SessionResultsPodium({
                   <div 
                     key={part.userId} 
                     onClick={() => handleNavigateToModelProfile(part)}
-                    className="bg-slate-900/90 hover:bg-slate-850 rounded-2xl p-2.5 sm:p-3 border border-slate-800 hover:border-amber-400/60 flex flex-col justify-between items-start gap-2 transition hover:scale-[1.01] active:scale-98 cursor-pointer select-none shadow-sm"
+                    className="bg-gradient-to-r from-rose-50/40 via-white to-pink-50/40 hover:bg-rose-50 rounded-2xl p-2.5 sm:p-3 border border-rose-200/80 hover:border-amber-400/80 flex flex-col justify-between items-start gap-2 transition hover:scale-[1.01] active:scale-98 cursor-pointer select-none shadow-xs"
                   >
                     <div className="flex items-center gap-2 truncate w-full text-left">
                       <img 
                         src={part.avatar} 
                         alt={part.name} 
                         onError={(e) => handleAvatarError(e, part.name)}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-slate-700 shrink-0" 
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-rose-200 shrink-0" 
                       />
-                      <span className="text-white font-extrabold text-xs truncate">
+                      <span className="text-slate-900 font-extrabold text-xs truncate">
                         {part.name}
                       </span>
                     </div>
                     
-                    <div className="w-full text-left flex items-center justify-between pt-1.5 border-t border-slate-800/80">
+                    <div className="w-full text-left flex items-center justify-between pt-1.5 border-t border-rose-100">
                       {isSelf ? (
-                        <span className="text-[8px] sm:text-[8.5px] font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-1.5 py-0.5 rounded uppercase tracking-tight">
+                        <span className="text-[8px] sm:text-[8.5px] font-bold text-cyan-800 bg-cyan-100 border border-cyan-300 px-1.5 py-0.5 rounded uppercase tracking-tight">
                           Mesa
                         </span>
                       ) : (
-                        <span className="text-[8px] sm:text-[8.5px] font-bold text-rose-300 bg-rose-950/80 border border-rose-500/40 px-1.5 py-0.5 rounded uppercase tracking-tight">
+                        <span className="text-[8px] sm:text-[8.5px] font-bold text-rose-800 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded uppercase tracking-tight">
                           Votado
                         </span>
                       )}
-                      <span className="text-[10px] sm:text-[10.5px] font-black text-amber-400 font-mono">
+                      <span className="text-[10px] sm:text-[10.5px] font-black text-amber-700 font-mono">
                         {part.votesReceived} votos
                       </span>
                     </div>
@@ -2043,13 +2053,13 @@ export default function SessionResultsPodium({
             </div>
           </div>
 
-          {/* 💼 CONTENEDOR 5: MI PORTAFOLIO CREATIVO (Diseño oscuro de lujo a ancho completo) */}
-          <div className="bg-[#0e1628]/95 border border-black rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-center">
-            <h4 className="text-xs sm:text-[13px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1.5 font-mono">
-              <Wallet className="w-4 h-4 text-amber-400" />
+          {/* 💼 CONTENEDOR 5: MI PORTAFOLIO CREATIVO */}
+          <div className="bg-white/95 border border-rose-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-center">
+            <h4 className="text-xs sm:text-[13px] font-black text-amber-800 uppercase tracking-widest flex items-center justify-center gap-1.5 font-mono">
+              <Wallet className="w-4 h-4 text-amber-600" />
               <span>Mi Portafolio Creativo</span>
             </h4>
-            <p className="text-[11px] text-slate-300 font-medium leading-relaxed max-w-md mx-auto">
+            <p className="text-[11px] text-slate-600 font-medium leading-relaxed max-w-md mx-auto">
               Consulte sus retornos acumulados, movimientos de fondos u operaciones inmediatas.
             </p>
             <button

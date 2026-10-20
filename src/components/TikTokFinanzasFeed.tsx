@@ -376,7 +376,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [showCameraParticipantsGrid, setShowCameraParticipantsGrid] = useState<Record<string, boolean>>({});
 
   // 📺 Canal seleccionado internamente para conmutar al instante dentro de esta misma pantalla
-  const [currentChannel, setCurrentChannel] = useState<string>(selectedCategoryFilter || 'Finanzas');
+  const [currentChannel, setCurrentChannel] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('last_selected_multimedia_channel');
+      if (saved) return saved;
+    } catch (_) {}
+    return selectedCategoryFilter || 'Todos';
+  });
   // 🌐 Traductor de descripciones a Inglés (solicitado sobre captura z.png)
   const [translatedVideosMap, setTranslatedVideosMap] = useState<Record<string, boolean>>({});
 
@@ -608,6 +614,53 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   ];
 
+  // Helper para verificar correspondencia estricta entre categoría de vídeo y canal
+  const isVideoCategoryMatchingChannel = (channelName: string, videoCategory?: string): boolean => {
+    const chan = (channelName || '').toLowerCase().trim();
+    const cat = (videoCategory || '').toLowerCase().trim();
+    
+    // El canal 'Todos' muestra los vídeos de todas las categorías
+    if (chan === 'todos') {
+      return true;
+    }
+    if (!cat) return false;
+    
+    if (chan === 'modelos' || chan === 'runway') {
+      return cat === 'modelos' || cat === 'runway';
+    }
+    if (chan === 'fashion') {
+      return cat === 'fashion' || cat === 'moda';
+    }
+    if (chan === 'backstage') {
+      return cat === 'backstage';
+    }
+    if (chan === 'investors' || chan === 'jewellery') {
+      return cat === 'investors' || cat === 'jewellery';
+    }
+    if (chan === 'catwalk' || chan === 'casting') {
+      return cat === 'catwalk' || cat === 'casting';
+    }
+    if (chan === 'fitnes' || chan === 'fitness') {
+      return cat === 'fitnes' || cat === 'fitness';
+    }
+    if (chan === 'beauty') {
+      return cat === 'beauty';
+    }
+    if (chan === 'influencer') {
+      return cat === 'influencer';
+    }
+    if (chan === 'luxury') {
+      return cat === 'luxury';
+    }
+    if (chan === 'interview') {
+      return cat === 'interview';
+    }
+    if (chan === 'finanzas') {
+      return cat === 'finanzas';
+    }
+    return cat === chan;
+  };
+
   // Helper to load videos from localStorage coll_casting_live_videos (from page z.png)
   const loadChannelVideosFromStorage = (channelName: string): ChannelUploadedVideoItem[] => {
     let stored: any[] = [];
@@ -623,49 +676,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
     const chanLower = (channelName || 'Fashion').toLowerCase();
 
-    // Match videos STRICTLY with this category - un vídeo subido a una categoría solo se ve en ella
+    // Coincidencia ESTRICTA: el vídeo subido solo se visualiza en 'Todos' y en el canal elegido por el usuario (marcado en naranja)
     const matched = stored.filter(v => {
       if (!v) return false;
       const cat = (v.videoCategory || v.category || '').toLowerCase();
-      
-      // En 'todos', todos los vídeos subidos también deben de verse en el canal Todos
-      if (chanLower === 'todos') {
-        return true;
-      }
-      if (chanLower === 'modelos' || chanLower === 'runway') {
-        return cat === 'modelos' || cat === 'runway';
-      }
-      if (chanLower === 'fashion') {
-        return cat === 'fashion' || cat === 'moda';
-      }
-      if (chanLower === 'backstage') {
-        return cat === 'backstage';
-      }
-      if (chanLower === 'investors' || chanLower === 'jewellery') {
-        return cat === 'investors' || cat === 'jewellery';
-      }
-      if (chanLower === 'catwalk' || chanLower === 'casting') {
-        return cat === 'catwalk' || cat === 'casting';
-      }
-      if (chanLower === 'fitnes' || chanLower === 'fitness') {
-        return cat === 'fitnes' || cat === 'fitness';
-      }
-      if (chanLower === 'beauty') {
-        return cat === 'beauty';
-      }
-      if (chanLower === 'influencer') {
-        return cat === 'influencer';
-      }
-      if (chanLower === 'luxury') {
-        return cat === 'luxury';
-      }
-      if (chanLower === 'interview') {
-        return cat === 'interview';
-      }
-      if (chanLower === 'finanzas') {
-        return cat === 'finanzas';
-      }
-      return cat === chanLower;
+      return isVideoCategoryMatchingChannel(chanLower, cat);
     }).map(v => ({
       ...v,
       isUserUploaded: true
@@ -676,7 +691,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       videoCategory: channelName
     }));
 
-    // Prioritize user uploads strictly matching this category right at the top
+    // Priorizar vídeos subidos por el usuario estrictamente en su categoría o en 'Todos'
     const combined = matched.length > 0 ? [...matched, ...presets] : presets;
     const unique: ChannelUploadedVideoItem[] = [];
     const seen = new Set<string>();
@@ -690,6 +705,32 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         unique.push(item);
       }
     }
+
+    // Asegurar que el último vídeo publicado se vea SOLO en el canal 'Todos' y en el canal elegido por el usuario (marcado de naranja)
+    try {
+      const lastPubRaw = localStorage.getItem('last_published_video');
+      if (lastPubRaw) {
+        const lastPub = JSON.parse(lastPubRaw);
+        if (lastPub && lastPub.id) {
+          const isAllowedInThisChannel = isVideoCategoryMatchingChannel(chanLower, lastPub.videoCategory || lastPub.category);
+          if (isAllowedInThisChannel) {
+            const foundIdx = unique.findIndex(u => u.id === lastPub.id || (u.videoUrl === lastPub.videoUrl && u.description === lastPub.description));
+            if (foundIdx > 0) {
+              const [item] = unique.splice(foundIdx, 1);
+              unique.unshift(item);
+            } else if (foundIdx === -1) {
+              unique.unshift({ ...lastPub, isUserUploaded: true });
+            }
+          } else {
+            // Estrictamente prohibido en otros canales no seleccionados
+            const foundIdx = unique.findIndex(u => u.id === lastPub.id || (u.videoUrl === lastPub.videoUrl && u.description === lastPub.description));
+            if (foundIdx !== -1) {
+              unique.splice(foundIdx, 1);
+            }
+          }
+        }
+      }
+    } catch (_) {}
 
     return unique.length > 0 ? unique : presets;
   };
@@ -739,12 +780,29 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   useEffect(() => {
     const handleSyncChannelVideos = (e?: any) => {
       const targetChan = e?.detail?.targetCategory || e?.detail?.channel || e?.detail?.newVideo?.videoCategory;
-      const channelToLoad = targetChan || currentChannel;
+      const channelToLoad = targetChan || currentChannel || 'Todos';
       if (targetChan) {
         setCurrentChannel(targetChan);
-        setActiveChannelVideoIdx(0);
       }
-      const vids = loadChannelVideosFromStorage(channelToLoad);
+      setActiveChannelVideoIdx(0);
+
+      let vids = loadChannelVideosFromStorage(channelToLoad);
+      const incomingVid = e?.detail?.newVideo;
+      if (incomingVid) {
+        const isAllowed = isVideoCategoryMatchingChannel(channelToLoad, incomingVid.videoCategory || incomingVid.category);
+        if (isAllowed) {
+          const mappedIncoming: ChannelUploadedVideoItem = {
+            ...incomingVid,
+            isUserUploaded: true
+          };
+          vids = [
+            mappedIncoming,
+            ...vids.filter(v => v.id !== mappedIncoming.id && (v.videoUrl !== mappedIncoming.videoUrl || v.description !== mappedIncoming.description))
+          ];
+        } else {
+          vids = vids.filter(v => v.id !== incomingVid.id && (v.videoUrl !== incomingVid.videoUrl || v.description !== incomingVid.description));
+        }
+      }
       setChannelUploadedVideos(vids);
 
       // Al publicar un vídeo o cambiar de canal con autoPlay, reiniciar pausas y reproducir directamente
@@ -753,7 +811,22 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         setIsChannelVideoPlaying(true);
         setUserPausedVideosMap({});
 
+        if (feedContainerRef.current) {
+          feedContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+        }
+
         const triggerPlay = (attempt = 0) => {
+          if (feedContainerRef.current) {
+            feedContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+          }
+          const firstVidId = incomingVid?.id || vids[0]?.id;
+          if (firstVidId) {
+            const firstCard = document.getElementById(`tiktok-round-card-multimedia-${firstVidId}`);
+            if (firstCard && feedContainerRef.current) {
+              firstCard.scrollIntoView({ behavior: 'instant', block: 'start' });
+            }
+          }
+
           const firstVid = vids[0];
           if (!firstVid) return;
           const el = videoRefsMap.current[firstVid.id] || channelVideoRef.current;
@@ -772,7 +845,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 }).catch(() => {});
               });
             }
-          } else if (attempt < 8) {
+          } else if (attempt < 15) {
             setTimeout(() => triggerPlay(attempt + 1), 40);
           }
         };
@@ -3923,43 +3996,28 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <div
               className="absolute inset-0 w-full h-full cursor-pointer overflow-hidden bg-black flex items-center justify-center select-none"
               onClick={(e) => {
-                const now = Date.now();
-                const diff = now - channelVideoLastClickTimeRef.current;
-                if (diff < 350) {
-                  e.stopPropagation();
-                  channelVideoLastClickTimeRef.current = 0;
-                  const el = videoRefsMap.current[currentVid.id];
-                  if (el) {
-                    if (el.paused) {
-                      el.play().catch(() => {});
-                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
-                    } else {
-                      el.pause();
-                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: true }));
-                    }
-                  }
-                } else {
-                  channelVideoLastClickTimeRef.current = now;
-                  if (activeChannelVideoIdx !== vidIdx) {
-                    setActiveChannelVideoIdx(vidIdx);
-                  }
-                }
-              }}
-              onDoubleClick={(e) => {
                 e.stopPropagation();
-                channelVideoLastClickTimeRef.current = 0;
-                const el = videoRefsMap.current[currentVid.id];
+                if (activeChannelVideoIdx !== vidIdx) {
+                  setActiveChannelVideoIdx(vidIdx);
+                }
+                const el = videoRefsMap.current[currentVid.id] || channelVideoRef.current;
                 if (el) {
-                  if (el.paused) {
+                  if (el.paused || isCardPaused) {
+                    el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
+                    el.volume = isChannelVideoAudioMuted ? 0 : Math.max(0.1, (channelVideoVolume || 88) / 100);
                     el.play().catch(() => {});
                     setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                    setIsUserPaused(false);
+                    if (isCardActive) setIsChannelVideoPlaying(true);
                   } else {
                     el.pause();
                     setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: true }));
+                    setIsUserPaused(true);
+                    if (isCardActive) setIsChannelVideoPlaying(false);
                   }
                 }
               }}
-              title="Haz doble clic en el centro del vídeo para pausar o reproducir"
+              title="Haz clic encima del vídeo para pausar o reproducir"
               id={`multimedia-channel-video-container-${currentVid.id}`}
             >
               <video
@@ -3976,6 +4034,28 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 loop
                 playsInline
                 muted={isChannelVideoAudioMuted || !isCardActive}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (activeChannelVideoIdx !== vidIdx) {
+                    setActiveChannelVideoIdx(vidIdx);
+                  }
+                  const el = videoRefsMap.current[currentVid.id] || channelVideoRef.current;
+                  if (el) {
+                    if (el.paused || isCardPaused) {
+                      el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
+                      el.volume = isChannelVideoAudioMuted ? 0 : Math.max(0.1, (channelVideoVolume || 88) / 100);
+                      el.play().catch(() => {});
+                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                      setIsUserPaused(false);
+                      if (isCardActive) setIsChannelVideoPlaying(true);
+                    } else {
+                      el.pause();
+                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: true }));
+                      setIsUserPaused(true);
+                      if (isCardActive) setIsChannelVideoPlaying(false);
+                    }
+                  }
+                }}
                 onPlay={() => {
                   if (isCardActive) setIsChannelVideoPlaying(true);
                 }}
@@ -3991,7 +4071,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     }
                   }
                 }}
-                className="w-full h-full object-cover select-none"
+                className="w-full h-full object-cover select-none cursor-pointer"
               />
 
               {/* ⏸️ ICONO DE PLAY EN EL CENTRO DE LA PANTALLA CUANDO ESTÁ EN PAUSA */}
@@ -4000,25 +4080,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px] z-30 transition-all duration-300 animate-fade-in cursor-pointer select-none"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const el = videoRefsMap.current[currentVid.id];
+                    const el = videoRefsMap.current[currentVid.id] || channelVideoRef.current;
                     if (el) {
                       el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
                       el.volume = isChannelVideoAudioMuted ? 0 : Math.max(0.1, (channelVideoVolume || 88) / 100);
                       el.play().catch(() => {});
                       setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
+                      setIsUserPaused(false);
+                      if (isCardActive) setIsChannelVideoPlaying(true);
                     }
                   }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
-                    const el = videoRefsMap.current[currentVid.id];
-                    if (el) {
-                      el.muted = isChannelVideoAudioMuted || channelVideoVolume === 0;
-                      el.volume = isChannelVideoAudioMuted ? 0 : Math.max(0.1, (channelVideoVolume || 88) / 100);
-                      el.play().catch(() => {});
-                      setUserPausedVideosMap(prev => ({ ...prev, [currentVid.id]: false }));
-                    }
-                  }}
-                  title="Haz clic o doble clic para reanudar el vídeo"
+                  title="Haz clic para reanudar el vídeo"
                   id={`multimedia-channel-paused-play-overlay-${currentVid.id}`}
                 >
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black/65 backdrop-blur-md flex items-center justify-center border-2 border-white/90 shadow-[0_0_35px_rgba(255,255,255,0.4),0_15px_35px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 transition-all duration-200 group">
@@ -4426,14 +4498,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             {isCardCommentsOpen && (
               <div
                 className={`absolute inset-x-0 bottom-0 z-50 bg-white/98 backdrop-blur-md rounded-t-3xl border-t border-slate-200/90 shadow-[0_-15px_45px_rgba(0,0,0,0.45)] flex flex-col p-3 sm:p-3.5 text-slate-900 animate-slide-up-tiktok pointer-events-auto transition-all duration-300 ${
-                  commentsList.length === 0
-                    ? 'max-h-[22%] sm:max-h-[160px]'
+                  showChannelVideoEmojiPicker
+                    ? 'min-h-[350px] max-h-[75%]'
+                    : commentsList.length === 0
+                    ? 'min-h-[220px] max-h-[30%] sm:max-h-[240px]'
                     : commentsList.length === 1
-                    ? 'max-h-[30%] sm:max-h-[220px]'
+                    ? 'min-h-[250px] max-h-[38%] sm:max-h-[270px]'
                     : commentsList.length === 2
-                    ? 'max-h-[40%] sm:max-h-[290px]'
+                    ? 'min-h-[280px] max-h-[46%] sm:max-h-[330px]'
                     : commentsList.length === 3
-                    ? 'max-h-[50%] sm:max-h-[360px]'
+                    ? 'min-h-[320px] max-h-[56%] sm:max-h-[390px]'
                     : 'top-1/3 max-h-[67%]'
                 }`}
                 onClick={(e) => e.stopPropagation()}
@@ -4537,27 +4611,73 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowChannelVideoEmojiPicker(!showChannelVideoEmojiPicker)}
-                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95 cursor-pointer text-sm"
-                      title="Insertar emoji rápido"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition active:scale-95 cursor-pointer text-base ${
+                        showChannelVideoEmojiPicker
+                          ? 'bg-rose-100 text-rose-600 ring-2 ring-rose-400'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                      title={showChannelVideoEmojiPicker ? "Cerrar emojis" : "Insertar emoji"}
                     >
                       😊
                     </button>
 
                     {showChannelVideoEmojiPicker && (
-                      <div className="absolute bottom-10 left-0 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 grid grid-cols-5 gap-1.5 z-50">
-                        {['❤️', '🔥', '👏', '😍', '✨', '👗', '👠', '👑', '💯', '🙌'].map((em) => (
+                      <div 
+                        className="absolute bottom-11 left-0 bg-white/98 backdrop-blur-xl border border-rose-200/90 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.22)] p-3 w-[275px] sm:w-[295px] z-50 animate-scale-in text-left select-none ring-1 ring-black/5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Cabecera del contenedor de emojis */}
+                        <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">✨</span>
+                            <span className="text-[11px] font-black uppercase text-slate-800 tracking-wider font-sans">
+                              Emojis rápidos
+                            </span>
+                          </div>
                           <button
-                            key={em}
+                            type="button"
+                            onClick={() => setShowChannelVideoEmojiPicker(false)}
+                            className="w-5 h-5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition cursor-pointer text-xs font-bold"
+                            title="Cerrar menú de emojis"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {/* Rejilla espaciosa y bien visible */}
+                        <div className="grid grid-cols-6 gap-1.5">
+                          {['❤️', '🔥', '👏', '😍', '✨', '💎', '👗', '👠', '👑', '💯', '🙌', '🎉', '🥂', '🌟', '💖', '🤩', '💃', '👍'].map((em) => (
+                            <button
+                              key={em}
+                              type="button"
+                              onClick={() => {
+                                setChannelVideoNewComment(prev => prev ? `${prev} ${em}` : em);
+                              }}
+                              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-lg sm:text-xl rounded-xl hover:bg-rose-50 hover:scale-120 active:scale-95 transition-all cursor-pointer bg-slate-50/70 border border-slate-100 hover:border-rose-200 shadow-3xs"
+                              title={`Añadir ${em} al comentario`}
+                            >
+                              {em}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Pie con sugerencia y botón de envío directo */}
+                        <div className="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between gap-1">
+                          <span className="text-[9.5px] text-slate-400 font-medium truncate">
+                            Toca para añadir al texto
+                          </span>
+                          <button
                             type="button"
                             onClick={() => {
-                              handleAddChannelVideoComment(currentVid, em);
+                              handleAddChannelVideoComment(currentVid, '❤️');
                               setShowChannelVideoEmojiPicker(false);
                             }}
-                            className="text-lg hover:scale-125 transition active:scale-90 p-1 cursor-pointer"
+                            className="px-2 py-0.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[9.5px] flex items-center gap-1 transition cursor-pointer border border-rose-200/80 active:scale-95 shadow-3xs shrink-0"
+                            title="Publicar ❤️ inmediatamente"
                           >
-                            {em}
+                            <span>⚡ Enviar ❤️</span>
                           </button>
-                        ))}
+                        </div>
                       </div>
                     )}
                   </div>

@@ -6121,7 +6121,7 @@ export default function CastingLiveSection({
       id: currentFinanzasSession?.id || 'sess-trabajadores-1',
       title: currentFinanzasSession?.title || 'Ronda de Financiación y Modaparati Directo',
       participants: participants,
-      poolTotal: currentFinanzasSession?.entryFee ? currentFinanzasSession.entryFee * 10 : 100,
+      poolTotal: currentFinanzasSession?.entryFee ? currentFinanzasSession.entryFee * 10 : 1000,
       winners: winners
     };
   };
@@ -7148,6 +7148,7 @@ export default function CastingLiveSection({
   const [activeSubTab, setActiveSubTab] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live'>('para-ti');
   const [liveViewMode, setLiveViewMode] = useState<'grid' | 'stream'>('grid');
   const [liveHeroMuted, setLiveHeroMuted] = useState<boolean>(true);
+  const [isHeroVideoPaused, setIsHeroVideoPaused] = useState<boolean>(false);
   const [heroCaptionTranslated, setHeroCaptionTranslated] = useState<boolean>(false);
   const [isHeroTopChannelsDropdownOpen, setIsHeroTopChannelsDropdownOpen] = useState<boolean>(false);
   const [heroChannelsSliderIdx, setHeroChannelsSliderIdx] = useState<number>(0);
@@ -7446,6 +7447,7 @@ export default function CastingLiveSection({
   const [fashionNewCommentText, setFashionNewCommentText] = useState<string>('');
   const [fashionChannelVolumeMap, setFashionChannelVolumeMap] = useState<Record<string, number>>({});
   const [fashionChannelMutedMap, setFashionChannelMutedMap] = useState<Record<string, boolean>>({});
+  const [fashionChannelPausedMap, setFashionChannelPausedMap] = useState<Record<string, boolean>>({});
   const [showStreamOptionsModal, setShowStreamOptionsModal] = useState<boolean>(false);
   const [streamOptionsTargetChannel, setStreamOptionsTargetChannel] = useState<{ id: string; label: string; image?: string } | null>(null);
   const [streamOptionsTab, setStreamOptionsTab] = useState<'camera' | 'mic' | 'screen' | 'rtmp' | 'multistream'>('camera');
@@ -10207,16 +10209,15 @@ export default function CastingLiveSection({
     return () => clearInterval(interval);
   }, [activeVideoIndex, isCommentsOpen]);
 
-  // Upload Form State
-  const [uploadUsername, setUploadUsername] = useState(userProfile?.username || 'usuario_anonimo');
-  const [uploadName, setUploadName] = useState(userProfile?.name || 'Inversor Anónimo');
+  const [uploadUsername, setUploadUsername] = useState(userProfile?.username || 'adrianalima');
+  const [uploadName, setUploadName] = useState(userProfile?.name || 'Adriana Lima');
   const [uploadVideoUrl, setUploadVideoUrl] = useState('');
   const [pastedVideoUrl, setPastedVideoUrl] = useState('');
   const [pastedUrlError, setPastedUrlError] = useState('');
   const [uploadDescription, setUploadDescription] = useState('Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25');
   const [uploadMusic, setUploadMusic] = useState('');
   const [uploadCategory, setUploadCategory] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos'>('para-ti');
-  const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' | ''>('');
+  const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' | ''>('Runway');
   const [showAllChannelGuide, setShowAllChannelGuide] = useState(false);
   const [uploadModelId, setUploadModelId] = useState('');
   const [uploadModalStage, setUploadModalStage] = useState<'review' | 'details'>('review');
@@ -11452,21 +11453,15 @@ export default function CastingLiveSection({
   const handleCreateVideo = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!uploadVideoCategory || uploadVideoCategory === 'Todos') {
-      alert('⚠️ Error: Debes seleccionar una categoría obligatoria para tu vídeo (Reels, Fashion, Finanzas, etc.) antes de poder publicarlo.');
-      // Scroll to category selection or focus
-      const el = document.getElementById('category-selector-container');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
-    }
+    // Asignar categoría: respetar estrictamente la categoría elegida por el usuario marcada de naranja en el selector (ej. Runway)
+    const chosenCat = (uploadVideoCategory && uploadVideoCategory !== 'Todos' ? uploadVideoCategory : 'Runway');
+    const finalCategory = (chosenCat === 'Modelos' ? 'Runway' : chosenCat === 'BackStage' ? 'Backstage' : chosenCat === 'Investors' ? 'Jewellery' : chosenCat) || 'Runway';
     
     const mediaUrl = uploadVideoUrl || PRESET_VIDEOS[0].url;
     const selectedModel = models.find(m => m.id === uploadModelId);
 
-    const finalUsername = selectedModel?.username || (uploadUsername || 'usuario_anonimo').toLowerCase().replace(/[^a-z0-9_]/g, '');
-    const finalName = selectedModel?.name || (uploadName || 'Inversor Anónimo');
+    const finalUsername = selectedModel?.username || (uploadUsername && uploadUsername !== 'usuario_anonimo' ? uploadUsername : 'adrianalima').toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const finalName = selectedModel?.name || (uploadName && uploadName !== 'Inversor Anónimo' ? uploadName : 'Adriana Lima');
 
     const videoId = `uploaded-${Date.now()}`;
     const newVideo: CastingLiveVideo = {
@@ -11474,7 +11469,7 @@ export default function CastingLiveSection({
       modelId: uploadModelId || undefined,
       username: finalUsername,
       name: finalName,
-      avatar: selectedModel?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      avatar: selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
       videoUrl: mediaUrl,
       coverUrl: undefined,
       poster: undefined,
@@ -11483,19 +11478,29 @@ export default function CastingLiveSection({
       comments: [],
       shares: Math.floor(Math.random() * 5),
       favorites: Math.floor(Math.random() * 8),
-      description: uploadDescription || '¡Nueva sesión de modelaje subida a Fashion Finances! 📸🌟 #trend #fashionista',
+      description: uploadDescription || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25',
       isLiked: false,
       isFavorited: false,
       isFollowing: false,
-      music: uploadMusic || 'Música original - Fashion Finances Studio',
+      music: uploadMusic || `Sonido original - @${finalUsername}`,
       category: uploadCategory as any,
-      videoCategory: (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory) || 'Runway',
+      videoCategory: finalCategory,
       uploaderId: userProfile?.id || 'anonymous',
       trimStart: trimStart,
       trimEnd: trimEnd
     };
 
-    const filteredPrevVideos = videosList.filter(v => {
+    let currentStoredVideos: any[] = [];
+    try {
+      const raw = localStorage.getItem('coll_casting_live_videos');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) currentStoredVideos = parsed;
+      }
+    } catch (e) {}
+
+    const baseList = currentStoredVideos.length > 0 ? currentStoredVideos : videosList;
+    const filteredPrevVideos = baseList.filter((v: any) => {
       if (!v || !v.id) return false;
       if (v.id === videoId) return false;
       if (mediaUrl && v.videoUrl === mediaUrl && v.description === newVideo.description) return false;
@@ -11505,6 +11510,9 @@ export default function CastingLiveSection({
     setVideosList(updatedVideos);
     try {
       localStorage.setItem('coll_casting_live_videos', JSON.stringify(updatedVideos));
+      localStorage.setItem('last_published_video', JSON.stringify(newVideo));
+      localStorage.setItem('last_published_video_id', videoId);
+      localStorage.setItem('last_selected_multimedia_channel', 'Todos');
     } catch (e) {
       console.error('Error saving casting live videos', e);
     }
@@ -11631,8 +11639,6 @@ export default function CastingLiveSection({
       }
     });
 
-    const finalCategory = (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory) || 'Runway';
-
     try {
       // Guardar 'Todos' como canal de navegación tras publicar
       localStorage.setItem('last_selected_multimedia_channel', 'Todos');
@@ -11642,13 +11648,13 @@ export default function CastingLiveSection({
         detail: { newVideo, updatedVideos, targetCategory: 'Todos', autoPlay: true } 
       }));
       window.dispatchEvent(new CustomEvent('change_multimedia_channel', { 
-        detail: { channel: 'Todos', autoPlay: true } 
+        detail: { channel: 'Todos', targetCategory: 'Todos', newVideo, autoPlay: true } 
       }));
       window.dispatchEvent(new CustomEvent('resume-channel-video', { 
-        detail: { channel: 'Todos', targetCategory: 'Todos', autoPlay: true } 
+        detail: { channel: 'Todos', targetCategory: 'Todos', newVideo, autoPlay: true } 
       }));
       window.dispatchEvent(new CustomEvent('play-published-video', { 
-        detail: { channel: 'Todos', targetCategory: 'Todos', autoPlay: true } 
+        detail: { channel: 'Todos', targetCategory: 'Todos', newVideo, autoPlay: true } 
       }));
     } catch (err) {
       console.error(err);
@@ -11661,6 +11667,15 @@ export default function CastingLiveSection({
     setSelectedLiveCategory('Todos' as any);
     setActiveVideoIndex(0);
     setAutoPlayEnabled(true);
+
+    // Scroll instantáneo al primer vídeo del canal
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const feedEl = document.getElementById('tiktok-rounds-vertical-feed');
+      if (feedEl) feedEl.scrollTo({ top: 0, behavior: 'instant' });
+      const firstCard = document.getElementById(`tiktok-round-card-multimedia-${videoId}`);
+      if (firstCard) firstCard.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }, 20);
 
     // Reproducir directamente el vídeo al abrirse el canal
     setTimeout(() => {
@@ -14593,7 +14608,8 @@ export default function CastingLiveSection({
     const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
     return (
       <div 
-        className="w-full h-full max-h-full bg-[#070b14] text-white flex flex-col font-sans text-left overflow-hidden min-h-0 animate-fade-in pointer-events-auto box-border" 
+        className="w-full h-full max-h-full bg-[#fff0f3] text-slate-900 flex flex-col font-sans text-left overflow-hidden min-h-0 animate-fade-in pointer-events-auto box-border" 
+        style={{ backgroundColor: '#fff0f3' }}
         id="finanzas-results-in-channel"
         onWheel={(e) => {
           e.stopPropagation();
@@ -14605,7 +14621,7 @@ export default function CastingLiveSection({
       >
         {/* Fixed Header bar inside phone container matching zr.png */}
         <div 
-          className="bg-[#0e1628]/95 border-b border-slate-800/80 p-2.5 sm:p-3 shrink-0 shadow-lg z-20 flex flex-col gap-1.5"
+          className="bg-white/95 border-b border-rose-200/80 p-2.5 sm:p-3 shrink-0 shadow-xs z-20 flex flex-col gap-1.5"
           onWheel={(e) => {
             e.stopPropagation();
             const wrapper = document.getElementById('podium-scrollable-content-wrapper');
@@ -14634,18 +14650,18 @@ export default function CastingLiveSection({
               <span>🛑</span>
               <span>Cerrar Concurso</span>
             </button>
-            <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Directo Finalizado
+            <span className="text-[9px] text-emerald-800 font-extrabold bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Directo Finalizado
             </span>
           </div>
 
-          <div className="flex items-start gap-1.5 pt-1 border-t border-slate-800/80">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0 mt-0.5" />
+          <div className="flex items-start gap-1.5 pt-1 border-t border-rose-200/80">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0 mt-0.5" />
             <div>
-              <h2 className="text-[10.5px] sm:text-[11px] font-black uppercase text-amber-400 tracking-wider font-sans leading-snug m-0">
+              <h2 className="text-[10.5px] sm:text-[11px] font-black uppercase text-amber-800 tracking-wider font-sans leading-snug m-0">
                 🏆 RESULTADOS FINALES Y RECUENTO DE VOTACIONES
               </h2>
-              <p className="text-[8.5px] text-slate-400 font-medium font-sans m-0 mt-0.5 leading-tight">
+              <p className="text-[8.5px] text-slate-500 font-medium font-sans m-0 mt-0.5 leading-tight">
                 Canal de Finanzas • Todos los participantes pueden ver la retransmisión en directo
               </p>
             </div>
@@ -14666,6 +14682,8 @@ export default function CastingLiveSection({
         >
           <SessionResultsPodium
             completedSessionToDisplay={activeSessionToDisplay}
+            pool={1000}
+            prizePerWinner={800}
             userProfile={{
               id: userProfile?.id || 'user',
               name: userProfile?.name || 'TÚ (Inversor)',
@@ -26653,8 +26671,21 @@ try {
                       loop
                       muted
                       playsInline
-                      className="w-full h-full object-cover select-none"
+                      className="w-full h-full object-cover select-none cursor-pointer"
                       style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (heroVideoRef.current) {
+                          if (heroVideoRef.current.paused || isHeroVideoPaused) {
+                            heroVideoRef.current.play().catch(() => {});
+                            setIsHeroVideoPaused(false);
+                          } else {
+                            heroVideoRef.current.pause();
+                            setIsHeroVideoPaused(true);
+                          }
+                        }
+                      }}
+                      title="Haz clic encima del vídeo para pausar o reproducir"
                       onError={(e) => {
                         const target = e.currentTarget;
                         if (!target.src.endsWith('/vertical_live_stream.mp4')) {
@@ -26676,7 +26707,20 @@ try {
                 loop
                 muted={liveHeroMuted}
                 playsInline
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (heroVideoRef.current) {
+                    if (heroVideoRef.current.paused || isHeroVideoPaused) {
+                      heroVideoRef.current.play().catch(() => {});
+                      setIsHeroVideoPaused(false);
+                    } else {
+                      heroVideoRef.current.pause();
+                      setIsHeroVideoPaused(true);
+                    }
+                  }
+                }}
+                title="Haz clic encima del vídeo para pausar o reproducir"
                 onLoadedMetadata={() => {
                   if (heroVideoRef.current) {
                     heroVideoRef.current.volume = (liveHeroMuted ? 0 : liveHeroVolume) / 100;
@@ -26684,6 +26728,24 @@ try {
                   }
                 }}
               />
+            )}
+            {/* ⏸️ ICONO DE PLAY EN EL CENTRO CUANDO EL HERO ESTÁ EN PAUSA */}
+            {isHeroVideoPaused && (
+              <div 
+                className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px] z-30 transition-all duration-300 animate-fade-in cursor-pointer select-none"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (heroVideoRef.current) {
+                    heroVideoRef.current.play().catch(() => {});
+                    setIsHeroVideoPaused(false);
+                  }
+                }}
+                title="Haz clic para reanudar el vídeo"
+              >
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black/65 backdrop-blur-md flex items-center justify-center border-2 border-white/90 shadow-[0_0_35px_rgba(255,255,255,0.4),0_15px_35px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 transition-all duration-200 group">
+                  <Play className="w-10 h-10 sm:w-12 sm:h-12 fill-white text-white translate-x-1 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] group-hover:scale-105 transition-transform" />
+                </div>
+              </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none" />
 
@@ -28013,14 +28075,73 @@ try {
                   className="relative flex items-center gap-1.5 pt-1 border-t border-white/10 shrink-0 w-full"
                 >
                   <div className="flex-1 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full pl-2 pr-2.5 py-1 focus-within:border-rose-500 transition shadow-inner min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => setShowHeroEmojiPicker(prev => !prev)}
-                      className="p-1 text-base hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none"
-                      title="Abrir emojis"
-                    >
-                      😊
-                    </button>
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowHeroEmojiPicker(prev => !prev)}
+                        className={`p-1 text-base hover:scale-125 transition active:scale-95 cursor-pointer bg-transparent border-0 shrink-0 leading-none select-none rounded-full ${showHeroEmojiPicker ? 'bg-rose-500/20' : ''}`}
+                        title={showHeroEmojiPicker ? "Cerrar emojis" : "Abrir emojis"}
+                      >
+                        😊
+                      </button>
+
+                      {showHeroEmojiPicker && (
+                        <div 
+                          className="absolute bottom-11 left-0 bg-[#0e1628]/98 backdrop-blur-xl border border-rose-500/60 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.85)] p-3 w-[275px] sm:w-[295px] z-50 animate-scale-in text-left select-none ring-1 ring-white/10"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-white/10">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">✨</span>
+                              <span className="text-[11px] font-black uppercase text-white tracking-wider font-sans">
+                                Emojis rápidos
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowHeroEmojiPicker(false)}
+                              className="w-5 h-5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer text-xs font-bold"
+                              title="Cerrar menú de emojis"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-6 gap-1.5">
+                            {['❤️', '🔥', '👏', '😍', '✨', '💎', '👗', '👠', '👑', '💯', '🙌', '🎉', '🥂', '🌟', '💖', '🤩', '💃', '👍'].map((em) => (
+                              <button
+                                key={em}
+                                type="button"
+                                onClick={() => {
+                                  setHeroCommentInputText(prev => prev ? `${prev} ${em}` : em);
+                                }}
+                                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-lg sm:text-xl rounded-xl hover:bg-rose-500/20 hover:scale-120 active:scale-95 transition-all cursor-pointer bg-slate-800/60 border border-slate-700/60 hover:border-rose-400/80 shadow-3xs"
+                                title={`Añadir ${em}`}
+                              >
+                                {em}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 mt-2 border-t border-white/10 flex items-center justify-between gap-1">
+                            <span className="text-[9.5px] text-slate-400 font-medium truncate">
+                              Toca para añadir al texto
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleAddHeroComment('❤️');
+                                setShowHeroEmojiPicker(false);
+                              }}
+                              className="px-2 py-0.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-[9.5px] flex items-center gap-1 transition cursor-pointer border border-rose-500/40 active:scale-95 shadow-3xs shrink-0"
+                              title="Enviar ❤️ directo"
+                            >
+                              <span>⚡ Enviar ❤️</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={heroCommentInputText}
@@ -28299,7 +28420,19 @@ try {
                           loop
                           muted={isMuted}
                           playsInline
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const target = e.currentTarget;
+                            if (target.paused || fashionChannelPausedMap[channel.id]) {
+                              target.play().catch(() => {});
+                              setFashionChannelPausedMap(prev => ({ ...prev, [channel.id]: false }));
+                            } else {
+                              target.pause();
+                              setFashionChannelPausedMap(prev => ({ ...prev, [channel.id]: true }));
+                            }
+                          }}
+                          title="Haz clic encima del vídeo para pausar o reproducir"
                           ref={(el) => {
                             if (el) {
                               el.volume = (isMuted ? 0 : currentVol) / 100;
@@ -28307,6 +28440,26 @@ try {
                             }
                           }}
                         />
+                        {/* ⏸️ ICONO DE PLAY EN EL CENTRO CUANDO ESTÁ EN PAUSA */}
+                        {fashionChannelPausedMap[channel.id] && (
+                          <div 
+                            className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px] z-30 transition-all duration-300 animate-fade-in cursor-pointer select-none"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const parent = e.currentTarget.parentElement;
+                              const vid = parent?.querySelector('video');
+                              if (vid) {
+                                vid.play().catch(() => {});
+                              }
+                              setFashionChannelPausedMap(prev => ({ ...prev, [channel.id]: false }));
+                            }}
+                            title="Haz clic para reanudar el vídeo"
+                          >
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/65 backdrop-blur-md flex items-center justify-center border-2 border-white/90 shadow-[0_0_35px_rgba(255,255,255,0.4),0_15px_35px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 transition-all duration-200 group">
+                              <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white translate-x-1 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] group-hover:scale-105 transition-transform" />
+                            </div>
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
 
                         {/* 🎯 SENSOR DEL MARGEN IZQUIERDO DEL CANAL: Al pasar el puntero por el lado izquierdo aparece la barra de volumen de la captura image.png (solicitud 1) */}
