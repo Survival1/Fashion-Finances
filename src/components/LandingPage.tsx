@@ -370,7 +370,7 @@ export default function LandingPage({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-5 flex flex-col justify-between hover:border-indigo-300 transition-all duration-200">
               <div className="space-y-3">
                 <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-2xl">
@@ -390,28 +390,6 @@ export default function LandingPage({
                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition uppercase tracking-wide cursor-pointer shadow-xs shadow-indigo-500/10 active:scale-98"
               >
                 Simular Inversor
-              </button>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-5 flex flex-col justify-between hover:border-pink-300 transition-all duration-200">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 text-2xl">
-                  💃
-                </div>
-                <div>
-                  <h4 className="font-display font-bold text-xs text-slate-900">Modelo: Adriana Lima</h4>
-                  <p className="text-[10px] text-slate-400 font-mono">Modelo Profesional en Ranking</p>
-                </div>
-                <p className="text-[11px] text-slate-500 leading-normal">
-                  Visualiza el panel de la modelo, cobra comisiones del 10% automático de tus referidos, publica contenido y modera tu lista de fans.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onSwitchPersona('model')}
-                className="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl text-xs transition uppercase tracking-wide cursor-pointer shadow-xs shadow-pink-500/10 active:scale-98"
-              >
-                Simular Modelo
               </button>
             </div>
 

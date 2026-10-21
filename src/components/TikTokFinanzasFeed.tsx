@@ -1565,7 +1565,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     return () => window.removeEventListener('tiktok-feed-scroll-round', handleCustomFeedScroll);
   }, [activeFinanzasSessionIndex, activeSessionsOnly.length, showFinanzasResults]);
 
-  // 🎯 Redirigir directamente a la página de la captura imagen.png (donde los participantes están en la cuenta atrás de los 10 minutos para votar) al pulsar X
+  // 🎯 Redirigir directamente a la página de la captura image.png (donde los participantes están en la cuenta atrás de los 10 minutos para votar en Casual & Lifestyle) al pulsar X
   useEffect(() => {
     const handleExitVotingToImagePage = (e: any) => {
       setShowVotingProjectsModal(false);
@@ -1576,29 +1576,40 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       if (setShowFinanzasResults) setShowFinanzasResults(false);
       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
 
-      // Encontrar la ronda de la captura image.png (Round Streetwear & Urban de 10€ donde está inscrito)
-      const targetSessionId = e.detail?.sessionId || 'sess-trabajadores-1';
-      const roundIdx = activeSessionsOnly.findIndex(s => 
-        s.id === targetSessionId || 
-        s.entryFee === 10 || 
-        s.id === 'sess-trabajadores-1' || 
-        s.title?.toUpperCase().includes('STREETWEAR')
+      // Encontrar la ronda de la captura image.png (Round Casual & Lifestyle de 100€)
+      const casualIndex = activeSessionsOnly.findIndex(s => 
+        s.entryFee === 100 || 
+        s.id === 'sess-emprendedores-1' || 
+        s.title?.toUpperCase().includes('CASUAL') ||
+        s.category?.toUpperCase().includes('CASUAL')
       );
-      const resolvedIndex = e.detail?.sessionIndex !== undefined ? e.detail.sessionIndex : (roundIdx !== -1 ? roundIdx : 0);
+      const targetSessionId = e.detail?.sessionId || (casualIndex !== -1 ? activeSessionsOnly[casualIndex]?.id : 'sess-emprendedores-1');
+      const resolvedIndex = e.detail?.sessionIndex !== undefined ? e.detail.sessionIndex : (casualIndex !== -1 ? casualIndex : 0);
 
       setActiveFinanzasSessionIndex(resolvedIndex);
       scrollToRound(resolvedIndex);
 
-      // Volver a la ventana de la captura image.png: fase de exposición (no forzar fase de votación)
+      // Volver a la ventana de la captura image.png: fase de votación activa (con cuenta atrás de 10 min y "TIENEN 10 MINUTOS PARA VOTAR.")
       setSessionVotingPhaseMap(prev => {
-        const next = { ...prev, [targetSessionId]: false, 'sess-trabajadores-1': false };
+        const next = { ...prev, [targetSessionId]: true, 'sess-emprendedores-1': true };
         try {
           localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(next));
-          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'false');
-          localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+          localStorage.setItem(`finanzas_is_voting_phase_active_${targetSessionId}`, 'true');
+          localStorage.setItem('finanzas_is_voting_phase_active', 'true');
         } catch (err) {}
         return next;
       });
+
+      setSessionVotingTimerMap(prev => {
+        const curr = prev[targetSessionId];
+        if (curr === undefined || curr <= 0) {
+          return { ...prev, [targetSessionId]: 584 };
+        }
+        return prev;
+      });
+      if (setVotingPhaseTimer) {
+        setVotingPhaseTimer(584);
+      }
     };
 
     window.addEventListener('exit-voting-to-image-page', handleExitVotingToImagePage);
@@ -6455,24 +6466,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     </span>
                   </button>
 
-                  {/* Button: 📋 VER PROYECTOS (White background matching zz.png) */}
+                  {/* Button: 📋 TOTAL PROYECTOS (matching image.png) */}
                   <button
                     type="button"
                     onClick={() => {
                       setActiveFinanzasSessionIndex(index);
-                      const lucasIdx = participants.findIndex(p => 
-                        p.name?.toLowerCase().includes('lucas') || 
-                        p.id === 'trab-1' || 
-                        p.id === 'lucas' || 
-                        p.username?.toLowerCase().includes('lucas')
-                      );
-                      const targetIdx = lucasIdx !== -1 ? lucasIdx : 0;
                       if (setVotingProjectSlideIndex) {
-                        setVotingProjectSlideIndex(targetIdx);
+                        setVotingProjectSlideIndex(0);
                       }
-                      const lucasUser = participants[targetIdx] || participants[0];
-                      if (setSelectedFinanzasUser && lucasUser) {
-                        setSelectedFinanzasUser(lucasUser);
+                      const firstUser = participants[0];
+                      if (setSelectedFinanzasUser && firstUser) {
+                        setSelectedFinanzasUser(firstUser);
                       }
 
                       setShowFinanzasInscriptionInChannel(false);
@@ -6484,10 +6488,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       setShowVotingProjectsModal(true);
                     }}
                     className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-slate-200 shadow-md flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer uppercase tracking-wider font-sans transition active:scale-95 shrink-0 mb-0.5 sm:mb-1"
-                    id={`btn-ver-proyectos-ronda-${session.id}`}
+                    id={`btn-total-proyectos-ronda-${session.id}`}
+                    title="Total Proyectos - Ver proyectos de los participantes"
                   >
                     <span className="text-base shrink-0">📋</span>
-                    <span className="font-black">VER PROYECTOS</span>
+                    <span className="font-black">TOTAL PROYECTOS</span>
                   </button>
                 </div>
               

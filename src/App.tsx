@@ -25,6 +25,7 @@ import FashionRankingSlider from './components/FashionRankingSlider';
 import GlobalMobileImageLightbox from './components/GlobalMobileImageLightbox';
 import MobileNavigationMenu from './components/MobileNavigationMenu';
 import { ModelFullscreenExpandedView } from './components/ModelFullscreenExpandedView';
+import AdminPortal from './components/AdminPortal';
 import { 
   Sparkles, 
   Home, 
@@ -403,7 +404,7 @@ export default function App() {
   const menSliderRef = useRef<HTMLDivElement>(null);
 
   // --- UI/Navigation State Hooks ---
-  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu'>('profile');
+  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin'>('profile');
   const [initialSelectedStoreId, setInitialSelectedStoreId] = useState<string | null>(null);
   const [selectedLiveModelId, setSelectedLiveModelId] = useState<string | undefined>(undefined);
   const [selectedModelForView, setSelectedModelForView] = useState<ModelProfile | null>(null);
@@ -1903,6 +1904,34 @@ export default function App() {
     if (!loginUsername) return;
     const cleanUsername = loginUsername.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 
+    // Check admin credentials
+    if (cleanUsername === 'admin' || cleanUsername === 'administrador') {
+      const adminUser: UserSessionProfile = {
+        id: 'usr-admin-001',
+        name: 'Super Admin',
+        username: 'admin',
+        role: 'admin',
+        patrocinadorId: 'model-1',
+        balance: 50000.00,
+        totalEarnings: 15200.00,
+        totalInvested: 10000.00,
+        totalCommissions: 4500.00,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        verified: true,
+        bankInfoProvided: true,
+        registeredAt: '2025-01-10',
+        bio: 'Superadministrador con privilegios de gestión de plataforma, auditoría y control de fondos.'
+      };
+      setUserProfile(adminUser);
+      saveStateToLocalStorage(models, adminUser, projects, sessions, messages, movements);
+      setShowLoginModal(false);
+      setLoginUsername('');
+      setLoginPassword('');
+      setActiveTabTab('admin');
+      alert('🔑 Sesión iniciada con éxito como Administrador. Accediendo al Panel de Control...');
+      return;
+    }
+
     // Check default Ernesto investor
     if (cleanUsername === 'ernesto' || cleanUsername === 'ernestovs') {
       switchDefaultPersona('investor');
@@ -2851,6 +2880,20 @@ export default function App() {
   // Find user's active sponsor info for display
   const userSponsor = models.find(m => m.id === userProfile.patrocinadorId);
 
+  // 🛡️ FULL-SUITE ADMINISTRATOR PAGE
+  if (activeTab === 'admin') {
+    return (
+      <AdminPortal
+        currentUser={userProfile}
+        onExitAdmin={() => setActiveTabTab(previousTab && previousTab !== 'admin' ? previousTab : 'home')}
+        onNavigateToTab={(tab) => setActiveTabTab(tab)}
+        sessions={sessions}
+        models={models}
+        projects={projects}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:overflow-hidden max-md:min-h-0' : 'overflow-y-auto'} select-none no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}>
       <HeartRainOverlay />
@@ -2912,7 +2955,19 @@ export default function App() {
               </button>
             </div>
 
-
+            {/* 🛡️ Botón Panel de Administración */}
+            <button
+              onClick={() => {
+                setPreviousTab(activeTab);
+                setActiveTabTab('admin');
+              }}
+              className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:shadow-xs active:scale-95"
+              id="btn-header-admin-portal"
+              title="Abrir Panel de Administración Integral"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#fe2c55]" />
+              <span className="font-mono uppercase text-[11px] tracking-wide">Panel Admin</span>
+            </button>
           </div>
         </div>
       </header>
@@ -3120,6 +3175,7 @@ export default function App() {
                 <span>Patrocinados</span>
               </button>
             )}
+
 
             <button
               onClick={handleLogout}

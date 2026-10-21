@@ -11569,31 +11569,47 @@ export default function CastingLiveSection({
       }
     }
     
-    // Also add to the profile saved_videos list (so it displays in z.png under the selected tab)
+    // Also add to the profile saved_videos list (so it displays in z.png under Vídeos Publicados)
     const currentUserId = userProfile?.id || 'anonymous';
     const targetUserIds = new Set<string>();
     if (currentUserId) targetUserIds.add(currentUserId);
+    if (userProfile?.id) targetUserIds.add(userProfile.id);
+    if (userProfile?.username) targetUserIds.add(userProfile.username);
     if (uploadModelId) targetUserIds.add(uploadModelId);
+    if (finalUsername) targetUserIds.add(finalUsername);
+    targetUserIds.add('adrianalima');
+    targetUserIds.add('adrianalima_w1');
+    targetUserIds.add('topf-1');
+    targetUserIds.add('usr-1');
 
-    // Reclaim localStorage quota by cleaning up old duplicate/excessive saved_videos keys
+    const publishedDesc = uploadDescription?.trim() || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25 #fashionfinances';
+    const publishedTitle = uploadDescription?.trim() || 'Vídeo publicado';
+
+    const savedVideoItem = {
+      id: videoId,
+      title: publishedTitle,
+      description: publishedDesc,
+      videoUrl: mediaUrl,
+      music: uploadMusic || `Sonido original - @${finalUsername}`,
+      likes: newVideo.likes,
+      views: '1.2K',
+      avatar: selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      name: finalUsername,
+      videoCategory: finalCategory
+    };
+
+    // Save in global coll_published_videos
     try {
-      const keysToCleanup: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('saved_videos_')) {
-          const mId = key.substring('saved_videos_'.length);
-          if (mId !== currentUserId && mId !== uploadModelId) {
-            keysToCleanup.push(key);
-          }
-        }
+      const rawPub = localStorage.getItem('coll_published_videos');
+      let pubList: any[] = [];
+      if (rawPub) {
+        const parsed = JSON.parse(rawPub);
+        if (Array.isArray(parsed)) pubList = parsed;
       }
-      keysToCleanup.forEach(k => {
-        try {
-          localStorage.removeItem(k);
-        } catch (e) {}
-      });
-    } catch (e) {
-      console.error('Cleanup error', e);
+      const nextPub = [savedVideoItem, ...pubList.filter((p: any) => p && p.id !== videoId)];
+      localStorage.setItem('coll_published_videos', JSON.stringify(nextPub));
+    } catch (err) {
+      console.error('Error saving coll_published_videos', err);
     }
 
     targetUserIds.forEach(targetId => {
@@ -11605,25 +11621,10 @@ export default function CastingLiveSection({
           if (Array.isArray(parsed)) {
             existingSavedVideos = parsed.filter((v: any) => v && v.id !== 'sv-uploaded-adriana' && v.id !== 'sv-1' && v.id !== 'sv-2' && v.id !== 'sv-3');
           }
-        } else {
-          existingSavedVideos = [];
         }
       } catch (e) {
         console.error('Error loading saved videos', e);
       }
-
-      const savedVideoItem = {
-        id: videoId,
-        title: uploadDescription || '¡Nueva sesión de modelaje subida!',
-        description: uploadDescription || '¡Nueva sesión de modelaje subida a Fashion Finances! 📸🌟 #trend #fashionista',
-        videoUrl: mediaUrl,
-        music: uploadMusic || 'Música original - Fashion Finances Studio',
-        likes: newVideo.likes,
-        views: '1.2K',
-        avatar: selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-        name: finalUsername,
-        videoCategory: (uploadVideoCategory === 'Modelos' ? 'Runway' : uploadVideoCategory) || 'Runway'
-      };
 
       const filteredExisting = existingSavedVideos.filter((v: any) => {
         if (!v || !v.id) return false;
@@ -14116,31 +14117,39 @@ export default function CastingLiveSection({
                 setShowFinanzasRecount(false);
                 setShowFinanzasResults(false);
 
-                // 🎯 Volver exactamente a la ventana de la captura image.png:
-                // Ronda Streetwear & Urban (10€) con el usuario inscrito como participante y en fase de exposición
-                setIsVotingPhaseActive(false);
+                // 🎯 Volver exactamente a la página de la captura image.png:
+                // Ronda Casual & Lifestyle (100€) en fase de votación activa (10 minutos)
+                setIsVotingPhaseActive(true);
+                setForceShowParticipantsPanel(true);
+                setIsBottomParticipantsHovered(true);
 
-                // Buscar el índice de la ronda Streetwear & Urban (10€) donde el usuario hizo el pago (captura image.png)
-                const streetwearIndex = activeSessionsOnly.findIndex(s => 
-                  s.entryFee === 10 || 
-                  s.id === 'sess-trabajadores-1' || 
-                  s.id === 'sess-streetwear-ref-2' || 
-                  s.title?.toUpperCase().includes('STREETWEAR')
+                // Buscar el índice de la ronda Casual & Lifestyle (100€) (captura image.png)
+                const casualIndex = activeSessionsOnly.findIndex(s => 
+                  s.entryFee === 100 || 
+                  s.id === 'sess-emprendedores-1' || 
+                  s.title?.toUpperCase().includes('CASUAL') ||
+                  s.category?.toUpperCase().includes('CASUAL')
                 );
-                const targetIndex = streetwearIndex !== -1 ? streetwearIndex : 0;
+                const targetIndex = casualIndex !== -1 ? casualIndex : activeFinanzasSessionIndex;
                 setActiveFinanzasSessionIndex(targetIndex);
 
-                const activeSessionId = activeSessionsOnly[targetIndex]?.id || 'sess-trabajadores-1';
+                const activeSessionId = activeSessionsOnly[targetIndex]?.id || 'sess-emprendedores-1';
                 try {
-                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'false');
-                  localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+                  localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+                  localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+                  localStorage.setItem(`finanzas_voting_phase_timer_${activeSessionId}`, '584');
                 } catch (err) {}
+
+                if (!votingPhaseTimer || votingPhaseTimer <= 0) {
+                  setVotingPhaseTimer(584);
+                }
 
                 // Despachar evento para sincronizar hacia la captura image.png
                 window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
                   detail: {
                     sessionId: activeSessionId,
-                    sessionIndex: targetIndex
+                    sessionIndex: targetIndex,
+                    isVoting: true
                   }
                 }));
               }}
@@ -14747,22 +14756,32 @@ export default function CastingLiveSection({
         id="voting-projects-modal-backdrop"
         onClick={() => {
           setShowVotingProjectsModal(false);
-          setIsVotingPhaseActive(false);
-          const streetwearIndex = activeSessionsOnly.findIndex(s => 
-            s.entryFee === 10 || 
-            s.id === 'sess-trabajadores-1' || 
-            s.id === 'sess-streetwear-ref-2' || 
-            s.title?.toUpperCase().includes('STREETWEAR')
+          setIsVotingPhaseActive(true);
+          setForceShowParticipantsPanel(true);
+          setIsBottomParticipantsHovered(true);
+
+          const casualIndex = activeSessionsOnly.findIndex(s => 
+            s.entryFee === 100 || 
+            s.id === 'sess-emprendedores-1' || 
+            s.title?.toUpperCase().includes('CASUAL') ||
+            s.category?.toUpperCase().includes('CASUAL')
           );
-          const targetIndex = streetwearIndex !== -1 ? streetwearIndex : 0;
+          const targetIndex = casualIndex !== -1 ? casualIndex : activeFinanzasSessionIndex;
           setActiveFinanzasSessionIndex(targetIndex);
-          const activeSessionId = activeSessionsOnly[targetIndex]?.id || 'sess-trabajadores-1';
+
+          const activeSessionId = activeSessionsOnly[targetIndex]?.id || 'sess-emprendedores-1';
           try {
-            localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'false');
-            localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+            localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessionId}`, 'true');
+            localStorage.setItem('finanzas_is_voting_phase_active', 'true');
+            localStorage.setItem(`finanzas_voting_phase_timer_${activeSessionId}`, '584');
           } catch (err) {}
+
+          if (!votingPhaseTimer || votingPhaseTimer <= 0) {
+            setVotingPhaseTimer(584);
+          }
+
           window.dispatchEvent(new CustomEvent('exit-voting-to-image-page', {
-            detail: { sessionId: activeSessionId, sessionIndex: targetIndex }
+            detail: { sessionId: activeSessionId, sessionIndex: targetIndex, isVoting: true }
           }));
         }}
       >
@@ -33543,15 +33562,15 @@ try {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        const lucasIdx = currentSessionParticipants10.findIndex(p => p.name?.toLowerCase().includes('lucas') || p.id === 'trab-1' || p.id === 'lucas');
-                                        setVotingProjectSlideIndex(lucasIdx !== -1 ? lucasIdx : 0);
+                                        setVotingProjectSlideIndex(0);
                                         setShowVotingProjectsModal(true);
                                       }}
                                       className="w-full max-w-[400px] bg-white hover:bg-slate-100 text-slate-950 active:scale-95 font-black text-[10.5px] xs:text-[11.5px] sm:text-[12.5px] px-6 sm:px-10 py-2 sm:py-2.5 rounded-full transition duration-200 border border-slate-200 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-sans shadow-lg box-border"
                                       id="btn-votar-mejor-proyecto-channel"
+                                      title="Total proyectos - Ver proyectos de los participantes"
                                     >
                                       <span className="text-sm shrink-0">📋</span>
-                                      <span className="truncate min-w-0 font-black">VER PROYECTOS</span>
+                                      <span className="truncate min-w-0 font-black">TOTAL PROYECTOS</span>
                                     </button>
                                   </div>
                                 </>

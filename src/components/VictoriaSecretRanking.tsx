@@ -1311,8 +1311,6 @@ export default function VictoriaSecretRanking({
   const giftSliderRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
   const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
-  const [sliderScrollProgress, setSliderScrollProgress] = useState<number>(0);
-  const [isSliderAutoplay, setIsSliderAutoplay] = useState<boolean>(false);
 
   // Mouse drag support for slider
   const isDraggingRef = useRef(false);
@@ -1354,8 +1352,6 @@ export default function VictoriaSecretRanking({
       const { scrollLeft, scrollWidth, clientWidth } = giftSliderRef.current;
       setCanScrollLeft(scrollLeft > 10);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-      const maxScroll = scrollWidth - clientWidth;
-      setSliderScrollProgress(maxScroll > 0 ? Math.min(100, Math.max(0, (scrollLeft / maxScroll) * 100)) : 0);
     }
   };
 
@@ -1368,26 +1364,8 @@ export default function VictoriaSecretRanking({
       const { scrollLeft, scrollWidth, clientWidth } = giftSliderRef.current;
       setCanScrollLeft(scrollLeft > 10);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-      const maxScroll = scrollWidth - clientWidth;
-      setSliderScrollProgress(maxScroll > 0 ? Math.min(100, Math.max(0, (scrollLeft / maxScroll) * 100)) : 0);
     }
   }, [vaultViewMode, giftTimeFilter, receivedCategoryFilter, receivedSearchQuery, vaultSortOrder, receivedGifts.length]);
-
-  // Autoplay effect
-  useEffect(() => {
-    if (!isSliderAutoplay || vaultViewMode !== 'slider') return;
-    const timer = setInterval(() => {
-      if (giftSliderRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = giftSliderRef.current;
-        if (scrollLeft >= scrollWidth - clientWidth - 15) {
-          giftSliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          scrollGiftSlider('right');
-        }
-      }
-    }, 3200);
-    return () => clearInterval(timer);
-  }, [isSliderAutoplay, vaultViewMode]);
 
   const isGiftInTimePeriod = (timestamp: number, filter: 'all' | 'actuales' | 'recientes' | 'antiguos') => {
     if (filter === 'all') return true;
@@ -3384,146 +3362,175 @@ export default function VictoriaSecretRanking({
               {giftsSubTab === 'received' && (
                 <div className="space-y-4 animate-fade-in" id="boveda-regalos-container">
                   
-                  {/* 🏛️ VAULT MASTER HEADER & REPUTATION BANNER */}
-                  <div className="bg-gradient-to-r from-slate-950 via-[#18161e] to-slate-950 border border-amber-500/40 rounded-2xl p-4 sm:p-5 text-white shadow-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-52 h-52 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                  {/* 🏛️ VAULT MASTER HEADER & REPUTATION BANNER (BLANCO ROSADO PERLA) */}
+                  <div className="bg-gradient-to-br from-[#fff9fb] via-[#fff0f5] to-[#fdf2f7] border-2 border-pink-200/90 rounded-3xl p-4 sm:p-6 text-slate-800 shadow-[0_10px_35px_rgba(251,113,133,0.08),_0_2px_10px_rgba(244,114,182,0.05)] relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-60 h-60 bg-pink-200/30 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-rose-200/20 rounded-full blur-2xl pointer-events-none" />
                     
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500/30 via-pink-500/20 to-purple-500/30 border-2 border-amber-400/60 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+                      {/* Left side: Emblem, Title, Badges, Description */}
+                      <div className="flex items-start gap-3.5 max-w-xl">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-100 via-rose-50 to-amber-100 border-2 border-pink-300/80 flex items-center justify-center text-2xl shadow-xs shrink-0">
                           🏛️
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-base sm:text-lg font-serif font-black text-amber-200 tracking-wide flex items-center gap-1.5">
+                            <h3 className="text-base sm:text-xl font-serif font-black text-slate-900 tracking-wide flex items-center gap-1.5">
                               BÓVEDA DE REGALOS CUSTODIADOS
                             </h3>
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
-                              <Shield className="w-2.5 h-2.5 text-emerald-400" />
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                              <Shield className="w-2.5 h-2.5 text-emerald-600" />
                               Custodia Activa
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
-                              <Lock className="w-2.5 h-2.5 text-amber-400" />
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                              <Lock className="w-2.5 h-2.5 text-amber-600" />
                               18K Seal
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-300 font-mono mt-0.5">
+                          <p className="text-xs text-slate-600 font-mono mt-1 leading-relaxed">
                             Caja fuerte oficial donde se custodian todos los regalos, certificados y distinciones recibidos de múltiples usuarios y mecenas.
                           </p>
                         </div>
                       </div>
 
-                      {/* Vault Action Buttons */}
-                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                      {/* Right side: Vault Action Buttons */}
+                      {/* "+ Recibir Regalo" a la izquierda, y a su derecha los botones en columna vertical con el mismo tamaño y fondo blanco rosado perla */}
+                      <div className="flex items-stretch gap-2.5 shrink-0 self-start lg:self-center">
+                        {/* Botón Principal: + Recibir Regalo */}
                         <button
                           type="button"
                           onClick={handleSimulateIncomingGift}
-                          className="px-3 py-1.5 bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 hover:from-pink-500 hover:to-rose-500 text-white rounded-xl text-xs font-serif font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer transform hover:scale-102 active:scale-98"
+                          className="w-32 sm:w-36 min-h-[142px] bg-gradient-to-br from-pink-600 via-rose-600 to-pink-700 hover:from-pink-500 hover:to-rose-500 text-white rounded-2xl p-3 font-serif font-black flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md transition cursor-pointer transform hover:scale-[1.02] active:scale-[0.98] shrink-0 text-center border border-pink-400/40"
                           title="Simular recepción de un nuevo regalo de otra modelo o patrocinador"
                         >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>+ Recibir Regalo</span>
+                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
+                            <Plus className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <span className="text-xs sm:text-sm font-black block leading-tight">
+                              + Recibir<br />Regalo
+                            </span>
+                            <span className="text-[9px] font-mono opacity-85 mt-1 block">
+                              Simular donante
+                            </span>
+                          </div>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setShowVaultInspector(!showVaultInspector)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer border ${
-                            showVaultInspector
-                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs'
-                              : 'bg-white/10 hover:bg-white/15 text-amber-300 border-amber-500/30'
-                          }`}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>{showVaultInspector ? 'Ocultar Vitrina' : 'Previsualizar'}</span>
-                        </button>
+                        {/* Columna vertical de botones a la derecha de Recibir Regalo (todos con el mismo tamaño exacto y fondo blanco rosado perla) */}
+                        <div className="flex flex-col gap-1.5 shrink-0 justify-between">
+                          {/* Botón 1: Previsualizar / Ocultar Vitrina */}
+                          <button
+                            type="button"
+                            onClick={() => setShowVaultInspector(!showVaultInspector)}
+                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
+                              showVaultInspector
+                                ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 border-amber-500 font-black shadow-xs'
+                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
+                            }`}
+                            title={showVaultInspector ? "Ocultar vitrina de inspección" : "Abrir vitrina de inspección de regalos"}
+                          >
+                            <Eye className="w-3.5 h-3.5 text-pink-600" />
+                            <span>{showVaultInspector ? 'Ocultar Vitrina' : 'Previsualizar'}</span>
+                          </button>
 
-                        {/* View Mode Toggle: Slider vs Grid vs Dense Table */}
-                        <div className="flex items-center bg-black/50 p-0.5 rounded-xl border border-white/10">
+                          {/* Botón 2: Vista Slider */}
                           <button
                             type="button"
                             onClick={() => setVaultViewMode('slider')}
-                            className={`px-2.5 py-1.5 rounded-lg transition cursor-pointer text-xs font-mono font-bold flex items-center gap-1.5 ${
-                              vaultViewMode === 'slider' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
+                              vaultViewMode === 'slider'
+                                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white border-pink-600 font-black shadow-xs'
+                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
                             }`}
-                            title="Vista Slider (Carrusel deslizante)"
+                            title="Ver regalos en slider deslizante continuo"
                           >
-                            <span>🎠 Slider</span>
+                            <span>🎠</span>
+                            <span>Vista Slider</span>
                           </button>
+
+                          {/* Botón 3: Vista Cuadrícula */}
                           <button
                             type="button"
                             onClick={() => setVaultViewMode('grid')}
-                            className={`p-1.5 rounded-lg transition cursor-pointer ${
-                              vaultViewMode === 'grid' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
+                              vaultViewMode === 'grid'
+                                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white border-pink-600 font-black shadow-xs'
+                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
                             }`}
-                            title="Vista Cuadrícula (Grid completo)"
+                            title="Ver regalos en cuadrícula completa"
                           >
-                            <Grid className="w-3.5 h-3.5" />
+                            <Grid className="w-3.5 h-3.5 text-pink-600" />
+                            <span>Vista Cuadrícula</span>
                           </button>
+
+                          {/* Botón 4: Vista Lista */}
                           <button
                             type="button"
                             onClick={() => setVaultViewMode('dense')}
-                            className={`p-1.5 rounded-lg transition cursor-pointer ${
-                              vaultViewMode === 'dense' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
+                              vaultViewMode === 'dense'
+                                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white border-pink-600 font-black shadow-xs'
+                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
                             }`}
-                            title="Vista Libro de Custodia (Lista compacta)"
+                            title="Ver libro de registro y custodia"
                           >
-                            <List className="w-3.5 h-3.5" />
+                            <List className="w-3.5 h-3.5 text-pink-600" />
+                            <span>Vista Lista</span>
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Vault Summary Metrics Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 pt-3 border-t border-amber-500/20 relative z-10">
-                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
-                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                    {/* Vault Summary Metrics Grid (Blanco Rosado Perla glassmorphism) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-4 border-t border-pink-200/70 relative z-10">
+                      <div className="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-2xl border border-pink-100 shadow-2xs hover:shadow-xs transition">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-500 block tracking-wider">
                           🏛️ Regalos Custodiados
                         </span>
-                        <span className="text-xl font-black font-serif text-white block mt-0.5">
+                        <span className="text-xl sm:text-2xl font-black font-serif text-slate-900 block mt-0.5">
                           {receivedGifts.length}
                         </span>
-                        <span className="text-[10px] text-pink-300 font-mono">En depósito seguro</span>
+                        <span className="text-[10px] text-pink-600 font-mono font-bold">En depósito seguro</span>
                       </div>
 
-                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
-                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                      <div className="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-2xl border border-pink-100 shadow-2xs hover:shadow-xs transition">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-500 block tracking-wider">
                           👥 Donantes Únicos
                         </span>
-                        <span className="text-xl font-black font-serif text-pink-300 block mt-0.5">
+                        <span className="text-xl sm:text-2xl font-black font-serif text-pink-600 block mt-0.5">
                           {new Set(receivedGifts.map(g => g.senderUsername || g.senderName)).size}
                         </span>
-                        <span className="text-[10px] text-slate-300 font-mono">De usuarios diferentes</span>
+                        <span className="text-[10px] text-slate-500 font-mono">De usuarios diferentes</span>
                       </div>
 
-                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
-                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                      <div className="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-2xl border border-pink-100 shadow-2xs hover:shadow-xs transition">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-500 block tracking-wider">
                           🪙 Valor en Bóveda
                         </span>
-                        <span className="text-xl font-black font-mono text-amber-400 block mt-0.5">
+                        <span className="text-xl sm:text-2xl font-black font-mono text-amber-600 block mt-0.5">
                           🪙 {receivedGifts.reduce((acc, g) => acc + g.price, 0).toLocaleString()}
                         </span>
-                        <span className="text-[10px] text-emerald-400 font-bold font-mono">
+                        <span className="text-[10px] text-emerald-600 font-bold font-mono">
                           ≈ {receivedGifts.reduce((acc, g) => acc + g.euroCost, 0).toLocaleString()}€
                         </span>
                       </div>
 
-                      <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-xl border border-white/5 shadow-2xs">
-                        <span className="text-[9px] font-mono font-bold uppercase text-slate-400 block tracking-wider">
+                      <div className="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-2xl border border-pink-100 shadow-2xs hover:shadow-xs transition">
+                        <span className="text-[9px] font-mono font-bold uppercase text-slate-500 block tracking-wider">
                           👑 Donante Principal
                         </span>
-                        <span className="text-sm font-black font-serif text-amber-300 truncate block mt-0.5 flex items-center gap-1">
-                          <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="text-sm font-black font-serif text-slate-900 truncate block mt-0.5 flex items-center gap-1">
+                          <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                           Adriana Lima
                         </span>
-                        <span className="text-[10px] text-amber-200/80 font-mono">5.000€ Reloj de Oro</span>
+                        <span className="text-[10px] text-amber-700 font-mono font-semibold">5.000€ Reloj de Oro</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 🔍 COMPACT VAULT INSPECTOR / VITRINA (Expandable, streamlined, without hogging the whole view) */}
+                  {/* 🔍 COMPACT VAULT INSPECTOR / VITRINA (Blanco Rosado Perla) */}
                   {showVaultInspector && (
-                    <div className="bg-gradient-to-r from-[#1a171d] via-[#131116] to-[#0f0e13] border border-amber-500/40 rounded-2xl p-3.5 sm:p-4 text-white shadow-lg animate-fade-in relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-[#fff9fb] via-[#fff0f5] to-[#fdf2f7] border-2 border-pink-200/90 rounded-2xl p-3.5 sm:p-4 text-slate-900 shadow-md animate-fade-in relative overflow-hidden">
                       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
                         
                         {/* Mini display thumbnail */}
@@ -3539,7 +3546,7 @@ export default function VictoriaSecretRanking({
                                 setShowGenericGiftModal(true);
                               }
                             }}
-                            className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 via-pink-500/20 to-purple-500/20 border border-amber-400/60 flex items-center justify-center text-3xl shadow-inner cursor-pointer hover:scale-105 transition shrink-0"
+                            className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-100 via-rose-50 to-amber-100 border border-pink-300/80 flex items-center justify-center text-3xl shadow-inner cursor-pointer hover:scale-105 transition shrink-0"
                             title="Toca para ver en grande"
                           >
                             {currentFeaturedGift.icon}
@@ -3547,25 +3554,25 @@ export default function VictoriaSecretRanking({
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[9px] font-mono font-bold uppercase text-amber-400 tracking-wider">
+                              <span className="text-[9px] font-mono font-bold uppercase text-pink-700 tracking-wider">
                                 🔍 INSPECCIONANDO:
                               </span>
                               <span className="px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 text-[9px] font-black font-mono">
                                 {currentFeaturedGift.badgeText}
                               </span>
                             </div>
-                            <h4 className="text-sm sm:text-base font-serif font-black text-white truncate flex items-center gap-1">
+                            <h4 className="text-sm sm:text-base font-serif font-black text-slate-900 truncate flex items-center gap-1">
                               {currentFeaturedGift.name} <span>{currentFeaturedGift.icon}</span>
                             </h4>
                             <div className="flex items-center gap-2 text-xs font-mono">
-                              <span className="text-pink-300">De: <strong>{currentFeaturedGift.senderName}</strong> (@{currentFeaturedGift.senderUsername})</span>
-                              <span className="text-amber-400 font-bold">🪙 {currentFeaturedGift.price.toLocaleString()} ({currentFeaturedGift.euroCost}€)</span>
+                              <span className="text-pink-700">De: <strong>{currentFeaturedGift.senderName}</strong> (@{currentFeaturedGift.senderUsername})</span>
+                              <span className="text-amber-700 font-bold">🪙 {currentFeaturedGift.price.toLocaleString()} ({currentFeaturedGift.euroCost}€)</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Middle: Short message quote */}
-                        <div className="hidden lg:block max-w-md bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-[11px] italic font-serif text-amber-100/90 truncate">
+                        <div className="hidden lg:block max-w-md bg-white/80 px-3 py-1.5 rounded-xl border border-pink-100 text-[11px] italic font-serif text-slate-700 truncate shadow-2xs">
                           "{currentFeaturedGift.message}"
                         </div>
 
@@ -3575,7 +3582,7 @@ export default function VictoriaSecretRanking({
                             <button
                               type="button"
                               onClick={handleViewCertificateLarge}
-                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
                             >
                               <Sparkles className="w-3 h-3 text-slate-950" />
                               <span>Ver Diploma</span>
@@ -3587,7 +3594,7 @@ export default function VictoriaSecretRanking({
                                 setActiveModalGift(receivedGifts.find(g => g.giftName.toLowerCase().includes('reloj')) || null);
                                 setShowLuxuryWatchModal(true);
                               }}
-                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
                             >
                               <Sparkles className="w-3 h-3 text-slate-950" />
                               <span>Ver Reloj 3D</span>
@@ -3599,7 +3606,7 @@ export default function VictoriaSecretRanking({
                                 setSelectedGenericModalGift(currentFeaturedGift);
                                 setShowGenericGiftModal(true);
                               }}
-                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
                             >
                               <Sparkles className="w-3 h-3 text-slate-950" />
                               <span>Ver en Grande</span>
@@ -3609,7 +3616,7 @@ export default function VictoriaSecretRanking({
                           <button
                             type="button"
                             onClick={() => setShowVaultInspector(false)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-pink-100/60 transition cursor-pointer"
                             title="Ocultar vitrina"
                           >
                             <X className="w-4 h-4" />
@@ -3899,74 +3906,6 @@ export default function VictoriaSecretRanking({
                               })}
                             </div>
                           </div>
-
-                          {/* Slider Navigation Bar: Indicator, Progress Bar, Autoplay & Next/Prev Controls */}
-                          <div className="bg-slate-50 px-3 py-2.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs font-mono text-slate-600 shadow-2xs">
-                            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                              <div className="flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                <span className="text-[11px] font-medium text-slate-700">
-                                  🎠 Slider interactivo (<strong>{filteredReceived.length}</strong> regalos)
-                                </span>
-                              </div>
-
-                              {/* Progress bar */}
-                              <div className="flex items-center gap-1.5" title={`${Math.round(sliderScrollProgress)}% recorrido de la bóveda`}>
-                                <div className="w-20 sm:w-28 h-2 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-amber-500 via-rose-500 to-pink-500 rounded-full transition-all duration-150"
-                                    style={{ width: `${Math.max(8, sliderScrollProgress)}%` }}
-                                  />
-                                </div>
-                                <span className="text-[10px] text-slate-500 font-bold">{Math.round(sliderScrollProgress)}%</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                              {/* Autoplay button */}
-                              <button
-                                type="button"
-                                onClick={() => setIsSliderAutoplay(!isSliderAutoplay)}
-                                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                                  isSliderAutoplay
-                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs animate-pulse'
-                                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 shadow-2xs'
-                                }`}
-                                title={isSliderAutoplay ? "Pausar carrusel automático" : "Iniciar carrusel automático de regalos"}
-                              >
-                                {isSliderAutoplay ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                                <span>{isSliderAutoplay ? 'Pausar' : 'Auto-Play'}</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => scrollGiftSlider('left')}
-                                disabled={!canScrollLeft}
-                                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                                  canScrollLeft 
-                                    ? 'bg-white hover:bg-amber-50 text-slate-800 border-slate-300 shadow-2xs' 
-                                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
-                                }`}
-                              >
-                                <ChevronLeft className="w-3.5 h-3.5" />
-                                <span>Anterior</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => scrollGiftSlider('right')}
-                                disabled={!canScrollRight}
-                                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                                  canScrollRight 
-                                    ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 border-amber-500 shadow-2xs font-black' 
-                                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
-                                }`}
-                              >
-                                <span>Siguiente</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
                         </div>
                       );
                     }

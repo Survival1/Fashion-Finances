@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { UserSessionProfile, ModelProfile, ChatMessage } from '../types';
 import ModelBookingSystem from './ModelBookingSystem';
@@ -771,6 +771,22 @@ export default function ModelFacebookProfile({
     setHideProfileMetrics(nextVal);
     localStorage.setItem(`hide_profile_metrics_${userProfile.id}`, String(nextVal));
   };
+
+  const [hideSocialCards, setHideSocialCards] = useState<boolean>(() => {
+    return localStorage.getItem(`hide_social_cards_${userProfile.id}`) === 'true';
+  });
+
+  const handleToggleHideSocialCards = (forcedVal?: boolean) => {
+    const nextVal = typeof forcedVal === 'boolean' ? forcedVal : !hideSocialCards;
+    setHideSocialCards(nextVal);
+    localStorage.setItem(`hide_social_cards_${userProfile.id}`, String(nextVal));
+  };
+
+  useEffect(() => {
+    setHideProfileMetrics(localStorage.getItem(`hide_profile_metrics_${userProfile.id}`) === 'true');
+    setHideSocialCards(localStorage.getItem(`hide_social_cards_${userProfile.id}`) === 'true');
+  }, [userProfile.id]);
+
   const [activeGalleryTab, setActiveGalleryTab] = useState<'grid' | 'saved' | 'reposts' | 'tagged' | 'saved_videos' | 'shared'>('grid');
   const [sharedVideosList, setSharedVideosList] = useState<any[]>(() => {
     try {
@@ -1054,6 +1070,9 @@ export default function ModelFacebookProfile({
   const isDefaultSavedVideo = (vid: any) => {
     if (!vid) return true;
     const id = String(vid.id || '');
+    // Real user published videos (uploaded-timestamp) should never be treated as default
+    if (id.startsWith('uploaded-') && id !== 'uploaded-adriana') return false;
+
     const url = String(vid.videoUrl || '');
     const desc = String(vid.description || '');
     const title = String(vid.title || '');
@@ -1062,7 +1081,6 @@ export default function ModelFacebookProfile({
     if (id === 'sv-uploaded-adriana' || id === 'sv-1' || id === 'sv-2' || id === 'sv-3' || id === 'uploaded-adriana') return true;
     if (id.startsWith('sv-') && !id.includes('-user-') && !id.includes('-custom-')) return true;
     if (url.includes('mixkit-beautiful-woman-posing-with-a-red-light-40486') || url.includes('mixkit-woman-posing-with-a-red-light-40158') || url.includes('mixkit-fashion-model-dancing-under-studio-light-40157') || url.includes('mixkit-girl-in-neon-sign-modeling-40156')) return true;
-    if (desc.includes('¡Nueva sesión de modelaje subida a Fashion Finances!') || title.includes('¡Nueva sesión de modelaje subida!')) return true;
     if (desc.includes('FLorem Ipsum') || desc.includes('Cinta de pasarela urbana') || desc.includes('Práctica de pose fluida') || desc.includes('Sesión artística monocromática')) return true;
     return false;
   };
@@ -1145,93 +1163,106 @@ export default function ModelFacebookProfile({
     return migrated;
   };
 
-  const [savedVideos, setSavedVideos] = useState<any[]>(() => {
-    const didPurge = purgePrelaunchTestVideos();
-    if (didPurge) return [];
-
-    let baseList: any[] = [];
+  const loadAllProfileVideos = (): any[] => {
+    let rawCollected: any[] = [];
     const userId = userProfile?.id || 'anonymous';
-    const saved = localStorage.getItem(`saved_videos_${userId}`);
-    if (saved) {
-      try {
-        baseList = migrateSavedVideos(JSON.parse(saved), userId);
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      baseList = [];
-    }
+    const viewedUsername = (userProfile?.username || '').toLowerCase().trim();
+    const isAdriana = viewedUsername.includes('adriana') || (userProfile?.name?.toLowerCase().includes('adriana'));
 
-    // Now merge uploaded videos from coll_casting_live_videos matching this model
-    const castingLiveVideosStr = localStorage.getItem('coll_casting_live_videos');
-    if (castingLiveVideosStr) {
+    const candidateKeys = [
+      `saved_videos_${userId}`,
+      userProfile?.username ? `saved_videos_${userProfile.username}` : null,
+      isAdriana ? 'saved_videos_adrianalima' : null,
+      isAdriana ? 'saved_videos_adrianalima_w1' : null,
+      isAdriana ? 'saved_videos_topf-1' : null,
+      'saved_videos_usr-1'
+    ].filter(Boolean) as string[];
+
+    candidateKeys.forEach(k => {
       try {
-        const parsedLive = JSON.parse(castingLiveVideosStr);
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            rawCollected.push(...parsed);
+          }
+        }
+      } catch (e) {}
+    });
+
+    // Also include coll_published_videos
+    try {
+      const pubRaw = localStorage.getItem('coll_published_videos');
+      if (pubRaw) {
+        const pubParsed = JSON.parse(pubRaw);
+        if (Array.isArray(pubParsed)) {
+          rawCollected.push(...pubParsed);
+        }
+      }
+    } catch (e) {}
+
+    // Also check coll_casting_live_videos
+    try {
+      const liveStr = localStorage.getItem('coll_casting_live_videos');
+      if (liveStr) {
+        const parsedLive = JSON.parse(liveStr);
         if (Array.isArray(parsedLive)) {
-          const viewedUsername = (userProfile?.username || '').toLowerCase().trim();
           const uploadedSaved = parsedLive
             .filter((v: any) => {
-              if (!v || !v.id || isDefaultSavedVideo(v)) return false;
+              if (!v || !v.id) return false;
               const isUploaded = String(v.id).includes('uploaded') || String(v.id).includes('sv-');
               if (!isUploaded) return false;
-              // Match if associated with the viewed profile in any way
-              const matchModelId = userProfile?.id ? v.modelId === userProfile.id : false;
-              const matchUploaderId = userProfile?.id ? v.uploaderId === userProfile.id : false;
-              const matchUsername = v.username && (v.username.toLowerCase().trim() === viewedUsername);
-              return matchModelId || matchUploaderId || matchUsername;
+              const vUser = (v.username || '').toLowerCase().trim();
+              const matchModelId = userProfile?.id ? (v.modelId === userProfile.id || v.uploaderId === userProfile.id) : false;
+              const matchUsername = vUser && viewedUsername && (
+                vUser === viewedUsername ||
+                vUser.includes(viewedUsername) ||
+                viewedUsername.includes(vUser) ||
+                (vUser.includes('adriana') && isAdriana)
+              );
+              return matchModelId || matchUsername || isOwnProfile;
             })
             .map((v: any) => ({
               id: v.id,
-              title: v.description ? (v.description.length > 35 ? v.description.substring(0, 32) + '...' : v.description) : 'Vídeo subido',
+              title: v.description ? (v.description.length > 35 ? v.description.substring(0, 32) + '...' : v.description) : 'Vídeo publicado',
               description: v.description || 'Vídeo de modelaje',
               videoUrl: v.videoUrl,
-              music: v.music || 'Música original',
-              likes: v.likes || 0,
+              music: v.music || 'Música original - Fashion Finances Studio',
+              likes: v.likes || 12,
               views: '1.2K',
-              avatar: v.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-              name: v.username || 'Anonymous',
-              videoCategory: v.videoCategory || 'Fashion',
+              avatar: v.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+              name: v.username || userProfile?.username || 'Adriana Lima',
+              videoCategory: v.videoCategory || 'Runway',
               isLiked: v.isLiked || false,
               isFavorited: v.isFavorited || false,
               isFollowing: v.isFollowing || false
             }));
-
-          const combined: any[] = [];
-          const seenIds = new Set<string>();
-          const seenKeys = new Set<string>();
-
-          const getKey = (item: any) => {
-            if (!item) return '';
-            const url = (item.videoUrl || '').trim();
-            if (url) return url;
-            return item.id || '';
-          };
-
-          for (const uploadItem of uploadedSaved) {
-            if (!uploadItem || !uploadItem.id) continue;
-            const key = getKey(uploadItem);
-            if (!seenIds.has(uploadItem.id) && (!key || !seenKeys.has(key))) {
-              combined.push(uploadItem);
-              seenIds.add(uploadItem.id);
-              if (key) seenKeys.add(key);
-            }
-          }
-          for (const item of baseList) {
-            if (!item || !item.id) continue;
-            const key = getKey(item);
-            if (!seenIds.has(item.id) && (!key || !seenKeys.has(key))) {
-              combined.push(item);
-              seenIds.add(item.id);
-              if (key) seenKeys.add(key);
-            }
-          }
-          return combined;
+          rawCollected.push(...uploadedSaved);
         }
-      } catch (e) {
-        console.error(e);
       }
+    } catch (e) {}
+
+    // Deduplicate and filter out default sample videos
+    const finalVideos: any[] = [];
+    const seenIds = new Set<string>();
+    const seenUrls = new Set<string>();
+
+    for (const item of rawCollected) {
+      if (!item || !item.id || isDefaultSavedVideo(item)) continue;
+      const url = (item.videoUrl || '').trim();
+      if (seenIds.has(item.id)) continue;
+      if (url && seenUrls.has(url)) continue;
+      seenIds.add(item.id);
+      if (url) seenUrls.add(url);
+      finalVideos.push(item);
     }
-    return baseList;
+
+    return migrateSavedVideos(finalVideos, userId);
+  };
+
+  const [savedVideos, setSavedVideos] = useState<any[]>(() => {
+    purgePrelaunchTestVideos();
+    return loadAllProfileVideos();
   });
 
   useEffect(() => {
@@ -1258,90 +1289,7 @@ export default function ModelFacebookProfile({
     } catch (e) {}
 
     const handleStorageChange = () => {
-      let baseList: any[] = [];
-      const userId = userProfile?.id || 'anonymous';
-      const saved = localStorage.getItem(`saved_videos_${userId}`);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          baseList = migrateSavedVideos(parsed, userId);
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        baseList = [];
-      }
-
-      const castingLiveVideosStr = localStorage.getItem('coll_casting_live_videos');
-      if (castingLiveVideosStr) {
-        try {
-          const parsedLive = JSON.parse(castingLiveVideosStr);
-          if (Array.isArray(parsedLive)) {
-            const viewedUsername = (userProfile?.username || '').toLowerCase().trim();
-            const uploadedSaved = parsedLive
-              .filter((v: any) => {
-                if (!v || !v.id || isDefaultSavedVideo(v)) return false;
-                const isUploaded = String(v.id).includes('uploaded') || String(v.id).includes('sv-');
-                if (!isUploaded) return false;
-                // Match if associated with the viewed profile in any way
-                const matchModelId = userProfile?.id ? v.modelId === userProfile.id : false;
-                const matchUploaderId = userProfile?.id ? v.uploaderId === userProfile.id : false;
-                const matchUsername = v.username && (v.username.toLowerCase().trim() === viewedUsername);
-                return matchModelId || matchUploaderId || matchUsername;
-              })
-              .map((v: any) => ({
-                id: v.id,
-                title: v.description ? (v.description.length > 35 ? v.description.substring(0, 32) + '...' : v.description) : '¡Nueva sesión de modelaje subida!',
-                description: v.description || '¡Nueva sesión de modelaje subida a Fashion Finances! 📸🌟 #trend #fashionista',
-                videoUrl: v.videoUrl,
-                music: v.music || 'Música original - Fashion Finances Studio',
-                likes: v.likes || 12,
-                views: '1.2K',
-                avatar: v.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-                name: v.username || 'Anonymous',
-                videoCategory: v.videoCategory || 'Fashion',
-                isLiked: v.isLiked || false,
-                isFavorited: v.isFavorited || false,
-                isFollowing: v.isFollowing || false
-              }));
-
-            const combined: any[] = [];
-            const seenIds = new Set<string>();
-            const seenKeys = new Set<string>();
-
-            const getKey = (item: any) => {
-              if (!item) return '';
-              const url = (item.videoUrl || '').trim();
-              if (url) return url;
-              return item.id || '';
-            };
-
-            for (const uploadItem of uploadedSaved) {
-              if (!uploadItem || !uploadItem.id) continue;
-              const key = getKey(uploadItem);
-              if (!seenIds.has(uploadItem.id) && (!key || !seenKeys.has(key))) {
-                combined.push(uploadItem);
-                seenIds.add(uploadItem.id);
-                if (key) seenKeys.add(key);
-              }
-            }
-            for (const item of baseList) {
-              if (!item || !item.id) continue;
-              const key = getKey(item);
-              if (!seenIds.has(item.id) && (!key || !seenKeys.has(key))) {
-                combined.push(item);
-                seenIds.add(item.id);
-                if (key) seenKeys.add(key);
-              }
-            }
-            setSavedVideos(combined);
-            return;
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      setSavedVideos(baseList);
+      setSavedVideos(loadAllProfileVideos());
     };
     
     window.addEventListener('storage', handleStorageChange);
@@ -1353,7 +1301,7 @@ export default function ModelFacebookProfile({
       window.removeEventListener('saved_videos_updated', handleStorageChange);
       clearInterval(interval);
     };
-  }, [userProfile?.id]);
+  }, [userProfile?.id, userProfile?.username, isOwnProfile]);
 
   const handleDeleteVideo = (videoId: string) => {
     const target = savedVideos.find((v: any) => v.id === videoId);
@@ -1392,6 +1340,18 @@ export default function ModelFacebookProfile({
               }
             } catch (err) {}
           }
+        }
+      }
+    } catch (e) {}
+
+    // Also remove from coll_published_videos
+    try {
+      const pubRaw = localStorage.getItem('coll_published_videos');
+      if (pubRaw) {
+        const pubArr = JSON.parse(pubRaw);
+        if (Array.isArray(pubArr)) {
+          const updatedPub = pubArr.filter((v: any) => v.id !== videoId && (targetUrl ? v.videoUrl !== targetUrl : true));
+          localStorage.setItem('coll_published_videos', JSON.stringify(updatedPub));
         }
       }
     } catch (e) {}
@@ -2074,6 +2034,44 @@ export default function ModelFacebookProfile({
 
   // Photo Lightbox Interactive States
   const [selectedPhotoForLightbox, setSelectedPhotoForLightbox] = useState<string | null>(null);
+  const isClosingLightboxRef = useRef(false);
+
+  const handleOpenPhotoLightbox = (ph: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isClosingLightboxRef.current) return;
+    setSelectedPhotoForLightbox(ph);
+  };
+
+  const handleClosePhotoLightbox = (e?: React.MouseEvent | KeyboardEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    isClosingLightboxRef.current = true;
+    setSelectedPhotoForLightbox(null);
+    setLightboxCommentText('');
+    setActiveGiftingPhotoUrl(null);
+    setHoveredStickersPostId(null);
+    // Prevent ghost clicks from bubbling or re-triggering cards underneath
+    setTimeout(() => {
+      isClosingLightboxRef.current = false;
+    }, 400);
+  };
+
+  useEffect(() => {
+    if (!selectedPhotoForLightbox) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClosePhotoLightbox(e);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPhotoForLightbox]);
+
   const [hoveredPhotoUrl, setHoveredPhotoUrl] = useState<string | null>(null);
   const [hoveredPhotoUrlLightbox, setHoveredPhotoUrlLightbox] = useState<boolean>(false);
   const [lightboxCommentText, setLightboxCommentText] = useState('');
@@ -3571,8 +3569,6 @@ export default function ModelFacebookProfile({
       setInvestorPhotos(nextPhotos);
       localStorage.setItem(`investor_photos_${userProfile.id}`, JSON.stringify(nextPhotos));
     }
-
-    alert('🗑️ Imagen eliminada con éxito.');
   };
 
   const handleAddPhotoComment = (photoUrl: string) => {
@@ -4174,7 +4170,7 @@ export default function ModelFacebookProfile({
                     alt="post attachment" 
                     referrerPolicy="no-referrer"
                     className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300 rounded-t-2xl"
-                    onClick={() => setSelectedPhotoForLightbox(post.image)}
+                    onClick={(e) => handleOpenPhotoLightbox(post.image, e)}
                   />
 
                   {!selectedPhotoForLightbox && giftConfirmPhotoUrl === post.image && renderConfirmGiftOverlay(post.image)}
@@ -4789,116 +4785,123 @@ export default function ModelFacebookProfile({
             </div>
           </div>
 
-          {/* 📊 SECCIÓN DE MÉTRICAS FINANCIERAS Y SOCIALES (z.png) - Ocultable con botón */}
-          {!hideProfileMetrics && (
+          {/* 📊 SECCIÓN DE MÉTRICAS FINANCIERAS Y SOCIALES (z.png) - Ocultable con ajustes de privacidad */}
+          {(!hideProfileMetrics || !hideSocialCards) && (
             <div className="animate-fade-in">
               <hr className="border-slate-100 my-4" />
 
               {/* Model Statistics Metrics Box */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1">
-                {userProfile.role === 'model' ? (
-                  <>
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Referidos Activos</span>
-                      <div className="flex items-center justify-center gap-1 mt-0.5">
-                        <Users className="w-3.5 h-3.5 text-indigo-500" />
-                        <strong className="text-slate-800 text-sm font-mono">{currentModel?.referidosCount ?? 0}</strong>
+              {!hideProfileMetrics && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1 animate-fade-in">
+                  {userProfile.role === 'model' ? (
+                    <>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Referidos Activos</span>
+                        <div className="flex items-center justify-center gap-1 mt-0.5">
+                          <Users className="w-3.5 h-3.5 text-indigo-500" />
+                          <strong className="text-slate-800 text-sm font-mono">{currentModel?.referidosCount ?? 0}</strong>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Likes Totales</span>
+                        <div className="flex items-center justify-center gap-1 mt-0.5">
+                          <Heart className="w-3.5 h-3.5 text-rose-500 fill-current" />
+                          <strong className="text-slate-800 text-sm font-mono">{currentModel?.totalLikes ?? 0}</strong>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Comisiones Ganadas</span>
+                        <strong className="text-emerald-600 text-sm font-mono block mt-0.5">+{userProfile.totalCommissions.toFixed(2)}€</strong>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Miembros Afiliados</span>
+                        <strong className="text-indigo-600 text-sm font-mono block mt-0.5">Activado</strong>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Mi Balance</span>
+                        <strong className="text-indigo-600 text-sm font-mono block mt-0.5">{userProfile.balance.toFixed(2)}€</strong>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Inversión Total</span>
+                        <strong className="text-emerald-600 text-sm font-mono block mt-0.5">{userProfile.totalInvested.toFixed(2)}€</strong>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Ganancias Totales</span>
+                        <strong className="text-slate-800 text-sm font-mono block mt-0.5">{userProfile.totalEarnings.toFixed(2)}€</strong>
+                      </div>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Comisiones Recibidas</span>
+                        <strong className="text-rose-600 text-sm font-mono block mt-0.5">+{userProfile.totalCommissions.toFixed(2)}€</strong>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* AMIGOS, SEGUIDORES & SEGUIDOS BUTTONS (HORIZONTAL & COMPACT - Ocultable con hideSocialCards según captura imagen.png) */}
+              {!hideSocialCards && (
+                <div 
+                  className={`grid grid-cols-1 sm:grid-cols-3 gap-3 ${!hideProfileMetrics ? 'mt-4 pt-4 border-t border-slate-100' : 'pt-1'} animate-fade-in`}
+                  id="profile-social-counters-cards"
+                >
+                  <button
+                    onClick={() => handleSetSocialModal('friends')}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <UserPlus className="w-4 h-4 text-pink-550 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Amigos</span>
+                        <span className="text-xs font-black text-slate-800 font-mono">
+                          {socialFriendsList.length}
+                        </span>
                       </div>
                     </div>
+                    <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                  </button>
 
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Likes Totales</span>
-                      <div className="flex items-center justify-center gap-1 mt-0.5">
-                        <Heart className="w-3.5 h-3.5 text-rose-500 fill-current" />
-                        <strong className="text-slate-800 text-sm font-mono">{currentModel?.totalLikes ?? 0}</strong>
+                  <button
+                    onClick={() => handleSetSocialModal('followers')}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Users className="w-4 h-4 text-pink-550 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidores</span>
+                        <span className="text-xs font-black text-slate-800 font-mono">
+                          {socialFollowersList.length}
+                        </span>
                       </div>
                     </div>
+                    <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                  </button>
 
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Comisiones Ganadas</span>
-                      <strong className="text-emerald-600 text-sm font-mono block mt-0.5">+{userProfile.totalCommissions.toFixed(2)}€</strong>
+                  <button
+                    onClick={() => handleSetSocialModal('following')}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <UserCheck className="w-4 h-4 text-pink-550 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidos</span>
+                        <span className="text-xs font-black text-slate-800 font-mono">
+                          {socialFollowingList.length}
+                        </span>
+                      </div>
                     </div>
-
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Miembros Afiliados</span>
-                      <strong className="text-indigo-600 text-sm font-mono block mt-0.5">Activado</strong>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Mi Balance</span>
-                      <strong className="text-indigo-600 text-sm font-mono block mt-0.5">{userProfile.balance.toFixed(2)}€</strong>
-                    </div>
-
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Inversión Total</span>
-                      <strong className="text-emerald-600 text-sm font-mono block mt-0.5">{userProfile.totalInvested.toFixed(2)}€</strong>
-                    </div>
-
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Ganancias Totales</span>
-                      <strong className="text-slate-800 text-sm font-mono block mt-0.5">{userProfile.totalEarnings.toFixed(2)}€</strong>
-                    </div>
-
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Comisiones Recibidas</span>
-                      <strong className="text-rose-600 text-sm font-mono block mt-0.5">+{userProfile.totalCommissions.toFixed(2)}€</strong>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* AMIGOS, SEGUIDORES & SEGUIDOS BUTTONS (HORIZONTAL & COMPACT) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100">
-                <button
-                  onClick={() => handleSetSocialModal('friends')}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <UserPlus className="w-4 h-4 text-pink-550 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Amigos</span>
-                      <span className="text-xs font-black text-slate-800 font-mono">
-                        {socialFriendsList.length}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
-                </button>
-
-                <button
-                  onClick={() => handleSetSocialModal('followers')}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Users className="w-4 h-4 text-pink-550 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidores</span>
-                      <span className="text-xs font-black text-slate-800 font-mono">
-                        {socialFollowersList.length}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
-                </button>
-
-                <button
-                  onClick={() => handleSetSocialModal('following')}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <UserCheck className="w-4 h-4 text-pink-550 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidos</span>
-                      <span className="text-xs font-black text-slate-800 font-mono">
-                        {socialFollowingList.length}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
-                </button>
-              </div>
+                    <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -5398,19 +5401,6 @@ export default function ModelFacebookProfile({
                     </div>
                   );
                 })()}
-
-                {!isOwnProfile && (
-                  <button
-                    onClick={() => {
-                      setSelectedService("Contratación General B2B / Partnerships");
-                      setHiringSuccessMessage(null);
-                    }}
-                    className="w-full mt-2.5 py-2.5 bg-gradient-to-r from-rose-500 to-[#fe2c55] hover:brightness-[1.04] text-white font-black text-[11px] uppercase tracking-widest rounded-xl transition duration-155 cursor-pointer border-0 shadow-sm flex items-center justify-center gap-2 active:scale-95"
-                  >
-                    <Briefcase className="w-3.5 h-3.5 text-white" />
-                    <span>Hacer Propuesta Comercial General</span>
-                  </button>
-                )}
                 </>
               )}
             </div>
@@ -7127,16 +7117,18 @@ export default function ModelFacebookProfile({
                       </svg>
                     </button>
 
-                    {/* Interactive Saved Videos Tab Icon (zaq.png request) */}
+                    {/* Interactive Tab Icon: Vídeos Publicados (actualizado según captura z.png) */}
                     <button
                       type="button"
                       onClick={() => setActiveGalleryTab('saved_videos')}
                       className={`tab-trigger py-2.5 px-1.5 flex justify-center items-center gap-2 transition-all duration-150 cursor-pointer rounded-xl ${
                         activeGalleryTab === 'saved_videos' 
-                          ? 'bg-pink-50 text-pink-600 font-extrabold border border-pink-200/40 shadow-3xs scale-102' 
+                          ? 'bg-pink-50 text-pink-600 font-extrabold border border-pink-200/40 shadow-3xs scale-102 ring-2 ring-pink-400/30' 
                           : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'
                       }`}
-                      title="Vídeos Guardados"
+                      title="Vídeos Publicados"
+                      aria-label="Vídeos Publicados"
+                      id="tab-profile-videos-publicados"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 shrink-0">
                         <path d="M23 7l-7 5 7 5V7z" />
@@ -7293,7 +7285,7 @@ export default function ModelFacebookProfile({
                         const vidCat = (vid.videoCategory || '').toLowerCase();
                         const filterCat = (savedVideoCategoryFilter || '').toLowerCase();
                         if (filterCat === 'todos') {
-                          return !vidCat || vidCat === 'todos';
+                          return true;
                         }
                         if (filterCat === 'modelos' || filterCat === 'runway') {
                           return vidCat === 'modelos' || vidCat === 'runway';
@@ -7356,13 +7348,13 @@ export default function ModelFacebookProfile({
                               <span className="text-4xl block mb-2">📹</span>
                               <p className="text-xs font-black text-slate-700">
                                 {savedVideoCategoryFilter === 'Todos'
-                                  ? 'No tienes vídeos guardados'
-                                  : `No hay vídeos guardados en la categoría ${savedVideoCategoryFilter === 'Catwalk' ? 'Catwalks' : savedVideoCategoryFilter}`}
+                                  ? 'No tienes vídeos publicados'
+                                  : `No hay vídeos publicados en la categoría ${savedVideoCategoryFilter === 'Catwalk' ? 'Catwalks' : savedVideoCategoryFilter}`}
                               </p>
                               <p className="text-[11px] text-slate-400 mt-1">
                                 {savedVideoCategoryFilter === 'Todos'
-                                  ? 'Guarda vídeos desde Casting Live para verlos aquí.'
-                                  : 'Guarda vídeos desde Casting Live asignando esta categoría para que se muestren aquí.'}
+                                  ? 'Publica vídeos desde Casting Live para verlos aquí.'
+                                  : 'Publica vídeos desde Casting Live asignando esta categoría para que se muestren aquí.'}
                               </p>
                             </div>
                           ) : (
@@ -8047,7 +8039,7 @@ export default function ModelFacebookProfile({
                                     if (item.videoUrl) {
                                       setPlayingSavedVideoUrl(item.videoUrl);
                                     } else {
-                                      setSelectedPhotoForLightbox(item.url || item.poster);
+                                      handleOpenPhotoLightbox(item.url || item.poster);
                                     }
                                   }}
                                 >
@@ -8136,7 +8128,7 @@ export default function ModelFacebookProfile({
 
                               {/* Interactive Image box */}
                               <div 
-                                onClick={() => setSelectedPhotoForLightbox(ph)}
+                                onClick={(e) => handleOpenPhotoLightbox(ph, e)}
                                 className="aspect-square w-full rounded-t-2xl overflow-hidden bg-slate-100 relative cursor-pointer"
                                 title="Haz clic para ampliar la foto"
                               >
@@ -8151,6 +8143,7 @@ export default function ModelFacebookProfile({
                                 <button
                                   type="button"
                                   onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     if (activeGalleryTab === 'saved') {
                                       handleToggleBookmark(ph);
@@ -8161,6 +8154,10 @@ export default function ModelFacebookProfile({
                                     } else {
                                       handleDeletePhoto(ph);
                                     }
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                   }}
                                   className="absolute top-2.5 right-2.5 z-30 w-8 h-8 rounded-full bg-black/45 text-white hover:text-white hover:bg-rose-600 flex items-center justify-center transition-all duration-200 active:scale-90 hover:scale-115 cursor-pointer shadow-md"
                                   title={
@@ -8194,7 +8191,7 @@ export default function ModelFacebookProfile({
                                   e.stopPropagation();
                                   setHoveredHeartAndGiftPhotoUrl(prev => prev === ph ? null : ph);
                                 },
-                                () => setSelectedPhotoForLightbox(ph),
+                                () => handleOpenPhotoLightbox(ph),
                                 () => handleToggleRepost(ph),
                                 (e) => {
                                   e.stopPropagation();
@@ -8238,7 +8235,7 @@ export default function ModelFacebookProfile({
                       >
                       {/* Interactive Image box */}
                       <div 
-                        onClick={() => setSelectedPhotoForLightbox(ph)}
+                        onClick={(e) => handleOpenPhotoLightbox(ph, e)}
                         className="aspect-square w-full overflow-hidden bg-slate-200 relative cursor-pointer"
                         title="Haz clic para ampliar la foto"
                       >
@@ -8296,7 +8293,7 @@ export default function ModelFacebookProfile({
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedPhotoForLightbox(ph);
+                            handleOpenPhotoLightbox(ph, e);
                           }}
                           className="flex items-center gap-0.5 justify-center hover:bg-slate-100 rounded-md p-1 text-slate-500 hover:text-slate-800 transition cursor-pointer grow shrink-0 min-w-0"
                           title="Comentar"
@@ -8692,28 +8689,52 @@ export default function ModelFacebookProfile({
       {selectedPhotoForLightbox && (() => {
         const activeInteraction = getPhotoInteraction(selectedPhotoForLightbox);
         const hasLiked = !!activeInteraction.likes[userProfile.id];
-        const closeLightbox = () => {
-          setSelectedPhotoForLightbox(null);
-          setLightboxCommentText('');
-          setActiveGiftingPhotoUrl(null);
-          setHoveredStickersPostId(null);
-        };
 
         return (
-          <div className="fixed inset-0 z-[120] bg-black/10 flex items-center justify-center p-2 sm:p-4 animate-fade-in duration-300">
+          <div 
+            className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-fade-in duration-200"
+            onClick={handleClosePhotoLightbox}
+          >
             {/* Click backdrop to close */}
             <div 
               className="absolute inset-0 cursor-zoom-out" 
-              onClick={closeLightbox} 
+              onClick={handleClosePhotoLightbox}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             />
 
+            {/* Top-Right Floating Universal Close Button */}
+            <button
+              type="button"
+              onClick={handleClosePhotoLightbox}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              className="fixed top-4 right-4 z-[130] bg-slate-900/90 hover:bg-black text-white px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xl transition-all duration-150 cursor-pointer text-xs font-bold border border-white/20 backdrop-blur-md hover:scale-105 active:scale-95"
+              title="Cerrar (Esc)"
+            >
+              <X className="w-4 h-4 stroke-[2.5]" />
+              <span>Cerrar</span>
+            </button>
+
             {/* Lightbox Container */}
-            <div className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] md:max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] border border-slate-100/10 relative z-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-150 transition-all duration-300">
+            <div 
+              className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] md:max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] border border-slate-200/40 relative z-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-150 transition-all duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
               
-              {/* Close Button on Mobile */}
+              {/* Close Button on Mobile Stage */}
               <button 
-                onClick={closeLightbox}
-                className="absolute top-4 right-4 md:hidden z-30 bg-slate-950/70 hover:bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center transition duration-150 shadow-md cursor-pointer"
+                type="button"
+                onClick={handleClosePhotoLightbox}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="absolute top-4 right-4 md:hidden z-30 bg-slate-950/80 hover:bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center transition duration-150 shadow-md cursor-pointer"
                 title="Cerrar"
               >
                 <X className="w-4 h-4" />
@@ -8762,13 +8783,18 @@ export default function ModelFacebookProfile({
                     </div>
                   </div>
 
-                  {/* Desktop close button */}
+                  {/* Close button in header */}
                   <button 
-                    onClick={closeLightbox}
-                    className="hidden md:flex text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-full transition duration-150 cursor-pointer"
-                    title="Cerrar"
+                    type="button"
+                    onClick={handleClosePhotoLightbox}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    className="flex text-slate-400 hover:text-slate-800 p-1.5 hover:bg-slate-100 rounded-full transition duration-150 cursor-pointer items-center justify-center"
+                    title="Cerrar (Esc)"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5 stroke-[2]" />
                   </button>
                 </div>
 
@@ -10075,13 +10101,27 @@ export default function ModelFacebookProfile({
                       <div className="flex justify-between items-center text-xs py-2 border-t border-slate-100 mt-2">
                         <div>
                           <span className="text-slate-800 font-bold block">Ocultar balance y contadores en el perfil</span>
-                          <span className="text-[10px] text-slate-400 block">Oculta las tarjetas de balance, inversión, ganancias y contadores de amigos/seguidores.</span>
+                          <span className="text-[10px] text-slate-400 block">Oculta las tarjetas de balance, inversión, ganancias y comisiones.</span>
                         </div>
                         <input 
                           type="checkbox" 
                           checked={hideProfileMetrics} 
                           onChange={(e) => handleToggleHideProfileMetrics(e.target.checked)}
                           className="w-4 h-4 accent-indigo-600 cursor-pointer" 
+                          id="checkbox-hide-profile-metrics"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-xs py-2 border-t border-slate-100 mt-2">
+                        <div>
+                          <span className="text-slate-800 font-bold block">Ocultar amigos, seguidores y seguidos en el perfil</span>
+                          <span className="text-[10px] text-slate-400 block">Oculta en tu perfil las tarjetas de Amigos, Seguidores y Seguidos (con acceso a Ver todos).</span>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={hideSocialCards} 
+                          onChange={(e) => handleToggleHideSocialCards(e.target.checked)}
+                          className="w-4 h-4 accent-indigo-600 cursor-pointer" 
+                          id="checkbox-hide-social-cards"
                         />
                       </div>
                     </div>

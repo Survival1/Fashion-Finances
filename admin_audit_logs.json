@@ -1,0 +1,52 @@
+[
+  {
+    "id": "log-1792574502956-459",
+    "timestamp": "2026-10-21T09:21:42.956Z",
+    "adminUser": "Super Admin",
+    "action": "Reactivación de Cuenta",
+    "module": "usuarios",
+    "targetId": "usr-investor-002",
+    "details": "Usuario @marcos_inv cambió de suspended a active. Motivo: Reactivación de prueba.",
+    "severity": "info"
+  },
+  {
+    "id": "log-1792574495221-279",
+    "timestamp": "2026-10-21T09:21:35.221Z",
+    "adminUser": "Super Admin",
+    "action": "Suspensión de Cuenta",
+    "module": "usuarios",
+    "targetId": "usr-investor-002",
+    "details": "Usuario @marcos_inv cambió de active a suspended. Motivo: Auditoría de prueba.",
+    "severity": "critical"
+  },
+  {
+    "id": "log-seed-1",
+    "timestamp": "2026-05-19T14:00:00Z",
+    "adminUser": "Super Admin",
+    "action": "Aprobación de Proyecto",
+    "module": "proyectos",
+    "targetId": "proj-2",
+    "details": "Proyecto \"Silk & Shadows Runway\" aprobado y publicado para rondas de inversión.",
+    "severity": "info"
+  },
+  {
+    "id": "log-seed-2",
+    "timestamp": "2026-05-19T18:15:00Z",
+    "adminUser": "Super Admin",
+    "action": "Suspensión de Cuenta",
+    "module": "usuarios",
+    "targetId": "usr-investor-004",
+    "details": "Suspensión preventiva del usuario bot_test_23 por spam en feed.",
+    "severity": "warning"
+  },
+  {
+    "id": "log-seed-3",
+    "timestamp": "2026-05-20T08:00:00Z",
+    "adminUser": "Super Admin",
+    "action": "Activación de Ronda",
+    "module": "financiacion",
+    "targetId": "sess-entrepreneurs-1",
+    "details": "Inicio oficial de la ronda CASUAL & LIFESTYLE 100€ con 10 participantes.",
+    "severity": "info"
+  }
+]

@@ -3265,30 +3265,30 @@ export default function SessionSimulator({
           </p>
         </div>
 
-        {/* Dynamic Action Buttons: Reglas de participación y Comisiones */}
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
+        {/* Dynamic Action Buttons: Reglas de participación y Comisiones en vertical */}
+        <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
           {/* Botón: Reglas de participación */}
           <button
             type="button"
             onClick={() => setShowReglasModal(true)}
-            className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95"
+            className="w-full px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95 uppercase"
             title="Ver reglas de participación completas"
             id="btn-open-reglas-participacion"
           >
-            <span className="text-sm text-[#fe2c55]">📜</span>
-            <span>Reglas de participación</span>
+            <span className="text-sm">📜</span>
+            <span>REGLAS DE PARTICIPACIÓN</span>
           </button>
 
           {/* Botón: Comisiones */}
           <button
             type="button"
             onClick={() => setShowComisionesModal(true)}
-            className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95"
+            className="w-full px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95 uppercase"
             title="Ver desglose y estructura de comisiones"
             id="btn-open-comisiones"
           >
-            <span className="text-sm text-emerald-600">💰</span>
-            <span>Comisiones</span>
+            <span className="text-sm">💰</span>
+            <span>COMISIONES</span>
           </button>
         </div>
       </div>

@@ -76,6 +76,22 @@ async function startServer() {
   }
   app.use(express.static(publicDir));
 
+  // Admin API routes
+  app.use(async (req, res, next) => {
+    if (req.url && req.url.startsWith('/api/admin')) {
+      try {
+        const { handleAdminApi } = await import('./src/server/adminApiMiddleware.ts');
+        const handled = await handleAdminApi(req, res, next);
+        if (handled) return;
+      } catch (err) {
+        console.error('[Server Admin API Error]', err);
+        res.status(500).json({ error: 'Error interno en la API de administración.' });
+        return;
+      }
+    }
+    next();
+  });
+
   // Background executions queue monitor (ticks every 5 seconds)
   setInterval(() => {
     const orders = loadOrders();
