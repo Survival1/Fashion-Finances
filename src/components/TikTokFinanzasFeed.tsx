@@ -290,7 +290,57 @@ interface TikTokFinanzasFeedProps {
   screenSplitLayout?: 'single' | '50-50' | 'pip' | 'grid-3' | 'grid-4' | 'presentation' | 'grid' | 'grid-10';
   invitedUsersMap?: Record<string, boolean>;
   onNavigateToTab?: (tab: string) => void;
+  onOpenHashtag?: (tag: string) => void;
 }
+
+// Helper to format captions with clickable hashtags and mentions
+const renderCaptionWithHashtags = (
+  text: string,
+  onHashtagClick?: (tag: string) => void
+) => {
+  if (!text) return null;
+  // If the caption is from the Fashion Sponsors Network capture and doesn't explicitly have #fashion, ensure it is added
+  let normalizedText = text;
+  if (normalizedText.includes('Fashion Sponsors Network') && !normalizedText.toLowerCase().includes('#fashion')) {
+    normalizedText = `${normalizedText} #fashion`;
+  }
+
+  const parts = normalizedText.split(/(\s+)/);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('#') && part.length > 1) {
+          const cleanTag = part.slice(1).replace(/[^a-zA-Z0-9_\u00C0-\u017F]/g, '');
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onHashtagClick) {
+                  onHashtagClick(cleanTag);
+                } else {
+                  window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: cleanTag } }));
+                }
+              }}
+              title={`Explorar tema #${cleanTag}`}
+              className="text-[#fe2c55] hover:text-rose-300 font-extrabold cursor-pointer transition inline-block mr-1 drop-shadow-xs hover:underline bg-transparent border-0 p-0 text-inherit text-left"
+            >
+              {part}
+            </button>
+          );
+        } else if (part.startsWith('@') && part.length > 1) {
+          return (
+            <span key={i} className="text-pink-300 font-bold inline-block mr-1">
+              {part}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+};
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   isActiveTab = true,
@@ -310,6 +360,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   onOpenRoundDatabaseModal,
   onNavigateTo10WindowsLive,
   onNavigateToTab,
+  onOpenHashtag,
   handleFinishRetransmissionAndPassToNextParticipant,
   isBroadcastMicOn,
   isMuted,
@@ -4463,10 +4514,19 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               )}
 
               {/* Video Caption & Hashtags */}
-              <p className="text-[11px] sm:text-xs text-slate-100 font-medium leading-relaxed drop-shadow-md line-clamp-3 mb-1">
-                {translatedVideosMap[currentVid.id] 
-                  ? getEnglishTranslation(currentVid.description, currentVid.id) 
-                  : currentVid.description}
+              <p className="text-[11px] sm:text-xs text-slate-100 font-medium leading-relaxed drop-shadow-md line-clamp-3 mb-1 text-left">
+                {renderCaptionWithHashtags(
+                  translatedVideosMap[currentVid.id] 
+                    ? getEnglishTranslation(currentVid.description, currentVid.id) 
+                    : currentVid.description,
+                  (tag) => {
+                    if (onOpenHashtag) {
+                      onOpenHashtag(tag);
+                    } else {
+                      window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag } }));
+                    }
+                  }
+                )}
               </p>
 
               {/* 🌐 Traductor a Inglés (solicitado sobre captura z.png) */}

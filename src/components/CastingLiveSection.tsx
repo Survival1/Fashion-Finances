@@ -166,6 +166,7 @@ interface CastingLiveSectionProps {
   onGiftTransaction?: (giftCostInCoins: number, recipientName: string, recipientIdOrUsername: string) => void;
   initialSelectedStoreId?: string | null;
   onClearSelectedStoreId?: () => void;
+  onOpenHashtag?: (tag: string) => void;
 }
 
 export const accountsQueSigues = [
@@ -544,19 +545,20 @@ const renderFormattedDescription = (
     <>
       {parts.map((part, i) => {
         if (part.startsWith('#') && part.length > 1) {
-          const tag = part.slice(1);
+          const cleanTag = part.slice(1).replace(/[^a-zA-Z0-9_\u00C0-\u017F]/g, '');
           return (
             <span
               key={i}
               onClick={(e) => {
                 e.stopPropagation();
                 if (onHashtagClick) {
-                  onHashtagClick(tag);
+                  onHashtagClick(cleanTag);
                 } else {
-                  alert(`Hashtag #${tag} activado`);
+                  window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: cleanTag } }));
                 }
               }}
-              className="text-[#fe2c55] hover:text-rose-400 font-extrabold cursor-pointer transition inline-block mr-0.5 drop-shadow-xs"
+              title={`Explorar #${cleanTag}`}
+              className="text-[#fe2c55] hover:text-rose-300 font-extrabold cursor-pointer transition inline-block mr-0.5 drop-shadow-xs hover:underline"
             >
               {part}
             </span>
@@ -1973,7 +1975,8 @@ export default function CastingLiveSection({
   onAddMovement,
   onGiftTransaction,
   initialSelectedStoreId,
-  onClearSelectedStoreId
+  onClearSelectedStoreId,
+  onOpenHashtag
 }: CastingLiveSectionProps) {
   // ⏸️ Pausar vídeos de CastingLive cuando la pestaña no está activa
   useEffect(() => {
@@ -10214,7 +10217,7 @@ export default function CastingLiveSection({
   const [uploadVideoUrl, setUploadVideoUrl] = useState('');
   const [pastedVideoUrl, setPastedVideoUrl] = useState('');
   const [pastedUrlError, setPastedUrlError] = useState('');
-  const [uploadDescription, setUploadDescription] = useState('Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25');
+  const [uploadDescription, setUploadDescription] = useState('Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25 #fashion');
   const [uploadMusic, setUploadMusic] = useState('');
   const [uploadCategory, setUploadCategory] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos'>('para-ti');
   const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' | ''>('Runway');
@@ -11478,7 +11481,7 @@ export default function CastingLiveSection({
       comments: [],
       shares: Math.floor(Math.random() * 5),
       favorites: Math.floor(Math.random() * 8),
-      description: uploadDescription || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25',
+      description: uploadDescription || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25 #fashion',
       isLiked: false,
       isFavorited: false,
       isFollowing: false,
@@ -11582,7 +11585,7 @@ export default function CastingLiveSection({
     targetUserIds.add('topf-1');
     targetUserIds.add('usr-1');
 
-    const publishedDesc = uploadDescription?.trim() || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25 #fashionfinances';
+    const publishedDesc = uploadDescription?.trim() || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25 #fashion';
     const publishedTitle = uploadDescription?.trim() || 'Vídeo publicado';
 
     const savedVideoItem = {
@@ -16523,9 +16526,18 @@ export default function CastingLiveSection({
                         Fashion Sponsors Network styl -<br />
                         Google Chrome 2025-04-15 09-22-25
                       </p>
-                      <span className="text-[10.5px] font-bold text-[#fe2c55] block cursor-pointer hover:underline">
-                        @fashionfinances
-                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenHashtag) onOpenHashtag('fashion');
+                          else window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'fashion' } }));
+                        }}
+                        className="text-[10.5px] font-bold text-[#fe2c55] hover:text-rose-300 block cursor-pointer hover:underline text-left bg-transparent border-0 p-0"
+                        title="Explorar tema #fashion"
+                      >
+                        #fashion
+                      </button>
 
                       {/* Sound info with musical note */}
                       <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 pt-0.5">
@@ -26819,17 +26831,6 @@ try {
                     >
                       <ChevronRight className="w-4 h-4 stroke-[2.5]" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsHeroTopChannelsDropdownOpen(false);
-                      }}
-                      className="p-1.5 px-2.5 rounded-full bg-slate-800/90 hover:bg-rose-600 text-slate-300 hover:text-white text-xs font-bold transition cursor-pointer ml-1"
-                      title="Cerrar menú"
-                    >
-                      ✕
-                    </button>
                   </div>
                 </div>
 
@@ -27767,29 +27768,30 @@ try {
                     }, 400);
                   }}
                 >
-                  {/* 💖 Glosario de 30 Emojis idéntico a captura z.png */}
+                  {/* 💖 Glosario de 30 Emojis idéntico a captura z.png (centrado verticalmente y visible completo en el canal) */}
                   {isHeroHeartGlossaryOpen && (
                     <div 
-                      className="absolute right-full mr-2.5 bottom-0 z-50 bg-[#0e1320]/95 backdrop-blur-xl border border-rose-500/50 rounded-2xl p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex flex-col gap-1.5 w-[220px] animate-fade-in select-none pointer-events-auto"
+                      className="absolute right-full mr-3 top-1/2 -translate-y-1/2 z-50 bg-[#0e1320]/95 backdrop-blur-2xl border border-rose-500/60 rounded-3xl p-3 sm:p-4 shadow-[0_20px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2 w-[285px] sm:w-[315px] max-w-[85vw] animate-fade-in select-none pointer-events-auto ring-1 ring-white/10 after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-5"
                       onMouseEnter={() => clearTimeout(heroHeartHoverTimeoutRef.current)}
                       onMouseLeave={() => setIsHeroHeartGlossaryOpen(false)}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex items-center justify-between pb-1 border-b border-white/10 px-0.5">
-                        <span className="text-[9px] font-black uppercase text-rose-300 tracking-wider">
-                          Reaccionar con emoji
+                      <div className="flex items-center justify-between pb-2 border-b border-white/15 px-1">
+                        <span className="text-[11px] sm:text-xs font-black uppercase text-rose-300 tracking-wider flex items-center gap-1.5">
+                          <span>✨</span>
+                          <span>Reaccionar con emoji</span>
                         </span>
                         <button
                           type="button"
                           onClick={() => setIsHeroEmojiEnglish(prev => !prev)}
-                          className="text-[8px] font-mono text-slate-300 hover:text-white px-1.5 py-0.5 rounded bg-slate-800 cursor-pointer"
+                          className="text-[9.5px] font-mono font-bold text-slate-200 hover:text-white px-2.5 py-1 rounded-md bg-slate-800/90 border border-white/20 hover:bg-slate-700 cursor-pointer transition active:scale-95 shadow-xs"
                           title="Traducir nombres a inglés"
                         >
                           {isHeroEmojiEnglish ? 'ES' : 'EN'}
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-6 gap-1 p-0.5">
+                      <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full justify-items-center">
                         {[
                           '❤️', '💖', '🔥', '👏', '🚀', '💯',
                           '💎', '✨', '😍', '😂', '🙌', '💡',
@@ -27801,12 +27803,19 @@ try {
                             key={em}
                             type="button"
                             onClick={(e) => handleHeroEmojiReaction(em, e)}
-                            className="w-7 h-7 flex items-center justify-center text-sm rounded-lg hover:bg-white/10 hover:scale-125 active:scale-95 transition cursor-pointer"
+                            className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-xl sm:text-2xl rounded-xl bg-white hover:bg-rose-50 hover:scale-120 active:scale-90 shadow-sm transition-all transform cursor-pointer border border-slate-100 select-none shrink-0"
                             title={em}
                           >
                             {em}
                           </button>
                         ))}
+                      </div>
+
+                      <div className="mt-1 pt-1.5 border-t border-white/10 px-1 flex items-center justify-between text-[10px] text-slate-300 font-mono">
+                        <span className="truncate text-rose-300 font-bold">
+                          {isHeroEmojiEnglish ? 'Nombres en inglés activos' : 'Toca un emoji para reaccionar'}
+                        </span>
+                        <span className="text-[9px] text-slate-400 uppercase font-black">30 Emojis</span>
                       </div>
                     </div>
                   )}
@@ -28241,41 +28250,41 @@ try {
                 {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter) ? (
                   <>
                     🔴 Transmisión de tu cámara en vivo y en directo para todos los usuarios de CastingLive ocupando todo el canal.{' '}
-                    <span className="font-semibold text-rose-300">#micamara</span>{' '}
-                    <span className="font-semibold text-rose-300">#directo</span>{' '}
-                    <span className="font-semibold text-rose-300">#envivo</span>{' '}
-                    <span className="font-semibold text-rose-300">#castinglive</span>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('micamara') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'micamara' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#micamara</button>{' '}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('directo') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'directo' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#directo</button>{' '}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('envivo') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'envivo' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#envivo</button>{' '}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('castinglive') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'castinglive' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#castinglive</button>
                   </>
                 ) : liveChannelsCategoryFilter === 'atelier' ? (
                   heroCaptionTranslated ? (
                     <>
                       Live pattern making, cutting and tailoring session from the Atelier boutique: "{heroChannel.title}". Presenting the handcrafted Haute Couture Collection! ✂️✨{' '}
-                      <span className="font-semibold text-rose-300">#atelier</span>{' '}
-                      <span className="font-semibold text-rose-300">#confeccion</span>{' '}
-                      <span className="font-semibold text-rose-300">#altacostura</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('atelier') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'atelier' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#atelier</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('confeccion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'confeccion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#confeccion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('altacostura') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'altacostura' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#altacostura</button>
                     </>
                   ) : (
                     <>
                       Sesión de taller de patronaje, corte y confección en vivo desde el Atelier boutique: "{heroChannel.title}". Presentando la nueva Colección Atelier de Alta Costura confeccionada a mano! ✂️✨{' '}
-                      <span className="font-semibold text-rose-300">#atelier</span>{' '}
-                      <span className="font-semibold text-rose-300">#confeccion</span>{' '}
-                      <span className="font-semibold text-rose-300">#altacostura</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('atelier') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'atelier' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#atelier</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('confeccion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'confeccion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#confeccion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('altacostura') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'altacostura' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#altacostura</button>
                     </>
                   )
                 ) : (
                   heroCaptionTranslated ? (
                     <>
                       Futuristic high fashion session. Presenting Glitter Makeup for the Barcelona show! ✨{' '}
-                      <span className="font-semibold text-rose-300">#highfashion</span>{' '}
-                      <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
-                      <span className="font-semibold text-rose-300">#futuristic</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('highfashion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'highfashion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#highfashion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('modamexicana') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'modamexicana' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#modamexicana</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('futuristic') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'futuristic' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#futuristic</button>
                     </>
                   ) : (
                     <>
                       Sesión de alta costura futurista. Presentando Glitter Makeup para el show de Barcelona! ✨{' '}
-                      <span className="font-semibold text-rose-300">#highfashion</span>{' '}
-                      <span className="font-semibold text-rose-300">#modamexicana</span>{' '}
-                      <span className="font-semibold text-rose-300">#futuristic</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('highfashion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'highfashion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#highfashion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('modamexicana') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'modamexicana' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#modamexicana</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('futuristic') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'futuristic' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#futuristic</button>
                     </>
                   )
                 )}
@@ -28669,9 +28678,19 @@ try {
                           <p className="text-xs text-slate-100 font-medium leading-snug drop-shadow line-clamp-2">
                             {channel.title}{' '}
                             {channel.tags.map(t => (
-                              <span key={t} className="text-rose-300 font-semibold mr-1">
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const cleanTag = t.replace(/^#/, '');
+                                  if (onOpenHashtag) onOpenHashtag(cleanTag);
+                                  else window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: cleanTag } }));
+                                }}
+                                className="text-rose-300 hover:text-rose-100 hover:underline font-semibold mr-1 cursor-pointer transition inline-block"
+                              >
                                 {t}
-                              </span>
+                              </button>
                             ))}
                           </p>
 
@@ -29606,6 +29625,7 @@ try {
                 <TikTokFinanzasFeed
                   isActiveTab={isActiveTab}
                   onNavigateToTab={onNavigateToTab}
+                  onOpenHashtag={onOpenHashtag}
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
                   setActiveFinanzasSessionIndex={setActiveFinanzasSessionIndex}
@@ -36389,8 +36409,12 @@ try {
                       {renderFormattedDescription(
                         translatedVideoIds[activeVideo.id] ? getTranslatedDescription(activeVideo) : activeVideo.description,
                         (tag) => {
-                          setSelectedCategoryFilter('Todos');
-                          alert(`Filtrando videos con el hashtag #${tag}`);
+                          const cleanTag = tag.replace(/^#/, '').replace(/[^a-zA-Z0-9_\u00C0-\u017F]/g, '');
+                          if (onOpenHashtag) {
+                            onOpenHashtag(cleanTag);
+                          } else {
+                            window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: cleanTag } }));
+                          }
                         },
                         (username) => {
                           const matched = models.find(m => m.username?.toLowerCase() === username.toLowerCase());

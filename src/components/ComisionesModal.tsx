@@ -146,26 +146,26 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-[200] flex items-center justify-center p-[1px] bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-[1px] bg-slate-900/35 backdrop-blur-md animate-fade-in"
       id="modal-comisiones"
       role="dialog"
       aria-modal="true"
     >
       <div 
-        className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[calc(100vw-2px)] h-[calc(100dvh-2px)] max-h-[calc(100dvh-2px)] flex flex-col shadow-2xl border border-slate-200 overflow-hidden text-slate-800 animate-slide-up"
+        className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[calc(100vw-2px)] h-[calc(100dvh-2px)] max-h-[calc(100dvh-2px)] flex flex-col shadow-2xl border border-pink-200/80 overflow-hidden text-slate-800 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-slate-800/80 flex items-center justify-between gap-4 bg-gradient-to-r from-slate-950 via-[#0f172a] to-slate-950 text-white shrink-0">
+        {/* Header con paleta Rosa Perla y Azul Cielo */}
+        <div className="p-4 sm:p-6 border-b border-pink-200/90 flex items-center justify-between gap-4 bg-gradient-to-r from-[#FFF0F5] via-[#F4F9FD] to-[#E0F2FE] text-slate-900 shrink-0 shadow-2xs">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-400/10 text-amber-400 flex items-center justify-center shrink-0 border border-amber-400/25 shadow-sm">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-pink-200 to-sky-200 text-sky-700 flex items-center justify-center shrink-0 border border-sky-300/80 shadow-xs">
               <Percent className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="text-left">
-              <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-amber-400 uppercase font-mono block">
+              <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-sky-700 uppercase font-mono block">
                 POLÍTICA FINANCIERA • MÁXIMA ELEGANCIA & TRANSPARENCIA
               </span>
-              <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-tight m-0">
+              <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight m-0">
                 Comisiones y Reparto de Fondos
               </h2>
             </div>
@@ -174,7 +174,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700/80 shrink-0"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-pink-50 active:scale-95 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer border border-pink-200/90 shadow-2xs shrink-0"
             title="Cerrar Comisiones"
             aria-label="Cerrar Comisiones"
             id="btn-close-comisiones-modal"
@@ -184,56 +184,56 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-left custom-scrollbar no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-[#fbfbfa]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-left custom-scrollbar no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-[#FBFBFE]">
 
-          {/* Hero Callout: 100% Transparent Pool */}
-          <div className="bg-gradient-to-br from-[#0c1222] via-[#0f172a] to-[#0a0e1a] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-amber-500/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Hero Callout: 100% Transparent Pool con paleta Rosa Perla y Azul Cielo */}
+          <div className="bg-gradient-to-br from-[#FFF5F8] via-[#F4F9FD] to-[#EBF5FB] text-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-pink-200/80 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-pink-300/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-sky-300/20 rounded-full blur-3xl pointer-events-none" />
             
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="space-y-2.5 max-w-xl text-left">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 font-mono text-[10px] font-black uppercase tracking-wider border border-amber-400/30">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-100/90 text-pink-700 font-mono text-[10px] font-black uppercase tracking-wider border border-pink-300/70 shadow-2xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-pink-600" />
                   <span>Sin Costes Ocultos • Custodia Escrow Certificada</span>
                 </span>
-                <h3 className="text-lg sm:text-xl font-black tracking-tight text-white m-0">
+                <h3 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 m-0">
                   ¿Cómo se reparte cada euro en una Ronda de Financiación?
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  El 100% de las aportaciones de los 10 miembros se deposita en una cuenta de custodia automatizada. El <strong className="text-emerald-400 font-black">80%</strong> se transfiere directamente al ganador o ganadores de la ronda y el <strong className="text-indigo-300 font-black">10%</strong> se transfiere directamente al patrocinador o patrocinadores/as de los ganadores de la ronda. La plataforma recibe el <strong className="text-amber-400 font-black">10%</strong> de cada ronda por mantener los servicios de esta plataforma.
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  El 100% de las aportaciones de los 10 miembros se deposita en una cuenta de custodia automatizada. El <strong className="text-emerald-600 font-black">80%</strong> se transfiere directamente al ganador o ganadores de la ronda y el <strong className="text-sky-600 font-black">10%</strong> se transfiere directamente al patrocinador o patrocinadores/as de los ganadores de la ronda. La plataforma recibe el <strong className="text-pink-600 font-black">10%</strong> de cada ronda por mantener los servicios de esta plataforma.
                 </p>
               </div>
 
               {/* Mini distribution pill cards */}
               <div className="flex flex-col gap-2 shrink-0 w-full md:w-auto">
-                <div className="px-4 py-2.5 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-emerald-500/30 shadow-xs flex items-center justify-between gap-4">
-                  <span className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                <div className="px-4 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-emerald-300/80 shadow-xs flex items-center justify-between gap-4">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
                     <span className="text-sm">🥇</span> Proyecto Ganador / Ganadores
                   </span>
-                  <strong className="text-emerald-400 font-mono font-black text-sm">80%</strong>
+                  <strong className="text-emerald-600 font-mono font-black text-sm">80%</strong>
                 </div>
-                <div className="px-4 py-2.5 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-indigo-500/30 shadow-xs flex items-center justify-between gap-4">
-                  <span className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                <div className="px-4 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-sky-300/80 shadow-xs flex items-center justify-between gap-4">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
                     <span className="text-sm">🤝</span> Patrocinador / Patrocinadores
                   </span>
-                  <strong className="text-indigo-400 font-mono font-black text-sm">10%</strong>
+                  <strong className="text-sky-600 font-mono font-black text-sm">10%</strong>
                 </div>
-                <div className="px-4 py-2.5 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-amber-500/30 shadow-xs flex items-center justify-between gap-4">
-                  <span className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                <div className="px-4 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-pink-300/80 shadow-xs flex items-center justify-between gap-4">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
                     <span className="text-sm">⚙️</span> Servicios Plataforma
                   </span>
-                  <strong className="text-amber-400 font-mono font-black text-sm">10%</strong>
+                  <strong className="text-pink-600 font-mono font-black text-sm">10%</strong>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Interactive Calculator Section */}
-          <div className="bg-gradient-to-b from-[#faf9f6] via-white to-[#f8f9fc] border border-slate-200/90 rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+          <div className="bg-gradient-to-b from-[#FFF5F8]/40 via-white to-[#F0F8FF]/50 border border-slate-200/90 rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-pink-100 pb-3">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 font-mono block">SIMULADOR EN TIEMPO REAL</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 font-mono block">SIMULADOR EN TIEMPO REAL</span>
                 <h4 className="text-base font-black text-slate-900 m-0">Calculadora de Retorno y Comisiones por Mesa</h4>
               </div>
               <span className="text-xs text-slate-500 font-medium">Selecciona una categoría:</span>
@@ -248,14 +248,14 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                   onClick={() => setSelectedCalcCategory(idx)}
                   className={`p-2.5 rounded-2xl border text-center transition cursor-pointer active:scale-95 flex flex-col items-center justify-center gap-1 shadow-2xs ${
                     selectedCalcCategory === idx
-                      ? 'bg-slate-950 border-amber-400 text-amber-300 shadow-md ring-2 ring-amber-400/30 font-black'
-                      : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-700 font-bold hover:text-slate-900'
+                      ? 'bg-gradient-to-r from-pink-500 to-sky-500 border-pink-400 text-white shadow-md ring-2 ring-sky-300/40 font-black'
+                      : 'bg-white hover:bg-pink-50/50 border-slate-200 text-slate-700 font-bold hover:text-slate-900'
                   }`}
                 >
                   <span className="text-[10px] sm:text-[11px] leading-tight truncate w-full font-black">
                     {cat.name.split(' ')[1] || cat.name}
                   </span>
-                  <span className={`text-xs sm:text-sm font-mono font-black ${selectedCalcCategory === idx ? 'text-amber-300' : 'text-slate-900'}`}>
+                  <span className={`text-xs sm:text-sm font-mono font-black ${selectedCalcCategory === idx ? 'text-white' : 'text-slate-900'}`}>
                     {cat.fee.toLocaleString('es-ES')} €
                   </span>
                 </button>
@@ -341,15 +341,15 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                   onClick={() => setSelectedReferralTier(10)}
                   className={`w-full px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-between gap-2 text-left ${
                     selectedReferralTier === 10
-                      ? 'bg-slate-900 text-white shadow-xs border border-slate-800 font-black'
+                      ? 'bg-gradient-to-r from-pink-500 to-sky-500 text-white shadow-xs border border-pink-400 font-black'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Users className={`w-3.5 h-3.5 shrink-0 ${selectedReferralTier === 10 ? 'text-amber-400' : 'text-slate-400'}`} />
+                    <Users className={`w-3.5 h-3.5 shrink-0 ${selectedReferralTier === 10 ? 'text-white' : 'text-slate-400'}`} />
                     <span>10 Referidos</span>
                   </div>
-                  <span className={`text-[10px] font-mono font-bold ${selectedReferralTier === 10 ? 'text-amber-300' : 'text-slate-400'}`}>50/día</span>
+                  <span className={`text-[10px] font-mono font-bold ${selectedReferralTier === 10 ? 'text-pink-100' : 'text-slate-400'}`}>50/día</span>
                 </button>
 
                 <button
@@ -357,15 +357,15 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                   onClick={() => setSelectedReferralTier(100)}
                   className={`w-full px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-between gap-2 text-left ${
                     selectedReferralTier === 100
-                      ? 'bg-slate-900 text-white shadow-xs border border-slate-800 font-black'
+                      ? 'bg-gradient-to-r from-pink-500 to-sky-500 text-white shadow-xs border border-pink-400 font-black'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Users className={`w-3.5 h-3.5 shrink-0 ${selectedReferralTier === 100 ? 'text-amber-400' : 'text-slate-400'}`} />
+                    <Users className={`w-3.5 h-3.5 shrink-0 ${selectedReferralTier === 100 ? 'text-white' : 'text-slate-400'}`} />
                     <span>100 Referidos</span>
                   </div>
-                  <span className={`text-[10px] font-mono font-bold ${selectedReferralTier === 100 ? 'text-amber-300' : 'text-slate-400'}`}>500/día</span>
+                  <span className={`text-[10px] font-mono font-bold ${selectedReferralTier === 100 ? 'text-pink-100' : 'text-slate-400'}`}>500/día</span>
                 </button>
 
                 <button
@@ -373,15 +373,15 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                   onClick={() => setSelectedReferralTier(1000)}
                   className={`w-full px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-between gap-2 text-left ${
                     selectedReferralTier === 1000
-                      ? 'bg-slate-900 text-white shadow-xs border border-slate-800 font-black'
+                      ? 'bg-gradient-to-r from-pink-500 to-sky-500 text-white shadow-xs border border-pink-400 font-black'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Users className={`w-3.5 h-3.5 shrink-0 ${selectedReferralTier === 1000 ? 'text-amber-400' : 'text-slate-400'}`} />
+                    <Users className={`w-3.5 h-3.5 shrink-0 ${selectedReferralTier === 1000 ? 'text-white' : 'text-slate-400'}`} />
                     <span>1.000 Referidos</span>
                   </div>
-                  <span className={`text-[10px] font-mono font-bold ${selectedReferralTier === 1000 ? 'text-amber-300' : 'text-slate-400'}`}>5.000/día</span>
+                  <span className={`text-[10px] font-mono font-bold ${selectedReferralTier === 1000 ? 'text-pink-100' : 'text-slate-400'}`}>5.000/día</span>
                 </button>
               </div>
             </div>
@@ -394,7 +394,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                   <div key={scen.referralsCount} className="space-y-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="px-3 py-1 rounded-xl text-xs font-black font-mono border border-slate-900 bg-slate-900 text-amber-300 shadow-xs">
+                        <span className="px-3 py-1 rounded-xl text-xs font-black font-mono border border-pink-200 bg-gradient-to-r from-pink-100 to-sky-100 text-sky-800 shadow-2xs">
                           👥 {scen.label}
                         </span>
                         <span className="text-xs font-bold text-slate-700">
@@ -406,17 +406,17 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
+                    <div className="border border-pink-200/80 rounded-2xl overflow-hidden shadow-2xs">
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-900 border-b border-slate-800 text-slate-200 uppercase font-mono text-[10px] tracking-wider">
+                          <thead className="bg-gradient-to-r from-[#FFF0F5] via-[#F4F9FD] to-[#E6F3FF] border-b border-pink-200 text-slate-700 uppercase font-mono text-[10px] tracking-wider">
                             <tr>
-                              <th className="py-3.5 px-3 sm:px-4 font-black">Ronda de Inversión</th>
-                              <th className="py-3.5 px-3 sm:px-4 font-black text-right">Cuota Mesa</th>
-                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-indigo-300">Comisión / Victoria (10%)</th>
-                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-emerald-400 bg-slate-800/60">Beneficio Diario</th>
-                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-emerald-300 bg-slate-800/90 font-black">Beneficio Mensual (30d)</th>
-                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-amber-300">Beneficio Anual (12m)</th>
+                              <th className="py-3.5 px-3 sm:px-4 font-black text-slate-700">Ronda de Inversión</th>
+                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-slate-700">Cuota Mesa</th>
+                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-sky-700">Comisión / Victoria (10%)</th>
+                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-emerald-700 bg-emerald-50/70">Beneficio Diario</th>
+                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-emerald-800 bg-emerald-100/60 font-black">Beneficio Mensual (30d)</th>
+                              <th className="py-3.5 px-3 sm:px-4 font-black text-right text-pink-700">Beneficio Anual (12m)</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 bg-white">
@@ -425,14 +425,14 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                               const monthlyProfit = dailyProfit * 30;
                               const annualProfit = monthlyProfit * 12;
                               return (
-                                <tr key={i} className="hover:bg-amber-50/20 transition">
+                                <tr key={i} className="hover:bg-pink-50/30 transition">
                                   <td className="py-3 px-3 sm:px-4 font-bold text-slate-900">
                                     {row.name}
                                   </td>
                                   <td className="py-3 px-3 sm:px-4 font-mono font-bold text-right text-slate-700">
                                     {row.fee.toLocaleString('es-ES')} €
                                   </td>
-                                  <td className="py-3 px-3 sm:px-4 font-mono font-bold text-right text-indigo-700 bg-indigo-50/25">
+                                  <td className="py-3 px-3 sm:px-4 font-mono font-bold text-right text-sky-700 bg-sky-50/30">
                                     {row.sponsorPrize.toLocaleString('es-ES')} €
                                   </td>
                                   <td className="py-3 px-3 sm:px-4 font-mono font-black text-right text-emerald-700 bg-emerald-50/30">
@@ -441,7 +441,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                                   <td className="py-3 px-3 sm:px-4 font-mono font-black text-right text-emerald-800 bg-emerald-50/60 font-black">
                                     {monthlyProfit.toLocaleString('es-ES')} €
                                   </td>
-                                  <td className="py-3 px-3 sm:px-4 font-mono font-black text-right text-amber-700 bg-amber-50/20">
+                                  <td className="py-3 px-3 sm:px-4 font-mono font-black text-right text-pink-700 bg-pink-50/30">
                                     {annualProfit.toLocaleString('es-ES')} €
                                   </td>
                                 </tr>
@@ -456,7 +456,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
             </div>
 
             {/* Formula Explanatory Box */}
-            <div className="bg-gradient-to-r from-amber-50/50 via-slate-50 to-indigo-50/40 p-3.5 rounded-2xl border border-amber-200/60 text-slate-700 text-xs flex items-start gap-2.5 shadow-2xs">
+            <div className="bg-gradient-to-r from-pink-50/60 via-slate-50 to-sky-50/60 p-3.5 rounded-2xl border border-pink-200/80 text-slate-700 text-xs flex items-start gap-2.5 shadow-2xs">
               <span className="text-base shrink-0 mt-0.5">💡</span>
               <p className="leading-relaxed">
                 <strong>¿Cómo se calcula este beneficio?</strong> Cada mesa de inversión está compuesta por exactamente 10 miembros. Con un promedio de <strong>5 participaciones diarias por referido</strong> (50 jugadas al día con 10 referidos), se obtienen <strong>5 victorias estimadas al día</strong> (1 de cada 10 miembros gana la mesa). Al recibir el patrocinador el <strong>10% del pool por cada victoria</strong> (importe equivalente al 100% de la cuota de la ronda), el patrocinador percibe 5 cuotas completas de comisión al día por cada 10 referidos activos.
@@ -467,13 +467,13 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
           {/* What does the platform fee cover? */}
           <div className="space-y-3 text-left">
             <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest font-mono flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
               <span>¿Qué incluye la comisión de la plataforma?</span>
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-amber-400/50 transition-all duration-200 space-y-2 shadow-2xs">
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center mb-1">
+              <div className="p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-sky-300 transition-all duration-200 space-y-2 shadow-2xs">
+                <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center mb-1">
                   <Server className="w-4 h-4" />
                 </div>
                 <strong className="text-xs font-black text-slate-900 block">Streaming y Voz en Vivo</strong>
@@ -482,7 +482,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-amber-400/50 transition-all duration-200 space-y-2 shadow-2xs">
+              <div className="p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-emerald-300 transition-all duration-200 space-y-2 shadow-2xs">
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center mb-1">
                   <Wallet className="w-4 h-4" />
                 </div>
@@ -492,8 +492,8 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-amber-400/50 transition-all duration-200 space-y-2 shadow-2xs">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center mb-1">
+              <div className="p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-pink-300 transition-all duration-200 space-y-2 shadow-2xs">
+                <div className="w-8 h-8 rounded-xl bg-pink-50 text-pink-700 border border-pink-100 flex items-center justify-center mb-1">
                   <Building2 className="w-4 h-4" />
                 </div>
                 <strong className="text-xs font-black text-slate-900 block">Auditoría y Soporte Legal</strong>
@@ -504,35 +504,35 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
             </div>
           </div>
 
-          {/* Refund guarantee notice */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-between gap-4 border border-amber-500/30 shadow-md">
+          {/* Refund guarantee notice con Rosa Perla y Azul Cielo */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#FFF2F6] via-[#F4F9FD] to-[#E0F2FE] text-slate-900 flex items-center justify-between gap-4 border border-sky-300/80 shadow-xs">
             <div className="flex items-center gap-3.5 text-left">
               <span className="text-2xl">🤝</span>
               <div>
-                <strong className="text-xs sm:text-sm font-black block text-amber-300">Garantía de Devolución del 100%</strong>
-                <p className="text-[11px] text-slate-300 mt-0.5">
+                <strong className="text-xs sm:text-sm font-black block text-sky-900">Garantía de Devolución del 100%</strong>
+                <p className="text-[11px] text-slate-600 mt-0.5">
                   Si una mesa no reúne a sus 10 participantes o se cancela la convocatoria, se reembolsa el 100% de la cuota de forma inmediata y automática, sin ninguna deducción ni comisión.
                 </p>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-mono font-black shrink-0">
+            <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-300 text-[10px] font-mono font-black shrink-0">
               0% COMISIÓN EN CANCELACIÓN
             </span>
           </div>
 
         </div>
 
-        {/* Footer */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-slate-300">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
-            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+        {/* Footer con Rosa Perla y Azul Cielo */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#FFF0F5] via-[#F9FBFE] to-[#F0F8FF] border-t border-pink-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-slate-700">
+          <div className="flex items-center gap-2 text-slate-600 text-xs font-medium">
+            <Sparkles className="w-4 h-4 text-pink-500 shrink-0" />
             <span>Condiciones financieras de máxima elegancia y transparencia, sin tarifas ocultas ni costes por retiro.</span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer shadow-md hover:shadow-lg"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-sky-500 hover:from-pink-600 hover:to-sky-600 text-white font-black text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer shadow-md hover:shadow-lg"
             id="btn-confirm-comisiones-modal"
           >
             Entendido, volver a las Rondas

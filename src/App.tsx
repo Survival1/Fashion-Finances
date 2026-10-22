@@ -18,6 +18,7 @@ import HeartRainOverlay from './components/HeartRainOverlay';
 import PatrocinadosView, { Patrocinado } from './components/PatrocinadosView';
 import SavedProjectsManager from './components/SavedProjectsManager';
 import CastingLiveSection from './components/CastingLiveSection';
+import HashtagDetailPage from './components/HashtagDetailPage';
 import LandingPage from './components/LandingPage';
 import VictoriaSecretRanking from './components/VictoriaSecretRanking';
 import FashionsFinanceLogo from './components/FashionsFinanceLogo';
@@ -404,7 +405,8 @@ export default function App() {
   const menSliderRef = useRef<HTMLDivElement>(null);
 
   // --- UI/Navigation State Hooks ---
-  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin'>('profile');
+  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin' | 'hashtag'>('profile');
+  const [selectedHashtag, setSelectedHashtag] = useState<string>('Runway');
   const [initialSelectedStoreId, setInitialSelectedStoreId] = useState<string | null>(null);
   const [selectedLiveModelId, setSelectedLiveModelId] = useState<string | undefined>(undefined);
   const [selectedModelForView, setSelectedModelForView] = useState<ModelProfile | null>(null);
@@ -558,6 +560,29 @@ export default function App() {
       setLastProfileTab('profile');
     }
   }, [userProfile?.role]);
+
+  const handleOpenHashtag = (tag: string) => {
+    if (!tag) return;
+    const cleanTag = tag.replace(/^#/, '').trim();
+    setSelectedHashtag(cleanTag);
+    setPreviousTab(activeTab);
+    setActiveTabTab('hashtag');
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {}
+  };
+
+  useEffect(() => {
+    const handleCustomHashtag = (e: any) => {
+      if (e && e.detail && e.detail.tag) {
+        handleOpenHashtag(e.detail.tag);
+      }
+    };
+    window.addEventListener('open_hashtag', handleCustomHashtag);
+    return () => {
+      window.removeEventListener('open_hashtag', handleCustomHashtag);
+    };
+  }, [activeTab]);
   
   // Friends list persistent state
   const [friendsList, setFriendsList] = useState<any[]>(() => {
@@ -2941,33 +2966,36 @@ export default function App() {
               <strong className="text-slate-800 text-sm font-semibold">{userProfile.name}</strong>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-1.5 flex items-center gap-3">
-              <div className="px-2.5">
-                <span className="text-[9px] text-slate-400 uppercase font-mono block">Backoffice</span>
-                <strong className="font-mono text-xs text-slate-900 font-bold">{userProfile.balance.toFixed(2)}€</strong>
+            {/* Contenedor Backoffice & Panel Admin: en móvil vertical (debajo), en desktop horizontal */}
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-3">
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-1 sm:p-1.5 flex items-center justify-between gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="px-2 sm:px-2.5">
+                  <span className="text-[8.5px] sm:text-[9px] text-slate-400 uppercase font-mono block">Backoffice</span>
+                  <strong className="font-mono text-[11px] sm:text-xs text-slate-900 font-bold">{userProfile.balance.toFixed(2)}€</strong>
+                </div>
+                <button
+                  onClick={() => setShowAddFundsModal(true)}
+                  className="bg-slate-950 hover:bg-slate-800 text-white rounded-lg p-1.5 sm:p-2 transition-all cursor-pointer flex items-center justify-center shrink-0"
+                  title="Añadir fondos simulados"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
               </div>
+
+              {/* 🛡️ Botón Panel de Administración (en móvil vertical debajo del contenedor del Backoffice) */}
               <button
-                onClick={() => setShowAddFundsModal(true)}
-                className="bg-slate-950 hover:bg-slate-800 text-white rounded-lg p-2 transition-all cursor-pointer flex items-center justify-center"
-                title="Añadir fondos simulados"
+                onClick={() => {
+                  setPreviousTab(activeTab);
+                  setActiveTabTab('admin');
+                }}
+                className="w-full sm:w-auto justify-center px-2.5 sm:px-3.5 py-1 sm:py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:shadow-xs active:scale-95"
+                id="btn-header-admin-portal"
+                title="Abrir Panel de Administración Integral"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[#fe2c55]" />
+                <span className="font-mono uppercase text-[10px] sm:text-[11px] tracking-wide">Panel Admin</span>
               </button>
             </div>
-
-            {/* 🛡️ Botón Panel de Administración */}
-            <button
-              onClick={() => {
-                setPreviousTab(activeTab);
-                setActiveTabTab('admin');
-              }}
-              className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:shadow-xs active:scale-95"
-              id="btn-header-admin-portal"
-              title="Abrir Panel de Administración Integral"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#fe2c55]" />
-              <span className="font-mono uppercase text-[11px] tracking-wide">Panel Admin</span>
-            </button>
           </div>
         </div>
       </header>
@@ -3006,10 +3034,12 @@ export default function App() {
           ? 'max-w-[1720px] 2xl:max-w-[1920px] p-2 sm:p-4 lg:p-6 gap-6'
           : activeTab === 'casting_live'
           ? 'max-w-7xl p-0 max-md:p-0 sm:px-0 md:px-0 lg:p-4 max-md:h-full max-md:gap-0 max-md:overflow-hidden'
+          : activeTab === 'hashtag'
+          ? 'max-w-7xl p-2 sm:p-4 lg:p-6 gap-6'
           : 'max-w-7xl p-4 sm:p-6 max-md:p-3 gap-6'
       }`}>
         {/* LEFT NAV PANEL - Styled with high contrast and desktop responsiveness */}
-        <aside className={`lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden ${activeTab === 'menu' ? 'hidden' : ''}`}>
+        <aside className={`lg:w-64 shrink-0 flex flex-col gap-4 max-md:hidden ${activeTab === 'menu' || activeTab === 'hashtag' ? 'hidden' : ''}`}>
           {/* User profile segment */}
           <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs space-y-3">
             <div className="flex items-center gap-3">
@@ -3223,8 +3253,8 @@ export default function App() {
 
         {/* RIGHT MASTER DETAIL CONTENT VIEWPORT */}
         <section className={`flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'gap-0 max-md:h-full max-md:overflow-hidden' : 'gap-6'} no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`} id="master-viewport">
-          {/* 📱 MOBILE NAVIGATION MENU - Visible on general tabs; hidden on casting_live to prevent overflow and lateral scrollbar */}
-          {(activeTab !== 'casting_live' || activeTab === 'menu') && (
+          {/* 📱 MOBILE NAVIGATION MENU - Visible on general tabs; hidden on casting_live and hashtag to prevent overflow and lateral scrollbar */}
+          {((activeTab !== 'casting_live' && activeTab !== 'hashtag') || activeTab === 'menu') && (
             <MobileNavigationMenu
               activeTab={activeTab}
               userRole={userProfile.role}
@@ -4242,8 +4272,51 @@ export default function App() {
               onUpdateUserProfile={handleUpdateProfile}
               onAddMovement={handleAddMovement}
               onGiftTransaction={handleGiftTransaction}
+              onOpenHashtag={handleOpenHashtag}
             />
           </div>
+
+          {activeTab === 'hashtag' && (
+            <div className="w-full animate-fade-in pb-12">
+              <HashtagDetailPage
+                hashtag={selectedHashtag}
+                onBack={() => {
+                  const fallbackTab = (previousTab && previousTab !== 'hashtag') ? (previousTab as any) : 'casting_live';
+                  setActiveTabTab(fallbackTab);
+                }}
+                onSelectHashtag={(t) => {
+                  setSelectedHashtag(t);
+                  try {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } catch {}
+                }}
+                onGoToModelProfile={(modelId) => {
+                  const target = models.find(m => m.id === modelId || m.username.toLowerCase() === modelId.toLowerCase());
+                  if (target) {
+                    setSelectedModelForView(target);
+                    setModelViewSourceTab('hashtag');
+                    setActiveTabTab('home');
+                  }
+                }}
+                onGoToProject={() => {
+                  setActiveTabTab('sessions');
+                }}
+                allVideos={(() => {
+                  try {
+                    const raw = localStorage.getItem('coll_casting_live_videos');
+                    if (raw) {
+                      const parsed = JSON.parse(raw);
+                      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    }
+                  } catch {}
+                  return [];
+                })()}
+                models={models}
+                projects={projects}
+                currentUser={userProfile || undefined}
+              />
+            </div>
+          )}
         </section>
       </main>
 
