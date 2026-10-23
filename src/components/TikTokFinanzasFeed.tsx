@@ -216,6 +216,7 @@ const LiveUserStreamVideo = React.memo(({
 
 interface TikTokFinanzasFeedProps {
   isActiveTab?: boolean;
+  activeSubTab?: 'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live';
   activeSessionsOnly: any[];
   activeFinanzasSessionIndex: number;
   setActiveFinanzasSessionIndex: (index: number) => void;
@@ -344,6 +345,7 @@ const renderCaptionWithHashtags = (
 
 export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   isActiveTab = true,
+  activeSubTab = 'para-ti',
   activeSessionsOnly,
   activeFinanzasSessionIndex,
   setActiveFinanzasSessionIndex,
@@ -665,6 +667,271 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   ];
 
+  // 👥 Vídeos de los Amigos Recíprocos de la página de la captura z.png (Círculo Íntimo - 5)
+  // 1. Candice Swanepoel (@candiceswanepoel_w3)
+  // 2. Alessandra Ambrosio (@alessandraambrosio_w2)
+  // 3. Alexander Vance (@alexandervance_m1)
+  // 4. Jasmine Tookes (@jasminetookes_w4)
+  // 5. Miranda Kerr (@mirandakerr_w5)
+  // y Adriana Lima (@adrianalima_w1)
+  const DEFAULT_FRIENDS_PRESETS: ChannelUploadedVideoItem[] = [
+    {
+      id: 'fr-vid-candice-1',
+      username: 'candiceswanepoel_w3',
+      name: 'Candice Swanepoel',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 28450,
+      comments: [
+        { id: 'c-fr-c1', user: 'adrianalima_w1', text: '¡Increíble pasarela amiga! Te veo luego en el hotel ✨👠', date: 'Hace 10m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
+        { id: 'c-fr-c2', user: 'alessandraambrosio_w2', text: 'Puro orgullo verte brillar con la colección sustentable 🌿💚', date: 'Hace 30m', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1340,
+      favorites: 4250,
+      description: '✨ Sesión exclusiva de Alta Costura & Colección Sustentable en París. ¡Un abrazo enorme a todos mis amigos de Fashion Finances! 🌿👗 #amigos #sustainable #pfw2026 #candiceswanepoel',
+      music: 'Sustainable Fashion Beats - Paris Mix',
+      videoCategory: 'Fashion',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-candice-2',
+      username: 'candiceswanepoel_w3',
+      name: 'Candice Swanepoel',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+      likes: 19800,
+      comments: [
+        { id: 'c-fr-c3', user: 'jasminetookes_w4', text: '¡Esa luz estroboscópica y el caminado son de otro nivel amiga! ⚡🖤', date: 'Hace 1h', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 890,
+      favorites: 2950,
+      description: '🌿 Backstage en Milán: preparativos de pasarela y presentación de nuevos talentos creativos. ¡Gracias amigos por el cariño! ✨👠 #amigos #backstage #candiceswanepoel #fashion',
+      music: 'Strobe Runway Catwalk - Studio 9',
+      videoCategory: 'Fashion',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-alessandra-1',
+      username: 'alessandraambrosio_w2',
+      name: 'Alessandra Ambrosio',
+      avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
+      likes: 35100,
+      comments: [
+        { id: 'c-fr-a1', user: 'candiceswanepoel_w3', text: '¡Qué elegancia en la alfombra roja amiga querida! ❤️🔥', date: 'Hace 15m', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+        { id: 'c-fr-a2', user: 'alexandervance_m1', text: 'Top 1 indiscutible en Cannes, éxito total con los patrocinadores 📈🍾', date: 'Hace 45m', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1812,
+      favorites: 5190,
+      description: '👑 Glamour en Cannes 2026. Conectando marcas de lujo con el mundo de las finanzas y el arte junto a mi círculo de amigos. ✨👠 #amigos #cannes #hautecouture #alessandra',
+      music: 'Cannes Sunset Gold - Red Carpet Session',
+      videoCategory: 'Modelos',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-alessandra-2',
+      username: 'alessandraambrosio_w2',
+      name: 'Alessandra Ambrosio',
+      avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
+      likes: 27400,
+      comments: [
+        { id: 'c-fr-a3', user: 'mirandakerr_w5', text: 'Radiante bajo las luces de la ciudad, te quiero amiga 🌸✨', date: 'Hace 2h', avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1210,
+      favorites: 3820,
+      description: '💎 Desfile de Clausura: Celebrando con mi círculo íntimo de Fashion Finances. ¡Nuevos contratos VIP en camino! 🥂✨ #amigos #runway #alessandraambrosio #luxury',
+      music: 'Street Lights (Slowed) - Lofi Beats',
+      videoCategory: 'Modelos',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-alexander-1',
+      username: 'alexandervance_m1',
+      name: 'Alexander Vance',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stylish-young-man-walking-in-a-urban-setting-41712-large.mp4',
+      likes: 26800,
+      comments: [
+        { id: 'c-fr-al1', user: 'adrianalima_w1', text: '¡Esa sastrería italiana es impecable Alexander! 👏', date: 'Hace 20m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
+        { id: 'c-fr-al2', user: 'jasminetookes_w4', text: 'El mejor estilo masculino de la semana de Milán ⭐', date: 'Hace 1h', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1420,
+      favorites: 4140,
+      description: '💼 Milán Runway & Sastrería a Medida. Para mis amigos y socios inversores: estrategias de retorno en alta costura masculina. 📈🍸 #amigos #milano #mensfashion #alexandervance',
+      music: 'Milan Executive Club - High Fashion LoFi',
+      videoCategory: 'Finanzas',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-alexander-2',
+      username: 'alexandervance_m1',
+      name: 'Alexander Vance',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-talking-in-a-studio-interview-41720-large.mp4',
+      likes: 21900,
+      comments: [
+        { id: 'c-fr-al3', user: 'alessandraambrosio_w2', text: 'Magnífica entrevista sobre patrocinios y modelos globales 🎙️🎩', date: 'Hace 3h', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 980,
+      favorites: 3120,
+      description: '⌚ Masterclass de Estilo & Alta Relojería: Elegancia atemporal y claves de inversión para amigos y creadores VIP. 👔💎 #amigos #mensstyle #luxuryinvestor #alexandervance',
+      music: 'Studio Talk Sessions - Interview Beats',
+      videoCategory: 'Finanzas',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-jasmine-1',
+      username: 'jasminetookes_w4',
+      name: 'Jasmine Tookes',
+      avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-with-luxury-jewelry-posing-in-a-studio-41718-large.mp4',
+      likes: 29750,
+      comments: [
+        { id: 'c-fr-j1', user: 'mirandakerr_w5', text: '¡Deslumbrante Jasmine! Esos diamantes combinan perfecto con tu aura ✨💖', date: 'Hace 5m', avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1280,
+      favorites: 4430,
+      description: '💎 Desfile de Alta Joyería y Vestidos de Noche en Nueva York. Un saludo muy especial a todo mi círculo íntimo de amigos. ✨🤍 #amigos #jasminetookes #luxury #highfashion',
+      music: 'Diamond Glow Symphony - NY Studio Beat',
+      videoCategory: 'Fashion',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-jasmine-2',
+      username: 'jasminetookes_w4',
+      name: 'Jasmine Tookes',
+      avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
+      likes: 23400,
+      comments: [
+        { id: 'c-fr-j2', user: 'candiceswanepoel_w3', text: 'Bailando antes de salir a desfilar, ¡así se hace amiga! 💃🎉', date: 'Hace 40m', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1150,
+      favorites: 3600,
+      description: '✨ Ensayos finales antes del show de invierno en Manhattan. ¡La energía con mis amigos de la plataforma es increíble! 👠❄️ #amigos #jasminetookes #runway #fashion',
+      music: 'Warmup Groove - Backstage Sound',
+      videoCategory: 'Fashion',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-miranda-1',
+      username: 'mirandakerr_w5',
+      name: 'Miranda Kerr',
+      avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-applying-lip-gloss-with-glitter-makeup-40480-large.mp4',
+      likes: 31900,
+      comments: [
+        { id: 'c-fr-m1', user: 'candiceswanepoel_w3', text: 'Amiga ese look natural y glow orgánico es insuperable 🌸✨', date: 'Hace 12m', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1510,
+      favorites: 4920,
+      description: '🌸 Rutina de bienestar y belleza previa al show internacional. Compartido con mucho cariño para mis amigos recíprocos. 🌿💄 #amigos #wellness #mirandakerr #organicglow',
+      music: 'Organic Glow Morning - Zen Chill Beats',
+      videoCategory: 'Beauty',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-miranda-2',
+      username: 'mirandakerr_w5',
+      name: 'Miranda Kerr',
+      avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-warm-up-exercises-in-a-gym-42999-large.mp4',
+      likes: 24600,
+      comments: [
+        { id: 'c-fr-m2', user: 'alessandraambrosio_w2', text: 'Diosa total de la salud y el bienestar ✨💪', date: 'Hace 1h', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 1040,
+      favorites: 3710,
+      description: '✨ Secretos de belleza orgánica y pasarela limpia. Para mis amigos de Fashion Finances: el verdadero lujo es el cuidado personal. 🌸🤍 #amigos #organicskincare #mirandakerr #glow',
+      music: 'Glow & Velvet Dreams - Beauty Lounge',
+      videoCategory: 'Beauty',
+      isUserUploaded: true
+    },
+    {
+      id: 'fr-vid-adriana-1',
+      username: 'adrianalima_w1',
+      name: 'Adriana Lima',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 42100,
+      comments: [
+        { id: 'c-fr-ad1', user: 'alessandraambrosio_w2', text: '¡Reina total como siempre amiga! 👑🔥', date: 'Hace 8m', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' },
+        { id: 'c-fr-ad2', user: 'candiceswanepoel_w3', text: '¡Ese maquillaje plateado te queda sensacional! 💖✨', date: 'Hace 25m', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' }
+      ],
+      shares: 2890,
+      favorites: 7400,
+      description: '🔥 Sesión Victoria\'s Secret & Casting Live exclusivo. ¡Hola a todos mis amigos! Preparando el gran desfile de temporada. 👑✨ #amigos #victoriassecret #adrianalima #angels',
+      music: 'Angels Runway Anthem - Miami Live',
+      videoCategory: 'Fashion',
+      isUserUploaded: true
+    }
+  ];
+
+  // Helper para verificar si un vídeo pertenece a un amigo de la página z.png
+  const isVideoFromFriendsPage = (v: ChannelUploadedVideoItem): boolean => {
+    if (!v) return false;
+
+    // Los 5 amigos del Círculo Íntimo en z.png:
+    // Candice Swanepoel (@candiceswanepoel_w3), Alessandra Ambrosio (@alessandraambrosio_w2),
+    // Alexander Vance (@alexandervance_m1), Jasmine Tookes (@jasminetookes_w4), Miranda Kerr (@mirandakerr_w5)
+    const friendUsernames = [
+      'candiceswanepoel_w3', 'candiceswanepoel', 'candice_swim',
+      'alessandraambrosio_w2', 'alessandraambrosio', 'alessandra_ambrosio',
+      'alexandervance_m1', 'alexandervance', 'alexandervance1',
+      'jasminetookes_w4', 'jasminetookes',
+      'mirandakerr_w5', 'mirandakerr'
+    ];
+
+    const isCurrentAdriana = userProfile && (
+      (userProfile.username && userProfile.username.toLowerCase().includes('adrianalima')) ||
+      (userProfile.name && userProfile.name.toLowerCase().includes('adriana')) ||
+      userProfile.id === 'topf-1'
+    );
+    if (!isCurrentAdriana) {
+      friendUsernames.push('adrianalima_w1', 'adrianalima');
+    }
+
+    const friendNames = [
+      'candice swanepoel',
+      'alessandra ambrosio',
+      'alexander vance',
+      'jasmine tookes',
+      'miranda kerr'
+    ];
+    if (!isCurrentAdriana) {
+      friendNames.push('adriana lima');
+    }
+
+    const u = (v.username || '').toLowerCase().trim().replace(/^@/, '');
+    const n = (v.name || '').toLowerCase().trim();
+    const desc = (v.description || '').toLowerCase();
+
+    if (friendUsernames.some(fu => u === fu || u.includes(fu) || fu.includes(u))) return true;
+    if (friendNames.some(fn => n === fn || n.includes(fn) || fn.includes(n))) return true;
+    if (v.id && v.id.startsWith('fr-vid-')) return true;
+    if (desc.includes('#amigos')) return true;
+
+    // También comprobar amigos dinámicos de coll_friends en localStorage
+    try {
+      const rawFriends = localStorage.getItem('coll_friends');
+      if (rawFriends) {
+        const parsed = JSON.parse(rawFriends);
+        if (Array.isArray(parsed)) {
+          const match = parsed.some((f: any) => {
+            const fU = (f.username || '').toLowerCase().trim().replace(/^@/, '');
+            const fN = (f.name || '').toLowerCase().trim();
+            return (fU && u && (u === fU || u.includes(fU))) ||
+                   (fN && n && (n === fN || n.includes(fN)));
+          });
+          if (match) return true;
+        }
+      }
+    } catch (_) {}
+
+    return false;
+  };
+
   // Helper para verificar correspondencia estricta entre categoría de vídeo y canal
   const isVideoCategoryMatchingChannel = (channelName: string, videoCategory?: string): boolean => {
     const chan = (channelName || '').toLowerCase().trim();
@@ -922,6 +1189,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       window.removeEventListener('saved_videos_updated', handleSyncChannelVideos);
     };
   }, [currentChannel]);
+
+  // 👥 Al cambiar al subtab 'amigos', reiniciar al primer vídeo de amigos y reproducirlo de inmediato
+  useEffect(() => {
+    if (activeSubTab === 'amigos') {
+      setActiveChannelVideoIdx(0);
+      setChannelVideoProgress(0);
+      setIsChannelVideoPlaying(true);
+      setIsUserPaused(false);
+      setUserPausedVideosMap({});
+      if (feedContainerRef.current) {
+        feedContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    }
+  }, [activeSubTab]);
 
   const [userPausedVideosMap, setUserPausedVideosMap] = useState<Record<string, boolean>>({});
 
@@ -4186,7 +4467,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               >
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
                 <span className="text-[11px] font-black uppercase tracking-wider text-rose-300">
-                  Canal: {getChannelCleanName(currentChannel)}
+                  {activeSubTab === 'amigos' ? 'Canal: Amigos 👥' : `Canal: ${getChannelCleanName(currentChannel)}`}
                 </span>
                 <span className="text-[9px] text-rose-400">▼</span>
               </button>
@@ -4501,8 +4782,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20" />
                 </h4>
                 <span className="text-[8px] bg-white/20 backdrop-blur-md text-white font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
-                  {getChannelCleanName(currentChannel)}
+                  {activeSubTab === 'amigos' ? 'AMIGOS' : getChannelCleanName(currentChannel)}
                 </span>
+                {isVideoFromFriendsPage(currentVid) && (
+                  <span className="text-[8px] bg-gradient-to-r from-pink-600 via-rose-600 to-rose-500 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                    👥 AMIGO RECÍPROCO
+                  </span>
+                )}
               </div>
 
               {/* User upload badge if uploaded from z.png */}
@@ -4846,10 +5132,30 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     );
   };
 
-  // 🎬 Renderizador del Feed de Vídeos del Canal (Fashion, Runway, BackStage, etc.)
-  // Renderiza cada vídeo de la categoría en una pantalla independiente (separadas por 3cm idéntico a image.png)
+  // 🎬 Renderizador del Feed de Vídeos del Canal (Fashion, Runway, BackStage, etc. y Amigos)
+  // Cuando activeSubTab === 'amigos', muestra exclusivamente los vídeos de los amigos de la captura z.png
   const renderMultimediaChannelVideoFeed = () => {
-    const videos = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
+    let videos: ChannelUploadedVideoItem[];
+    if (activeSubTab === 'amigos') {
+      const allVideosPool = [
+        ...channelUploadedVideos,
+        ...DEFAULT_FRIENDS_PRESETS
+      ];
+      const seen = new Set<string>();
+      const friendsList: ChannelUploadedVideoItem[] = [];
+      for (const item of allVideosPool) {
+        if (!item || !item.videoUrl) continue;
+        const key = item.id || item.videoUrl;
+        if (seen.has(key)) continue;
+        if (isVideoFromFriendsPage(item)) {
+          seen.add(key);
+          friendsList.push(item);
+        }
+      }
+      videos = friendsList.length > 0 ? friendsList : DEFAULT_FRIENDS_PRESETS;
+    } else {
+      videos = channelUploadedVideos.length > 0 ? channelUploadedVideos : DEFAULT_FASHION_PRESETS;
+    }
     return videos.map((currentVid, vidIdx) => renderSingleMultimediaVideoScreen(currentVid, vidIdx, videos));
   };
 
@@ -4910,7 +5216,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         className="w-full max-w-full h-full max-md:min-h-[calc(100dvh-20px)] sm:h-[calc(100dvh-20px)] overflow-x-hidden overflow-y-auto md:snap-y md:snap-mandatory scroll-smooth py-0 sm:py-0.5 flex flex-col items-center select-none overscroll-contain touch-pan-y cursor-grab active:cursor-grabbing scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative gap-[3cm]"
         style={{ rowGap: '3cm' }}
       >
-        {currentChannel !== 'Finanzas' ? (
+        {currentChannel !== 'Finanzas' || activeSubTab === 'amigos' ? (
           renderMultimediaChannelVideoFeed()
         ) : (
           activeSessionsOnly.map((session, index) => {

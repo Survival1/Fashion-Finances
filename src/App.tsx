@@ -3302,6 +3302,7 @@ export default function App() {
                 </div>
 
                 <ModelFacebookProfile
+                  key={selectedModelForView.id}
                   userProfile={{
                     id: selectedModelForView.id,
                     name: selectedModelForView.name,
@@ -3432,7 +3433,15 @@ export default function App() {
                     }
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
-                  onGoToModelProfile={(modelId) => {
+                  onGoToModelProfile={(modelId, modelObj) => {
+                    if (modelObj) {
+                      setSelectedModelForView(modelObj);
+                      setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
+                      return;
+                    }
                     let target = models.find(m => m.id === modelId);
                     if (!target && modelId) {
                       const lower = modelId.toLowerCase().trim();
@@ -3447,6 +3456,26 @@ export default function App() {
                     if (target) {
                       setSelectedModelForView(target);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
+                    } else if (modelId) {
+                      const fallbackModel: ModelProfile = {
+                        id: modelId,
+                        name: modelId.charAt(0).toUpperCase() + modelId.slice(1),
+                        username: modelId.toLowerCase().replace(/\s+/g, '_'),
+                        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+                        bio: 'Modelo oficial y creador/a participante en sesiones de alta costura.',
+                        role: 'model',
+                        rating: 5.0,
+                        followersCount: 125000,
+                        verified: true
+                      };
+                      setSelectedModelForView(fallbackModel);
+                      setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                     }
                   }}
                   initialSocialModal={profileSocialModalState}
@@ -3594,7 +3623,15 @@ export default function App() {
                   setActiveTabTab(tab);
                 }}
                 onLaunchChat={handleLaunchChatWithModel}
-                onGoToModelProfile={(modelId) => {
+                onGoToModelProfile={(modelId, modelObj) => {
+                  if (modelObj) {
+                    setSelectedModelForView(modelObj);
+                    setActiveTabTab('home');
+                    try {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch {}
+                    return;
+                  }
                   let target = models.find(m => m.id === modelId);
                   if (!target && modelId) {
                     const lower = modelId.toLowerCase().trim();
@@ -3609,6 +3646,26 @@ export default function App() {
                   if (target) {
                     setSelectedModelForView(target);
                     setActiveTabTab('home');
+                    try {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch {}
+                  } else if (modelId) {
+                    const fallbackModel: ModelProfile = {
+                      id: modelId,
+                      name: modelId.charAt(0).toUpperCase() + modelId.slice(1),
+                      username: modelId.toLowerCase().replace(/\s+/g, '_'),
+                      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+                      bio: 'Modelo oficial y creador/a participante en sesiones de alta costura.',
+                      role: 'model',
+                      rating: 5.0,
+                      followersCount: 125000,
+                      verified: true
+                    };
+                    setSelectedModelForView(fallbackModel);
+                    setActiveTabTab('home');
+                    try {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch {}
                   }
                 }}
                 initialSocialModal={profileSocialModalState}

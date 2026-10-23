@@ -22,9 +22,7 @@ import {
   Info,
   Star,
   Archive,
-  Film,
-  Eye,
-  EyeOff
+  Film
 } from 'lucide-react';
 
 interface StoryCreatorModalProps {
@@ -71,7 +69,6 @@ export default function StoryCreatorModal({
   const [saveToArchive, setSaveToArchive] = useState(true);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
-  const [isPeekingBackground, setIsPeekingBackground] = useState(false);
 
   // Presets
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
@@ -84,6 +81,54 @@ export default function StoryCreatorModal({
   const recordingTimerRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Mouse drag-to-scroll & wheel scrolling state for phone preview
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isDraggingPhone, setIsDraggingPhone] = useState(false);
+  const dragStartY = useRef<number>(0);
+  const dragStartScrollTop = useRef<number>(0);
+
+  // Global mouse move & mouse up listeners during phone dragging
+  useEffect(() => {
+    if (!isDraggingPhone) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!scrollContainerRef.current) return;
+      const deltaY = e.clientY - dragStartY.current;
+      scrollContainerRef.current.scrollTop = dragStartScrollTop.current - deltaY;
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingPhone(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingPhone]);
+
+  const handlePhoneMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only primary mouse button
+    const target = e.target as HTMLElement;
+    // Do not initiate drag if user clicked directly on interactive buttons, inputs, selects
+    if (target.closest('button') || target.closest('select') || target.closest('input')) {
+      return;
+    }
+    if (!scrollContainerRef.current) return;
+    setIsDraggingPhone(true);
+    dragStartY.current = e.clientY;
+    dragStartScrollTop.current = scrollContainerRef.current.scrollTop;
+  };
+
+  const handlePhoneWheel = (e: React.WheelEvent) => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop += e.deltaY;
+    }
+  };
 
   // Fashion Story Presets
   const STORY_PRESETS = [
@@ -455,82 +500,45 @@ export default function StoryCreatorModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2500] w-full h-full flex flex-col justify-between overflow-hidden bg-transparent select-none animate-fade-in pointer-events-auto">
-      {/* Background layer click to see page / dismiss */}
-      <div 
-        className="absolute inset-0 w-full h-full bg-transparent cursor-pointer"
-        onClick={onClose}
-        title="Haz clic en cualquier parte fuera de la ventana para ver la página de fondo"
-      />
+    <div className="fixed inset-0 z-[2500] w-full h-full flex flex-col justify-between overflow-hidden bg-white select-none animate-fade-in pointer-events-auto">
+      {/* Hidden Canvas for Photo capture */}
+      <canvas ref={canvasRef} className="hidden" />
 
-      <div className="w-full h-full flex flex-col justify-between overflow-hidden bg-transparent relative pointer-events-none">
-        
-        {/* Hidden Canvas for Photo capture */}
-        <canvas ref={canvasRef} className="hidden" />
-
-        {/* Peek background floating indicator */}
-        {isPeekingBackground && (
-          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[2600] flex items-center gap-2.5 bg-slate-900/90 text-white px-5 py-2.5 rounded-full shadow-2xl border border-white/20 animate-fade-in backdrop-blur-md pointer-events-auto">
-            <Eye className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-bold">Viendo página completa de fondo</span>
-            <button
-              type="button"
-              onClick={() => setIsPeekingBackground(false)}
-              className="ml-2 px-3 py-1 rounded-full bg-[#fe2c55] hover:bg-rose-600 text-white text-xs font-black transition cursor-pointer"
-            >
-              Volver a la Historia
-            </button>
+      {/* Top Header - White Background */}
+      <div className="px-4 sm:px-8 py-3 sm:py-3.5 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white shadow-xs text-slate-800 relative z-10 pointer-events-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-xl shadow-md shrink-0 text-white">
+            📸
           </div>
-        )}
-
-        {/* Top Header - Translucent Clean Light Glassmorphism */}
-        <div className={`px-4 sm:px-8 py-3 sm:py-3.5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white/95 backdrop-blur-md shadow-xs text-slate-800 relative z-10 pointer-events-auto transition-opacity duration-300 ${isPeekingBackground ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-xl shadow-md shrink-0 text-white">
-              📸
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
+                Subir una Historia
+              </h3>
+              <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                ⏱️ 24h
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
-                  Subir una Historia
-                </h3>
-                <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  ⏱️ 24h
-                </span>
-                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider hidden md:inline-block">
-                  ✨ Fondo Visible
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium hidden xs:block">
-                Contenido efímero vertical (9:16) visible en la barra superior y perfil durante 24 horas
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsPeekingBackground(true)}
-              className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 cursor-pointer shadow-xs"
-              title="Ocultar paneles temporalmente para ver la página completa de fondo"
-            >
-              <Eye className="w-3.5 h-3.5 text-slate-600" />
-              <span className="hidden sm:inline">Ver fondo</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shadow-xs"
-              title="Cerrar ventana"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <p className="text-[11px] text-slate-500 font-medium hidden xs:block">
+              Contenido efímero vertical (9:16) visible en la barra superior y perfil durante 24 horas
+            </p>
           </div>
         </div>
 
-        {/* Navigation Tabs - Light Frosted Glassmorphism */}
-        <div className={`px-4 sm:px-8 pt-2 flex items-center gap-2 sm:gap-4 border-b border-slate-200/80 bg-white/90 backdrop-blur-md text-xs font-bold shrink-0 relative z-10 pointer-events-auto transition-opacity duration-300 ${isPeekingBackground ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shadow-xs"
+            title="Cerrar ventana"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation Tabs - White Background */}
+      <div className="px-4 sm:px-8 pt-2 flex items-center gap-2 sm:gap-4 border-b border-slate-200 bg-white text-xs font-bold shrink-0 relative z-10 pointer-events-auto">
           <button
             type="button"
             onClick={() => setActiveTab('record')}
@@ -571,17 +579,39 @@ export default function StoryCreatorModal({
           </button>
         </div>
 
-        {/* Main Body Content - Page clearly visible in the background */}
-        <div className={`p-3 sm:p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center w-full transition-opacity duration-300 relative z-10 pointer-events-auto ${isPeekingBackground ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        {/* Main Body Content - White Background with Smooth Mouse Wheel & Drag Scrolling */}
+        <div 
+          ref={scrollContainerRef}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              handlePhoneMouseDown(e);
+            }
+          }}
+          className="p-3 sm:p-6 overflow-y-auto flex-1 flex flex-col items-center justify-start w-full bg-white relative z-10 pointer-events-auto scroll-smooth"
+        >
           
           {/* ======================================================== */}
           {/* TAB 1: GRABARSE EN DIRECTO (LIVE CAMERA & RECORDING)     */}
           {/* ======================================================== */}
           {activeTab === 'record' && (
-            <div className="w-full max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 py-2">
+            <div className="w-full max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 py-4 my-auto">
               
-              {/* Viewfinder Frame (9:16 Portrait Ratio) Centered with Background Visible Around */}
-              <div className="relative h-[56vh] xs:h-[60vh] sm:h-[65vh] md:h-[68vh] max-h-[660px] aspect-[9/16] rounded-3xl overflow-hidden bg-black border-2 border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center group shrink-0">
+              {/* Viewfinder Frame (9:16 Portrait Ratio) with Mouse Drag & Wheel Scroll */}
+              <div 
+                onMouseDown={handlePhoneMouseDown}
+                onWheel={handlePhoneWheel}
+                className={`relative h-[54vh] xs:h-[58vh] sm:h-[62vh] max-h-[580px] min-h-[380px] aspect-[9/16] rounded-[36px] overflow-hidden bg-black border-[1px] border-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex items-center justify-center group shrink-0 select-none transition-all ${
+                  isDraggingPhone ? 'cursor-grabbing ring-4 ring-[#fe2c55]/50 scale-[0.99] shadow-2xl' : 'cursor-grab hover:shadow-2xl'
+                }`}
+                title="Haz clic y arrastra con el ratón o gira la rueda para desplazar hacia abajo y arriba"
+              >
+                
+                {/* Dynamic Island Notch */}
+                <div className="absolute top-2.5 inset-x-0 flex justify-center z-30 pointer-events-none select-none">
+                  <div className="w-20 h-3.5 bg-black/90 rounded-full border border-white/10 flex items-center justify-end px-2 shadow-inner">
+                    <span className="w-2 h-2 rounded-full bg-slate-800 border border-slate-700/60 inline-block" />
+                  </div>
+                </div>
                 
                 {/* 1. Recorded Video Preview */}
                 {recordedVideoUrl ? (
@@ -676,7 +706,14 @@ export default function StoryCreatorModal({
                         /* Video Record Toggle Button */
                         <button
                           type="button"
-                          onClick={isRecording ? handleStopRecording : handleStartRecording}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isRecording) {
+                              handleStopRecording();
+                            } else {
+                              handleStartRecording();
+                            }
+                          }}
                           className={`w-16 h-16 rounded-full border-4 border-white flex items-center justify-center transition-all cursor-pointer shadow-2xl active:scale-95 ${
                             isRecording 
                               ? 'bg-rose-600 scale-105 animate-pulse' 
@@ -694,7 +731,10 @@ export default function StoryCreatorModal({
                         /* Photo Shutter Button */
                         <button
                           type="button"
-                          onClick={handleCapturePhoto}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCapturePhoto();
+                          }}
                           className="w-16 h-16 rounded-full border-4 border-white bg-white/80 hover:bg-white flex items-center justify-center transition-all cursor-pointer shadow-2xl active:scale-95"
                           title="Tomar Foto Instantánea"
                         >
@@ -706,8 +746,8 @@ export default function StoryCreatorModal({
                 )}
               </div>
 
-              {/* Controls, Captions & Settings in Clean Light Glassmorphism */}
-              <div className="w-full lg:w-96 bg-white/95 backdrop-blur-md p-5 rounded-3xl border border-slate-200/90 shadow-xl space-y-4 text-left text-slate-800 shrink-0">
+              {/* Controls, Captions & Settings */}
+              <div className="w-full lg:w-96 bg-white p-5 rounded-3xl border border-slate-200 shadow-xl space-y-4 text-left text-slate-800 shrink-0">
                 {/* Mode switch & Camera Controls */}
                 {!recordedVideoUrl && !capturedPhotoUrl && (
                   <div className="space-y-2.5">
@@ -838,7 +878,7 @@ export default function StoryCreatorModal({
           {/* TAB 2: SUBIR ARCHIVO (FILE UPLOAD FOR PHOTO OR VIDEO)    */}
           {/* ======================================================== */}
           {activeTab === 'upload' && (
-            <div className="w-full max-w-3xl mx-auto bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-2xl space-y-5 text-left text-slate-800">
+            <div className="w-full max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-5 text-left text-slate-800 my-auto">
               
               {/* Drag & Drop Input Zone */}
               <div 
@@ -1021,7 +1061,7 @@ export default function StoryCreatorModal({
           {/* TAB 3: ESPECIFICACIONES TÉCNICAS (TECHNICAL SPECS VIEW)  */}
           {/* ======================================================== */}
           {activeTab === 'specs' && (
-            <div className="w-full max-w-3xl mx-auto bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-2xl space-y-5 text-left text-slate-800">
+            <div className="w-full max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-5 text-left text-slate-800 my-auto">
               
               <div className="bg-slate-50/90 p-5 rounded-2xl border border-slate-200 space-y-3">
                 <div className="flex items-center gap-2 text-rose-600 font-black text-xs uppercase tracking-wider">
@@ -1064,8 +1104,8 @@ export default function StoryCreatorModal({
 
         </div>
 
-        {/* Footer Actions - Translucent Glassmorphism */}
-        <div className={`px-4 sm:px-8 py-3 sm:py-3.5 border-t border-slate-200/80 flex items-center justify-between gap-3 bg-white/95 backdrop-blur-md shrink-0 shadow-lg text-slate-800 relative z-10 pointer-events-auto transition-opacity duration-300 ${isPeekingBackground ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        {/* Footer Actions - White Background */}
+        <div className="px-4 sm:px-8 py-3 sm:py-3.5 border-t border-slate-200 flex items-center justify-between gap-3 bg-white shrink-0 shadow-xs text-slate-800 relative z-10 pointer-events-auto">
           <button
             type="button"
             onClick={onClose}
@@ -1117,7 +1157,6 @@ export default function StoryCreatorModal({
           )}
         </div>
 
-      </div>
     </div>
   );
 }

@@ -269,6 +269,52 @@ export const accountsQueSigues = [
     ]
   },
   {
+    username: 'candiceswanepoel_w3',
+    name: 'Candice Swanepoel',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true,
+    bio: 'Supermodelo Internacional & Fundadora de Tropic of C 🌿\nModa Sustentable & Alta Costura en París ✨\n👇 COLECCIÓN & CASTING 👇',
+    website: 'candiceswanepoel.com/paris...',
+    seguidores: '16.4M',
+    meGusta: '9.8M',
+    videos: [
+      { id: 'cs-v1', title: 'PARIS COUTURE & ECO', views: '284 mil', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'cs-v2', title: 'BACKSTAGE MILÁN', views: '198K', img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600' },
+      { id: 'cs-v3', title: 'SUSTAINABLE RUNWAY', views: '142K', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'jasminetookes_w4',
+    name: 'Jasmine Tookes',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true,
+    bio: 'Top Model & Fundadora de JOJA 🖤\nFitness, estilo de vida y alta costura internacional 👑\n👇 ENTRENAMIENTOS & LOOKS 👇',
+    website: 'jasminetookes.com/joja-vip...',
+    seguidores: '7.1M',
+    meGusta: '5.2M',
+    videos: [
+      { id: 'jt-v1', title: 'RUTINA JOJA FITNESS', views: '310 mil', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'jt-v2', title: 'PASARELA COUTURE', views: '225K', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
+    username: 'mirandakerr_w5',
+    name: 'Miranda Kerr',
+    avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true,
+    bio: 'Supermodelo & Fundadora de KORA Organics 🌸\nBelleza natural, bienestar y pasarelas de Milán ✨\n👇 SKINCARE ORGÁNICO 👇',
+    website: 'koraorganics.com/exclusive...',
+    seguidores: '14.2M',
+    meGusta: '8.4M',
+    videos: [
+      { id: 'mk-v1', title: 'GLOW NATURAL KORA', views: '260 mil', img: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600', isPinned: true },
+      { id: 'mk-v2', title: 'MILÁN RUNWAY WALK', views: '185K', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' }
+    ]
+  },
+  {
     username: 'ssoftblooms',
     name: 'ssoftblooms',
     avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=260',
@@ -10563,6 +10609,25 @@ export default function CastingLiveSection({
     if (activeSubTab === 'siguiendo' && !vid.isFollowing && !vid.isFollower && !isSelfVideo) {
       return false;
     }
+    if (activeSubTab === 'amigos') {
+      const friendKeywords = [
+        'candice', 'swanepoel',
+        'alessandra', 'ambrosio',
+        'alexander', 'vance',
+        'jasmine', 'tookes',
+        'miranda', 'kerr',
+        'adriana', 'lima'
+      ];
+      const uName = (vid.username || '').toLowerCase();
+      const fName = (vid.name || '').toLowerCase();
+      const desc = (vid.description || '').toLowerCase();
+      const isFriendMatch = friendKeywords.some(kw => uName.includes(kw) || fName.includes(kw)) ||
+        desc.includes('#amigos') || desc.includes('#circulo') ||
+        vid.isFriend === true;
+      if (!isFriendMatch && !isSelfVideo) {
+        return false;
+      }
+    }
     
     // Stage 2: filter by search term
     if (searchTerm.trim() !== '') {
@@ -13876,26 +13941,17 @@ export default function CastingLiveSection({
   const renderCreationTypeModal = () => {
     return (
       <div 
-        className="fixed inset-0 bg-transparent z-[3500] flex items-center justify-center p-4 animate-fade-in cursor-pointer" 
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[3500] flex items-center justify-center p-4 animate-fade-in cursor-pointer" 
         id="creation-type-modal-backdrop"
         onClick={() => setShowCreationTypeModal(false)}
       >
         <div 
-          className="bg-white/95 backdrop-blur-md rounded-3xl w-full max-w-md border border-slate-200/80 p-6 sm:p-7 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans text-left cursor-default"
+          className="bg-white rounded-3xl w-full max-w-md border border-slate-200 p-6 sm:p-7 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans text-left cursor-default"
           onClick={(e) => e.stopPropagation()}
         >
           
-          {/* Top Actions: Ver fondo & Close */}
+          {/* Top Actions: Close */}
           <div className="absolute top-4 right-4 flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setShowCreationTypeModal(false)}
-              className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1 border-0 cursor-pointer shadow-xs"
-              title="Cerrar para ver el fondo"
-            >
-              <span>👁️</span>
-              <span className="hidden sm:inline">Ver fondo</span>
-            </button>
             <button
               type="button"
               onClick={() => setShowCreationTypeModal(false)}
@@ -29624,6 +29680,7 @@ try {
                 /* 📱 TIKTOK-STYLE VERTICAL FEED FOR ALL CHANNELS (image.png & z.png) */
                 <TikTokFinanzasFeed
                   isActiveTab={isActiveTab}
+                  activeSubTab={activeSubTab}
                   onNavigateToTab={onNavigateToTab}
                   onOpenHashtag={onOpenHashtag}
                   activeSessionsOnly={activeSessionsOnly}
@@ -38696,7 +38753,7 @@ interface CastingLiveStoryLightboxProps {
   setFloatingParticles: React.Dispatch<React.SetStateAction<any[]>>;
   showLiveGiftsPopover?: boolean;
   setShowLiveGiftsPopover?: (val: boolean) => void;
-  onGoToModelProfile?: (modelId: string) => void;
+  onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
 }
 
 function CastingLiveStoryLightbox({
@@ -38848,16 +38905,18 @@ function CastingLiveStoryLightbox({
 
   const handleStoryUserRedirect = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const targetUsername = currentActiveSubStory.username || selectedCastingLiveStory.username;
+    const rawTarget = currentActiveSubStory.username || selectedCastingLiveStory.username || currentActiveSubStory.name || selectedCastingLiveStory.name;
+    const targetUsername = (rawTarget || '').trim();
     const targetUserId = currentActiveSubStory.userId || selectedCastingLiveStory.userId;
     
     let matched = models.find(m => 
-      m.id === targetUserId || 
-      (m.username && m.username.toLowerCase() === targetUsername?.toLowerCase())
+      (targetUserId && m.id === targetUserId) || 
+      (m.username && m.username.toLowerCase() === targetUsername.toLowerCase()) ||
+      (m.name && m.name.toLowerCase() === targetUsername.toLowerCase())
     );
 
+    const lower = targetUsername.toLowerCase();
     if (!matched && targetUsername) {
-      const lower = targetUsername.toLowerCase();
       let fallbackId = 'topf-2'; // Isabella Dubois as default
       if (lower.includes('milano')) {
         fallbackId = 'topm-1'; // Alexander Vance
@@ -38879,9 +38938,41 @@ function CastingLiveStoryLightbox({
       matched = models.find(m => m.id === fallbackId);
     }
 
-    if (matched && onGoToModelProfile) {
-      onGoToModelProfile(matched.id);
-      setSelectedCastingLiveStory(null);
+    const finalModel: ModelProfile = matched ? {
+      ...matched,
+      name: lower.includes('editorial') ? 'Marcus Sterling' : matched.name,
+      username: lower.includes('editorial') ? 'editorial' : (matched.username || targetUsername),
+      avatar: currentActiveSubStory.avatar || selectedCastingLiveStory.avatar || matched.avatar,
+      photos: [
+        currentActiveSubStory.image || currentActiveSubStory.avatar || selectedCastingLiveStory.avatar || matched.avatar,
+        ...(matched.photos || [])
+      ]
+    } : {
+      id: targetUserId || `model-${(targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+      name: lower.includes('editorial') ? 'Marcus Sterling' : (currentActiveSubStory.name || selectedCastingLiveStory.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Marcus Sterling')),
+      username: (targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9_]/g, ''),
+      avatar: currentActiveSubStory.avatar || selectedCastingLiveStory.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600',
+      bio: `Top Modelo de Pasarela y Creador Editorial Internacional. Posicionamiento en desfiles de París y Milán.`,
+      role: 'model',
+      rating: 5.0,
+      followersCount: 142000,
+      totalLikes: 12500,
+      referidosCount: 42,
+      verified: true,
+      gender: lower.includes('editorial') || lower.includes('milano') ? 'male' : 'female',
+      fashionAgency: 'Elite Model Management',
+      statusText: 'Shoot en curso ⚡',
+      photos: [
+        currentActiveSubStory.image || selectedCastingLiveStory.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=650'
+      ]
+    };
+
+    setSelectedCastingLiveStory(null);
+    if (onGoToModelProfile) {
+      onGoToModelProfile(finalModel.id, finalModel);
     }
   };
 
@@ -39055,10 +39146,14 @@ function CastingLiveStoryLightbox({
                 src={currentActiveSubStory.avatar || selectedCastingLiveStory.avatar} 
                 alt="" 
                 referrerPolicy="no-referrer"
-                className="w-7 h-7 rounded-full object-cover border border-white/30 shadow-md bg-slate-900 group-hover:border-white/60 transition-all"
+                className="w-7 h-7 rounded-full object-cover border border-white/30 shadow-md bg-slate-900 group-hover:border-white/60 transition-all cursor-pointer active:scale-95"
+                onClick={handleStoryUserRedirect}
               />
               <div className="flex items-center gap-2 text-left">
-                <span className="font-bold text-white text-[12px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[140px] group-hover:underline">
+                <span 
+                  className="font-bold text-white text-[12px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[140px] hover:underline hover:text-sky-300 transition-colors cursor-pointer"
+                  onClick={handleStoryUserRedirect}
+                >
                   {currentActiveSubStory.username || selectedCastingLiveStory.username || currentActiveSubStory.name || selectedCastingLiveStory.name}
                 </span>
                 <span className="text-white/80 text-[10px] font-sans font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">

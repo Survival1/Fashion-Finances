@@ -41,7 +41,10 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
       aria-modal="true"
     >
       <div 
-        className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[calc(100vw-2px)] h-[calc(100dvh-2px)] max-h-[calc(100dvh-2px)] flex flex-col shadow-2xl border border-slate-200 overflow-hidden text-slate-800 animate-slide-up"
+        className="rounded-2xl sm:rounded-3xl w-full max-w-[calc(100vw-2px)] h-[calc(100dvh-2px)] max-h-[calc(100dvh-2px)] flex flex-col shadow-2xl border border-pink-100/80 overflow-hidden text-slate-800 animate-slide-up bg-gradient-to-br from-[#FDE8EF] via-[#FFFFFF] to-[#E0F2FE]"
+        style={{
+          background: 'linear-gradient(135deg, #FDE8EF 0%, #FFFFFF 48%, #E0F2FE 100%)'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -73,7 +76,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
         </div>
 
         {/* Tab Navigation */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 p-2 sm:px-4 bg-slate-50 border-b border-slate-200/80 shrink-0 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 p-2 sm:px-4 bg-white/70 backdrop-blur-md border-b border-slate-200/60 shrink-0 w-full">
           <button
             type="button"
             onClick={() => setActiveTab('dinamica')}

@@ -403,6 +403,7 @@ interface ModelFacebookProfileProps {
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live', targetStoreId?: string) => void;
   onLaunchChat?: (modelId: string, draftImg?: string) => void;
   onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
+  key?: React.Key;
   initialSocialModal?: 'followers' | 'following' | 'friends' | null;
   onSocialModalChange?: (modal: 'followers' | 'following' | 'friends' | null) => void;
   onLogout?: () => void;
@@ -787,7 +788,112 @@ export default function ModelFacebookProfile({
     setHideSocialCards(localStorage.getItem(`hide_social_cards_${userProfile.id}`) === 'true');
   }, [userProfile.id]);
 
-  const [activeGalleryTab, setActiveGalleryTab] = useState<'grid' | 'saved' | 'reposts' | 'tagged' | 'saved_videos' | 'shared'>('grid');
+  const [activeGalleryTab, setActiveGalleryTab] = useState<'grid' | 'saved' | 'reposts' | 'tagged' | 'saved_videos' | 'shared' | 'watched_videos'>('grid');
+  const [watchedCategoryFilter, setWatchedCategoryFilter] = useState<string>('todos');
+  const [selectedWatchedVideo, setSelectedWatchedVideo] = useState<any | null>(null);
+
+  const [watchedVideosList, setWatchedVideosList] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem(`user_watched_videos_${userProfile.id}`) || localStorage.getItem('user_watched_videos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [
+      {
+        id: 'wv-1',
+        title: 'Desfile Alta Costura París - Pasarela Runway Spring/Summer',
+        username: 'valentina_milan',
+        name: 'Valentina Rossi',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-neon-light-40018-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600',
+        category: 'Pasarela',
+        duration: '0:45',
+        progress: 100,
+        watchedAt: 'Hoy, 15:30',
+        likes: 3420,
+        views: 18400
+      },
+      {
+        id: 'wv-2',
+        title: 'Prueba de Vestuario y Maquillaje Glow Editorial',
+        username: 'sofia_couture',
+        name: 'Sofía Laurent',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600',
+        category: 'Backstage',
+        duration: '1:12',
+        progress: 85,
+        watchedAt: 'Hoy, 12:15',
+        likes: 2150,
+        views: 12900
+      },
+      {
+        id: 'wv-3',
+        title: 'Sesión Fotográfica Estudio Vanguardia & Luces Rojas',
+        username: 'elena_vogue',
+        name: 'Elena Rostova',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600',
+        category: 'Casting',
+        duration: '0:58',
+        progress: 100,
+        watchedAt: 'Ayer, 21:40',
+        likes: 4890,
+        views: 24300
+      },
+      {
+        id: 'wv-4',
+        title: 'Pasarela Milano Fashion Week - Colección Cápsula',
+        username: 'clara_madrid',
+        name: 'Clara Domínguez',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-rainy-night-40539-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=600',
+        category: 'Pasarela',
+        duration: '1:30',
+        progress: 60,
+        watchedAt: 'Ayer, 18:20',
+        likes: 1980,
+        views: 9800
+      },
+      {
+        id: 'wv-5',
+        title: 'Casting Internacional Balmain / Modelos Emergentes',
+        username: 'isabella_roma',
+        name: 'Isabella Conti',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600',
+        category: 'Casting',
+        duration: '0:40',
+        progress: 100,
+        watchedAt: 'Hace 2 días',
+        likes: 5620,
+        views: 31200
+      },
+      {
+        id: 'wv-6',
+        title: 'Runway Night Show & Colección Exclusiva de Joyería',
+        username: 'camila_ny',
+        name: 'Camila Duarte',
+        avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=150',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-with-a-red-light-40158-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&q=80&w=600',
+        category: 'Joyería',
+        duration: '1:05',
+        progress: 100,
+        watchedAt: 'Hace 3 días',
+        likes: 3110,
+        views: 15400
+      }
+    ];
+  });
+
   const [sharedVideosList, setSharedVideosList] = useState<any[]>(() => {
     try {
       const saved = localStorage.getItem('user_shared_videos');
@@ -804,15 +910,36 @@ export default function ModelFacebookProfile({
       } catch (_) {}
     };
     const handleOpenSharedTab = () => {
-      setActiveGalleryTab('shared');
+      setActiveGalleryTab('watched_videos');
     };
+    const handleOpenWatchedTab = () => {
+      setActiveGalleryTab('watched_videos');
+    };
+    const handleVideoWatched = (e: any) => {
+      if (e?.detail) {
+        setWatchedVideosList(prev => {
+          const filtered = prev.filter(v => (v.id && v.id !== e.detail.id) && (v.videoUrl && v.videoUrl !== e.detail.videoUrl));
+          const updated = [e.detail, ...filtered];
+          try {
+            localStorage.setItem(`user_watched_videos_${userProfile.id}`, JSON.stringify(updated));
+            localStorage.setItem('user_watched_videos', JSON.stringify(updated));
+          } catch (_) {}
+          return updated;
+        });
+      }
+    };
+
     window.addEventListener('channel-video-shared', handleVideoShared);
     window.addEventListener('open-profile-shared-tab', handleOpenSharedTab);
+    window.addEventListener('open-profile-watched-videos-tab', handleOpenWatchedTab);
+    window.addEventListener('user-video-watched', handleVideoWatched);
     return () => {
       window.removeEventListener('channel-video-shared', handleVideoShared);
       window.removeEventListener('open-profile-shared-tab', handleOpenSharedTab);
+      window.removeEventListener('open-profile-watched-videos-tab', handleOpenWatchedTab);
+      window.removeEventListener('user-video-watched', handleVideoWatched);
     };
-  }, []);
+  }, [userProfile.id]);
   const [blockedUserIds, setBlockedUserIds] = useState<string[]>(() => {
     const saved = localStorage.getItem(`blocked_users_${userProfile.id}`);
     return saved ? JSON.parse(saved) : [];
@@ -5270,8 +5397,14 @@ export default function ModelFacebookProfile({
                   });
 
                   return (
-                    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-5 animate-fade-in text-slate-900 select-none">
-                      <div className="bg-white border border-pink-100 rounded-3xl w-full max-w-4xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[94vh] flex flex-col my-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-[1px] animate-fade-in text-slate-900 select-none">
+                      <div 
+                        className="rounded-2xl sm:rounded-3xl w-full max-w-[calc(100vw-2px)] h-[calc(100dvh-2px)] max-h-[calc(100dvh-2px)] p-4 sm:p-7 space-y-4 sm:space-y-6 shadow-2xl relative flex flex-col my-auto border-[1px] border-slate-950 text-slate-800 overflow-hidden"
+                        style={{
+                          background: 'linear-gradient(135deg, #FDE8EF 0%, #FFFFFF 48%, #E0F2FE 100%)'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         
                         {/* Close Button top-right */}
                         <button 
@@ -5279,23 +5412,25 @@ export default function ModelFacebookProfile({
                             setShowContractsModal(false);
                             setContractSearchQuery('');
                           }}
-                          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full transition cursor-pointer border-0 shadow-3xs z-10"
+                          className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-white/90 hover:bg-pink-50 rounded-full transition-all cursor-pointer border-[1px] border-[#F4A7C3] shadow-xs z-10 active:scale-95"
+                          title="Cerrar modal"
                         >
-                          <X className="w-5 h-5" />
+                          <X className="w-4.5 h-4.5" />
                         </button>
 
                         {/* Title and Header Banner */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-pink-100/80 pb-4.5 shrink-0">
-                          <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#fe2c55] to-rose-600 flex items-center justify-center text-white shadow-sm shrink-0">
-                              <Briefcase className="w-5.5 h-5.5 text-white" />
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-[1px] border-[#F4A7C3] pb-4.5 shrink-0">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F472B6] via-[#FB7185] to-[#38BDF8] flex items-center justify-center text-white shadow-md shadow-pink-500/20 shrink-0 border-[1px] border-white/80">
+                              <Briefcase className="w-6 h-6 text-white" />
                             </div>
                             <div className="text-left">
-                              <h3 className="text-base sm:text-lg font-black text-slate-950 leading-tight uppercase font-display tracking-wide">
+                              <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight uppercase font-display tracking-wide">
                                 Opciones de Contratación Corporativa
                               </h3>
-                              <p className="text-[10.5px] sm:text-[11px] text-rose-550 font-mono font-bold uppercase tracking-wider block leading-none mt-1">
-                                💼 PORTAL DE ACUERDOS REGULADOS & SESIÓN B2B
+                              <p className="text-[10px] sm:text-[10.5px] font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1.5 mt-1 text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full border-[1px] border-[#F4A7C3]">
+                                <span>💼</span>
+                                <span>PORTAL DE ACUERDOS REGULADOS & SESIÓN B2B</span>
                               </p>
                             </div>
                           </div>
@@ -5307,27 +5442,27 @@ export default function ModelFacebookProfile({
                               value={contractSearchQuery}
                               onChange={(e) => setContractSearchQuery(e.target.value)}
                               placeholder="Buscar servicio o contrato..."
-                              className="w-full bg-slate-50 border border-slate-200 focus:border-rose-400 focus:bg-white rounded-xl py-1.5 pl-3 pr-8 text-xs focus:outline-none transition-all font-medium text-slate-800"
+                              className="w-full bg-white/95 border-[1px] border-[#F4A7C3] focus:border-[#F472B6] focus:ring-1 focus:ring-[#F4A7C3] rounded-xl py-2 pl-3.5 pr-9 text-xs focus:outline-none transition-all font-medium text-slate-800 placeholder:text-slate-400 shadow-2xs"
                             />
-                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F472B6] text-xs pointer-events-none">
                               🔍
                             </span>
                           </div>
                         </div>
 
                         {/* Table / Grid Body */}
-                        <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200">
-                          <div className="overflow-x-auto rounded-xl border border-slate-100 bg-slate-50/30">
+                        <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-200">
+                          <div className="overflow-x-auto rounded-2xl border-[1px] border-[#F4A7C3] bg-white/90 backdrop-blur-xs shadow-xs">
                             <table className="w-full text-left border-collapse min-w-[640px]">
                               <thead>
-                                <tr className="bg-slate-100/85 border-b border-slate-200/80 text-slate-700 font-mono text-[9.5px] sm:text-[10px] uppercase font-black tracking-wider">
+                                <tr className="bg-gradient-to-r from-[#FDE8EF]/90 via-white to-[#E0F2FE]/90 border-b-[1px] border-[#F4A7C3] text-slate-700 font-mono text-[9.5px] sm:text-[10px] uppercase font-black tracking-wider">
                                   <th className="py-3 px-4 w-[28%]">Servicio</th>
                                   <th className="py-3 px-4 w-[42%]">Contrato habitual</th>
                                   <th className="py-3 px-4 w-[20%]">¿Quién contrata?</th>
                                   <th className="py-3 px-4 w-[10%] text-center">Acción</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px] sm:text-xs">
+                              <tbody className="divide-y-[1px] divide-[#F4A7C3]/60 text-slate-800 text-[11px] sm:text-xs">
                                 {filteredContracts.length === 0 ? (
                                   <tr>
                                     <td colSpan={4} className="py-8 text-center text-slate-400 font-medium font-mono text-xs">
@@ -5338,11 +5473,11 @@ export default function ModelFacebookProfile({
                                   filteredContracts.map((item, index) => (
                                     <tr 
                                       key={index} 
-                                      className="hover:bg-rose-50/20 transition duration-150 group/row"
+                                      className="hover:bg-gradient-to-r hover:from-pink-50/60 hover:via-white hover:to-sky-50/50 transition duration-150 group/row"
                                     >
                                       {/* Servicio Column */}
-                                      <td className="py-3 px-4 font-extrabold text-slate-900 flex items-center gap-1.5">
-                                        <span className="text-slate-950">{item.label}</span>
+                                      <td className="py-3 px-4 font-black text-slate-900 group-hover/row:text-pink-600 transition-colors flex items-center gap-1.5">
+                                        <span>{item.label}</span>
                                       </td>
                                       
                                       {/* Contrato habitual Column */}
@@ -5352,7 +5487,7 @@ export default function ModelFacebookProfile({
                                       
                                       {/* Quien contrata Column */}
                                       <td className="py-3 px-4">
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 border border-slate-200/40 text-slate-600">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border-[1px] border-[#F4A7C3] shadow-2xs group-hover/row:bg-sky-100/70 transition-colors">
                                           {item.counterparty}
                                         </span>
                                       </td>
@@ -5362,12 +5497,11 @@ export default function ModelFacebookProfile({
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            // Trigger contract creation flow!
                                             setSelectedService(item.label);
                                             setShowContractsModal(false);
                                             setHiringSuccessMessage(null);
                                           }}
-                                          className="bg-rose-600 hover:bg-[#fe2c55] text-white px-3 py-1 rounded-lg text-[10px] font-extrabold transition cursor-pointer border-0 active:scale-95 shadow-3xs"
+                                          className="bg-gradient-to-r from-pink-500 via-rose-500 to-sky-500 hover:from-pink-600 hover:via-rose-600 hover:to-sky-600 text-white px-3.5 py-1.5 rounded-xl text-[10px] font-black transition cursor-pointer border-[1px] border-[#F4A7C3] shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-95"
                                         >
                                           Contratar
                                         </button>
@@ -5381,9 +5515,9 @@ export default function ModelFacebookProfile({
                         </div>
 
                         {/* Modal Footer with disclaimer */}
-                        <div className="border-t border-slate-100 pt-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-left text-[10px] sm:text-[11px] text-slate-500 font-medium">
-                          <span className="flex items-center gap-1.5">
-                            🔒 Los flujos financieros y depósito de garantía (escrow) se procesan con saldo seguro de Backoffice.
+                        <div className="border-t-[1px] border-[#F4A7C3] pt-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-left text-[10px] sm:text-[11px] text-slate-600 font-medium">
+                          <span className="flex items-center gap-2 bg-white/70 px-3 py-1.5 rounded-xl border-[1px] border-[#F4A7C3] text-slate-600 font-medium shadow-2xs">
+                            <span className="text-sky-600">🔒</span> Los flujos financieros y depósito de garantía (escrow) se procesan con saldo seguro de Backoffice.
                           </span>
                           <button
                             type="button"
@@ -5391,7 +5525,7 @@ export default function ModelFacebookProfile({
                               setShowContractsModal(false);
                               setContractSearchQuery('');
                             }}
-                            className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer border-0 active:scale-95 shadow-3xs w-full sm:w-auto text-center"
+                            className="px-5 py-2 bg-gradient-to-r from-sky-500 to-pink-500 hover:from-sky-600 hover:to-pink-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer border-[1px] border-[#F4A7C3] active:scale-95 shadow-xs hover:shadow-md w-full sm:w-auto text-center"
                           >
                             Cerrar Catálogo
                           </button>
@@ -7082,8 +7216,8 @@ export default function ModelFacebookProfile({
                   </div>
                 </div>
 
-                  {/* Navigation Tabs supporting saved videos, shared videos, and private stories archive */}
-                  <div className={`grid ${isOwnProfile ? 'grid-cols-7' : 'grid-cols-6'} py-2.5 text-center select-none gap-2 px-1`}>
+                  {/* Navigation Tabs supporting saved videos, watched videos, reposts, and tagged */}
+                  <div className="grid grid-cols-6 py-2.5 text-center select-none gap-2 px-1">
                     <button
                       type="button"
                       onClick={() => setActiveGalleryTab('grid')}
@@ -7137,19 +7271,23 @@ export default function ModelFacebookProfile({
                       </svg>
                     </button>
 
-                    {/* Botón nuevo llamado Compartir con el mismo icono que en la captura z.png (Share2) */}
+                    {/* Botón de Videos vistos (reemplaza botón compartir según petición del usuario) */}
                     <button
                       type="button"
-                      onClick={() => setActiveGalleryTab('shared')}
+                      onClick={() => setActiveGalleryTab('watched_videos')}
                       className={`tab-trigger py-2.5 px-1.5 flex justify-center items-center gap-2 transition-all duration-150 cursor-pointer rounded-xl ${
-                        activeGalleryTab === 'shared' 
+                        activeGalleryTab === 'watched_videos' || activeGalleryTab === 'shared'
                           ? 'bg-pink-50 text-pink-600 font-extrabold border border-pink-200/40 shadow-3xs scale-102 ring-2 ring-pink-400/30' 
                           : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'
                       }`}
-                      title="Compartir"
-                      id="tab-profile-compartir"
+                      title="Videos vistos"
+                      aria-label="Videos vistos"
+                      id="tab-profile-videos-vistos"
                     >
-                      <Share2 className="w-5 h-5 shrink-0 text-current" />
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none" />
+                      </svg>
                     </button>
 
                     <button
@@ -7186,24 +7324,6 @@ export default function ModelFacebookProfile({
                       </svg>
                     </button>
 
-                    {isOwnProfile && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveGalleryTab('stories_archive' as any)}
-                        className={`tab-trigger py-2.5 px-1.5 flex justify-center items-center gap-2 transition-all duration-150 cursor-pointer rounded-xl ${
-                          activeGalleryTab === ('stories_archive' as any) 
-                            ? 'bg-pink-50 text-pink-600 font-extrabold border border-pink-200/40 shadow-3xs scale-102' 
-                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'
-                        }`}
-                        title="Archivo Privado de Historias"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 shrink-0">
-                          <polyline points="21 8 21 21 3 21 3 8" />
-                          <rect x="1" y="3" width="22" height="5" />
-                          <line x1="10" y1="12" x2="14" y2="12" strokeWidth="3" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                    )}
                   </div>
 
                   {/* Filtered Active Tab Display */}
@@ -7776,53 +7896,112 @@ export default function ModelFacebookProfile({
                       );
                     }
 
-                    if (activeGalleryTab === 'shared') {
+                    if (activeGalleryTab === 'watched_videos' || activeGalleryTab === 'shared') {
+                      const categories = ['todos', 'Pasarela', 'Casting', 'Backstage', 'Joyería'];
+                      const filteredVideos = watchedVideosList.filter(item => {
+                        if (watchedCategoryFilter === 'todos') return true;
+                        return (item.category || '').toLowerCase() === watchedCategoryFilter.toLowerCase();
+                      });
+
                       return (
-                        <div className="space-y-6 w-full text-left animate-fade-in" id="profile-shared-videos-section">
+                        <div className="space-y-6 w-full text-left animate-fade-in" id="profile-watched-videos-section">
                           {/* Top Header Card */}
-                          <div className="bg-gradient-to-r from-rose-50 via-pink-50 to-slate-50 border border-rose-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div className="bg-gradient-to-r from-pink-50 via-rose-50 to-sky-50 border border-pink-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fe2c55] to-rose-500 text-white flex items-center justify-center shadow-md shrink-0">
-                                <Share2 className="w-5 h-5" />
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 via-rose-500 to-sky-500 text-white flex items-center justify-center shadow-md shrink-0">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                  <polygon points="10 9 15 12 10 15 10 9" fill="currentColor" />
+                                </svg>
                               </div>
                               <div>
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 tracking-wide flex items-center gap-2">
-                                  <span>VÍDEOS COMPARTIDOS</span>
-                                  <span className="text-[10px] font-mono bg-rose-600 text-white px-2 py-0.5 rounded-full shadow-3xs">
-                                    {sharedVideosList.length}
+                                  <span>VIDEOS VISTOS</span>
+                                  <span className="text-[10px] font-mono bg-pink-500 text-white px-2 py-0.5 rounded-full shadow-3xs">
+                                    {filteredVideos.length} {filteredVideos.length === 1 ? 'vídeo' : 'vídeos'}
                                   </span>
                                 </h3>
                                 <p className="text-[11px] text-slate-500 font-medium">
-                                  Vídeos compartidos desde el reproductor de canales (captura z.png).
+                                  Historial de reproducciones y vídeos visualizados en desfiles, directos y canales.
                                 </p>
                               </div>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onNavigateToTab) {
-                                  onNavigateToTab('casting_live');
-                                } else {
-                                  window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'casting_live' }));
-                                }
-                              }}
-                              className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer shrink-0"
-                            >
-                              <span>📺</span> Ver Canales
-                            </button>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {watchedVideosList.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm('¿Deseas vaciar todo tu historial de vídeos vistos?')) {
+                                      setWatchedVideosList([]);
+                                      try {
+                                        localStorage.removeItem(`user_watched_videos_${userProfile.id}`);
+                                        localStorage.removeItem('user_watched_videos');
+                                      } catch (_) {}
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 text-[11px] font-bold tracking-wide flex items-center justify-center gap-1 shadow-3xs transition active:scale-95 cursor-pointer"
+                                  title="Vaciar historial de reproducción"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>Vaciar historial</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onNavigateToTab) {
+                                    onNavigateToTab('casting_live');
+                                  } else {
+                                    window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'casting_live' }));
+                                  }
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+                              >
+                                <span>📺</span> Ver Canales
+                              </button>
+                            </div>
                           </div>
 
-                          {sharedVideosList.length === 0 ? (
+                          {/* Filter Categories */}
+                          {watchedVideosList.length > 0 && (
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                              {categories.map((cat) => {
+                                const count = cat === 'todos' 
+                                  ? watchedVideosList.length 
+                                  : watchedVideosList.filter(v => (v.category || '').toLowerCase() === cat.toLowerCase()).length;
+                                const isSelected = watchedCategoryFilter.toLowerCase() === cat.toLowerCase();
+                                return (
+                                  <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => setWatchedCategoryFilter(cat.toLowerCase())}
+                                    className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-all cursor-pointer shrink-0 ${
+                                      isSelected
+                                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-xs scale-102'
+                                        : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                                    }`}
+                                  >
+                                    {cat === 'todos' ? 'Todos' : cat} ({count})
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {filteredVideos.length === 0 ? (
                             <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200 w-full p-6">
-                              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-200/60 shadow-xs">
-                                <Share2 className="w-7 h-7" />
+                              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center border border-pink-200/60 shadow-xs">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
+                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                  <polygon points="10 9 15 12 10 15 10 9" fill="currentColor" />
+                                </svg>
                               </div>
                               <p className="text-sm font-black text-slate-800 mb-1">
-                                No tienes vídeos compartidos todavía
+                                No tienes vídeos vistos {watchedCategoryFilter !== 'todos' ? 'en esta categoría' : 'todavía'}
                               </p>
                               <p className="text-xs text-slate-500 max-w-md mx-auto mb-4 leading-relaxed">
-                                En la reproducción de vídeos de cualquier canal (captura z.png), pincha en el botón <strong>Compartir</strong> para verlos organizados aquí.
+                                Los vídeos que reproduzcas en los canales en directo, pasarelas de moda y castings se guardarán automáticamente aquí.
                               </p>
                               <button
                                 type="button"
@@ -7833,22 +8012,25 @@ export default function ModelFacebookProfile({
                                     window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'casting_live' }));
                                   }
                                 }}
-                                className="px-4 py-2 bg-gradient-to-r from-[#fe2c55] to-rose-600 hover:from-rose-500 hover:to-pink-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition active:scale-95 cursor-pointer inline-flex items-center gap-2"
+                                className="px-4 py-2 bg-gradient-to-r from-pink-500 via-rose-500 to-sky-500 hover:opacity-95 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition active:scale-95 cursor-pointer inline-flex items-center gap-2"
                               >
                                 <span>📺 Ir a los Canales en Directo</span>
                               </button>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                              {sharedVideosList.map((item, idx) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4.5 w-full">
+                              {filteredVideos.map((item, idx) => (
                                 <div
                                   key={item.id || idx}
                                   className="group bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col"
                                 >
                                   {/* Media Thumbnail */}
-                                  <div className="relative aspect-[9/14] bg-slate-900 overflow-hidden">
+                                  <div 
+                                    className="relative aspect-[9/14] bg-slate-950 overflow-hidden cursor-pointer"
+                                    onClick={() => setSelectedWatchedVideo(item)}
+                                  >
                                     <video
-                                      src={item.videoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-neon-light-40018-large.mp4'}
+                                      src={item.videoUrl}
                                       poster={item.poster || item.thumbnail}
                                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                       muted
@@ -7862,17 +8044,36 @@ export default function ModelFacebookProfile({
                                       }}
                                     />
                                     {/* Gradient overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none" />
 
-                                    {/* Channel Badge */}
-                                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-white border border-white/20">
-                                      {item.category || 'Fashion'} 👑
+                                    {/* Play button center hover hint */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                      <div className="w-12 h-12 rounded-full bg-white/90 text-slate-900 flex items-center justify-center shadow-lg backdrop-blur-xs transform scale-90 group-hover:scale-100 transition-transform">
+                                        <Play className="w-5 h-5 ml-0.5 fill-current" />
+                                      </div>
+                                    </div>
+
+                                    {/* Category Badge */}
+                                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-white border border-white/20">
+                                      {item.category || 'Pasarela'} 👑
                                     </span>
 
-                                    {/* Share badge */}
-                                    <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-rose-500/90 text-white flex items-center gap-1 shadow-sm">
-                                      <Share2 className="w-2.5 h-2.5" /> Compartido
+                                    {/* Watched Badge */}
+                                    <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-pink-500/90 backdrop-blur-xs text-white flex items-center gap-1 shadow-sm">
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-2.5 h-2.5">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                        <polygon points="10 9 15 12 10 15 10 9" fill="currentColor" />
+                                      </svg>
+                                      <span>Visto {item.progress ? `${item.progress}%` : '100%'}</span>
                                     </span>
+
+                                    {/* Progress bar at bottom of video thumbnail */}
+                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-white/20">
+                                      <div 
+                                        className="h-full bg-gradient-to-r from-pink-500 to-rose-400"
+                                        style={{ width: `${item.progress || 100}%` }}
+                                      />
+                                    </div>
 
                                     {/* Author Info bottom overlay */}
                                     <div className="absolute bottom-2.5 inset-x-2.5 flex items-center gap-2 text-white">
@@ -7882,66 +8083,69 @@ export default function ModelFacebookProfile({
                                         className="w-7 h-7 rounded-full object-cover border border-white/40 shadow-sm shrink-0"
                                       />
                                       <div className="min-w-0 flex-1">
-                                        <p className="text-[11px] font-black truncate drop-shadow-md">
+                                        <p 
+                                          className="text-[11px] font-black truncate drop-shadow-md hover:underline cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (onGoToModelProfile) {
+                                              const targetM = (models || []).find((m: any) => m.username?.toLowerCase() === (item.username || '').toLowerCase() || m.name?.toLowerCase() === (item.name || '').toLowerCase());
+                                              if (targetM) onGoToModelProfile(targetM.id, targetM);
+                                            }
+                                          }}
+                                        >
                                           @{item.username || 'modelo'}
                                         </p>
                                         <p className="text-[9.5px] text-slate-300 truncate drop-shadow-sm font-medium">
-                                          {item.title || item.name}
+                                          {item.duration ? `⏱ ${item.duration}` : ''} • {item.watchedAt || 'Reciente'}
                                         </p>
                                       </div>
                                     </div>
                                   </div>
 
                                   {/* Details Card */}
-                                  <div className="p-3 flex flex-col justify-between flex-1 gap-2 bg-white">
-                                    {item.description && (
-                                      <p className="text-[11px] text-slate-600 line-clamp-2 leading-snug">
-                                        {item.description}
-                                      </p>
-                                    )}
+                                  <div className="p-3.5 flex flex-col justify-between flex-1 gap-2.5 bg-white">
+                                    <h4 className="text-[12px] font-bold text-slate-900 line-clamp-2 leading-snug">
+                                      {item.title}
+                                    </h4>
 
                                     {/* Stats row */}
                                     <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-100">
                                       <span className="flex items-center gap-1 font-bold text-slate-700">
                                         <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
-                                        {item.likes || 1200}
+                                        {(item.likes || 1200).toLocaleString()}
                                       </span>
                                       <span className="flex items-center gap-1 font-bold text-slate-700">
-                                        <Share2 className="w-3 h-3 text-emerald-600" />
-                                        {item.shares || 49}
+                                        <Eye className="w-3 h-3 text-sky-500" />
+                                        {(item.views || 4500).toLocaleString()} vistas
                                       </span>
-                                      <span className="text-[9px] text-slate-400">
-                                        {item.sharedAt ? new Date(item.sharedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Reciente'}
+                                      <span className="text-[9px] text-pink-600 font-bold bg-pink-50 px-1.5 py-0.5 rounded">
+                                        {item.watchedAt || 'Visto'}
                                       </span>
                                     </div>
 
                                     {/* Action buttons */}
-                                    <div className="flex items-center gap-1.5 pt-1">
+                                    <div className="flex items-center gap-2 pt-1">
                                       <button
                                         type="button"
-                                        onClick={() => {
-                                          if (navigator.clipboard) {
-                                            navigator.clipboard.writeText(item.videoUrl || window.location.href);
-                                            alert('¡Enlace del vídeo copiado al portapapeles!');
-                                          }
-                                        }}
-                                        className="flex-1 py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition active:scale-95 cursor-pointer"
-                                        title="Copiar enlace"
+                                        onClick={() => setSelectedWatchedVideo(item)}
+                                        className="flex-1 py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-3xs"
+                                        title="Ver vídeo completo"
                                       >
-                                        <Share2 className="w-3 h-3" />
-                                        <span>Copiar</span>
+                                        <Play className="w-3 h-3 fill-current" />
+                                        <span>Ver vídeo</span>
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          const nextList = sharedVideosList.filter((v: any) => v.id !== item.id);
-                                          setSharedVideosList(nextList);
+                                          const nextList = watchedVideosList.filter((v: any) => (v.id || v.videoUrl) !== (item.id || item.videoUrl));
+                                          setWatchedVideosList(nextList);
                                           try {
-                                            localStorage.setItem('user_shared_videos', JSON.stringify(nextList));
+                                            localStorage.setItem(`user_watched_videos_${userProfile.id}`, JSON.stringify(nextList));
+                                            localStorage.setItem('user_watched_videos', JSON.stringify(nextList));
                                           } catch (_) {}
                                         }}
-                                        className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition active:scale-95 cursor-pointer"
-                                        title="Eliminar de compartidos"
+                                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition active:scale-95 cursor-pointer"
+                                        title="Quitar de vídeos vistos"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -8680,6 +8884,95 @@ export default function ModelFacebookProfile({
                 <Check className="w-3.5 h-3.5 text-[#db2777]" />
                 <span>Aplicar a Portada de Inicio</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🎬 MODAL REPRODUCTOR DE VÍDEOS VISTOS */}
+      {selectedWatchedVideo && (
+        <div 
+          className="fixed inset-0 z-[130] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+          onClick={() => setSelectedWatchedVideo(null)}
+        >
+          <div 
+            className="relative bg-slate-900 border border-white/10 rounded-2xl sm:rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[92vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top modal bar */}
+            <div className="p-3 sm:p-4 bg-slate-950/80 border-b border-white/10 flex items-center justify-between z-10">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img
+                  src={selectedWatchedVideo.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                  alt={selectedWatchedVideo.username || 'modelo'}
+                  className="w-8 h-8 rounded-full object-cover border border-pink-400 shrink-0"
+                />
+                <div className="min-w-0">
+                  <p 
+                    className="text-white text-xs font-black truncate hover:underline cursor-pointer"
+                    onClick={() => {
+                      if (onGoToModelProfile) {
+                        const targetM = (models || []).find((m: any) => m.username?.toLowerCase() === (selectedWatchedVideo.username || '').toLowerCase() || m.name?.toLowerCase() === (selectedWatchedVideo.name || '').toLowerCase());
+                        if (targetM) {
+                          setSelectedWatchedVideo(null);
+                          onGoToModelProfile(targetM.id, targetM);
+                        }
+                      }
+                    }}
+                  >
+                    @{selectedWatchedVideo.username || 'modelo'}
+                  </p>
+                  <p className="text-slate-400 text-[10px] truncate">
+                    {selectedWatchedVideo.title || 'Vídeo visto'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                  {selectedWatchedVideo.category || 'Pasarela'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedWatchedVideo(null)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
+                  title="Cerrar reproductor"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Video player */}
+            <div className="relative bg-black flex items-center justify-center flex-1 min-h-[350px] max-h-[60vh] overflow-hidden">
+              <video
+                src={selectedWatchedVideo.videoUrl}
+                poster={selectedWatchedVideo.poster || selectedWatchedVideo.thumbnail}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full max-h-[60vh] object-contain"
+              />
+            </div>
+
+            {/* Bottom info */}
+            <div className="p-3.5 sm:p-4 bg-slate-950/90 text-left space-y-2 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span className="flex items-center gap-1.5 font-bold text-rose-400">
+                  <Heart className="w-3.5 h-3.5 fill-current" />
+                  {(selectedWatchedVideo.likes || 1200).toLocaleString()} Me gusta
+                </span>
+                <span className="flex items-center gap-1.5 font-medium text-slate-400">
+                  <Eye className="w-3.5 h-3.5 text-sky-400" />
+                  {(selectedWatchedVideo.views || 4500).toLocaleString()} reproducciones
+                </span>
+                <span className="text-[10px] text-pink-400 bg-pink-950/50 px-2 py-0.5 rounded-full border border-pink-500/30">
+                  {selectedWatchedVideo.watchedAt || 'Visto recientemente'}
+                </span>
+              </div>
+              <p className="text-white text-xs font-medium leading-relaxed">
+                {selectedWatchedVideo.title}
+              </p>
             </div>
           </div>
         </div>
@@ -10887,16 +11180,19 @@ function ModelStoryLightbox({
 
   const handleStoryUserRedirect = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const targetUsername = currentActiveSubStory.username || userProfile.username;
-    const targetUserId = currentActiveSubStory.userId || userProfile.id;
+    const rawTarget = currentActiveSubStory.username || currentActiveSubStory.name || currentActiveSubStory.title || userProfile.username;
+    const targetUsername = (rawTarget || '').trim();
+    const targetUserId = currentActiveSubStory.userId || (isOwnActiveViewing || isArchivedViewing ? userProfile.id : undefined);
+
     let matched = models.find(m => 
-      m.id === targetUserId || 
-      (m.username && m.username.toLowerCase() === targetUsername?.toLowerCase())
+      (targetUserId && m.id === targetUserId) || 
+      (m.username && m.username.toLowerCase() === targetUsername.toLowerCase()) ||
+      (m.name && m.name.toLowerCase() === targetUsername.toLowerCase())
     );
 
+    const lower = targetUsername.toLowerCase();
     if (!matched && targetUsername) {
-      const lower = targetUsername.toLowerCase();
-      let fallbackId = 'topf-2'; // Alessandra Ambrosio as default
+      let fallbackId = 'topf-2'; // Default
       if (lower.includes('milano')) {
         fallbackId = 'topm-1'; // Alexander Vance
       } else if (lower.includes('laviniader')) {
@@ -10917,9 +11213,44 @@ function ModelStoryLightbox({
       matched = models.find(m => m.id === fallbackId);
     }
 
-    if (matched && onGoToModelProfile) {
-      onGoToModelProfile(matched.id);
-      setSelectedStoryForPreview(null);
+    // Build rich, robust ModelProfile object
+    const finalModel: any = matched ? {
+      ...matched,
+      name: lower.includes('editorial') ? 'Marcus Sterling' : matched.name,
+      username: lower.includes('editorial') ? 'editorial' : (matched.username || targetUsername),
+      avatar: currentActiveSubStory.avatar || currentActiveSubStory.image || matched.avatar,
+      photos: [
+        currentActiveSubStory.image || currentActiveSubStory.avatar || matched.avatar,
+        ...(matched.photos || [])
+      ]
+    } : {
+      id: targetUserId || `model-${(targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+      name: lower.includes('editorial') ? 'Marcus Sterling' : (currentActiveSubStory.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Marcus Sterling')),
+      username: (targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9_]/g, ''),
+      avatar: currentActiveSubStory.avatar || currentActiveSubStory.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600',
+      bio: `Top Modelo de Pasarela y Creador Editorial Internacional. Posicionamiento y producciones en París, Milán y Nueva York.`,
+      role: 'model',
+      rating: 5.0,
+      followersCount: 142000,
+      totalLikes: 12500,
+      referidosCount: 42,
+      verified: true,
+      gender: lower.includes('editorial') || lower.includes('milano') ? 'male' : 'female',
+      fashionAgency: 'Elite Model Management',
+      statusText: 'Shoot en curso ⚡',
+      photos: [
+        currentActiveSubStory.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=650'
+      ]
+    };
+
+    // Close preview modal first so the profile page becomes visible immediately
+    setSelectedStoryForPreview(null);
+
+    if (onGoToModelProfile) {
+      onGoToModelProfile(finalModel.id, finalModel);
     }
   };
 
@@ -11078,11 +11409,15 @@ function ModelStoryLightbox({
                   src={currentActiveSubStory.avatar || currentActiveSubStory.image || (isOwnActiveViewing || isArchivedViewing ? userProfile.avatar : 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150')} 
                   alt="" 
                   referrerPolicy="no-referrer"
-                  className="w-8.5 h-8.5 rounded-full object-cover border border-white/30 shadow-md bg-slate-900 group-hover:border-white/60 transition-all"
+                  className="w-8.5 h-8.5 rounded-full object-cover border border-white/30 shadow-md bg-slate-900 group-hover:border-white/60 transition-all cursor-pointer active:scale-95"
+                  onClick={handleStoryUserRedirect}
                 />
                 <div className="flex flex-col text-left">
                   <div className="flex items-center gap-1.5 leading-none">
-                    <span className="font-extrabold text-white text-[12px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[130px] group-hover:underline">
+                    <span 
+                      className="font-extrabold text-white text-[12px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[130px] hover:underline hover:text-sky-300 transition-colors cursor-pointer"
+                      onClick={handleStoryUserRedirect}
+                    >
                       {currentActiveSubStory.username || currentActiveSubStory.name || currentActiveSubStory.title || (isOwnActiveViewing || isArchivedViewing ? userProfile.username : 'historia')}
                     </span>
                     <span className="text-white/80 text-[10px] font-sans font-medium drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
@@ -11429,10 +11764,14 @@ function ModelStoryLightbox({
               src={currentActiveSubStory.avatar || currentActiveSubStory.image || (isOwnActiveViewing || isArchivedViewing ? userProfile.avatar : 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150')} 
               alt="" 
               referrerPolicy="no-referrer"
-              className="w-8 h-8 rounded-full object-cover border border-slate-200 bg-slate-100 group-hover:border-slate-400 transition-all"
+              className="w-8 h-8 rounded-full object-cover border border-slate-200 bg-slate-100 group-hover:border-slate-400 transition-all cursor-pointer active:scale-95"
+              onClick={handleStoryUserRedirect}
             />
             <div className="flex items-center gap-1.5 leading-none">
-              <span className="font-black text-slate-900 text-[12px] tracking-tight group-hover:underline">
+              <span 
+                className="font-black text-slate-900 text-[12px] tracking-tight hover:underline hover:text-sky-600 transition-colors cursor-pointer"
+                onClick={handleStoryUserRedirect}
+              >
                 {currentActiveSubStory.username || currentActiveSubStory.name || currentActiveSubStory.title || (isOwnActiveViewing || isArchivedViewing ? userProfile.username : 'usuario')}
               </span>
               {/* Verified Blue Star badge checkmark icon */}
