@@ -1,0 +1,14 @@
+[
+  {
+    "id": "sch-seed-1",
+    "userId": "user-buyer-1",
+    "userName": "Tú",
+    "userAvatar": "",
+    "entryFee": 1000,
+    "dateTime": "2026-10-24T12:28:02.070Z",
+    "recurrence": "weekly",
+    "projectId": "proj-1",
+    "projectName": "Milano Vintage Denim",
+    "status": "pending"
+  }
+]

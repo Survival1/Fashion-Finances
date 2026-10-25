@@ -32374,22 +32374,22 @@ try {
                             </div>
 
                             {/* 1. TOP CAROUSEL OF SESSIONS / MESAS (Matching capturas image.png, z.png & zw.png) */}
-                            <div className="relative w-full flex flex-col items-center justify-center py-1 px-3 box-border">
-                              <div className="flex items-center justify-between w-full gap-1.5 sm:gap-2">
+                            <div className="relative w-full max-w-3xl mx-auto flex flex-col items-center justify-center py-1 px-2 sm:px-4 box-border">
+                              <div className="flex items-center justify-between w-full gap-2 sm:gap-3">
                                 {/* Left Arrow */}
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setActiveFinanzasSessionIndex(prev => (prev - 1 + activeSessionsOnly.length) % activeSessionsOnly.length);
                                   }}
-                                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
+                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-700 bg-slate-900/90 text-white shadow-xl flex items-center justify-center cursor-pointer hover:bg-slate-800 active:scale-90 transition shrink-0 z-20"
                                   title="Mesa anterior"
                                 >
                                   <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-300" />
                                 </button>
 
                                 {/* Active Center Card */}
-                                <div className="flex-1 min-w-0 max-w-full mx-auto">
+                                <div className="flex-1 min-w-0 w-full mx-auto">
                                   {(() => {
                                     const isPinkStreetwear = activeFee === 10 || currentSession?.id === 'sess-trabajadores-1' || currentSession?.id === 'sess-streetwear-ref-2' || currentSession?.title?.toUpperCase().includes('STREETWEAR') || currentSession?.category?.toUpperCase().includes('STREETWEAR');
                                     const isCasualLifestyle = activeFee === 100 || currentSession?.id === 'sess-emprendedores-1' || currentSession?.title?.toUpperCase().includes('CASUAL') || currentSession?.category?.toUpperCase().includes('CASUAL');
@@ -32424,7 +32424,17 @@ try {
 
                                     if (isPinkStreetwear) {
                                       return (
-                                        <div className="bg-[#FDF0F5] border border-[#F7D2DE] text-slate-950 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-lg">
+                                        <div className="border-[3.5px] border-[#FF2D85] ring-2 ring-[#FF77B5]/40 text-slate-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl min-h-[380px] sm:min-h-[420px] group">
+                                          {/* Background Model Photo */}
+                                          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-3xl z-0">
+                                            <img
+                                              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=85"
+                                              alt="Modelos Fashion Streetwear & Urban"
+                                              className="w-full h-full object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
+                                              loading="lazy"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#FFF5F8] via-[#FFF5F8]/75 via-50% to-[#FFF5F8]/20" />
+                                          </div>
                                           {/* Top badge */}
                                           <div className="flex justify-between items-start gap-1">
                                             <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3CBD7] bg-[#FCEEF3] text-slate-900 leading-none truncate max-w-full">
@@ -32443,12 +32453,12 @@ try {
                                             <p className="text-[10px] sm:text-[10.5px] font-medium leading-tight line-clamp-2 text-slate-600">
                                               {descText}
                                             </p>
-                                            <div className="flex items-baseline gap-1.5 pt-0.5">
-                                              <span className="text-[10px] sm:text-[11px] font-medium text-slate-600">
-                                                Monto de Entrada:
+                                            <div className="flex flex-col items-start gap-0.5 pt-0.5">
+                                              <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                                                MONTO DE ENTRADA:
                                               </span>
                                               <strong className="font-mono text-xs sm:text-sm md:text-base font-black text-slate-950">
-                                                10,00€
+                                                10,00 Euros
                                               </strong>
                                             </div>
                                           </div>
@@ -32481,7 +32491,17 @@ try {
 
                                     if (isCasualLifestyle) {
                                       return (
-                                        <div className="bg-[#0c1322] border border-slate-700/90 text-white rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl">
+                                        <div className="border-[3.5px] border-[#FF2D85] ring-2 ring-[#FF77B5]/40 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl min-h-[380px] sm:min-h-[420px] group">
+                                          {/* Background Model Photo */}
+                                          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-3xl z-0">
+                                            <img
+                                              src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85"
+                                              alt="Modelos Fashion Casual & Lifestyle"
+                                              className="w-full h-full object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
+                                              loading="lazy"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 via-50% to-slate-950/20" />
+                                          </div>
                                           {/* Top badge */}
                                           <div className="flex justify-between items-start gap-1">
                                             <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-amber-500/70 bg-[#161d2f] text-amber-400 leading-none truncate max-w-full">
@@ -32497,12 +32517,12 @@ try {
                                             <p className="text-[10px] sm:text-[10.5px] font-medium leading-tight line-clamp-2 text-amber-200/90">
                                               {descText}
                                             </p>
-                                            <div className="flex items-baseline gap-1.5 pt-0.5">
-                                              <span className="text-[10px] sm:text-[11px] font-medium text-slate-300">
-                                                Monto de Entrada:
+                                            <div className="flex flex-col items-start gap-0.5 pt-0.5">
+                                              <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                                                MONTO DE ENTRADA:
                                               </span>
                                               <strong className="font-mono text-xs sm:text-sm md:text-base font-black text-amber-400">
-                                                100,00€
+                                                100,00 Euros
                                               </strong>
                                             </div>
                                           </div>
@@ -32534,8 +32554,26 @@ try {
                                     }
 
                                     // Default / Glamour / High Fashion / Classic
+                                    const defaultBgImage = isGlamour
+                                      ? "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=80"
+                                      : isClassic
+                                      ? "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=900&q=80"
+                                      : isHighFashion100k
+                                      ? "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80"
+                                      : "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=900&q=80";
+
                                     return (
-                                      <div className="bg-[#0c1322] border border-slate-700/90 text-white rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl">
+                                      <div className="border-[3.5px] border-[#FF2D85] ring-2 ring-[#FF77B5]/40 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden w-full max-w-full min-w-0 box-border shadow-2xl min-h-[380px] sm:min-h-[420px] group">
+                                        {/* Background Model Photo */}
+                                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-3xl z-0">
+                                          <img
+                                            src={defaultBgImage}
+                                            alt="Modelos de Alta Moda"
+                                            className="w-full h-full object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
+                                            loading="lazy"
+                                          />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 via-50% to-slate-950/20" />
+                                        </div>
                                         {/* Top badge */}
                                         <div className="flex justify-between items-start gap-1">
                                           <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-600 bg-slate-800/90 text-slate-200 leading-none truncate max-w-full">
@@ -32551,12 +32589,12 @@ try {
                                           <p className="text-[10px] sm:text-[10.5px] font-medium leading-tight line-clamp-2 text-slate-300">
                                             {descText}
                                           </p>
-                                          <div className="flex items-baseline gap-1.5 pt-0.5">
-                                            <span className="text-[10px] sm:text-[11px] font-medium text-slate-300">
-                                              Monto de Entrada:
+                                          <div className="flex flex-col items-start gap-0.5 pt-0.5">
+                                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                                              MONTO DE ENTRADA:
                                             </span>
                                             <strong className="font-mono text-xs sm:text-sm md:text-base font-black text-amber-400">
-                                              {feeFormatted}
+                                              {feeFormatted} Euros
                                             </strong>
                                           </div>
                                         </div>

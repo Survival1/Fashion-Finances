@@ -4821,7 +4821,7 @@ export default function ModelFacebookProfile({
                       }}
                       className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer select-none shadow-xs hover:shadow-sm active:scale-[0.98]"
                     >
-                      <span>🎬 IR A SESIONES</span>
+                      <span>🎬 IR A RONDAS</span>
                     </button>
                   </>
                 ) : (
@@ -5372,28 +5372,119 @@ export default function ModelFacebookProfile({
                 {/* 📋 LUXURIOUS PORTAL DE OPCIONES DE CONTRATACIÓN OVERLAY PAGE */}
                 {showContractsModal && (() => {
                   const contractServicesList = [
-                    { label: '📸 Sesión de fotos', contract: 'Contrato de prestación de servicios + cesión/licencia de imagen', counterparty: 'Marca/Fotógrafo ↔ Modelo' },
-                    { label: '📺 Publicidad', contract: 'Contrato de modelo/actor para campaña publicitaria.', counterparty: 'Marca/Agencia publicitaria ↔ Modelo' },
-                    { label: '👗 Desfile', contract: 'Contrato de participación en desfile', counterparty: 'Diseñador/Organizador ↔ Modelo' },
-                    { label: '📱 Redes sociales', contract: 'Contrato de influencer/creador de contenido', counterparty: 'Marca ↔ Modelo' },
-                    { label: '🎬 Vídeo / Reel / TikTok', contract: 'Contrato de creación de contenido', counterparty: 'Marca ↔ Modelo' },
-                    { label: '🏪 Embajador de marca', contract: 'Contrato de embajador/Brand Ambassador', counterparty: 'Marca ↔ Modelo' },
-                    { label: '🎤 Evento', contract: 'Contrato de actuación o aparición', counterparty: 'Organizador ↔ Modelo' },
-                    { label: '🎥 Videoclip', contract: 'Contrato de participación artística', counterparty: 'Productora ↔ Modelo' },
-                    { label: '🎬 Cine/TV', contract: 'Contrato artístico o de interpretación', counterparty: 'Productora ↔ Modelo' },
-                    { label: '🛍️ E-commerce', contract: 'Contrato de modelo para catálogo', counterparty: 'Marca/Tienda ↔ Modelo' },
-                    { label: '📸 Catálogo', contract: 'Contrato de sesión fotográfica + derechos de imagen', counterparty: 'Marca ↔ Modelo' },
-                    { label: '🌍 Campaña internacional', contract: 'Contrato de campaña + derechos de uso internacional', counterparty: 'Marca ↔ Modelo' },
-                    { label: '🤝 Exclusividad', contract: 'Contrato de exclusividad', counterparty: 'Marca ↔ Modelo' },
-                    { label: '🏢 Representación', contract: 'Contrato de representación de modelo', counterparty: 'Agencia ↔ Modelo' },
-                    { label: '🔎 Casting', contract: 'Acuerdo de participación en casting', counterparty: 'Agencia/Productora ↔ Modelo' }
+                    { 
+                      label: 'Sesión de fotos', 
+                      badge: '📸 Fotografía Editorial',
+                      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de prestación de servicios + cesión/licencia de imagen profesional.', 
+                      counterparty: 'Marca / Fotógrafo ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Publicidad', 
+                      badge: '📺 Campaña Comercial',
+                      image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de modelo y actor publicitario para difusión en medios masivos.', 
+                      counterparty: 'Marca / Agencia publicitaria ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Desfile de moda', 
+                      badge: '👗 Pasarela & Fashion Week',
+                      image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de participación en desfile de alta costura y pasarela en vivo.', 
+                      counterparty: 'Diseñador / Organizador ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Redes sociales', 
+                      badge: '📱 Creador de Contenido',
+                      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de influencer, publicaciones patrocinadas y branding digital.', 
+                      counterparty: 'Marca ↔ Creador / Modelo' 
+                    },
+                    { 
+                      label: 'Vídeo / Reel / TikTok', 
+                      badge: '🎬 Producción Audiovisual 4K',
+                      image: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de creación y actuación en formato vídeo vertical de alto impacto.', 
+                      counterparty: 'Marca ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Embajador de marca', 
+                      badge: '👑 Brand Ambassador VIP',
+                      image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de embajador exclusivo de marca y representación institucional.', 
+                      counterparty: 'Marca ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Evento & Gala', 
+                      badge: '🎤 Aparición Presencial VIP',
+                      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de actuación, alfombra roja y presencia en eventos corporativos.', 
+                      counterparty: 'Organizador / Empresa ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Videoclip musical', 
+                      badge: '🎥 Rodaje Artístico',
+                      image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de protagonismo o participación artística en videoclip musical.', 
+                      counterparty: 'Productora musical ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Cine & Televisión', 
+                      badge: '🎬 Ficción & Serie TV',
+                      image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato artístico de interpretación para largometraje, corto o televisión.', 
+                      counterparty: 'Productora cinematográfica ↔ Modelo' 
+                    },
+                    { 
+                      label: 'E-commerce & Tienda', 
+                      badge: '🛍️ Catálogo Digital',
+                      image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de modelo para sesión de tienda online, lookbook y ficha de producto.', 
+                      counterparty: 'Marca / Tienda Online ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Catálogo & Lookbook', 
+                      badge: '📸 Editorial Impreso & Web',
+                      image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de sesión fotográfica de colección completa y derechos de catálogo.', 
+                      counterparty: 'Marca de moda ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Campaña internacional', 
+                      badge: '🌍 Campaña Global',
+                      image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de campaña publicitaria con derechos de uso y difusión internacional.', 
+                      counterparty: 'Marca multinacional ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Exclusividad de imagen', 
+                      badge: '🤝 Acuerdo Exclusivo',
+                      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de exclusividad sectorial y fidelidad de marca por periodo pactado.', 
+                      counterparty: 'Marca / Holding ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Representación de agencia', 
+                      badge: '🏢 Management Oficial',
+                      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Contrato de representación profesional, gestión de bookings y management.', 
+                      counterparty: 'Agencia de modelos ↔ Modelo' 
+                    },
+                    { 
+                      label: 'Casting & Audición', 
+                      badge: '🔎 Selección & Prueba',
+                      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400',
+                      contract: 'Acuerdo de participación en casting selectivo y prueba de cámara para proyecto.', 
+                      counterparty: 'Directora de casting / Agencia ↔ Modelo' 
+                    }
                   ];
 
                   const filteredContracts = contractServicesList.filter(item => {
                     const query = contractSearchQuery.toLowerCase();
                     return item.label.toLowerCase().includes(query) || 
                            item.contract.toLowerCase().includes(query) || 
-                           item.counterparty.toLowerCase().includes(query);
+                           item.counterparty.toLowerCase().includes(query) ||
+                           item.badge.toLowerCase().includes(query);
                   });
 
                   return (
@@ -5453,19 +5544,19 @@ export default function ModelFacebookProfile({
                         {/* Table / Grid Body */}
                         <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-200">
                           <div className="overflow-x-auto rounded-2xl border-[1px] border-[#F4A7C3] bg-white/90 backdrop-blur-xs shadow-xs">
-                            <table className="w-full text-left border-collapse min-w-[640px]">
+                            <table className="w-full text-left border-collapse min-w-full sm:min-w-[680px]">
                               <thead>
-                                <tr className="bg-gradient-to-r from-[#FDE8EF]/90 via-white to-[#E0F2FE]/90 border-b-[1px] border-[#F4A7C3] text-slate-700 font-mono text-[9.5px] sm:text-[10px] uppercase font-black tracking-wider">
-                                  <th className="py-3 px-4 w-[28%]">Servicio</th>
-                                  <th className="py-3 px-4 w-[42%]">Contrato habitual</th>
-                                  <th className="py-3 px-4 w-[20%]">¿Quién contrata?</th>
-                                  <th className="py-3 px-4 w-[10%] text-center">Acción</th>
+                                <tr className="bg-gradient-to-r from-[#FDE8EF]/90 via-white to-[#E0F2FE]/90 border-b-[1px] border-[#F4A7C3] text-slate-700 font-mono text-[10px] sm:text-[11px] uppercase font-black tracking-wider">
+                                  <th className="py-3.5 px-4 sm:px-5 w-[33%]">Servicio</th>
+                                  <th className="py-3.5 px-3 sm:px-4 w-[31%]">Contrato habitual</th>
+                                  <th className="py-3.5 px-3 sm:px-4 w-[18%]">¿Quién contrata?</th>
+                                  <th className="py-3.5 px-4 sm:px-6 w-[18%] min-w-[130px] text-center">Acción</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y-[1px] divide-[#F4A7C3]/60 text-slate-800 text-[11px] sm:text-xs">
+                              <tbody className="divide-y-[1px] divide-[#F4A7C3]/60 text-slate-800">
                                 {filteredContracts.length === 0 ? (
                                   <tr>
-                                    <td colSpan={4} className="py-8 text-center text-slate-400 font-medium font-mono text-xs">
+                                    <td colSpan={4} className="py-10 text-center text-slate-400 font-medium font-mono text-sm">
                                       Ningún servicio coincide con "{contractSearchQuery}"
                                     </td>
                                   </tr>
@@ -5473,27 +5564,47 @@ export default function ModelFacebookProfile({
                                   filteredContracts.map((item, index) => (
                                     <tr 
                                       key={index} 
-                                      className="hover:bg-gradient-to-r hover:from-pink-50/60 hover:via-white hover:to-sky-50/50 transition duration-150 group/row"
+                                      className="hover:bg-gradient-to-r hover:from-pink-50/70 hover:via-white hover:to-sky-50/60 transition duration-150 group/row"
                                     >
-                                      {/* Servicio Column */}
-                                      <td className="py-3 px-4 font-black text-slate-900 group-hover/row:text-pink-600 transition-colors flex items-center gap-1.5">
-                                        <span>{item.label}</span>
+                                      {/* Servicio Column with large image and clear title */}
+                                      <td className="py-3.5 px-4 sm:px-5">
+                                        <div className="flex items-center gap-3.5 sm:gap-4.5">
+                                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-2xl overflow-hidden shrink-0 border-[1.5px] border-[#F4A7C3] shadow-md bg-pink-100/40 group-hover/row:scale-105 group-hover/row:shadow-lg transition-transform duration-200">
+                                            <img
+                                              src={item.image}
+                                              alt={item.label}
+                                              className="w-full h-full object-cover"
+                                              referrerPolicy="no-referrer"
+                                              onError={(e) => {
+                                                (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300';
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="min-w-0">
+                                            <h4 className="text-sm sm:text-base md:text-[17px] font-black text-slate-900 group-hover/row:text-pink-600 transition-colors leading-tight">
+                                              {item.label}
+                                            </h4>
+                                            <span className="inline-block mt-1 text-[9.5px] sm:text-[10.5px] font-bold text-pink-700 bg-pink-50/90 px-2 py-0.5 rounded-md border border-[#F4A7C3]">
+                                              {item.badge}
+                                            </span>
+                                          </div>
+                                        </div>
                                       </td>
                                       
                                       {/* Contrato habitual Column */}
-                                      <td className="py-3 px-4 font-medium text-slate-600 group-hover/row:text-slate-800 transition-colors">
+                                      <td className="py-3.5 px-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm leading-relaxed">
                                         {item.contract}
                                       </td>
                                       
                                       {/* Quien contrata Column */}
-                                      <td className="py-3 px-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border-[1px] border-[#F4A7C3] shadow-2xs group-hover/row:bg-sky-100/70 transition-colors">
+                                      <td className="py-3.5 px-3 sm:px-4">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-800 border-[1px] border-[#F4A7C3] shadow-2xs group-hover/row:bg-sky-100/80 transition-colors">
                                           {item.counterparty}
                                         </span>
                                       </td>
 
-                                      {/* Acción Column */}
-                                      <td className="py-3 px-4 text-center">
+                                      {/* Acción Column with ample padding and centered full button */}
+                                      <td className="py-3.5 px-4 sm:px-6 text-center min-w-[130px] whitespace-nowrap">
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -5501,7 +5612,7 @@ export default function ModelFacebookProfile({
                                             setShowContractsModal(false);
                                             setHiringSuccessMessage(null);
                                           }}
-                                          className="bg-gradient-to-r from-pink-500 via-rose-500 to-sky-500 hover:from-pink-600 hover:via-rose-600 hover:to-sky-600 text-white px-3.5 py-1.5 rounded-xl text-[10px] font-black transition cursor-pointer border-[1px] border-[#F4A7C3] shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-95"
+                                          className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 via-rose-500 to-sky-500 hover:from-pink-600 hover:via-rose-600 hover:to-sky-600 text-white px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-xs sm:text-xs font-black uppercase tracking-wider transition cursor-pointer border-[1px] border-[#F4A7C3] shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-95 whitespace-nowrap"
                                         >
                                           Contratar
                                         </button>
@@ -5540,8 +5651,8 @@ export default function ModelFacebookProfile({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* 🎬 Llamada y Botón de Sesiones centrado justo encima del Podio de Modelos */}
-              <div className="flex flex-col items-center justify-center text-center w-full px-4 py-2 space-y-2.5">
+              {/* 🎬 Llamada y Botón de Rondas de Financiación con amplia separación superior e inferior */}
+              <div className="flex flex-col items-center justify-center text-center w-full px-4 pt-10 pb-8 sm:pt-14 sm:pb-12 my-6 sm:my-8 space-y-4 sm:space-y-5">
                 <p className="text-xs sm:text-sm font-semibold text-slate-700 max-w-xl leading-relaxed">
                   ¿Quieres conocer nuestras Rondas de financiación Crowdfunding ? Únete a ellas y comienza a financiar tus proyectos.
                 </p>
@@ -5551,13 +5662,13 @@ export default function ModelFacebookProfile({
                     if (onNavigateToTab) {
                       onNavigateToTab('sessions');
                     } else {
-                      alert('Navegando a Sesiones...');
+                      alert('Navegando a Rondas...');
                     }
                   }}
                   className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer select-none shadow-xs hover:shadow-md active:scale-[0.98] w-auto justify-center"
                 >
                   <span className="text-sm">🎬</span>
-                  <span>IR A SESIONES</span>
+                  <span>IR A RONDAS</span>
                 </button>
               </div>
 
@@ -9434,7 +9545,7 @@ export default function ModelFacebookProfile({
             <div className="text-center">
               <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Página Social de Cuenta</span>
               <h3 className="text-sm sm:text-base font-black text-slate-950 font-display flex items-center gap-1.5 justify-center">
-                {activeSocialModal === 'friends' ? `Mis Amigos Recíprocos (${socialFriendsList.length})` :
+                {activeSocialModal === 'friends' ? 'Mis amigos' :
                  activeSocialModal === 'followers' ? `Mis Seguidores (${socialFollowersList.length})` : 
                  `Mis Perfiles Seguidos (${socialFollowingList.length})`}
               </h3>
@@ -9463,7 +9574,7 @@ export default function ModelFacebookProfile({
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
-                      {activeSocialModal === 'friends' ? `Mis Amigos (Círculo Íntimo - ${socialFriendsList.length})` :
+                      {activeSocialModal === 'friends' ? 'Mis Amigos' :
                        activeSocialModal === 'followers' ? `Seguidores de mi Canal (${socialFollowersList.length})` : 
                        `Perfiles del ecosistema que sigo (${socialFollowingList.length})`}
                     </h2>
@@ -9936,317 +10047,308 @@ export default function ModelFacebookProfile({
                         />
                       </div>
 
-                      {/* 🎥 SUBIR VÍDEO PARA EL RANKING DE LA LANDING PAGE - SOLO PARA MODELOS */}
-                      {userProfile.role === 'model' && (
-                      <div className="border-t border-slate-100 pt-5 mt-5 space-y-4">
-                        <div className="flex items-center gap-2 text-rose-600">
-                          <Sparkles className="w-4 h-4 text-rose-500 animate-pulse shrink-0" />
-                          <span className="text-[11px] font-black uppercase tracking-wider font-mono">Vídeo de competencia en el Ranking de la Landing Page</span>
-                        </div>
-                        
-                        <div className="bg-rose-50/40 border border-rose-100 rounded-2xl p-4 flex gap-4 items-start text-left shadow-2xs">
-                          <span className="text-xl select-none leading-none shrink-0">📸</span>
-                          <div className="space-y-1">
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-2 font-mono">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
-                              RECORDATORIO IMPRESCINDIBLE PARA EL MODELO
-                            </h5>
-                            <p className="text-[10.5px] leading-relaxed text-slate-650 font-medium">
-                              Esta sección está diseñada <strong className="text-rose-700 uppercase font-black">exclusivamente</strong> para que subas tu vídeo de competencia al Ranking de la Landing Page. Es un requisito obligatorio elegir o subir un vídeo grabado en <strong className="text-slate-900 border-b-2 border-rose-300 pb-0.5 font-bold">Primer plano</strong> (zoom extremo facial a tu rostro o mirada destacable). Los vídeos que no cumplan con esta directriz no se calificarán para recibir patrocinio de los inversores.
-                            </p>
-                          </div>
-                        </div>
+                      {/* 🎥 SUBIR VÍDEO PARA EL RANKING DE LA LANDING PAGE */}
+                      {(() => {
+                        const applyRankingVideo = (targetVideoUrl: string) => {
+                          if (!targetVideoUrl) return;
 
-                        {/* Combined Grid of Presets and Custom Uploaded Videos */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-mono">1. Seleccionar Vídeo para el Ranking</label>
-                          <div className="grid grid-cols-2 gap-2 font-sans">
-                            {userRankingVideos.map((preset, pIdx) => {
-                              const isSelected = rankingFormVideoUrl === preset.url;
-                              
-                              return (
-                                <div key={pIdx} className="relative group">
-                                  <button
-                                    type="button"
-                                    onClick={() => setRankingFormVideoUrl(preset.url)}
-                                    className={`w-full p-2.5 cursor-pointer border rounded-xl text-left transition-all duration-200 flex flex-col justify-center ${
-                                      isSelected 
-                                        ? 'border-rose-500 bg-rose-50/30 text-rose-900 shadow-xs shadow-rose-100/50 font-bold ring-1 ring-rose-500/30' 
-                                        : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700 hover:bg-slate-50/50'
-                                    }`}
-                                  >
-                                    <p className="text-xs font-extrabold uppercase truncate pr-5">{preset.label}</p>
-                                    <span className="text-[9px] text-slate-400 font-medium mt-0.5">
-                                      Vídeo Guardado
-                                    </span>
-                                  </button>
-                                  
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const updated = userRankingVideos.filter(v => v.url !== preset.url);
-                                      setUserRankingVideos(updated);
-                                      if (rankingFormVideoUrl === preset.url) {
-                                        setRankingFormVideoUrl(updated[0]?.url || '');
-                                      }
-                                    }}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 flex items-center justify-center transition-all cursor-pointer z-20 border border-rose-200 shadow-2xs"
-                                    title="Eliminar este vídeo permanentemente"
-                                  >
-                                    <span className="text-[9px] font-black leading-none">✕</span>
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                          // 1. Identify target model and gender
+                          const targetGender = currentModel?.gender || userProfile?.gender || 'female';
+                          const targetId = currentModel?.id || userProfile?.id || (targetGender === 'male' ? 'topm-1' : 'topf-1');
+                          const targetUsername = currentModel?.username || userProfile?.username || (targetGender === 'male' ? 'alexandervance_m1' : 'adrianalima');
+                          const targetName = currentModel?.name || userProfile?.name || (targetGender === 'male' ? 'Alexander Vance' : 'Adriana Lima');
 
-                        {/* Interactive Premium Video Player */}
-                        {(rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url) && (
-                          <div className="p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-lg overflow-hidden relative">
-                            <span className="absolute top-3 left-3 bg-rose-600 text-[8px] text-white font-mono font-black uppercase px-2 py-0.5 rounded z-10 shadow-sm">
-                              REPRODUCTOR DEMO
-                            </span>
-                            <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
-                              <video
-                                key={rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url}
-                                src={rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url}
-                                autoPlay
-                                loop
-                                muted
-                                controls
-                                playsInline
-                                className="w-full h-full object-cover rounded-md object-center transition-transform duration-700"
-                              />
-                            </div>
-                          </div>
-                        )}
+                          // Store gender-specific key and cover video
+                          try {
+                            if (targetGender === 'male') {
+                              localStorage.setItem('coll_custom_ranking_video_male', targetVideoUrl);
+                            } else {
+                              localStorage.setItem('coll_custom_ranking_video_female', targetVideoUrl);
+                              localStorage.setItem('coll_custom_ranking_video', targetVideoUrl);
+                              localStorage.removeItem('coll_custom_ranking_video_male');
+                            }
+                            localStorage.setItem('landing_page_cover_video_url', targetVideoUrl);
+                          } catch (err) {}
 
-                        {/* Subir archivo de vídeo local */}
-                        <div className="p-4 bg-slate-50 border border-slate-200/85 rounded-2xl space-y-3">
-                          <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1 font-mono">
-                            <span>📁</span> Subir Archivo de Vídeo Local
-                          </p>
-                          <div>
-                            <label className="w-full cursor-pointer bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-black py-2.5 rounded-xl text-center uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-3xs">
-                              <span>📁 Subir vídeo local</span>
-                              <input
-                                type="file"
-                                accept="video/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const objectUrl = URL.createObjectURL(file);
-                                    const label = file.name.substring(0, 15);
-                                    setNewCustomVideoUrl(objectUrl);
-                                    setRankingFormVideoUrl(objectUrl);
-                                    setNewCustomVideoLabel(label);
-                                    setRankingFormConfirmCloseup(true);
-                                    setUserRankingVideos(prev => {
-                                      if (prev.some(v => v.url === objectUrl)) return prev;
-                                      return [{ label, url: objectUrl, isCustom: true }, ...prev];
-                                    });
-                                    alert(`📹 Vídeo "${file.name}" cargado localmente con éxito. Se muestra la vista previa en el reproductor demo.`);
-                                  }
-                                }}
-                              />
-                            </label>
-                          </div>
-                        </div>
+                          try {
+                            localStorage.setItem(`custom_model_video_${targetId}`, targetVideoUrl);
+                            localStorage.setItem(`custom_model_video_${targetUsername.toLowerCase()}`, targetVideoUrl);
+                            if (targetGender === 'female') {
+                              localStorage.setItem(`custom_model_video_adrianalima`, targetVideoUrl);
+                              localStorage.setItem(`custom_model_video_topf-1`, targetVideoUrl);
+                            }
+                          } catch (err) {}
 
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Hashtags o Descripción del Vídeo</label>
-                          <input
-                            type="text"
-                            value={rankingFormDescription}
-                            onChange={(e) => setRankingFormDescription(e.target.value)}
-                            placeholder="Añade hashtags como #Gucci #Estrella..."
-                            className="w-full bg-slate-50 border border-slate-200 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:outline-none placeholder:text-slate-400"
-                          />
-                        </div>
+                          // 2. Update in-memory models array and localStorage coll_models
+                          const rawModels = localStorage.getItem('coll_models');
+                          let currentList = models && models.length > 0 ? [...models] : [];
+                          if (rawModels) {
+                            try {
+                              const parsed = JSON.parse(rawModels);
+                              if (Array.isArray(parsed) && parsed.length > 0) currentList = parsed;
+                            } catch (e) {}
+                          }
 
-                        <div className="pt-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const targetVideoUrl = rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url;
-                              if (!targetVideoUrl) {
-                                alert("Por favor selecciona un vídeo o introduce una URL.");
-                                return;
+                          let updatedAny = false;
+                          const nextModels = currentList.map(m => {
+                            // If female upload, ensure male models NEVER receive this video
+                            if (targetGender === 'female' && m.gender === 'male') {
+                              if (m.videoUrl === targetVideoUrl || (m.videoUrl && m.videoUrl.includes('adrianalima'))) {
+                                updatedAny = true;
+                                return { ...m, videoUrl: undefined };
                               }
-                              // Parse rankings data to perform updates
-                              const cachedRankingsRaw = localStorage.getItem('coll_top_100_ranking');
-                              let rankingsData: any = null;
-                              if (cachedRankingsRaw) {
-                                try {
-                                  rankingsData = JSON.parse(cachedRankingsRaw);
-                                } catch (err) {}
-                              }
-                              if (!rankingsData) {
-                                rankingsData = { females: [], males: [] };
-                              }
-                              
-                              const userId = userProfile?.id || 'admin';
-                              const matchedModelInProps = models?.find(m => m.id === userId || (m.username && m.username.toLowerCase() === userProfile?.username?.toLowerCase()));
-                              
-                              let userGender = 'female';
-                              if (currentModel && (currentModel as any).gender) {
-                                userGender = (currentModel as any).gender;
-                              } else if (matchedModelInProps && (matchedModelInProps as any).gender) {
-                                userGender = (matchedModelInProps as any).gender;
-                              } else if ((userProfile as any)?.gender) {
-                                userGender = (userProfile as any).gender;
-                              } else if (userId.startsWith('topm-')) {
-                                userGender = 'male';
-                              } else {
-                                const nameLower = (userProfile?.name || '').toLowerCase();
-                                const usernameLower = (userProfile?.username || '').toLowerCase();
-                                if (
-                                  nameLower.includes('carlos') || 
-                                  nameLower.includes('lucas') || 
-                                  nameLower.includes('marcus') || 
-                                  nameLower.includes('alexander') || 
-                                  nameLower.includes('nicholas') || 
-                                  nameLower.includes('julian') || 
-                                  nameLower.includes('male') ||
-                                  usernameLower.includes('_m') ||
-                                  usernameLower.includes('male')
-                                ) {
-                                  userGender = 'male';
-                                }
-                              }
-                              
-                              const targetKey = userGender === 'female' ? 'females' : 'males';
-                              const otherKey = userGender === 'female' ? 'males' : 'females';
-                              
-                              if (!rankingsData[targetKey]) {
-                                rankingsData[targetKey] = [];
-                              }
-                              if (rankingsData[otherKey]) {
-                                rankingsData[otherKey] = rankingsData[otherKey].filter((m: any) => m.id !== userId && m.username !== userProfile?.username);
-                              }
-                              
-                              let updatedModelId = userId;
-                              let updatedModelName = userProfile?.name || 'Mi Perfil de Modelo';
-                              
-                              const foundIdx = rankingsData[targetKey].findIndex((m: any) => m.id === userId || m.username === userProfile?.username);
-                              if (foundIdx !== -1) {
-                                const existingModel = rankingsData[targetKey][foundIdx];
-                                const updatedModel = {
-                                  ...existingModel,
-                                  videoUrl: targetVideoUrl,
-                                  gender: userGender,
-                                  isOnline: true,
-                                  totalLikes: Math.max(existingModel.totalLikes || 15000, 99999),
-                                  bio: rankingFormDescription.trim() || existingModel.bio || `Estrella de Fashion Finances.`
-                                };
-                                rankingsData[targetKey].splice(foundIdx, 1);
-                                rankingsData[targetKey].unshift(updatedModel);
-                                updatedModelName = updatedModel.name;
-                                updatedModelId = updatedModel.id;
-                              } else {
-                                const freshModel = {
-                                  id: userId,
-                                  name: userProfile?.name || 'Mi Perfil de Modelo',
-                                  username: userProfile?.username || 'mi_usuario',
-                                  avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-                                  bio: rankingFormDescription.trim() || `Estrella del ranking de ${userGender === 'female' ? 'Mujeres' : 'Hombres'} de Fashion Finances.`,
-                                  totalLikes: 99999,
-                                  followersCount: 15200,
-                                  referidosCount: 12,
-                                  photos: [
-                                    userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600'
-                                  ],
-                                  socials: {
-                                    instagram: '@' + (userProfile?.username || 'modelo'),
-                                    tiktok: '@' + (userProfile?.username || 'modelo') + '_tok'
-                                  },
-                                  gender: userGender,
-                                  isOnline: true,
-                                  videoUrl: targetVideoUrl
-                                };
-                                rankingsData[targetKey].unshift(freshModel);
-                              }
-                              
-                              localStorage.setItem('coll_top_100_ranking', JSON.stringify(rankingsData));
-                              
-                              const rawModels = localStorage.getItem('coll_models');
-                              if (rawModels) {
-                                try {
-                                  const decodedModels = JSON.parse(rawModels);
-                                  let wasUpdated = false;
-                                  const updatedDecoded = decodedModels.map((m: any) => {
-                                    if (m.id === userId || m.username === userProfile?.username) {
-                                      wasUpdated = true;
-                                      return { ...m, videoUrl: targetVideoUrl, gender: userGender, totalLikes: 99999 };
+                              return m;
+                            }
+
+                            if (targetGender === 'male' && m.gender === 'female') {
+                              return m;
+                            }
+
+                            const isTarget = 
+                              m.id === targetId || 
+                              (targetGender === 'female' && (m.id === 'topf-1' || m.id === 'model-1')) ||
+                              (m.username && m.username.toLowerCase() === targetUsername.toLowerCase()) ||
+                              (m.name && m.name.toLowerCase().includes(targetName.toLowerCase())) ||
+                              (targetGender === 'female' && m.name.toLowerCase().includes('adriana'));
+                            
+                            if (isTarget) {
+                              updatedAny = true;
+                              return {
+                                ...m,
+                                videoUrl: targetVideoUrl,
+                                totalLikes: Math.max(m.totalLikes || 15000, 99999),
+                                isOnline: true
+                              };
+                            }
+                            return m;
+                          });
+
+                          if (updatedAny) {
+                            try {
+                              localStorage.setItem('coll_models', JSON.stringify(nextModels));
+                            } catch (e) {}
+                            if (onUpdateModels) {
+                              onUpdateModels(nextModels);
+                            }
+                          }
+
+                          // 3. Update coll_top_100_ranking so Top100 and LandingPage sliders update
+                          const cachedRankingsRaw = localStorage.getItem('coll_top_100_ranking');
+                          if (cachedRankingsRaw) {
+                            try {
+                              const rankingsData = JSON.parse(cachedRankingsRaw);
+                              if (rankingsData) {
+                                if (targetGender === 'female' && Array.isArray(rankingsData.females)) {
+                                  rankingsData.females = rankingsData.females.map((m: any) => {
+                                    if (
+                                      m.id === targetId ||
+                                      m.id === 'topf-1' ||
+                                      m.id === 'model-1' ||
+                                      (m.username && m.username.toLowerCase() === targetUsername.toLowerCase()) ||
+                                      (m.name && m.name.toLowerCase().includes(targetName.toLowerCase())) ||
+                                      (m.name && m.name.toLowerCase().includes('adriana'))
+                                    ) {
+                                      return {
+                                        ...m,
+                                        videoUrl: targetVideoUrl,
+                                        totalLikes: Math.max(m.totalLikes || 15000, 99999),
+                                        isOnline: true
+                                      };
                                     }
                                     return m;
                                   });
-                                  if (!wasUpdated) {
-                                    updatedDecoded.push({
-                                      id: userId,
-                                      name: updatedModelName,
-                                      username: userProfile?.username || 'mi_usuario',
-                                      avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-                                      bio: rankingFormDescription.trim() || `Estrella del ranking de ${userGender === 'female' ? 'Mujeres' : 'Hombres'} de Fashion Finances.`,
-                                      gender: userGender,
-                                      videoUrl: targetVideoUrl,
-                                      totalLikes: 99999,
-                                      followersCount: 15200,
-                                      referidosCount: 12,
-                                      socials: {
-                                        instagram: '@' + (userProfile?.username || 'modelo'),
-                                        tiktok: '@' + (userProfile?.username || 'modelo') + '_tok'
+                                }
+                                // Ensure male rankings do not hold female video
+                                if (Array.isArray(rankingsData.males)) {
+                                  rankingsData.males = rankingsData.males.map((m: any) => {
+                                    if (targetGender === 'female' && (m.videoUrl === targetVideoUrl || (m.videoUrl && m.videoUrl.includes('adrianalima')))) {
+                                      return { ...m, videoUrl: undefined };
+                                    }
+                                    return m;
+                                  });
+                                }
+                                localStorage.setItem('coll_top_100_ranking', JSON.stringify(rankingsData));
+                              }
+                            } catch (e) {}
+                          }
+
+                          // 5. Sync coverVideoSlots if present
+                          if (coverVideoSlots && coverVideoSlots.length > 0) {
+                            const nextSlots = [...coverVideoSlots];
+                            let targetIdx = nextSlots.findIndex(s => !s.url);
+                            if (targetIdx === -1) targetIdx = 0;
+                            nextSlots[targetIdx] = {
+                              ...nextSlots[targetIdx],
+                              name: "Vídeo del Ranking",
+                              url: targetVideoUrl,
+                              filename: 'ranking_video.mp4'
+                            };
+                            setCoverVideoSlots(nextSlots);
+                          }
+
+                          // 6. Broadcast custom and standard sync events
+                          window.dispatchEvent(new Event('ranking_videos_updated'));
+                          window.dispatchEvent(new CustomEvent('ranking_video_changed', { detail: { videoUrl: targetVideoUrl, modelId: targetId } }));
+                        };
+
+                        return (
+                          <div className="border-t border-slate-100 pt-5 mt-5 space-y-4">
+                            <div className="flex items-center gap-2 text-rose-600">
+                              <Sparkles className="w-4 h-4 text-rose-500 animate-pulse shrink-0" />
+                              <span className="text-[11px] font-black uppercase tracking-wider font-mono">Vídeo de competencia en el Ranking de la Landing Page</span>
+                            </div>
+                            
+                            <div className="bg-rose-50/40 border border-rose-100 rounded-2xl p-4 flex gap-4 items-start text-left shadow-2xs">
+                              <span className="text-xl select-none leading-none shrink-0">📸</span>
+                              <div className="space-y-1">
+                                <h5 className="text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-2 font-mono">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+                                  RECORDATORIO IMPRESCINDIBLE PARA EL MODELO
+                                </h5>
+                                <p className="text-[10.5px] leading-relaxed text-slate-650 font-medium">
+                                  Esta sección está diseñada <strong className="text-rose-700 uppercase font-black">exclusivamente</strong> para que subas tu vídeo de competencia al Ranking de la Landing Page. Es un requisito obligatorio elegir o subir un vídeo grabado en <strong className="text-slate-900 border-b-2 border-rose-300 pb-0.5 font-bold">Primer plano</strong> (zoom extremo facial a tu rostro o mirada destacable). Los vídeos que no cumplan con esta directriz no se calificarán para recibir patrocinio de los inversores.
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Combined Grid of Presets and Custom Uploaded Videos */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-mono">1. Seleccionar Vídeo para el Ranking</label>
+                              <div className="grid grid-cols-2 gap-2 font-sans">
+                                {userRankingVideos.map((preset, pIdx) => {
+                                  const isSelected = rankingFormVideoUrl === preset.url;
+                                  
+                                  return (
+                                    <div key={pIdx} className="relative group">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setRankingFormVideoUrl(preset.url);
+                                          applyRankingVideo(preset.url);
+                                        }}
+                                        className={`w-full p-2.5 cursor-pointer border rounded-xl text-left transition-all duration-200 flex flex-col justify-center ${
+                                          isSelected 
+                                            ? 'border-rose-500 bg-rose-50/30 text-rose-900 shadow-xs shadow-rose-100/50 font-bold ring-1 ring-rose-500/30' 
+                                            : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700 hover:bg-slate-50/50'
+                                        }`}
+                                      >
+                                        <p className="text-xs font-extrabold uppercase truncate pr-5">{preset.label}</p>
+                                        <span className="text-[9px] text-slate-400 font-medium mt-0.5">
+                                          Vídeo Guardado
+                                        </span>
+                                      </button>
+                                      
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const updated = userRankingVideos.filter(v => v.url !== preset.url);
+                                          setUserRankingVideos(updated);
+                                          if (rankingFormVideoUrl === preset.url) {
+                                            setRankingFormVideoUrl(updated[0]?.url || '');
+                                          }
+                                        }}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 flex items-center justify-center transition-all cursor-pointer z-20 border border-rose-200 shadow-2xs"
+                                        title="Eliminar este vídeo permanentemente"
+                                      >
+                                        <span className="text-[9px] font-black leading-none">✕</span>
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Interactive Premium Video Player - Marco Rosa Perla y Blanco */}
+                            {(rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url) && (
+                              <div className="p-2.5 bg-gradient-to-br from-white via-[#fff0f5] to-[#fce7f3] rounded-2xl border-2 border-[#fbcfe8] shadow-md shadow-pink-100/60 overflow-hidden relative ring-2 ring-white/90">
+                                <span className="absolute top-3.5 left-3.5 bg-gradient-to-r from-[#f472b6] to-[#ec4899] text-[8.5px] text-white font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-white/60 tracking-wider">
+                                  REPRODUCTOR DEMO
+                                </span>
+                                <div className="relative w-full aspect-video bg-white/30 rounded-xl overflow-hidden flex items-center justify-center border border-[#ffd1dc]/80 shadow-inner">
+                                  <video
+                                    key={rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url}
+                                    src={rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    controls
+                                    playsInline
+                                    className="w-full h-full object-cover rounded-lg object-center transition-transform duration-700 bg-black"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Subir archivo de vídeo local */}
+                            <div className="p-4 bg-slate-50 border border-slate-200/85 rounded-2xl space-y-3">
+                              <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1 font-mono">
+                                <span>📁</span> Subir Archivo de Vídeo Local
+                              </p>
+                              <div>
+                                <label className="w-full cursor-pointer bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-black py-2.5 rounded-xl text-center uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-3xs">
+                                  <span>📁 Subir vídeo local</span>
+                                  <input
+                                    type="file"
+                                    accept="video/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const objectUrl = URL.createObjectURL(file);
+                                        const label = file.name.substring(0, 15);
+                                        setNewCustomVideoUrl(objectUrl);
+                                        setRankingFormVideoUrl(objectUrl);
+                                        setNewCustomVideoLabel(label);
+                                        setRankingFormConfirmCloseup(true);
+                                        setUserRankingVideos(prev => {
+                                          if (prev.some(v => v.url === objectUrl)) return prev;
+                                          return [{ label, url: objectUrl, isCustom: true }, ...prev];
+                                        });
+                                        applyRankingVideo(objectUrl);
+                                        alert(`📹 Vídeo "${file.name}" cargado localmente con éxito. Se muestra en el reproductor demo y se ha sincronizado en vivo con el Ranking (#1) y el Carrusel 3D.`);
                                       }
-                                    });
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">Hashtags o Descripción del Vídeo</label>
+                              <input
+                                type="text"
+                                value={rankingFormDescription}
+                                onChange={(e) => setRankingFormDescription(e.target.value)}
+                                placeholder="Añade hashtags como #Gucci #Estrella..."
+                                className="w-full bg-slate-50 border border-slate-200 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:outline-none placeholder:text-slate-400"
+                              />
+                            </div>
+
+                            <div className="pt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const targetVideoUrl = rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url;
+                                  if (!targetVideoUrl) {
+                                    alert("Por favor selecciona un vídeo o introduce una URL.");
+                                    return;
                                   }
-                                  localStorage.setItem('coll_models', JSON.stringify(updatedDecoded));
-                                  if (onUpdateModels) {
-                                    onUpdateModels(updatedDecoded);
+                                  applyRankingVideo(targetVideoUrl);
+                                  setShowSettingsDrawer(false);
+                                  if (onNavigateToTab) {
+                                    onNavigateToTab('home');
                                   }
-                                } catch (err) {}
-                              }
-                              
-                              // Sync to coverVideoSlots
-                              const nextSlots = [...coverVideoSlots];
-                              let targetIdx = nextSlots.findIndex(s => !s.url);
-                              if (targetIdx === -1) {
-                                targetIdx = nextSlots.findIndex(s => s.url.includes('mixkit-'));
-                              }
-                              if (targetIdx === -1) {
-                                targetIdx = 0;
-                              }
-                              nextSlots[targetIdx] = {
-                                ...nextSlots[targetIdx],
-                                name: "Vídeo del Ranking",
-                                url: targetVideoUrl,
-                                filename: 'ranking_video.mp4'
-                              };
-                              setCoverVideoSlots(nextSlots);
-                              localStorage.setItem(`cover_video_slots_${userId}`, JSON.stringify(nextSlots.map(s => ({
-                                id: s.id,
-                                name: s.name,
-                                url: s.url.startsWith('blob:') ? '' : s.url,
-                                filename: s.filename
-                              }))));
-                              localStorage.setItem('landing_page_cover_video_url', targetVideoUrl);
-                              
-                              window.dispatchEvent(new Event('ranking_videos_updated'));
-                              setShowSettingsDrawer(false);
-                              if (onNavigateToTab) {
-                                onNavigateToTab('home');
-                              }
-                              alert(`🎬 ¡Vídeo publicado con éxito en el Ranking! Mira tu vídeo publicado en la Landing Page.`);
-                            }}
-                            className="w-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black py-2.5 rounded-xl uppercase tracking-wider transition-all shadow-sm border-0 cursor-pointer text-center"
-                          >
-                            🚀 Publicar en el Ranking de la Landing Page
-                          </button>
-                        </div>
-                      </div>
-                      )}
+                                  alert(`🎬 ¡Vídeo publicado con éxito en el Ranking! Puedes verlo inmediatamente en el Podio y en el Carrusel.`);
+                                }}
+                                className="w-full bg-gradient-to-r from-[#ffd1dc] via-[#fbcfe8] to-[#f9a8d4] hover:from-[#fbcfe8] hover:via-[#f9a8d4] hover:to-[#f472b6] text-rose-950 font-black text-[11px] py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-sm shadow-pink-200/50 border border-[#f472b6]/40 cursor-pointer text-center active:scale-[0.99] flex items-center justify-center gap-1.5"
+                              >
+                                <span>🚀</span> Publicar en el Ranking de la Landing Page
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="pt-4 border-t border-slate-100 flex justify-end gap-2 shrink-0">
@@ -10262,22 +10364,62 @@ export default function ModelFacebookProfile({
                         onClick={() => {
                           setBioText(editingBio);
                           setFashionAgency(editingFashionAgency);
+
+                          const activeVideo = rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url;
+                          
+                          const targetGender = currentModel?.gender || userProfile?.gender || 'female';
+                          const targetId = currentModel?.id || userProfile?.id || (targetGender === 'male' ? 'topm-1' : 'topf-1');
+                          const targetUsername = currentModel?.username || userProfile?.username || (targetGender === 'male' ? 'alexandervance_m1' : 'adrianalima');
+                          const targetName = editingName || currentModel?.name || userProfile?.name || (targetGender === 'male' ? 'Alexander Vance' : 'Adriana Lima');
+
+                          if (activeVideo) {
+                            try {
+                              if (targetGender === 'male') {
+                                localStorage.setItem('coll_custom_ranking_video_male', activeVideo);
+                              } else {
+                                localStorage.setItem('coll_custom_ranking_video_female', activeVideo);
+                                localStorage.setItem('coll_custom_ranking_video', activeVideo);
+                                localStorage.removeItem('coll_custom_ranking_video_male');
+                              }
+                              localStorage.setItem('landing_page_cover_video_url', activeVideo);
+                              localStorage.setItem(`custom_model_video_${targetId}`, activeVideo);
+                              localStorage.setItem(`custom_model_video_${targetUsername.toLowerCase()}`, activeVideo);
+                              if (targetGender === 'female') {
+                                localStorage.setItem(`custom_model_video_adrianalima`, activeVideo);
+                                localStorage.setItem(`custom_model_video_topf-1`, activeVideo);
+                              }
+                            } catch (e) {}
+                          }
+
                           if (currentModel) {
                             const updatedModels = models.map(m => {
-                              if (m.id === currentModel.id) {
+                              // If current model is female, clean up if any male model somehow had this video
+                              if (targetGender === 'female' && m.gender === 'male') {
+                                if (m.videoUrl === activeVideo || (m.videoUrl && m.videoUrl.includes('adrianalima'))) {
+                                  return { ...m, videoUrl: undefined };
+                                }
+                                return m;
+                              }
+
+                              if (m.id === currentModel.id || (targetGender === 'female' && m.name.toLowerCase().includes('adriana'))) {
                                 return {
                                   ...m,
                                   name: editingName,
                                   username: editingUsername,
                                   bio: editingBio,
                                   avatar: editingAvatar,
-                                  fashionAgency: editingFashionAgency
+                                  fashionAgency: editingFashionAgency,
+                                  ...(activeVideo ? { videoUrl: activeVideo, totalLikes: 99999, isOnline: true } : {})
                                 };
                               }
                               return m;
                             });
+                            try {
+                              localStorage.setItem('coll_models', JSON.stringify(updatedModels));
+                            } catch (e) {}
                             onUpdateModels(updatedModels);
                           }
+                          
                           // Also write directly back into parent profile state
                           userProfile.name = editingName;
                           userProfile.username = editingUsername;
@@ -10295,10 +10437,15 @@ export default function ModelFacebookProfile({
                           };
                           onUpdateProfile(nextProfile);
 
-                          alert('✅ ¡Tus cambios en el perfil han sido guardados con éxito en la base de datos!');
+                          window.dispatchEvent(new Event('ranking_videos_updated'));
+                          if (activeVideo) {
+                            window.dispatchEvent(new CustomEvent('ranking_video_changed', { detail: { videoUrl: activeVideo, modelId: targetId } }));
+                          }
+
+                          alert('✅ ¡Tus cambios en el perfil y vídeos del Ranking han sido guardados con éxito!');
                           setShowSettingsDrawer(false);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition shadow-3xs"
+                        className="bg-gradient-to-r from-[#ffd1dc] via-[#fbcfe8] to-[#f9a8d4] hover:from-[#fbcfe8] hover:via-[#f9a8d4] hover:to-[#f472b6] text-rose-950 font-black px-5 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-200 shadow-sm shadow-pink-200/50 border border-[#f472b6]/40 active:scale-[0.98]"
                       >
                         Guardar cambios
                       </button>

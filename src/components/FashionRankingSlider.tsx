@@ -274,6 +274,79 @@ function ModelRankingCard({
     }
   };
 
+  // Sync with custom video uploaded in settings drawer
+  const isMaleModel = isMale;
+
+  const [customVideo, setCustomVideo] = useState<string>(() => {
+    try {
+      const modelKey = model?.id ? localStorage.getItem(`custom_model_video_${model.id}`) : null;
+      const userKey = model?.username ? localStorage.getItem(`custom_model_video_${model.username.toLowerCase()}`) : null;
+      const isAdriana = !isMaleModel && (model?.name?.toLowerCase().includes('adriana') || model?.username?.toLowerCase().includes('adriana'));
+      const adrianaKey = isAdriana ? localStorage.getItem('custom_model_video_adrianalima') : null;
+      const globalKey = index === 0 
+        ? (isMaleModel 
+            ? localStorage.getItem('coll_custom_ranking_video_male') 
+            : (localStorage.getItem('coll_custom_ranking_video_female') || localStorage.getItem('coll_custom_ranking_video')))
+        : null;
+      const candidate = modelKey || userKey || adrianaKey || globalKey || '';
+      
+      // Strict gender boundary: male cards must never show female videos
+      if (isMaleModel) {
+        const femaleGlobal = localStorage.getItem('coll_custom_ranking_video');
+        const femaleAdriana = localStorage.getItem('custom_model_video_adrianalima');
+        if (candidate && (
+          (femaleGlobal && candidate === femaleGlobal) ||
+          (femaleAdriana && candidate === femaleAdriana) ||
+          candidate.toLowerCase().includes('adrianalima')
+        )) {
+          return '';
+        }
+      }
+      return candidate;
+    } catch (e) {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const modelKey = model?.id ? localStorage.getItem(`custom_model_video_${model.id}`) : null;
+        const userKey = model?.username ? localStorage.getItem(`custom_model_video_${model.username.toLowerCase()}`) : null;
+        const isAdriana = !isMaleModel && (model?.name?.toLowerCase().includes('adriana') || model?.username?.toLowerCase().includes('adriana'));
+        const adrianaKey = isAdriana ? localStorage.getItem('custom_model_video_adrianalima') : null;
+        const globalKey = index === 0 
+          ? (isMaleModel 
+              ? localStorage.getItem('coll_custom_ranking_video_male') 
+              : (localStorage.getItem('coll_custom_ranking_video_female') || localStorage.getItem('coll_custom_ranking_video')))
+          : null;
+        let nextVid = modelKey || userKey || adrianaKey || globalKey || '';
+        
+        if (isMaleModel) {
+          const femaleGlobal = localStorage.getItem('coll_custom_ranking_video');
+          const femaleAdriana = localStorage.getItem('custom_model_video_adrianalima');
+          if (nextVid && (
+            (femaleGlobal && nextVid === femaleGlobal) ||
+            (femaleAdriana && nextVid === femaleAdriana) ||
+            nextVid.toLowerCase().includes('adrianalima')
+          )) {
+            nextVid = '';
+          }
+        }
+        
+        setCustomVideo(nextVid);
+        setVideoError(false);
+      } catch (e) {}
+    };
+
+    window.addEventListener('ranking_videos_updated', handleSync);
+    window.addEventListener('ranking_video_changed', handleSync);
+    return () => {
+      window.removeEventListener('ranking_videos_updated', handleSync);
+      window.removeEventListener('ranking_video_changed', handleSync);
+    };
+  }, [model?.id, model?.username, model?.videoUrl, model?.name, index, isMaleModel]);
+
   // Select a preset high-luxury video loop if no custom video is uploaded yet
   const presetFemaleVideos = [
     'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4',
@@ -289,7 +362,25 @@ function ModelRankingCard({
     'https://assets.mixkit.co/videos/preview/mixkit-man-with-sunglasses-posing-in-creative-light-40496-large.mp4'
   ];
 
-  const modelVideo = model?.videoUrl || (isMale ? presetMaleVideos : presetFemaleVideos)[index % 4];
+  // Resolve model video: male models never inherit female/Adriana videos
+  let safeModelVideoUrl = model?.videoUrl;
+  if (isMaleModel && safeModelVideoUrl) {
+    const femaleGlobal = typeof window !== 'undefined' ? localStorage.getItem('coll_custom_ranking_video') : null;
+    const femaleAdriana = typeof window !== 'undefined' ? localStorage.getItem('custom_model_video_adrianalima') : null;
+    if (
+      (femaleGlobal && safeModelVideoUrl === femaleGlobal) ||
+      (femaleAdriana && safeModelVideoUrl === femaleAdriana) ||
+      safeModelVideoUrl.toLowerCase().includes('adrianalima') ||
+      safeModelVideoUrl.includes('mixkit-beautiful-woman') ||
+      safeModelVideoUrl.includes('mixkit-fashion-woman') ||
+      safeModelVideoUrl.includes('mixkit-woman-posing') ||
+      safeModelVideoUrl.includes('mixkit-girl-in-neon')
+    ) {
+      safeModelVideoUrl = undefined;
+    }
+  }
+
+  const modelVideo = customVideo || safeModelVideoUrl || (isMaleModel ? presetMaleVideos : presetFemaleVideos)[index % 4];
 
   useEffect(() => {
     setVideoError(false);
@@ -360,6 +451,7 @@ function ModelRankingCard({
         {offset === 0 && modelVideo && !videoError ? (
           <video
             ref={videoRef}
+            key={modelVideo}
             src={modelVideo || undefined}
             autoPlay
             loop

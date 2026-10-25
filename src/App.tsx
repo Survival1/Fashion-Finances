@@ -390,6 +390,18 @@ export default function App() {
       try {
         const parsed = JSON.parse(cache);
         if (parsed && Array.isArray(parsed.females) && Array.isArray(parsed.males) && (parsed.females.length + parsed.males.length >= 100)) {
+          const femaleVideo = localStorage.getItem('coll_custom_ranking_video');
+          const adrianaVideo = localStorage.getItem('custom_model_video_adrianalima');
+          parsed.males = parsed.males.map((m: any) => {
+            if (m.videoUrl && (
+              (femaleVideo && m.videoUrl === femaleVideo) ||
+              (adrianaVideo && m.videoUrl === adrianaVideo) ||
+              m.videoUrl.toLowerCase().includes('adrianalima')
+            )) {
+              return { ...m, videoUrl: undefined };
+            }
+            return m;
+          });
           return parsed;
         }
       } catch (e) {
@@ -418,7 +430,20 @@ export default function App() {
     try {
       const raw = localStorage.getItem('coll_patrocinados');
       if (raw) {
-        const parsed: Patrocinado[] = JSON.parse(raw);
+        let parsed: Patrocinado[] = JSON.parse(raw);
+        // Ensure Marcus Sterling is present as seen in image.png
+        if (!parsed.some(p => p.name?.toLowerCase().includes('marcus sterling') || p.username?.toLowerCase().includes('marcussterling'))) {
+          parsed.unshift({
+            id: 'pat-marcus',
+            name: 'Marcus Sterling',
+            username: 'marcussterling_m2',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+            role: 'model',
+            registeredAt: '8 oct 2026',
+            earningsGenerated: 5.00,
+            status: 'active'
+          });
+        }
         return parsed.map(p => {
           if (p.avatar && p.avatar.includes('1524504388940-b1c1722553e1')) {
             return { ...p, avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' };
@@ -428,6 +453,16 @@ export default function App() {
       }
     } catch (e) {}
     const defaultPatrocinados: Patrocinado[] = [
+      {
+        id: 'pat-marcus',
+        name: 'Marcus Sterling',
+        username: 'marcussterling_m2',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+        role: 'model',
+        registeredAt: '8 oct 2026',
+        earningsGenerated: 5.00,
+        status: 'active'
+      },
       {
         id: 'pat-0',
         name: 'juan',
@@ -649,7 +684,10 @@ export default function App() {
   const [followersList, setFollowersList] = useState<any[]>(() => {
     try {
       const raw = localStorage.getItem('coll_followers');
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= 8) return parsed;
+      }
     } catch (e) {}
     const defaultFollowers = [
       {
@@ -691,6 +729,46 @@ export default function App() {
         bio: 'Estilo de vida, moda urbana e innovación sostenible.',
         online: false,
         followedBack: true
+      },
+      {
+        id: 'fol-5',
+        name: 'Sophia Loren',
+        username: 'sophialoren_w3',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+        role: 'model',
+        bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos',
+        online: true,
+        followedBack: true
+      },
+      {
+        id: 'fol-6',
+        name: 'Carmen de la Cruz',
+        username: 'carmen_moda',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        role: 'model',
+        bio: 'Amante de la costura prêt-à-porter y la financiación ética',
+        online: true,
+        followedBack: false
+      },
+      {
+        id: 'fol-7',
+        name: 'Mia Kincaid',
+        username: 'miakincaid',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        role: 'model',
+        bio: 'Influencer de estilo de vida, mentor de creadores emergentes.',
+        online: true,
+        followedBack: true
+      },
+      {
+        id: 'fol-8',
+        name: 'Alessandra Ambrosio',
+        username: 'alessandraambrosio_w2',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        role: 'model',
+        bio: 'Top Model de pasarela y embajadora de la moda sostenible.',
+        online: true,
+        followedBack: true
       }
     ];
     localStorage.setItem('coll_followers', JSON.stringify(defaultFollowers));
@@ -700,18 +778,26 @@ export default function App() {
   const [followingList, setFollowingList] = useState<any[]>(() => {
     try {
       const raw = localStorage.getItem('coll_following');
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= 14) return parsed;
+      }
     } catch (e) {}
     const defaultFollowing = [
-      {
-        id: 'fol-1',
-        name: 'Adriana Lima',
-        username: 'adrianalima_w1',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-        role: 'model',
-        bio: 'Modelo internacional y apasionado/a del fitness.',
-        online: true
-      }
+      { id: 'fol-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Modelo internacional y apasionado/a del fitness.', online: true },
+      { id: 'fol-2', name: 'Alessandra Ambrosio', username: 'alessandraambrosio_w2', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Top Model de pasarela y embajadora de la moda sostenible.', online: true },
+      { id: 'fol-3', name: 'Candice Swanepoel', username: 'candiceswanepoel_w3', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Ángel icónico y diseñadora de moda ecológica.', online: true },
+      { id: 'fol-4', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', role: 'model', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos', online: true },
+      { id: 'fol-5', name: 'Alexander Vance', username: 'alexandervance1', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Creador/a de trends y embajador/a de marcas de alta.', online: true },
+      { id: 'fol-6', name: 'Isabella Dubois', username: 'isabelladubois2', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Enfocado/a en el empoderamiento y nuevos negocios creativos.', online: true },
+      { id: 'fol-7', name: 'Elena Rostova', username: 'elenarostova', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Estilo de vida, moda urbana e innovación sostenible.', online: false },
+      { id: 'fol-8', name: 'Mia Kincaid', username: 'miakincaid', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Influencer de estilo de vida, mentor de creadores emergentes.', online: true },
+      { id: 'fol-9', name: 'Marcus Vance', username: 'marcusvance_m2', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Modelo de pasarela y consultor de moda masculina.', online: true },
+      { id: 'fol-10', name: 'Sienna Cole', username: 'siennacole_w4', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Estilismo prêt-à-porter y creadora de tendencias.', online: true },
+      { id: 'fol-11', name: 'Liam Cooper', username: 'liamcooper_m3', avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Diseño vanguardista y fotografía de pasarela.', online: true },
+      { id: 'fol-12', name: 'Gisele Bündchen', username: 'giselebundchen_w5', avatar: 'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Top model internacional e icono de la moda.', online: true },
+      { id: 'fol-13', name: 'Carmen de la Cruz', username: 'carmen_moda', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', role: 'model', bio: 'Amante de la costura prêt-à-porter y la financiación ética', online: true },
+      { id: 'fol-14', name: 'Valentina Rose', username: 'valentinarose_w6', avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Creadora de moda, pasarela y proyectos de financiamiento colectivo.', online: true }
     ];
     localStorage.setItem('coll_following', JSON.stringify(defaultFollowing));
     return defaultFollowing;
@@ -820,6 +906,18 @@ export default function App() {
         try {
           const parsed = JSON.parse(cache);
           if (parsed && Array.isArray(parsed.females) && Array.isArray(parsed.males)) {
+            const femaleVideo = localStorage.getItem('coll_custom_ranking_video');
+            const adrianaVideo = localStorage.getItem('custom_model_video_adrianalima');
+            parsed.males = parsed.males.map((m: any) => {
+              if (m.videoUrl && (
+                (femaleVideo && m.videoUrl === femaleVideo) ||
+                (adrianaVideo && m.videoUrl === adrianaVideo) ||
+                m.videoUrl.toLowerCase().includes('adrianalima')
+              )) {
+                return { ...m, videoUrl: undefined };
+              }
+              return m;
+            });
             setTop100Rankings(parsed);
           }
         } catch (e) {
@@ -2942,6 +3040,10 @@ export default function App() {
             setPreviousTab(activeTab);
             setActiveTabTab('casting_live');
           }}
+          onNavigateToTab={(tab) => {
+            setShowVictoriaSecretRanking(false);
+            setActiveTabTab(tab as any);
+          }}
         />
       )}
 
@@ -3496,10 +3598,11 @@ export default function App() {
                 totalEarnings={userProfile.totalEarnings}
                 totalInvested={userProfile.totalInvested}
                 totalCommissions={userProfile.totalCommissions}
-                friendsCount={friendsList.length}
-                followersCount={followersList.length}
-                followingCount={followingList.length}
-                referralsOnlineCount={patrocinadosList.filter(p => p.status === 'active').length}
+                friendsCount={friendsList.length >= 5 ? friendsList.length : 5}
+                followersCount={followersList.length >= 8 ? followersList.length : 8}
+                followingCount={followingList.length >= 14 ? followingList.length : 14}
+                referralsOnlineCount={patrocinadosList.length >= 7 ? patrocinadosList.length : 7}
+                onNavigateToTab={setActiveTabTab}
                 isVisitor={userProfile.role === 'visitor'}
                 onSelectModel={(model) => {
                   handleSwitchToModelProfile(model);
@@ -3539,6 +3642,7 @@ export default function App() {
                   setSelectedModelForView(model);
                   setActiveTabTab('home');
                 }}
+                onUpdateProjects={setProjects}
               />
             </div>
           )}
@@ -5692,7 +5796,7 @@ export default function App() {
             <div className="text-center">
               <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Página Social de Cuenta</span>
               <h3 className="text-sm sm:text-base font-black text-slate-950 font-display flex items-center gap-1.5 justify-center">
-                {activeSocialModalInvestor === 'friends' ? `Mis Amigos (Cerrado - ${displayedFriends.length})` :
+                {activeSocialModalInvestor === 'friends' ? 'Mis amigos' :
                  activeSocialModalInvestor === 'followers' ? `Mis Seguidores (Inversor - ${displayedFollowers.length})` : 
                  `Perfiles que Sigo (Inversor - ${displayedFollowing.length})`}
               </h3>
@@ -5721,7 +5825,7 @@ export default function App() {
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
-                      {activeSocialModalInvestor === 'friends' ? `Mis Amigos Recíprocos (Inversor - ${displayedFriends.length})` :
+                      {activeSocialModalInvestor === 'friends' ? 'Mis Amigos' :
                        activeSocialModalInvestor === 'followers' ? `Seguidores en mi Colectivo (${displayedFollowers.length})` : 
                        `Portafolio de creadores que sigo (${displayedFollowing.length})`}
                     </h2>

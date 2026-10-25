@@ -8,47 +8,6 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
-      {
-        name: 'local-api-mock',
-        configureServer(server) {
-          server.middlewares.use(async (req, res, next) => {
-            if (req.url && req.url.startsWith('/api/admin')) {
-              try {
-                const { handleAdminApi } = await import('./src/server/adminApiMiddleware.ts');
-                const handled = await handleAdminApi(req, res, next);
-                if (handled) return;
-              } catch (err) {
-                console.error('[Admin API Error]', err);
-                res.statusCode = 500;
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ error: 'Error interno en la API de administración.' }));
-                return;
-              }
-            }
-            if (req.url === '/api/hero-video-status') {
-              res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ exists: true, url: '/hero_video.mp4' }));
-              return;
-            }
-            if (req.url && req.url.startsWith('/api/scheduled-orders')) {
-              res.setHeader('Content-Type', 'application/json');
-              if (req.method === 'GET') {
-                res.end(JSON.stringify([]));
-                return;
-              }
-              if (req.method === 'POST') {
-                res.end(JSON.stringify({ success: true, message: 'Operación simulada en modo local' }));
-                return;
-              }
-              if (req.method === 'DELETE') {
-                res.end(JSON.stringify({ success: true, message: 'Orden eliminada' }));
-                return;
-              }
-            }
-            next();
-          });
-        },
-      },
     ],
     resolve: {
       alias: {

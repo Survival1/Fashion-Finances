@@ -23,6 +23,8 @@ import {
   Radio,
   ShoppingBag,
   Gem,
+  Home,
+  Video,
   Tag,
   Check,
   Eye,
@@ -1156,6 +1158,8 @@ interface PodiumModelMediaProps {
   heightClass: string;
   borderColorClass: string;
   defaultVideoIndex: number;
+  roundedClass?: string;
+  hideBadges?: boolean;
 }
 
 function PodiumModelMedia({
@@ -1164,16 +1168,103 @@ function PodiumModelMedia({
   widthClass,
   heightClass,
   borderColorClass,
-  defaultVideoIndex
+  defaultVideoIndex,
+  roundedClass = "rounded-[24px]",
+  hideBadges = false
 }: PodiumModelMediaProps) {
   const [videoError, setVideoError] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const isMale = (model as any).gender === 'male';
-  const videoSrc = model?.videoUrl || (isMale 
+  const isMale = (model as any)?.gender === 'male';
+
+  // Sync with custom video uploaded in settings drawer
+  const [customVideo, setCustomVideo] = useState<string>(() => {
+    try {
+      const modelKey = model?.id ? localStorage.getItem(`custom_model_video_${model.id}`) : null;
+      const userKey = model?.username ? localStorage.getItem(`custom_model_video_${model.username.toLowerCase()}`) : null;
+      const isAdriana = !isMale && (model?.name?.toLowerCase().includes('adriana') || model?.username?.toLowerCase().includes('adriana'));
+      const adrianaKey = isAdriana ? localStorage.getItem('custom_model_video_adrianalima') : null;
+      const globalKey = place === 1 
+        ? (isMale 
+            ? localStorage.getItem('coll_custom_ranking_video_male') 
+            : (localStorage.getItem('coll_custom_ranking_video_female') || localStorage.getItem('coll_custom_ranking_video')))
+        : null;
+      let candidate = modelKey || userKey || adrianaKey || globalKey || '';
+      if (isMale) {
+        const femaleGlobal = localStorage.getItem('coll_custom_ranking_video');
+        const femaleAdriana = localStorage.getItem('custom_model_video_adrianalima');
+        if (candidate && (
+          (femaleGlobal && candidate === femaleGlobal) ||
+          (femaleAdriana && candidate === femaleAdriana) ||
+          candidate.toLowerCase().includes('adrianalima')
+        )) {
+          return '';
+        }
+      }
+      return candidate;
+    } catch (e) {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const modelKey = model?.id ? localStorage.getItem(`custom_model_video_${model.id}`) : null;
+        const userKey = model?.username ? localStorage.getItem(`custom_model_video_${model.username.toLowerCase()}`) : null;
+        const isAdriana = !isMale && (model?.name?.toLowerCase().includes('adriana') || model?.username?.toLowerCase().includes('adriana'));
+        const adrianaKey = isAdriana ? localStorage.getItem('custom_model_video_adrianalima') : null;
+        const globalKey = place === 1 
+          ? (isMale 
+              ? localStorage.getItem('coll_custom_ranking_video_male') 
+              : (localStorage.getItem('coll_custom_ranking_video_female') || localStorage.getItem('coll_custom_ranking_video')))
+          : null;
+        let nextVid = modelKey || userKey || adrianaKey || globalKey || '';
+        if (isMale) {
+          const femaleGlobal = localStorage.getItem('coll_custom_ranking_video');
+          const femaleAdriana = localStorage.getItem('custom_model_video_adrianalima');
+          if (nextVid && (
+            (femaleGlobal && nextVid === femaleGlobal) ||
+            (femaleAdriana && nextVid === femaleAdriana) ||
+            nextVid.toLowerCase().includes('adrianalima')
+          )) {
+            nextVid = '';
+          }
+        }
+        setCustomVideo(nextVid);
+        setVideoError(false);
+      } catch (e) {}
+    };
+
+    window.addEventListener('ranking_videos_updated', handleSync);
+    window.addEventListener('ranking_video_changed', handleSync);
+    return () => {
+      window.removeEventListener('ranking_videos_updated', handleSync);
+      window.removeEventListener('ranking_video_changed', handleSync);
+    };
+  }, [model?.id, model?.username, model?.videoUrl, model?.name, place, isMale]);
+
+  let safeModelVideoUrl = model?.videoUrl;
+  if (isMale && safeModelVideoUrl) {
+    const femaleGlobal = typeof window !== 'undefined' ? localStorage.getItem('coll_custom_ranking_video') : null;
+    const femaleAdriana = typeof window !== 'undefined' ? localStorage.getItem('custom_model_video_adrianalima') : null;
+    if (
+      (femaleGlobal && safeModelVideoUrl === femaleGlobal) ||
+      (femaleAdriana && safeModelVideoUrl === femaleAdriana) ||
+      safeModelVideoUrl.toLowerCase().includes('adrianalima')
+    ) {
+      safeModelVideoUrl = undefined;
+    }
+  }
+
+  const videoSrc = customVideo || safeModelVideoUrl || (isMale 
     ? PRESET_MALE_VIDEOS[defaultVideoIndex % PRESET_MALE_VIDEOS.length] 
     : PRESET_FEMALE_VIDEOS[defaultVideoIndex % PRESET_FEMALE_VIDEOS.length]);
+
+  useEffect(() => {
+    setVideoError(false);
+  }, [videoSrc]);
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -1186,35 +1277,38 @@ function PodiumModelMedia({
   };
 
   return (
-    <div className={`${widthClass} ${heightClass} rounded-t-full overflow-hidden border-[1px] ${borderColorClass} shadow-xl bg-slate-950 p-0 relative z-10 group/podium-media`}>
-      <div className="w-full h-full rounded-t-full overflow-hidden relative bg-slate-900">
+    <div className={`${widthClass} ${heightClass} ${roundedClass} overflow-hidden border-[1px] ${borderColorClass} shadow-xl bg-slate-950 p-0 relative z-10 group/podium-media`}>
+      <div className={`w-full h-full ${roundedClass} overflow-hidden relative bg-slate-900`}>
         {!videoError ? (
           <video
             ref={videoRef}
+            key={videoSrc}
             src={videoSrc}
             autoPlay
             loop
             muted={isMuted}
             playsInline
             onError={() => setVideoError(true)}
-            className="w-full h-full object-cover group-hover/podium-media:scale-108 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover/podium-media:scale-105 transition-transform duration-500"
           />
         ) : (
           <img
             src={model?.avatar}
             alt={model?.name || 'Modelo'}
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover group-hover/podium-media:scale-108 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover/podium-media:scale-105 transition-transform duration-500"
           />
         )}
 
-        {/* 🟢 EN LÍNEA badge overlay top center (centered on the arch) */}
-        <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 z-25 pointer-events-none">
-          <span className="bg-emerald-600/95 text-white font-sans font-black text-[7.5px] sm:text-[8.5px] px-2.5 py-0.5 rounded-md tracking-wider animate-pulse shadow-md border border-white/40 backdrop-blur-xs flex items-center gap-1 whitespace-nowrap">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-            EN LÍNEA
-          </span>
-        </div>
+        {/* 🟢 EN LÍNEA badge overlay top center */}
+        {!hideBadges && (
+          <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 z-25 pointer-events-none">
+            <span className="bg-emerald-600/95 text-white font-sans font-black text-[7.5px] sm:text-[8.5px] px-2.5 py-0.5 rounded-md tracking-wider animate-pulse shadow-md border border-white/40 backdrop-blur-xs flex items-center gap-1 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+              EN LÍNEA
+            </span>
+          </div>
+        )}
 
         {/* Highlight glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
@@ -1244,6 +1338,7 @@ interface VictoriaSecretRankingProps {
   models: ModelProfile[];
   onSelectModel?: (model: ModelProfile) => void;
   onNavigateToStore?: (storeId: string) => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export default function VictoriaSecretRanking({
@@ -1252,6 +1347,7 @@ export default function VictoriaSecretRanking({
   models,
   onSelectModel,
   onNavigateToStore,
+  onNavigateToTab,
 }: VictoriaSecretRankingProps) {
   const [activeTab, setActiveTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>('ranking');
   const [rankingSearchQuery, setRankingSearchQuery] = useState('');
@@ -1892,6 +1988,9 @@ export default function VictoriaSecretRanking({
   // Pick a legendary model: search for Adriana Lima (who is #1) or fallback to first place
   const legendModel = models.find(m => m.name.toLowerCase().includes('lima')) || firstPlace;
 
+  // Estado para elevar la tarjeta del podio (Candice Swanepoel o Alessandra Ambrosio) por encima de Adriana Lima al hacer clic o hover
+  const [elevatedPodiumPlace, setElevatedPodiumPlace] = useState<number | null>(null);
+
   // Master sorted list of exactly 100 items (Hooks declared at the top before any early return)
   const masterSortedRanking = React.useMemo(() => {
     const list = [...models].sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0));
@@ -1976,391 +2075,418 @@ export default function VictoriaSecretRanking({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-start justify-center bg-[#fdf2f8]/70 backdrop-blur-xl overflow-y-auto p-0 sm:px-2 md:px-4 pt-0 animate-fade-in font-sans">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[#fdf2f8]/80 backdrop-blur-xl overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in font-sans">
       
-      {/* Glamorous High-Fashion Backdrop Simulation with Soft Pink Curtains and Spotlight */}
-      <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(253,242,248,0.73)_0%,rgba(252,231,243,0.92)_100%) pointer-events-none" />
+      {/* Glamorous Luxury Backdrop with soft pink satin ribbons and lighting matching image.png */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#fff7f9] via-[#fff0f4] to-white pointer-events-none" />
       
-      {/* Decorative vertical theater drapery columns on sides - matching zx.png perfectly */}
-      <div className="absolute top-0 bottom-0 left-0 w-3 sm:w-8 md:w-12 lg:w-16 bg-gradient-to-r from-[#880e4f] via-[#ec4899] to-[#fbcfe8] border-r-2 border-[#f472b6] opacity-95 shadow-[8px_0_20px_rgba(0,0,0,0.18)] pointer-events-none z-0">
-        <div className="w-full h-full opacity-30 bg-[linear-gradient(90deg,transparent_40%,rgba(255,255,255,0.3)_50%,transparent_60%)] bg-[size:16px_100%] animate-pulse" style={{ animationDuration: '8s' }} />
-      </div>
-      <div className="absolute top-0 bottom-0 right-0 w-3 sm:w-8 md:w-12 lg:w-16 bg-gradient-to-l from-[#880e4f] via-[#ec4899] to-[#fbcfe8] border-l-2 border-[#f472b6] opacity-95 shadow-[-8px_0_20px_rgba(0,0,0,0.18)] pointer-events-none z-0">
-        <div className="w-full h-full opacity-30 bg-[linear-gradient(90deg,transparent_40%,rgba(255,255,255,0.3)_50%,transparent_60%)] bg-[size:16px_100%] animate-pulse" style={{ animationDuration: '8s' }} />
-      </div>
+      {/* Decorative diagonal silk ribbon overlays matching image.png */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-gradient-to-br from-pink-300/40 via-rose-300/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-gradient-to-tl from-pink-300/40 via-rose-300/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      
+      {/* Diagonal satin ribbons as seen in image.png */}
+      <div className="absolute top-1/4 -left-20 w-[600px] h-32 bg-gradient-to-r from-pink-400/20 via-pink-300/40 to-transparent rotate-[-25deg] pointer-events-none blur-sm" />
+      <div className="absolute top-1/3 -right-20 w-[600px] h-32 bg-gradient-to-l from-pink-400/20 via-pink-300/40 to-transparent rotate-[-25deg] pointer-events-none blur-sm" />
 
-      {/* Main Glassmorphic Panel (Extremely Clear, Premium, Glossy and Clean Design) */}
-      <div className="bg-white/95 border border-white/60 rounded-t-none rounded-b-[32px] w-full max-w-[1400px] overflow-hidden shadow-[0_20px_60px_rgba(219,39,119,0.15)] relative text-slate-800 mt-0 mb-4 md:mb-8 flex flex-col max-h-none md:max-h-[100vh] animate-scale-up">
+      {/* Main Container */}
+      <div className="bg-white/95 border border-pink-100/80 rounded-[36px] w-full max-w-[1280px] overflow-hidden shadow-[0_25px_80px_rgba(219,39,119,0.18)] relative text-slate-800 my-auto flex flex-col max-h-[96vh] animate-scale-up">
         
-        {/* Soft luxury top runway light stripe */}
-        <div className="h-1.5 bg-gradient-to-r from-pink-300 via-rose-400 to-pink-350 w-full" />
+        {/* Close Button top-right */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/80 hover:bg-pink-100 border border-pink-200 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+          title="Cerrar ranking"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-        {/* 🎀 TOP HEADER IN THE EXACT LAYOUT FROM THE ATTACHED DESIGN MOCKUP */}
-        <div className="px-6 py-4 flex flex-col sm:flex-row justify-between items-center bg-white/70 border-b border-pink-100/50 relative z-10 gap-4 sm:gap-2">
+        {/* Scrollable container */}
+        <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto no-scrollbar relative z-10">
           
-          {/* Brand Logo Replacement: Fashion Finances instead of Victoria's Secret */}
-          <div className="flex items-center gap-2 select-none hover:opacity-90 transition">
-            <FashionsFinanceLogo className="w-8 h-8" mode="light" withText={true} inlineText={true} textClassName="text-pink-900" subTextClassName="text-pink-500" />
-          </div>
-
-          {/* Middle Navigation options exactly as listed in the mockup with Boutique button added */}
-          <div className="flex items-center gap-2 sm:gap-4 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-slate-500 flex-wrap justify-center">
-            <button 
-              onClick={() => setActiveTab('ranking')}
-              className={`px-3 py-1.5 border transition-all duration-300 cursor-pointer ${
-                activeTab === 'ranking' 
-                  ? 'border-pink-600 bg-pink-50 text-pink-600 font-black shadow-xs' 
-                  : 'border-slate-300 hover:border-pink-400 hover:text-pink-600 text-slate-700 bg-white/60'
-              }`}
-              id="tab-ranking-nav"
-            >
-              RANKING
-            </button>
-            <button 
-              onClick={() => setActiveTab('premios')}
-              className={`px-3 py-1.5 border transition-all duration-300 cursor-pointer ${
-                activeTab === 'premios' 
-                  ? 'border-pink-600 bg-pink-50 text-pink-600 font-black shadow-xs' 
-                  : 'border-slate-300 hover:border-pink-400 hover:text-pink-600 text-slate-700 bg-white/60'
-              }`}
-              id="tab-premios-nav"
-            >
-              PREMIOS
-            </button>
-            <button 
-              onClick={() => setActiveTab('hall_of_fame')}
-              className={`px-3 py-1.5 border transition-all duration-300 cursor-pointer ${
-                activeTab === 'hall_of_fame' 
-                  ? 'border-pink-600 bg-pink-50 text-pink-600 font-black shadow-xs' 
-                  : 'border-slate-300 hover:border-pink-400 hover:text-pink-600 text-slate-700 bg-white/60'
-              }`}
-              id="tab-hall-nav"
-            >
-              HALL OF FAME
-            </button>
-            <button 
-              onClick={() => setActiveTab('regalos')}
-              className={`px-3 py-1.5 border transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'regalos' 
-                  ? 'border-pink-600 bg-pink-50 text-pink-600 font-black shadow-xs' 
-                  : 'border-slate-300 hover:border-pink-400 hover:text-pink-600 text-slate-700 bg-white/60'
-              }`}
-              id="tab-regalos-nav"
-            >
-              <Gift className="w-3.5 h-3.5" />
-              REGALOS
-            </button>
-          </div>
-
-          {/* Classic luxury Back pill button on the right */}
-          <button
-            onClick={onClose}
-            className="bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 font-extrabold text-[10px] md:text-xs px-5 py-2.5 rounded-full transition-all duration-300 border border-pink-100 shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1 shrink-0"
-          >
-            <span>‹</span> VOLVER
-          </button>
-        </div>
-
-        {/* Scrollable Center Runway Container */}
-        <div className="p-4 sm:p-8 md:p-10 space-y-8 relative z-10 overflow-y-auto">
-          
-          {/* Render Active Tab Content */}
+          {activeTab !== 'ranking' && (
+            <div className="flex items-center justify-between pb-2 border-b border-pink-100">
+              <button
+                onClick={() => setActiveTab('ranking')}
+                className="bg-white hover:bg-pink-50 text-slate-700 hover:text-pink-600 font-extrabold text-xs px-4 py-2 rounded-full border border-pink-200 shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition"
+              >
+                <span>‹</span> VOLVER AL RANKING
+              </button>
+            </div>
+          )}
 
           {activeTab === 'ranking' && (
             <>
-              {/* ✨ MAIN PRESTIGE TITLE CONTAINER WITH HIGH-FASHION TYPOGRAPHY */}
-              <div className="text-center space-y-2 relative">
-                <h2 className="text-2xl font-light tracking-[0.35em] text-pink-900/90 uppercase font-serif">
-                  THE ANGELS
-                </h2>
-                <h1 className="text-4xl md:text-5xl font-black tracking-widest uppercase leading-none text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-500 to-amber-700 font-serif filter drop-shadow-xs">
-                  RANKING
-                </h1>
-                <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.32em] font-mono">
-                  LAS MODELOS MÁS ADMIRADAS EN TIEMPO REAL
-                </p>
-                
-                {/* Little pink updated badge */}
-                <div className="inline-block mt-3 bg-pink-100/60 border border-pink-200/40 text-[9px] font-bold text-pink-600 uppercase tracking-widest px-3 py-1 rounded-full">
-                  ✨ ACTUALIZADO CADA 60 SEGUNDOS
+              {/* 🌟 1. TOP HEADER: FASHION FINANCES (LEFT) & BEAUTY CREATES OPPORTUNITIES (RIGHT) */}
+              <div className="w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 pt-2 pb-6 sm:pb-8 px-2 select-none">
+                {/* Left Brand: FASHION FINANCES with 3D Golden Diamond */}
+                <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+                  <div className="flex items-center gap-1.5 text-amber-500 mb-0.5">
+                    <svg className="w-10 h-8 drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)]" viewBox="0 0 40 32" fill="none">
+                      <path d="M12 2L2 12L20 30L38 12L28 2H12Z" fill="url(#goldHeaderDia)" stroke="#d97706" strokeWidth="1.2" strokeLinejoin="round" />
+                      <path d="M12 2L20 12L28 2" stroke="#fef08a" strokeWidth="1.2" />
+                      <path d="M2 12H38" stroke="#fef08a" strokeWidth="1.2" />
+                      <path d="M20 12L20 30" stroke="#fef08a" strokeWidth="1.2" />
+                      <path d="M12 2L20 30L28 2" stroke="#b45309" strokeWidth="0.8" opacity="0.6" />
+                      <defs>
+                        <linearGradient id="goldHeaderDia" x1="0" y1="0" x2="40" y2="32" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="#fef08a" />
+                          <stop offset="0.4" stopColor="#f59e0b" />
+                          <stop offset="1" stopColor="#92400e" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-serif font-black tracking-[0.22em] text-slate-900 uppercase leading-none">
+                    FASHION
+                  </h1>
+                  <div className="flex items-center gap-2 my-1.5 w-full max-w-[210px]">
+                    <span className="h-[1px] flex-1 bg-slate-300" />
+                    <span className="text-[11px] sm:text-xs font-serif font-bold tracking-[0.35em] text-slate-800 uppercase">
+                      FINANCES
+                    </span>
+                    <span className="h-[1px] flex-1 bg-slate-300" />
+                  </div>
+                  <span className="text-[9px] font-sans font-bold tracking-[0.3em] text-[#b45309] uppercase">
+                    MODELS × FASHION × FINANCE
+                  </span>
+                </div>
+
+                {/* Right Slogan: BEAUTY CREATES OPPORTUNITIES */}
+                <div className="flex flex-col items-center sm:items-end text-center sm:text-right pt-0.5">
+                  <span className="font-serif italic text-4xl sm:text-5xl font-bold text-[#e11d48] tracking-tight leading-none drop-shadow-xs">
+                    Beauty
+                  </span>
+                  <span className="text-[9.5px] font-sans font-black tracking-[0.3em] text-slate-900 uppercase leading-tight mt-1">
+                    CREATES
+                  </span>
+                  <div className="relative inline-block mt-0.5">
+                    <span className="text-base sm:text-lg font-sans font-bold tracking-[0.18em] text-[#e11d48] uppercase leading-none block">
+                      OPPORTUNITIES
+                    </span>
+                    <div className="w-36 sm:w-40 h-[1.5px] bg-gradient-to-r from-transparent via-[#d97706] to-[#b45309] mt-1 ml-auto rounded-full" />
+                  </div>
                 </div>
               </div>
 
-              {/* 📢 PRESTIGE CONTEST RULES EXPLANATION */}
-              <div className="bg-gradient-to-r from-pink-50/80 to-amber-50/40 border-2 border-pink-100/60 rounded-2xl p-4 sm:p-5 text-slate-700 text-xs md:text-sm leading-relaxed shadow-xs max-w-5xl mx-auto flex items-start gap-3.5 text-left">
-                <div className="bg-pink-100 p-2.5 rounded-xl shrink-0 text-pink-600">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <strong className="text-pink-950 font-black block text-xs md:text-sm uppercase tracking-wider font-display">💡 ¿En qué consiste este prestigioso concurso?</strong>
-                  <p className="text-slate-600 text-[11px] leading-relaxed">
-                    El modelo que más <strong>Likes</strong> acumule en las fotos de su perfil y en sus vídeos será coronado como la número 1. Si logras posicionarte entre las 100 afortunadas de esta pasarela estelar, podrás <strong>ganar el patrocinio de un gran grupo de inversores</strong> en nuestras mesas.
-                  </p>
-                </div>
-              </div>
-
-              {/* 🏆 THE COUTURE PODIUM GRID (Exact 2, 1, 3 visual architecture from mockup) */}
-              {firstPlace ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 items-end max-w-5xl mx-auto pt-6 px-2">
+              {/* 🏆 THE COUTURE PODIUM (Exact Match to image.png with generous breathing room) */}
+              {firstPlace && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5 items-end max-w-5xl mx-auto pt-28 sm:pt-40 md:pt-48 pb-4 px-2 mt-6 sm:mt-10">
                   
-                  {/* RANKING #2 : MODELO ORO (ELITE ORO) - LEFT BAR */}
+                  {/* RANKING #2 : ALESSANDRA AMBROSIO (LEFT) */}
                   {secondPlace && (
-                    <div className="flex flex-col items-center order-2 md:order-1 group transition-transform duration-500 hover:-translate-y-1 relative">
+                    <div 
+                      onClick={() => setElevatedPodiumPlace(prev => prev === 2 ? null : 2)}
+                      onMouseEnter={() => setElevatedPodiumPlace(2)}
+                      onMouseLeave={() => setElevatedPodiumPlace(prev => prev === 2 ? null : prev)}
+                      className={`flex flex-col items-center order-2 md:order-1 group transition-all duration-300 relative cursor-pointer ${
+                        elevatedPodiumPlace === 2 ? 'z-50' : 'z-10 hover:z-50'
+                      }`}
+                    >
                       
-                      {/* Decorative Arch Portrait representation */}
-                      <div className="relative mb-4 flex flex-col items-center">
-                        
-                        {/* Smooth pink studio semicircles peeking from behind the arch */}
-                        <div className="absolute w-36 sm:w-44 h-22 sm:h-26 -left-3 top-[28%] bg-[#FD7CBB]/75 rounded-full pointer-events-none z-0 shadow-sm" />
-                        <div className="absolute w-36 sm:w-44 h-22 sm:h-26 -right-3 top-[28%] bg-[#FD7CBB]/75 rounded-full pointer-events-none z-0 shadow-sm" />
+                      {/* Photo / Video Card Container */}
+                      <div 
+                        className={`w-64 sm:w-72 h-[350px] sm:h-[380px] rounded-[30px] overflow-hidden border-2 shadow-xl bg-slate-950 relative group/card transition-all duration-300 ${
+                          elevatedPodiumPlace === 2 
+                            ? 'z-50 scale-105 border-pink-400 shadow-[0_25px_60px_rgba(219,39,119,0.5)] translate-x-3 sm:translate-x-5' 
+                            : 'z-10 hover:z-50 hover:scale-105 hover:border-pink-400 hover:shadow-[0_25px_60px_rgba(219,39,119,0.5)] hover:translate-x-3 sm:hover:translate-x-5 border-white/90'
+                        }`}
+                      >
+                        {/* Top-left pill: EN LÍNEA */}
+                        <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                          <span>EN LÍNEA</span>
+                        </div>
 
-                        {/* Highly Polished Arched Frame Overlay with 1px border and live video */}
+                        {/* Top-right heart button */}
+                        <button 
+                          type="button"
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute top-3 right-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 border border-white/40 shadow-md backdrop-blur-md transition cursor-pointer"
+                          title="Me gusta"
+                        >
+                          <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                        </button>
+
+                        {/* Media component */}
                         <PodiumModelMedia
                           model={secondPlace}
                           place={2}
-                          widthClass="w-32 sm:w-36 md:w-40"
-                          heightClass="h-44 sm:h-50 md:h-54"
-                          borderColorClass="border-[#FBBFCE]"
+                          widthClass="w-full"
+                          heightClass="h-full"
+                          borderColorClass="border-transparent"
                           defaultVideoIndex={1}
+                          roundedClass="rounded-[30px]"
+                          hideBadges={true}
                         />
 
-                        {/* White Name badge overlaying bottom boundary exactly as in zx.png */}
-                        <div className="absolute bottom-1 z-20 bg-white border border-slate-200 rounded-md px-3.5 py-1.5 shadow-md text-center min-w-[75%]">
-                          <span className="text-[10px] font-mono font-black text-slate-800 tracking-widest uppercase block leading-none">
-                            {secondPlace.name.split(' ')[0]}
-                          </span>
+                        {/* Bottom overlay over photo */}
+                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/75 to-transparent pt-12 pb-4 px-4 text-left">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-white font-serif font-bold text-base leading-tight">
+                                Alessandra
+                              </h4>
+                              <h4 className="text-white font-serif font-bold text-base leading-tight">
+                                Ambrosio
+                              </h4>
+                            </div>
+                            <span className="text-white/80 text-xl font-light">☆</span>
+                          </div>
+                          <div className="text-white/90 font-medium text-[11px] sm:text-xs flex items-center gap-1 mt-1">
+                            <span className="text-[#ec4899]">💖</span> 14.682 votos
+                          </div>
                         </div>
                       </div>
 
-                      {/* Votos and Name block */}
-                      <div className="text-center space-y-0.5 w-full z-15 pt-0.5 px-1 mb-2">
-                        <h4 className="text-[12px] sm:text-sm font-bold text-slate-900 tracking-wide truncate">
-                          {secondPlace.name}
-                        </h4>
-                        <div className="inline-flex items-center gap-0.5 text-[#E12A75] text-[11px] font-bold">
-                          <strong>♥ {(secondPlace.totalLikes || 14717).toLocaleString()} votos</strong>
-                        </div>
-                      </div>
-
-                      {/* White Pedestal Column 2 - matching zx.png perfectly */}
-                      <div className="w-full bg-white border border-pink-100 rounded-xl shadow-xs p-4 flex flex-col items-center justify-center relative min-h-[140px]">
-                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pink-400 to-rose-450 rounded-t-xl" />
-                        
-                        {/* Upper label of Pedestal */}
-                        <span className="text-[9.5px] font-bold uppercase tracking-widest text-[#B93259] mb-1 font-sans">
-                          MODELO ORO
+                      {/* White Pedestal Column 2 */}
+                      <div className="w-full max-w-[270px] bg-white border border-pink-100 rounded-[26px] shadow-lg p-5 flex flex-col items-center justify-center text-center mt-3.5">
+                        <span className="text-[#b45309] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-1.5 font-sans mb-1">
+                          👑 MODELO ORO
                         </span>
-                        
-                        <span className="font-serif font-bold text-4xl text-[#E12A75] my-1 leading-none">
+                        <span className="font-serif text-5xl sm:text-6xl font-black text-slate-900 my-0.5 leading-none">
                           2
                         </span>
-                        
-                        <div className="text-[9px] text-[#E12A75] font-semibold uppercase tracking-[0.14em] mt-1.5">
-                          ✦ ANGEL ELITE ✦
+                        <div className="flex items-center justify-center gap-2 text-slate-400 text-[10px] font-medium tracking-[0.2em] uppercase my-1 font-sans">
+                          <span className="w-6 h-[1px] bg-slate-300" />
+                          <span>ANGEL ELITE</span>
+                          <span className="w-6 h-[1px] bg-slate-300" />
                         </div>
-
                         <button
                           onClick={() => onSelectModel && onSelectModel(secondPlace)}
-                          className="text-[10px] text-[#E12A75] hover:text-pink-800 font-bold underline bg-transparent cursor-pointer border-0 mt-3.5 z-20"
+                          className="border border-[#f472b6] hover:border-pink-500 text-slate-800 rounded-full py-2 px-7 text-xs font-bold uppercase tracking-wider hover:bg-pink-50/70 transition-all shadow-xs mt-3 cursor-pointer inline-flex items-center gap-1.5"
                         >
-                          Ver Ficha
+                          VER FICHA <span>›</span>
                         </button>
                       </div>
-
-
 
                     </div>
                   )}
 
-                  {/* RANKING #1 : MODELO DIAMANTE (DIAMOND ANGEL) - TALL CENTER COLUMN */}
+                  {/* RANKING #1 : ADRIANA LIMA (CENTER - DIAMOND CHAMPION) */}
                   {firstPlace && (
-                    <div className="flex flex-col items-center order-1 md:order-2 group z-20 transition-transform duration-500 hover:-translate-y-2 relative">
+                    <div 
+                      onClick={() => setElevatedPodiumPlace(1)}
+                      className={`flex flex-col items-center order-1 md:order-2 group transition-all duration-300 hover:-translate-y-2 relative ${
+                        elevatedPodiumPlace === 3 || elevatedPodiumPlace === 2 ? 'z-20' : 'z-30'
+                      }`}
+                    >
                       
-                      {/* Glowing halo behind champion */}
-                      <div className="absolute inset-0 -top-12 bg-pink-300/10 rounded-full blur-3xl scale-125 animate-pulse" />
-
-                      {/* Decorative Arch Portrait representation */}
-                      <div className="relative mb-4 flex flex-col items-center">
+                      {/* Photo / Video Card Container with Golden Frame & Royal Tiara from z.png */}
+                      <div className="relative mb-2 flex flex-col items-center">
                         
-                        {/* Elegant Crown hovered closely above image frame without touching */}
-                        <div className="absolute -top-11 sm:-top-13 z-30 transition duration-500 group-hover:scale-105 pointer-events-none">
-                          {firstPlace?.gender === 'male' ? (
-                            <RoyalMaleCrown 
-                              imgClassName="w-26 sm:w-30 h-auto"
-                              showSparkles={true}
-                            />
-                          ) : (
-                            <RoyalFemaleCrown 
-                              imgClassName="w-26 sm:w-30 h-auto"
-                              showSparkles={true}
-                            />
-                          )}
+                        {/* Corona Real Femenina de Diamantes y Rubíes (Separada con espacio flotante del marco amarillo) */}
+                        <div 
+                          style={{ bottom: 'calc(100% + 22px)' }}
+                          className="absolute left-1/2 -translate-x-1/2 z-40 transition duration-500 group-hover:scale-105 pointer-events-none drop-shadow-[0_12px_28px_rgba(225,29,72,0.35)]"
+                        >
+                          <RoyalFemaleCrown 
+                            imgClassName="w-36 sm:w-44 md:w-48 h-auto"
+                          />
                         </div>
 
-                        {/* Large pink butterfly studio wings peeking from behind the arch */}
-                        <div className="absolute w-44 sm:w-56 h-26 sm:h-32 -left-4 top-[24%] bg-[#FD4CA2]/85 rounded-full pointer-events-none z-0 shadow-md animate-pulse" style={{ animationDuration: '4s' }} />
-                        <div className="absolute w-44 sm:w-56 h-26 sm:h-32 -right-4 top-[24%] bg-[#FD4CA2]/85 rounded-full pointer-events-none z-0 shadow-md animate-pulse" style={{ animationDuration: '4s' }} />
+                        {/* Golden Metallic Double-Frame Container */}
+                        <div className="w-72 sm:w-80 md:w-[310px] h-[390px] sm:h-[430px] rounded-[34px] p-1 bg-gradient-to-b from-[#fef08a] via-[#f59e0b] to-[#b45309] shadow-[0_0_40px_rgba(245,158,11,0.55)] relative z-30">
+                          <div className="w-full h-full rounded-[30px] overflow-hidden bg-black relative border-2 border-amber-300 flex flex-col justify-between">
+                            
+                            {/* Top-left pill: EN LÍNEA */}
+                            <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                              <span>EN LÍNEA</span>
+                            </div>
 
-                        {/* Highly Polished Arched Frame Overlay with 1px border and live video */}
-                        <PodiumModelMedia
-                          model={firstPlace}
-                          place={1}
-                          widthClass="w-36 sm:w-44 md:w-48"
-                          heightClass="h-48 sm:h-58 md:h-64"
-                          borderColorClass="border-[#3c1d1a]"
-                          defaultVideoIndex={0}
-                        />
+                            {/* Top-right heart button */}
+                            <button 
+                              type="button"
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute top-3 right-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 border border-white/40 shadow-md backdrop-blur-md transition cursor-pointer"
+                              title="Me gusta"
+                            >
+                              <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                            </button>
 
-                        {/* Golden yellow name tag badge exactly as in zx.png */}
-                        <div className="absolute bottom-1 z-20 bg-[#FCB115] border border-amber-500 rounded-md px-5 py-2 shadow-md text-center min-w-[75%]">
-                          <span className="text-[11px] font-mono font-black text-slate-950 tracking-wider uppercase block leading-none">
-                            {firstPlace.name.split(' ')[0]}
-                          </span>
+                            {/* Media component */}
+                            <PodiumModelMedia
+                              model={firstPlace}
+                              place={1}
+                              widthClass="w-full"
+                              heightClass="h-full"
+                              borderColorClass="border-transparent"
+                              defaultVideoIndex={0}
+                              roundedClass="rounded-[30px]"
+                              hideBadges={true}
+                            />
+
+                            {/* Bottom overlay inside card: Contoured arched banner with pink diamond at apex */}
+                            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center pb-3 pt-8 bg-gradient-to-t from-black via-black/85 to-transparent">
+                              {/* Pink diamond apex badge */}
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#ec4899] via-[#f43f5e] to-[#ec4899] border border-white p-1 flex items-center justify-center shadow-lg -mb-3 z-30">
+                                <span className="text-[12px] leading-none text-white">💎</span>
+                              </div>
+
+                              {/* Curved banner */}
+                              <div className="w-[92%] bg-gradient-to-b from-[#181512]/90 to-black/95 rounded-t-2xl pt-4 pb-2 px-4 border-t border-pink-400/50 text-center">
+                                <div className="text-white font-serif font-bold text-base sm:text-lg flex items-center justify-center gap-1.5">
+                                  <span>Adriana Lima</span>
+                                  <span className="text-amber-400 text-sm">★</span>
+                                </div>
+                                <div className="text-white/95 font-medium text-xs flex items-center justify-center gap-1.5 mt-1">
+                                  <span className="text-[#ec4899]">💖</span> 99.999 votos
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
                         </div>
+
                       </div>
 
-                      {/* Votos and Name block */}
-                      <div className="text-center space-y-0.5 w-full z-15 pt-0.5 px-1 mb-2">
-                        <div className="flex justify-center items-center gap-1">
-                          <h4 className="text-sm sm:text-base font-bold text-slate-900 tracking-wide">
-                            {firstPlace.name}
-                          </h4>
-                          <span className="text-base leading-none text-amber-500">★</span>
+                      {/* Pedestal Column 1: Rounded card with golden metallic border */}
+                      <div className="w-full max-w-[310px] bg-gradient-to-b from-[#181512] via-[#111113] to-black border-2 border-amber-400 rounded-[28px] p-5 flex flex-col items-center justify-center text-center shadow-2xl ring-1 ring-amber-300/40 relative mt-3.5 z-20 overflow-hidden box-border">
+                        <div className="flex items-center justify-center gap-2 text-amber-300 font-sans font-bold text-[10.5px] uppercase tracking-[0.25em] drop-shadow-sm mb-1">
+                          <span className="w-5 h-[1px] bg-amber-400/60" />
+                          <span>MODELO DIAMANTE</span>
+                          <span className="w-5 h-[1px] bg-amber-400/60" />
                         </div>
-                        <div className="inline-flex items-center gap-0.5 text-[#E12A75] text-[11px] font-mono font-bold">
-                          <strong>♥ {(firstPlace.totalLikes || 14926).toLocaleString()} votos</strong>
-                        </div>
-                      </div>
 
-                      {/* Luxury Dark & Gold Pedestal Column 1 (Matching image.png) */}
-                      <div className="w-full bg-[#181512] border border-[#d4af37]/70 rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.65)] p-5 flex flex-col items-center justify-center relative min-h-[175px] transition-all hover:border-[#f3d078]">
-                        {/* Subtle inner golden glow */}
-                        <div className="absolute inset-0 bg-radial from-[#d4af37]/10 via-transparent to-transparent rounded-2xl pointer-events-none" />
-
-                        {/* Upper label of Pedestal */}
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5c583] mb-1 font-sans drop-shadow-sm">
-                          MODELO DIAMANTE
-                        </span>
-                        
-                        {/* Laurel Wreath & Number 1 */}
-                        <div className="relative flex items-center justify-center my-0.5 py-0.5">
-                          {/* Left Laurel Branch */}
+                        {/* Laurel Wreath & Number 1 flanked with diamonds */}
+                        <div className="flex items-center justify-center my-1 relative">
+                          <span className="text-sm text-amber-300 absolute left-8 top-3">💎</span>
+                          
+                          {/* Left Laurel */}
                           <svg className="w-9 h-14 sm:w-11 sm:h-16 text-[#dfb152] drop-shadow-[0_2px_6px_rgba(223,177,82,0.4)]" viewBox="0 0 45 75" fill="currentColor">
                             <path d="M38 70 C24 60, 14 42, 16 12 C18 22, 26 30, 32 34 C22 36, 16 44, 20 54 C26 58, 32 60, 38 70 Z" opacity="0.35" />
-                            {/* Leaves */}
                             <path d="M 36,65 C 28,56 20,44 20,28 C 20,18 25,10 32,3 C 27,8 14,20 16,34 C 17,46 25,57 36,65 Z" />
                             <path d="M26,18 C18,15 11,20 9,27 C14,29 23,25 26,18 Z" />
                             <path d="M22,32 C14,31 8,37 7,44 C13,45 21,40 22,32 Z" />
                             <path d="M25,48 C18,49 13,56 13,62 C19,62 25,56 25,48 Z" />
                             <path d="M31,9 C25,5 18,7 15,13 C20,15 28,13 31,9 Z" />
                           </svg>
-                          
-                          <span className="font-serif font-black text-5xl sm:text-6xl text-[#ff3888] leading-none px-1 relative z-10 drop-shadow-[0_2px_14px_rgba(255,56,136,0.4)]">
+
+                          <span className="font-serif font-black text-6xl text-amber-200 leading-none px-2 relative z-10 drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]">
                             1
                           </span>
 
-                          {/* Right Laurel Branch (Mirrored) */}
+                          {/* Right Laurel */}
                           <svg className="w-9 h-14 sm:w-11 sm:h-16 text-[#dfb152] drop-shadow-[0_2px_6px_rgba(223,177,82,0.4)] -scale-x-100" viewBox="0 0 45 75" fill="currentColor">
                             <path d="M38 70 C24 60, 14 42, 16 12 C18 22, 26 30, 32 34 C22 36, 16 44, 20 54 C26 58, 32 60, 38 70 Z" opacity="0.35" />
-                            {/* Leaves */}
                             <path d="M 36,65 C 28,56 20,44 20,28 C 20,18 25,10 32,3 C 27,8 14,20 16,34 C 17,46 25,57 36,65 Z" />
                             <path d="M26,18 C18,15 11,20 9,27 C14,29 23,25 26,18 Z" />
                             <path d="M22,32 C14,31 8,37 7,44 C13,45 21,40 22,32 Z" />
                             <path d="M25,48 C18,49 13,56 13,62 C19,62 25,56 25,48 Z" />
                             <path d="M31,9 C25,5 18,7 15,13 C20,15 28,13 31,9 Z" />
                           </svg>
-                        </div>
-                        
-                        <div className="text-[10px] text-[#ff3888] font-bold uppercase tracking-[0.2em] my-1 flex items-center justify-center gap-1.5">
-                          <span className="text-xs">✦</span> DIAMOND ANGEL <span className="text-xs">✦</span>
+
+                          <span className="text-sm text-amber-300 absolute right-8 top-3">💎</span>
                         </div>
 
-                        <button
-                          onClick={() => onSelectModel && onSelectModel(firstPlace)}
-                          className="w-full max-w-[190px] text-[11px] sm:text-[12px] text-[#1a140b] bg-gradient-to-b from-[#f7d988] via-[#e5bc5c] to-[#c8942b] hover:from-[#fae09c] hover:to-[#d6a237] font-black uppercase tracking-wider py-2.5 px-5 rounded-xl cursor-pointer border border-[#fce7a8]/60 mt-3 transition-all hover:scale-105 shadow-[0_4px_16px_rgba(212,175,55,0.45)] active:scale-95"
-                        >
-                          SUPERESTRELLA
-                        </button>
+                        <div className="text-amber-100/90 font-mono text-[10px] uppercase tracking-[0.28em] font-bold my-1">
+                          DIAMOND ANGEL
+                        </div>
+
+                        {/* Hot Pink / Magenta Pill Button: SUPERESTRELLA > (perfectamente centrado y dentro del marco) */}
+                        <div className="w-full flex justify-center mt-3.5">
+                          <button
+                            onClick={() => onSelectModel && onSelectModel(firstPlace)}
+                            className="w-full max-w-[220px] bg-gradient-to-r from-[#d946ef] via-[#e11d48] to-[#f43f5e] hover:brightness-110 text-white font-extrabold text-xs uppercase tracking-wider py-2.5 px-4 rounded-full shadow-lg shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-white/30"
+                          >
+                            <span>SUPERESTRELLA</span>
+                            <span className="text-sm leading-none font-bold">›</span>
+                          </button>
+                        </div>
                       </div>
-
-
 
                     </div>
                   )}
 
-                  {/* RANKING #3 : MODELO PLATINO (RUNWAY QUEEN) - RIGHT BAR */}
+                  {/* RANKING #3 : CANDICE SWANEPOEL (RIGHT) */}
                   {thirdPlace && (
-                    <div className="flex flex-col items-center order-3 group transition-transform duration-500 hover:-translate-y-1 relative">
-                       
-                      {/* Decorative Arch Portrait representation */}
-                      <div className="relative mb-4 flex flex-col items-center">
-                        
-                        {/* Soft gray-pink smooth studio semicircles peeking from behind the arch */}
-                        <div className="absolute w-34 sm:w-40 h-20 sm:h-24 -left-2.5 top-[28%] bg-[#C3C2C7]/80 rounded-full pointer-events-none z-0 shadow-sm" />
-                        <div className="absolute w-34 sm:w-40 h-20 sm:h-24 -right-2.5 top-[28%] bg-[#C3C2C7]/80 rounded-full pointer-events-none z-0 shadow-sm" />
+                    <div 
+                      onClick={() => setElevatedPodiumPlace(prev => prev === 3 ? null : 3)}
+                      onMouseEnter={() => setElevatedPodiumPlace(3)}
+                      onMouseLeave={() => setElevatedPodiumPlace(prev => prev === 3 ? null : prev)}
+                      className={`flex flex-col items-center order-3 group transition-all duration-300 relative cursor-pointer ${
+                        elevatedPodiumPlace === 3 ? 'z-50' : 'z-10 hover:z-50'
+                      }`}
+                    >
+                      
+                      {/* Photo / Video Card Container */}
+                      <div 
+                        className={`w-64 sm:w-72 h-[350px] sm:h-[380px] rounded-[30px] overflow-hidden border-2 shadow-xl bg-slate-950 relative group/card transition-all duration-300 ${
+                          elevatedPodiumPlace === 3 
+                            ? 'z-50 scale-105 border-pink-400 shadow-[0_25px_60px_rgba(219,39,119,0.5)] -translate-x-3 sm:-translate-x-5' 
+                            : 'z-10 hover:z-50 hover:scale-105 hover:border-pink-400 hover:shadow-[0_25px_60px_rgba(219,39,119,0.5)] hover:-translate-x-3 sm:hover:-translate-x-5 border-white/90'
+                        }`}
+                      >
+                        {/* Top-left pill: EN LÍNEA */}
+                        <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                          <span>EN LÍNEA</span>
+                        </div>
 
-                        {/* Highly Polished Arched Frame Overlay with 1px border and live video */}
+                        {/* Top-right heart button */}
+                        <button 
+                          type="button"
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute top-3 right-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 border border-white/40 shadow-md backdrop-blur-md transition cursor-pointer"
+                          title="Me gusta"
+                        >
+                          <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                        </button>
+
+                        {/* Media component */}
                         <PodiumModelMedia
                           model={thirdPlace}
                           place={3}
-                          widthClass="w-30 sm:w-34 md:w-38"
-                          heightClass="h-42 sm:h-48 md:h-50"
-                          borderColorClass="border-[#B93259]"
+                          widthClass="w-full"
+                          heightClass="h-full"
+                          borderColorClass="border-transparent"
                           defaultVideoIndex={2}
+                          roundedClass="rounded-[30px]"
+                          hideBadges={true}
                         />
 
-                        {/* White Name badge overlaying bottom boundary exactly as in zx.png */}
-                        <div className="absolute bottom-1 z-20 bg-white border border-slate-200 rounded-md px-3.5 py-1.5 shadow-md text-center min-w-[75%]">
-                          <span className="text-[10px] font-mono font-black text-slate-800 tracking-widest uppercase block leading-none">
-                            {thirdPlace.name.split(' ')[0]}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Votos and Name block */}
-                      <div className="text-center space-y-0.5 w-full z-15 pt-0.5 px-1 mb-2">
-                        <h4 className="text-[12px] sm:text-sm font-bold text-slate-900 tracking-wide truncate">
-                          {thirdPlace.name}
-                        </h4>
-                        <div className="inline-flex items-center gap-0.5 text-[#E12A75] text-[11px] font-bold">
-                          <strong>♥ {(thirdPlace.totalLikes || 14415).toLocaleString()} votos</strong>
+                        {/* Bottom overlay over photo */}
+                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/75 to-transparent pt-12 pb-4 px-4 text-left">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-white font-serif font-bold text-base leading-tight">
+                              Candice Swanepoel
+                            </h4>
+                            <span className="text-white/80 text-xl font-light">☆</span>
+                          </div>
+                          <div className="text-white/90 font-medium text-[11px] sm:text-xs flex items-center gap-1 mt-1">
+                            <span className="text-[#ec4899]">💖</span> 14.406 votos
+                          </div>
                         </div>
                       </div>
 
                       {/* White Pedestal Column 3 */}
-                      <div className="w-full bg-white border border-pink-100 rounded-xl shadow-xs p-4 flex flex-col items-center justify-center relative min-h-[140px]">
-                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pink-400 to-rose-400 rounded-t-xl" />
-                        
-                        {/* Upper label of Pedestal */}
-                        <span className="text-[9.5px] font-bold uppercase tracking-widest text-[#B93259] mb-1 font-sans">
-                          MODELO PLATINO
+                      <div className="w-full max-w-[270px] bg-white border border-pink-100 rounded-[26px] shadow-lg p-5 flex flex-col items-center justify-center text-center mt-3.5">
+                        <span className="text-[#e11d48] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-1.5 font-sans mb-1">
+                          👑 MODELO PLATINO
                         </span>
-                        
-                        <span className="font-serif font-bold text-4xl text-[#E12A75] my-1 leading-none">
+                        <span className="font-serif text-5xl sm:text-6xl font-black text-slate-900 my-0.5 leading-none">
                           3
                         </span>
-                        
-                        <div className="text-[9px] text-[#E12A75] font-semibold uppercase tracking-[0.14em] mt-1.5">
-                          ✦ RUNWAY QUEEN ✦
+                        <div className="flex items-center justify-center gap-2 text-slate-400 text-[10px] font-medium tracking-[0.2em] uppercase my-1 font-sans">
+                          <span className="w-6 h-[1px] bg-slate-300" />
+                          <span>RUNWAY QUEEN</span>
+                          <span className="w-6 h-[1px] bg-slate-300" />
                         </div>
-
                         <button
                           onClick={() => onSelectModel && onSelectModel(thirdPlace)}
-                          className="text-[10px] text-[#E12A75] hover:text-pink-800 font-bold underline bg-transparent cursor-pointer border-0 mt-3.5 z-20"
+                          className="border border-[#f472b6] hover:border-pink-500 text-slate-800 rounded-full py-2 px-7 text-xs font-bold uppercase tracking-wider hover:bg-pink-50/70 transition-all shadow-xs mt-3 cursor-pointer inline-flex items-center gap-1.5"
                         >
-                          Ver Ficha
+                          VER FICHA <span>›</span>
                         </button>
                       </div>
-
-
 
                     </div>
                   )}
 
                 </div>
-              ) : (
-                <p className="text-center text-slate-450">No hay modelos registradas disponibles para el ranking.</p>
               )}
+
+
 
               {/* 👑 RECUADRO APARTE - MODELO LEYENDA (Laurel design with exact stats from mockup image) */}
               <div 
@@ -2417,9 +2543,6 @@ export default function VictoriaSecretRanking({
                       <h3 className="text-xl font-serif font-black text-rose-950 group-hover/legend:text-pink-600 transition-colors leading-none">
                         {legendModel?.name || 'Adriana Lima'}
                       </h3>
-                      <span className="text-[9px] font-black uppercase text-pink-600 bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100 opacity-80 group-hover/legend:opacity-100 transition-all">
-                        Ver Tienda ↗
-                      </span>
                     </div>
                     <p className="text-[11px] text-pink-500 font-bold font-mono">
                       @{legendModel?.username || 'adrianalima_w1'}
@@ -2510,10 +2633,6 @@ export default function VictoriaSecretRanking({
                           </span>
                           <span className="text-[9px] text-pink-500 ml-0.5">♥</span>
                         </div>
-                        
-                        <span className="text-[8.5px] font-black uppercase text-pink-600 bg-pink-50 px-2 py-1 rounded-lg border border-pink-100/70 opacity-80 group-hover/second:opacity-100 transition-all">
-                          Ver Tienda ↗
-                        </span>
                       </div>
                     </div>
                   )}
@@ -2567,10 +2686,6 @@ export default function VictoriaSecretRanking({
                           </span>
                           <span className="text-[9px] text-pink-500 ml-0.5">♥</span>
                         </div>
-                        
-                        <span className="text-[8.5px] font-black uppercase text-pink-600 bg-pink-50 px-2 py-1 rounded-lg border border-pink-100/70 opacity-80 group-hover/third:opacity-100 transition-all">
-                          Ver Tienda ↗
-                        </span>
                       </div>
                     </div>
                   )}
@@ -2585,7 +2700,7 @@ export default function VictoriaSecretRanking({
                   <div className="space-y-0.5 text-left">
                     <h3 className="text-sm font-black uppercase text-pink-950 tracking-wider flex items-center gap-1.5 font-display">
                       <Trophy className="w-4 h-4 text-amber-500 fill-amber-400" />
-                      Clasificación de los 100 Modelos de Élite (Hombres y Mujeres)
+                      Clasificación de los 100 Modelos de Élite
                     </h3>
                     <p className="text-[10px] text-slate-450 font-bold uppercase tracking-widest font-mono">
                       Ordenados por el total de "Me Gusta" acumulados en las imágenes de su perfil

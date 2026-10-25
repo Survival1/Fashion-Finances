@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentSession, ParticipantState, ModelProfile, ProjectData, UserSessionProfile, FinancialMovement } from '../types';
 import { seedInitialData } from '../utils/seedData';
 import { getRoundReference } from '../utils/roundsDatabase';
@@ -41,7 +41,8 @@ import {
   ThumbsUp,
   Calendar,
   RefreshCw,
-  Trash2
+  Trash2,
+  Camera
 } from 'lucide-react';
 
 interface SessionSimulatorProps {
@@ -58,6 +59,7 @@ interface SessionSimulatorProps {
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live') => void;
   onSelectModel?: (model: ModelProfile) => void;
   onFinishParticipationSession?: () => void;
+  onUpdateProjects?: (projects: ProjectData[]) => void;
 }
 
 interface SessionTheme {
@@ -73,115 +75,169 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
   if (isSelected) {
     if (entryFee === 10) {
       return {
-        background: 'bg-gradient-to-br from-[#FFF5F8] via-[#FADCE7] to-[#F3CAD9] border-[#E8AEC1] ring-2 ring-[#F3CAD9]/80 text-slate-950',
+        background: 'bg-gradient-to-br from-[#FFF5F8] via-[#FADCE7] to-[#F3CAD9] text-slate-950',
         badge: 'bg-[#F2C9D8] text-slate-950 border-[#DDA0B5]',
-        accentText: 'text-slate-950 font-black',
+        accentText: 'text-amber-400 font-black',
         progressBarColor: 'bg-gradient-to-r from-pink-500 to-rose-600',
         tierSlogan: 'Round STREETWEAR & URBAN',
-        cardShadow: 'shadow-xl shadow-pink-300/25 scale-[1.025]',
+        cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.025]',
       };
     } else if (entryFee === 100) {
       return {
-        background: 'bg-slate-900 border-amber-600/80 ring-2 ring-amber-600/30 text-white',
-        badge: 'bg-amber-950/40 text-amber-300 border-amber-800/50',
+        background: 'bg-slate-900 text-white',
+        badge: 'bg-pink-950/40 text-pink-300 border-pink-700/50',
         accentText: 'text-amber-400 font-bold',
-        progressBarColor: 'bg-amber-550',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Round CASUAL & LIFESTYLE',
-        cardShadow: 'shadow-md lg:shadow-amber-500/10 scale-[1.025]',
+        cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.025]',
       };
     } else if (entryFee === 1000) {
       return {
-        background: 'bg-slate-900 border-slate-400 ring-2 ring-slate-400/30 text-white',
-        badge: 'bg-slate-800 text-slate-100 border-slate-700',
-        accentText: 'text-slate-200 font-bold',
-        progressBarColor: 'bg-slate-400',
+        background: 'bg-slate-900 text-white',
+        badge: 'bg-pink-950/40 text-pink-300 border-pink-700/50',
+        accentText: 'text-pink-200 font-bold',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Ronda Glamour ✨',
-        cardShadow: 'shadow-md lg:shadow-slate-500/10 scale-[1.025]',
+        cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.025]',
       };
     } else if (entryFee === 10000) {
       return {
-        background: 'bg-gradient-to-br from-slate-950 via-amber-950/20 to-slate-950 border-amber-400 ring-2 ring-amber-400/40 text-white',
-        badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+        background: 'bg-gradient-to-br from-slate-950 via-pink-950/20 to-slate-950 text-white',
+        badge: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
         accentText: 'text-amber-300 font-black',
-        progressBarColor: 'bg-amber-400',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Ronda Elegant & Classic 🤍',
-        cardShadow: 'shadow-xl shadow-amber-500/10 scale-[1.03]',
+        cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.03]',
       };
     } else if (entryFee === 100000) {
       return {
-        background: 'bg-gradient-to-br from-slate-950 via-rose-950/20 to-slate-950 border-rose-400 ring-2 ring-rose-400/40 text-white',
-        badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+        background: 'bg-gradient-to-br from-slate-950 via-rose-950/20 to-slate-950 text-white',
+        badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
         accentText: 'text-rose-300 font-black',
         progressBarColor: 'bg-rose-400',
         tierSlogan: 'Ronda High Fashion 👠',
-        cardShadow: 'shadow-xl shadow-rose-500/10 scale-[1.03]',
+        cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.03]',
       };
     } else {
       return {
-        background: 'bg-gradient-to-br from-black via-slate-900 to-black border-amber-300 ring-2 ring-amber-300/45 text-white',
-        badge: 'bg-gradient-to-r from-amber-500/15 to-teal-500/15 text-amber-300 border-amber-400/30',
-        accentText: 'text-amber-400 font-black bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent',
-        progressBarColor: 'bg-gradient-to-r from-amber-400 to-amber-200',
+        background: 'bg-gradient-to-br from-black via-slate-900 to-black text-white',
+        badge: 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-400/40',
+        accentText: 'text-amber-300 font-black',
+        progressBarColor: 'bg-gradient-to-r from-pink-500 to-rose-500',
         tierSlogan: 'Ronda High Fashion 👠',
-        cardShadow: 'shadow-2xl shadow-amber-500/20 scale-[1.035]',
+        cardShadow: 'shadow-2xl shadow-pink-500/30 scale-[1.035]',
       };
     }
   } else {
     if (entryFee === 10) {
       return {
-        background: 'bg-gradient-to-br from-[#FFF8FA] via-[#FDF2F6] to-[#F9E2EB] hover:bg-[#F9E2EB] border-[#F2C9D8] hover:border-[#E8AEC1] text-slate-900',
+        background: 'bg-gradient-to-br from-[#FFF8FA] via-[#FDF2F6] to-[#F9E2EB] text-slate-900',
         badge: 'bg-[#F9E2EB] text-slate-800 border-[#E8B6C7]',
-        accentText: 'text-slate-900 font-bold',
+        accentText: 'text-amber-400 font-bold',
         progressBarColor: 'bg-pink-400',
         tierSlogan: 'Round STREETWEAR & URBAN',
-        cardShadow: 'shadow-sm hover:shadow-md hover:-translate-y-0.5',
+        cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else if (entryFee === 100) {
       return {
-        background: 'bg-[#faf6f0] hover:bg-[#f5ece0] border-amber-200 hover:border-amber-300 text-slate-800',
-        badge: 'bg-amber-100/60 text-amber-800 border-amber-200/50',
-        accentText: 'text-amber-700',
-        progressBarColor: 'bg-amber-600',
+        background: 'bg-slate-900/90 text-slate-200',
+        badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
+        accentText: 'text-amber-400',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Round CASUAL & LIFESTYLE',
-        cardShadow: 'shadow-sm hover:shadow-md hover:-translate-y-0.5',
+        cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else if (entryFee === 1000) {
       return {
-        background: 'bg-slate-100/70 hover:bg-slate-150 border-slate-300 hover:border-slate-400 text-slate-800',
-        badge: 'bg-slate-200 text-slate-700 border-transparent',
-        accentText: 'text-slate-700',
-        progressBarColor: 'bg-slate-500',
+        background: 'bg-slate-900/90 text-slate-200',
+        badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
+        accentText: 'text-pink-200',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Ronda Glamour ✨',
-        cardShadow: 'shadow-sm hover:shadow-md hover:-translate-y-0.5',
+        cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else if (entryFee === 10000) {
       return {
-        background: 'bg-[#fdf9f4] hover:bg-[#fbf3e7] border-amber-200 hover:border-[#edd0aa] text-slate-800',
-        badge: 'bg-[#fcf1df] text-amber-800 border-amber-200/50',
-        accentText: 'text-amber-700 font-semibold',
-        progressBarColor: 'bg-amber-500',
+        background: 'bg-slate-900/90 text-slate-200',
+        badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
+        accentText: 'text-amber-400 font-semibold',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Ronda Elegant & Classic 🤍',
-        cardShadow: 'shadow-[0_4px_12px_-2px_rgba(217,119,6,0.05)] hover:shadow-[0_8px_20px_-3px_rgba(217,119,6,0.12)] hover:-translate-y-0.5',
+        cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else if (entryFee === 100000) {
       return {
-        background: 'bg-[#fdf6f6] hover:bg-[#fbeaea] border-[#fcdadb] hover:border-[#f5b8ba] text-slate-800',
-        badge: 'bg-[#fae3e4] text-rose-800 border-[#f8c9cb]/50',
-        accentText: 'text-rose-700 font-semibold',
+        background: 'bg-slate-900/90 text-slate-200',
+        badge: 'bg-rose-950/40 text-rose-300 border-rose-800/40',
+        accentText: 'text-rose-400 font-semibold',
         progressBarColor: 'bg-rose-500',
         tierSlogan: 'Ronda High Fashion 👠',
-        cardShadow: 'shadow-[0_4px_12px_-2px_rgba(244,63,94,0.05)] hover:shadow-[0_8px_20px_-3px_rgba(244,63,94,0.12)] hover:-translate-y-0.5',
+        cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else {
       return {
-        background: 'bg-gradient-to-b from-[#faf9f6]/95 to-[#f7f4ee]/95 border-amber-300 hover:border-amber-400 text-slate-900',
-        badge: 'bg-[#fef8eb] text-amber-800 border-amber-200',
-        accentText: 'text-amber-800 font-heavy bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent',
-        progressBarColor: 'bg-amber-500',
+        background: 'bg-black/90 text-slate-200',
+        badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
+        accentText: 'text-amber-300 font-heavy',
+        progressBarColor: 'bg-pink-500',
         tierSlogan: 'Ronda High Fashion 👠',
-        cardShadow: 'shadow-[0_6px_15px_-3px_rgba(217,119,6,0.06)] hover:shadow-[0_12px_28px_-4px_rgba(217,119,6,0.15)] hover:-translate-y-0.5',
+        cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     }
+  }
+};
+
+interface RoundModelStyleInfo {
+  bgImage: string;
+  alt: string;
+  styleTag: string;
+  overlayClass: string;
+}
+
+const getRoundModelStyle = (entryFee: number, title?: string): RoundModelStyleInfo => {
+  const t = (title || '').toUpperCase();
+  if (entryFee === 10 || t.includes('STREETWEAR') || t.includes('TRABAJAD')) {
+    return {
+      bgImage: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=85',
+      alt: 'Modelos Fashion Streetwear & Urban Style',
+      styleTag: 'STREETWEAR & URBAN 👟',
+      overlayClass: 'bg-gradient-to-t from-slate-950/90 via-slate-950/30 via-50% to-transparent',
+    };
+  } else if (entryFee === 100 || t.includes('CASUAL') || t.includes('EMPREND')) {
+    return {
+      bgImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85',
+      alt: 'Modelos Fashion Casual & Lifestyle Chic',
+      styleTag: 'CASUAL & LIFESTYLE 🕶️',
+      overlayClass: 'bg-gradient-to-t from-slate-950/90 via-slate-950/30 via-50% to-transparent',
+    };
+  } else if (entryFee === 1000 || t.includes('GLAMOUR') || t.includes('EMPRESAR')) {
+    return {
+      bgImage: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1400&q=85',
+      alt: 'Modelos Fashion Glamour & Red Carpet',
+      styleTag: 'RONDA GLAMOUR ✨',
+      overlayClass: 'bg-gradient-to-t from-slate-950/90 via-slate-950/30 via-50% to-transparent',
+    };
+  } else if (entryFee === 10000 || t.includes('ELEGANT') || t.includes('CLASSIC') || t.includes('TOPMODEL')) {
+    return {
+      bgImage: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1400&q=85',
+      alt: 'Modelos Fashion Elegant & Classic Atelier Tailoring',
+      styleTag: 'ELEGANT & CLASSIC 🤍',
+      overlayClass: 'bg-gradient-to-t from-slate-950/90 via-slate-950/30 via-50% to-transparent',
+    };
+  } else if (entryFee === 100000 || (entryFee < 1000000 && t.includes('FASHION'))) {
+    return {
+      bgImage: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1400&q=85',
+      alt: 'Modelos Fashion Runway Catwalk High Fashion',
+      styleTag: 'HIGH FASHION 👠',
+      overlayClass: 'bg-gradient-to-t from-slate-950/90 via-slate-950/30 via-50% to-transparent',
+    };
+  } else {
+    return {
+      bgImage: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1400&q=85',
+      alt: 'Supermodelos Fashion Haute Couture VIP Runway Platino',
+      styleTag: 'HAUTE COUTURE VIP 👑',
+      overlayClass: 'bg-gradient-to-t from-black/90 via-black/35 via-50% to-transparent',
+    };
   }
 };
 
@@ -359,7 +415,8 @@ export default function SessionSimulator({
   onAddSystemHistory,
   onNavigateToTab,
   onSelectModel,
-  onFinishParticipationSession
+  onFinishParticipationSession,
+  onUpdateProjects
 }: SessionSimulatorProps) {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string>('');
@@ -368,6 +425,40 @@ export default function SessionSimulator({
   const [gatheringSessionData, setGatheringSessionData] = useState<InvestmentSession | null>(null);
   const [showReglasModal, setShowReglasModal] = useState<boolean>(false);
   const [showComisionesModal, setShowComisionesModal] = useState<boolean>(false);
+
+  const handleCoverImageUploadInSession = (projectId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('La imagen seleccionada supera los 10MB. Por favor selecciona una imagen más ligera.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        const updated = userProjects.map(p => {
+          if (p.id === projectId) {
+            const currentImages = p.images ? [...p.images] : [];
+            return {
+              ...p,
+              images: [base64, ...currentImages.filter(img => img !== base64)]
+            };
+          }
+          return p;
+        });
+        try {
+          localStorage.setItem('coll_projects', JSON.stringify(updated));
+        } catch (err) {}
+        if (onUpdateProjects) {
+          onUpdateProjects(updated);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const handleOpenReglas = () => setShowReglasModal(true);
@@ -861,10 +952,35 @@ export default function SessionSimulator({
   }, [userProjects, enrollProjectId]);
 
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? Math.min(window.innerWidth, 1200) : 1000);
+  const sliderContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const handleUpdateWidth = () => {
+      if (typeof window !== 'undefined') {
+        setWindowWidth(window.innerWidth);
+      }
+      if (sliderContainerRef.current) {
+        const w = sliderContainerRef.current.getBoundingClientRect().width;
+        if (w > 0) setContainerWidth(w);
+      } else if (typeof window !== 'undefined') {
+        setContainerWidth(window.innerWidth);
+      }
+    };
+
+    handleUpdateWidth();
+    window.addEventListener('resize', handleUpdateWidth);
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && sliderContainerRef.current) {
+      ro = new ResizeObserver(() => handleUpdateWidth());
+      ro.observe(sliderContainerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleUpdateWidth);
+      if (ro) ro.disconnect();
+    };
   }, []);
 
   const getVisibleSessions = (): InvestmentSession[] => {
@@ -3557,21 +3673,33 @@ export default function SessionSimulator({
 
       {/* SLIDER NAVIGATION FOR SESSIONS (ELEGANT 3D CAROUSEL DESIGN MATCHING ZZ.PNG) */}
       {(() => {
-        let cardWidth = 300;
-        let cardHeight = 220;
-        let spacing = 190;
-        let rotateYVal = 24;
+        // Dimensions: Expansive wide card that adapts perfectly to container width
+        let cardWidth = 980;
+        let cardHeight = 480;
+        let spacing = 720;
+        let rotateYVal = 7;
 
-        if (windowWidth < 640) {
-          cardWidth = 230;
-          cardHeight = 210;
-          spacing = 90;
-          rotateYVal = 18;
-        } else if (windowWidth < 1024) {
-          cardWidth = 270;
-          cardHeight = 220;
-          spacing = 150;
-          rotateYVal = 22;
+        if (containerWidth < 500) {
+          // Mobile / small viewport: take 94% of available container width so card is wide and beautiful, not squished!
+          cardWidth = Math.max(310, Math.floor(containerWidth * 0.94));
+          cardHeight = 450;
+          spacing = Math.round(cardWidth * 0.92);
+          rotateYVal = 4;
+        } else if (containerWidth < 768) {
+          cardWidth = Math.max(480, Math.floor(containerWidth * 0.90));
+          cardHeight = 460;
+          spacing = Math.round(cardWidth * 0.82);
+          rotateYVal = 6;
+        } else if (containerWidth < 1100) {
+          cardWidth = Math.min(860, Math.floor(containerWidth * 0.84));
+          cardHeight = 470;
+          spacing = Math.round(cardWidth * 0.76);
+          rotateYVal = 7;
+        } else {
+          cardWidth = Math.min(1080, Math.floor(containerWidth * 0.82));
+          cardHeight = 480;
+          spacing = Math.round(cardWidth * 0.70);
+          rotateYVal = 8;
         }
 
         const visibleSessions = getVisibleSessions();
@@ -3588,13 +3716,17 @@ export default function SessionSimulator({
         };
 
         return (
-          <div className="relative w-full py-8 select-none flex flex-col items-center overflow-hidden" id="collective-sessions-slider-viewport">
+          <div 
+            ref={sliderContainerRef}
+            className="relative w-full py-4 select-none flex flex-col items-center overflow-hidden" 
+            id="collective-sessions-slider-viewport"
+          >
             {/* 3D Stage Container */}
             <div 
-              className="relative w-full flex items-center justify-center"
+              className="relative w-full flex items-center justify-center overflow-visible"
               style={{ 
                 height: `${cardHeight + 40}px`,
-                perspective: '1200px',
+                perspective: '1400px',
                 perspectiveOrigin: '50% 50%'
               }}
             >
@@ -3602,15 +3734,15 @@ export default function SessionSimulator({
               <button
                 type="button"
                 onClick={handlePrevSession}
-                className="absolute left-2 sm:left-6 lg:left-12 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-slate-200 bg-white/95 hover:bg-white text-slate-800 shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+                className="absolute left-1 sm:left-4 lg:left-8 z-50 w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-2xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Ver mesa anterior"
               >
-                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800 pointer-events-none" />
+                <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7 text-pink-600 pointer-events-none stroke-[2.5]" />
               </button>
 
               {/* 3D Cards Stage */}
               <div 
-                className="absolute w-full h-full flex items-center justify-center pointer-events-none"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {visibleSessions.map((sess, index) => {
@@ -3623,18 +3755,24 @@ export default function SessionSimulator({
                   if (!isVisible) return null;
 
                   const theme = getSessionTheme(sess.entryFee, isSelected);
+                  const modelStyle = getRoundModelStyle(sess.entryFee, sess.title);
                   const percent = Math.min(100, (sess.participants.length / 10) * 100);
 
                   const formattedFee = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sess.entryFee) + '€';
                   const formattedPool = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sess.poolTotal) + '€';
 
                   // Positioning & Rotation
-                  const scale = offset === 0 ? 1.08 : 0.82 - (absOffset - 1) * 0.08;
+                  const scale = offset === 0 ? 1.02 : 0.88 - (absOffset - 1) * 0.08;
                   const translateX = offset * spacing;
-                  const translateZ = offset === 0 ? 50 : -100 - (absOffset - 1) * 50;
+                  const translateZ = offset === 0 ? 40 : -90 - (absOffset - 1) * 45;
                   const rotateY = offset === 0 ? 0 : (offset < 0 ? rotateYVal : -rotateYVal);
-                  const opacity = offset === 0 ? 1 : Math.max(0.15, 0.65 - (absOffset - 1) * 0.25);
+                  const opacity = offset === 0 ? 1 : Math.max(0.2, 0.75 - (absOffset - 1) * 0.22);
                   const zIndex = 50 - absOffset;
+
+                  // Marco Rosa requested by user for all images
+                  const pinkFrameClass = isSelected
+                    ? 'border-[4px] border-[#FF2D85] ring-4 ring-[#FF77B5]/50 shadow-[0_0_35px_rgba(255,45,133,0.45)]'
+                    : 'border-[3px] border-[#FF69B4]/85 ring-2 ring-pink-300/30 shadow-lg shadow-pink-500/15 hover:border-[#FF2D85]';
 
                   return (
                     <div
@@ -3642,11 +3780,16 @@ export default function SessionSimulator({
                       onClick={() => {
                         setActiveSessionId(sess.id);
                       }}
-                      className={`pointer-events-auto absolute rounded-2xl p-5 border text-left transition-all duration-350 cursor-pointer flex flex-col justify-between shadow-md ${theme.background} ${theme.cardShadow}`}
+                      className={`pointer-events-auto absolute shrink-0 rounded-3xl p-4 sm:p-7 text-left cursor-pointer flex flex-col justify-between overflow-hidden group box-border ${pinkFrameClass} ${theme.cardShadow}`}
                       style={{
                         width: `${cardWidth}px`,
+                        minWidth: `${cardWidth}px`,
+                        maxWidth: `${cardWidth}px`,
                         height: `${cardHeight}px`,
-                        transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                        minHeight: `${cardHeight}px`,
+                        left: '50%',
+                        top: '50%',
+                        transform: `translate(-50%, -50%) translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                         opacity: opacity,
                         zIndex: zIndex,
                         transition: 'transform 0.4s ease-out, opacity 0.4s ease-out',
@@ -3654,128 +3797,133 @@ export default function SessionSimulator({
                         backfaceVisibility: 'hidden',
                       }}
                     >
-                      {/* Header Decoration */}
-                      <div className="flex justify-between items-start mb-2">
-                        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border leading-none ${theme.badge}`}>
-                          {theme.tierSlogan}
-                        </span>
-
-                        {/* Estrella eliminada por petición del usuario */}
-                        <span className="w-2 h-2 rounded-full opacity-0" />
+                      {/* Foto panorámica de fondo de modelo/s fashion relacionada con el nombre y estilo de moda */}
+                      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl z-0">
+                        <img
+                          src={modelStyle.bgImage}
+                          alt={modelStyle.alt}
+                          className="w-full h-full object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        {/* Capa de degradado cinematográfico para destacar a la modelo y garantizar legibilidad perfecta */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 via-50% to-slate-950/20" />
                       </div>
 
-                      {/* Card Title & Value Specs */}
-                      <div className="space-y-1">
-                        <h3 className={`font-bold text-xs sm:text-sm tracking-tight truncate ${
-                          sess.entryFee === 10 ? 'text-slate-950 font-black' : (isSelected ? 'text-white' : 'text-slate-800')
-                        }`}>
-                          {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear'))))
-                            ? 'Round STREETWEAR & URBAN'
-                            : (sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual'))))
-                            ? 'Round CASUAL & LIFESTYLE'
-                            : (sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour'))))
-                            ? 'Ronda Glamour ✨'
-                            : (sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant'))))
-                            ? 'Ronda Elegant & Classic 🤍'
-                            : (sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion'))))
-                            ? 'Ronda High Fashion 👠'
-                            : (sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino'))))
-                            ? 'Ronda High Fashion 👠'
-                            : sess.title.replace('Sesión de Inversión de ', 'Mesa ')}
-                        </h3>
-                        {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear')))) && (
-                          <p className={`text-[9.5px] leading-tight font-medium ${
-                            sess.entryFee === 10 ? 'text-slate-750' : (isSelected ? 'text-slate-300' : 'text-slate-500')
-                          }`}>
-                            Estilo moderno, sneakers, denim y cultura street.
-                          </p>
-                        )}
-                        {(sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual')))) && (
-                          <p className={`text-[9.5px] leading-tight font-medium ${
-                            isSelected ? 'text-amber-200/90' : 'text-slate-500'
-                          }`}>
-                            Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
-                          </p>
-                        )}
-                        {(sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour')))) && (
-                          <p className={`text-[9.5px] leading-tight font-medium ${
-                            isSelected ? 'text-slate-200' : 'text-slate-400'
-                          }`}>
-                            vestidos, belleza, eventos, alfombra roja y looks impactantes.
-                          </p>
-                        )}
-                        {(sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant')))) && (
-                          <p className={`text-[9.5px] leading-tight font-medium ${
-                            isSelected ? 'text-amber-200/90' : 'text-slate-400'
-                          }`}>
-                            sofisticado, clásico, atemporal y refinado.
-                          </p>
-                        )}
-                        {(sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion')))) && (
-                          <p className={`text-[9.5px] leading-tight font-medium ${
-                            isSelected ? 'text-rose-200/90' : 'text-slate-400'
-                          }`}>
-                            alta moda, diseñadores, pasarela y tendencias.
-                          </p>
-                        )}
-                        {(sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino')))) && (
-                          <p className={`text-[9.5px] leading-tight font-medium ${
-                            isSelected ? 'text-amber-200/90' : 'text-slate-400'
-                          }`}>
-                            alta moda, diseñadores, pasarela y tendencias.
-                          </p>
-                        )}
-                        <div className="flex items-baseline gap-1">
-                          <span className={`text-[10px] font-medium font-sans ${
-                            sess.entryFee === 10 ? 'text-slate-700' : (isSelected ? 'text-slate-300' : 'text-slate-500')
-                          }`}>
-                            Monto de Entrada:
+                      {/* Capa de contenido en primer plano */}
+                      <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                        {/* Header Decoration */}
+                        <div className="flex justify-between items-start gap-2 mb-2">
+                          <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full border leading-none shadow-md backdrop-blur-md ${theme.badge}`}>
+                            {theme.tierSlogan}
                           </span>
-                          <strong className={`font-mono text-xs sm:text-sm leading-none ${theme.accentText}`}>
-                            {formattedFee}
-                          </strong>
-                        </div>
-                      </div>
-
-                      {/* Recruitment state bar indicator */}
-                      <div className="space-y-1.5">
-                        <div className="flex justify-end items-center text-[9px] font-extrabold font-mono tracking-wide">
-                          <span className={sess.entryFee === 10 ? 'text-slate-950 font-black' : (isSelected ? 'text-slate-200' : 'text-slate-650 font-semibold')}>
-                            {sess.participants.length}/10 Miembros
+                          <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-black/60 text-pink-200 border border-pink-400/50 backdrop-blur-md shadow-md">
+                            {modelStyle.styleTag}
                           </span>
                         </div>
 
-                        <div className={`w-full h-1.5 rounded-full overflow-hidden border ${
-                          sess.entryFee === 10 ? 'bg-slate-900/10 border-slate-900/10' : (isSelected ? 'bg-white/10 border-white/5' : 'bg-slate-200/55 border-slate-100')
-                        }`}>
-                          <div
-                            className={`h-full rounded-full transition-all duration-550 ${theme.progressBarColor}`}
-                            style={{ width: `${percent}%` }}
-                          />
+                        {/* Zona central amplia para contemplar la foto de las modelos de moda */}
+                        <div className="flex-1 my-2" />
+
+                        {/* Card Title & Value Specs en formato ancho amplio sin solapamientos */}
+                        <div className="space-y-3 bg-slate-950/85 backdrop-blur-md p-3.5 sm:p-5 rounded-2xl border border-white/15 shadow-2xl w-full box-border">
+                          <div className="space-y-1">
+                            <h3 className="font-black text-sm sm:text-lg md:text-2xl tracking-tight text-white drop-shadow-md">
+                              {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear'))))
+                                ? 'Round STREETWEAR & URBAN'
+                                : (sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual'))))
+                                ? 'Round CASUAL & LIFESTYLE'
+                                : (sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour'))))
+                                ? 'Ronda Glamour ✨'
+                                : (sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant'))))
+                                ? 'Ronda Elegant & Classic 🤍'
+                                : (sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion'))))
+                                ? 'Ronda High Fashion 👠'
+                                : (sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino'))))
+                                ? 'Ronda High Fashion 👠'
+                                : sess.title.replace('Sesión de Inversión de ', 'Mesa ')}
+                            </h3>
+
+                            {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear')))) && (
+                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-slate-200">
+                                Estilo moderno, sneakers, denim y cultura street.
+                              </p>
+                            )}
+                            {(sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual')))) && (
+                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-amber-200">
+                                Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
+                              </p>
+                            )}
+                            {(sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour')))) && (
+                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-rose-200">
+                                vestidos, belleza, eventos, alfombra roja y looks impactantes.
+                              </p>
+                            )}
+                            {(sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant')))) && (
+                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-amber-100">
+                                sofisticado, clásico, atemporal y refinado.
+                              </p>
+                            )}
+                            {(sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion')))) && (
+                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-rose-100">
+                                alta moda, diseñadores, pasarela y tendencias.
+                              </p>
+                            )}
+                            {(sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino')))) && (
+                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-amber-100">
+                                alta moda, diseñadores, pasarela y tendencias.
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Grid horizontal amplio de 3 columnas para Monto, Miembros y Pool */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 pt-2.5 border-t border-white/15">
+                            {/* Monto de entrada */}
+                            <div className="flex flex-col items-start justify-center gap-0.5 min-w-[130px] shrink-0">
+                              <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
+                                MONTO DE ENTRADA:
+                              </span>
+                              <strong className={`font-mono text-sm sm:text-lg md:text-xl font-black ${theme.accentText} tracking-tight drop-shadow-md`}>
+                                {sess.entryFee === 10 ? '10,00 Euros' : `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sess.entryFee)} Euros`}
+                              </strong>
+                            </div>
+
+                            {/* Barra de Miembros */}
+                            <div className="flex-1 max-w-full sm:max-w-xs space-y-1">
+                              <div className="flex justify-between items-center text-[10px] sm:text-[11px] font-extrabold font-mono tracking-wide">
+                                <span className="text-[9px] uppercase tracking-wider text-slate-300">
+                                  Miembros
+                                </span>
+                                <span className="text-white font-black">
+                                  {sess.participants.length}/10 Miembros
+                                </span>
+                              </div>
+
+                              <div className="w-full h-2 sm:h-2.5 rounded-full overflow-hidden bg-white/15 border border-white/10">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-550 ${theme.progressBarColor}`}
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Status y Pool Total */}
+                            <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-1">
+                              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300">
+                                <span className={`w-2 h-2 rounded-full inline-block ${
+                                  sess.status === 'voting' ? 'bg-rose-500 animate-ping' : 'bg-pink-500'
+                                }`} />
+                                <span className="font-black">{sess.status === 'voting' ? 'Escrutinio' : 'Reclutando'}</span>
+                              </span>
+
+                              <div className="text-[11px] sm:text-xs font-bold flex items-baseline gap-1.5">
+                                <span className="text-slate-300 font-medium text-[10px] sm:text-[11px]">Pool:</span>
+                                <span className="font-mono font-black text-xs sm:text-base text-amber-300">
+                                  {formattedPool}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-
-                      {/* Bottom Stats Footer */}
-                      <div className={`pt-3 border-t flex justify-between items-center ${
-                        sess.entryFee === 10 ? 'border-slate-900/15' : (isSelected ? 'border-white/10' : 'border-slate-100')
-                      }`}>
-                        <span className={`text-[9px] font-extrabold uppercase tracking-widest inline-flex items-center gap-1.5 ${
-                          sess.status === 'voting' ? 'text-rose-600' : (sess.entryFee === 10 ? 'text-slate-700' : (isSelected ? 'text-slate-300' : 'text-slate-450'))
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full inline-block ${
-                            sess.status === 'voting' ? 'bg-rose-600 animate-ping' : (sess.entryFee === 10 ? 'bg-pink-600' : (isSelected ? 'bg-indigo-300' : 'bg-slate-400'))
-                          }`} />
-                          <span>{sess.status === 'voting' ? 'Escrutinio' : 'Reclutando'}</span>
-                        </span>
-
-                        <span className="text-[9px] font-bold flex items-baseline gap-1">
-                          <span className={sess.entryFee === 10 ? 'text-slate-700 font-medium' : (isSelected ? 'text-slate-300 font-medium' : 'text-slate-400 font-normal')}>Pool:</span>
-                          <span className={`font-mono font-bold text-xs ${
-                            sess.entryFee === 10 ? 'text-slate-950 font-black' : (isSelected ? 'text-amber-300' : 'text-indigo-650')
-                          }`}>
-                            {formattedPool}
-                          </span>
-                        </span>
                       </div>
                     </div>
                   );
@@ -3786,10 +3934,10 @@ export default function SessionSimulator({
               <button
                 type="button"
                 onClick={handleNextSession}
-                className="absolute right-2 sm:right-6 lg:right-12 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-slate-200 bg-white/95 hover:bg-white text-slate-800 shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+                className="absolute right-2 sm:right-4 lg:right-8 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Ver mesa siguiente"
               >
-                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-slate-850 pointer-events-none" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 pointer-events-none stroke-[2.5]" />
               </button>
             </div>
 
@@ -3927,6 +4075,71 @@ export default function SessionSimulator({
                       ))}
                     </select>
                   </div>
+
+                  {/* PROJECT HERO BANNER AS SEEN IN IMAGE.PNG */}
+                  {(() => {
+                    const selectedEnrollProject = userProjects.find(p => p.id === enrollProjectId) || userProjects[0];
+                    if (!selectedEnrollProject) return null;
+                    const hasCoverImage = selectedEnrollProject.images && selectedEnrollProject.images.length > 0;
+                    const coverUrl = hasCoverImage 
+                      ? selectedEnrollProject.images[0] 
+                      : (selectedEnrollProject as any)?.coverImage || (selectedEnrollProject as any)?.image;
+
+                    return (
+                      <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm animate-fade-in text-left block relative">
+                        {/* HERO COVER BANNER */}
+                        <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900 group">
+                          {/* BUTTON WITH CAMERA TO CHANGE COVER IMAGE */}
+                          <label
+                            htmlFor={`cover-upload-enroll-${selectedEnrollProject.id}`}
+                            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white border border-white/25 backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition-all active:scale-95"
+                            title="Cambiar imagen de portada"
+                          >
+                            <Camera className="w-4 h-4 text-sky-300" />
+                            <span className="text-[11px] font-medium tracking-wide">Cambiar Portada</span>
+                            <input
+                              id={`cover-upload-enroll-${selectedEnrollProject.id}`}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleCoverImageUploadInSession(selectedEnrollProject.id, e)}
+                            />
+                          </label>
+
+                          {coverUrl ? (
+                            <>
+                              <img 
+                                src={coverUrl} 
+                                alt={selectedEnrollProject.title} 
+                                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" 
+                              />
+                              {/* Subtle bottom gradient only behind text to preserve total clarity across the image */}
+                              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+                            </>
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 opacity-95">
+                              {/* Abstract visual background pattern */}
+                              <div className="absolute inset-0 opacity-15 mix-blend-overlay bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-300 via-indigo-500 to-slate-900" />
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-550/10 rounded-full filter blur-3xl pointer-events-none" />
+                            </div>
+                          )}
+
+                          {/* OVERLAY HEADER CONTENT */}
+                          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 flex flex-col justify-end text-white pointer-events-none">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-black/60 backdrop-blur-md text-white rounded-md border border-white/20 shadow-sm">
+                                {selectedEnrollProject.category}
+                              </span>
+                            </div>
+                            
+                            <h4 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                              {selectedEnrollProject.title}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {enrollProjectId && userProjects.find(p => p.id === enrollProjectId) && (
                     <div className="p-3 bg-slate-50 rounded-lg border border-slate-150 text-[11px] text-slate-600 space-y-1 font-sans">
