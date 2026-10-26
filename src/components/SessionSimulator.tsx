@@ -663,16 +663,32 @@ export default function SessionSimulator({
         };
   };
 
-  // Poll scheduled orders from the backend every 5 seconds
+  // Poll scheduled orders from the backend with robust error handling and localStorage fallback
   useEffect(() => {
     if (!userProfile || userProfile.role === 'visitor') return;
 
+    let isMounted = true;
     const fetchScheduledOrders = async () => {
+      // Avoid polling when browser tab is inactive
+      if (typeof document !== 'undefined' && document.hidden) return;
+
       try {
         const res = await fetch('/api/scheduled-orders');
-        if (!res.ok) throw new Error('Failed to fetch scheduled orders');
+        if (!res.ok) {
+          try {
+            const local = localStorage.getItem('coll_scheduled_orders');
+            if (local && isMounted) {
+              setScheduledOrders(JSON.parse(local));
+            }
+          } catch (_) {}
+          return;
+        }
         const data = await res.json();
+        if (!isMounted) return;
         setScheduledOrders(data);
+        try {
+          localStorage.setItem('coll_scheduled_orders', JSON.stringify(data));
+        } catch (_) {}
 
         // Filter orders that are marked as 'executed' and belong to this user
         const pendingApplications = data.filter((order: any) => 
@@ -683,14 +699,23 @@ export default function SessionSimulator({
         if (pendingApplications.length > 0) {
           await handleApplyExecutedOrders(pendingApplications);
         }
-      } catch (err) {
-        console.error('Error in schedules background poll:', err);
+      } catch (_) {
+        // Silently fallback to cached orders when server is restarting or network is interrupted
+        try {
+          const local = localStorage.getItem('coll_scheduled_orders');
+          if (local && isMounted) {
+            setScheduledOrders(JSON.parse(local));
+          }
+        } catch (_) {}
       }
     };
 
     fetchScheduledOrders();
-    const interval = setInterval(fetchScheduledOrders, 5000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchScheduledOrders, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [userProfile, sessions, userProjects]);
 
   // Synchronize backend execution state with local user portfolio state
@@ -795,7 +820,7 @@ export default function SessionSimulator({
           setOrderNotification(`🚨 ¡Autoinversión Activada! Se han invertido ${order.entryFee}€ en la Mesa de ${sessionCategory} con tu proyecto "${order.projectName}" automáticamente en segundo plano.`);
         }
       } catch (err) {
-        console.error(`Error marking order ${order.id} as applied:`, err);
+        console.warn(`[Auto-Investor] Order ${order.id} application offline note:`, err);
       }
     }
 
@@ -3673,32 +3698,32 @@ export default function SessionSimulator({
 
       {/* SLIDER NAVIGATION FOR SESSIONS (ELEGANT 3D CAROUSEL DESIGN MATCHING ZZ.PNG) */}
       {(() => {
-        // Dimensions: Expansive wide card that adapts perfectly to container width
-        let cardWidth = 980;
-        let cardHeight = 480;
-        let spacing = 720;
+        // Dimensions: Compact and balanced card sizing (un poco más chica)
+        let cardWidth = 800;
+        let cardHeight = 410;
+        let spacing = 580;
         let rotateYVal = 7;
 
         if (containerWidth < 500) {
-          // Mobile / small viewport: take 94% of available container width so card is wide and beautiful, not squished!
-          cardWidth = Math.max(310, Math.floor(containerWidth * 0.94));
-          cardHeight = 450;
-          spacing = Math.round(cardWidth * 0.92);
+          // Mobile / small viewport
+          cardWidth = Math.max(300, Math.floor(containerWidth * 0.90));
+          cardHeight = 390;
+          spacing = Math.round(cardWidth * 0.90);
           rotateYVal = 4;
         } else if (containerWidth < 768) {
-          cardWidth = Math.max(480, Math.floor(containerWidth * 0.90));
-          cardHeight = 460;
-          spacing = Math.round(cardWidth * 0.82);
+          cardWidth = Math.max(420, Math.floor(containerWidth * 0.82));
+          cardHeight = 400;
+          spacing = Math.round(cardWidth * 0.80);
           rotateYVal = 6;
         } else if (containerWidth < 1100) {
-          cardWidth = Math.min(860, Math.floor(containerWidth * 0.84));
-          cardHeight = 470;
-          spacing = Math.round(cardWidth * 0.76);
+          cardWidth = Math.min(680, Math.floor(containerWidth * 0.72));
+          cardHeight = 410;
+          spacing = Math.round(cardWidth * 0.74);
           rotateYVal = 7;
         } else {
-          cardWidth = Math.min(1080, Math.floor(containerWidth * 0.82));
-          cardHeight = 480;
-          spacing = Math.round(cardWidth * 0.70);
+          cardWidth = Math.min(820, Math.floor(containerWidth * 0.68));
+          cardHeight = 410;
+          spacing = Math.round(cardWidth * 0.68);
           rotateYVal = 8;
         }
 
@@ -3725,7 +3750,7 @@ export default function SessionSimulator({
             <div 
               className="relative w-full flex items-center justify-center overflow-visible"
               style={{ 
-                height: `${cardHeight + 40}px`,
+                height: `${cardHeight + 30}px`,
                 perspective: '1400px',
                 perspectiveOrigin: '50% 50%'
               }}
@@ -3734,10 +3759,10 @@ export default function SessionSimulator({
               <button
                 type="button"
                 onClick={handlePrevSession}
-                className="absolute left-1 sm:left-4 lg:left-8 z-50 w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-2xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+                className="absolute left-1 sm:left-4 lg:left-8 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Ver mesa anterior"
               >
-                <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7 text-pink-600 pointer-events-none stroke-[2.5]" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 pointer-events-none stroke-[2.5]" />
               </button>
 
               {/* 3D Cards Stage */}
@@ -3762,9 +3787,9 @@ export default function SessionSimulator({
                   const formattedPool = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sess.poolTotal) + '€';
 
                   // Positioning & Rotation
-                  const scale = offset === 0 ? 1.02 : 0.88 - (absOffset - 1) * 0.08;
+                  const scale = offset === 0 ? 1.0 : 0.86 - (absOffset - 1) * 0.08;
                   const translateX = offset * spacing;
-                  const translateZ = offset === 0 ? 40 : -90 - (absOffset - 1) * 45;
+                  const translateZ = offset === 0 ? 30 : -80 - (absOffset - 1) * 40;
                   const rotateY = offset === 0 ? 0 : (offset < 0 ? rotateYVal : -rotateYVal);
                   const opacity = offset === 0 ? 1 : Math.max(0.2, 0.75 - (absOffset - 1) * 0.22);
                   const zIndex = 50 - absOffset;
@@ -3780,7 +3805,7 @@ export default function SessionSimulator({
                       onClick={() => {
                         setActiveSessionId(sess.id);
                       }}
-                      className={`pointer-events-auto absolute shrink-0 rounded-3xl p-4 sm:p-7 text-left cursor-pointer flex flex-col justify-between overflow-hidden group box-border ${pinkFrameClass} ${theme.cardShadow}`}
+                      className={`pointer-events-auto absolute shrink-0 rounded-3xl p-3.5 sm:p-5.5 text-left cursor-pointer flex flex-col justify-between overflow-hidden group box-border ${pinkFrameClass} ${theme.cardShadow}`}
                       style={{
                         width: `${cardWidth}px`,
                         minWidth: `${cardWidth}px`,
@@ -3822,12 +3847,12 @@ export default function SessionSimulator({
                         </div>
 
                         {/* Zona central amplia para contemplar la foto de las modelos de moda */}
-                        <div className="flex-1 my-2" />
+                        <div className="flex-1 my-1" />
 
                         {/* Card Title & Value Specs en formato ancho amplio sin solapamientos */}
-                        <div className="space-y-3 bg-slate-950/85 backdrop-blur-md p-3.5 sm:p-5 rounded-2xl border border-white/15 shadow-2xl w-full box-border">
-                          <div className="space-y-1">
-                            <h3 className="font-black text-sm sm:text-lg md:text-2xl tracking-tight text-white drop-shadow-md">
+                        <div className="space-y-2.5 bg-slate-950/85 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/15 shadow-2xl w-full box-border">
+                          <div className="space-y-0.5">
+                            <h3 className="font-black text-sm sm:text-base md:text-xl tracking-tight text-white drop-shadow-md">
                               {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear'))))
                                 ? 'Round STREETWEAR & URBAN'
                                 : (sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual'))))
@@ -3844,53 +3869,53 @@ export default function SessionSimulator({
                             </h3>
 
                             {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear')))) && (
-                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-slate-200">
+                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-slate-200">
                                 Estilo moderno, sneakers, denim y cultura street.
                               </p>
                             )}
                             {(sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual')))) && (
-                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-amber-200">
+                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-200">
                                 Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
                               </p>
                             )}
                             {(sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour')))) && (
-                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-rose-200">
+                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-rose-200">
                                 vestidos, belleza, eventos, alfombra roja y looks impactantes.
                               </p>
                             )}
                             {(sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant')))) && (
-                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-amber-100">
+                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-100">
                                 sofisticado, clásico, atemporal y refinado.
                               </p>
                             )}
                             {(sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion')))) && (
-                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-rose-100">
+                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-rose-100">
                                 alta moda, diseñadores, pasarela y tendencias.
                               </p>
                             )}
                             {(sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino')))) && (
-                              <p className="text-[11px] sm:text-sm leading-snug font-medium text-amber-100">
+                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-100">
                                 alta moda, diseñadores, pasarela y tendencias.
                               </p>
                             )}
                           </div>
 
                           {/* Grid horizontal amplio de 3 columnas para Monto, Miembros y Pool */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 pt-2.5 border-t border-white/15">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3.5 pt-2 border-t border-white/15">
                             {/* Monto de entrada */}
-                            <div className="flex flex-col items-start justify-center gap-0.5 min-w-[130px] shrink-0">
-                              <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
+                            <div className="flex flex-col items-start justify-center gap-0.5 min-w-[120px] shrink-0">
+                              <span className="text-[9.5px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
                                 MONTO DE ENTRADA:
                               </span>
-                              <strong className={`font-mono text-sm sm:text-lg md:text-xl font-black ${theme.accentText} tracking-tight drop-shadow-md`}>
+                              <strong className={`font-mono text-xs sm:text-base md:text-lg font-black ${theme.accentText} tracking-tight drop-shadow-md`}>
                                 {sess.entryFee === 10 ? '10,00 Euros' : `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sess.entryFee)} Euros`}
                               </strong>
                             </div>
 
                             {/* Barra de Miembros */}
                             <div className="flex-1 max-w-full sm:max-w-xs space-y-1">
-                              <div className="flex justify-between items-center text-[10px] sm:text-[11px] font-extrabold font-mono tracking-wide">
-                                <span className="text-[9px] uppercase tracking-wider text-slate-300">
+                              <div className="flex justify-between items-center text-[9.5px] sm:text-[10px] font-extrabold font-mono tracking-wide">
+                                <span className="text-[8.5px] uppercase tracking-wider text-slate-300">
                                   Miembros
                                 </span>
                                 <span className="text-white font-black">
@@ -3898,7 +3923,7 @@ export default function SessionSimulator({
                                 </span>
                               </div>
 
-                              <div className="w-full h-2 sm:h-2.5 rounded-full overflow-hidden bg-white/15 border border-white/10">
+                              <div className="w-full h-2 rounded-full overflow-hidden bg-white/15 border border-white/10">
                                 <div
                                   className={`h-full rounded-full transition-all duration-550 ${theme.progressBarColor}`}
                                   style={{ width: `${percent}%` }}
@@ -3908,16 +3933,16 @@ export default function SessionSimulator({
 
                             {/* Status y Pool Total */}
                             <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-1">
-                              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300">
-                                <span className={`w-2 h-2 rounded-full inline-block ${
+                              <span className="text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300">
+                                <span className={`w-1.5 h-1.5 rounded-full inline-block ${
                                   sess.status === 'voting' ? 'bg-rose-500 animate-ping' : 'bg-pink-500'
                                 }`} />
                                 <span className="font-black">{sess.status === 'voting' ? 'Escrutinio' : 'Reclutando'}</span>
                               </span>
 
-                              <div className="text-[11px] sm:text-xs font-bold flex items-baseline gap-1.5">
-                                <span className="text-slate-300 font-medium text-[10px] sm:text-[11px]">Pool:</span>
-                                <span className="font-mono font-black text-xs sm:text-base text-amber-300">
+                              <div className="text-[10px] sm:text-xs font-bold flex items-baseline gap-1.5">
+                                <span className="text-slate-300 font-medium text-[9px] sm:text-[10px]">Pool:</span>
+                                <span className="font-mono font-black text-xs sm:text-sm text-amber-300">
                                   {formattedPool}
                                 </span>
                               </div>
@@ -3934,7 +3959,7 @@ export default function SessionSimulator({
               <button
                 type="button"
                 onClick={handleNextSession}
-                className="absolute right-2 sm:right-4 lg:right-8 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+                className="absolute right-2 sm:right-4 lg:right-8 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Ver mesa siguiente"
               >
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 pointer-events-none stroke-[2.5]" />

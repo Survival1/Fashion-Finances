@@ -3387,8 +3387,12 @@ export default function App() {
                         setShowVictoriaSecretRanking(true);
                       } else if (modelViewSourceTab === 'casting_live') {
                         setActiveTabTab('casting_live');
-                      } else if (selectedModelForView?.username === 'alexandervance_m1' || modelViewSourceTab === 'patrocinados') {
+                      } else if (modelViewSourceTab === 'profile') {
+                        setActiveTabTab('profile');
+                      } else if (modelViewSourceTab === 'patrocinados' || selectedModelForView?.username === 'alexandervance_m1') {
                         setActiveTabTab('patrocinados');
+                      } else if (modelViewSourceTab) {
+                        setActiveTabTab(modelViewSourceTab as any);
                       }
                       setSelectedModelForView(null);
                       setModelViewSourceTab(null);
@@ -3412,9 +3416,9 @@ export default function App() {
                     role: 'model',
                     patrocinadorId: selectedModelForView.id === 'topf-1' ? 'topm-1' : 'topf-1',
                     balance: 1500.00,
-                    totalEarnings: selectedModelForView.followersCount * 0.12,
+                    totalEarnings: (selectedModelForView.followersCount || 120000) * 0.12,
                     totalInvested: 0,
-                    totalCommissions: selectedModelForView.referidosCount * 25,
+                    totalCommissions: (selectedModelForView.referidosCount || 20) * 25,
                     avatar: selectedModelForView.avatar,
                     banner: selectedModelForView.banner || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1200",
                     verified: true,
@@ -3440,15 +3444,22 @@ export default function App() {
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
                   onGoToModelProfile={(modelId, modelObj) => {
+                    setModelViewSourceTab(activeTab);
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                       return;
                     }
                     const target = models.find(m => m.id === modelId || m.name.toLowerCase().includes(modelId.toLowerCase()));
                     if (target) {
                       setSelectedModelForView(target);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                     } else if (modelId) {
                       const fallbackModel: ModelProfile = {
                         id: modelId,
@@ -3463,6 +3474,9 @@ export default function App() {
                       };
                       setSelectedModelForView(fallbackModel);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                     }
                   }}
                   initialSocialModal={profileSocialModalState}
@@ -3488,15 +3502,22 @@ export default function App() {
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
                   onGoToModelProfile={(modelId, modelObj) => {
+                    setModelViewSourceTab(activeTab);
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                       return;
                     }
                     const target = models.find(m => m.id === modelId || m.name.toLowerCase().includes(modelId.toLowerCase()));
                     if (target) {
                       setSelectedModelForView(target);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                     } else if (modelId) {
                       const fallbackModel: ModelProfile = {
                         id: modelId,
@@ -3511,6 +3532,9 @@ export default function App() {
                       };
                       setSelectedModelForView(fallbackModel);
                       setActiveTabTab('home');
+                      try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } catch {}
                     }
                   }}
                   initialSocialModal={profileSocialModalState}
@@ -3536,6 +3560,7 @@ export default function App() {
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
                   onGoToModelProfile={(modelId, modelObj) => {
+                    setModelViewSourceTab(activeTab);
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');

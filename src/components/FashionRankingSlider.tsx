@@ -246,9 +246,28 @@ function ModelRankingCard({
 }: ModelRankingCardProps) {
   const isMale = gender === 'male' || (model && model.gender === 'male');
   const [videoError, setVideoError] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.8);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+      videoRef.current.muted = isMuted;
+      if (!isMuted) {
+        const p = videoRef.current.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              setIsMuted(true);
+              videoRef.current.play().catch(() => {});
+            }
+          });
+        }
+      }
+    }
+  }, [isMuted]);
 
   const handleVolumeChange = (newVol: number) => {
     setVolume(newVol);
@@ -475,42 +494,48 @@ function ModelRankingCard({
           />
         )}
 
-        {/* Floating Active EN LÍNEA Badge overlay */}
-        {model?.isOnline && (
+        {/* Floating Active EN LÍNEA Badge overlay - Only if user is actually online */}
+        {Boolean(model?.isOnline) && (
           <span className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-emerald-600 text-white font-sans font-bold text-[8.5px] px-2.5 py-0.5 rounded-md tracking-wider animate-pulse shadow-md whitespace-nowrap flex items-center gap-1 border border-white/40">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
             EN LÍNEA
           </span>
         )}
 
-        {/* Volume Bar Overlay on Active Video - Appears on hover over left side of card */}
+        {/* Fina y larga barra vertical de volumen: aparece solo al pasar el puntero por encima del margen izquierdo */}
         {offset === 0 && modelVideo && !videoError && (
-          <div className="absolute inset-y-0 left-0 w-1/2 z-20 group/volume-left pointer-events-auto flex items-end p-3">
+          <div className="absolute inset-y-0 left-0 w-16 sm:w-20 z-30 group/volume-left-margin pointer-events-auto flex items-center justify-start pl-2">
             <div 
               onClick={(e) => e.stopPropagation()} 
-              className="opacity-0 group-hover/volume-left:opacity-100 transition-opacity duration-300 flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white shadow-xl hover:bg-black"
+              className="opacity-0 group-hover/volume-left-margin:opacity-100 pointer-events-none group-hover/volume-left-margin:pointer-events-auto transition-opacity duration-300 flex flex-col items-center gap-2.5 bg-slate-950/80 hover:bg-slate-950/95 backdrop-blur-md py-3 px-1 rounded-full border border-white/20 text-white shadow-2xl"
               title="Ajustar volumen"
             >
               <button
                 type="button"
                 onClick={toggleMute}
-                className="text-white hover:text-rose-400 cursor-pointer p-0.5"
+                className="text-white hover:text-rose-400 cursor-pointer p-0.5 transition-transform hover:scale-110 active:scale-95"
+                title={isMuted || volume === 0 ? "Activar audio" : "Silenciar"}
               >
                 {isMuted || volume === 0 ? (
-                  <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                  <VolumeX className="w-3 h-3 text-rose-400" />
                 ) : (
-                  <Volume2 className="w-3.5 h-3.5 text-white" />
+                  <Volume2 className="w-3 h-3 text-white" />
                 )}
               </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={isMuted ? 0 : volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-12 sm:w-16 h-1 accent-rose-500 cursor-pointer rounded-lg bg-white/40"
-              />
+
+              {/* Fina y más larga barra vertical de volumen */}
+              <div className="relative w-3.5 h-28 flex items-center justify-center">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.02"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-28 h-[1.5px] -rotate-90 origin-center accent-rose-500 cursor-pointer rounded-full bg-white/35 appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-rose-500 [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-white"
+                  title={`Volumen: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+                />
+              </div>
             </div>
           </div>
         )}

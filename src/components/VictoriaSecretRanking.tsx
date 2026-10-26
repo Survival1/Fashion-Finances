@@ -1173,7 +1173,8 @@ function PodiumModelMedia({
   hideBadges = false
 }: PodiumModelMediaProps) {
   const [videoError, setVideoError] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(0.8);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isMale = (model as any)?.gender === 'male';
@@ -1266,15 +1267,47 @@ function PodiumModelMedia({
     setVideoError(false);
   }, [videoSrc]);
 
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    if (videoRef.current) {
+      videoRef.current.volume = newVol;
+      videoRef.current.muted = newVol === 0;
+    }
+    setIsMuted(newVol === 0);
+  };
+
   const toggleMute = () => {
     if (videoRef.current) {
       const nextMuted = !videoRef.current.muted;
       videoRef.current.muted = nextMuted;
       setIsMuted(nextMuted);
+      if (!nextMuted && volume === 0) {
+        setVolume(0.8);
+        videoRef.current.volume = 0.8;
+      }
     } else {
       setIsMuted(!isMuted);
     }
   };
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+      videoRef.current.muted = isMuted;
+      if (!isMuted) {
+        const p = videoRef.current.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              setIsMuted(true);
+              videoRef.current.play().catch(() => {});
+            }
+          });
+        }
+      }
+    }
+  }, [videoSrc, isMuted]);
 
   return (
     <div className={`${widthClass} ${heightClass} ${roundedClass} overflow-hidden border-[1px] ${borderColorClass} shadow-xl bg-slate-950 p-0 relative z-10 group/podium-media`}>
@@ -1300,8 +1333,8 @@ function PodiumModelMedia({
           />
         )}
 
-        {/* 🟢 EN LÍNEA badge overlay top center */}
-        {!hideBadges && (
+        {/* 🟢 EN LÍNEA badge overlay top center - only if model is actually online */}
+        {!hideBadges && Boolean(model?.isOnline) && (
           <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 z-25 pointer-events-none">
             <span className="bg-emerald-600/95 text-white font-sans font-black text-[7.5px] sm:text-[8.5px] px-2.5 py-0.5 rounded-md tracking-wider animate-pulse shadow-md border border-white/40 backdrop-blur-xs flex items-center gap-1 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -1313,20 +1346,46 @@ function PodiumModelMedia({
         {/* Highlight glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
-        {/* Audio control toggle on hover */}
-        <div className="absolute bottom-6 left-2.5 z-30 opacity-0 group-hover/podium-media:opacity-100 transition-opacity duration-200 pointer-events-auto">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleMute();
-            }}
-            className="bg-black/80 hover:bg-black text-white p-1.5 rounded-full border border-white/30 shadow-lg cursor-pointer flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
-            title={isMuted ? "Activar audio" : "Silenciar"}
-          >
-            {isMuted ? <VolumeX className="w-3 h-3 text-rose-400" /> : <Volume2 className="w-3 h-3 text-emerald-400" />}
-          </button>
-        </div>
+        {/* Fina y larga barra vertical de volumen: aparece solo al pasar el puntero por encima del margen izquierdo */}
+        {!videoError && (
+          <div className="absolute inset-y-0 left-0 w-16 sm:w-20 z-30 group/volume-left-margin pointer-events-auto flex items-center justify-start pl-2">
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              className="opacity-0 group-hover/volume-left-margin:opacity-100 pointer-events-none group-hover/volume-left-margin:pointer-events-auto transition-opacity duration-300 flex flex-col items-center gap-2.5 bg-slate-950/80 hover:bg-slate-950/95 backdrop-blur-md py-3 px-1 rounded-full border border-white/20 text-white shadow-2xl"
+              title="Ajustar volumen"
+            >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMute();
+                }}
+                className="text-white hover:text-rose-400 cursor-pointer p-0.5 transition-transform hover:scale-110 active:scale-95"
+                title={isMuted || volume === 0 ? "Activar audio" : "Silenciar"}
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="w-3 h-3 text-rose-400" />
+                ) : (
+                  <Volume2 className="w-3 h-3 text-white" />
+                )}
+              </button>
+
+              {/* Fina y más larga barra vertical de volumen */}
+              <div className="relative w-3.5 h-28 flex items-center justify-center">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.02"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-28 h-[1.5px] -rotate-90 origin-center accent-rose-500 cursor-pointer rounded-full bg-white/35 appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-rose-500 [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-white"
+                  title={`Volumen: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2191,11 +2250,13 @@ export default function VictoriaSecretRanking({
                             : 'z-10 hover:z-50 hover:scale-105 hover:border-pink-400 hover:shadow-[0_25px_60px_rgba(219,39,119,0.5)] hover:translate-x-3 sm:hover:translate-x-5 border-white/90'
                         }`}
                       >
-                        {/* Top-left pill: EN LÍNEA */}
-                        <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-                          <span>EN LÍNEA</span>
-                        </div>
+                        {/* Top-left pill: EN LÍNEA (only if online) */}
+                        {Boolean(secondPlace?.isOnline) && (
+                          <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                            <span>EN LÍNEA</span>
+                          </div>
+                        )}
 
                         {/* Top-right heart button */}
                         <button 
@@ -2288,11 +2349,13 @@ export default function VictoriaSecretRanking({
                         <div className="w-72 sm:w-80 md:w-[310px] h-[390px] sm:h-[430px] rounded-[34px] p-1 bg-gradient-to-b from-[#fef08a] via-[#f59e0b] to-[#b45309] shadow-[0_0_40px_rgba(245,158,11,0.55)] relative z-30">
                           <div className="w-full h-full rounded-[30px] overflow-hidden bg-black relative border-2 border-amber-300 flex flex-col justify-between">
                             
-                            {/* Top-left pill: EN LÍNEA */}
-                            <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-                              <span>EN LÍNEA</span>
-                            </div>
+                            {/* Top-left pill: EN LÍNEA (only if online) */}
+                            {Boolean(firstPlace?.isOnline) && (
+                              <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                                <span>EN LÍNEA</span>
+                              </div>
+                            )}
 
                             {/* Top-right heart button */}
                             <button 
@@ -2417,11 +2480,13 @@ export default function VictoriaSecretRanking({
                             : 'z-10 hover:z-50 hover:scale-105 hover:border-pink-400 hover:shadow-[0_25px_60px_rgba(219,39,119,0.5)] hover:-translate-x-3 sm:hover:-translate-x-5 border-white/90'
                         }`}
                       >
-                        {/* Top-left pill: EN LÍNEA */}
-                        <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-                          <span>EN LÍNEA</span>
-                        </div>
+                        {/* Top-left pill: EN LÍNEA (only if online) */}
+                        {Boolean(thirdPlace?.isOnline) && (
+                          <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                            <span>EN LÍNEA</span>
+                          </div>
+                        )}
 
                         {/* Top-right heart button */}
                         <button 

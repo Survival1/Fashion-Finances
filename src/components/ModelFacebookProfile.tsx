@@ -222,49 +222,68 @@ export function ProfileIntroAndSponsors({
     <div className="space-y-4 font-sans text-left">
       {/* Intro Information Cards (FB Intro style) */}
       {!hideIntro && (
-        <div className="bg-gradient-to-br from-[#FCE7F3] via-[#FFF1F6] to-[#E0F2FE] rounded-2xl border border-pink-200/60 p-5 space-y-4 shadow-xs" id="intro-information-card-container">
-          <div>
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest flex items-center gap-1">
-              <span>Información / Intro</span>
-            </h3>
+        <div 
+          className="relative overflow-hidden rounded-2xl border-2 border-pink-500 shadow-[0_0_25px_rgba(236,72,153,0.35)] p-5 space-y-4 bg-black text-white" 
+          id="intro-information-card-container"
+        >
+          {/* 🪽 Wings background: Pure white wings on black background, cropped so Victoria's Secret text and watermark are excluded */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <img 
+              src="/assets/aistudio/ffd370ca-4923-4890-9a20-94b352a93eb2_61aa00ae.jpg" 
+              alt="White Angel Wings" 
+              className="w-full h-full object-cover object-[center_18%] scale-105 opacity-80" 
+            />
+            {/* Black bottom masking layer to guarantee only the wings show and text at bottom is 100% hidden */}
+            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black via-black/85 to-transparent" />
+            {/* Subtle dark vignette to enhance text readability over the wings */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[0.5px]" />
           </div>
 
-          {/* Custom user-editable presentation/intro text */}
-          <div className="space-y-2 text-left">
-            <p className="text-xs text-slate-700 leading-relaxed font-medium bg-white/80 backdrop-blur-xs border border-white/90 p-3.5 rounded-xl whitespace-pre-line shadow-2xs">
-              {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
-            </p>
-          </div>
+          <div className="relative z-10 space-y-4">
+            <div>
+              <h3 className="text-xs font-black text-pink-400 uppercase tracking-widest flex items-center gap-1.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+                <span>Información / Intro</span>
+              </h3>
+            </div>
 
-          <hr className="border-pink-200/50" />
+            {/* Custom user-editable presentation/intro text with elegant glassmorphism */}
+            <div className="space-y-2 text-left">
+              <p className="text-xs text-white leading-relaxed font-medium bg-black/60 backdrop-blur-md border border-pink-500/35 p-3.5 rounded-xl whitespace-pre-line shadow-lg">
+                {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
+              </p>
+            </div>
 
-          {/* Status details indicators */}
-          <div className="text-xs space-y-2 text-slate-700">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-sky-500 font-bold" />
-              <span>Espacio de Trabajo: <strong>España / Remoto</strong></span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Instagram className="w-4 h-4 text-fuchsia-500 font-bold" />
-              <span>Sígueme en Instagram: <strong className="text-indigo-650">@{userProfile?.username || 'usuario'}</strong></span>
-            </div>
-            <div 
-              onClick={() => {
-                if (onOpenRanking) {
-                  onOpenRanking();
-                } else if (onNavigateToTab) {
-                  onNavigateToTab('casting_live');
-                }
-              }}
-              className="flex items-center gap-2 cursor-pointer hover:text-amber-600 transition-colors p-1 -m-1 rounded-lg hover:bg-white/60"
-              title="Ver Sponsoring Oficial y Ranking"
-            >
-              <Award className="w-4 h-4 text-amber-500 font-bold shrink-0" />
-              <span>Sponsoring: <strong className="text-emerald-600">Comisión 10% activa</strong></span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-500 font-bold" />
-              <span>Mis amigos: <strong className="text-indigo-650">{friendsCount} amigos</strong></span>
+            <hr className="border-pink-500/30" />
+
+            {/* Status details indicators styled for high-contrast dark mode */}
+            <div className="text-xs space-y-2 text-slate-200">
+              <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                <Globe className="w-4 h-4 text-sky-400 font-bold shrink-0" />
+                <span>Espacio de Trabajo: <strong className="text-white">España / Remoto</strong></span>
+              </div>
+              <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                <Instagram className="w-4 h-4 text-pink-400 font-bold shrink-0" />
+                <span>Sígueme en Instagram: <strong className="text-pink-300">@{userProfile?.username || 'usuario'}</strong></span>
+              </div>
+              <div 
+                onClick={() => {
+                  if (onOpenRanking) {
+                    onOpenRanking();
+                  } else if (onNavigateToTab) {
+                    onNavigateToTab('casting_live');
+                  }
+                }}
+                className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition-colors p-1 -m-1 rounded-lg hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                title="Ver Sponsoring Oficial y Ranking"
+              >
+                <Award className="w-4 h-4 text-amber-400 font-bold shrink-0" />
+                <span>Sponsoring: <strong className="text-emerald-400">Comisión 10% activa</strong></span>
+              </div>
+              <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                <Users className="w-4 h-4 text-indigo-400 font-bold shrink-0" />
+                <span>Mis amigos: <strong className="text-pink-200">{friendsCount} amigos</strong></span>
+              </div>
             </div>
           </div>
         </div>
@@ -455,6 +474,31 @@ export default function ModelFacebookProfile({
   
   // Find current model's profile info
   const currentModel = models.find(m => m.id === userProfile.id);
+
+  // Check if profile is verified by uploading a video in the ranking video drawer
+  const checkIsProfileVerified = useCallback(() => {
+    try {
+      const pid = userProfile?.id;
+      const puname = userProfile?.username?.toLowerCase();
+      if (!pid && !puname) return false;
+      
+      if (pid && localStorage.getItem(`model_verified_by_video_upload_${pid}`) === 'true') {
+        return true;
+      }
+      if (puname && localStorage.getItem(`model_verified_by_video_upload_${puname}`) === 'true') {
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [userProfile?.id, userProfile?.username]);
+
+  const [isProfileVerified, setIsProfileVerified] = useState<boolean>(() => checkIsProfileVerified());
+
+  useEffect(() => {
+    setIsProfileVerified(checkIsProfileVerified());
+  }, [userProfile?.id, userProfile?.username, checkIsProfileVerified]);
 
   // Helper to determine if a contact/model is the current profile or the logged in user
   const isSelfContact = useCallback((item: { id?: string; username?: string; name?: string }) => {
@@ -783,6 +827,18 @@ export default function ModelFacebookProfile({
     localStorage.setItem(`hide_social_cards_${userProfile.id}`, String(nextVal));
   };
 
+  const handleSettingsTabClick = (tabKey: string) => {
+    setActiveSettingsTab(tabKey);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setTimeout(() => {
+        const el = document.getElementById('settings-tab-content');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 50);
+    }
+  };
+
   useEffect(() => {
     setHideProfileMetrics(localStorage.getItem(`hide_profile_metrics_${userProfile.id}`) === 'true');
     setHideSocialCards(localStorage.getItem(`hide_social_cards_${userProfile.id}`) === 'true');
@@ -1006,21 +1062,7 @@ export default function ModelFacebookProfile({
   }, []);
 
   // --- RANKING VIDEO UPLOAD FORM STATES ---
-  const [rankingFormVideoUrl, setRankingFormVideoUrl] = useState<string>(() => {
-    const cachedRankingsRaw = localStorage.getItem('coll_top_100_ranking');
-    if (cachedRankingsRaw) {
-      try {
-        const rankingsData = JSON.parse(cachedRankingsRaw);
-        const userId = userProfile?.id || 'admin';
-        const matchedModelInProps = models?.find(m => m.id === userId || (m.username && m.username.toLowerCase() === userProfile?.username?.toLowerCase()));
-        const userGender = (matchedModelInProps as any)?.gender || (userProfile as any)?.gender || 'female';
-        const targetKey = userGender === 'female' ? 'females' : 'males';
-        const found = rankingsData[targetKey]?.find((m: any) => m.id === userId || m.username === userProfile?.username);
-        if (found?.videoUrl) return found.videoUrl;
-      } catch (e) {}
-    }
-    return 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-a-red-light-40486-large.mp4';
-  });
+  const [rankingFormVideoUrl, setRankingFormVideoUrl] = useState<string>('');
   const [rankingFormDescription, setRankingFormDescription] = useState<string>(() => {
     const cachedRankingsRaw = localStorage.getItem('coll_top_100_ranking');
     if (cachedRankingsRaw) {
@@ -4780,9 +4822,11 @@ export default function ModelFacebookProfile({
                   <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 leading-tight whitespace-nowrap">
                     {userProfile.name}
                   </h2>
-                  <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
-                    Verificado ✓
-                  </span>
+                  {isProfileVerified && (
+                    <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 animate-fade-in shadow-2xs">
+                      Verificado ✓
+                    </span>
+                  )}
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-0.5 shrink-0 ${
                     userProfile.role === 'model' 
                       ? 'bg-amber-100 text-amber-700' 
@@ -5251,8 +5295,8 @@ export default function ModelFacebookProfile({
           
           {activeProfileOrWallTab === 'perfil' && (
             <>
-              {/* Intro Information & Sponsored Companies Cards (Mobile view only; on Desktop rendered in sidebar under Close button) */}
-              <div className="lg:hidden mb-6">
+              {/* Intro Information & Sponsored Companies Cards (ends with #10 Behati Prinsloo) */}
+              <div className="mb-6">
                 <ProfileIntroAndSponsors
                   userProfile={userProfile}
                   bioText={bioText}
@@ -5265,39 +5309,143 @@ export default function ModelFacebookProfile({
                 />
               </div>
 
-          {/* 💼 SECCIÓN DE CONTRATACIÓN (Solo visible para perfiles de MODELOS) / PORTAL PREMIUM DE RANKINGS para perfiles de INVERSORES */}
-          {userProfile.role === 'model' ? (
-            <div className="bg-gradient-to-b from-[#F0F8FF] via-[#EAF4FC] to-[#F4F9FF] border border-[#CDE3F5] text-[#171717] rounded-3xl p-5 sm:p-7 space-y-5 shadow-[0_4px_24px_rgba(2,132,199,0.06)] relative overflow-hidden select-none">
+              {/* 🏆 EN OTRO CONTENEDOR: CONTENIDO DE IMAGE.PNG JUSTO DEBAJO DE BEHATI PRINSLOO */}
+              <div className="space-y-4 mb-6" id="contenedor-podio-rondas-debajo-ranking">
+                {/* 🎬 Llamada y Botón de Rondas de Financiación */}
+                <div className="flex flex-col items-center justify-center text-center w-full px-4 pt-6 pb-4 sm:pt-8 sm:pb-6 space-y-4">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-700 max-w-xl leading-relaxed">
+                    ¿Quieres conocer nuestras Rondas de financiación Crowdfunding ? Únete a ellas y comienza a financiar tus proyectos.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onNavigateToTab) {
+                        onNavigateToTab('sessions');
+                      } else {
+                        alert('Navegando a Rondas...');
+                      }
+                    }}
+                    className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer select-none shadow-xs hover:shadow-md active:scale-[0.98] w-auto justify-center"
+                  >
+                    <span className="text-sm">🎬</span>
+                    <span>IR A RONDAS</span>
+                  </button>
+                </div>
+
+                {/* 🏆 PORTAL DE RANKING & PODIO ELITE (Victoria's Secret Angel Wings Runway Background) */}
+                <div className="relative overflow-hidden select-none rounded-3xl border-2 border-pink-400/60 p-6 sm:p-9 text-white shadow-[0_12px_45px_rgba(236,72,153,0.35)] min-h-[310px] sm:min-h-[330px] md:min-h-[350px] bg-[#c2185b] flex flex-col justify-center">
+                  {/* 🪽 Background Runway Image with Angel Wings */}
+                  <img 
+                    src="/assets/aistudio/1760507441-3095-large_4bb26be6.webp" 
+                    alt="Victoria's Secret Angel Wings Runway" 
+                    className="absolute inset-0 w-full h-full object-cover object-[80%_18%] sm:object-[78%_16%] md:object-[76%_14%] pointer-events-none transition-transform duration-700 hover:scale-[1.02]"
+                  />
+
+                  {/* Left gradient overlay covering only the left text area, keeping the angel on the right completely bright and clear */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 via-50% to-transparent sm:bg-gradient-to-r sm:from-black/90 sm:via-black/60 sm:via-46% sm:to-transparent sm:to-62% pointer-events-none" />
+
+                  {/* Subtle ambient lighting */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-pink-400/20 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-8 -left-8 w-44 h-44 bg-pink-500/20 rounded-full blur-2xl pointer-events-none" />
+
+                  {/* Left Area Content: Titles, description, and action buttons cleanly clustered on the left so the angel with wings on the right is 100% visible */}
+                  <div className="relative z-10 max-w-lg sm:max-w-xl text-left space-y-4">
+                    {/* Pills */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 bg-white/95 text-slate-900 border border-white/60 text-[9.5px] font-mono font-black uppercase tracking-[0.16em] px-3.5 py-1.5 rounded-full shadow-md backdrop-blur-sm">
+                        🏆 SALA DE LA FAMA
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 bg-pink-500/90 text-white border border-pink-300/50 text-[9.5px] font-mono font-black uppercase tracking-[0.16em] px-3.5 py-1.5 rounded-full shadow-md backdrop-blur-sm">
+                        GLOBAL ELITE
+                      </span>
+                    </div>
+
+                    {/* Title & Description */}
+                    <div className="space-y-2">
+                      <h3 className="text-2xl sm:text-3xl font-serif font-black text-white tracking-wide leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        Podio de Modelos <span className="text-pink-300 antialiased font-mono font-black uppercase text-2.5xl sm:text-3xl tracking-normal ml-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">TOP 100</span>
+                      </h3>
+                      <p className="text-xs sm:text-[12.5px] text-white/95 font-medium leading-relaxed max-w-md sm:max-w-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">
+                        Visualiza la élite internacional de creadores registrados en Fashion Finances. Desliza horizontalmente para explorar el ranking de 50 mujeres y 50 hombres que lideran las tendencias mundiales.
+                      </p>
+                    </div>
+
+                    {/* Badges and action row grouped together on the left */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      {/* Total model badge */}
+                      <div className="bg-white/90 border border-white/50 rounded-2xl py-2 px-4 shadow-lg select-none backdrop-blur-md">
+                        <span className="text-slate-600 text-[9px] uppercase font-black tracking-widest font-mono block leading-none pb-1">
+                          TOTAL MODELOS
+                        </span>
+                        <span className="text-sm font-mono font-black text-slate-950 block">
+                          100 Creadores
+                        </span>
+                      </div>
+
+                      {/* Golden crown button */}
+                      <button
+                        onClick={() => {
+                          if (onOpenRanking) {
+                            onOpenRanking();
+                          } else {
+                            const btn = document.getElementById('btn-victoria-secret-ranking') || document.getElementById('btn-victoria-secret-ranking-banner');
+                            if (btn) btn.click();
+                          }
+                        }}
+                        className="bg-gradient-to-r from-[#FDFBF7] to-[#FFF8E7] hover:from-white hover:to-[#FFF3D6] text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_20px_rgba(211,180,112,0.4)] hover:shadow-[0_8px_25px_rgba(211,180,112,0.6)] transition-all duration-300 flex items-center justify-center py-2.5 px-6 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
+                        title="Explorar el Podio de Modelos TOP 100"
+                      >
+                        {/* Corona según género del modelo */}
+                        <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                          {userProfile?.gender === 'male' ? (
+                            <RoyalMaleCrown imgClassName="w-8 h-6.5 object-contain" />
+                          ) : (
+                            <RoyalFemaleCrown imgClassName="w-8 h-6.5 object-contain" />
+                          )}
+                        </div>
+                        <div className="h-5 w-[1px] bg-[#D3B470]/60 mx-3" />
+                        <span className="font-serif text-xs font-black text-[#967838] tracking-[0.18em] select-none">
+                          RANKING
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 💼 SECCIÓN DE CONTRATACIÓN (Solo visible para perfiles de MODELOS) */}
+              {userProfile.role === 'model' && (
+                <div className="bg-gradient-to-b from-[#FFF5F8] via-[#FFF9FA] to-white border border-[#FBCFE8] text-[#171717] rounded-3xl p-5 sm:p-7 space-y-5 shadow-[0_4px_24px_rgba(244,114,182,0.10)] relative overflow-hidden select-none">
               
-              <div className="flex items-center justify-between border-b border-[#CDE3F5] pb-3.5">
+              <div className="flex items-center justify-between border-b border-[#FCE7F3] pb-3.5">
                 <div className="flex items-center gap-2.5">
-                  <span className="px-2.5 py-0.5 bg-[#E0F2FE] rounded-md text-[#0284C7] border border-[#0284C7]/30 text-[10px] font-mono font-black uppercase tracking-wider shadow-3xs">
+                  <span className="px-2.5 py-0.5 bg-[#FDF2F8] rounded-md text-[#DB2777] border border-[#F472B6]/40 text-[10px] font-mono font-black uppercase tracking-wider shadow-3xs">
                     B2B
                   </span>
-                  <h3 className="text-xs sm:text-[13px] font-bold text-slate-600 uppercase tracking-wider font-sans">
+                  <h3 className="text-xs sm:text-[13px] font-bold text-slate-700 uppercase tracking-wider font-sans">
                     Contratación de modelo y partnerships
                   </h3>
                 </div>
               </div>
 
               {isEditingCommercial ? (
-                <div className="space-y-4 text-xs bg-white/80 border border-[#CDE3F5] p-4 rounded-2xl shadow-3xs">
+                <div className="space-y-4 text-xs bg-white/90 border border-[#FBCFE8] p-4 rounded-2xl shadow-3xs">
                   <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-[#697386] block font-mono">Email Profesional:</label>
+                    <label className="text-[10px] uppercase font-bold text-[#831843] block font-mono">Email Profesional:</label>
                     <input
                       type="email"
                       value={tempProfEmail}
                       onChange={(e) => setTempProfEmail(e.target.value)}
-                      className="w-full bg-white border border-[#CDE3F5] rounded-xl p-2.5 text-xs text-[#171717] focus:outline-none focus:border-[#0284C7] font-mono"
+                      className="w-full bg-white border border-[#FBCFE8] rounded-xl p-2.5 text-xs text-[#171717] focus:outline-none focus:border-[#EC4899] font-mono"
                     />
                   </div>
                   <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-[#697386] block font-mono">Ciudad / Base:</label>
+                    <label className="text-[10px] uppercase font-bold text-[#831843] block font-mono">Ciudad / Base:</label>
                     <input
                       type="text"
                       value={tempProfCity}
                       onChange={(e) => setTempProfCity(e.target.value)}
-                      className="w-full bg-white border border-[#CDE3F5] rounded-xl p-2.5 text-xs text-[#171717] focus:outline-none focus:border-[#0284C7]"
+                      className="w-full bg-white border border-[#FBCFE8] rounded-xl p-2.5 text-xs text-[#171717] focus:outline-none focus:border-[#EC4899]"
                     />
                   </div>
                   <button
@@ -5309,60 +5457,36 @@ export default function ModelFacebookProfile({
                       setIsEditingCommercial(false);
                       alert('✨ ¡Información de perfil comercial guardada correctamente!');
                     }}
-                    className="w-full py-2.5 bg-[#0284C7] hover:bg-[#0369a1] text-white font-bold rounded-xl text-xs transition cursor-pointer border-0 shadow-xs active:scale-[0.99]"
+                    className="w-full py-2.5 bg-gradient-to-r from-[#EC4899] to-[#F43F5E] hover:from-[#DB2777] hover:to-[#E11D48] text-white font-bold rounded-xl text-xs transition cursor-pointer border-0 shadow-xs active:scale-[0.99]"
                   >
                     Guardar Perfil Comercial
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-center py-2">
-                    <button
-                          onClick={() => {
-                            if (onOpenRanking) {
-                              onOpenRanking();
-                            } else {
-                              const btn = document.getElementById('btn-victoria-secret-ranking') || document.getElementById('btn-victoria-secret-ranking-banner');
-                              if (btn) btn.click();
-                            }
-                          }}
-                          className="bg-gradient-to-br from-[#FFFDF8] via-[#FFFBF2] to-[#FFF6E3] hover:from-[#FFF9ED] hover:to-[#FFEFCC] text-[#C9A24A] rounded-2xl border border-[#C9A24A]/80 hover:border-[#C9A24A] shadow-[0_2px_12px_rgba(201,162,74,0.18)] hover:shadow-[0_4px_20px_rgba(201,162,74,0.3)] transition-all duration-300 flex items-center justify-center py-3 px-5 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
-                          title="Explorar el Podio de Modelos TOP 100"
-                        >
-                          {/* Crown button based on model gender */}
-                          <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-                            {userProfile?.gender === 'male' ? (
-                              <RoyalMaleCrown imgClassName="w-7 h-5.5 object-contain" />
-                            ) : (
-                              <RoyalFemaleCrown imgClassName="w-7 h-5.5 object-contain" />
-                            )}
-                          </div>
-                          <div className="h-4 w-[1px] bg-[#E7D39B] mx-3" />
-                          <span className="font-serif text-xs font-bold text-[#C9A24A] tracking-[0.2em] select-none">
-                            RANKING
-                          </span>
-                    </button>
-                  </div>
+                  <div className="text-left">
+                    {/* Fondo Rosa Perla y blanco */}
+                    <div className="bg-gradient-to-b from-[#FFF0F5] via-[#FFF7FA] to-white border border-[#F9A8D4]/60 rounded-2xl p-6 text-center space-y-4 shadow-[0_4px_20px_rgba(244,114,182,0.12)] mb-3.5 relative overflow-hidden">
+                      {/* Subtle pearlescent glow effect */}
+                      <div className="absolute -top-12 -right-12 w-36 h-36 bg-pink-200/30 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-rose-100/40 rounded-full blur-2xl pointer-events-none" />
 
-                  <div className="pt-4 border-t border-[#CDE3F5] text-left">
-                    {/* Sky blue (Azul Cielo) visual banner and button to open contract page modal */}
-                    <div className="bg-gradient-to-b from-[#bfe2ff] via-[#cde9ff] to-[#bfe2ff] border border-[#7ec4f8] rounded-2xl p-6 text-center space-y-4 shadow-[0_4px_20px_rgba(2,132,199,0.12)] mb-3.5">
-                      <div className="space-y-1.5">
-                        <h4 className="font-bold text-[#0c2840] text-sm sm:text-base tracking-tight font-sans">
+                      <div className="relative z-10 space-y-1.5">
+                        <h4 className="font-bold text-[#831843] text-sm sm:text-base tracking-tight font-sans">
                           Catálogo de Modalidades de Contratación
                         </h4>
-                        <p className="text-xs text-[#1e3a58] max-w-md mx-auto leading-relaxed font-medium">
+                        <p className="text-xs text-[#9d174d]/85 max-w-md mx-auto leading-relaxed font-medium">
                           Consulta y selecciona entre 15 tipos de servicios profesionales, contratos de imagen y representación con pasarela y catálogo.
                         </p>
                       </div>
 
-                      <div className="flex justify-center">
+                      <div className="relative z-10 flex justify-center">
                         <button
                           type="button"
                           onClick={() => setShowContractsModal(true)}
-                          className="px-5 py-2.5 bg-white hover:bg-[#0c2840] hover:text-white text-[#0c2840] font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer border border-[#90d0fc] hover:border-[#0c2840] shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2.5 active:scale-[0.99] group"
+                          className="px-5 py-2.5 bg-white hover:bg-gradient-to-r hover:from-[#EC4899] hover:to-[#F43F5E] hover:text-white text-[#9d174d] font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer border border-[#F9A8D4] hover:border-transparent shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2.5 active:scale-[0.99] group"
                         >
-                          <FileText className="w-4 h-4 text-[#0284C7] group-hover:text-sky-300 transition-colors" />
+                          <FileText className="w-4 h-4 text-[#EC4899] group-hover:text-white transition-colors" />
                           <span className="font-bold tracking-wide text-xs">Ver opciones de contratación</span>
                         </button>
                       </div>
@@ -5648,99 +5772,6 @@ export default function ModelFacebookProfile({
                 })()}
                 </>
               )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* 🎬 Llamada y Botón de Rondas de Financiación con amplia separación superior e inferior */}
-              <div className="flex flex-col items-center justify-center text-center w-full px-4 pt-10 pb-8 sm:pt-14 sm:pb-12 my-6 sm:my-8 space-y-4 sm:space-y-5">
-                <p className="text-xs sm:text-sm font-semibold text-slate-700 max-w-xl leading-relaxed">
-                  ¿Quieres conocer nuestras Rondas de financiación Crowdfunding ? Únete a ellas y comienza a financiar tus proyectos.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onNavigateToTab) {
-                      onNavigateToTab('sessions');
-                    } else {
-                      alert('Navegando a Rondas...');
-                    }
-                  }}
-                  className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer select-none shadow-xs hover:shadow-md active:scale-[0.98] w-auto justify-center"
-                >
-                  <span className="text-sm">🎬</span>
-                  <span>IR A RONDAS</span>
-                </button>
-              </div>
-
-              {/* 🏆 PORTAL DE RANKING & PODIO ELITE (Azul Capri y Rosa Perla con letras en negro) */}
-              <div className="relative overflow-hidden select-none rounded-3xl bg-gradient-to-br from-[#00A4E4] via-[#65cbf3] to-[#F5D0E0] border-2 border-[#00A4E4]/40 p-6 sm:p-8 text-black shadow-lg">
-                {/* Elegant glow decoration */}
-                <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-b from-white/40 to-transparent rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/30 rounded-full blur-2xl pointer-events-none" />
-
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
-                  {/* Left Area: Display Titles and text */}
-                  <div className="space-y-3.5 text-left flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 bg-white/85 text-black border border-black/20 text-[9px] font-mono font-black uppercase tracking-[0.16em] px-3 py-1 rounded-full shadow-2xs">
-                        🏆 SALA DE LA FAMA
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 bg-black/10 text-black border border-black/25 text-[9px] font-mono font-black uppercase tracking-[0.16em] px-3 py-1 rounded-full shadow-2xs">
-                        GLOBAL ELITE
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h3 className="text-xl sm:text-2xl font-serif font-black text-black tracking-wide leading-tight antialiased">
-                        Podio de Modelos <span className="text-black antialiased font-mono font-black uppercase text-2.5xl tracking-normal ml-1">TOP 100</span>
-                      </h3>
-                      <p className="text-[11.5px] text-black font-semibold leading-relaxed max-w-lg">
-                        Visualiza la élite internacional de creadores registrados en Fashion Finances. Desliza horizontalmente para explorar el ranking de 50 mujeres y 50 hombres que lideran las tendencias mundiales.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right Area: Stat + Ranking Crown button stacked vertically on desktop */}
-                  <div className="flex flex-row md:flex-col items-center md:items-end gap-3.5 shrink-0 justify-between md:justify-center border-t border-black/10 pt-4 md:border-t-0 md:pt-0">
-                    {/* Total model badge */}
-                    <div className="bg-white/70 border border-black/20 rounded-2xl p-3 px-4 text-left md:text-right shadow-3xs min-w-[130px] select-none backdrop-blur-xs">
-                      <span className="text-black text-[9.5px] uppercase font-black tracking-widest font-mono block leading-none pb-1.5">
-                        TOTAL MODELOS
-                      </span>
-                      <span className="text-sm font-mono font-black text-black block">
-                        100 Creadores
-                      </span>
-                    </div>
-
-                    {/* Golden crown button */}
-                    <button
-                      onClick={() => {
-                        if (onOpenRanking) {
-                          onOpenRanking();
-                        } else {
-                          const btn = document.getElementById('btn-victoria-secret-ranking') || document.getElementById('btn-victoria-secret-ranking-banner');
-                          if (btn) btn.click();
-                        }
-                      }}
-                      className="bg-[#FDFBF7] hover:bg-white text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_15px_-4px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.25)] transition-all duration-300 flex items-center justify-center py-2 px-5 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
-                      title="Explorar el Podio de Modelos TOP 100"
-                    >
-                      {/* Corona según género del modelo */}
-                      <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                        {userProfile?.gender === 'male' ? (
-                          <RoyalMaleCrown imgClassName="w-8 h-6.5 object-contain" />
-                        ) : (
-                          <RoyalFemaleCrown imgClassName="w-8 h-6.5 object-contain" />
-                        )}
-                      </div>
-                      <div className="h-5 w-[1px] bg-[#D3B470]/60 mx-3" />
-                      <span className="font-serif text-xs font-bold text-[#B4975A] tracking-[0.15em] select-none">
-                        RANKING
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -9179,9 +9210,11 @@ export default function ModelFacebookProfile({
                     <div className="text-left">
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-slate-800 text-xs block leading-none">{userProfile.name}</span>
-                        <div className="w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center shrink-0" title="Verificado">
-                          <Check className="w-2 text-white stroke-[4px]" />
-                        </div>
+                        {isProfileVerified && (
+                          <div className="w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center shrink-0" title="Verificado">
+                            <Check className="w-2 text-white stroke-[4px]" />
+                          </div>
+                        )}
                       </div>
                       <span className="text-[10px] text-slate-400 font-mono">@{userProfile.username}</span>
                     </div>
@@ -9729,9 +9762,9 @@ export default function ModelFacebookProfile({
           <div className="bg-white w-full h-full border-0 shadow-none flex flex-col overflow-hidden relative">
             
             {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
                   <Edit className="w-5 h-5" />
                 </div>
                 <div className="text-left">
@@ -9742,17 +9775,18 @@ export default function ModelFacebookProfile({
               <button 
                 type="button"
                 onClick={() => setShowSettingsDrawer(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold hover:bg-slate-100 px-2.5 py-1.5 rounded-lg transition text-sm cursor-pointer border-0 shadow-none"
+                className="text-slate-800 hover:text-slate-950 font-bold border border-slate-200 hover:bg-slate-100 px-3.5 py-1.5 rounded-xl transition text-xs sm:text-sm cursor-pointer shadow-3xs flex items-center gap-1.5 uppercase tracking-wide"
               >
-                ✕ Cerrar
+                <span>✕</span>
+                <span>CERRAR</span>
               </button>
             </div>
 
-            {/* Main content body (Splits in left menu and right detail content) */}
-            <div className="flex-1 flex overflow-hidden divide-x divide-slate-100 bg-white">
+            {/* Main content body: On mobile, buttons come first at full width, then detail content below at full width */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-white">
               
-              {/* LEFT SIDEBAR: vertical list of items from yz.png */}
-              <div className="w-[42%] sm:w-[35%] bg-white overflow-y-auto p-3 text-left space-y-4 border-0">
+              {/* BUTTONS NAVIGATION: Full width on mobile, left sidebar on desktop */}
+              <div id="settings-menu-nav" className="w-full md:w-[35%] lg:w-[28%] bg-white p-3.5 sm:p-4 text-left space-y-4 border-0 shrink-0 md:overflow-y-auto">
                 
                 {/* Section header */}
                 <div className="space-y-1.5">
@@ -9762,28 +9796,28 @@ export default function ModelFacebookProfile({
                   <div className="space-y-1.5">
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('profile')}
+                      onClick={() => handleSettingsTabClick('profile')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'profile'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Camera className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Editar Perfil</span>
+                      <span className="truncate sm:whitespace-normal">Editar Perfil</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('notifications')}
+                      onClick={() => handleSettingsTabClick('notifications')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'notifications'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Bell className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Notificaciones</span>
+                      <span className="truncate sm:whitespace-normal">Notificaciones</span>
                     </button>
                   </div>
                 </div>
@@ -9796,54 +9830,54 @@ export default function ModelFacebookProfile({
                   <div className="space-y-1.5">
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('privacy')}
+                      onClick={() => handleSettingsTabClick('privacy')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'privacy'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Lock className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Privacidad de la cuen...</span>
+                      <span className="truncate sm:whitespace-normal">Privacidad de la cuenta</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('friends')}
+                      onClick={() => handleSettingsTabClick('friends')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'friends'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Star className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Mejores Amigos</span>
+                      <span className="truncate sm:whitespace-normal">Mejores Amigos</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('blocked')}
+                      onClick={() => handleSettingsTabClick('blocked')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'blocked'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Ban className="w-4 h-4 text-rose-500 shrink-0" />
-                      <span className="truncate">Cuentas Bloqueadas</span>
+                      <span className="truncate sm:whitespace-normal">Cuentas Bloqueadas</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('history')}
+                      onClick={() => handleSettingsTabClick('history')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'history'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Clock className="w-4 h-4 text-sky-500 shrink-0" />
-                      <span className="truncate">Historia y Ubicación</span>
+                      <span className="truncate sm:whitespace-normal">Historia y Ubicación</span>
                     </button>
                   </div>
                 </div>
@@ -9856,88 +9890,108 @@ export default function ModelFacebookProfile({
                   <div className="space-y-1.5">
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('messages')}
+                      onClick={() => handleSettingsTabClick('messages')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'messages'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Send className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Mensajes e Historias</span>
+                      <span className="truncate sm:whitespace-normal">Mensajes e Historias</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('tags')}
+                      onClick={() => handleSettingsTabClick('tags')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'tags'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Type className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Etiquetas y Menciones</span>
+                      <span className="truncate sm:whitespace-normal">Etiquetas y Menciones</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('comments')}
+                      onClick={() => handleSettingsTabClick('comments')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'comments'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <MessageSquare className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Comentarios</span>
+                      <span className="truncate sm:whitespace-normal">Comentarios</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('sharing')}
+                      onClick={() => handleSettingsTabClick('sharing')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'sharing'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <Share2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="truncate">Compartiendo</span>
+                      <span className="truncate sm:whitespace-normal">Compartiendo</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('restricted')}
+                      onClick={() => handleSettingsTabClick('restricted')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'restricted'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <ShieldAlert className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Cuentas Restringidas</span>
+                      <span className="truncate sm:whitespace-normal">Cuentas Restringidas</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveSettingsTab('filters')}
+                      onClick={() => handleSettingsTabClick('filters')}
                       className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'filters'
-                          ? 'active-tab bg-slate-100 text-slate-900'
+                          ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <EyeOff className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate">Palabras Filtradas</span>
+                      <span className="truncate sm:whitespace-normal">Palabras Filtradas</span>
                     </button>
                   </div>
                 </div>
 
               </div>
 
-              {/* RIGHT DETAIL CONTENT VIEW */}
-              <div className="flex-1 overflow-y-auto p-5 sm:p-7 text-left space-y-6">
+              {/* RIGHT DETAIL CONTENT VIEW: Full width on mobile, right panel on desktop */}
+              <div id="settings-tab-content" className="w-full flex-1 md:overflow-y-auto p-4 sm:p-7 text-left space-y-6 bg-white">
+                
+                {/* Mobile helper indicator to quickly jump back to top buttons if desired */}
+                <div className="md:hidden flex items-center justify-between pb-2.5 border-b border-slate-100 mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                    <span className="text-[11px] font-black text-slate-800 uppercase font-mono">
+                      Contenido de la pestaña
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nav = document.getElementById('settings-menu-nav');
+                      if (nav) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-800 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer transition"
+                  >
+                    ↑ Ver todos los botones
+                  </button>
+                </div>
                 
                 {activeSettingsTab === 'profile' && (
                   <div className="space-y-4 animate-fade-in text-xs">
@@ -10077,7 +10131,21 @@ export default function ModelFacebookProfile({
                               localStorage.setItem(`custom_model_video_adrianalima`, targetVideoUrl);
                               localStorage.setItem(`custom_model_video_topf-1`, targetVideoUrl);
                             }
+                            localStorage.setItem(`model_verified_by_video_upload_${targetId}`, 'true');
+                            localStorage.setItem(`model_verified_by_video_upload_${targetUsername.toLowerCase()}`, 'true');
+                            if (userProfile?.id) localStorage.setItem(`model_verified_by_video_upload_${userProfile.id}`, 'true');
+                            if (userProfile?.username) localStorage.setItem(`model_verified_by_video_upload_${userProfile.username.toLowerCase()}`, 'true');
+                            if (targetGender === 'female') {
+                              localStorage.setItem('model_verified_by_video_upload_adrianalima', 'true');
+                              localStorage.setItem('model_verified_by_video_upload_adrianalima_w1', 'true');
+                              localStorage.setItem('model_verified_by_video_upload_topf-1', 'true');
+                            }
                           } catch (err) {}
+
+                          setIsProfileVerified(true);
+                          if (onUpdateProfile) {
+                            onUpdateProfile({ ...userProfile, verified: true });
+                          }
 
                           // 2. Update in-memory models array and localStorage coll_models
                           const rawModels = localStorage.getItem('coll_models');
@@ -10223,8 +10291,12 @@ export default function ModelFacebookProfile({
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          setRankingFormVideoUrl(preset.url);
-                                          applyRankingVideo(preset.url);
+                                          if (isSelected) {
+                                            setRankingFormVideoUrl('');
+                                          } else {
+                                            setRankingFormVideoUrl(preset.url);
+                                            applyRankingVideo(preset.url);
+                                          }
                                         }}
                                         className={`w-full p-2.5 cursor-pointer border rounded-xl text-left transition-all duration-200 flex flex-col justify-center ${
                                           isSelected 
@@ -10245,7 +10317,7 @@ export default function ModelFacebookProfile({
                                           const updated = userRankingVideos.filter(v => v.url !== preset.url);
                                           setUserRankingVideos(updated);
                                           if (rankingFormVideoUrl === preset.url) {
-                                            setRankingFormVideoUrl(updated[0]?.url || '');
+                                            setRankingFormVideoUrl('');
                                           }
                                         }}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 flex items-center justify-center transition-all cursor-pointer z-20 border border-rose-200 shadow-2xs"
@@ -10260,15 +10332,15 @@ export default function ModelFacebookProfile({
                             </div>
 
                             {/* Interactive Premium Video Player - Marco Rosa Perla y Blanco */}
-                            {(rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url) && (
+                            {(rankingFormVideoUrl || newCustomVideoUrl) ? (
                               <div className="p-2.5 bg-gradient-to-br from-white via-[#fff0f5] to-[#fce7f3] rounded-2xl border-2 border-[#fbcfe8] shadow-md shadow-pink-100/60 overflow-hidden relative ring-2 ring-white/90">
                                 <span className="absolute top-3.5 left-3.5 bg-gradient-to-r from-[#f472b6] to-[#ec4899] text-[8.5px] text-white font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-white/60 tracking-wider">
                                   REPRODUCTOR DEMO
                                 </span>
                                 <div className="relative w-full aspect-video bg-white/30 rounded-xl overflow-hidden flex items-center justify-center border border-[#ffd1dc]/80 shadow-inner">
                                   <video
-                                    key={rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url}
-                                    src={rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url}
+                                    key={rankingFormVideoUrl || newCustomVideoUrl}
+                                    src={rankingFormVideoUrl || newCustomVideoUrl}
                                     autoPlay
                                     loop
                                     muted
@@ -10277,6 +10349,16 @@ export default function ModelFacebookProfile({
                                     className="w-full h-full object-cover rounded-lg object-center transition-transform duration-700 bg-black"
                                   />
                                 </div>
+                              </div>
+                            ) : (
+                              <div className="p-6 bg-gradient-to-br from-white via-[#fff9fb] to-[#fdf2f8] rounded-2xl border-2 border-dashed border-[#fbcfe8] text-center space-y-2 select-none">
+                                <div className="w-10 h-10 mx-auto rounded-full bg-pink-50 border border-pink-200 flex items-center justify-center text-pink-500 text-lg">
+                                  🎬
+                                </div>
+                                <p className="text-xs font-bold text-slate-700">Ningún vídeo seleccionado</p>
+                                <p className="text-[10.5px] text-slate-400 max-w-xs mx-auto">
+                                  Haz clic en uno de los vídeos guardados arriba o sube un archivo local para previsualizarlo aquí.
+                                </p>
                               </div>
                             )}
 
@@ -10329,7 +10411,7 @@ export default function ModelFacebookProfile({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const targetVideoUrl = rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url;
+                                  const targetVideoUrl = rankingFormVideoUrl || newCustomVideoUrl;
                                   if (!targetVideoUrl) {
                                     alert("Por favor selecciona un vídeo o introduce una URL.");
                                     return;
@@ -10365,7 +10447,7 @@ export default function ModelFacebookProfile({
                           setBioText(editingBio);
                           setFashionAgency(editingFashionAgency);
 
-                          const activeVideo = rankingFormVideoUrl || newCustomVideoUrl || userRankingVideos[0]?.url;
+                          const activeVideo = rankingFormVideoUrl || newCustomVideoUrl;
                           
                           const targetGender = currentModel?.gender || userProfile?.gender || 'female';
                           const targetId = currentModel?.id || userProfile?.id || (targetGender === 'male' ? 'topm-1' : 'topf-1');
@@ -10388,7 +10470,21 @@ export default function ModelFacebookProfile({
                                 localStorage.setItem(`custom_model_video_adrianalima`, activeVideo);
                                 localStorage.setItem(`custom_model_video_topf-1`, activeVideo);
                               }
+                              localStorage.setItem(`model_verified_by_video_upload_${targetId}`, 'true');
+                              localStorage.setItem(`model_verified_by_video_upload_${targetUsername.toLowerCase()}`, 'true');
+                              if (userProfile?.id) localStorage.setItem(`model_verified_by_video_upload_${userProfile.id}`, 'true');
+                              if (userProfile?.username) localStorage.setItem(`model_verified_by_video_upload_${userProfile.username.toLowerCase()}`, 'true');
+                              if (targetGender === 'female') {
+                                localStorage.setItem('model_verified_by_video_upload_adrianalima', 'true');
+                                localStorage.setItem('model_verified_by_video_upload_adrianalima_w1', 'true');
+                                localStorage.setItem('model_verified_by_video_upload_topf-1', 'true');
+                              }
                             } catch (e) {}
+
+                            setIsProfileVerified(true);
+                            if (onUpdateProfile) {
+                              onUpdateProfile({ ...userProfile, verified: true });
+                            }
                           }
 
                           if (currentModel) {
@@ -10880,6 +10976,7 @@ export default function ModelFacebookProfile({
           onGoToModelProfile={onGoToModelProfile}
           models={models}
           realLoggedInUser={realLoggedInUser}
+          onNavigateToTab={onNavigateToTab}
         />
       )}
 
@@ -10940,6 +11037,7 @@ interface ModelStoryLightboxProps {
   onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
   models: any[];
   realLoggedInUser?: any;
+  onNavigateToTab?: (tab: any, targetStoreId?: string) => void;
 }
 
 function ModelStoryLightbox({
@@ -10959,7 +11057,8 @@ function ModelStoryLightbox({
   setLiveUserCoins,
   onGoToModelProfile,
   models,
-  realLoggedInUser
+  realLoggedInUser,
+  onNavigateToTab
 }: ModelStoryLightboxProps) {
 
   // Check if user is Online
@@ -11325,80 +11424,275 @@ function ModelStoryLightbox({
     setShowGiftsPopup(false);
   };
 
-  const handleStoryUserRedirect = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const rawTarget = currentActiveSubStory.username || currentActiveSubStory.name || currentActiveSubStory.title || userProfile.username;
-    const targetUsername = (rawTarget || '').trim();
-    const targetUserId = currentActiveSubStory.userId || (isOwnActiveViewing || isArchivedViewing ? userProfile.id : undefined);
+  const resolveStoryUserProfile = (storyItem: any) => {
+    if (!storyItem) return null;
 
-    let matched = models.find(m => 
-      (targetUserId && m.id === targetUserId) || 
+    const rawTarget = storyItem.username || storyItem.name || storyItem.title || '';
+    const targetUsername = String(rawTarget).trim().replace(/^@/, '');
+    const targetUserId = storyItem.userId || storyItem.id;
+
+    // 1. Is it the logged-in user?
+    if (
+      storyItem.isOwnProfileActive || 
+      storyItem.isArchivedStory ||
+      targetUserId === userProfile.id ||
+      (targetUsername && targetUsername.toLowerCase() === (userProfile.username || '').toLowerCase()) ||
+      (targetUsername && targetUsername.toLowerCase() === (userProfile.name || '').toLowerCase())
+    ) {
+      return {
+        ...userProfile,
+        isSelf: true
+      };
+    }
+
+    // 2. Exact match in models by username, id, or name
+    const exactModelMatch = models.find(m => 
+      (targetUserId && m.id === targetUserId) ||
       (m.username && m.username.toLowerCase() === targetUsername.toLowerCase()) ||
       (m.name && m.name.toLowerCase() === targetUsername.toLowerCase())
     );
-
-    const lower = targetUsername.toLowerCase();
-    if (!matched && targetUsername) {
-      let fallbackId = 'topf-2'; // Default
-      if (lower.includes('milano')) {
-        fallbackId = 'topm-1'; // Alexander Vance
-      } else if (lower.includes('laviniader')) {
-        fallbackId = 'topf-6'; // Camila Barbosa
-      } else if (lower.includes('editorial')) {
-        fallbackId = 'topm-2'; // Marcus Sterling
-      } else if (lower.includes('lovelehee')) {
-        fallbackId = 'topf-2'; // Alessandra Ambrosio
-      } else if (lower.includes('marii')) {
-        fallbackId = 'topf-3'; // Candice Swanepoel
-      } else if (lower.includes('ann')) {
-        fallbackId = 'topf-4'; // Mia Kincaid
-      } else if (lower.includes('salamakss')) {
-        fallbackId = 'topf-5'; // Elena Rostova
-      } else if (lower.includes('plievazz')) {
-        fallbackId = 'topf-8'; // Freja Beha
-      }
-      matched = models.find(m => m.id === fallbackId);
+    if (exactModelMatch) {
+      return exactModelMatch;
     }
 
-    // Build rich, robust ModelProfile object
-    const finalModel: any = matched ? {
-      ...matched,
-      name: lower.includes('editorial') ? 'Marcus Sterling' : matched.name,
-      username: lower.includes('editorial') ? 'editorial' : (matched.username || targetUsername),
-      avatar: currentActiveSubStory.avatar || currentActiveSubStory.image || matched.avatar,
-      photos: [
-        currentActiveSubStory.image || currentActiveSubStory.avatar || matched.avatar,
-        ...(matched.photos || [])
-      ]
-    } : {
-      id: targetUserId || `model-${(targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-      name: lower.includes('editorial') ? 'Marcus Sterling' : (currentActiveSubStory.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Marcus Sterling')),
-      username: (targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9_]/g, ''),
-      avatar: currentActiveSubStory.avatar || currentActiveSubStory.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600',
-      bio: `Top Modelo de Pasarela y Creador Editorial Internacional. Posicionamiento y producciones en París, Milán y Nueva York.`,
-      role: 'model',
+    // 3. Known story profiles dictionary with distinct identities
+    const lower = targetUsername.toLowerCase();
+    
+    if (lower.includes('ann')) {
+      return {
+        id: 'model-ann-stories',
+        name: 'Ann Miller',
+        username: 'ann_______',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Fashion Influencer, Top Creator y Modelo urbana internacional. Creando estilo y colaborando con grandes marcas.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 185000,
+        totalLikes: 34200,
+        referidosCount: 52,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Next Models NYC',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('marii')) {
+      return {
+        id: 'model-marii2121-stories',
+        name: 'Mari Ivanova',
+        username: 'marii2121',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Modelo de pasarela y lifestyle. Amante de la alta moda y la fotografía editorial.',
+        role: 'model' as const,
+        rating: 4.9,
+        followersCount: 162000,
+        totalLikes: 29800,
+        referidosCount: 45,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Elite Model Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('salamakss')) {
+      return {
+        id: 'model-salamakss-stories',
+        name: 'Salama K.',
+        username: 'salamakss',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Executive Fashion Director y Modelo Profesional de Alta Costura. Pasarelas internacionales y producciones comerciales.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 198000,
+        totalLikes: 41200,
+        referidosCount: 68,
+        verified: true,
+        gender: 'male' as const,
+        fashionAgency: 'IMG Models Men',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('lovelehee')) {
+      return {
+        id: 'model-lovelehee-stories',
+        name: 'Love Lehee',
+        username: 'lovelehee',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Creadora y Modelo Beauty & Fashion. Pasarelas de Tokio, París y Milán.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 215000,
+        totalLikes: 48000,
+        referidosCount: 74,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Women Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('plievazz')) {
+      return {
+        id: 'model-plievazz-stories',
+        name: 'Plieva Z.',
+        username: 'plievazz',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Top Model de vanguardia, estética minimalista y proyectos editoriales.',
+        role: 'model' as const,
+        rating: 4.9,
+        followersCount: 135000,
+        totalLikes: 24000,
+        referidosCount: 38,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'DNA Model Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('laviniader')) {
+      return {
+        id: 'model-laviniader-stories',
+        name: 'Lavinia Der',
+        username: 'laviniader',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Modelo internacional de pasarela y editorial en Europa.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 178000,
+        totalLikes: 36000,
+        referidosCount: 49,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Select Model Agency',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('milano')) {
+      return {
+        id: 'model-milano-stories',
+        name: 'Milano Fashion Week',
+        username: 'milano.fw',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Cobertura oficial y modelos de pasarela de la semana de la moda en Milán.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 310000,
+        totalLikes: 95000,
+        referidosCount: 120,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Milano Fashion Week',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('editorial')) {
+      return {
+        id: 'model-editorial-stories',
+        name: 'Editorial Haute Couture',
+        username: 'editorial',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Colectiva de creadores y modelos editoriales de alta costura.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 220000,
+        totalLikes: 58000,
+        referidosCount: 88,
+        verified: true,
+        gender: 'male' as const,
+        fashionAgency: 'Haute Couture Editorial',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    // 4. Default / any other story:
+    const cleanUsername = targetUsername.toLowerCase().replace(/[^a-z0-9_.]/g, '');
+    const cleanName = storyItem.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Modelo');
+    return {
+      id: targetUserId || `model-${cleanUsername || 'creator'}`,
+      name: cleanName,
+      username: cleanUsername || 'modelo',
+      avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+      banner: 'https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1200',
+      bio: `Top Modelo y Creador en la plataforma. Participando en castings y pasarelas exclusivas.`,
+      role: 'model' as const,
       rating: 5.0,
-      followersCount: 142000,
-      totalLikes: 12500,
-      referidosCount: 42,
+      followersCount: 128000,
+      totalLikes: 21500,
+      referidosCount: 30,
       verified: true,
-      gender: lower.includes('editorial') || lower.includes('milano') ? 'male' : 'female',
+      gender: 'female' as const,
       fashionAgency: 'Elite Model Management',
-      statusText: 'Shoot en curso ⚡',
       photos: [
-        currentActiveSubStory.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
-        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
-        'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=650'
+        storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
       ]
     };
+  };
+
+  const handleStoryUserRedirectWithStory = (storyItem: any) => {
+    if (!storyItem) return;
+    const resolved = resolveStoryUserProfile(storyItem);
+    if (!resolved) return;
 
     // Close preview modal first so the profile page becomes visible immediately
     setSelectedStoryForPreview(null);
 
-    if (onGoToModelProfile) {
-      onGoToModelProfile(finalModel.id, finalModel);
+    // If it's the logged-in user themselves:
+    if (resolved.isSelf || resolved.id === userProfile.id || resolved.username === userProfile.username) {
+      if (onNavigateToTab) {
+        onNavigateToTab('profile');
+      } else if (onGoToModelProfile) {
+        onGoToModelProfile(userProfile.id, userProfile);
+      }
+      return;
     }
+
+    if (onGoToModelProfile) {
+      onGoToModelProfile(resolved.id, resolved);
+    }
+  };
+
+  const handleStoryUserRedirect = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    handleStoryUserRedirectWithStory(currentActiveSubStory);
   };
 
   return (
@@ -11465,10 +11759,24 @@ function ModelStoryLightbox({
                 <img src={combinedList[currentIdx - 2].image} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px]" />
                 <div className="absolute inset-0 bg-black/60" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-2.5 text-center">
-                  <div className="w-[44px] h-[44px] lg:w-[50px] lg:h-[50px] rounded-full p-[2px] bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 shadow-md">
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx - 2]);
+                    }}
+                    className="w-[44px] h-[44px] lg:w-[50px] lg:h-[50px] rounded-full p-[2px] bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                    title={`Ver perfil de ${combinedList[currentIdx - 2].username}`}
+                  >
                     <img src={combinedList[currentIdx - 2].avatar} alt="" className="w-full h-full rounded-full object-cover border-2 border-[#121214]" />
                   </div>
-                  <span className="text-white text-[10.5px] font-bold truncate w-full mt-2 drop-shadow leading-tight">
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx - 2]);
+                    }}
+                    className="text-white text-[10.5px] font-bold truncate w-full mt-2 drop-shadow leading-tight hover:underline hover:text-sky-300 cursor-pointer"
+                    title={`Ver perfil de ${combinedList[currentIdx - 2].username}`}
+                  >
                     {combinedList[currentIdx - 2].username}
                   </span>
                   <span className="text-white/60 text-[8.5px] mt-0.5 font-mono">{combinedList[currentIdx - 2].time}</span>
@@ -11490,10 +11798,24 @@ function ModelStoryLightbox({
                 <img src={combinedList[currentIdx - 1].image} alt="" className="absolute inset-0 w-full h-full object-cover blur-[1px]" />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
-                  <div className="w-[50px] h-[50px] lg:w-[58px] lg:h-[58px] rounded-full p-[2px] bg-white shadow-md">
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx - 1]);
+                    }}
+                    className="w-[50px] h-[50px] lg:w-[58px] lg:h-[58px] rounded-full p-[2px] bg-white shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                    title={`Ver perfil de ${combinedList[currentIdx - 1].username}`}
+                  >
                     <img src={combinedList[currentIdx - 1].avatar} alt="" className="w-full h-full rounded-full object-cover border-2 border-[#121214]" />
                   </div>
-                  <span className="text-white text-[11px] font-extrabold truncate w-full mt-2.5 drop-shadow leading-tight">
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx - 1]);
+                    }}
+                    className="text-white text-[11px] font-extrabold truncate w-full mt-2.5 drop-shadow leading-tight hover:underline hover:text-sky-300 cursor-pointer"
+                    title={`Ver perfil de ${combinedList[currentIdx - 1].username}`}
+                  >
                     {combinedList[currentIdx - 1].username}
                   </span>
                   <span className="text-white/70 text-[9px] mt-0.5 font-mono">{combinedList[currentIdx - 1].time}</span>
@@ -11801,10 +12123,24 @@ function ModelStoryLightbox({
                 <img src={combinedList[currentIdx + 1].image} alt="" className="absolute inset-0 w-full h-full object-cover blur-[1px]" />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
-                  <div className="w-[50px] h-[50px] lg:w-[58px] lg:h-[58px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 shadow-md">
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx + 1]);
+                    }}
+                    className="w-[50px] h-[50px] lg:w-[58px] lg:h-[58px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                    title={`Ver perfil de ${combinedList[currentIdx + 1].username}`}
+                  >
                     <img src={combinedList[currentIdx + 1].avatar} alt="" className="w-full h-full rounded-full object-cover border-2 border-[#121214]" />
                   </div>
-                  <span className="text-white text-[11px] font-extrabold truncate w-full mt-2.5 drop-shadow leading-tight">
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx + 1]);
+                    }}
+                    className="text-white text-[11px] font-extrabold truncate w-full mt-2.5 drop-shadow leading-tight hover:underline hover:text-sky-300 cursor-pointer"
+                    title={`Ver perfil de ${combinedList[currentIdx + 1].username}`}
+                  >
                     {combinedList[currentIdx + 1].username}
                   </span>
                   <span className="text-white/70 text-[9px] mt-0.5 font-mono">{combinedList[currentIdx + 1].time}</span>
@@ -11826,10 +12162,24 @@ function ModelStoryLightbox({
                 <img src={combinedList[currentIdx + 2].image} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px]" />
                 <div className="absolute inset-0 bg-black/60" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-2.5 text-center">
-                  <div className="w-[44px] h-[44px] lg:w-[50px] lg:h-[50px] rounded-full p-[2px] bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 shadow-md">
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx + 2]);
+                    }}
+                    className="w-[44px] h-[44px] lg:w-[50px] lg:h-[50px] rounded-full p-[2px] bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                    title={`Ver perfil de ${combinedList[currentIdx + 2].username}`}
+                  >
                     <img src={combinedList[currentIdx + 2].avatar} alt="" className="w-full h-full rounded-full object-cover border-2 border-[#121214]" />
                   </div>
-                  <span className="text-white text-[10.5px] font-bold truncate w-full mt-2 drop-shadow leading-tight">
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStoryUserRedirectWithStory(combinedList[currentIdx + 2]);
+                    }}
+                    className="text-white text-[10.5px] font-bold truncate w-full mt-2 drop-shadow leading-tight hover:underline hover:text-sky-300 cursor-pointer"
+                    title={`Ver perfil de ${combinedList[currentIdx + 2].username}`}
+                  >
                     {combinedList[currentIdx + 2].username}
                   </span>
                   <span className="text-white/60 text-[8.5px] mt-0.5 font-mono">{combinedList[currentIdx + 2].time}</span>

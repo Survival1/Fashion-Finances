@@ -38941,72 +38941,236 @@ function CastingLiveStoryLightbox({
   const safeSubIdx = Math.min(Math.max(0, activeStorySubIndex), finalPubStories.length - 1);
   const currentActiveSubStory = finalPubStories[safeSubIdx];
 
-  const handleStoryUserRedirect = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const rawTarget = currentActiveSubStory.username || selectedCastingLiveStory.username || currentActiveSubStory.name || selectedCastingLiveStory.name;
+  const resolveCastingLiveStoryUserProfile = (storyItem: any): ModelProfile => {
+    const rawTarget = storyItem?.username || selectedCastingLiveStory?.username || storyItem?.name || selectedCastingLiveStory?.name;
     const targetUsername = (rawTarget || '').trim();
-    const targetUserId = currentActiveSubStory.userId || selectedCastingLiveStory.userId;
-    
-    let matched = models.find(m => 
-      (targetUserId && m.id === targetUserId) || 
+    const targetUserId = storyItem?.userId || selectedCastingLiveStory?.userId;
+
+    // 1. Exact match in models by username, id, or name
+    const exactModelMatch = models.find(m => 
+      (targetUserId && m.id === targetUserId) ||
       (m.username && m.username.toLowerCase() === targetUsername.toLowerCase()) ||
       (m.name && m.name.toLowerCase() === targetUsername.toLowerCase())
     );
-
-    const lower = targetUsername.toLowerCase();
-    if (!matched && targetUsername) {
-      let fallbackId = 'topf-2'; // Isabella Dubois as default
-      if (lower.includes('milano')) {
-        fallbackId = 'topm-1'; // Alexander Vance
-      } else if (lower.includes('laviniader')) {
-        fallbackId = 'topf-6'; // Camila Barbosa
-      } else if (lower.includes('editorial')) {
-        fallbackId = 'topm-2'; // Marcus Sterling
-      } else if (lower.includes('lovelehee')) {
-        fallbackId = 'topf-2'; // Isabella Dubois
-      } else if (lower.includes('marii')) {
-        fallbackId = 'topf-3'; // Sophia Loren
-      } else if (lower.includes('ann')) {
-        fallbackId = 'topf-4'; // Mia Kincaid
-      } else if (lower.includes('salamakss')) {
-        fallbackId = 'topf-5'; // Elena Rostova
-      } else if (lower.includes('plievazz')) {
-        fallbackId = 'topf-8'; // Freja Beha
-      }
-      matched = models.find(m => m.id === fallbackId);
+    if (exactModelMatch) {
+      return exactModelMatch;
     }
 
-    const finalModel: ModelProfile = matched ? {
-      ...matched,
-      name: lower.includes('editorial') ? 'Marcus Sterling' : matched.name,
-      username: lower.includes('editorial') ? 'editorial' : (matched.username || targetUsername),
-      avatar: currentActiveSubStory.avatar || selectedCastingLiveStory.avatar || matched.avatar,
-      photos: [
-        currentActiveSubStory.image || currentActiveSubStory.avatar || selectedCastingLiveStory.avatar || matched.avatar,
-        ...(matched.photos || [])
-      ]
-    } : {
-      id: targetUserId || `model-${(targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-      name: lower.includes('editorial') ? 'Marcus Sterling' : (currentActiveSubStory.name || selectedCastingLiveStory.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Marcus Sterling')),
-      username: (targetUsername || 'editorial').toLowerCase().replace(/[^a-z0-9_]/g, ''),
-      avatar: currentActiveSubStory.avatar || selectedCastingLiveStory.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600',
-      bio: `Top Modelo de Pasarela y Creador Editorial Internacional. Posicionamiento en desfiles de París y Milán.`,
+    // 2. Known story profiles dictionary with distinct identities matching their username
+    const lower = targetUsername.toLowerCase();
+    
+    if (lower.includes('ann')) {
+      return {
+        id: 'model-ann-stories',
+        name: 'Ann Miller',
+        username: 'ann_______',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Fashion Influencer, Top Creator y Modelo urbana internacional. Creando estilo y colaborando con grandes marcas.',
+        role: 'model',
+        rating: 5.0,
+        followersCount: 185000,
+        totalLikes: 34200,
+        referidosCount: 52,
+        verified: true,
+        gender: 'female',
+        fashionAgency: 'Next Models NYC',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('marii')) {
+      return {
+        id: 'model-marii2121-stories',
+        name: 'Mari Ivanova',
+        username: 'marii2121',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Modelo de pasarela y lifestyle. Amante de la alta moda y la fotografía editorial.',
+        role: 'model',
+        rating: 4.9,
+        followersCount: 162000,
+        totalLikes: 29800,
+        referidosCount: 45,
+        verified: true,
+        gender: 'female',
+        fashionAgency: 'Elite Model Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('salamakss')) {
+      return {
+        id: 'model-salamakss-stories',
+        name: 'Salama K.',
+        username: 'salamakss',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Executive Fashion Director y Modelo Profesional de Alta Costura. Pasarelas internacionales y producciones comerciales.',
+        role: 'model',
+        rating: 5.0,
+        followersCount: 198000,
+        totalLikes: 41200,
+        referidosCount: 68,
+        verified: true,
+        gender: 'male',
+        fashionAgency: 'IMG Models Men',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('lovelehee')) {
+      return {
+        id: 'model-lovelehee-stories',
+        name: 'Love Lehee',
+        username: 'lovelehee',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Creadora y Modelo Beauty & Fashion. Pasarelas de Tokio, París y Milán.',
+        role: 'model',
+        rating: 5.0,
+        followersCount: 215000,
+        totalLikes: 48000,
+        referidosCount: 74,
+        verified: true,
+        gender: 'female',
+        fashionAgency: 'Women Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('plievazz')) {
+      return {
+        id: 'model-plievazz-stories',
+        name: 'Plieva Z.',
+        username: 'plievazz',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Top Model de vanguardia, estética minimalista y proyectos editoriales.',
+        role: 'model',
+        rating: 4.9,
+        followersCount: 135000,
+        totalLikes: 24000,
+        referidosCount: 38,
+        verified: true,
+        gender: 'female',
+        fashionAgency: 'DNA Model Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('laviniader')) {
+      return {
+        id: 'model-laviniader-stories',
+        name: 'Lavinia Der',
+        username: 'laviniader',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Modelo internacional de pasarela y editorial en Europa.',
+        role: 'model',
+        rating: 5.0,
+        followersCount: 178000,
+        totalLikes: 36000,
+        referidosCount: 49,
+        verified: true,
+        gender: 'female',
+        fashionAgency: 'Select Model Agency',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('milano')) {
+      return {
+        id: 'model-milano-stories',
+        name: 'Milano Fashion Week',
+        username: 'milano.fw',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Cobertura oficial y modelos de pasarela de la semana de la moda en Milán.',
+        role: 'model',
+        rating: 5.0,
+        followersCount: 310000,
+        totalLikes: 95000,
+        referidosCount: 120,
+        verified: true,
+        gender: 'female',
+        fashionAgency: 'Milano Fashion Week',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('editorial')) {
+      return {
+        id: 'model-editorial-stories',
+        name: 'Editorial Haute Couture',
+        username: 'editorial',
+        avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Colectiva de creadores y modelos editoriales de alta costura.',
+        role: 'model',
+        rating: 5.0,
+        followersCount: 220000,
+        totalLikes: 58000,
+        referidosCount: 88,
+        verified: true,
+        gender: 'male',
+        fashionAgency: 'Haute Couture Editorial',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    // 3. Fallback for any other custom user
+    const cleanUsername = targetUsername.toLowerCase().replace(/[^a-z0-9_.]/g, '');
+    const cleanName = storyItem.name || selectedCastingLiveStory.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Modelo');
+    return {
+      id: targetUserId || `model-${cleanUsername || 'creator'}`,
+      name: cleanName,
+      username: cleanUsername || 'modelo',
+      avatar: storyItem.avatar || selectedCastingLiveStory.avatar || storyItem.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+      banner: 'https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=1200',
+      bio: `Top Modelo y Creador en la plataforma. Participando en castings y pasarelas exclusivas.`,
       role: 'model',
       rating: 5.0,
-      followersCount: 142000,
-      totalLikes: 12500,
-      referidosCount: 42,
+      followersCount: 128000,
+      totalLikes: 21500,
+      referidosCount: 30,
       verified: true,
-      gender: lower.includes('editorial') || lower.includes('milano') ? 'male' : 'female',
+      gender: 'female',
       fashionAgency: 'Elite Model Management',
-      statusText: 'Shoot en curso ⚡',
       photos: [
-        currentActiveSubStory.image || selectedCastingLiveStory.image || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
-        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
-        'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=650'
+        storyItem.image || selectedCastingLiveStory.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
       ]
     };
+  };
+
+  const handleStoryUserRedirect = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const finalModel = resolveCastingLiveStoryUserProfile(currentActiveSubStory);
 
     setSelectedCastingLiveStory(null);
     if (onGoToModelProfile) {
