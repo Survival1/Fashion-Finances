@@ -2299,25 +2299,17 @@ export default function VictoriaSecretRanking({
                         </div>
                       </div>
 
-                      {/* White Pedestal Column 2 */}
-                      <div className="w-full max-w-[270px] bg-white border border-pink-100 rounded-[26px] shadow-lg p-5 flex flex-col items-center justify-center text-center mt-3.5">
-                        <span className="text-[#b45309] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-1.5 font-sans mb-1">
-                          👑 MODELO ORO
-                        </span>
-                        <span className="font-serif text-5xl sm:text-6xl font-black text-slate-900 my-0.5 leading-none">
-                          2
-                        </span>
-                        <div className="flex items-center justify-center gap-2 text-slate-400 text-[10px] font-medium tracking-[0.2em] uppercase my-1 font-sans">
-                          <span className="w-6 h-[1px] bg-slate-300" />
-                          <span>ANGEL ELITE</span>
-                          <span className="w-6 h-[1px] bg-slate-300" />
-                        </div>
-                        <button
-                          onClick={() => onSelectModel && onSelectModel(secondPlace)}
-                          className="border border-[#f472b6] hover:border-pink-500 text-slate-800 rounded-full py-2 px-7 text-xs font-bold uppercase tracking-wider hover:bg-pink-50/70 transition-all shadow-xs mt-3 cursor-pointer inline-flex items-center gap-1.5"
-                        >
-                          VER FICHA <span>›</span>
-                        </button>
+                      {/* 🏆 Glamour Pedestal Column 2: MODELO ORO (Matches Clasificaci_n_glamorosa_de_modelos_con_diamantes) */}
+                      <div 
+                        onClick={() => onSelectModel && onSelectModel(secondPlace)}
+                        className="w-full max-w-[280px] sm:max-w-[295px] rounded-[32px] overflow-hidden shadow-[0_15px_35px_rgba(217,119,6,0.35)] hover:shadow-[0_22px_50px_rgba(217,119,6,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-3.5 relative group border-2 border-amber-300/80 bg-gradient-to-b from-[#fef08a] via-[#f59e0b] to-[#b45309] p-0.5"
+                        title="Ver ficha de Alessandra Ambrosio"
+                      >
+                        <img 
+                          src="/assets/aistudio/pedestal_gold_card.png" 
+                          alt="2 MODELO ORO - Angel Elite" 
+                          className="w-full h-auto object-contain block rounded-[30px]"
+                        />
                       </div>
 
                     </div>
@@ -2335,9 +2327,9 @@ export default function VictoriaSecretRanking({
                       {/* Photo / Video Card Container with Golden Frame & Royal Tiara from z.png */}
                       <div className="relative mb-2 flex flex-col items-center">
                         
-                        {/* Corona Real Femenina de Diamantes y Rubíes (Separada con espacio flotante del marco amarillo) */}
+                        {/* Corona Real Femenina de Diamantes y Rubíes (Posicionada justo encima del marco dorado) */}
                         <div 
-                          style={{ bottom: 'calc(100% + 22px)' }}
+                          style={{ bottom: 'calc(100% + 8px)' }}
                           className="absolute left-1/2 -translate-x-1/2 z-40 transition duration-500 group-hover:scale-105 pointer-events-none drop-shadow-[0_12px_28px_rgba(225,29,72,0.35)]"
                         >
                           <RoyalFemaleCrown 
@@ -2345,117 +2337,47 @@ export default function VictoriaSecretRanking({
                           />
                         </div>
 
-                        {/* Golden Metallic Double-Frame Container */}
-                        <div className="w-72 sm:w-80 md:w-[310px] h-[390px] sm:h-[430px] rounded-[34px] p-1 bg-gradient-to-b from-[#fef08a] via-[#f59e0b] to-[#b45309] shadow-[0_0_40px_rgba(245,158,11,0.55)] relative z-30">
-                          <div className="w-full h-full rounded-[30px] overflow-hidden bg-black relative border-2 border-amber-300 flex flex-col justify-between">
-                            
-                            {/* Top-left pill: EN LÍNEA (only if online) */}
-                            {Boolean(firstPlace?.isOnline) && (
-                              <div className="absolute top-3 left-3 z-30 bg-[#e11d48] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-                                <span>EN LÍNEA</span>
-                              </div>
-                            )}
+                        {/* Golden Metallic Container with MAXIM Diamond Presentation (Matches image.png exactly) */}
+                        <div 
+                          onClick={() => onSelectModel && onSelectModel(firstPlace)}
+                          className="w-72 sm:w-80 md:w-[315px] h-[390px] sm:h-[430px] rounded-[34px] overflow-hidden shadow-[0_0_45px_rgba(245,158,11,0.65),0_0_75px_rgba(59,130,246,0.35)] hover:shadow-[0_0_60px_rgba(245,158,11,0.85),0_0_90px_rgba(59,130,246,0.5)] transition-all duration-300 relative z-30 cursor-pointer group"
+                          title="Ver ficha de Adriana Lima"
+                        >
+                          <img 
+                            src="/assets/aistudio/card_1_maxim_diamonds.png" 
+                            alt="Adriana Lima - MAXIM Diamond Angel" 
+                            className="w-full h-full object-cover rounded-[34px] transition-transform duration-500 group-hover:scale-[1.02]"
+                          />
 
-                            {/* Top-right heart button */}
-                            <button 
-                              type="button"
-                              onClick={(e) => e.stopPropagation()}
-                              className="absolute top-3 right-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 border border-white/40 shadow-md backdrop-blur-md transition cursor-pointer"
-                              title="Me gusta"
-                            >
-                              <Heart className="w-4 h-4 fill-white/20 stroke-white" />
-                            </button>
-
-                            {/* Media component */}
-                            <PodiumModelMedia
-                              model={firstPlace}
-                              place={1}
-                              widthClass="w-full"
-                              heightClass="h-full"
-                              borderColorClass="border-transparent"
-                              defaultVideoIndex={0}
-                              roundedClass="rounded-[30px]"
-                              hideBadges={true}
-                            />
-
-                            {/* Bottom overlay inside card: Contoured arched banner with pink diamond at apex */}
-                            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center pb-3 pt-8 bg-gradient-to-t from-black via-black/85 to-transparent">
-                              {/* Pink diamond apex badge */}
-                              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#ec4899] via-[#f43f5e] to-[#ec4899] border border-white p-1 flex items-center justify-center shadow-lg -mb-3 z-30">
-                                <span className="text-[12px] leading-none text-white">💎</span>
-                              </div>
-
-                              {/* Curved banner */}
-                              <div className="w-[92%] bg-gradient-to-b from-[#181512]/90 to-black/95 rounded-t-2xl pt-4 pb-2 px-4 border-t border-pink-400/50 text-center">
-                                <div className="text-white font-serif font-bold text-base sm:text-lg flex items-center justify-center gap-1.5">
-                                  <span>Adriana Lima</span>
-                                  <span className="text-amber-400 text-sm">★</span>
-                                </div>
-                                <div className="text-white/95 font-medium text-xs flex items-center justify-center gap-1.5 mt-1">
-                                  <span className="text-[#ec4899]">💖</span> 99.999 votos
-                                </div>
-                              </div>
-                            </div>
-
-                          </div>
+                          {/* Interactive clickable heart in top right */}
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (firstPlace && onSelectModel) {
+                                onSelectModel(firstPlace);
+                              }
+                            }}
+                            className="absolute top-3.5 right-3.5 z-40 w-8 h-8 rounded-full bg-black/20 hover:bg-black/50 text-white flex items-center justify-center transition cursor-pointer"
+                            title="Me gusta"
+                          >
+                            <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                          </button>
                         </div>
 
                       </div>
 
-                      {/* Pedestal Column 1: Rounded card with golden metallic border */}
-                      <div className="w-full max-w-[310px] bg-gradient-to-b from-[#181512] via-[#111113] to-black border-2 border-amber-400 rounded-[28px] p-5 flex flex-col items-center justify-center text-center shadow-2xl ring-1 ring-amber-300/40 relative mt-3.5 z-20 overflow-hidden box-border">
-                        <div className="flex items-center justify-center gap-2 text-amber-300 font-sans font-bold text-[10.5px] uppercase tracking-[0.25em] drop-shadow-sm mb-1">
-                          <span className="w-5 h-[1px] bg-amber-400/60" />
-                          <span>MODELO DIAMANTE</span>
-                          <span className="w-5 h-[1px] bg-amber-400/60" />
-                        </div>
-
-                        {/* Laurel Wreath & Number 1 flanked with diamonds */}
-                        <div className="flex items-center justify-center my-1 relative">
-                          <span className="text-sm text-amber-300 absolute left-8 top-3">💎</span>
-                          
-                          {/* Left Laurel */}
-                          <svg className="w-9 h-14 sm:w-11 sm:h-16 text-[#dfb152] drop-shadow-[0_2px_6px_rgba(223,177,82,0.4)]" viewBox="0 0 45 75" fill="currentColor">
-                            <path d="M38 70 C24 60, 14 42, 16 12 C18 22, 26 30, 32 34 C22 36, 16 44, 20 54 C26 58, 32 60, 38 70 Z" opacity="0.35" />
-                            <path d="M 36,65 C 28,56 20,44 20,28 C 20,18 25,10 32,3 C 27,8 14,20 16,34 C 17,46 25,57 36,65 Z" />
-                            <path d="M26,18 C18,15 11,20 9,27 C14,29 23,25 26,18 Z" />
-                            <path d="M22,32 C14,31 8,37 7,44 C13,45 21,40 22,32 Z" />
-                            <path d="M25,48 C18,49 13,56 13,62 C19,62 25,56 25,48 Z" />
-                            <path d="M31,9 C25,5 18,7 15,13 C20,15 28,13 31,9 Z" />
-                          </svg>
-
-                          <span className="font-serif font-black text-6xl text-amber-200 leading-none px-2 relative z-10 drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]">
-                            1
-                          </span>
-
-                          {/* Right Laurel */}
-                          <svg className="w-9 h-14 sm:w-11 sm:h-16 text-[#dfb152] drop-shadow-[0_2px_6px_rgba(223,177,82,0.4)] -scale-x-100" viewBox="0 0 45 75" fill="currentColor">
-                            <path d="M38 70 C24 60, 14 42, 16 12 C18 22, 26 30, 32 34 C22 36, 16 44, 20 54 C26 58, 32 60, 38 70 Z" opacity="0.35" />
-                            <path d="M 36,65 C 28,56 20,44 20,28 C 20,18 25,10 32,3 C 27,8 14,20 16,34 C 17,46 25,57 36,65 Z" />
-                            <path d="M26,18 C18,15 11,20 9,27 C14,29 23,25 26,18 Z" />
-                            <path d="M22,32 C14,31 8,37 7,44 C13,45 21,40 22,32 Z" />
-                            <path d="M25,48 C18,49 13,56 13,62 C19,62 25,56 25,48 Z" />
-                            <path d="M31,9 C25,5 18,7 15,13 C20,15 28,13 31,9 Z" />
-                          </svg>
-
-                          <span className="text-sm text-amber-300 absolute right-8 top-3">💎</span>
-                        </div>
-
-                        <div className="text-amber-100/90 font-mono text-[10px] uppercase tracking-[0.28em] font-bold my-1">
-                          DIAMOND ANGEL
-                        </div>
-
-                        {/* Hot Pink / Magenta Pill Button: SUPERESTRELLA > (perfectamente centrado y dentro del marco) */}
-                        <div className="w-full flex justify-center mt-3.5">
-                          <button
-                            onClick={() => onSelectModel && onSelectModel(firstPlace)}
-                            className="w-full max-w-[220px] bg-gradient-to-r from-[#d946ef] via-[#e11d48] to-[#f43f5e] hover:brightness-110 text-white font-extrabold text-xs uppercase tracking-wider py-2.5 px-4 rounded-full shadow-lg shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-white/30"
-                          >
-                            <span>SUPERESTRELLA</span>
-                            <span className="text-sm leading-none font-bold">›</span>
-                          </button>
-                        </div>
+                      {/* 💎 Glamour Pedestal Column 1: MODELO DIAMANTE (Matches Clasificaci_n_glamorosa_de_modelos_con_diamantes) */}
+                      <div 
+                        onClick={() => onSelectModel && onSelectModel(firstPlace)}
+                        className="w-full max-w-[295px] sm:max-w-[325px] rounded-[36px] overflow-hidden shadow-[0_20px_50px_rgba(30,58,138,0.55),0_0_40px_rgba(59,130,246,0.45)] hover:shadow-[0_25px_60px_rgba(30,58,138,0.7),0_0_55px_rgba(59,130,246,0.65)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-3.5 relative z-20 group border-2 border-cyan-300/90 bg-gradient-to-b from-[#93c5fd] via-[#3b82f6] to-[#1e3a8a] p-0.5"
+                        title="Ver ficha de Adriana Lima"
+                      >
+                        <img 
+                          src="/assets/aistudio/pedestal_diamond_card.png" 
+                          alt="1 MODELO DIAMANTE - Diamond Angel" 
+                          className="w-full h-auto object-contain block rounded-[34px]"
+                        />
                       </div>
 
                     </div>
@@ -2524,25 +2446,17 @@ export default function VictoriaSecretRanking({
                         </div>
                       </div>
 
-                      {/* White Pedestal Column 3 */}
-                      <div className="w-full max-w-[270px] bg-white border border-pink-100 rounded-[26px] shadow-lg p-5 flex flex-col items-center justify-center text-center mt-3.5">
-                        <span className="text-[#e11d48] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-1.5 font-sans mb-1">
-                          👑 MODELO PLATINO
-                        </span>
-                        <span className="font-serif text-5xl sm:text-6xl font-black text-slate-900 my-0.5 leading-none">
-                          3
-                        </span>
-                        <div className="flex items-center justify-center gap-2 text-slate-400 text-[10px] font-medium tracking-[0.2em] uppercase my-1 font-sans">
-                          <span className="w-6 h-[1px] bg-slate-300" />
-                          <span>RUNWAY QUEEN</span>
-                          <span className="w-6 h-[1px] bg-slate-300" />
-                        </div>
-                        <button
-                          onClick={() => onSelectModel && onSelectModel(thirdPlace)}
-                          className="border border-[#f472b6] hover:border-pink-500 text-slate-800 rounded-full py-2 px-7 text-xs font-bold uppercase tracking-wider hover:bg-pink-50/70 transition-all shadow-xs mt-3 cursor-pointer inline-flex items-center gap-1.5"
-                        >
-                          VER FICHA <span>›</span>
-                        </button>
+                      {/* 👑 Glamour Pedestal Column 3: MODELO PLATINO (Matches Clasificaci_n_glamorosa_de_modelos_con_diamantes) */}
+                      <div 
+                        onClick={() => onSelectModel && onSelectModel(thirdPlace)}
+                        className="w-full max-w-[280px] sm:max-w-[295px] rounded-[32px] overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.35)] hover:shadow-[0_22px_50px_rgba(148,163,184,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-3.5 relative group border-2 border-slate-300/80 bg-gradient-to-b from-slate-100 via-slate-300 to-slate-400 p-0.5"
+                        title="Ver ficha de Candice Swanepoel"
+                      >
+                        <img 
+                          src="/assets/aistudio/pedestal_platinum_card.png" 
+                          alt="3 MODELO PLATINO - Runway Queen" 
+                          className="w-full h-auto object-contain block rounded-[30px]"
+                        />
                       </div>
 
                     </div>

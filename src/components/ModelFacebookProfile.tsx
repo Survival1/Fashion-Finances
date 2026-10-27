@@ -17,6 +17,7 @@ import {
   LuxuryWatchGift, 
   playLuxuryWatchSoundEffect 
 } from './LuxuryWatchAnimation';
+import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { 
   Heart, 
   Trash2,
@@ -82,6 +83,7 @@ import {
   PlusCircle,
   Layers,
   MessageCircle,
+  Music,
   Video,
   LogOut
 } from 'lucide-react';
@@ -218,54 +220,80 @@ export function ProfileIntroAndSponsors({
     return list.slice(0, 100);
   }, [allModels]);
 
+  const targetModelMatch = React.useMemo(() => {
+    return propModels?.find(m => m.id === userProfile?.id || (m.username && m.username.toLowerCase() === userProfile?.username?.toLowerCase())) || null;
+  }, [propModels, userProfile]);
+
+  const instagramHandle = userProfile?.instagram || targetModelMatch?.socials?.instagram || (userProfile?.username ? `@${userProfile.username}` : '');
+  const tiktokHandle = userProfile?.tiktok || targetModelMatch?.socials?.tiktok || (userProfile?.username ? `@${userProfile.username}_tok` : '');
+  const twitterHandle = (userProfile as any)?.twitter || targetModelMatch?.socials?.twitter || (userProfile?.username ? `@${userProfile.username}_real` : '');
+
   return (
     <div className="space-y-4 font-sans text-left">
       {/* Intro Information Cards (FB Intro style) */}
       {!hideIntro && (
         <div 
-          className="relative overflow-hidden rounded-2xl border-2 border-pink-500 shadow-[0_0_25px_rgba(236,72,153,0.35)] p-5 space-y-4 bg-black text-white" 
+          className="relative overflow-hidden rounded-2xl border-2 border-[#fbcfe8] shadow-[0_4px_24px_rgba(244,114,182,0.18)] p-5 space-y-4 bg-gradient-to-br from-[#ffffff] via-[#fff0f5] to-[#fce7f3] text-slate-800" 
           id="intro-information-card-container"
         >
-          {/* 🪽 Wings background: Pure white wings on black background, cropped so Victoria's Secret text and watermark are excluded */}
+          {/* 🪽 Wings background: Luminous white wings on smooth pearl pink background, clear and without harsh saturation */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <img 
-              src="/assets/aistudio/ffd370ca-4923-4890-9a20-94b352a93eb2_61aa00ae.jpg" 
-              alt="White Angel Wings" 
-              className="w-full h-full object-cover object-[center_18%] scale-105 opacity-80" 
+              src="/assets/aistudio/wings_pearl_pink.jpg" 
+              alt="Alas de Ángel Rosa Perla" 
+              className="w-full h-full object-cover object-[center_35%] opacity-90 transition-transform duration-700" 
             />
-            {/* Black bottom masking layer to guarantee only the wings show and text at bottom is 100% hidden */}
-            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black via-black/85 to-transparent" />
-            {/* Subtle dark vignette to enhance text readability over the wings */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[0.5px]" />
+            {/* Subtle soft pearl gradient overlay to guarantee perfect contrast and readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#fff0f5]/65 via-transparent to-[#ffffff]/45" />
           </div>
 
           <div className="relative z-10 space-y-4">
             <div>
-              <h3 className="text-xs font-black text-pink-400 uppercase tracking-widest flex items-center gap-1.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+              <h3 className="text-xs font-black text-rose-800 uppercase tracking-widest flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
+                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
                 <span>Información / Intro</span>
               </h3>
             </div>
 
             {/* Custom user-editable presentation/intro text with elegant glassmorphism */}
             <div className="space-y-2 text-left">
-              <p className="text-xs text-white leading-relaxed font-medium bg-black/60 backdrop-blur-md border border-pink-500/35 p-3.5 rounded-xl whitespace-pre-line shadow-lg">
+              <p className="text-xs text-slate-800 leading-relaxed font-semibold bg-white/80 backdrop-blur-md border border-[#fbcfe8] p-3.5 rounded-xl whitespace-pre-line shadow-xs">
                 {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
               </p>
             </div>
 
-            <hr className="border-pink-500/30" />
+            <hr className="border-[#fbcfe8]/70" />
 
-            {/* Status details indicators styled for high-contrast dark mode */}
-            <div className="text-xs space-y-2 text-slate-200">
-              <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                <Globe className="w-4 h-4 text-sky-400 font-bold shrink-0" />
-                <span>Espacio de Trabajo: <strong className="text-white">España / Remoto</strong></span>
+            {/* Status details indicators styled for high-contrast light mode */}
+            <div className="text-xs space-y-2 text-slate-700 font-medium">
+              <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                <Globe className="w-4 h-4 text-sky-600 font-bold shrink-0" />
+                <span>Espacio de Trabajo: <strong className="text-slate-900 font-bold">España / Remoto</strong></span>
               </div>
-              <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                <Instagram className="w-4 h-4 text-pink-400 font-bold shrink-0" />
-                <span>Sígueme en Instagram: <strong className="text-pink-300">@{userProfile?.username || 'usuario'}</strong></span>
-              </div>
+
+              {/* Instagram */}
+              {Boolean(instagramHandle) && (
+                <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                  <Instagram className="w-4 h-4 text-rose-600 font-bold shrink-0" />
+                  <span>Sígueme en Instagram: <strong className="text-rose-700 font-bold">{instagramHandle}</strong></span>
+                </div>
+              )}
+
+              {/* TikTok */}
+              {Boolean(tiktokHandle) && (
+                <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                  <span className="text-sm shrink-0 leading-none">🎵</span>
+                  <span>Sígueme en TikTok: <strong className="text-slate-900 font-bold">{tiktokHandle}</strong></span>
+                </div>
+              )}
+
+              {/* X / Twitter */}
+              {Boolean(twitterHandle) && (
+                <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                  <span className="text-xs font-black font-mono shrink-0 leading-none">𝕏</span>
+                  <span>Sígueme en X / Twitter: <strong className="text-indigo-700 font-bold">{twitterHandle}</strong></span>
+                </div>
+              )}
               <div 
                 onClick={() => {
                   if (onOpenRanking) {
@@ -274,15 +302,15 @@ export function ProfileIntroAndSponsors({
                     onNavigateToTab('casting_live');
                   }
                 }}
-                className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition-colors p-1 -m-1 rounded-lg hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                className="flex items-center gap-2 cursor-pointer hover:text-amber-700 transition-colors p-1 -m-1 rounded-lg hover:bg-white/60 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]"
                 title="Ver Sponsoring Oficial y Ranking"
               >
-                <Award className="w-4 h-4 text-amber-400 font-bold shrink-0" />
-                <span>Sponsoring: <strong className="text-emerald-400">Comisión 10% activa</strong></span>
+                <Award className="w-4 h-4 text-amber-600 font-bold shrink-0" />
+                <span>Sponsoring: <strong className="text-emerald-700 font-bold">Comisión 10% activa</strong></span>
               </div>
-              <div className="flex items-center gap-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                <Users className="w-4 h-4 text-indigo-400 font-bold shrink-0" />
-                <span>Mis amigos: <strong className="text-pink-200">{friendsCount} amigos</strong></span>
+              <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                <Users className="w-4 h-4 text-indigo-600 font-bold shrink-0" />
+                <span>Mis amigos: <strong className="text-rose-700 font-bold">{friendsCount} amigos</strong></span>
               </div>
             </div>
           </div>
@@ -806,6 +834,71 @@ export default function ModelFacebookProfile({
   const [editingAvatar, setEditingAvatar] = useState(userProfile.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150');
   const [fashionAgency, setFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
   const [editingFashionAgency, setEditingFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
+  const [editingInstagram, setEditingInstagram] = useState<string>(() => {
+    return userProfile.instagram || currentModel?.socials?.instagram || `@${userProfile.username || 'usuario'}`;
+  });
+  const [editingTikTok, setEditingTikTok] = useState<string>(() => {
+    return userProfile.tiktok || currentModel?.socials?.tiktok || (userProfile.username ? `@${userProfile.username}_tok` : '');
+  });
+  const [editingTwitter, setEditingTwitter] = useState<string>(() => {
+    return (userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : '');
+  });
+
+  useEffect(() => {
+    if (showSettingsDrawer) {
+      setEditingInstagram(userProfile.instagram || currentModel?.socials?.instagram || `@${userProfile.username || 'usuario'}`);
+      setEditingTikTok(userProfile.tiktok || currentModel?.socials?.tiktok || (userProfile.username ? `@${userProfile.username}_tok` : ''));
+      setEditingTwitter((userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : ''));
+    }
+  }, [showSettingsDrawer, userProfile, currentModel]);
+
+  const [socialsSavedFeedback, setSocialsSavedFeedback] = useState(false);
+
+  const handleSaveSocialsOnly = () => {
+    userProfile.instagram = editingInstagram;
+    userProfile.tiktok = editingTikTok;
+    (userProfile as any).twitter = editingTwitter;
+
+    const nextProfile = {
+      ...userProfile,
+      instagram: editingInstagram,
+      tiktok: editingTikTok,
+      twitter: editingTwitter
+    };
+
+    if (currentModel) {
+      const targetGender = currentModel?.gender || userProfile?.gender || 'female';
+      const updatedModels = models.map(m => {
+        if (m.id === currentModel.id || (targetGender === 'female' && m.name.toLowerCase().includes('adriana'))) {
+          return {
+            ...m,
+            socials: {
+              ...(m.socials || {}),
+              instagram: editingInstagram,
+              tiktok: editingTikTok,
+              twitter: editingTwitter
+            }
+          };
+        }
+        return m;
+      });
+      try {
+        localStorage.setItem('coll_models', JSON.stringify(updatedModels));
+      } catch (e) {}
+      onUpdateModels(updatedModels);
+    }
+
+    try {
+      localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
+    } catch (e) {}
+    onUpdateProfile(nextProfile);
+
+    setSocialsSavedFeedback(true);
+    setTimeout(() => {
+      setSocialsSavedFeedback(false);
+    }, 3500);
+  };
+
   const [isAccountPrivate, setIsAccountPrivate] = useState(false);
   const [hideProfileMetrics, setHideProfileMetrics] = useState<boolean>(() => {
     return localStorage.getItem(`hide_profile_metrics_${userProfile.id}`) === 'true';
@@ -2240,6 +2333,22 @@ export default function ModelFacebookProfile({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedPhotoForLightbox]);
+
+  // Synchronize with global lightbox: if global image lightbox opens or closes, ensure z1 (split comments lightbox) is closed
+  useEffect(() => {
+    const handleCloseAllLightboxes = () => {
+      setSelectedPhotoForLightbox(null);
+    };
+    const handleOpenExternalLightbox = () => {
+      setSelectedPhotoForLightbox(null);
+    };
+    window.addEventListener('close-all-photo-lightboxes', handleCloseAllLightboxes);
+    window.addEventListener('open-image-lightbox', handleOpenExternalLightbox);
+    return () => {
+      window.removeEventListener('close-all-photo-lightboxes', handleCloseAllLightboxes);
+      window.removeEventListener('open-image-lightbox', handleOpenExternalLightbox);
+    };
+  }, []);
 
   const [hoveredPhotoUrl, setHoveredPhotoUrl] = useState<string | null>(null);
   const [hoveredPhotoUrlLightbox, setHoveredPhotoUrlLightbox] = useState<boolean>(false);
@@ -4333,13 +4442,32 @@ export default function ModelFacebookProfile({
                 <div 
                   className="rounded-2xl overflow-hidden bg-slate-900/5 border border-slate-150 cursor-pointer group/postimg max-h-96 relative"
                   title="Ampliar foto"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedPhotoForLightbox(null);
+                    openImageLightbox({
+                      src: post.image,
+                      alt: 'Foto de publicación',
+                      title: userProfile.name
+                    });
+                  }}
                 >
                   <img 
                     src={post.image} 
                     alt="post attachment" 
                     referrerPolicy="no-referrer"
                     className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300 rounded-t-2xl"
-                    onClick={(e) => handleOpenPhotoLightbox(post.image, e)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedPhotoForLightbox(null);
+                      openImageLightbox({
+                        src: post.image,
+                        alt: 'Foto de publicación',
+                        title: userProfile.name
+                      });
+                    }}
                   />
 
                   {!selectedPhotoForLightbox && giftConfirmPhotoUrl === post.image && renderConfirmGiftOverlay(post.image)}
@@ -5671,16 +5799,15 @@ export default function ModelFacebookProfile({
                             <table className="w-full text-left border-collapse min-w-full sm:min-w-[680px]">
                               <thead>
                                 <tr className="bg-gradient-to-r from-[#FDE8EF]/90 via-white to-[#E0F2FE]/90 border-b-[1px] border-[#F4A7C3] text-slate-700 font-mono text-[10px] sm:text-[11px] uppercase font-black tracking-wider">
-                                  <th className="py-3.5 px-4 sm:px-5 w-[33%]">Servicio</th>
-                                  <th className="py-3.5 px-3 sm:px-4 w-[31%]">Contrato habitual</th>
-                                  <th className="py-3.5 px-3 sm:px-4 w-[18%]">¿Quién contrata?</th>
+                                  <th className="py-3.5 px-4 sm:px-5 w-[46%]">Servicio</th>
+                                  <th className="py-3.5 px-3 sm:px-4 w-[36%]">Contrato habitual</th>
                                   <th className="py-3.5 px-4 sm:px-6 w-[18%] min-w-[130px] text-center">Acción</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y-[1px] divide-[#F4A7C3]/60 text-slate-800">
                                 {filteredContracts.length === 0 ? (
                                   <tr>
-                                    <td colSpan={4} className="py-10 text-center text-slate-400 font-medium font-mono text-sm">
+                                    <td colSpan={3} className="py-10 text-center text-slate-400 font-medium font-mono text-sm">
                                       Ningún servicio coincide con "{contractSearchQuery}"
                                     </td>
                                   </tr>
@@ -5718,13 +5845,6 @@ export default function ModelFacebookProfile({
                                       {/* Contrato habitual Column */}
                                       <td className="py-3.5 px-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm leading-relaxed">
                                         {item.contract}
-                                      </td>
-                                      
-                                      {/* Quien contrata Column */}
-                                      <td className="py-3.5 px-3 sm:px-4">
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-800 border-[1px] border-[#F4A7C3] shadow-2xs group-hover/row:bg-sky-100/80 transition-colors">
-                                          {item.counterparty}
-                                        </span>
                                       </td>
 
                                       {/* Acción Column with ample padding and centered full button */}
@@ -7798,131 +7918,127 @@ export default function ModelFacebookProfile({
 
                                   </div>
 
-                              {/* 💖 High-fidelity Sidebar INSIDE the video container, centered vertically on the right margin (appears only on mouse hover) */}
-                              <div className="absolute right-0 top-0 bottom-0 w-[80px] sm:w-[100px] z-30 flex flex-col justify-center items-end pr-1.5 sm:pr-2 pointer-events-auto group/sidebar-hover-zone" id={`saved-vid-right-sidebar-${vid.id}`}>
+                              {/* 💖 High-fidelity Actions Column INSIDE the video container (Identical to image.png) */}
+                              <div className="absolute right-1.5 sm:right-2.5 bottom-6 sm:bottom-10 z-30 flex flex-col items-center gap-2.5 sm:gap-3 pointer-events-auto select-none" id={`saved-vid-actions-column-${vid.id}`}>
 
-                                {/* The actual sidebar centered vertically in the middle of the channel, appearing on hover */}
-                                <div className="w-[52px] sm:w-[58px] h-auto bg-slate-900/85 hover:bg-slate-900/95 backdrop-blur-md py-3 px-1 rounded-[24px] border border-white/20 flex flex-col items-center justify-center gap-3 select-none shadow-2xl transition-all duration-300 ease-out opacity-0 translate-x-4 pointer-events-none group-hover/sidebar-hover-zone:opacity-100 group-hover/sidebar-hover-zone:translate-x-0 group-hover/sidebar-hover-zone:pointer-events-auto" id="video-right-sidebar-panel">
-                                  
-                                  <div /> {/* Spacer replacing the removed avatar block to maintain balance */}
-
-                                  {/* Heart Button Area */}
-                                  <div className="flex flex-col items-center shrink-0">
-                                    <button
-                                      onClick={(e) => handleToggleLikeSavedVideo(vid.id, e)}
-                                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white text-white hover:text-slate-900 border border-white/10 flex items-center justify-center shadow-md transition-all hover:scale-110 active:scale-75 cursor-pointer"
-                                      title="Me gusta"
-                                    >
-                                      <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${vid.isLiked ? 'text-red-550 fill-red-550 scale-110 animate-[bounce_1s_infinite]' : 'text-rose-500'}`} />
-                                    </button>
-                                    <span className="text-[8.5px] sm:text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
-                                      {vid.likes || 423}
-                                    </span>
-                                  </div>
-
-                                  {/* Comment Button Area */}
-                                  <div className="flex flex-col items-center shrink-0">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenCommentsVideoId(openCommentsVideoId === vid.id ? null : vid.id);
-                                      }}
-                                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/10 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer ${
-                                        openCommentsVideoId === vid.id 
-                                          ? 'bg-[#fe2c55] border-[#fe2c55] text-white animate-pulse' 
-                                          : 'bg-white/10 hover:bg-white text-white hover:text-slate-900'
-                                      }`}
-                                      title="Comentarios"
-                                    >
-                                      <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    </button>
-                                    <span className="text-[8.5px] sm:text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
-                                      {(customComments[vid.id]?.length || 0) + (mockCommentsMap[vid.id]?.length || 3)}
-                                    </span>
-                                  </div>
-
-                                  {/* Favorite Folder Button Area */}
-                                  <div className="flex flex-col items-center shrink-0">
-                                    <button
-                                      onClick={(e) => handleToggleFavoriteSavedVideo(vid.id, e)}
-                                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white text-white hover:text-slate-900 border border-white/10 flex items-center justify-center shadow-md transition-all hover:scale-110 active:scale-75 cursor-pointer"
-                                      title="Añadir a favoritos"
-                                    >
-                                      <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${vid.isFavorited ? 'text-amber-400 fill-amber-400' : 'text-slate-300'}`} />
-                                    </button>
-                                    <span className="text-[8.5px] sm:text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
-                                      {vid.favoritesCount || 78}
-                                    </span>
-                                  </div>
-
-                                  {/* 🔔 FLOATING ACTIVITY LOGGER BUTTON AREA */}
-                                  <div className="flex flex-col items-center shrink-0">
-                                    <button
-                                      onClick={(e) => triggerBellNotification(vid.id, e)}
-                                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/10 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer ${
-                                        bellNotifications[vid.id]
-                                          ? 'bg-[#fe2c55] border-[#fe2c55] text-white' 
-                                          : 'bg-white/10 hover:bg-white text-white hover:text-slate-900'
-                                      }`}
-                                      title="Actividad Reciente"
-                                    >
-                                      <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    </button>
-                                    <span className="text-[7px] sm:text-[8px] font-black text-pink-100 mt-0.5 uppercase tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
-                                      Actividad
-                                    </span>
-                                  </div>
-
-                                  {/* Share button Area */}
-                                  <div className="flex flex-col items-center shrink-0 relative">
-                                    <button
-                                      onClick={(e) => handleShareSavedVideo(vid.id, e)}
-                                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/10 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer ${
-                                        copiedVideoId === vid.id
-                                          ? 'bg-emerald-550 border-emerald-500 text-white' 
-                                          : 'bg-white/10 hover:bg-white text-white hover:text-slate-900'
-                                      }`}
-                                      title="Compartir"
-                                    >
-                                      <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    </button>
-                                    <span className="text-[8.5px] sm:text-[9.5px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
-                                      {vid.shares || 34}
-                                    </span>
-                                  </div>
-
-                                  {/* Virtual Gift Button */}
-                                  <div className="flex flex-col items-center shrink-0">
-                                    <button
-                                      onClick={(e) => triggerGiftExplosion(vid.id, e)}
-                                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/10 flex items-center justify-center shadow-md transition hover:scale-110 active:scale-90 cursor-pointer ${
-                                        giftExplosions[vid.id]?.show
-                                          ? 'bg-amber-500 border-amber-500 text-white animate-bounce' 
-                                          : 'bg-white/10 hover:bg-white text-white hover:text-slate-900'
-                                      }`}
-                                      title="Enviar Regalos Virtuales"
-                                    >
-                                      <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
-                                    </button>
-                                    <span className="text-[8px] sm:text-[9px] font-black text-pink-100 mt-0.5 tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
-                                      Regalo
-                                    </span>
-                                  </div>
-
-                                  {/* Spinning vinyl record record art with matching border halo */}
-                                  <div className="relative mt-0.5 animate-spin duration-[1800ms] linear shrink-0">
-                                    <div className="w-5.5 h-5.5 sm:w-7 sm:h-7 rounded-full bg-slate-950 p-[1px] border border-slate-300/40 flex items-center justify-center relative overflow-hidden shadow-md">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500 border border-white/30 z-10" />
-                                      <img
-                                        src={vid.avatar}
-                                        alt="Vinyl label animate"
-                                        className="absolute inset-0 w-full h-full object-cover opacity-80"
-                                        referrerPolicy="no-referrer"
-                                      />
-                                    </div>
-                                  </div>
-
+                                {/* 1. Creator Avatar with follow (+) badge */}
+                                <div className="relative group/creator-avatar cursor-pointer mb-0.5 shrink-0">
+                                  <img
+                                    src={vid.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                                    alt={vid.name || 'Creador'}
+                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white shadow-xl transition-transform group-hover/creator-avatar:scale-105"
+                                    referrerPolicy="no-referrer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedStoryForPreview({ id: vid.id, title: vid.title, image: vid.videoUrl, isVideo: true });
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleToggleFollowSavedVideo(vid.id, e)}
+                                    className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4.5 h-4.5 rounded-full flex items-center justify-center text-white text-[10px] font-black border border-slate-900 shadow-md transition-all cursor-pointer ${
+                                      vid.isFollowing ? 'bg-emerald-500 scale-90' : 'bg-[#fe2c55] hover:scale-110 active:scale-90'
+                                    }`}
+                                    title={vid.isFollowing ? "Siguiendo" : "Seguir a este creador"}
+                                  >
+                                    {vid.isFollowing ? '✓' : '+'}
+                                  </button>
                                 </div>
+
+                                {/* 2. Like / Me gusta button */}
+                                <div className="flex flex-col items-center shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleToggleLikeSavedVideo(vid.id, e)}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-75 cursor-pointer backdrop-blur-md ${
+                                      vid.isLiked
+                                        ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
+                                        : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
+                                    }`}
+                                    title={vid.isLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
+                                  >
+                                    <Heart className={`w-5 h-5 ${vid.isLiked ? 'fill-[#fe2c55] text-[#fe2c55] drop-shadow-[0_0_6px_rgba(254,44,85,0.9)] animate-heart-beat' : 'text-white'}`} />
+                                  </button>
+                                  <span className={`text-[10px] sm:text-[11px] font-black mt-1 drop-shadow-md select-none ${vid.isLiked ? 'text-[#fe2c55]' : 'text-white'}`}>
+                                    {vid.likes || 842}
+                                  </span>
+                                </div>
+
+                                {/* 3. Comment / Comentarios button */}
+                                <div className="flex flex-col items-center shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenCommentsVideoId(openCommentsVideoId === vid.id ? null : vid.id);
+                                    }}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
+                                      openCommentsVideoId === vid.id
+                                        ? 'bg-rose-600 text-white ring-2 ring-rose-400'
+                                        : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
+                                    }`}
+                                    title="Comentarios"
+                                  >
+                                    <MessageCircle className="w-5 h-5 text-white" />
+                                  </button>
+                                  <span className="text-[10px] sm:text-[11px] font-black text-white mt-1 drop-shadow-md select-none">
+                                    {(customComments[vid.id]?.length || 0) + (mockCommentsMap[vid.id]?.length || 29)}
+                                  </span>
+                                </div>
+
+                                {/* 4. Share / Compartir button */}
+                                <div className="flex flex-col items-center shrink-0 relative">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleShareSavedVideo(vid.id, e)}
+                                    className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 border border-white/20 text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md"
+                                    title="Compartir enlace de vídeo"
+                                  >
+                                    <Share2 className="w-4.5 h-4.5 text-white" />
+                                  </button>
+                                  <span className="text-[10px] sm:text-[11px] font-black text-white mt-1 drop-shadow-md select-none">
+                                    {vid.shares || 12}
+                                  </span>
+                                </div>
+
+                                {/* 5. Bookmark / Guardar vídeo button */}
+                                <div className="flex flex-col items-center shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleToggleFavoriteSavedVideo(vid.id, e)}
+                                    className={`w-10 h-10 rounded-full border text-white flex items-center justify-center shadow-lg transition active:scale-90 cursor-pointer backdrop-blur-md ${
+                                      vid.isFavorited
+                                        ? 'bg-amber-500/30 border-amber-400 text-amber-400 shadow-amber-500/30'
+                                        : 'bg-black/50 hover:bg-black/70 border-white/20'
+                                    }`}
+                                    title="Guardar vídeo"
+                                  >
+                                    <Bookmark className={`w-4.5 h-4.5 ${vid.isFavorited ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+                                  </button>
+                                  <span className="text-[10px] sm:text-[11px] font-black text-white mt-1 drop-shadow-md select-none">
+                                    {vid.favoritesCount || 55}
+                                  </span>
+                                </div>
+
+                                {/* 6. Spinning Music Disc (toggles sound) */}
+                                <div className="flex flex-col items-center shrink-0 mt-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const nextMute = !isProfileVideoMuted;
+                                      setIsProfileVideoMuted(nextMute);
+                                      localStorage.setItem('profile_video_muted', String(nextMute));
+                                    }}
+                                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/85 border-2 border-slate-700/80 p-1 flex items-center justify-center shadow-xl cursor-pointer hover:scale-105 active:scale-95 transition-transform backdrop-blur-md ${
+                                      !isProfileVideoMuted ? 'animate-spin duration-[4000ms]' : 'opacity-80'
+                                    }`}
+                                    title={isProfileVideoMuted ? "Activar sonido" : "Silenciar sonido"}
+                                  >
+                                    <Music className="w-4.5 h-4.5 text-[#fe2c55]" />
+                                  </button>
+                                </div>
+
                               </div>
 
                               {/* 🎁 VIRTUAL GIFT EXPLOSION OVERLAY */}
@@ -9189,7 +9305,18 @@ export default function ModelFacebookProfile({
                   src={selectedPhotoForLightbox} 
                   alt="Muestra de moda en grande"
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain max-h-[35vh] sm:max-h-[40vh] md:max-h-[75vh] relative z-10 transition-all duration-300 group-hover/stage:scale-[1.015]"
+                  className="w-full h-full object-contain max-h-[35vh] sm:max-h-[40vh] md:max-h-[75vh] relative z-10 transition-all duration-300 group-hover/stage:scale-[1.015] cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const ph = selectedPhotoForLightbox;
+                    setSelectedPhotoForLightbox(null);
+                    openImageLightbox({
+                      src: ph,
+                      alt: userProfile.name,
+                      title: userProfile.name
+                    });
+                  }}
                 />
 
                 {giftConfirmPhotoUrl === selectedPhotoForLightbox && renderConfirmGiftOverlay(selectedPhotoForLightbox, true)}
@@ -10101,6 +10228,132 @@ export default function ModelFacebookProfile({
                         />
                       </div>
 
+                      {/* 🌐 CONTENEDOR EXACTO A GEMINI_GENERATED_IMAGE CON DISEÑO MINIMALISTA Y NEON GLOW */}
+                      <div className="bg-[#fbf9f5] border border-stone-200/90 rounded-[28px] p-5 sm:p-6 shadow-sm space-y-4 my-2">
+                        {/* Header con icono de enlace y texto limpio */}
+                        <div className="flex items-center gap-2 text-stone-800">
+                          <svg className="w-4 h-4 text-stone-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                          </svg>
+                          <span className="text-[11px] sm:text-xs font-sans font-medium tracking-wider text-stone-800 uppercase">
+                            REDES SOCIALES OFICIALES DEL MODELO:
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col gap-3.5 w-full">
+                          {/* Contenedor 1: Instagram (Tarjeta blanca limpia con píldora rosa pastel) */}
+                          <div className="bg-white border border-stone-200/90 rounded-[22px] p-4 sm:p-4.5 shadow-2xs space-y-2.5 transition-all">
+                            <div className="flex items-center gap-2.5">
+                              {/* Logo oficial Instagram con gradiente */}
+                              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                                <defs>
+                                  <linearGradient id="ig-grad-exact" x1="0%" y1="100%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#fdf497" />
+                                    <stop offset="25%" stopColor="#fd5949" />
+                                    <stop offset="65%" stopColor="#d6249f" />
+                                    <stop offset="100%" stopColor="#285AEB" />
+                                  </linearGradient>
+                                </defs>
+                                <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="url(#ig-grad-exact)" strokeWidth="2.2"/>
+                                <circle cx="12" cy="12" r="4.2" stroke="url(#ig-grad-exact)" strokeWidth="2.2"/>
+                                <circle cx="17.5" cy="6.5" r="1.3" fill="url(#ig-grad-exact)"/>
+                              </svg>
+                              <span className="text-base sm:text-[17px] font-sans font-normal tracking-wide text-stone-900 uppercase">
+                                INSTAGRAM
+                              </span>
+                            </div>
+                            <div className="relative rounded-xl border border-[#fbcfe8] bg-gradient-to-r from-[#ffe4ec] via-[#fde8ef] to-[#fce4ec] px-3.5 py-2 flex items-center gap-2">
+                              <span className="text-[#be185d] font-bold text-sm sm:text-base select-none font-sans">@</span>
+                              <input
+                                type="text"
+                                value={editingInstagram.replace(/^@/, '')}
+                                onChange={(e) => {
+                                  const val = e.target.value.trim().replace(/^@/, '');
+                                  setEditingInstagram(val ? `@${val}` : '');
+                                }}
+                                className="w-full bg-transparent text-xs sm:text-sm font-sans text-stone-850 font-normal focus:outline-none placeholder:text-rose-300"
+                                placeholder="adrianalima_w1"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Contenedor 2: TikTok (Con borde dual-tone brillante Cyan a Magenta y resplandor neón) */}
+                          <div className="relative rounded-[22px] p-[2.5px] bg-gradient-to-r from-[#00f2fe] via-[#06b6d4] to-[#fe0979] shadow-[0_0_20px_rgba(0,242,254,0.35),0_0_24px_rgba(254,9,121,0.35)] transition-all">
+                            <div className="bg-white rounded-[19.5px] p-4 sm:p-4.5 space-y-2.5">
+                              <div className="flex items-center gap-2.5">
+                                {/* Logo oficial TikTok dual-tone */}
+                                <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                                  <path d="M19.321 5.562a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.228 1h-3.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.48a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.525a8.318 8.318 0 0 0 4.854 1.556V5.562z" fill="#000000" />
+                                  <path d="M18.821 5.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 14.728.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.025a8.318 8.318 0 0 0 4.854 1.556V5.062z" fill="#25F4EE" opacity="0.9"/>
+                                  <path d="M19.821 6.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.728 1.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V8.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V8.025a8.318 8.318 0 0 0 4.854 1.556V6.062z" fill="#FE2C55" opacity="0.9"/>
+                                </svg>
+                                <span className="text-base sm:text-[17px] font-sans font-normal tracking-wide text-stone-900 uppercase">
+                                  TIKTOK
+                                </span>
+                              </div>
+                              <div className="relative rounded-xl border border-[#a5f3fc] bg-[#e6fafb] px-3.5 py-2 flex items-center gap-2">
+                                <span className="text-teal-700 font-bold text-sm sm:text-base select-none font-sans">@</span>
+                                <input
+                                  type="text"
+                                  value={editingTikTok.replace(/^@/, '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value.trim().replace(/^@/, '');
+                                    setEditingTikTok(val ? `@${val}` : '');
+                                  }}
+                                  className="w-full bg-transparent text-xs sm:text-sm font-sans text-stone-850 font-normal focus:outline-none placeholder:text-teal-400"
+                                  placeholder="adrianalima_w1_tok"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Contenedor 3: X / Twitter (Tarjeta blanca limpia con píldora gris neutral) */}
+                          <div className="bg-white border border-stone-200/90 rounded-[22px] p-4 sm:p-4.5 shadow-2xs space-y-2.5 transition-all">
+                            <div className="flex items-center gap-2.5">
+                              {/* Logo oficial X */}
+                              <svg className="w-4.5 h-4.5 shrink-0 text-black" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                              </svg>
+                              <span className="text-base sm:text-[17px] font-sans font-normal tracking-wide text-stone-900 uppercase">
+                                X (TWITTER)
+                              </span>
+                            </div>
+                            <div className="relative rounded-xl border border-stone-200 bg-[#f1f3f5] px-3.5 py-2 flex items-center gap-2">
+                              <span className="text-stone-500 font-bold text-sm sm:text-base select-none font-sans">@</span>
+                              <input
+                                type="text"
+                                value={editingTwitter.replace(/^@/, '')}
+                                onChange={(e) => {
+                                  const val = e.target.value.trim().replace(/^@/, '');
+                                  setEditingTwitter(val ? `@${val}` : '');
+                                }}
+                                className="w-full bg-transparent text-xs sm:text-sm font-sans text-stone-850 font-normal focus:outline-none placeholder:text-stone-400"
+                                placeholder="adrianalima_w1_real"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Botón Guardar Redes Sociales en negro mate de ancho completo exacto a la captura */}
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={handleSaveSocialsOnly}
+                            className="w-full bg-[#141414] hover:bg-black text-white font-sans font-normal text-xs sm:text-[13px] uppercase tracking-[0.2em] py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2.5"
+                          >
+                            <Check className="w-4 h-4 stroke-[2.2]" />
+                            <span>GUARDAR REDES SOCIALES</span>
+                          </button>
+                          {socialsSavedFeedback && (
+                            <p className="text-xs font-bold text-emerald-600 text-center animate-fade-in font-mono mt-2.5 flex items-center justify-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                              ¡Redes sociales guardadas y actualizadas!
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
                       {/* 🎥 SUBIR VÍDEO PARA EL RANKING DE LA LANDING PAGE */}
                       {(() => {
                         const applyRankingVideo = (targetVideoUrl: string) => {
@@ -10274,7 +10527,7 @@ export default function ModelFacebookProfile({
                                   RECORDATORIO IMPRESCINDIBLE PARA EL MODELO
                                 </h5>
                                 <p className="text-[10.5px] leading-relaxed text-slate-650 font-medium">
-                                  Esta sección está diseñada <strong className="text-rose-700 uppercase font-black">exclusivamente</strong> para que subas tu vídeo de competencia al Ranking de la Landing Page. Es un requisito obligatorio elegir o subir un vídeo grabado en <strong className="text-slate-900 border-b-2 border-rose-300 pb-0.5 font-bold">Primer plano</strong> (zoom extremo facial a tu rostro o mirada destacable). Los vídeos que no cumplan con esta directriz no se calificarán para recibir patrocinio de los inversores.
+                                  Esta sección está diseñada <strong className="text-rose-700 uppercase font-black">exclusivamente</strong> para que subas tu vídeo de competencia al Ranking de la Landing Page. Es un requisito obligatorio elegir o subir un vídeo grabado en <strong className="text-slate-900 border-b-2 border-rose-300 pb-0.5 font-bold">Primer plano</strong> (zoom extremo facial a tu rostro o mirada destacable). Los vídeos que no cumplan con esta directriz no se calificarán para aparecer en el ranking de moda.
                                 </p>
                               </div>
                             </div>
@@ -10505,6 +10758,12 @@ export default function ModelFacebookProfile({
                                   bio: editingBio,
                                   avatar: editingAvatar,
                                   fashionAgency: editingFashionAgency,
+                                  socials: {
+                                    ...(m.socials || {}),
+                                    instagram: editingInstagram,
+                                    tiktok: editingTikTok,
+                                    twitter: editingTwitter
+                                  },
                                   ...(activeVideo ? { videoUrl: activeVideo, totalLikes: 99999, isOnline: true } : {})
                                 };
                               }
@@ -10522,6 +10781,9 @@ export default function ModelFacebookProfile({
                           userProfile.bio = editingBio;
                           userProfile.avatar = editingAvatar;
                           userProfile.fashionAgency = editingFashionAgency;
+                          userProfile.instagram = editingInstagram;
+                          userProfile.tiktok = editingTikTok;
+                          (userProfile as any).twitter = editingTwitter;
 
                           const nextProfile = {
                             ...userProfile,
@@ -10529,8 +10791,14 @@ export default function ModelFacebookProfile({
                             username: editingUsername,
                             bio: editingBio,
                             avatar: editingAvatar,
-                            fashionAgency: editingFashionAgency
+                            fashionAgency: editingFashionAgency,
+                            instagram: editingInstagram,
+                            tiktok: editingTikTok,
+                            twitter: editingTwitter
                           };
+                          try {
+                            localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
+                          } catch (e) {}
                           onUpdateProfile(nextProfile);
 
                           window.dispatchEvent(new Event('ranking_videos_updated'));

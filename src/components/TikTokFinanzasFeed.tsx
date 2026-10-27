@@ -4781,14 +4781,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <span>@{currentVid.username}</span>
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20" />
                 </h4>
-                <span className="text-[8px] bg-white/20 backdrop-blur-md text-white font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
-                  {activeSubTab === 'amigos' ? 'AMIGOS' : getChannelCleanName(currentChannel)}
-                </span>
-                {isVideoFromFriendsPage(currentVid) && (
-                  <span className="text-[8px] bg-gradient-to-r from-pink-600 via-rose-600 to-rose-500 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                    👥 AMIGO RECÍPROCO
-                  </span>
-                )}
               </div>
 
               {/* User upload badge if uploaded from z.png */}

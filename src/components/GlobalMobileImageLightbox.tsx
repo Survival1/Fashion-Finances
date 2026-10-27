@@ -63,6 +63,9 @@ export const GlobalMobileImageLightbox: React.FC = () => {
     setZoomLevel(1);
     setRotation(0);
     setPosition({ x: 0, y: 0 });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('close-all-photo-lightboxes'));
+    }
   }, []);
 
   // Navigation handlers
@@ -399,24 +402,23 @@ export const GlobalMobileImageLightbox: React.FC = () => {
 
   const currentItem: LightboxImageItem = galleryList[currentIndex] || activeImage;
 
-  // Viewport-maximizing sizing style (75% - 90% of available viewport)
-  // Maintains 100% true natural aspect ratio without distortion or cropping
+  // Viewport sizing: scaled down so the image appears smaller ('mas chica') with pearl pink frame
   const getImageSizingStyle = (): React.CSSProperties => {
     if (aspectMode === 'vertical') {
       return {
         width: 'auto',
-        height: '88vh',
-        maxWidth: '90vw',
-        maxHeight: '88vh',
+        height: '56vh',
+        maxWidth: 'min(70vw, 440px)',
+        maxHeight: '56vh',
         objectFit: 'contain'
       };
     }
     if (aspectMode === 'horizontal') {
       return {
-        width: '90vw',
+        width: 'auto',
         height: 'auto',
-        maxWidth: '90vw',
-        maxHeight: '88vh',
+        maxWidth: 'min(76vw, 600px)',
+        maxHeight: '52vh',
         objectFit: 'contain'
       };
     }
@@ -424,8 +426,8 @@ export const GlobalMobileImageLightbox: React.FC = () => {
     return {
       width: 'auto',
       height: 'auto',
-      maxWidth: 'min(90vw, 88vh)',
-      maxHeight: 'min(90vw, 88vh)',
+      maxWidth: 'min(65vw, 50vh, 440px)',
+      maxHeight: 'min(65vw, 50vh, 440px)',
       objectFit: 'contain'
     };
   };
@@ -433,7 +435,7 @@ export const GlobalMobileImageLightbox: React.FC = () => {
   return (
     <div 
       id="global-mobile-image-lightbox"
-      className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/20 backdrop-blur-[2px] transition-all duration-300 select-none overflow-hidden"
+      className="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-950/85 backdrop-blur-md transition-all duration-300 select-none overflow-hidden"
       onClick={handleClose}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -441,7 +443,7 @@ export const GlobalMobileImageLightbox: React.FC = () => {
       {/* Top Left: Optional Gallery Counter (e.g. 1 / 12) */}
       {galleryList.length > 1 && (
         <div 
-          className="fixed top-4 left-4 sm:top-6 sm:left-6 z-[1000000] px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white font-mono text-[11px] sm:text-xs font-semibold tracking-wider flex items-center gap-1.5 shadow-xl select-none"
+          className="fixed top-4 left-4 sm:top-6 sm:left-6 z-[1000000] px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white font-mono text-[11px] sm:text-xs font-semibold tracking-wider flex items-center gap-1.5 shadow-xl select-none"
           onClick={(e) => e.stopPropagation()}
         >
           <span className="text-white font-bold">{currentIndex + 1}</span>
@@ -457,7 +459,7 @@ export const GlobalMobileImageLightbox: React.FC = () => {
           e.stopPropagation();
           handleClose();
         }}
-        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[1000000] w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 shadow-xl cursor-pointer"
+        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[1000000] w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-black/80 active:scale-95 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 shadow-xl cursor-pointer"
         title="Cerrar (Esc)"
         aria-label="Cerrar visor"
       >
@@ -472,7 +474,7 @@ export const GlobalMobileImageLightbox: React.FC = () => {
             e.stopPropagation();
             goToPrev();
           }}
-          className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-[1000000] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/65 active:scale-95 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 shadow-xl cursor-pointer"
+          className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-[1000000] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/50 hover:bg-black/75 active:scale-95 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 shadow-xl cursor-pointer"
           title="Imagen anterior (Flecha izquierda)"
           aria-label="Anterior"
         >
@@ -488,7 +490,7 @@ export const GlobalMobileImageLightbox: React.FC = () => {
             e.stopPropagation();
             goToNext();
           }}
-          className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-[1000000] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/65 active:scale-95 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 shadow-xl cursor-pointer"
+          className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-[1000000] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/50 hover:bg-black/75 active:scale-95 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 shadow-xl cursor-pointer"
           title="Imagen siguiente (Flecha derecha)"
           aria-label="Siguiente"
         >
@@ -496,19 +498,16 @@ export const GlobalMobileImageLightbox: React.FC = () => {
         </button>
       )}
 
-      {/* CENTER IMAGE CONTAINER:
-          - Eliminados todos los max-width pequeños (sin 460px)
-          - Borde fino blanco de 1px
-          - Border-radius aproximado de 1px
-          - Sombra suave y premium
-          - Animación de entrada suave: scale 0.96 -> 1, opacity 0 -> 1 en 260ms
+      {/* CENTER IMAGE CONTAINER CON MARCO ROSA PERLA:
+          - Imagen más chica (maxHeight ~56vh)
+          - Marco Rosa Perla con sutil brillo nacarado (#F8C8DC / #FFF5F8)
+          - Doble anillo perlado y sombra de luz rosa perla
       */}
       <div 
-        className="relative inline-flex items-center justify-center p-[1px] bg-white border border-white/95 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] animate-lightbox-enter transition-shadow duration-300 pointer-events-auto"
+        className="relative inline-flex items-center justify-center p-3 sm:p-4 bg-gradient-to-br from-[#FFF5F8] via-[#F8C8DC] to-[#F3B3C8] border-[5px] sm:border-[7px] border-[#F8C8DC] rounded-3xl sm:rounded-[32px] shadow-[0_0_40px_rgba(248,200,220,0.8),0_25px_60px_rgba(0,0,0,0.7)] animate-lightbox-enter transition-all duration-300 pointer-events-auto ring-2 ring-white/90 select-none"
         style={{
-          borderRadius: '1px',
-          maxWidth: '90vw',
-          maxHeight: '88vh',
+          maxWidth: '82vw',
+          maxHeight: '66vh',
           cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
         }}
         onClick={handleImageClick}
@@ -518,6 +517,9 @@ export const GlobalMobileImageLightbox: React.FC = () => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Subtle Pearlescent Sheen Reflection */}
+        <div className="absolute inset-0 rounded-[20px] sm:rounded-[24px] pointer-events-none bg-gradient-to-tr from-white/35 via-transparent to-white/45 mix-blend-overlay" />
+        
         <img
           ref={imgRef}
           src={currentItem.src}
@@ -525,10 +527,10 @@ export const GlobalMobileImageLightbox: React.FC = () => {
           onLoad={handleImageLoad}
           referrerPolicy="no-referrer"
           draggable={false}
+          className="rounded-2xl sm:rounded-[20px] shadow-sm"
           style={{
             display: 'block',
             ...getImageSizingStyle(),
-            borderRadius: '1px',
             transform: `translate(${position.x}px, ${position.y}px) scale(${zoomLevel}) rotate(${rotation}deg)`,
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 240ms cubic-bezier(0.2, 0.9, 0.3, 1)',

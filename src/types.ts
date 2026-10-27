@@ -59,6 +59,7 @@ export interface UserSessionProfile {
   email?: string;
   instagram?: string;
   tiktok?: string;
+  twitter?: string;
   shareDireccion?: boolean;
   shareTelefono?: boolean;
   shareEmail?: boolean;

@@ -78,6 +78,7 @@ export default function SavedProjectsManager({
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
     userProjects.length > 0 ? userProjects[0].id : ''
   );
+  const [projectToDelete, setProjectToDelete] = useState<ProjectData | null>(null);
   const [hoveredMedia, setHoveredMedia] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -551,35 +552,42 @@ export default function SavedProjectsManager({
   const handleDeleteProject = (projectId: string) => {
     const projToDelete = userProjects.find(p => p.id === projectId);
     if (!projToDelete) return;
+    setProjectToDelete(projToDelete);
+  };
 
-    const hasEntered = hasEnteredAnySession(projectId);
-    let confirmMsg = `¿Estás seguro de que deseas eliminar el proyecto "${projToDelete.title}"? Esta acción no se puede deshacer.`;
-    if (hasEntered) {
-      confirmMsg = `⚠️ ADVERTENCIA: El proyecto "${projToDelete.title}" ya ha participado o está participando en mesas de inversión. Si lo eliminas, se conservará en el historial de las mesas pero desaparecerá de tu portafolio personal. ¿Deseas continuar con la eliminación?`;
-    }
-
-    if (!window.confirm(confirmMsg)) {
-      return;
-    }
+  const confirmExecuteDelete = () => {
+    if (!projectToDelete) return;
+    const targetId = projectToDelete.id;
+    const targetTitle = projectToDelete.title;
 
     if (!onUpdateProjects) {
       alert('Error: No se pudo actualizar el portafolio.');
+      setProjectToDelete(null);
       return;
     }
 
-    const nextProjects = userProjects.filter(p => p.id !== projectId);
+    const nextProjects = userProjects.filter(p => p.id !== targetId);
     onUpdateProjects(nextProjects);
+
+    // If currently editing, exit edit mode
+    setIsEditing(false);
 
     // Update selectedProjectId
     if (nextProjects.length > 0) {
-      const currentIndex = userProjects.findIndex(p => p.id === projectId);
+      const currentIndex = userProjects.findIndex(p => p.id === targetId);
       const nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
       setSelectedProjectId(nextProjects[nextIndex].id);
     } else {
       setSelectedProjectId('');
     }
 
-    alert(`🗑️ El proyecto "${projToDelete.title}" ha sido eliminado correctamente.`);
+    // Also update selectedProjectIds
+    setSelectedProjectIds(prev => prev.filter(id => id !== targetId));
+
+    setProjectToDelete(null);
+    setToastNotification({
+      message: `🗑️ El proyecto "${targetTitle}" ha sido eliminado correctamente.`
+    });
   };
 
   // Slider navigation logic
@@ -1976,6 +1984,7 @@ export default function SavedProjectsManager({
                               </button>
 
                               <button
+                                type="button"
                                 onClick={() => handleDeleteProject(project.id)}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border border-rose-100 rounded-xl font-bold transition active:scale-95 cursor-pointer font-sans"
                                 title="Eliminar este proyecto"
@@ -2856,6 +2865,73 @@ export default function SavedProjectsManager({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* MODAL DE CONFIRMACIÓN PARA ELIMINAR PROYECTO */}
+      {projectToDelete && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-rose-150 space-y-4 animate-scale-up text-left">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-200 shrink-0 shadow-3xs">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900 font-sans">
+                  ¿Eliminar este proyecto?
+                </h3>
+                <p className="text-xs text-slate-500 font-sans mt-0.5">
+                  Esta acción es definitiva y no se puede deshacer.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setProjectToDelete(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                title="Cerrar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-rose-50/60 rounded-xl p-3.5 border border-rose-100 text-xs space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-800">
+                  {projectToDelete.category || 'Proyecto'}
+                </span>
+                <span className="font-bold text-slate-800 truncate">
+                  {projectToDelete.title}
+                </span>
+              </div>
+              {hasEnteredAnySession(projectToDelete.id) ? (
+                <p className="text-[11px] text-amber-800 leading-relaxed font-sans bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                  ⚠️ <strong>Aviso:</strong> Este proyecto ya ha participado o está participando en mesas de inversión. Se conservará en el historial de las mesas pero desaparecerá de tu portafolio personal.
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-600 leading-relaxed font-sans">
+                  Se eliminarán todos los datos, multimedia asociada, presupuestos y perfiles de staff vinculados a este registro.
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setProjectToDelete(null)}
+                className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer active:scale-95"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmExecuteDelete}
+                className="px-4 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md hover:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Sí, Eliminar Proyecto</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toastNotification && (
         <div className="fixed bottom-6 right-6 z-[9999] max-w-sm w-full bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-indigo-500/30 animate-fade-in flex items-start gap-3">

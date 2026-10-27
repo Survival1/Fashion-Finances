@@ -1247,7 +1247,13 @@ export default function App() {
             username: nextProfile.username,
             avatar: nextProfile.avatar,
             banner: nextProfile.banner || m.banner,
-            bio: nextProfile.bio || m.bio
+            bio: nextProfile.bio || m.bio,
+            socials: {
+              ...(m.socials || {}),
+              instagram: nextProfile.instagram,
+              tiktok: nextProfile.tiktok,
+              twitter: nextProfile.twitter
+            }
           };
         }
         return m;
@@ -3673,7 +3679,7 @@ export default function App() {
           )}
 
           {activeTab === 'create_project' && (
-            <div className="space-y-6 animate-fade-in bg-gradient-to-b from-[#B9E2FC]/30 via-[#B9E2FC]/10 to-transparent p-1.5 sm:p-3 rounded-3xl">
+            <div className="animate-fade-in">
               <ProjectForm
                 userProjects={projects}
                 userId={userProfile.id}

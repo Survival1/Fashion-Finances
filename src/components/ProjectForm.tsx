@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ProjectData, ProjectTeamMember } from '../types';
 import { 
   FileText, 
-  Plus, 
   Trash2, 
   AlertTriangle, 
   ArrowRight, 
   ArrowLeft,
-  CheckCircle2, 
-  ShieldCheck, 
-  Database, 
-  Calendar, 
   UploadCloud, 
-  Fingerprint, 
   CreditCard, 
   Camera, 
-  Building2, 
-  Sparkles, 
   Lock, 
   Check, 
   Mail, 
   Phone, 
-  MapPin, 
   Eye, 
-  Info,
-  ChevronRight,
-  User,
-  AlertCircle,
-  Download
+  Tag,
+  Sparkles,
+  Download,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { generateProjectPDF } from '../utils/pdfGenerator';
 
@@ -40,6 +31,24 @@ interface ProjectFormProps {
   onVerifyUserToggle: () => void;
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live') => void;
 }
+
+// Faceted luxury diamond SVG icon
+const DiamondIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="1.8" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <polygon points="6,3 18,3 22,8 12,21 2,8" />
+    <line x1="2" y1="8" x2="22" y2="8" />
+    <polyline points="6,3 10,8 12,21 14,8 18,3" />
+    <line x1="10" y1="8" x2="14" y2="8" />
+  </svg>
+);
 
 export default function ProjectForm({
   userProjects,
@@ -57,8 +66,10 @@ export default function ProjectForm({
   const [category, setCategory] = useState('Inteligencia artificial y automatización');
   const [descShort, setDescShort] = useState('');
   const [descLong, setDescLong] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('contacto@fashionfinances.net');
+  const [contactPhone, setContactPhone] = useState('+34 654 321 098');
+  const [showAdvancedMedia, setShowAdvancedMedia] = useState(false);
+
   const [imagesList, setImagesList] = useState<string[]>([
     'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&q=80&w=600'
   ]);
@@ -208,7 +219,6 @@ export default function ProjectForm({
       return;
     }
 
-    // Convert structured list into text description for backwards compatibility
     const itemizedText = budgetItems.map(item => `${item.item}: ${item.amount}€`).join('\n');
 
     const newProject: ProjectData = {
@@ -226,13 +236,11 @@ export default function ProjectForm({
       termsAccepted,
       images: imagesList,
       status: 'submitted',
-      
-      // Extended fields
       fundingGoal: fundingGoal || (budget * 50),
       budgetBreakdown: itemizedText,
       videos: videosList,
       contactEmail: contactEmail || 'contacto@fashionfinances.net',
-      contactPhone: contactPhone || '+34 600 000 000',
+      contactPhone: contactPhone || '+34 654 321 098',
       documentationName: uploadedDocName,
       documentationUrl: uploadedDocUrl
     };
@@ -247,8 +255,6 @@ export default function ProjectForm({
       setObjective('');
       setFundUsage('');
       setTimeline('');
-      setContactEmail('');
-      setContactPhone('');
       setActiveStep('basic');
       if (onNavigateToTab) {
         onNavigateToTab('saved_projects');
@@ -278,696 +284,658 @@ export default function ProjectForm({
   };
 
   return (
-    <div className="bg-[#B9E2FC] rounded-3xl border border-[#9fd3f2] p-6 sm:p-8 space-y-8 shadow-xl text-left relative overflow-hidden" id="premium-project-form-container">
-      
-      {/* Visual background accents */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-white/40 rounded-full blur-3xl -z-0 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-200/50 rounded-full blur-3xl -z-0 pointer-events-none" />
+    <div 
+      className="w-full min-h-screen bg-gradient-to-br from-[#FEF5F6] via-[#FDF2F4] to-[#FCE7F3] rounded-[32px] sm:rounded-[40px] border border-pink-200/80 p-5 sm:p-8 lg:p-12 relative overflow-hidden text-left shadow-2xl shadow-pink-950/10 font-sans"
+      id="luxury-fashion-finances-portal"
+    >
+      {/* GLAMOROUS MODEL BACKGROUND ACCENT AT TOP-RIGHT */}
+      <div className="absolute top-0 right-0 w-[460px] max-w-[50vw] h-[400px] pointer-events-none z-0 overflow-hidden">
+        <img 
+          src="/assets/aistudio/luxury_model_clean.png" 
+          alt="Fashion Model" 
+          className="w-full h-full object-cover object-top opacity-90 mix-blend-multiply mask-radial-fade"
+          style={{
+            maskImage: 'radial-gradient(circle at 75% 30%, black 55%, transparent 95%)',
+            WebkitMaskImage: 'radial-gradient(circle at 75% 30%, black 55%, transparent 95%)'
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#FDF2F4]/40 to-[#FDF2F4]" />
+      </div>
 
-      {/* Elegant Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-sky-300/60 relative z-10">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-white text-[#0284c7] rounded-2xl shadow-sm backdrop-blur-md border border-white/80">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 tracking-tight drop-shadow-xs">Portal de Registro de Proyectos</h2>
+      {/* LUXURY TOP HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 relative z-10 border-b border-pink-200/60">
+        
+        {/* Brand FF Crown Logo & Title */}
+        <div className="flex items-center gap-3.5 sm:gap-4">
+          <img 
+            src="/assets/aistudio/luxury_ff_logo.png" 
+            alt="FF Crown Logo" 
+            className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm shrink-0" 
+          />
+          <div className="flex flex-col">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-black tracking-tight leading-none text-slate-950 flex items-center gap-2">
+              <span className="font-black text-slate-900">FASHION</span>
+              <span className="font-normal bg-gradient-to-r from-[#be185d] via-[#db2777] to-[#9d174d] bg-clip-text text-transparent">FINANCES</span>
+            </h2>
+            <div className="text-[9px] sm:text-[10.5px] font-extrabold text-slate-700 tracking-[0.28em] uppercase mt-1.5 font-sans">
+              FASHION • MODELS • INVESTMENT
+            </div>
           </div>
         </div>
 
-        {/* Info label and Navigation Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Action Buttons: "Volver a Proyectos Guardados" + "CIFRADO DE SEGURIDAD SSL" */}
+        <div className="flex flex-wrap items-center gap-3 relative z-20">
           {onNavigateToTab && (
             <button
               type="button"
               onClick={() => onNavigateToTab('saved_projects')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-[#0284c7] hover:text-[#0369a1] border border-white/80 rounded-xl font-bold transition-all active:scale-95 cursor-pointer font-sans text-xs shadow-sm"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-xs sm:text-sm font-bold shadow-lg shadow-pink-600/30 transition-all hover:scale-105 active:scale-95 bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] border border-pink-300/40 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver a Proyectos Guardados</span>
             </button>
           )}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/85 rounded-xl border border-white/80 backdrop-blur-sm text-slate-800 shadow-2xs">
-            <Lock className="w-3.5 h-3.5 text-sky-600" />
-            <span className="text-[10px] font-bold text-slate-700 uppercase font-mono tracking-wider">Cifrado de Seguridad SSL</span>
+
+          <div className="flex items-center gap-2 px-5 py-2.5 bg-white/95 rounded-full border border-amber-200/90 shadow-sm text-slate-800">
+            <Lock className="w-4 h-4 text-[#991b1b] fill-[#991b1b]/20" />
+            <span className="text-[10px] font-extrabold text-slate-800 tracking-[0.16em] uppercase font-mono">
+              CIFRADO DE SEGURIDAD SSL
+            </span>
           </div>
+        </div>
+
+      </div>
+
+      {/* HERO SLOGAN: "Tu idea, EL SIGUIENTE NIVEL" */}
+      <div className="mt-8 mb-8 text-left relative z-10 max-w-2xl">
+        <span className="block text-3xl sm:text-4xl lg:text-[42px] text-[#db2777] font-['Alex_Brush',cursive] leading-none mb-1 -rotate-2 transform origin-left">
+          Tu idea,
+        </span>
+        <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black font-serif tracking-tight text-slate-900 leading-[1.05] uppercase">
+          EL SIGUIENTE NIVEL
+        </h1>
+        <div className="text-xs sm:text-sm font-extrabold text-slate-700 tracking-[0.38em] uppercase mt-2.5">
+          FINANCIA • CRECE • BRILLA
         </div>
       </div>
 
-      {/* Success View */}
+      {/* MAIN CONTAINER: SIDEBAR + FORM CARD */}
       {isSuccess ? (
-        <div className="bg-slate-900 text-white rounded-3xl p-8 text-center space-y-4 max-w-xl mx-auto shadow-lg border border-slate-800 animate-fade-in relative z-10">
-          <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+        <div className="bg-slate-900 text-white rounded-3xl p-10 text-center space-y-4 max-w-xl mx-auto shadow-2xl border border-pink-500/30 animate-fade-in relative z-10 my-12">
+          <div className="w-16 h-16 bg-pink-500/10 text-pink-400 border border-pink-500/40 rounded-2xl flex items-center justify-center mx-auto text-3xl">
             ✓
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-bold text-slate-100">¡Proyecto Registrado Oficialmente!</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-              Tu proyecto <strong className="text-indigo-400">"{title}"</strong> ya califica en el simulador y ha sido registrado correctamente. Ya puedes participar en sesiones activas de inversión.
+            <h3 className="text-2xl font-serif font-bold text-white">¡Proyecto Registrado Oficialmente!</h3>
+            <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+              Tu proyecto <strong className="text-pink-400">"{title}"</strong> ya califica en el ecosistema Fashion Finances y ha quedado registrado de manera exitosa.
             </p>
           </div>
           <div className="pt-2">
-            <span className="inline-block px-3.5 py-1.5 bg-slate-800 text-slate-350 border border-slate-700 rounded-full text-[10px] font-mono animate-pulse">
-              Volviendo a la mesa de control...
+            <span className="inline-block px-4 py-1.5 bg-slate-800 text-pink-300 border border-pink-500/30 rounded-full text-[10px] font-mono animate-pulse">
+              Redirigiendo a tus proyectos guardados...
             </span>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
-          
-          {/* STEPPER NAVIGATION SIDEBAR */}
-          <div className="lg:col-span-3 space-y-2 lg:border-r lg:border-sky-300/60 lg:pr-6" id="form-stepper-sidebar">
-            <span className="text-[9px] font-extrabold text-slate-700 uppercase tracking-widest block mb-4">
-              Progreso de Calificación
-            </span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start relative z-10">
 
-            {/* Step 1 */}
-            <button
-              type="button"
-              onClick={() => setActiveStep('basic')}
-              className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                activeStep === 'basic'
-                  ? 'bg-slate-900 text-white shadow-md font-bold scale-[1.02]'
-                  : 'bg-white/95 text-slate-800 hover:bg-white font-bold border border-white/60 shadow-xs'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="text-xs">Identidad Creativa</span>
-              </div>
-              {title && <Check className="w-3.5 h-3.5 text-emerald-500" />}
-            </button>
-
-            {/* Step 2 */}
-            <button
-              type="button"
-              onClick={() => setActiveStep('finance')}
-              className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                activeStep === 'finance'
-                  ? 'bg-slate-900 text-white shadow-md font-bold scale-[1.02]'
-                  : 'bg-white/95 text-slate-800 hover:bg-white font-bold border border-white/60 shadow-xs'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="text-xs">Economía y Fondos</span>
-              </div>
-              {fundUsage && objective && <Check className="w-3.5 h-3.5 text-emerald-500" />}
-            </button>
-
-            {/* Step 3 */}
-            <button
-              type="button"
-              onClick={() => setActiveStep('team')}
-              className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                activeStep === 'team'
-                  ? 'bg-slate-900 text-white shadow-md font-bold scale-[1.02]'
-                  : 'bg-white/95 text-slate-800 hover:bg-white font-bold border border-white/60 shadow-xs'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="text-xs">Equipo Humano</span>
-              </div>
-              {teamMembers.length > 0 && <Check className="w-3.5 h-3.5 text-emerald-500" />}
-            </button>
+          {/* LEFT LUXURY COLUMN: CREATIVIDAD QUE GENERA VALOR */}
+          <div className="hidden lg:block lg:col-span-3 xl:col-span-3 shrink-0">
+            <div className="rounded-2xl overflow-hidden shadow-2xl border border-pink-300/60 sticky top-6 transition-all duration-300 hover:shadow-pink-900/15">
+              <img 
+                src="/assets/aistudio/luxury_left_column_clean.png" 
+                alt="Creatividad que genera valor - Moda, Finanzas, Oportunidades Globales" 
+                className="w-full h-auto object-cover block"
+              />
+            </div>
           </div>
 
-          {/* ACTIVE STEP CONTENT CONTAINER */}
-          <div className="lg:col-span-9 bg-white/95 rounded-2xl border border-white/80 p-5 sm:p-7 space-y-6 shadow-sm backdrop-blur-sm">
+          {/* MAIN LUXURY WHITE FORM CARD */}
+          <div className="lg:col-span-9 xl:col-span-9 bg-white rounded-3xl sm:rounded-[36px] p-6 sm:p-10 shadow-2xl shadow-pink-950/5 border border-[#fce7f3] relative space-y-8">
+            
+            {/* 3-STEP DIAMOND PROGRESS BAR */}
+            <div className="relative pb-6 border-b border-stone-200/80">
+              {/* Connecting line between the 3 steps */}
+              <div className="absolute top-6 left-12 right-12 h-0.5 bg-gradient-to-r from-pink-500 via-pink-300 to-pink-200 -z-0" />
+
+              <div className="flex justify-between items-start relative z-10">
+
+                {/* Step 1: IDENTIDAD CREATIVA */}
+                <button
+                  type="button"
+                  onClick={() => setActiveStep('basic')}
+                  className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
+                >
+                  <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    activeStep === 'basic'
+                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-lg shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500'
+                  }`}>
+                    <DiamondIcon className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-800 bg-pink-100/70 px-2 py-0.5 rounded-full font-mono">1</span>
+                  <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors ${
+                    activeStep === 'basic' ? 'text-[#db2777]' : 'text-slate-600 group-hover:text-pink-600'
+                  }`}>
+                    IDENTIDAD CREATIVA
+                  </span>
+                </button>
+
+                {/* Step 2: ECONOMÍA Y FONDOS */}
+                <button
+                  type="button"
+                  onClick={() => setActiveStep('finance')}
+                  className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
+                >
+                  <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    activeStep === 'finance'
+                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-lg shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500'
+                  }`}>
+                    <DiamondIcon className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-800 bg-pink-100/70 px-2 py-0.5 rounded-full font-mono">2</span>
+                  <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors ${
+                    activeStep === 'finance' ? 'text-[#db2777]' : 'text-slate-600 group-hover:text-pink-600'
+                  }`}>
+                    ECONOMÍA Y FONDOS
+                  </span>
+                </button>
+
+                {/* Step 3: EQUIPO HUMANO */}
+                <button
+                  type="button"
+                  onClick={() => setActiveStep('team')}
+                  className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
+                >
+                  <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    activeStep === 'team'
+                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-lg shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500'
+                  }`}>
+                    <DiamondIcon className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-800 bg-pink-100/70 px-2 py-0.5 rounded-full font-mono">3</span>
+                  <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors ${
+                    activeStep === 'team' ? 'text-[#db2777]' : 'text-slate-600 group-hover:text-pink-600'
+                  }`}>
+                    EQUIPO HUMANO
+                  </span>
+                </button>
+
+              </div>
+            </div>
+
+            {/* FORM CONTAINER */}
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-              
+
               {/* STEP 1: IDENTIDAD CREATIVA */}
               {activeStep === 'basic' && (
-                <div className="space-y-5 animate-fade-in text-left">
+                <div className="space-y-6 animate-fade-in text-left">
+                  
+                  {/* Step Title Header */}
                   <div>
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block mb-1">Paso 1 de 3</span>
-                    <h3 className="text-lg font-bold text-slate-900">Identidad Creativa del Proyecto</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <span className="text-[11px] font-extrabold text-amber-800/90 uppercase tracking-[0.2em] block mb-1">
+                      PASO 1 DE 3
+                    </span>
+                    <h3 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 tracking-tight leading-tight">
+                      Identidad Creativa del Proyecto
+                    </h3>
+                    <p className="text-xs sm:text-sm text-stone-500 leading-relaxed mt-1.5">
                       Define los pilares centrales de tu proyecto creativo de indumentaria, modelaje o producción de moda.
                     </p>
                   </div>
 
-                  <hr className="border-slate-150" />
+                  <hr className="border-stone-200" />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700">Título del Proyecto *</label>
+                  {/* Form Fields matching Registro_de_Moda_y_Finanzas_de_Lujo */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    
+                    {/* TÍTULO DEL PROYECTO */}
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        <DiamondIcon className="w-4 h-4 text-amber-600" />
+                        <span>TÍTULO DEL PROYECTO *</span>
+                      </label>
                       <input
                         type="text"
                         required
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Ej. Eco-Lux Runway Primavera"
-                        className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                        className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-stone-400 font-medium focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700">Categoría Comercial *</label>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium cursor-pointer"
-                      >
-                        <option value="Inteligencia artificial y automatización">Inteligencia artificial y automatización</option>
-                        <option value="Agricultura y alimentos">Agricultura y alimentos</option>
-                        <option value="Realidad virtual y aumentada">Realidad virtual y aumentada</option>
-                        <option value="Energía y recursos">Energía y recursos</option>
-                        <option value="Transporte y movilidad">Transporte y movilidad</option>
-                        <option value="Gaming y e-sports">Gaming y e-sports</option>
-                        <option value="Ciberseguridad">Ciberseguridad</option>
-                        <option value="Marketplace">Marketplace</option>
-                        <option value="Moda y belleza">Moda y belleza</option>
-                        <option value="Bienes raíces o proptech">Bienes raíces o proptech</option>
-                        <option value="Tecnología y software">Tecnología y software</option>
-                        <option value="Salud y biotecnología">Salud y biotecnología</option>
-                        <option value="Educación y formación">Educación y formación</option>
-                        <option value="Finanzas y fintech">Finanzas y fintech</option>
-                        <option value="Sostenibilidad o impacto ambiental">Sostenibilidad o impacto ambiental</option>
-                        <option value="Comercio y retail">Comercio y retail</option>
-                        <option value="Servicios profesionales">Servicios profesionales</option>
-                        <option value="Operaciones o logística">Operaciones o logística</option>
-                        <option value="Turismo y viajes">Turismo y viajes</option>
-                        <option value="Hostelería y restauración">Hostelería y restauración</option>
-                        <option value="Construcción e infraestructura">Construcción e infraestructura</option>
-                        <option value="Industria y manufactura">Industria y manufactura</option>
-                        <option value="Telecomunicaciones">Telecomunicaciones</option>
-                        <option value="Medios de comunicación">Medios de comunicación</option>
-                        <option value="Marketing y publicidad">Marketing y publicidad</option>
-                        <option value="Recursos humanos y empleo">Recursos humanos y empleo</option>
-                        <option value="Legal o legaltech">Legal o legaltech</option>
-                        <option value="Seguros o insurtech">Seguros o insurtech</option>
-                        <option value="Economía colaborativa">Economía colaborativa</option>
-                        <option value="Arte y cultura">Arte y cultura</option>
-                        <option value="Música y audio">Música y audio</option>
-                        <option value="Deportes y fitness">Deportes y fitness</option>
-                        <option value="Mascotas">Mascotas</option>
-                        <option value="Hogar y decoración">Hogar y decoración</option>
-                        <option value="Electrónica de consumo">Electrónica de consumo</option>
-                        <option value="Automoción">Automoción</option>
-                        <option value="Aeroespacial y defensa">Aeroespacial y defensa</option>
-                        <option value="Blockchain y Web3">Blockchain y Web3</option>
-                        <option value="Criptomonedas">Criptomonedas</option>
-                        <option value="IoT (Internet de las Cosas)">IoT (Internet de las Cosas)</option>
-                        <option value="Robótica">Robótica</option>
-                        <option value="Smart Cities">Smart Cities</option>
-                        <option value="Gobierno o GovTech">Gobierno o GovTech</option>
-                        <option value="ONG e impacto social">ONG e impacto social</option>
-                        <option value="Eventos">Eventos</option>
-                        <option value="Lujo">Lujo</option>
-                        <option value="Infantil y familia">Infantil y familia</option>
-                        <option value="Recursos naturales y minería">Recursos naturales y minería</option>
-                        <option value="Ciencia e investigación">Ciencia e investigación</option>
-                        <option value="Otros">Otros</option>
-                      </select>
+                    {/* CATEGORÍA COMERCIAL */}
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        <Tag className="w-4 h-4 text-rose-600" />
+                        <span>CATEGORÍA COMERCIAL *</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium appearance-none focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition cursor-pointer pr-10"
+                        >
+                          <option value="Inteligencia artificial y automatización">Inteligencia artificial y automatización</option>
+                          <option value="Agricultura y alimentos">Agricultura y alimentos</option>
+                          <option value="Realidad virtual y aumentada">Realidad virtual y aumentada</option>
+                          <option value="Energía y recursos">Energía y recursos</option>
+                          <option value="Transporte y movilidad">Transporte y movilidad</option>
+                          <option value="Gaming y e-sports">Gaming y e-sports</option>
+                          <option value="Ciberseguridad">Ciberseguridad</option>
+                          <option value="Marketplace">Marketplace</option>
+                          <option value="Moda y belleza">Moda y belleza</option>
+                          <option value="Bienes raíces o proptech">Bienes raíces o proptech</option>
+                          <option value="Tecnología y software">Tecnología y software</option>
+                          <option value="Salud y biotecnología">Salud y biotecnología</option>
+                          <option value="Educación y formación">Educación y formación</option>
+                          <option value="Finanzas y fintech">Finanzas y fintech</option>
+                          <option value="Sostenibilidad o impacto ambiental">Sostenibilidad o impacto ambiental</option>
+                          <option value="Comercio y retail">Comercio y retail</option>
+                          <option value="Servicios profesionales">Servicios profesionales</option>
+                          <option value="Operaciones o logística">Operaciones o logística</option>
+                          <option value="Turismo y viajes">Turismo y viajes</option>
+                          <option value="Hostelería y restauración">Hostelería y restauración</option>
+                          <option value="Construcción e infraestructura">Construcción e infraestructura</option>
+                          <option value="Industria y manufactura">Industria y manufactura</option>
+                          <option value="Telecomunicaciones">Telecomunicaciones</option>
+                          <option value="Medios de comunicación">Medios de comunicación</option>
+                          <option value="Marketing y publicidad">Marketing y publicidad</option>
+                          <option value="Recursos humanos y empleo">Recursos humanos y empleo</option>
+                          <option value="Legal o legaltech">Legal o legaltech</option>
+                          <option value="Seguros o insurtech">Seguros o insurtech</option>
+                          <option value="Economía colaborativa">Economía colaborativa</option>
+                          <option value="Arte y cultura">Arte y cultura</option>
+                          <option value="Música y audio">Música y audio</option>
+                          <option value="Deportes y fitness">Deportes y fitness</option>
+                          <option value="Mascotas">Mascotas</option>
+                          <option value="Hogar y decoración">Hogar y decoración</option>
+                          <option value="Electrónica de consumo">Electrónica de consumo</option>
+                          <option value="Automoción">Automoción</option>
+                          <option value="Aeroespacial y defensa">Aeroespacial y defensa</option>
+                          <option value="Blockchain y Web3">Blockchain y Web3</option>
+                          <option value="Criptomonedas">Criptomonedas</option>
+                          <option value="IoT (Internet de las Cosas)">IoT (Internet de las Cosas)</option>
+                          <option value="Robótica">Robótica</option>
+                          <option value="Smart Cities">Smart Cities</option>
+                          <option value="Gobierno o GovTech">Gobierno o GovTech</option>
+                          <option value="ONG e impacto social">ONG e impacto social</option>
+                          <option value="Eventos">Eventos</option>
+                          <option value="Lujo">Lujo</option>
+                          <option value="Infantil y familia">Infantil y familia</option>
+                          <option value="Recursos naturales y minería">Recursos naturales y minería</option>
+                          <option value="Ciencia e investigación">Ciencia e investigación</option>
+                          <option value="Otros">Otros</option>
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-slate-500 absolute right-3.5 top-4 pointer-events-none" />
+                      </div>
                     </div>
+
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700">Lema o Descripción Breve (Máx. 120 caracteres) *</label>
+                  {/* LEMA O DESCRIPCIÓN BREVE */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      <FileText className="w-4 h-4 text-slate-600" />
+                      <span>LEMA O DESCRIPCIÓN BREVE (MÁX. 120 CARACTERES) *</span>
+                    </label>
                     <input
                       type="text"
                       required
                       value={descShort}
                       onChange={(e) => setDescShort(e.target.value)}
-                      placeholder="Ej. Fusión de lino biodegrable de Galicia con cortes futuristas y alta costura."
+                      placeholder="Ej. Fusión de lino biodegradable de Galicia con cortes futuristas y alta costura."
                       maxLength={120}
-                      className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-stone-400 font-medium focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition"
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700">Descripción Detallada o Abstract *</label>
+                  {/* DESCRIPCIÓN DETALLADA O ABSTRACT */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      <Sparkles className="w-4 h-4 text-rose-600" />
+                      <span>DESCRIPCIÓN DETALLADA O ABSTRACT *</span>
+                    </label>
                     <textarea
                       required
-                      rows={5}
+                      rows={4}
                       value={descLong}
                       onChange={(e) => setDescLong(e.target.value)}
                       placeholder="¿Cuál es la visión comercial del proyecto? ¿Cómo vas a promocionar sus diseños en pasarelas compartidas con influencers? Explica aquí la estética, cortes de tela, inspiraciones artísticas y materialidad..."
-                      className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 font-sans resize-none"
+                      className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-stone-400 font-medium focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition resize-none leading-relaxed"
                     />
                   </div>
 
-                  {/* DATOS DE CONTACTO */}
-                  <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200/60 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-indigo-600" />
-                      Datos de Contacto del Proyecto
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="block text-[10px] uppercase font-bold text-slate-500">Correo Electrónico *</label>
-                        <input
-                          type="email"
-                          required
-                          value={contactEmail}
-                          onChange={(e) => setContactEmail(e.target.value)}
-                          placeholder="Ej. mi.proyecto@diseno.com"
-                          className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="block text-[10px] uppercase font-bold text-slate-500">Teléfono Móvil *</label>
-                        <input
-                          type="tel"
-                          required
-                          value={contactPhone}
-                          onChange={(e) => setContactPhone(e.target.value)}
-                          placeholder="Ej. +34 654 321 098"
-                          className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* IMÁGENES O VIDEOS */}
-                  <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200/60 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <Camera className="w-3.5 h-3.5 text-indigo-100 bg-indigo-600 p-0.5 rounded" />
-                      Imágenes o Videos de Referencia
-                    </h4>
-                    
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Sube o enlaza imágenes inspiracionales, bocetos, vídeos de desfiles anteriores o books para que los inversionistas analicen la estética visual.
-                    </p>
-
-                    {/* Image list previews */}
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-3">
-                        {imagesList.map((url, index) => (
-                          <div 
-                            key={index} 
-                            onMouseEnter={() => setHoveredMedia({ url, type: 'image' })}
-                            onMouseLeave={() => setHoveredMedia(null)}
-                            className="relative group w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs shrink-0 transition-all duration-300 hover:scale-[1.04] hover:border-indigo-400 hover:shadow-md cursor-zoom-in bg-slate-50"
-                          >
-                            <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-                              <Eye className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setImagesList(imagesList.filter((_, i) => i !== index));
-                                if (hoveredMedia?.url === url) setHoveredMedia(null);
-                              }}
-                              className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5.5 h-5.5 flex items-center justify-center p-0 shadow-md hover:scale-110 active:scale-95 transition text-[10px] font-extrabold leading-none select-none cursor-pointer z-10"
-                              title="Eliminar imagen"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                        {videosList.map((url, index) => (
-                          <div 
-                            key={index} 
-                            onMouseEnter={() => setHoveredMedia({ url, type: 'video' })}
-                            onMouseLeave={() => setHoveredMedia(null)}
-                            className="relative group w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 flex flex-col items-center justify-center shrink-0 text-[10px] text-white font-sans p-2 text-center transition-all duration-300 hover:scale-[1.04] hover:border-indigo-400 hover:shadow-md cursor-zoom-in"
-                          >
-                            <span className="font-bold text-xs">📹 Vídeo</span>
-                            <span className="text-[9px] text-slate-400 truncate w-full mt-1 px-1">{url.split('/').pop()?.substring(0,12) || 'video.mp4'}</span>
-                            <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-                              <Eye className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setVideosList(videosList.filter((_, i) => i !== index));
-                                if (hoveredMedia?.url === url) setHoveredMedia(null);
-                              }}
-                              className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5.5 h-5.5 flex items-center justify-center p-0 shadow-md hover:scale-110 active:scale-95 transition text-[10px] font-extrabold leading-none select-none cursor-pointer z-10"
-                              title="Eliminar video"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Desktop File Upload Area */}
-                      <div className="border border-dashed border-slate-350 hover:border-indigo-500 bg-white hover:bg-indigo-50/10 rounded-2xl p-5 transition-all duration-300 text-center relative group shadow-3xs">
-                        <input
-                          type="file"
-                          id="desktop-media-upload"
-                          multiple
-                          accept="image/*,video/*"
-                          className="hidden"
-                          onChange={handleDesktopFilesUpload}
-                        />
-                        <label 
-                          htmlFor="desktop-media-upload" 
-                          className="flex flex-col items-center justify-center cursor-pointer space-y-2.5 py-1.5"
-                        >
-                          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-105 transition-transform duration-300 shadow-3xs border border-indigo-100/40">
-                            <UploadCloud className="w-5.5 h-5.5" />
-                          </div>
-                          <div className="space-y-1">
-                            <span className="block text-xs font-bold text-slate-800">
-                              Subir archivo desde el escritorio
-                            </span>
-                            <span className="block text-[10px] text-slate-450 font-semibold">
-                              Soporta imágenes (.jpg, .png, .webp) y videos (.mp4)
-                            </span>
-                          </div>
-                        </label>
-                      </div>
-
-                      {/* Add Image URL or Video URL */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div className="flex gap-1.5">
-                          <input
-                            type="url"
-                            placeholder="Enlace de imagen (.jpg, .png)"
-                            value={newImageUrl}
-                            onChange={(e) => setNewImageUrl(e.target.value)}
-                            className="bg-white border border-slate-205 rounded-xl flex-1 px-3 py-2 text-xs text-slate-800 focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (newImageUrl.trim()) {
-                                setImagesList([...imagesList, newImageUrl.trim()]);
-                                setNewImageUrl('');
-                              }
-                            }}
-                            className="bg-indigo-600 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
-                          >
-                            +Img
-                          </button>
-                        </div>
-
-                        <div className="flex gap-1.5">
-                          <input
-                            type="url"
-                            placeholder="Enlace de video (.mp4)"
-                            value={newVideoUrl}
-                            onChange={(e) => setNewVideoUrl(e.target.value)}
-                            className="bg-white border border-slate-205 rounded-xl flex-1 px-3 py-2 text-xs text-slate-800 focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (newVideoUrl.trim()) {
-                                setVideosList([...videosList, newVideoUrl.trim()]);
-                                setNewVideoUrl('');
-                              }
-                            }}
-                            className="bg-indigo-600 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
-                          >
-                            +Vid
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Presets shortcut buttons to make simulation extremely simple and gorgeous */}
-                      <div className="flex flex-wrap gap-1 items-center">
-                        <span className="text-[9px] text-slate-400 font-bold block">Presets rápidos:</span>
-                        <button
-                          type="button"
-                          onClick={() => setImagesList([...imagesList, 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=400'])}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[9px] px-2 py-0.5 rounded-md font-bold transition cursor-pointer"
-                        >
-                          + Vestidos Atardecer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setImagesList([...imagesList, 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400'])}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[9px] px-2 py-0.5 rounded-md font-bold transition cursor-pointer"
-                        >
-                          + Pasarela Vanguardista
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setVideosList([...videosList, 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-makeup-posing-under-neon-light-40478-large.mp4'])}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[9px] px-2 py-0.5 rounded-md font-bold transition cursor-pointer"
-                        >
-                          + Vídeo Neon
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex justify-end">
+                  {/* COLLAPSIBLE ADVANCED MEDIA & CONTACT DETAILS */}
+                  <div className="border border-pink-200/80 rounded-2xl overflow-hidden bg-pink-50/20">
                     <button
                       type="button"
-                      disabled={!title || !descLong || !contactEmail || !contactPhone}
-                      onClick={() => setActiveStep('finance')}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all ${
-                        title && descLong && contactEmail && contactPhone
-                          ? 'bg-slate-900 text-white hover:bg-slate-800' 
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      }`}
+                      onClick={() => setShowAdvancedMedia(!showAdvancedMedia)}
+                      className="w-full px-5 py-3.5 flex items-center justify-between text-left bg-pink-100/40 hover:bg-pink-100/60 transition cursor-pointer"
                     >
-                      <span>Siguiente: Finanzas e Impulso</span>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-pink-600" />
+                        <span className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+                          Datos de Contacto y Multimedia del Proyecto
+                        </span>
+                        <span className="text-[10px] text-pink-700 font-bold bg-pink-200/60 px-2 py-0.5 rounded-full">
+                          {imagesList.length + videosList.length} archivos
+                        </span>
+                      </div>
+                      {showAdvancedMedia ? <ChevronUp className="w-4 h-4 text-slate-600" /> : <ChevronDown className="w-4 h-4 text-slate-600" />}
+                    </button>
+
+                    {showAdvancedMedia && (
+                      <div className="p-5 space-y-5 bg-white">
+                        {/* Contact info inputs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 text-pink-600" />
+                              Correo Electrónico *
+                            </label>
+                            <input
+                              type="email"
+                              value={contactEmail}
+                              onChange={(e) => setContactEmail(e.target.value)}
+                              className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-pink-500"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-pink-600" />
+                              Teléfono Móvil *
+                            </label>
+                            <input
+                              type="tel"
+                              value={contactPhone}
+                              onChange={(e) => setContactPhone(e.target.value)}
+                              className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-pink-500"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Media previews */}
+                        <div className="space-y-3">
+                          <label className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                            <Camera className="w-3.5 h-3.5 text-pink-600" />
+                            Archivos Multimedia y Books
+                          </label>
+
+                          <div className="flex flex-wrap gap-3">
+                            {imagesList.map((url, index) => (
+                              <div 
+                                key={index} 
+                                onMouseEnter={() => setHoveredMedia({ url, type: 'image' })}
+                                onMouseLeave={() => setHoveredMedia(null)}
+                                className="relative group w-24 h-24 rounded-2xl overflow-hidden border border-pink-200 shadow-sm shrink-0 hover:scale-105 transition bg-stone-100"
+                              >
+                                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                  <Eye className="w-4 h-4 text-white" />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setImagesList(imagesList.filter((_, i) => i !== index))}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            {videosList.map((url, index) => (
+                              <div 
+                                key={index} 
+                                onMouseEnter={() => setHoveredMedia({ url, type: 'video' })}
+                                onMouseLeave={() => setHoveredMedia(null)}
+                                className="relative group w-24 h-24 rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 flex flex-col items-center justify-center shrink-0 p-2 text-white"
+                              >
+                                <span className="font-bold text-[10px]">📹 Video</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setVideosList(videosList.filter((_, i) => i !== index))}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Desktop file upload */}
+                          <div className="border border-dashed border-stone-300 rounded-xl p-4 text-center bg-[#faf8f7] hover:bg-pink-50/30 transition">
+                            <input
+                              type="file"
+                              id="desktop-media-upload"
+                              multiple
+                              accept="image/*,video/*"
+                              className="hidden"
+                              onChange={handleDesktopFilesUpload}
+                            />
+                            <label htmlFor="desktop-media-upload" className="cursor-pointer flex flex-col items-center gap-1.5">
+                              <UploadCloud className="w-5 h-5 text-pink-600" />
+                              <span className="text-xs font-bold text-slate-800">Subir imágenes o vídeos desde el dispositivo</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PRIMARY ACTION BUTTON: [ 💎 Siguiente paso → ] */}
+                  <div className="pt-6 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveStep('finance')}
+                      className="px-10 py-3.5 rounded-full text-white font-bold text-sm bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] shadow-lg shadow-pink-600/35 hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 border border-pink-300/40 cursor-pointer"
+                    >
+                      <DiamondIcon className="w-4 h-4" />
+                      <span>Siguiente paso</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
+
                 </div>
               )}
 
               {/* STEP 2: FINANZAS E IMPACTO */}
               {activeStep === 'finance' && (
-                <div className="space-y-5 animate-fade-in text-left">
+                <div className="space-y-6 animate-fade-in text-left">
+                  
+                  {/* Step Title Header */}
                   <div>
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block mb-1">Paso 2 de 3</span>
-                    <h3 className="text-lg font-bold text-slate-900">Aspectos Económicos e Impacto</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <span className="text-[11px] font-extrabold text-amber-800/90 uppercase tracking-[0.2em] block mb-1">
+                      PASO 2 DE 3
+                    </span>
+                    <h3 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 tracking-tight leading-tight">
+                      Aspectos Económicos e Impacto
+                    </h3>
+                    <p className="text-xs sm:text-sm text-stone-500 leading-relaxed mt-1.5">
                       El presupuesto se define en base a la mesa de inversión que deseas calificar.
                     </p>
                   </div>
 
-                  <hr className="border-slate-150" />
+                  <hr className="border-stone-200" />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700">Presupuesto Referencia de Mesa (EUR) *</label>
+                  {/* Budget and goal */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Presupuesto Referencia de Mesa (EUR) *
+                      </label>
                       <div className="relative">
-                        <span className="absolute left-3.5 top-2.5 text-xs text-indigo-650 font-bold font-mono">€</span>
+                        <span className="absolute left-4 top-3 text-sm text-pink-600 font-bold font-mono">€</span>
                         <input
                           type="number"
                           required
                           value={budget}
                           onChange={(e) => setBudget(Number(e.target.value))}
-                          className="bg-white border border-slate-205 rounded-xl w-full pl-8 pr-3.5 py-2.5 text-xs text-slate-800 font-bold font-mono focus:outline-none focus:border-indigo-600"
+                          className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 font-bold font-mono focus:outline-none focus:border-pink-500"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-450 block mt-1 leading-normal">
-                        Rango: <strong>10€</strong> (Streetwear & Urban), <strong>100€</strong> (Casual & Lifestyle) o <strong>1.000€</strong> (Empresarios).
+                      <span className="text-[10px] text-stone-400 block">
+                        Rango: <strong>10€</strong> (Streetwear), <strong>100€</strong> (Casual) o <strong>1.000€</strong> (Alta Gama).
                       </span>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700">Objetivo de Recaudación del Proyecto (EUR) *</label>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Objetivo de Recaudación (EUR) *
+                      </label>
                       <div className="relative">
-                        <span className="absolute left-3.5 top-2.5 text-xs text-emerald-650 font-bold font-mono">€</span>
+                        <span className="absolute left-4 top-3 text-sm text-emerald-600 font-bold font-mono">€</span>
                         <input
                           type="number"
                           required
                           value={fundingGoal}
                           onChange={(e) => setFundingGoal(Number(e.target.value))}
                           placeholder="Ej. 5000"
-                          className="bg-white border border-slate-205 rounded-xl w-full pl-8 pr-3.5 py-2.5 text-xs text-slate-800 font-bold font-mono focus:outline-none focus:border-indigo-600"
+                          className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 font-bold font-mono focus:outline-none focus:border-pink-500"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-450 block mt-1 leading-normal">
-                        Monto total objetivo a recaudar para financiar el proyecto completo.
+                      <span className="text-[10px] text-stone-400 block">
+                        Meta total de financiación requerida para el desarrollo del proyecto.
                       </span>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700">Uso Detallado de Fondos (Distribución) *</label>
+                  {/* Fund usage and objective */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Uso Detallado de Fondos (Distribución) *
+                    </label>
                     <input
                       type="text"
                       required
                       value={fundUsage}
                       onChange={(e) => setFundUsage(e.target.value)}
-                      placeholder="Ej. 60% Confección telas, 30% Fotografía, 10% Accesorios"
-                      className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
+                      placeholder="Ej. 60% Confección telas, 30% Fotografía y video, 10% Accesorios"
+                      className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-stone-400 font-medium focus:outline-none focus:border-pink-500"
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700">Objetivo del Financiamiento *</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Objetivo del Financiamiento *
+                    </label>
                     <textarea
                       required
                       rows={3}
                       value={objective}
                       onChange={(e) => setObjective(e.target.value)}
-                      placeholder="Ej. Financiar la compra de hilos reciclados de alta resistencia y organizar un micro desfile filmado con dron para las redes de afiliados de nuestras modelos sponsors."
-                      className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600 font-sans resize-none"
+                      placeholder="Ej. Financiar la compra de hilos reciclados de alta resistencia y organizar una pasarela filmada para las redes de afiliados de nuestras modelos sponsors."
+                      className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-stone-400 font-medium focus:outline-none focus:border-pink-500 resize-none leading-relaxed"
                     />
                   </div>
 
-                  {/* PRESUPUESTO DESGLOSADO */}
-                  <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200/60 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
-                        Presupuesto Desglosado (Partidas de Gasto)
+                  {/* Expense Breakdown */}
+                  <div className="bg-[#faf8f7] rounded-2xl p-5 border border-pink-100 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <CreditCard className="w-4 h-4 text-pink-600" />
+                        Partidas de Gasto Desglosadas
                       </span>
-                      <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-mono font-bold">
+                      <span className="text-xs bg-pink-100 text-pink-800 border border-pink-200 px-3 py-1 rounded-full font-mono font-bold">
                         Total Sumado: {budgetItems.reduce((acc, current) => acc + current.amount, 0)}€
                       </span>
-                    </h4>
-
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Desglosa el destino de cada euro de forma transparente para generar máxima confianza con los patrocinadores.
-                    </p>
-
-                    {/* Expenses Table */}
-                    <div className="bg-white rounded-xl border border-slate-250 overflow-hidden divide-y divide-slate-100 shadow-sm max-h-48 overflow-y-auto">
-                      {budgetItems.length === 0 ? (
-                        <div className="p-4 text-center text-slate-400 text-xs">
-                          No tienes componentes de gasto. Añade al menos uno abajo.
-                        </div>
-                      ) : (
-                        budgetItems.map(item => (
-                          <div key={item.id} className="p-2.5 flex items-center justify-between gap-3 text-xs">
-                            <span className="font-semibold text-slate-700 flex-1">{item.item}</span>
-                            <span className="font-mono font-bold text-indigo-600 bg-indigo-50/50 px-2.5 py-0.5 rounded border border-indigo-100">{item.amount} €</span>
-                            <button
-                              type="button"
-                              onClick={() => removeBudgetItem(item.id)}
-                              className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1 rounded-lg transition"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))
-                      )}
                     </div>
 
-                    {/* New Gasto Input Row */}
-                    <div className="flex gap-2 pt-1 items-center">
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="Fórmula de Gasto (Ej. Compra Algodón Orgánico, Licencia CLO3D)"
-                          value={newBudgetItem}
-                          onChange={(e) => setNewBudgetItem(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-xl w-full px-3 py-2 text-xs text-slate-800 focus:outline-none"
-                        />
-                      </div>
-                      <div className="w-24 relative">
-                        <span className="absolute left-2.5 top-2 text-xs text-slate-450 font-mono">€</span>
-                        <input
-                          type="number"
-                          placeholder="Monto"
-                          value={newBudgetAmount}
-                          onChange={(e) => setNewBudgetAmount(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-xl w-full pl-6 pr-2 py-2 text-xs text-slate-800 focus:outline-none font-mono font-bold"
-                        />
-                      </div>
+                    <div className="bg-white rounded-xl border border-stone-200 overflow-hidden divide-y divide-stone-100 max-h-48 overflow-y-auto">
+                      {budgetItems.map(item => (
+                        <div key={item.id} className="p-3 flex items-center justify-between gap-3 text-xs">
+                          <span className="font-semibold text-slate-800 flex-1">{item.item}</span>
+                          <span className="font-mono font-bold text-pink-600 bg-pink-50 px-2.5 py-1 rounded border border-pink-100">{item.amount} €</span>
+                          <button
+                            type="button"
+                            onClick={() => removeBudgetItem(item.id)}
+                            className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg transition cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Concepto de gasto (Ej. Telas seda, Patronaje)"
+                        value={newBudgetItem}
+                        onChange={(e) => setNewBudgetItem(e.target.value)}
+                        className="bg-white border border-stone-300 rounded-xl flex-1 px-3.5 py-2 text-xs text-slate-800 focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Monto €"
+                        value={newBudgetAmount}
+                        onChange={(e) => setNewBudgetAmount(e.target.value)}
+                        className="w-24 bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none"
+                      />
                       <button
                         type="button"
                         onClick={addBudgetItem}
-                        className="bg-slate-900 hover:bg-indigo-600 text-white px-3 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer"
+                        className="bg-slate-900 hover:bg-pink-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
                       >
                         + Añadir
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700">Cronograma Breve de Lanzamiento</label>
-                    <input
-                      type="text"
-                      value={timeline}
-                      onChange={(e) => setTimeline(e.target.value)}
-                      placeholder="Ej. Semana 1: Patronaje y corte. Semana 2: Ensamblado y sesión de fotos oficial."
-                      className="bg-white border border-slate-205 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600"
-                    />
-                  </div>
-
-                  {/* DOCUMENTACIÓN A SUBIR */}
-                  <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200/60 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <UploadCloud className="w-4 h-4 text-indigo-650" />
+                  {/* Document upload simulation */}
+                  <div className="bg-[#faf8f7] rounded-2xl p-5 border border-pink-100 space-y-3">
+                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <UploadCloud className="w-4 h-4 text-pink-600" />
                       Documentación Oficial o Dossier Corporativo
-                    </h4>
+                    </label>
 
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Sube un dossier del proyecto, balance de cuentas pasadas, copia lícita de CIF o plan de viabilidad de negocio para auditar la solvencia en rondas de nivel ejecutivo.
-                    </p>
-
-                    <div className="bg-white rounded-xl border border-dashed border-slate-300 p-5 text-center space-y-3 relative overflow-hidden">
+                    <div className="bg-white rounded-xl border border-dashed border-stone-300 p-5 text-center space-y-3">
                       {isUploadingDoc ? (
                         <div className="space-y-2 py-2">
-                          <span className="text-xs text-indigo-600 font-bold block animate-pulse">Sincronizando archivo de forma segura...</span>
-                          <div className="w-all bg-slate-150 rounded-full h-2 overflow-hidden mx-auto max-w-xs">
-                            <div className="bg-gradient-to-r from-indigo-500 to-sky-400 h-full transition-all duration-150" style={{ width: `${uploadProgress}%` }} />
+                          <span className="text-xs text-pink-600 font-bold block animate-pulse">Sincronizando archivo de forma segura...</span>
+                          <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden mx-auto max-w-xs">
+                            <div className="bg-gradient-to-r from-pink-500 to-rose-400 h-full transition-all duration-150" style={{ width: `${uploadProgress}%` }} />
                           </div>
-                          <span className="text-[10px] text-slate-400 font-mono block">{uploadProgress}% Completado</span>
+                          <span className="text-[10px] text-stone-400 font-mono block">{uploadProgress}% Completado</span>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <div className="mx-auto w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500">
+                          <div className="mx-auto w-10 h-10 bg-pink-50 rounded-full flex items-center justify-center text-pink-600">
                             <FileText className="w-5 h-5" />
                           </div>
-
-                          <div>
-                            <span className="text-xs text-slate-600 font-bold block">
-                              Arrastra tu PDF aquí o haz clic para buscar en tu dispositivo
-                            </span>
-                            <span className="text-[10px] text-slate-400 block mt-0.5">
-                              Soporta archivos .pdf, .docx, .zip hasta 15MB
-                            </span>
-                          </div>
-
-                          {/* Quick mock file triggers */}
-                          <div className="flex flex-wrap gap-1.5 items-center justify-center pt-2">
+                          <span className="text-xs text-slate-700 font-bold block">
+                            {uploadedDocName || 'Arrastra tu PDF de viabilidad aquí'}
+                          </span>
+                          <div className="flex flex-wrap gap-2 justify-center pt-1">
                             <button
                               type="button"
                               onClick={() => triggerSimulatedDocUpload('Plan_Comercial_ModaSostenible_V3.pdf')}
-                              className="bg-indigo-50 hover:bg-slate-100 text-indigo-700 border border-indigo-150 text-[10px] px-2.5 py-1 rounded-lg font-bold transition cursor-pointer"
+                              className="bg-pink-50 hover:bg-pink-100 text-pink-800 border border-pink-200 text-[10px] px-3 py-1 rounded-lg font-bold transition cursor-pointer"
                             >
-                              📄 Simulador: Plan de Negocio.pdf
+                              📄 Cargar Plan de Negocio.pdf
                             </button>
                             <button
                               type="button"
                               onClick={() => triggerSimulatedDocUpload('Dossier_Maquetas_Pasarela.pdf')}
-                              className="bg-indigo-50 hover:bg-slate-100 text-indigo-700 border border-indigo-150 text-[10px] px-2.5 py-1 rounded-lg font-bold transition cursor-pointer"
+                              className="bg-pink-50 hover:bg-pink-100 text-pink-800 border border-pink-200 text-[10px] px-3 py-1 rounded-lg font-bold transition cursor-pointer"
                             >
-                              📄 Simulador: Dossier Diseñador.pdf
+                              📄 Cargar Dossier Alta Costura.pdf
                             </button>
                           </div>
-                        </div>
-                      )}
-
-                      {uploadedDocName && !isUploadingDoc && (
-                        <div className="mt-2 p-2.5 bg-emerald-500/5 text-emerald-800 border border-emerald-150 rounded-xl flex items-center justify-between text-xs font-medium">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1 bg-emerald-100 text-emerald-700 rounded-lg">
-                              ✓
-                            </div>
-                            <div className="text-left">
-                              <p className="font-bold text-slate-800 text-xs truncate max-w-[200px]">{uploadedDocName}</p>
-                              <a href={uploadedDocUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 hover:underline">Ver archivo en la red</a>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUploadedDocName('');
-                              setUploadedDocUrl('');
-                            }}
-                            className="text-xs text-slate-400 hover:text-red-500 px-2 py-1 bg-white hover:bg-slate-50 border rounded-lg transition"
-                          >
-                            Quitar
-                          </button>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="pt-4 flex justify-between gap-3">
+                  {/* Navigation Buttons */}
+                  <div className="pt-6 flex justify-between items-center gap-4">
                     <button
                       type="button"
                       onClick={() => setActiveStep('basic')}
-                      className="px-5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer transition-all"
+                      className="px-6 py-3 rounded-full border border-stone-300 text-slate-700 font-bold text-xs hover:bg-stone-100 transition cursor-pointer flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span>Volver al Paso 1</span>
@@ -975,52 +943,53 @@ export default function ProjectForm({
 
                     <button
                       type="button"
-                      disabled={!fundUsage || !objective}
                       onClick={() => setActiveStep('team')}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all ${
-                        fundUsage && objective
-                          ? 'bg-slate-900 text-white hover:bg-slate-800'
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      }`}
+                      className="px-10 py-3.5 rounded-full text-white font-bold text-sm bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] shadow-lg shadow-pink-600/35 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
                     >
-                      <span>Siguiente: Equipo Creativo</span>
+                      <DiamondIcon className="w-4 h-4" />
+                      <span>Siguiente: Equipo Humano</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
+
                 </div>
               )}
 
               {/* STEP 3: EQUIPO HUMANO */}
               {activeStep === 'team' && (
-                <div className="space-y-5 animate-fade-in text-left">
+                <div className="space-y-6 animate-fade-in text-left">
+                  
+                  {/* Step Title Header */}
                   <div>
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block mb-1">Paso 3 de 3</span>
-                    <h3 className="text-lg font-bold text-slate-900">Equipo detrás del Backstage</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <span className="text-[11px] font-extrabold text-amber-800/90 uppercase tracking-[0.2em] block mb-1">
+                      PASO 3 DE 3
+                    </span>
+                    <h3 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 tracking-tight leading-tight">
+                      Equipo detrás del Backstage
+                    </h3>
+                    <p className="text-xs sm:text-sm text-stone-500 leading-relaxed mt-1.5">
                       La solvencia de una propuesta recae en su talento humano. Registra los roles clave del proyecto.
                     </p>
                   </div>
 
-                  <hr className="border-slate-150" />
+                  <hr className="border-stone-200" />
 
                   {/* Registered team list */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     {teamMembers.map((m, idx) => (
                       <div 
                         key={idx} 
-                        className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col gap-2 transition"
+                        className="bg-[#faf8f7] border border-pink-100 rounded-2xl p-4 flex flex-col gap-2 transition"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-900/5 text-slate-700 flex items-center justify-center font-bold text-xs">
-                              {m.name.substring(0,2).toUpperCase()}
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-600 to-rose-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                              {m.name.substring(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-800 text-xs">{m.name}</p>
-                              <p className="text-[10px] text-slate-500 flex items-center gap-1">
-                                <span>Rol: <strong>{m.role}</strong></span>
-                                <span>•</span>
-                                <span>Exp: {m.experience}</span>
+                              <p className="font-bold text-slate-900 text-sm">{m.name}</p>
+                              <p className="text-xs text-stone-500">
+                                <span>Rol: <strong className="text-pink-700">{m.role}</strong></span> • <span>Exp: {m.experience}</span>
                               </p>
                             </div>
                           </div>
@@ -1029,187 +998,110 @@ export default function ProjectForm({
                             <button
                               type="button"
                               onClick={() => removeTeamMember(idx)}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition shrink-0 cursor-pointer"
+                              className="p-1.5 text-rose-500 hover:text-rose-700 bg-white rounded-lg border border-rose-200 transition cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           )}
                         </div>
 
-                        {(m.bio || m.profileLink) && (
-                          <div className="bg-slate-50/50 rounded-lg p-2.5 text-[10px] text-slate-600 space-y-1 border border-slate-100">
-                            {m.bio && <p className="leading-relaxed"><strong className="text-slate-700 font-medium">Bio/Perfil:</strong> {m.bio}</p>}
-                            {m.profileLink && (
-                              <p>
-                                <strong className="text-slate-700 font-medium">Enlace / Portfolio:</strong>{' '}
-                                <a href={m.profileLink} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline inline-block truncate max-w-full">
-                                  {m.profileLink}
-                                </a>
-                              </p>
-                            )}
-                          </div>
+                        {m.bio && (
+                          <p className="text-xs text-stone-600 pl-13 italic">"{m.bio}"</p>
                         )}
                       </div>
                     ))}
                   </div>
 
-                  {/* Add team member card */}
-                  <div className="p-4 bg-slate-100/60 rounded-xl border border-dashed border-slate-300 space-y-3">
-                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest block">
-                      + Registrar Miembro (con Perfil Profesional)
+                  {/* Add member box */}
+                  <div className="p-5 bg-white rounded-2xl border border-dashed border-pink-300 space-y-4">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                      + Añadir Miembro del Equipo
                     </span>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block">Nombre Completo *</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Clara Gómez"
-                          value={newMemberName}
-                          onChange={(e) => setNewMemberName(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-lg w-full px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block">Función / Rol *</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Modista, Fotógrafo..."
-                          value={newMemberRole}
-                          onChange={(e) => setNewMemberRole(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-lg w-full px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block">Experiencia</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. 3 años en costura"
-                          value={newMemberExp}
-                          onChange={(e) => setNewMemberExp(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-lg w-full px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block">Enlace al Perfil / Portfolio</label>
-                        <input
-                          type="url"
-                          placeholder="Ej. https://instagram.com/clara_diseno"
-                          value={newMemberProfile}
-                          onChange={(e) => setNewMemberProfile(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-lg w-full px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block">Biografía Corta del Perfil</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Especializada en confección y tintes de origen natural..."
-                          value={newMemberBio}
-                          onChange={(e) => setNewMemberBio(e.target.value)}
-                          className="bg-white border border-slate-205 rounded-lg w-full px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-600"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        placeholder="Nombre completo *"
+                        value={newMemberName}
+                        onChange={(e) => setNewMemberName(e.target.value)}
+                        className="bg-[#fcfbfa] border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-pink-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Función / Rol *"
+                        value={newMemberRole}
+                        onChange={(e) => setNewMemberRole(e.target.value)}
+                        className="bg-[#fcfbfa] border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-pink-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Experiencia"
+                        value={newMemberExp}
+                        onChange={(e) => setNewMemberExp(e.target.value)}
+                        className="bg-[#fcfbfa] border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-pink-500"
+                      />
                     </div>
 
                     <button
                       type="button"
                       onClick={addTeamMember}
-                      className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-indigo-650 transition cursor-pointer"
+                      className="w-full py-2.5 bg-slate-900 hover:bg-pink-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
                     >
-                      Añadir Miembro con su Perfil
+                      Añadir Miembro
                     </button>
                   </div>
 
-                  {/* DECLARACIÓN JURADA Y VERACIDAD DE DATOS */}
-                  <div className="p-5 bg-amber-500/5 border border-amber-200 rounded-2xl space-y-4 mt-6">
-                    <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-1 rounded uppercase tracking-wider inline-flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      <span>Declaración Jurada de Veracidad</span>
-                    </span>
-
-                    <div className="space-y-3">
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={termsAccepted}
-                          onChange={(e) => setTermsAccepted(e.target.checked)}
-                          className="w-4 h-4 text-indigo-650 mt-1 focus:ring-0 cursor-pointer shrink-0 rounded border-slate-300"
-                        />
-                        <div className="text-[11px] text-slate-700 leading-relaxed font-sans">
-                          Manifiesto bajo juramento que los roles del equipo creativo y el plan de viabilidad comercial del proyecto son **100% verídicos y reales**. Consiento que cualquier información falsa resultará en la exclusión inmediata de las mesas de inversión.
-                        </div>
-                      </label>
-                    </div>
+                  {/* Legal terms check */}
+                  <div className="p-5 bg-amber-500/5 border border-amber-300/80 rounded-2xl space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="w-5 h-5 text-pink-600 mt-0.5 focus:ring-0 cursor-pointer shrink-0 rounded border-amber-300 accent-pink-600"
+                      />
+                      <div className="text-xs text-slate-700 leading-relaxed">
+                        Manifiesto bajo juramento que los datos del proyecto y la viabilidad de financiamiento son <strong>100% verídicos y reales</strong>. Consiento que cualquier información falsa resultará en la exclusión inmediata del ecosistema Fashion Finances.
+                      </div>
+                    </label>
                   </div>
 
-                  {/* BOTTOM SUBMIT BAR */}
-                  <div className="pt-4 border-t border-slate-150 flex flex-col sm:flex-row justify-between items-center gap-3">
+                  {/* Submission and PDF */}
+                  <div className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <button
                       type="button"
                       onClick={() => setActiveStep('finance')}
-                      className="px-5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer transition-all w-full sm:w-auto text-center justify-center"
+                      className="px-6 py-3 rounded-full border border-stone-300 text-slate-700 font-bold text-xs hover:bg-stone-100 transition cursor-pointer flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span>Volver al Paso 2</span>
                     </button>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-3">
                       <button
                         type="button"
                         onClick={handleDownloadPDF}
-                        style={{
-                          backgroundColor: '#fce7f3',
-                          backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
-                          borderColor: '#f472b6',
-                          color: '#831843'
-                        }}
-                        className="pearl-pink-btn custom-bg px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 w-full sm:w-auto"
-                        title="Descargar dossier del proyecto en formato PDF"
+                        className="px-6 py-3 rounded-full bg-white hover:bg-pink-50 text-pink-800 border border-pink-300 text-xs font-bold flex items-center gap-2 transition shadow-sm cursor-pointer"
                       >
-                        <Download className="w-4 h-4 text-pink-700" />
-                        <span>Descargar Proyecto</span>
+                        <Download className="w-4 h-4 text-pink-600" />
+                        <span>Descargar Dossier PDF</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={handleSubmit}
                         disabled={!termsAccepted}
-                        style={
+                        className={`px-8 py-3.5 rounded-full text-white font-bold text-xs sm:text-sm flex items-center gap-2.5 transition-all shadow-lg ${
                           termsAccepted
-                            ? {
-                                backgroundColor: '#fce7f3',
-                                backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
-                                borderColor: '#f472b6',
-                                color: '#831843'
-                              }
-                            : {
-                                backgroundColor: '#fdf2f8',
-                                borderColor: '#fce7f3',
-                                color: '#9ca3af'
-                              }
-                        }
-                        className={`custom-bg px-8 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm whitespace-nowrap active:scale-95 w-full sm:w-auto ${
-                          termsAccepted 
-                            ? 'pearl-pink-btn cursor-pointer' 
-                            : 'pearl-pink-btn-disabled cursor-not-allowed'
+                            ? 'bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] shadow-pink-600/35 hover:scale-105 active:scale-95 cursor-pointer'
+                            : 'bg-stone-300 cursor-not-allowed text-stone-500'
                         }`}
                       >
-                        <span>Registrar proyecto</span>
-                        <ArrowRight className={`w-4 h-4 ${termsAccepted ? 'text-pink-700' : 'text-slate-400'}`} />
+                        <DiamondIcon className="w-4 h-4" />
+                        <span>Registrar Proyecto Oficialmente</span>
+                        <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
-                  </div>
-
-                  <div className="text-center font-mono text-[9px] text-slate-400 flex items-center justify-center gap-2 py-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Conexión cifrada de alta seguridad SSL</span>
                   </div>
 
                 </div>
@@ -1222,6 +1114,27 @@ export default function ProjectForm({
         </div>
       )}
 
+      {/* LUXURY FOOTER MATCHING SCREENSHOT */}
+      <div className="mt-14 pt-8 border-t border-amber-300/50 flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+        <div className="flex-1 flex flex-col items-center">
+          <div className="flex items-center gap-4 text-amber-900/90 text-xs font-black tracking-[0.35em] uppercase font-serif">
+            <span className="w-12 sm:w-20 h-px bg-amber-400"></span>
+            <span>FASHION FINANCES</span>
+            <span className="w-12 sm:w-20 h-px bg-amber-400"></span>
+          </div>
+          <span className="text-[10px] text-slate-600 font-bold tracking-[0.25em] uppercase mt-1.5 font-sans">
+            DONDE LA MODA SE ENCUENTRA CON EL FUTURO
+          </span>
+        </div>
+
+        <div className="text-center sm:text-right shrink-0">
+          <span className="font-['Alex_Brush',cursive] text-3xl sm:text-4xl text-[#db2777] block leading-tight drop-shadow-xs">
+            Dream Invest Grow ♡
+          </span>
+        </div>
+      </div>
+
+      {/* LIGHTBOX PREVIEW MODAL FOR MEDIA HOVER */}
       <AnimatePresence>
         {hoveredMedia && (
           <motion.div
