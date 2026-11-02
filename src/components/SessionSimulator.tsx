@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentSession, ParticipantState, ModelProfile, ProjectData, UserSessionProfile, FinancialMovement } from '../types';
 import { seedInitialData } from '../utils/seedData';
-import { getRoundReference } from '../utils/roundsDatabase';
+import { getRoundReference, resolveCategoryKey } from '../utils/roundsDatabase';
 import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import ReglasParticipacionModal from './ReglasParticipacionModal';
@@ -124,7 +124,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-400/40',
         accentText: 'text-amber-300 font-black',
         progressBarColor: 'bg-gradient-to-r from-pink-500 to-rose-500',
-        tierSlogan: 'Ronda High Fashion 👠',
+        tierSlogan: 'Round of Millionaires 💎',
         cardShadow: 'shadow-2xl shadow-pink-500/30 scale-[1.035]',
       };
     }
@@ -180,7 +180,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
         accentText: 'text-amber-300 font-heavy',
         progressBarColor: 'bg-pink-500',
-        tierSlogan: 'Ronda High Fashion 👠',
+        tierSlogan: 'Round of Millionaires 💎',
         cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     }
@@ -234,8 +234,8 @@ const getRoundModelStyle = (entryFee: number, title?: string): RoundModelStyleIn
   } else {
     return {
       bgImage: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1400&q=85',
-      alt: 'Supermodelos Fashion Haute Couture VIP Runway Platino',
-      styleTag: 'HAUTE COUTURE VIP 👑',
+      alt: 'Modelos Round of Millionaires VIP Executives',
+      styleTag: 'ROUND OF MILLIONAIRES 💎',
       overlayClass: 'bg-gradient-to-t from-black/90 via-black/35 via-50% to-transparent',
     };
   }
@@ -1036,12 +1036,12 @@ export default function SessionSimulator({
             ? 'Glamour'
             : fee === 10000
               ? 'Ronda Elegant & Classic'
-              : (fee === 100000 || fee === 1000000)
+              : fee === 100000
                 ? 'High Fashion'
-                : 'High Fashion';
+                : 'Round of Millionaires';
       return {
         id: `sess-fallback-${fee}-${Date.now()}`,
-        title: (fee === 100000 || fee === 1000000) ? 'Ronda High Fashion 👠' : fee === 10000 ? 'Ronda Elegant & Classic 🤍' : fee === 1000 ? 'Ronda Glamour ✨' : `Mesa de Inversión de ${sessionCategory}`,
+        title: fee === 1000000 ? 'Round of Millionaires 💎' : fee === 100000 ? 'Ronda High Fashion 👠' : fee === 10000 ? 'Ronda Elegant & Classic 🤍' : fee === 1000 ? 'Ronda Glamour ✨' : `Mesa de Inversión de ${sessionCategory}`,
         entryFee: fee,
         status: 'filling' as const,
         timeLeft: 1200,
@@ -1306,9 +1306,11 @@ export default function SessionSimulator({
               ? `Ronda Glamour ✨ - R-${Math.floor(Date.now() % 1000)}`
               : sessObj.entryFee === 10000
                 ? `Ronda Elegant & Classic 🤍 - R-${Math.floor(Date.now() % 1000)}`
-                : (sessObj.entryFee === 100000 || sessObj.entryFee === 1000000)
+                : sessObj.entryFee === 100000
                   ? `Ronda High Fashion 👠 - R-${Math.floor(Date.now() % 1000)}`
-                  : `Sesión de Inversión de ${sessionCategory} - R-${Math.floor(Date.now() % 1000)}`,
+                  : sessObj.entryFee === 1000000
+                    ? `Round of Millionaires 💎 - R-${Math.floor(Date.now() % 1000)}`
+                    : `Sesión de Inversión de ${sessionCategory} - R-${Math.floor(Date.now() % 1000)}`,
         entryFee: sessObj.entryFee,
         status: 'filling',
         timeLeft: 1200,
@@ -1447,9 +1449,9 @@ export default function SessionSimulator({
       zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     } else if (fee >= 1000000 || sessObj.id === 'sess-millionaires' || (sessObj.title && (sessObj.title.toLowerCase().includes('millonar') || sessObj.title.toLowerCase().includes('platino')))) {
       targetId = 'sess-millonarios-1';
-      targetTitle = 'Ronda High Fashion 👠';
-      targetBrand = 'alta moda, diseñadores, pasarela y tendencias.';
-      targetCategory = 'Ronda High Fashion 👠';
+      targetTitle = 'Round of Millionaires 💎';
+      targetBrand = 'exclusividad, inversores de élite, lujo y alta costura.';
+      targetCategory = 'Round of Millionaires 💎';
       targetPresenter = { id: 'f-6', name: 'Elena Rostova', username: 'elena_r_finanzas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Gestora de Cuentas' };
       zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     }
@@ -3394,6 +3396,13 @@ export default function SessionSimulator({
   return (
     <div className="bg-white rounded-3xl border border-slate-900/80 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="automated-sessions-section">
       
+      {/* Mensaje de invitación destacado, centrado y con espacio */}
+      <div className="w-full text-center px-2 pt-2 pb-3 mb-2">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug sm:leading-tight max-w-4xl mx-auto">
+          Quieres que impulsemos tus proyectos, súbelos y participa en nuestras Rondas de financiación.
+        </h2>
+      </div>
+
       {/* Upper header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
         <div className="text-left">
@@ -3517,7 +3526,7 @@ export default function SessionSimulator({
                   <option value={1000}>1,000.00€ — Ronda Glamour ✨</option>
                   <option value={10000}>10,000.00€ — Ronda Elegant & Classic 🤍</option>
                   <option value={100000}>100,000.00€ — Ronda High Fashion 👠</option>
-                  <option value={1000000}>1,000,000.00€ — Ronda High Fashion 👠</option>
+                  <option value={1000000}>1,000,000.00€ — Round of Millionaires 💎</option>
                 </select>
               </div>
 
@@ -3864,7 +3873,7 @@ export default function SessionSimulator({
                                 : (sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion'))))
                                 ? 'Ronda High Fashion 👠'
                                 : (sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino'))))
-                                ? 'Ronda High Fashion 👠'
+                                ? 'Round of Millionaires 💎'
                                 : sess.title.replace('Sesión de Inversión de ', 'Mesa ')}
                             </h3>
 
@@ -3888,14 +3897,14 @@ export default function SessionSimulator({
                                 sofisticado, clásico, atemporal y refinado.
                               </p>
                             )}
-                            {(sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion')))) && (
+                            {(sess.entryFee === 100000 || (sess.entryFee !== 1000000 && (sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion')))))) && (
                               <p className="text-[11px] sm:text-xs leading-snug font-medium text-rose-100">
                                 alta moda, diseñadores, pasarela y tendencias.
                               </p>
                             )}
                             {(sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino')))) && (
                               <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-100">
-                                alta moda, diseñadores, pasarela y tendencias.
+                                exclusividad, inversores de élite, lujo y alta costura.
                               </p>
                             )}
                           </div>
@@ -3992,69 +4001,179 @@ export default function SessionSimulator({
         <div className="space-y-6">
           
           {/* Detailed Info Ribbon for the current active selection */}
-          <div className="bg-gradient-to-r from-[#fce4ec] via-[#f7eef5] to-[#e0f2fe] text-slate-900 p-6 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-sm border border-pink-200/80" id="detail-active-ribbon">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="space-y-1.5 max-w-2xl mx-auto flex flex-col items-center text-center">
-              <span className={`inline-flex items-center text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-md ${
-                currentSession.status === 'voting' ? 'bg-slate-950 text-white border border-slate-700 shadow-sm' : 'bg-indigo-600 text-white shadow-sm'
-              }`}>
-                {currentSession.status === 'voting' ? '🗳️ RDA VOTACIÓN ABIERTA' : '⏳ RECLUTANDO MIEMBROS (FALTAN ' + (10 - currentSession.participants.length) + ' MÁS PARA ABRIR VOTACIÓN)'}
-              </span>
-              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 flex items-center justify-center gap-2 mt-1">
-                <span>
-                  {(currentSession.entryFee === 10 || currentSession.id === 'sess-workers' || currentSession.title?.includes('Trabajad') || currentSession.title?.includes('STREETWEAR'))
-                    ? 'Round STREETWEAR & URBAN'
-                    : (currentSession.entryFee === 100 || currentSession.id === 'sess-entrepreneurs' || currentSession.title?.includes('Bronce') || currentSession.title?.includes('Emprendedor') || currentSession.title?.includes('CASUAL'))
-                    ? 'Round CASUAL & LIFESTYLE'
-                    : (currentSession.entryFee === 1000 || currentSession.id === 'sess-businessmen' || currentSession.title?.includes('Acero') || currentSession.title?.includes('Empresar') || currentSession.title?.includes('Glamour'))
-                    ? 'Ronda Glamour ✨'
-                    : (currentSession.entryFee === 10000 || currentSession.id === 'sess-topmodels' || currentSession.title?.includes('Model') || currentSession.title?.includes('Oro') || currentSession.title?.includes('Classic') || currentSession.title?.includes('Elegant'))
-                    ? 'Ronda Elegant & Classic 🤍'
-                    : (currentSession.entryFee === 100000 || currentSession.id === 'sess-investors' || currentSession.title?.includes('Invers') || currentSession.title?.includes('Rosa') || currentSession.title?.includes('Fashion'))
-                    ? 'Ronda High Fashion 👠'
-                    : (currentSession.entryFee === 1000000 || currentSession.id === 'sess-millionaires' || currentSession.title?.includes('Millon') || currentSession.title?.includes('Platino'))
-                    ? 'Ronda High Fashion 👠'
-                    : currentSession.title}
-                </span>
-                <span className="text-xs font-mono font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full shadow-2xs">
-                  {getRoundReference(currentSession)}
-                </span>
-              </h3>
-              {(currentSession.entryFee === 10 || currentSession.id === 'sess-workers' || currentSession.title?.includes('Trabajad') || currentSession.title?.includes('STREETWEAR')) && (
-                <p className="text-xs text-slate-700 font-medium">
-                  Estilo moderno, sneakers, denim y cultura street.
-                </p>
-              )}
-              {(currentSession.entryFee === 100 || currentSession.id === 'sess-entrepreneurs' || currentSession.title?.includes('Bronce') || currentSession.title?.includes('Emprendedor') || currentSession.title?.includes('CASUAL')) && (
-                <p className="text-xs text-slate-700 font-medium">
-                  Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
-                </p>
-              )}
-              {(currentSession.entryFee === 1000 || currentSession.id === 'sess-businessmen' || currentSession.title?.includes('Acero') || currentSession.title?.includes('Empresar') || currentSession.title?.includes('Glamour')) && (
-                <p className="text-xs text-slate-700 font-medium">
-                  vestidos, belleza, eventos, alfombra roja y looks impactantes.
-                </p>
-              )}
-              {(currentSession.entryFee === 10000 || currentSession.id === 'sess-topmodels' || currentSession.title?.includes('Model') || currentSession.title?.includes('Oro') || currentSession.title?.includes('Classic') || currentSession.title?.includes('Elegant')) && (
-                <p className="text-xs text-slate-700 font-medium">
-                  sofisticado, clásico, atemporal y refinado.
-                </p>
-              )}
-              {(currentSession.entryFee === 100000 || currentSession.id === 'sess-investors' || currentSession.title?.includes('Invers') || currentSession.title?.includes('Rosa') || currentSession.title?.includes('Fashion')) && (
-                <p className="text-xs text-slate-700 font-medium">
-                  alta moda, diseñadores, pasarela y tendencias.
-                </p>
-              )}
-              {(currentSession.entryFee === 1000000 || currentSession.id === 'sess-millionaires' || currentSession.title?.includes('Millon') || currentSession.title?.includes('Platino')) && (
-                <p className="text-xs text-slate-700 font-medium">
-                  alta moda, diseñadores, pasarela y tendencias.
-                </p>
-              )}
-              <p className="text-xs text-slate-700">
-                Fondo Acumulado: <strong className="text-emerald-700 font-mono text-sm font-black">{currentSession.poolTotal}€</strong> — Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el **80% del premio**.
-              </p>
-            </div>
-          </div>
+          {(() => {
+            const fee = Number(currentSession.entryFee || 0);
+            const sessTitle = (currentSession.title || '').toLowerCase();
+            const sessId = (currentSession.id || '').toLowerCase();
+            const catKey = resolveCategoryKey(currentSession);
+
+            const isStreetwear = catKey === 'streetwear' || fee === 10 || sessId.includes('workers') || sessId.includes('trabajad') || sessTitle.includes('trabajad') || sessTitle.includes('streetwear');
+            const isCasual = !isStreetwear && (catKey === 'casual' || fee === 100 || sessId.includes('entrepreneurs') || sessId.includes('emprend') || sessTitle.includes('bronce') || sessTitle.includes('casual') || sessTitle.includes('lifestyle'));
+            const isGlamour = !isStreetwear && !isCasual && (catKey === 'glamour' || fee === 1000 || sessId.includes('businessmen') || sessId.includes('empresar') || sessTitle.includes('acero') || sessTitle.includes('glamour'));
+            const isElegant = !isStreetwear && !isCasual && !isGlamour && (catKey === 'elegant' || fee === 10000 || sessId.includes('topmodels') || sessTitle.includes('model') || sessTitle.includes('oro') || sessTitle.includes('classic') || sessTitle.includes('elegant'));
+            const isMillionaires = !isStreetwear && !isCasual && !isGlamour && !isElegant && (
+              catKey === 'highfashion_1m' || fee === 1000000 ||
+              sessId.includes('millionaires') || sessId.includes('millonarios') ||
+              sessTitle.includes('millionaires') || sessTitle.includes('millon') || sessTitle.includes('platino')
+            );
+            const isHighFashion = !isStreetwear && !isCasual && !isGlamour && !isElegant && !isMillionaires && (
+              catKey === 'highfashion_100k' ||
+              fee === 100000 ||
+              sessId.includes('investors') || sessId.includes('inversores') ||
+              sessTitle.includes('high fashion') || sessTitle.includes('fashion') || sessTitle.includes('invers')
+            );
+
+            const roundCategoryTitle = isStreetwear
+              ? 'Round STREETWEAR & URBAN'
+              : isCasual
+              ? 'Round CASUAL & LIFESTYLE'
+              : isGlamour
+              ? 'Ronda Glamour ✨'
+              : isElegant
+              ? 'Ronda Elegant & Classic 🤍'
+              : isHighFashion
+              ? 'Ronda High Fashion 👠'
+              : isMillionaires
+              ? 'Round of Millionaires 💎'
+              : currentSession.title;
+
+            const roundSubtitle = isStreetwear
+              ? 'Estilo moderno, sneakers, denim y cultura street.'
+              : isCasual
+              ? 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.'
+              : isGlamour
+              ? 'vestidos, belleza, eventos, alfombra roja y looks impactantes.'
+              : isElegant
+              ? 'sofisticado, clásico, atemporal y refinado.'
+              : isHighFashion
+              ? 'alta moda, diseñadores, pasarela y tendencias.'
+              : 'exclusividad, inversores de élite, lujo y alta costura.';
+
+            if (isStreetwear) {
+              return (
+                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                  <img
+                    src="/assets/aistudio/Moda__finanzas_y_oportunidades_urbanas_62beb248.png"
+                    alt="Moda, finanzas y oportunidades urbanas - Round STREETWEAR & URBAN"
+                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
+                  />
+                </div>
+              );
+            }
+
+            if (isCasual) {
+              return (
+                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                  <img
+                    src="/assets/aistudio/Moda_casual_y_estilo_de_vida_glamuroso_a25ddc2b.png"
+                    alt="Moda casual y estilo de vida glamuroso - Round CASUAL & LIFESTYLE"
+                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
+                  />
+                </div>
+              );
+            }
+
+            if (isGlamour) {
+              return (
+                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                  <img
+                    src="/assets/aistudio/Gemini_Generated_Image_mizl7umizl7umizl_1dd942c2.jpg"
+                    alt="Round Glamour - Fashions Finance"
+                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
+                  />
+                </div>
+              );
+            }
+
+            if (isElegant) {
+              return (
+                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                  <img
+                    src="/assets/aistudio/Gemini_Generated_Image_76lmsq76lmsq76lm_f12a9bd7.jpg"
+                    alt="Round Elegant Classic - Fashions Finance"
+                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
+                  />
+                </div>
+              );
+            }
+
+            if (isHighFashion) {
+              return (
+                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                  <img
+                    src="/assets/aistudio/Gemini_Generated_Image_210s3d210s3d210s_b39d065b.jpg"
+                    alt="Round High Fashion - Fashions Finance"
+                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
+                  />
+                </div>
+              );
+            }
+
+            if (isMillionaires) {
+              return (
+                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                  <img
+                    src="/assets/aistudio/Gemini_Generated_Image_icag8zicag8zicag_1a7f0fe4.jpg"
+                    alt="Round of Millionaires - Fashions Finance"
+                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
+                  />
+                </div>
+              );
+            }
+
+            return (
+              <div className="bg-gradient-to-r from-[#ffe4ed] via-[#ffd6e6] to-[#fce4ec] text-slate-900 p-6 sm:p-8 rounded-3xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg border-2 border-pink-300/80" id="detail-active-ribbon">
+                <div className="absolute -top-10 -left-10 w-36 h-36 bg-pink-400/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-10 -right-10 w-36 h-36 bg-rose-400/20 rounded-full blur-2xl pointer-events-none" />
+                
+                <div className="space-y-3 max-w-3xl mx-auto flex flex-col items-center text-center relative z-10 w-full">
+                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md border-2 ${
+                    currentSession.status === 'voting' 
+                      ? 'bg-gradient-to-r from-rose-950 via-pink-950 to-rose-950 text-amber-200 border-amber-300/80 shadow-[0_0_15px_rgba(244,63,94,0.3)]' 
+                      : 'bg-indigo-900 text-amber-100 border-amber-300/60'
+                  }`}>
+                    <span className="text-xs">🗳️</span>
+                    <span>{currentSession.status === 'voting' ? 'RDA VOTACIÓN ABIERTA' : '⏳ RECLUTANDO MIEMBROS (FALTAN ' + (10 - currentSession.participants.length) + ' MÁS PARA ABRIR VOTACIÓN)'}</span>
+                  </span>
+
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 mt-1">
+                    <h3 className="text-2xl sm:text-3xl font-serif text-slate-900 flex items-center justify-center gap-2 tracking-wide">
+                      <span className="italic font-normal text-rose-800 font-serif">
+                        {roundCategoryTitle.toLowerCase().startsWith('round') ? 'Round' : 'Ronda'}
+                      </span>
+                      <span className="font-extrabold tracking-wider uppercase text-slate-900">
+                        {roundCategoryTitle.replace(/^round\s+/i, '').replace(/^ronda\s+/i, '')}
+                      </span>
+                    </h3>
+                    <span className="text-xs sm:text-sm font-serif font-black text-amber-950 bg-gradient-to-b from-amber-200 via-amber-300 to-amber-500 border-2 border-amber-400 px-3 py-1 rounded-full shadow-md">
+                      {getRoundReference(currentSession)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-center w-full max-w-md my-1">
+                    <div className="h-[1.5px] bg-gradient-to-r from-transparent via-rose-300 to-rose-400 flex-1" />
+                    <span className="px-3 text-xs text-rose-400 drop-shadow-sm">💎</span>
+                    <div className="h-[1.5px] bg-gradient-to-r from-rose-400 via-rose-300 to-transparent flex-1" />
+                  </div>
+
+                  <p className="text-sm font-serif text-slate-800 font-medium tracking-wide max-w-xl">
+                    {roundSubtitle}
+                  </p>
+
+                  <div className="mt-2 w-full max-w-2xl bg-white/90 backdrop-blur-md border-2 border-amber-300/80 rounded-full py-2.5 px-6 shadow-md flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-800">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-serif text-slate-700">Fondo Acumulado:</span>
+                      <strong className="text-lg font-serif font-black text-rose-700">{currentSession.poolTotal}€</strong>
+                    </div>
+                    <div className="hidden sm:block w-[1.5px] h-5 bg-amber-400/80" />
+                    <span className="text-[11px] sm:text-xs text-slate-700 font-medium leading-tight">
+                      Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el <strong className="text-rose-700 font-bold">*80% del premio*</strong>.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* USER ACTION CARD: CHOOSE & JOIN ROUND (Shown when session is active to let user simulate/test payment) */}
           {(currentSession.status === 'filling' || currentSession.status === 'voting') && (

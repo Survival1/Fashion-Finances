@@ -62,9 +62,9 @@ export const ROUND_CATEGORIES: Record<RoundCategoryKey, {
   },
   highfashion_1m: {
     key: 'highfashion_1m',
-    title: 'Ronda High Fashion 👠',
-    category: 'Ronda High Fashion 👠',
-    brand: 'alta moda, diseñadores, pasarela y tendencias.',
+    title: 'Round of Millionaires 💎',
+    category: 'Round of Millionaires 💎',
+    brand: 'exclusividad, inversores de élite, lujo y alta costura.',
     entryFee: 1000000,
     poolMultiplier: 10
   }
@@ -449,6 +449,20 @@ export function getRoundReference(session?: any, fallbackIndex?: number): string
       return formatRoundRef(fallbackIndex + 1);
     }
     return 'REF: 1';
+  }
+
+  // All 6 base categories start at REF: 1 unless their category has celebrated rounds
+  const baseSessionIds = [
+    'sess-workers', 'sess-entrepreneurs', 'sess-businessmen', 'sess-topmodels', 'sess-investors', 'sess-millionaires',
+    'sess-trabajadores-1', 'sess-emprendedores-1', 'sess-empresarios-1', 'sess-topmodels-1', 'sess-inversores-1', 'sess-millonarios-1'
+  ];
+  if (session.id && baseSessionIds.includes(session.id)) {
+    const catKey = resolveCategoryKey(session);
+    const celebrated = getCategoryCelebratedCount(catKey);
+    if (celebrated === 0) {
+      return 'REF: 1';
+    }
+    return formatRoundRef(celebrated + 1);
   }
 
   // If session already has a valid normalized reference

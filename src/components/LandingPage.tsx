@@ -181,8 +181,8 @@ export default function LandingPage({
             <span>La Fusión Definitiva de Moda y Finanzas Colectivas</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-medium text-slate-950 tracking-tight leading-[1.1] max-w-3xl mx-auto">
-            Descubre <span className="bg-gradient-to-r from-red-600 via-rose-600 to-red-800 bg-clip-text text-transparent font-semibold">Fashion Finances</span>: la plataforma innovadora donde las finanzas se fusionan con la moda.
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-sans font-semibold text-slate-900 tracking-tight leading-snug max-w-2xl mx-auto">
+            Somos una comunidad de modelos unidas para patrocinar las empresas, los inversores y emprendedores de élite.
           </h2>
 
           {/* Vídeo Oficial de Presentación colocado directamente debajo de "la moda." */}

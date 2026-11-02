@@ -21,9 +21,13 @@ if (typeof window !== 'undefined') {
       reason.includes('WebSocket') ||
       reason.includes('websocket') ||
       reason.includes('failed to connect') ||
+      reason.includes('closed without opened') ||
       reason.includes('QuotaExceededError')
     ) {
       event.preventDefault();
+      if (typeof (event as any).stopImmediatePropagation === 'function') {
+        (event as any).stopImmediatePropagation();
+      }
     }
   });
 
@@ -32,9 +36,13 @@ if (typeof window !== 'undefined') {
     if (
       msg.includes('WebSocket') ||
       msg.includes('websocket') ||
+      msg.includes('closed without opened') ||
       msg.includes('QuotaExceededError')
     ) {
       event.preventDefault();
+      if (typeof (event as any).stopImmediatePropagation === 'function') {
+        (event as any).stopImmediatePropagation();
+      }
     }
   });
 }

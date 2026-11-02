@@ -306,37 +306,32 @@ export default function App() {
       if (raw && version === 'true') {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const hasWorkers = parsed.some((s: InvestmentSession) => s.id === 'sess-workers');
-          const hasEntrepreneurs = parsed.some((s: InvestmentSession) => s.id === 'sess-entrepreneurs');
-          const hasBusinessmen = parsed.some((s: InvestmentSession) => s.id === 'sess-businessmen');
-          const hasTopModels = parsed.some((s: InvestmentSession) => s.id === 'sess-topmodels');
-          const hasInvestors = parsed.some((s: InvestmentSession) => s.id === 'sess-investors');
-          const hasMillionaires = parsed.some((s: InvestmentSession) => s.id === 'sess-millionaires');
-          if (hasWorkers && hasEntrepreneurs && hasBusinessmen && hasTopModels && hasInvestors && hasMillionaires) {
-            const updated = parsed.map((s: InvestmentSession) => {
-              if (s.id === 'sess-workers' || s.entryFee === 10 || (s.title && s.title.toLowerCase().includes('trabajad'))) {
-                return { ...s, title: 'Round STREETWEAR & URBAN' };
-              }
-              if (s.id === 'sess-entrepreneurs' || s.entryFee === 100 || (s.title && (s.title.toLowerCase().includes('bronce') || s.title.toLowerCase().includes('emprend')))) {
-                return { ...s, title: 'Round CASUAL & LIFESTYLE' };
-              }
-              if (s.id === 'sess-businessmen' || s.entryFee === 1000 || (s.title && (s.title.toLowerCase().includes('acero') || s.title.toLowerCase().includes('empresar')))) {
-                return { ...s, title: 'Ronda Glamour ✨' };
-              }
-              if (s.id === 'sess-topmodels' || s.entryFee === 10000 || (s.title && (s.title.toLowerCase().includes('model') || s.title.toLowerCase().includes('oro') || s.title.toLowerCase().includes('classic') || s.title.toLowerCase().includes('elegant')))) {
-                return { ...s, title: 'Ronda Elegant & Classic 🤍' };
-              }
-              if (s.id === 'sess-investors' || s.entryFee === 100000 || (s.title && (s.title.toLowerCase().includes('invers') || s.title.toLowerCase().includes('rosa')))) {
-                return { ...s, title: 'Ronda High Fashion 👠' };
-              }
-              if (s.id === 'sess-millionaires' || s.entryFee === 1000000 || (s.title && (s.title.toLowerCase().includes('millonar') || s.title.toLowerCase().includes('platino')))) {
-                return { ...s, title: 'Ronda High Fashion 👠' };
-              }
-              return s;
-            });
-            localStorage.setItem('coll_sessions', JSON.stringify(updated));
-            return updated;
-          }
+          const updated = parsed.map((s: InvestmentSession) => {
+            const fee = Number(s.entryFee || 0);
+            const id = (s.id || '').toLowerCase();
+            const t = (s.title || '').toLowerCase();
+            if (id.includes('workers') || id.includes('trabajad') || fee === 10 || t.includes('trabajad') || t.includes('streetwear')) {
+              return { ...s, title: 'Round STREETWEAR & URBAN', reference: 'REF: 1', roundNumber: 1 };
+            }
+            if (id.includes('entrepreneurs') || id.includes('emprend') || fee === 100 || t.includes('bronce') || t.includes('emprend') || t.includes('casual') || t.includes('lifestyle')) {
+              return { ...s, title: 'Round CASUAL & LIFESTYLE', reference: 'REF: 1', roundNumber: 1 };
+            }
+            if (id.includes('businessmen') || id.includes('empresar') || fee === 1000 || t.includes('acero') || t.includes('empresar') || t.includes('glamour')) {
+              return { ...s, title: 'Ronda Glamour ✨', reference: 'REF: 1', roundNumber: 1 };
+            }
+            if (id.includes('topmodels') || fee === 10000 || t.includes('model') || t.includes('oro') || t.includes('classic') || t.includes('elegant')) {
+              return { ...s, title: 'Ronda Elegant & Classic 🤍', reference: 'REF: 1', roundNumber: 1 };
+            }
+            if (id.includes('investors') || id.includes('invers') || fee === 100000 || t.includes('invers') || t.includes('rosa') || t.includes('fashion')) {
+              return { ...s, title: 'Ronda High Fashion 👠', reference: 'REF: 1', roundNumber: 1 };
+            }
+            if (id.includes('millionaires') || id.includes('millon') || fee === 1000000 || t.includes('millonar') || t.includes('platino')) {
+              return { ...s, title: 'Ronda High Fashion 👠', reference: 'REF: 1', roundNumber: 1 };
+            }
+            return s;
+          });
+          localStorage.setItem('coll_sessions', JSON.stringify(updated));
+          return updated;
         }
       }
     } catch (e) {}

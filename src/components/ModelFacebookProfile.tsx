@@ -237,14 +237,14 @@ export function ProfileIntroAndSponsors({
           id="intro-information-card-container"
         >
           {/* 🪽 Wings background: Luminous white wings on smooth pearl pink background, clear and without harsh saturation */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
             <img 
               src="/assets/aistudio/wings_pearl_pink.jpg" 
               alt="Alas de Ángel Rosa Perla" 
-              className="w-full h-full object-cover object-[center_35%] opacity-90 transition-transform duration-700" 
+              className="w-full h-full object-fill opacity-90 transition-transform duration-700 rounded-2xl" 
             />
             {/* Subtle soft pearl gradient overlay to guarantee perfect contrast and readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#fff0f5]/65 via-transparent to-[#ffffff]/45" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#fff0f5]/65 via-transparent to-[#ffffff]/45 rounded-2xl" />
           </div>
 
           <div className="relative z-10 space-y-4">
@@ -3277,8 +3277,8 @@ export default function ModelFacebookProfile({
     setActiveEmojiPicker(null);
   };
 
-  // Compact Stickers popup rendered right next to its icon
-  const renderCompactStickersPopup = (targetId: string, isPhoto = false) => {
+  // Compact Stickers popup rendered inside the uploaded image container centered
+  const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = true) => {
     return (
       <div 
         onMouseEnter={() => {
@@ -3287,7 +3287,11 @@ export default function ModelFacebookProfile({
         onMouseLeave={() => {
           if (targetId) handleStickersMouseLeave();
         }}
-        className="absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+        className={
+          isCentered
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[150] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
+            : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2.5 shrink-0">
@@ -3309,7 +3313,7 @@ export default function ModelFacebookProfile({
         </div>
         
         {/* Compact Grid of cute stickers with larger tiles */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
           {STICKER_PACK.map((sticker, sIdx) => {
             const fullEmojiStr = sticker.emojis.join('');
             return (
@@ -3327,25 +3331,25 @@ export default function ModelFacebookProfile({
                   }
                   setHoveredStickersPostId(null);
                 }}
-                className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-white hover:bg-rose-50/70 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs"
+                className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50/70 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs"
               >
-                <div className="relative flex flex-col items-center justify-center h-7 sm:h-8 w-full">
+                <div className="relative flex flex-col items-center justify-center h-6 sm:h-7 w-full">
                   {sticker.emojis.length > 1 ? (
-                    <div className="relative h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
-                      <span className="text-base sm:text-lg absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none">
+                    <div className="relative h-6 w-6 sm:h-7 sm:w-7 flex items-center justify-center">
+                      <span className="text-sm sm:text-base absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none">
                         {sticker.emojis[0]}
                       </span>
-                      <span className="text-base sm:text-lg absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none">
+                      <span className="text-sm sm:text-base absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none">
                         {sticker.emojis[1]}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-lg sm:text-xl select-none leading-none">
+                    <span className="text-base sm:text-lg select-none leading-none">
                       {sticker.emojis[0]}
                     </span>
                   )}
                 </div>
-                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-zinc-600 tracking-tight leading-none mt-1.5 truncate max-w-full text-center uppercase">
+                <span className="text-[7.5px] sm:text-[8px] font-extrabold text-zinc-600 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
                   {sticker.label}
                 </span>
               </button>
@@ -3356,8 +3360,8 @@ export default function ModelFacebookProfile({
     );
   };
 
-  // Compact Extra Gifts popup rendered right next to its icon
-  const renderCompactGiftsPopup = (targetId: string, isPhoto = false) => {
+  // Compact Extra Gifts popup rendered inside the uploaded image container centered
+  const renderCompactGiftsPopup = (targetId: string, isPhoto = false, isCentered = true) => {
     return (
       <div 
         onMouseEnter={() => {
@@ -3366,15 +3370,19 @@ export default function ModelFacebookProfile({
         onMouseLeave={() => {
           handleGiftMouseLeave();
         }}
-        className="absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+        className={
+          isCentered
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[150] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
+            : "absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+        }
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-zinc-800/80 shrink-0">
+        <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-zinc-800/80 shrink-0">
           <span className="text-yellow-400 font-extrabold text-[10px] sm:text-[11px] tracking-wide uppercase flex items-center gap-1.5 select-none font-sans">
             🎁 REGALOS EXTRA
           </span>
-          <div className="flex items-center gap-2">
-            <span className="text-[9.5px] bg-zinc-800 text-yellow-350 font-black px-2 py-0.5 rounded font-mono">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] bg-zinc-800 text-yellow-350 font-black px-1.5 py-0.5 rounded font-mono">
               🪙 {liveUserCoins}
             </span>
             <button
@@ -3394,7 +3402,7 @@ export default function ModelFacebookProfile({
         </div>
 
         {/* Compact Grid with hidden scrollbar and larger tiles */}
-        <div className="grid grid-cols-3 gap-2 max-h-[220px] sm:max-h-[235px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="grid grid-cols-3 gap-1.5 max-h-[170px] sm:max-h-[200px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {EXTRA_GIFTS.map((gift, gIdx) => (
             <button
               key={gIdx}
@@ -3407,16 +3415,16 @@ export default function ModelFacebookProfile({
                 setActiveGiftingPhotoUrl(targetId);
                 setGiftCustomMessage('');
               }}
-              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-2 sm:p-2.5 rounded-xl aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
+              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-1.5 sm:p-2 rounded-xl aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
             >
-              <span className="text-2xl sm:text-3xl filter drop-shadow hover:scale-110 transition transform duration-150">
+              <span className="text-xl sm:text-2xl filter drop-shadow hover:scale-110 transition transform duration-150">
                 {gift.icon}
               </span>
-              <span className="text-[8.5px] sm:text-[9px] font-black text-slate-800 mt-1.5 truncate w-full px-0.5 leading-tight select-none uppercase">
+              <span className="text-[8px] sm:text-[8.5px] font-black text-slate-800 mt-1 truncate w-full px-0.5 leading-tight select-none uppercase">
                 {gift.name.length > 11 ? `${gift.name.substring(0, 10).toUpperCase()}..` : gift.name.toUpperCase()}
               </span>
               <div className="flex items-center gap-0.5 mt-0.5 select-none shrink-0 leading-none">
-                <span className="text-[8.5px] sm:text-[9px] font-extrabold text-amber-600 font-mono">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-amber-600 font-mono">
                   🪙 {gift.cost}
                 </span>
               </div>
@@ -3424,7 +3432,7 @@ export default function ModelFacebookProfile({
           ))}
         </div>
         
-        <div className="text-[8px] sm:text-[8.5px] text-zinc-400 text-center mt-2 pt-2 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider">
+        <div className="text-[7.5px] sm:text-[8px] text-zinc-400 text-center mt-1.5 pt-1.5 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider">
           Presiona para enviar · 🪙 {liveUserCoins}
         </div>
       </div>
@@ -3462,7 +3470,7 @@ export default function ModelFacebookProfile({
                 }}
                 onMouseEnter={() => {
                   if (id) {
-                    handleStickersMouseEnter(id);
+                    handleStickersMouseEnter(hoverKey || id);
                   }
                 }}
                 onMouseLeave={() => {
@@ -3476,9 +3484,9 @@ export default function ModelFacebookProfile({
                 <span className="text-[12px] font-extrabold text-slate-800 leading-none">{likesCount}</span>
               </div>
 
-              {/* STICKERS HOVER POPUP RIGHT NEXT TO 💵 REACTION ICON */}
-              {(hoveredStickersPostId === id || (hoverKey && hoveredStickersPostId === hoverKey)) && 
-                renderCompactStickersPopup(hoverKey || id)
+              {/* STICKERS HOVER POPUP RIGHT NEXT TO 💵 REACTION ICON (Only fallback if post has no image) */}
+              {!hoverKey && (hoveredStickersPostId === id) && 
+                renderCompactStickersPopup(id, false, false)
               }
             </div>
 
@@ -3501,9 +3509,9 @@ export default function ModelFacebookProfile({
                 <Gift className="w-5 h-5 text-pink-500 stroke-[1.8]" />
               </button>
 
-              {/* GIFTS HOVER POPUP RIGHT NEXT TO GIFT ICON */}
-              {(hoveredHeartAndGiftPhotoUrl === (hoverKey || id) || hoveredHeartAndGiftPhotoUrl === id || (hoverKey && hoveredHeartAndGiftPhotoUrl === hoverKey)) && 
-                renderCompactGiftsPopup(hoverKey || id)
+              {/* GIFTS HOVER POPUP RIGHT NEXT TO GIFT ICON (Only fallback if post has no image) */}
+              {!hoverKey && (hoveredHeartAndGiftPhotoUrl === id) && 
+                renderCompactGiftsPopup(id, false, false)
               }
             </div>
           </div>
@@ -4873,6 +4881,16 @@ export default function ModelFacebookProfile({
                     }}
                   />
 
+                  {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                  {!selectedPhotoForLightbox && (hoveredStickersPostId === post.id || hoveredStickersPostId === post.image) && (
+                    renderCompactStickersPopup(post.image || post.id, false, true)
+                  )}
+
+                  {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                  {!selectedPhotoForLightbox && (hoveredHeartAndGiftPhotoUrl === post.id || hoveredHeartAndGiftPhotoUrl === post.image) && (
+                    renderCompactGiftsPopup(post.image || post.id, false, true)
+                  )}
+
                   {!selectedPhotoForLightbox && giftConfirmPhotoUrl === post.image && renderConfirmGiftOverlay(post.image)}
 
                   {/* 📤 Renders the custom Full-Size Share Overlay covering the image exactly */}
@@ -4909,6 +4927,7 @@ export default function ModelFacebookProfile({
                 (e) => {
                   e.stopPropagation();
                   handleLikePost(post.id, e);
+                  setHoveredStickersPostId(prev => (prev === (post.image || post.id)) ? null : (post.image || post.id));
                 },
                 (e) => {
                   e.stopPropagation();
@@ -9022,6 +9041,16 @@ export default function ModelFacebookProfile({
                                   <X className="w-4.5 h-4.5 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
                                 </button>
 
+                                {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                                {!selectedPhotoForLightbox && hoveredStickersPostId === ph && (
+                                  renderCompactStickersPopup(ph, true, true)
+                                )}
+
+                                {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                                {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === ph && (
+                                  renderCompactGiftsPopup(ph, true, true)
+                                )}
+
                                 {/* 📤 Renders the custom Full-Size Share Overlay covering the image exactly */}
                                 {!selectedPhotoForLightbox && activeShareMenuPostId === ph && renderShareOverlay(ph, ph)}
                               </div>
@@ -9038,6 +9067,7 @@ export default function ModelFacebookProfile({
                                 (e) => {
                                   e.stopPropagation();
                                   handleLikePhoto(ph, e);
+                                  setHoveredStickersPostId(prev => prev === ph ? null : ph);
                                 },
                                 (e) => {
                                   e.stopPropagation();
@@ -9709,6 +9739,16 @@ export default function ModelFacebookProfile({
                   }}
                 />
 
+                {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                {hoveredStickersPostId === selectedPhotoForLightbox && (
+                  renderCompactStickersPopup(selectedPhotoForLightbox, true, true)
+                )}
+
+                {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
+                  renderCompactGiftsPopup(selectedPhotoForLightbox, true, true)
+                )}
+
                 {giftConfirmPhotoUrl === selectedPhotoForLightbox && renderConfirmGiftOverlay(selectedPhotoForLightbox, true)}
               </div>
 
@@ -9938,10 +9978,6 @@ export default function ModelFacebookProfile({
                         <Heart className={`w-4 h-4 ${hasLiked ? 'fill-current text-rose-500 animate-pulse' : 'text-slate-400'}`} />
                         <span>{activeInteraction.likeCount} Me gusta</span>
                       </button>
-
-                      {hoveredStickersPostId === selectedPhotoForLightbox && (
-                        renderCompactStickersPopup(selectedPhotoForLightbox, true)
-                      )}
                     </div>
 
                     {/* Simple bouncing Gift icon as indicator */}
@@ -9969,10 +10005,6 @@ export default function ModelFacebookProfile({
                       >
                         <Gift className="w-3.5 h-3.5" />
                       </div>
-
-                      {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
-                        renderCompactGiftsPopup(selectedPhotoForLightbox, true)
-                      )}
                     </div>
                   </div>
 
