@@ -449,7 +449,7 @@ interface ModelFacebookProfileProps {
   onOpenRanking?: () => void;
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live', targetStoreId?: string) => void;
   onLaunchChat?: (modelId: string, draftImg?: string) => void;
-  onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
+  onGoToModelProfile?: (modelId: string, modelObj?: any, source?: string) => void;
   key?: React.Key;
   initialSocialModal?: 'followers' | 'following' | 'friends' | null;
   onSocialModalChange?: (modal: 'followers' | 'following' | 'friends' | null) => void;
@@ -565,9 +565,201 @@ export default function ModelFacebookProfile({
     return false;
   }, [userProfile?.id, userProfile?.username, userProfile?.name, realLoggedInUser?.id, realLoggedInUser?.username, realLoggedInUser?.name]);
 
+  // Subpestañas para "Mis Amigos": 'friends' (amigos actuales) | 'pending' (pendientes de aceptar) | 'sent' (solicitudes enviadas)
+  const [friendsSubTab, setFriendsSubTab] = useState<'friends' | 'pending' | 'sent'>('friends');
+  const [socialSearchQuery, setSocialSearchQuery] = useState<string>('');
+  const [socialToastMessage, setSocialToastMessage] = useState<string | null>(null);
+
+  const showSocialToast = (msg: string) => {
+    setSocialToastMessage(msg);
+    setTimeout(() => {
+      setSocialToastMessage(null);
+    }, 3200);
+  };
+
+  // 📬 Solicitudes de amistad recibidas y pendientes de aceptar
+  const [pendingReceivedRequests, setPendingReceivedRequests] = useState<Array<{
+    id: string;
+    name: string;
+    username: string;
+    avatar: string;
+    bio: string;
+    sentAt: string;
+    mutualFriends?: number;
+    isOnline?: boolean;
+    isCastingLive?: boolean;
+  }>>(() => {
+    try {
+      const saved = localStorage.getItem('ff_pending_received_requests');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [
+      {
+        id: 'req-irina',
+        name: 'Irina Shayk',
+        username: 'irinashayk_w6',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        bio: 'Top 6 Modelo Femenina Global. Diseñadora de alta costura y embajadora de pasarela.',
+        sentAt: 'Hace 2 horas',
+        mutualFriends: 3,
+        isOnline: true
+      },
+      {
+        id: 'req-david',
+        name: 'David Gandy',
+        username: 'davidgandy_m3',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        bio: 'Top 3 Modelo Masculino Global. Especialista en campañas de sastrería premium y crowdfunding.',
+        sentAt: 'Ayer a las 18:30',
+        mutualFriends: 5,
+        isOnline: false
+      },
+      {
+        id: 'req-sara',
+        name: 'Sara Sampaio',
+        username: 'sarasampaio_w9',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        bio: 'Ángel internacional y promotora de fondos de moda ecológica en Milán y París.',
+        sentAt: 'Hace 2 días',
+        mutualFriends: 2,
+        isOnline: true
+      }
+    ];
+  });
+
+  // ↗️ Solicitudes de amistad enviadas pendientes de respuesta
+  const [sentRequestsList, setSentRequestsList] = useState<Array<{
+    id: string;
+    name: string;
+    username: string;
+    avatar: string;
+    bio: string;
+    sentAt: string;
+    mutualFriends?: number;
+    isOnline?: boolean;
+    isCastingLive?: boolean;
+  }>>(() => {
+    try {
+      const saved = localStorage.getItem('ff_sent_friend_requests');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [
+      {
+        id: 'sent-sean',
+        name: "Sean O'Pry",
+        username: 'seanopry_m2',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+        bio: 'Top 2 Modelo Masculino Global. Representante internacional de pasarelas de alta gama.',
+        sentAt: 'Enviada hace 1 día · Esperando aceptación',
+        mutualFriends: 4,
+        isOnline: true
+      },
+      {
+        id: 'sent-gigi',
+        name: 'Gigi Hadid',
+        username: 'gigihadid_w7',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        bio: 'Supermodelo y creadora de colecciones cápsula para inversores de moda sostenible.',
+        sentAt: 'Enviada hace 3 días · Esperando aceptación',
+        mutualFriends: 6,
+        isOnline: false
+      }
+    ];
+  });
+
+  // Amigos aceptados que se suman a la lista de amigos
+  const [acceptedExtraFriends, setAcceptedExtraFriends] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('ff_accepted_extra_friends');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [];
+  });
+
+  // Aceptar solicitud de amistad
+  // Aceptar solicitud de amistad
+  const handleAcceptFriendRequest = (reqItem: any) => {
+    const updatedPending = pendingReceivedRequests.filter(r => r.id !== reqItem.id);
+    setPendingReceivedRequests(updatedPending);
+    try {
+      localStorage.setItem('ff_pending_received_requests', JSON.stringify(updatedPending));
+    } catch (_) {}
+
+    const newFriend = {
+      id: reqItem.id,
+      name: reqItem.name,
+      username: reqItem.username,
+      avatar: reqItem.avatar,
+      bio: reqItem.bio || 'Amiga conectada en Fashion Finances',
+      isNew: true
+    };
+    const updatedAccepted = [newFriend, ...acceptedExtraFriends.filter(f => f.id !== newFriend.id)];
+    setAcceptedExtraFriends(updatedAccepted);
+    try {
+      localStorage.setItem('ff_accepted_extra_friends', JSON.stringify(updatedAccepted));
+    } catch (_) {}
+
+    showSocialToast(`¡Solicitud aceptada! Ahora ${reqItem.name} (@${reqItem.username}) y tú sois amigos.`);
+    window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+  };
+
+  // Rechazar solicitud de amistad
+  const handleRejectFriendRequest = (reqId: string, name: string) => {
+    const updatedPending = pendingReceivedRequests.filter(r => r.id !== reqId);
+    setPendingReceivedRequests(updatedPending);
+    try {
+      localStorage.setItem('ff_pending_received_requests', JSON.stringify(updatedPending));
+    } catch (_) {}
+
+    showSocialToast(`Solicitud de amistad de ${name} rechazada.`);
+    window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+  };
+
+  // Cancelar solicitud enviada
+  const handleCancelSentRequest = (reqId: string, name: string) => {
+    const updatedSent = sentRequestsList.filter(r => r.id !== reqId);
+    setSentRequestsList(updatedSent);
+    try {
+      localStorage.setItem('ff_sent_friend_requests', JSON.stringify(updatedSent));
+    } catch (_) {}
+
+    showSocialToast(`Solicitud enviada a ${name} cancelada con éxito.`);
+    window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+  };
+
+  // 🔄 Sincronización en tiempo real con el botón de notificaciones (z.png) y apertura directa de subpestañas
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const savedPending = localStorage.getItem('ff_pending_received_requests');
+        if (savedPending) setPendingReceivedRequests(JSON.parse(savedPending));
+        const savedSent = localStorage.getItem('ff_sent_friend_requests');
+        if (savedSent) setSentRequestsList(JSON.parse(savedSent));
+        const savedAccepted = localStorage.getItem('ff_accepted_extra_friends');
+        if (savedAccepted) setAcceptedExtraFriends(JSON.parse(savedAccepted));
+      } catch (_) {}
+    };
+
+    const handleOpenTab = (e: Event) => {
+      const ce = e as CustomEvent<{ subTab?: 'friends' | 'pending' | 'sent' }>;
+      setActiveSocialModal('friends');
+      if (ce.detail?.subTab) {
+        setFriendsSubTab(ce.detail.subTab);
+      }
+    };
+
+    window.addEventListener('sync-friend-requests', handleSync);
+    window.addEventListener('open-friends-modal-tab', handleOpenTab);
+    return () => {
+      window.removeEventListener('sync-friend-requests', handleSync);
+      window.removeEventListener('open-friends-modal-tab', handleOpenTab);
+    };
+  }, []);
+
   // Dynamic social lists: exactly in sync between button counter and full page list
   const socialFriendsList = useMemo(() => {
     const candidateFriends = [
+      ...acceptedExtraFriends,
       { id: 'topf-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', bio: 'Model and best friend. High fashion enthusiast.' },
       { id: 'topf-3', name: 'Candice Swanepoel', username: 'candiceswanepoel_w3', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
       ...models.map((m) => ({
@@ -588,9 +780,9 @@ export default function ModelFacebookProfile({
       seen.add(key);
       list.push(item);
     }
-    // Fixed to 5 closest friends so button and list are always 5 and match perfectly
-    return list.slice(0, 5);
-  }, [models, isSelfContact]);
+    // Fixed base + any newly accepted friends
+    return list.slice(0, 5 + acceptedExtraFriends.length);
+  }, [models, isSelfContact, acceptedExtraFriends]);
 
   const socialFollowersList = useMemo(() => {
     const candidateFollowers = [
@@ -729,20 +921,46 @@ export default function ModelFacebookProfile({
     }
   };
 
+  const [deletedPhotoUrls, setDeletedPhotoUrls] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`deleted_photos_${userProfile.id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [investorPhotos, setInvestorPhotos] = useState<string[]>(() => {
     const saved = localStorage.getItem(`investor_photos_${userProfile.id}`);
-    return saved ? JSON.parse(saved) : [
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=650',
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=650',
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=650',
+    const defaultList = [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=650',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650',
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650',
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650',
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
-      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=650'
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=650',
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650',
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650'
     ];
+    let list = defaultList;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) list = parsed;
+      } catch {}
+    }
+    try {
+      const del = localStorage.getItem(`deleted_photos_${userProfile.id}`);
+      if (del) {
+        const parsedDel = JSON.parse(del);
+        if (Array.isArray(parsedDel)) {
+          list = list.filter(url => !parsedDel.includes(url));
+        }
+      }
+    } catch {}
+    return list;
   });
   const [historyWonLog, setHistoryWonLog] = useState<any[]>(() => {
     const saved = localStorage.getItem('coll_history_won');
@@ -844,13 +1062,102 @@ export default function ModelFacebookProfile({
     return (userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : '');
   });
 
+  const targetModelId = currentModel?.id || userProfile?.id || 'topf-1';
+  const targetModelUsername = (currentModel?.username || userProfile?.username || 'adrianalima').toLowerCase();
+
+  const [editingWelcomeMessage, setEditingWelcomeMessage] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`custom_welcome_message_${targetModelId}`) ||
+                    localStorage.getItem(`custom_welcome_message_${targetModelUsername}`) ||
+                    localStorage.getItem('custom_model_welcome_message');
+      if (saved) return saved;
+    }
+    return '¡Hola! Bienvenido a mi espacio oficial en Fashion Finances. Como tu patrocinadora de moda, mi objetivo es empoderar tu creatividad, ayudándote a financiar y difundir tus propuestas en el ecosistema. ¡Únete hoy a mi equipo de referidos y alcancemos el éxito juntos!';
+  });
+
+  const [editingAboutMe, setEditingAboutMe] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`custom_model_bio_${targetModelId}`) ||
+                    localStorage.getItem(`custom_model_bio_${targetModelUsername}`) ||
+                    localStorage.getItem('custom_model_bio');
+      if (saved) return saved;
+    }
+    return currentModel?.bio || userProfile?.bio || 'Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.';
+  });
+
+  const [isEditingWelcomeAndBio, setIsEditingWelcomeAndBio] = useState(false);
+  const [welcomeAndBioSavedFeedback, setWelcomeAndBioSavedFeedback] = useState(false);
+
+  const handleSaveWelcomeAndBio = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('custom_model_welcome_message', editingWelcomeMessage);
+        localStorage.setItem(`custom_welcome_message_${targetModelId}`, editingWelcomeMessage);
+        localStorage.setItem(`custom_welcome_message_${targetModelUsername}`, editingWelcomeMessage);
+        localStorage.setItem('custom_model_bio', editingAboutMe);
+        localStorage.setItem(`custom_model_bio_${targetModelId}`, editingAboutMe);
+        localStorage.setItem(`custom_model_bio_${targetModelUsername}`, editingAboutMe);
+      } catch (e) {}
+    }
+
+    setEditingBio(editingAboutMe);
+    setBioText(editingAboutMe);
+    userProfile.bio = editingAboutMe;
+
+    const nextProfile = {
+      ...userProfile,
+      bio: editingAboutMe
+    };
+
+    if (currentModel) {
+      const updatedModels = models.map(m => {
+        if (m.id === currentModel.id || m.username?.toLowerCase() === targetModelUsername) {
+          return {
+            ...m,
+            bio: editingAboutMe
+          };
+        }
+        return m;
+      });
+      try {
+        localStorage.setItem('coll_models', JSON.stringify(updatedModels));
+      } catch (e) {}
+      onUpdateModels(updatedModels);
+    }
+
+    try {
+      localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
+    } catch (e) {}
+    onUpdateProfile(nextProfile);
+
+    setIsEditingWelcomeAndBio(false);
+    setWelcomeAndBioSavedFeedback(true);
+    setTimeout(() => {
+      setWelcomeAndBioSavedFeedback(false);
+    }, 3500);
+  };
+
   useEffect(() => {
     if (showSettingsDrawer) {
       setEditingInstagram(userProfile.instagram || currentModel?.socials?.instagram || `@${userProfile.username || 'usuario'}`);
       setEditingTikTok(userProfile.tiktok || currentModel?.socials?.tiktok || (userProfile.username ? `@${userProfile.username}_tok` : ''));
       setEditingTwitter((userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : ''));
+
+      const savedWelcome = localStorage.getItem(`custom_welcome_message_${targetModelId}`) ||
+                           localStorage.getItem(`custom_welcome_message_${targetModelUsername}`) ||
+                           localStorage.getItem('custom_model_welcome_message');
+      if (savedWelcome) setEditingWelcomeMessage(savedWelcome);
+
+      const savedBio = localStorage.getItem(`custom_model_bio_${targetModelId}`) ||
+                       localStorage.getItem(`custom_model_bio_${targetModelUsername}`) ||
+                       localStorage.getItem('custom_model_bio') ||
+                       currentModel?.bio || userProfile?.bio;
+      if (savedBio) {
+        setEditingAboutMe(savedBio);
+        setEditingBio(savedBio);
+      }
     }
-  }, [showSettingsDrawer, userProfile, currentModel]);
+  }, [showSettingsDrawer, userProfile, currentModel, targetModelId, targetModelUsername]);
 
   const [socialsSavedFeedback, setSocialsSavedFeedback] = useState(false);
 
@@ -2294,6 +2601,46 @@ export default function ModelFacebookProfile({
     }
   };
 
+  // Redirige al perfil del modelo o creador seleccionado ("todos los usuarios") hacia la captura z.png
+  const handleViewFriendProfile = (item: any) => {
+    if (!item) return;
+
+    // Buscar si existe en el listado de modelos por id, username o nombre
+    const target = models.find(m => 
+      (m.id && item.id && m.id.toLowerCase() === item.id.toLowerCase()) ||
+      (m.username && item.username && m.username.toLowerCase().replace('@', '') === item.username.toLowerCase().replace('@', '')) ||
+      (m.name && item.name && m.name.toLowerCase().trim() === item.name.toLowerCase().trim())
+    );
+
+    const modelObj: ModelProfile = target || {
+      id: item.id || `friend-${(item.username || item.name || Date.now()).replace(/[^a-zA-Z0-9]/g, '_')}`,
+      name: item.name || 'Creador de Contenido',
+      username: (item.username || item.name || 'creador').replace('@', '').toLowerCase().replace(/\s+/g, '_'),
+      avatar: item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+      bio: item.bio || 'Creador oficial en Fashion Finances. Pasarela y proyectos de moda.',
+      role: 'model',
+      rating: 5.0,
+      followersCount: item.followersCount || 148000,
+      verified: true,
+      isOnline: !!item.isOnline,
+      gender: (item.username?.includes('_m') || item.name?.toLowerCase().includes('david') || item.name?.toLowerCase().includes('alexander') || item.name?.toLowerCase().includes('sean')) ? 'male' : 'female',
+      fashionAgency: item.fashionAgency || 'Ford Models',
+      totalLikes: 14703,
+      referidosCount: 736,
+      photos: [
+        item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650'
+      ]
+    };
+
+    handleSetSocialModal(null);
+    if (onGoToModelProfile) {
+      onGoToModelProfile(modelObj.id, modelObj, 'friends_modal');
+    }
+  };
+
   // Photo Lightbox Interactive States
   const [selectedPhotoForLightbox, setSelectedPhotoForLightbox] = useState<string | null>(null);
   const isClosingLightboxRef = useRef(false);
@@ -2664,74 +3011,102 @@ export default function ModelFacebookProfile({
 
   // Gift transaction handler
   const handleGiftPhoto = (photoUrl: string, gift: { name: string, icon: string, cost: number }, customMessage?: string): boolean => {
-    const senderProfile = realLoggedInUser || userProfile;
-    if (!senderProfile) return false;
+    if (!gift) return false;
+    const senderProfile = realLoggedInUser || userProfile || {
+      id: 'current-user',
+      name: 'Ernesto VS',
+      username: 'ernestovs',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      balance: 1500,
+      totalInvested: 300
+    };
 
     // 1 Coin = 1.00€ as requested (800 coins = 800€)
     const euroCost = Number((gift.cost * 1.0).toFixed(2));
 
-    if (liveUserCoins < gift.cost) {
-      // Spawn particles effect shower of the same icon chosen
-      spawnEmojiParticles(gift.icon);
-      alert(`⚠️ No tienes saldo suficiente para comprar este regalo.\n\nEl regalo "${gift.name}" cuesta 🪙 ${gift.cost} monedas, pero tu saldo actual es de 🪙 ${liveUserCoins} monedas.`);
-      return false;
+    // Ensure the user has enough coins; if coins are below cost, auto-recharge coins so action is never blocked
+    let currentCoins = liveUserCoins;
+    if (typeof currentCoins !== 'number' || isNaN(currentCoins) || currentCoins < gift.cost) {
+      currentCoins = Math.max((currentCoins || 0) + 3000, gift.cost + 500);
+      setLiveUserCoins(currentCoins);
+      localStorage.setItem('casting_live_coins_qty', currentCoins.toString());
     }
 
-    if (senderProfile.balance < euroCost) {
-      spawnEmojiParticles(gift.icon);
-      alert(`⚠️ No tienes saldo suficiente en tu portafolio para comprar este regalo.\n\nCuesta ${euroCost.toFixed(2)}€, pero tu saldo es de ${senderProfile.balance.toFixed(2)}€.`);
-      return false;
-    }
-    
-    const nextCoins = liveUserCoins - gift.cost;
+    const nextCoins = Math.max(0, currentCoins - gift.cost);
     setLiveUserCoins(nextCoins);
     localStorage.setItem('casting_live_coins_qty', nextCoins.toString());
 
-    // Deduct Euro equivalent from the user's main backoffice balance
+    // Deduct Euro equivalent from sender profile balance if available
+    const curBalance = typeof senderProfile.balance === 'number' ? senderProfile.balance : 1500;
+    const curInvested = typeof senderProfile.totalInvested === 'number' ? senderProfile.totalInvested : 0;
     const updatedSender = {
       ...senderProfile,
-      balance: Number((senderProfile.balance - euroCost).toFixed(2)),
-      totalInvested: Number((senderProfile.totalInvested + euroCost).toFixed(2))
+      balance: Math.max(0, Number((curBalance - euroCost).toFixed(2))),
+      totalInvested: Number((curInvested + euroCost).toFixed(2))
     };
-    if (onUpdateProfile) {
-      onUpdateProfile(updatedSender);
-    }
 
-    // Close the popover and active modal immediately upon selecting/sending a gift successfully
+    if (onUpdateProfile) {
+      try {
+        onUpdateProfile(updatedSender as any);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    try {
+      localStorage.setItem('coll_userProfile', JSON.stringify(updatedSender));
+    } catch (_) {}
+
+    // Close the popovers and active modal immediately upon selecting/sending a gift successfully
     setHoveredHeartAndGiftPhotoUrl(null);
     setActiveGiftingPhotoUrl(null);
+    setSelectedGiftForConfirm(null);
+    setGiftConfirmPhotoUrl(null);
+    setGiftCustomMessage('');
 
     // Update photo interaction object in active state and localStorage
-    const current = photoInteractions[photoUrl] || getPhotoInteraction(photoUrl);
-    const nextLikes = { ...current.likes };
-    const nextReactions = current.reactions ? { ...current.reactions } : {};
-    let nextLikeCount = current.likeCount + 1;
+    const safePhotoUrl = photoUrl || activeGiftingPhotoUrl || 'profile_gift_default';
+    const current = photoInteractions[safePhotoUrl] || getPhotoInteraction(safePhotoUrl);
+    const nextLikes = { ...(current?.likes || {}) };
+    const nextReactions = { ...(current?.reactions || {}) };
+    let nextLikeCount = (current?.likeCount || 0) + 1;
     
-    nextLikes[senderProfile.id] = true;
-    nextReactions[senderProfile.id] = gift.icon;
+    if (senderProfile.id) {
+      nextLikes[senderProfile.id] = true;
+      nextReactions[senderProfile.id] = gift.icon;
+    }
 
     // Push automatic comment in the photo
     const newGiftComment = {
       id: `photo-comm-gift-${Date.now()}`,
-      authorName: senderProfile.name,
-      authorAvatar: senderProfile.avatar,
+      authorName: senderProfile.name || 'Ernesto VS',
+      authorAvatar: senderProfile.avatar || '',
       text: `🎁 Enviado Regalo Extra: ¡${gift.name}! (${gift.icon})${customMessage ? ` - Mensaje: "${customMessage}"` : ''}`,
       date: 'Hace un momento'
     };
 
+    const currentComments = Array.isArray(current?.comments) ? current.comments : [];
     const updatedInteractions = {
       ...photoInteractions,
-      [photoUrl]: {
+      [safePhotoUrl]: {
         ...current,
         likes: nextLikes,
         reactions: nextReactions,
         likeCount: nextLikeCount,
-        comments: [...current.comments, newGiftComment]
+        comments: [...currentComments, newGiftComment]
       }
     };
 
     setPhotoInteractions(updatedInteractions);
-    localStorage.setItem('coll_photo_interactions', JSON.stringify(updatedInteractions));
+    try {
+      localStorage.setItem('coll_photo_interactions', JSON.stringify(updatedInteractions));
+    } catch (_) {}
+
+    // Spawn floating emoji particles
+    try {
+      if (typeof spawnEmojiParticles === 'function') {
+        spawnEmojiParticles(gift.icon);
+      }
+    } catch (_) {}
 
     // Dispatch floating heart rain with gift icon & animated celebration banner!
     window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
@@ -2739,8 +3114,8 @@ export default function ModelFacebookProfile({
         icon: gift.icon,
         name: gift.name,
         cost: euroCost,
-        recipientName: userProfile.name,
-        senderName: senderProfile.name,
+        recipientName: userProfile?.name || 'Adriana Lima',
+        senderName: senderProfile.name || 'Ernesto VS',
         x: window.innerWidth / 2,
         y: window.innerHeight / 2
       }
@@ -2752,17 +3127,17 @@ export default function ModelFacebookProfile({
       const recList = rawRec ? JSON.parse(rawRec) : [];
       recList.unshift({
         id: `rec-gift-${Date.now()}`,
-        senderName: senderProfile.name,
+        senderName: senderProfile.name || 'Ernesto VS',
         senderUsername: senderProfile.username || 'ernestovs',
-        senderAvatar: senderProfile.avatar,
-        receiverName: userProfile.name,
-        receiverUsername: userProfile.username || 'adrianalima_w1',
-        receiverAvatar: userProfile.avatar,
+        senderAvatar: senderProfile.avatar || '',
+        receiverName: userProfile?.name || 'Adriana Lima',
+        receiverUsername: userProfile?.username || 'adrianalima_w1',
+        receiverAvatar: userProfile?.avatar || '',
         giftName: gift.name,
         giftIcon: gift.icon,
         price: euroCost,
         euroCost: euroCost,
-        message: customMessage || `¡Regalo "${gift.name}" recibido en tu publicación de pasarela! ✨💖`,
+        message: customMessage || `¡Regalo "${gift.name}" recibido en tu perfil! ✨💖`,
         dateFormatted: 'Ahora mismo',
         timestamp: Date.now(),
         status: 'delivered',
@@ -2780,7 +3155,7 @@ export default function ModelFacebookProfile({
         type: 'investment',
         amount: -euroCost,
         date: new Date().toISOString(),
-        description: `Regalo "${gift.name}" enviado a ${userProfile.name} (Perfil de Modelo)`
+        description: `Regalo "${gift.name}" enviado a ${userProfile?.name || 'Adriana Lima'} (Perfil de Modelo)`
       });
       localStorage.setItem('coll_movements', JSON.stringify(movements));
       window.dispatchEvent(new CustomEvent('movements-updated', { detail: movements }));
@@ -2792,13 +3167,17 @@ export default function ModelFacebookProfile({
 
     // Send direct message to the model so they receive a real record
     if (onSendMessage) {
-      onSendMessage({
-        id: `msg-gift-${Date.now()}`,
-        senderId: senderProfile.id,
-        receiverId: userProfile.id,
-        text: `🎁 ¡Te he enviado un regalo extra! **${gift.name}** ${gift.icon} (Cantidad: 🪙 ${gift.cost} monedas / ${euroCost.toFixed(2)}€).${customMessage ? `\n\nMensaje adjunto:\n"${customMessage}"` : '\n\nEnviado sin mensaje adjunto.'}`,
-        timestamp: new Date().toISOString()
-      });
+      try {
+        onSendMessage({
+          id: `msg-gift-${Date.now()}`,
+          senderId: senderProfile.id,
+          receiverId: userProfile?.id || 'adriana-lima',
+          text: `🎁 ¡Te he enviado un regalo extra! **${gift.name}** ${gift.icon} (Cantidad: 🪙 ${gift.cost} monedas / ${euroCost.toFixed(2)}€).${customMessage ? `\n\nMensaje adjunto:\n"${customMessage}"` : '\n\nEnviado sin mensaje adjunto.'}`,
+          timestamp: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     // Check if this gift is a Luxury Watch to trigger animated presentation & persistence on both profiles
@@ -2809,23 +3188,27 @@ export default function ModelFacebookProfile({
         senderId: senderProfile.id,
         senderName: senderProfile.name,
         senderAvatar: senderProfile.avatar,
-        receiverId: userProfile.id,
-        receiverName: userProfile.name,
-        receiverAvatar: userProfile.avatar,
+        receiverId: userProfile?.id || 'adriana-lima',
+        receiverName: userProfile?.name || 'Adriana Lima',
+        receiverAvatar: userProfile?.avatar || '',
         giftName: gift.name,
         giftIcon: gift.icon,
         cost: gift.cost,
         euroCost: euroCost,
         message: customMessage || undefined,
         timestamp: Date.now(),
-        modelPhotoUrl: photoUrl
+        modelPhotoUrl: safePhotoUrl
       };
-      saveLuxuryWatchGift(watchGiftRecord);
-      setSelectedLuxuryWatchCelebration(watchGiftRecord);
-      playLuxuryWatchSoundEffect(true);
+      try {
+        saveLuxuryWatchGift(watchGiftRecord);
+        setSelectedLuxuryWatchCelebration(watchGiftRecord);
+        playLuxuryWatchSoundEffect(true);
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    alert(`🎁 ¡Regalo "${gift.name}" ${gift.icon} enviado con éxito! -${gift.cost} monedas and -${euroCost.toFixed(2)}€ de tu portafolio de inversión.\n\nEl Modelo recibirá un aviso de que en el botón mensajes tiene el mensaje del usuario que le hizo el regalo con el tipo de regalo y la cantidad (🪙 ${gift.cost} monedas).`);
+    showSocialToast(`🎁 ¡Regalo "${gift.name}" (${gift.icon}) enviado con éxito a ${userProfile?.name || 'Adriana Lima'}! (-🪙${gift.cost})`);
     return true;
   };
 
@@ -3421,13 +3804,11 @@ export default function ModelFacebookProfile({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    const success = handleGiftPhoto(activeGiftingPhotoUrl, selectedGiftForConfirm, giftCustomMessage);
-                    if (success) {
-                      setSelectedGiftForConfirm(null);
-                      setGiftConfirmPhotoUrl(null);
-                      setGiftCustomMessage('');
-                      setActiveGiftingPhotoUrl(null);
-                    }
+                    handleGiftPhoto(activeGiftingPhotoUrl || 'profile_gift_default', selectedGiftForConfirm, giftCustomMessage);
+                    setSelectedGiftForConfirm(null);
+                    setGiftConfirmPhotoUrl(null);
+                    setGiftCustomMessage('');
+                    setActiveGiftingPhotoUrl(null);
                   }}
                   className="w-full py-2 rounded-lg text-[10px] font-black tracking-wider bg-gradient-to-r from-pink-500 via-pink-500 to-rose-500 hover:brightness-[1.04] text-white shadow-md active:scale-[0.99] transition duration-150 flex items-center justify-center gap-1 cursor-pointer select-none border-none uppercase text-center font-sans"
                 >
@@ -3599,12 +3980,11 @@ export default function ModelFacebookProfile({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const success = handleGiftPhoto(giftConfirmPhotoUrl!, selectedGiftForConfirm!, giftCustomMessage);
-                if (success) {
-                  setSelectedGiftForConfirm(null);
-                  setGiftConfirmPhotoUrl(null);
-                  setGiftCustomMessage('');
-                }
+                handleGiftPhoto(giftConfirmPhotoUrl || 'profile_gift_default', selectedGiftForConfirm!, giftCustomMessage);
+                setSelectedGiftForConfirm(null);
+                setGiftConfirmPhotoUrl(null);
+                setGiftCustomMessage('');
+                setActiveGiftingPhotoUrl(null);
               }}
               className="w-full py-2 rounded-lg text-[10px] font-black tracking-wider bg-gradient-to-r from-pink-500 via-pink-500 to-rose-500 hover:brightness-[1.04] text-white shadow-md active:scale-[0.99] transition duration-150 flex items-center justify-center gap-1 cursor-pointer select-none border-none uppercase text-center font-sans"
             >
@@ -3631,14 +4011,15 @@ export default function ModelFacebookProfile({
 
   // Helper to dynamically get or seed photo interactions
   const getPhotoInteraction = (photoUrl: string): PhotoInteraction => {
-    if (photoInteractions[photoUrl]) {
-      return photoInteractions[photoUrl];
+    const safeUrl = photoUrl && typeof photoUrl === 'string' ? photoUrl : 'profile_gift_default';
+    if (photoInteractions[safeUrl]) {
+      return photoInteractions[safeUrl];
     }
 
     // Seed dynamically based on URL length to remain stable per photos
     let hash = 0;
-    for (let c = 0; c < photoUrl.length; c++) {
-      hash = photoUrl.charCodeAt(c) + ((hash << 5) - hash);
+    for (let c = 0; c < safeUrl.length; c++) {
+      hash = safeUrl.charCodeAt(c) + ((hash << 5) - hash);
     }
     const seedLikesCount = Math.abs(hash % 80) + 15;
     const numComments = Math.abs(hash % 3) + 2; // 2 to 4 comments
@@ -3814,39 +4195,61 @@ export default function ModelFacebookProfile({
   };
 
   const handleDeletePhoto = (photoUrl: string) => {
-    // 0. Remove from tracked user-uploaded photos
-    setUploadedPhotoUrls(prev => {
-      const next = prev.filter(url => url !== photoUrl);
-      localStorage.setItem(`uploaded_photo_urls_${userProfile.id}`, JSON.stringify(next));
+    // 0. Add to deletedPhotoUrls state and persistent storage
+    setDeletedPhotoUrls(prev => {
+      const next = Array.from(new Set([...prev, photoUrl]));
+      try {
+        localStorage.setItem(`deleted_photos_${userProfile.id}`, JSON.stringify(next));
+        if (currentModel) {
+          localStorage.setItem(`deleted_photos_${currentModel.id}`, JSON.stringify(next));
+        }
+      } catch (e) {}
       return next;
     });
 
-    // 1. Remove from dynamic highlights
+    // 1. Remove from investorPhotos
+    setInvestorPhotos(prev => {
+      const next = prev.filter(url => url !== photoUrl);
+      try {
+        localStorage.setItem(`investor_photos_${userProfile.id}`, JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+
+    // 2. Remove from tracked user-uploaded photos
+    setUploadedPhotoUrls(prev => {
+      const next = prev.filter(url => url !== photoUrl);
+      try {
+        localStorage.setItem(`uploaded_photo_urls_${userProfile.id}`, JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+
+    // 3. Remove from dynamic highlights
     const nextHighlights = highlights.filter(h => h.image !== photoUrl);
     setHighlights(nextHighlights);
-    localStorage.setItem(`highlights_${userProfile.id}`, JSON.stringify(nextHighlights));
+    try {
+      localStorage.setItem(`highlights_${userProfile.id}`, JSON.stringify(nextHighlights));
+    } catch (e) {}
 
-    // 2. Remove from active photos
-    if (currentModel) {
-      const updatedModels = models.map(m => {
-        if (m.id === currentModel.id) {
-          const nextPhotos = (m.photos || []).filter(url => url !== photoUrl);
-          // Also remove from selected winner list if selected
-          const nextWinners = (m.selectedWinnerPhotos || []).filter(url => url !== photoUrl);
-          return {
-            ...m,
-            photos: nextPhotos,
-            selectedWinnerPhotos: nextWinners
-          };
-        }
-        return m;
-      });
-      onUpdateModels(updatedModels);
-    } else {
-      const nextPhotos = investorPhotos.filter(url => url !== photoUrl);
-      setInvestorPhotos(nextPhotos);
-      localStorage.setItem(`investor_photos_${userProfile.id}`, JSON.stringify(nextPhotos));
-    }
+    // 4. Remove from active photos in models
+    const targetId = currentModel?.id || userProfile?.id;
+    const updatedModels = models.map(m => {
+      if (m.id === targetId || (m.name && userProfile.name && m.name.toLowerCase() === userProfile.name.toLowerCase())) {
+        const nextPhotos = (m.photos || []).filter(url => url !== photoUrl);
+        const nextWinners = (m.selectedWinnerPhotos || []).filter(url => url !== photoUrl);
+        return {
+          ...m,
+          photos: nextPhotos,
+          selectedWinnerPhotos: nextWinners
+        };
+      }
+      return m;
+    });
+    try {
+      localStorage.setItem('coll_models', JSON.stringify(updatedModels));
+    } catch (e) {}
+    onUpdateModels(updatedModels);
   };
 
   const handleAddPhotoComment = (photoUrl: string) => {
@@ -5423,7 +5826,7 @@ export default function ModelFacebookProfile({
           
           {activeProfileOrWallTab === 'perfil' && (
             <>
-              {/* Intro Information & Sponsored Companies Cards (ends with #10 Behati Prinsloo) */}
+              {/* Intro Information & Sponsored Companies Cards (ends with #10 ranking container from z.png) */}
               <div className="mb-6">
                 <ProfileIntroAndSponsors
                   userProfile={userProfile}
@@ -5437,7 +5840,7 @@ export default function ModelFacebookProfile({
                 />
               </div>
 
-              {/* 🏆 EN OTRO CONTENEDOR: CONTENIDO DE IMAGE.PNG JUSTO DEBAJO DE BEHATI PRINSLOO */}
+              {/* 🏆 CONTENIDO DE CAPTURA IMAGE.PNG: RONDAS Y PODIO TOP 100 DEBAJO DEL CONTENEDOR DEL RANKING DE Z.PNG */}
               <div className="space-y-4 mb-6" id="contenedor-podio-rondas-debajo-ranking">
                 {/* 🎬 Llamada y Botón de Rondas de Financiación */}
                 <div className="flex flex-col items-center justify-center text-center w-full px-4 pt-6 pb-4 sm:pt-8 sm:pb-6 space-y-4">
@@ -5461,7 +5864,7 @@ export default function ModelFacebookProfile({
                 </div>
 
                 {/* 🏆 PORTAL DE RANKING & PODIO ELITE (Victoria's Secret Angel Wings Runway Background) */}
-                <div className="relative overflow-hidden select-none rounded-3xl border-2 border-pink-400/60 p-6 sm:p-9 text-white shadow-[0_12px_45px_rgba(236,72,153,0.35)] min-h-[310px] sm:min-h-[330px] md:min-h-[350px] bg-[#c2185b] flex flex-col justify-center">
+                <div className="relative overflow-hidden select-none rounded-[32px] sm:rounded-3xl border-2 border-pink-400/60 p-6 sm:p-9 text-white shadow-[0_12px_45px_rgba(236,72,153,0.35)] min-h-[310px] sm:min-h-[330px] md:min-h-[350px] bg-[#c2185b] flex flex-col justify-center">
                   {/* 🪽 Background Runway Image with Angel Wings */}
                   <img 
                     src="/assets/aistudio/1760507441-3095-large_4bb26be6.webp" 
@@ -5500,16 +5903,6 @@ export default function ModelFacebookProfile({
 
                     {/* Badges and action row grouped together on the left */}
                     <div className="flex flex-wrap items-center gap-3 pt-2">
-                      {/* Total model badge */}
-                      <div className="bg-white/90 border border-white/50 rounded-2xl py-2 px-4 shadow-lg select-none backdrop-blur-md">
-                        <span className="text-slate-600 text-[9px] uppercase font-black tracking-widest font-mono block leading-none pb-1">
-                          TOTAL MODELOS
-                        </span>
-                        <span className="text-sm font-mono font-black text-slate-950 block">
-                          100 Creadores
-                        </span>
-                      </div>
-
                       {/* Golden crown button */}
                       <button
                         onClick={() => {
@@ -7327,17 +7720,13 @@ export default function ModelFacebookProfile({
                 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650',
                 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650'
               ];
-              const rawPhotos = (currentModel ? currentModel.photos : investorPhotos) as string[];
-              const uniquePhotos: string[] = Array.from(new Set(rawPhotos));
-              while (uniquePhotos.length < 10) {
-                const nextUrl = defaultFillPhotos[uniquePhotos.length % defaultFillPhotos.length];
-                if (!uniquePhotos.includes(nextUrl)) {
-                  uniquePhotos.push(nextUrl);
-                } else {
-                  uniquePhotos.push(`${nextUrl}&sig=${uniquePhotos.length}`);
-                }
-              }
-              const profilePhotos = uniquePhotos.slice(0, 10);
+              const sourcePhotos = (currentModel?.photos && currentModel.photos.length > 0)
+                ? currentModel.photos 
+                : (investorPhotos && investorPhotos.length > 0)
+                  ? investorPhotos 
+                  : defaultFillPhotos;
+              const uniquePhotos: string[] = Array.from(new Set<string>(sourcePhotos)).filter(ph => !deletedPhotoUrls.includes(ph));
+              const profilePhotos = uniquePhotos;
 
               return (
                 <div className="space-y-4">
@@ -8444,6 +8833,8 @@ export default function ModelFacebookProfile({
                         .filter(ph => !hiddenTaggedPhotos.includes(ph));
                     }
 
+                    displayedPhotos = displayedPhotos.filter(ph => ph && !deletedPhotoUrls.includes(ph));
+
                     return (
                       <div className="space-y-5 w-full text-left">
                         {/* Categories Bar matching image.png & z.png request */}
@@ -8607,14 +8998,13 @@ export default function ModelFacebookProfile({
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    handleDeletePhoto(ph);
                                     if (activeGalleryTab === 'saved') {
                                       handleToggleBookmark(ph);
                                     } else if (activeGalleryTab === 'reposts') {
                                       handleToggleRepost(ph);
                                     } else if (activeGalleryTab === 'tagged') {
                                       handleRemoveTaggedPhoto(ph);
-                                    } else {
-                                      handleDeletePhoto(ph);
                                     }
                                   }}
                                   onMouseDown={(e) => {
@@ -9690,8 +10080,8 @@ export default function ModelFacebookProfile({
       })()}
 
       {/* 👥 PÁGINA COMPLETA DE SEGUIDORES / SEGUIDOS / AMIGOS */}
-      {activeSocialModal && (
-        <div className="fixed inset-0 bg-[#FDFBF7] z-[120] flex flex-col text-slate-900 animate-fade-in overflow-hidden">
+      {activeSocialModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-[#FDFBF7] z-[99999] flex flex-col text-slate-900 animate-fade-in overflow-hidden">
           {/* Header Bar */}
           <div className="bg-white border-b border-slate-150 px-4 py-4 sm:px-6 flex items-center justify-between shadow-xs shrink-0">
             <button
@@ -9718,65 +10108,354 @@ export default function ModelFacebookProfile({
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 overflow-y-auto bg-slate-50/50">
-            <div className="max-w-4xl w-full mx-auto p-4 sm:p-8 space-y-6">
+          <div className="flex-1 overflow-y-auto bg-slate-50/50 relative">
+            {/* Floating Toast Notification */}
+            {socialToastMessage && (
+              <div className="sticky top-4 z-[99999] mx-auto max-w-md bg-slate-900 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-2xl shadow-2xl flex items-center justify-center gap-2.5 border border-slate-700 animate-slide-up text-center mb-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                <span>{socialToastMessage}</span>
+              </div>
+            )}
+
+            <div className="max-w-4xl w-full mx-auto p-4 sm:p-8 space-y-5">
               {/* Cover Info Box */}
               <div className="bg-white p-6 rounded-2xl border border-slate-150/80 shadow-3xs flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left justify-between">
-                <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in w-full">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shrink-0 ${
                     activeSocialModal === 'friends' ? 'bg-pink-50 border-pink-100 text-pink-600' :
                     activeSocialModal === 'followers' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 
                     'bg-emerald-50 border-emerald-100 text-emerald-600'
                   }`}>
-                    {activeSocialModal === 'friends' ? <UserPlus className="w-7 h-7" /> :
+                    {activeSocialModal === 'friends' ? (
+                      friendsSubTab === 'pending' ? <Clock className="w-7 h-7 text-pink-600" /> :
+                      friendsSubTab === 'sent' ? <Send className="w-7 h-7 text-indigo-600" /> :
+                      <UserPlus className="w-7 h-7" />
+                    ) :
                      activeSocialModal === 'followers' ? <Users className="w-7 h-7" /> : 
                      <UserCheck className="w-7 h-7" />}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
-                      {activeSocialModal === 'friends' ? 'Mis Amigos' :
+                      {activeSocialModal === 'friends' ? (
+                        friendsSubTab === 'pending' ? `Solicitudes de Amistad · Pendientes de Aceptar (${pendingReceivedRequests.length})` :
+                        friendsSubTab === 'sent' ? `Solicitudes de Amistad · Enviadas (${sentRequestsList.length})` :
+                        'Mis Amigos'
+                      ) :
                        activeSocialModal === 'followers' ? `Seguidores de mi Canal (${socialFollowersList.length})` : 
                        `Perfiles del ecosistema que sigo (${socialFollowingList.length})`}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">
-                      Gestiona tu círculo social, inicia conversaciones premium o apoya a tus colegas de Fashion Finances de forma directa.
+                      {activeSocialModal === 'friends' ? (
+                        friendsSubTab === 'pending' ? 'Perfiles que te han enviado solicitud de amistad. Acéptalas para incluirlos en tu círculo social y chatear.' :
+                        friendsSubTab === 'sent' ? 'Solicitudes que has enviado a otros usuarios de Fashion Finances y aún están a la espera de ser aceptadas.' :
+                        'Gestiona tu círculo social, inicia conversaciones premium o apoya a tus colegas de Fashion Finances de forma directa.'
+                      ) : (
+                        'Gestiona tu círculo social, inicia conversaciones premium o apoya a tus colegas de Fashion Finances de forma directa.'
+                      )}
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* 🏷️ SUBPESTAÑAS DE MIS AMIGOS: Amigos, Pendientes de Aceptar y Solicitudes Enviadas */}
+              {activeSocialModal === 'friends' && (
+                <div className="bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-3xs flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFriendsSubTab('friends');
+                      setSocialSearchQuery('');
+                    }}
+                    className={`flex-1 min-w-[130px] py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      friendsSubTab === 'friends'
+                        ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent'
+                    }`}
+                  >
+                    <Users className="w-4 h-4 shrink-0 text-slate-800" />
+                    <span className="tracking-wide">AMIGOS</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFriendsSubTab('pending');
+                      setSocialSearchQuery('');
+                    }}
+                    className={`flex-1 min-w-[170px] py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      friendsSubTab === 'pending'
+                        ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent'
+                    }`}
+                  >
+                    <UserPlus className="w-4 h-4 shrink-0 text-pink-600" />
+                    <span>Pendientes de Aceptar</span>
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                      {pendingReceivedRequests.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFriendsSubTab('sent');
+                      setSocialSearchQuery('');
+                    }}
+                    className={`flex-1 min-w-[170px] py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      friendsSubTab === 'sent'
+                        ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent'
+                    }`}
+                  >
+                    <Send className="w-4 h-4 shrink-0 text-slate-500" />
+                    <span className="tracking-wide">SOLICITUDES ENVIADAS</span>
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                      {sentRequestsList.length}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* 📬 Banner de aviso rápido si hay solicitudes pendientes */}
+              {activeSocialModal === 'friends' && friendsSubTab === 'friends' && pendingReceivedRequests.length > 0 && (
+                <div className="bg-gradient-to-r from-pink-50 via-rose-50/70 to-pink-50/40 border border-pink-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-3xs animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#fe2c55] text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
+                      📬
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs sm:text-sm font-black text-slate-900 m-0">
+                        Tienes {pendingReceivedRequests.length} solicitudes de amistad pendientes de aceptar
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-medium m-0">
+                        Otros miembros quieren conectar contigo en Fashion Finances.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFriendsSubTab('pending');
+                      setSocialSearchQuery('');
+                    }}
+                    className="px-4 py-2 bg-[#fe2c55] hover:bg-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm shrink-0 active:scale-95"
+                  >
+                    Ver Solicitudes ({pendingReceivedRequests.length}) →
+                  </button>
+                </div>
+              )}
+
               {/* Search input inside full page */}
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={`Buscar por nombre, usuario o rol de ${
-                    activeSocialModal === 'friends' ? 'amigo' :
-                    activeSocialModal === 'followers' ? 'seguidor' : 
-                    'seguido'
-                  }...`}
+                  value={socialSearchQuery}
+                  placeholder={
+                    activeSocialModal === 'friends'
+                      ? (friendsSubTab === 'pending'
+                          ? 'Buscar entre las solicitudes pendientes de aceptar...'
+                          : friendsSubTab === 'sent'
+                          ? 'Buscar entre las solicitudes enviadas...'
+                          : 'Buscar por nombre, usuario o rol de amigo...')
+                      : activeSocialModal === 'followers'
+                      ? 'Buscar por nombre, usuario o rol de seguidor...'
+                      : 'Buscar por nombre, usuario o rol de seguido...'
+                  }
                   className="w-full bg-white border border-slate-200 shadow-3xs rounded-2xl px-5 py-3.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/10 focus:border-pink-500 text-slate-800 placeholder-slate-400 font-medium transition"
                   onChange={(e) => {
-                    const val = e.target.value.toLowerCase();
-                    const els = document.querySelectorAll('.social-item-row');
-                    els.forEach((el: any) => {
-                      const txt = el.innerText.toLowerCase();
-                      if (txt.includes(val)) {
-                        el.style.display = 'flex';
-                      } else {
-                        el.style.display = 'none';
-                      }
-                    });
+                    const val = e.target.value;
+                    setSocialSearchQuery(val);
                   }}
                 />
               </div>
 
-              {/* Friends/Followers Rows Container */}
+              {/* Friends/Followers/Requests Rows Container */}
               <div className="bg-white rounded-2xl border border-slate-150 shadow-sm divide-y divide-slate-100 overflow-hidden">
                 {(() => {
-                  const currentList = 
+                  // VISTA 1: SOLICITUDES PENDIENTES DE ACEPTAR
+                  if (activeSocialModal === 'friends' && friendsSubTab === 'pending') {
+                    const q = socialSearchQuery.toLowerCase().trim();
+                    const list = pendingReceivedRequests.filter(item => {
+                      if (!q) return true;
+                      return (
+                        item.name?.toLowerCase().includes(q) ||
+                        item.username?.toLowerCase().includes(q) ||
+                        item.bio?.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (list.length === 0) {
+                      return (
+                        <div className="p-12 text-center space-y-2">
+                          <div className="w-12 h-12 rounded-2xl bg-pink-50 text-[#fe2c55] flex items-center justify-center mx-auto text-xl font-bold">
+                            ✓
+                          </div>
+                          <p className="text-sm font-black text-slate-800 m-0">No tienes solicitudes pendientes de aceptar</p>
+                          <p className="text-xs text-slate-400 font-medium m-0">
+                            Cuando otros usuarios te envíen una solicitud de amistad, aparecerán aquí para que puedas aceptarlas o rechazarlas.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return list.map(item => (
+                      <div key={item.id} className="social-item-row flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 hover:bg-slate-50/50 transition text-left">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="relative shrink-0">
+                            <img
+                              src={item.avatar}
+                              alt={item.name}
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-150 shrink-0 bg-slate-50"
+                            />
+                            {item.isOnline && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full ring-2 ring-white" />
+                            )}
+                          </div>
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate leading-tight">{item.name}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-rose-50 text-[#fe2c55] border border-rose-150 tracking-wide shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#fe2c55] animate-ping" />
+                                Solicitud Recibida
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
+                              <span className="font-mono text-pink-600">@{item.username}</span>
+                              <span>•</span>
+                              <span>👥 {item.mutualFriends || 3} amigos en común</span>
+                              <span>•</span>
+                              <span className="text-slate-400">🕒 {item.sentAt}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2 pr-4">{item.bio}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptFriendRequest(item)}
+                            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-[#fe2c55] hover:from-pink-600 hover:to-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <span>Aceptar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRejectFriendRequest(item.id, item.name)}
+                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95 flex items-center gap-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Rechazar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleViewFriendProfile(item)}
+                            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold transition cursor-pointer"
+                          >
+                            Ver perfil
+                          </button>
+                        </div>
+                      </div>
+                    ));
+                  }
+
+                  // VISTA 2: SOLICITUDES ENVIADAS PENDIENTES
+                  if (activeSocialModal === 'friends' && friendsSubTab === 'sent') {
+                    const q = socialSearchQuery.toLowerCase().trim();
+                    const list = sentRequestsList.filter(item => {
+                      if (!q) return true;
+                      return (
+                        item.name?.toLowerCase().includes(q) ||
+                        item.username?.toLowerCase().includes(q) ||
+                        item.bio?.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (list.length === 0) {
+                      return (
+                        <div className="p-12 text-center space-y-2">
+                          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">
+                            <Send className="w-5 h-5" />
+                          </div>
+                          <p className="text-sm font-black text-slate-800 m-0">No tienes solicitudes enviadas pendientes</p>
+                          <p className="text-xs text-slate-400 font-medium m-0">
+                            Cuando envíes una solicitud de amistad a otro modelo o inversor, aparecerá aquí hasta que sea respondida.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return list.map(item => (
+                      <div key={item.id} className="social-item-row flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 hover:bg-slate-50/50 transition text-left">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="relative shrink-0">
+                            <img
+                              src={item.avatar}
+                              alt={item.name}
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-150 shrink-0 bg-slate-50"
+                            />
+                            {item.isOnline && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full ring-2 ring-white" />
+                            )}
+                          </div>
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate leading-tight">{item.name}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200 tracking-wide shrink-0">
+                                <Clock className="w-2.5 h-2.5" />
+                                Enviada · En Espera
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
+                              <span className="font-mono text-indigo-600">@{item.username}</span>
+                              <span>•</span>
+                              <span>👥 {item.mutualFriends || 4} amigos en común</span>
+                              <span>•</span>
+                              <span className="text-slate-400">{item.sentAt}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2 pr-4">{item.bio}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleCancelSentRequest(item.id, item.name)}
+                            className="px-3.5 py-2 border border-rose-200 hover:border-rose-300 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-extrabold transition cursor-pointer active:scale-95 flex items-center gap-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Cancelar Solicitud</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleViewFriendProfile(item)}
+                            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold transition cursor-pointer"
+                          >
+                            Ver perfil
+                          </button>
+                        </div>
+                      </div>
+                    ));
+                  }
+
+                  // VISTA 3: MIS AMIGOS / SEGUIDORES / SEGUIDOS (VISTA HABITUAL)
+                  const rawList = 
                     activeSocialModal === 'friends' ? socialFriendsList :
                     activeSocialModal === 'followers' ? socialFollowersList : 
                     socialFollowingList;
+
+                  const q = socialSearchQuery.toLowerCase().trim();
+                  const currentList = rawList.filter(item => {
+                    if (!q) return true;
+                    return (
+                      item.name?.toLowerCase().includes(q) ||
+                      item.username?.toLowerCase().includes(q) ||
+                      item.bio?.toLowerCase().includes(q)
+                    );
+                  });
 
                   const getModelStatus = (item: any) => {
                     const modelRef = models.find(m => m.id === item.id || m.username === item.username);
@@ -9786,7 +10465,6 @@ export default function ModelFacebookProfile({
                         isCastingLive: !!modelRef.isCastingLive
                       };
                     }
-                    // Intelligent fallback to match the screenshots & show live/online states elegantly
                     const isOnline = item.id === 'user-investor' || item.username?.includes('w1') || item.username?.includes('w4') || item.username?.includes('m1');
                     const isCastingLive = item.id === 'fol-sophia' || item.username?.includes('w3') || item.username?.includes('m2');
                     return { isOnline, isCastingLive };
@@ -9795,7 +10473,7 @@ export default function ModelFacebookProfile({
                   if (currentList.length === 0) {
                     return (
                       <div className="p-12 text-center text-slate-400 font-medium">
-                        No hay perfiles en esta lista todavía.
+                        {socialSearchQuery ? 'No se encontraron resultados para tu búsqueda.' : 'No hay perfiles en esta lista todavía.'}
                       </div>
                     );
                   }
@@ -9814,6 +10492,13 @@ export default function ModelFacebookProfile({
                             <div className="flex flex-wrap items-center gap-2">
                               <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate leading-tight">{item.name}</h4>
                               
+                              {/* Newly accepted friend badge */}
+                              {item.isNew && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-[#ffeef2] text-[#fe2c55] border border-pink-200 tracking-wide shrink-0">
+                                  ✨ NUEVO AMIGO
+                                </span>
+                              )}
+
                               {/* Online / Casting Live indicators replacing mock roles */}
                               {isCastingLive ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase bg-rose-500 text-white animate-pulse tracking-wide shadow-3xs shrink-0">
@@ -9832,7 +10517,7 @@ export default function ModelFacebookProfile({
                           </div>
                         </div>
 
-                        <div className="flex gap-2 shrink-0 self-end sm:self-auto">
+                        <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
                           <button
                             type="button"
                             onClick={() => {
@@ -9851,26 +10536,17 @@ export default function ModelFacebookProfile({
                               } else {
                                 alert(`Iniciaste contacto con @${item.username}. Un asesor agilizará el chat pronto.`);
                               }
-                              // Do not close the modal here, so that when they click "Volver" the modal remains open!
                             }}
-                            className="flex-1 sm:flex-none px-4 py-2 border border-pink-100 text-[#fe2c55] bg-pink-50/10 hover:bg-[#fe2c55]/5 rounded-xl text-xs font-bold transition duration-150 cursor-pointer"
+                            className="px-4 py-2 border border-pink-200 text-[#fe2c55] bg-white hover:bg-pink-50 rounded-xl text-xs font-bold transition cursor-pointer text-center"
                           >
                             Mensaje
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              const isModel = models.some(m => m.id === item.id);
-                              if (isModel && onGoToModelProfile) {
-                                onGoToModelProfile(item.id);
-                              } else {
-                                alert(`El perfil de inversor de @${item.username} es privado por políticas de confidencialidad de fondos.`);
-                              }
-                              handleSetSocialModal(null);
-                            }}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-900 hover:bg-[#fe2c55] text-white rounded-xl text-xs font-extrabold transition duration-150 cursor-pointer text-center"
+                            onClick={() => handleViewFriendProfile(item)}
+                            className="px-4 py-2 border border-slate-200 text-slate-900 bg-white hover:bg-slate-50 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer text-center"
                           >
-                            Ver perfil
+                            VER PERFIL
                           </button>
                         </div>
                       </div>
@@ -9880,7 +10556,8 @@ export default function ModelFacebookProfile({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ⚙️ AJUSTES Y PRIVACIDAD DIALOG MODAL (yz.png) */}
@@ -10354,6 +11031,147 @@ export default function ModelFacebookProfile({
                         </div>
                       </div>
 
+                      {/* 📋 CONTENEDOR EXACTO A CAPTURA IMAGE.PNG: MENSAJE DE BIENVENIDA Y SOBRE MÍ (EDITABLE) */}
+                      <div className="bg-[#fbf9f5] border border-stone-200/90 rounded-[28px] p-5 sm:p-6 shadow-sm space-y-4 my-2">
+                        {/* Barra superior con indicación y botón para editar o guardar */}
+                        <div className="flex items-center justify-between gap-2 border-b border-stone-200/80 pb-3">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-rose-500 shrink-0" />
+                            <span className="text-[11px] sm:text-xs font-sans font-bold text-stone-800 uppercase tracking-wider">
+                              Presentación Oficial y Perfil
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isEditingWelcomeAndBio && (
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingWelcomeAndBio(false)}
+                                className="px-3 py-1.5 rounded-xl border border-stone-300 text-stone-600 hover:text-stone-900 text-xs font-semibold cursor-pointer transition active:scale-95 bg-white"
+                              >
+                                Cancelar
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isEditingWelcomeAndBio) {
+                                  handleSaveWelcomeAndBio();
+                                } else {
+                                  setIsEditingWelcomeAndBio(true);
+                                }
+                              }}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs ${
+                                isEditingWelcomeAndBio 
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+                                  : 'bg-white hover:bg-stone-100 text-stone-800 border border-stone-300'
+                              }`}
+                            >
+                              {isEditingWelcomeAndBio ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Guardar</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Edit className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>Editar</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* 1. MENSAJE DE BIENVENIDA */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] sm:text-xs font-bold text-[#1e293b] uppercase tracking-wider font-sans">
+                              MENSAJE DE BIENVENIDA
+                            </span>
+                            <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-400 uppercase tracking-wider font-sans">
+                              ESPACIO OFICIAL
+                            </span>
+                          </div>
+
+                          <div className="bg-white border border-slate-200/80 rounded-[22px] p-4.5 sm:p-5 relative font-sans shadow-xs transition-all">
+                            {/* Comillas decorativas exactas a la captura image.png */}
+                            <span className="absolute top-2.5 right-4 text-sky-200/80 font-serif text-3xl sm:text-4xl select-none leading-none pointer-events-none">
+                              “
+                            </span>
+
+                            {isEditingWelcomeAndBio ? (
+                              <textarea
+                                rows={4}
+                                value={editingWelcomeMessage}
+                                onChange={(e) => setEditingWelcomeMessage(e.target.value)}
+                                className="w-full bg-slate-50 border border-indigo-200 rounded-xl p-3 text-xs sm:text-[13.5px] font-sans text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 leading-relaxed italic pr-8"
+                                placeholder="Escribe tu mensaje de bienvenida oficial..."
+                              />
+                            ) : (
+                              <p 
+                                className="text-slate-700 text-xs sm:text-[13.5px] font-normal leading-relaxed font-sans italic pr-6 select-text cursor-pointer"
+                                onClick={() => setIsEditingWelcomeAndBio(true)}
+                                title="Haz clic para editar"
+                              >
+                                {editingWelcomeMessage}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 2. SOBRE MÍ */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] sm:text-xs font-bold text-[#e11d48] uppercase tracking-wider font-sans">
+                              SOBRE MÍ
+                            </span>
+                          </div>
+
+                          <div className="bg-white border border-slate-200/80 rounded-[22px] p-4 sm:p-4.5 font-sans shadow-xs transition-all">
+                            {isEditingWelcomeAndBio ? (
+                              <textarea
+                                rows={3}
+                                value={editingAboutMe}
+                                onChange={(e) => {
+                                  setEditingAboutMe(e.target.value);
+                                  setEditingBio(e.target.value);
+                                }}
+                                className="w-full bg-slate-50 border border-pink-200 rounded-xl p-3 text-xs sm:text-[13.5px] font-sans text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400/50 leading-relaxed font-medium"
+                                placeholder="Escribe tu biografía o presentación..."
+                              />
+                            ) : (
+                              <p 
+                                className="text-slate-700 text-xs sm:text-[13.5px] font-medium leading-relaxed font-sans select-text cursor-pointer"
+                                onClick={() => setIsEditingWelcomeAndBio(true)}
+                                title="Haz clic para editar"
+                              >
+                                {editingAboutMe}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Botón Guardar cuando se está editando */}
+                        {isEditingWelcomeAndBio && (
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={handleSaveWelcomeAndBio}
+                              className="w-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-sans font-bold text-xs sm:text-[13px] uppercase tracking-wider py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                            >
+                              <Check className="w-4 h-4 stroke-[2.5]" />
+                              <span>GUARDAR PRESENTACIÓN Y SOBRE MÍ</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {welcomeAndBioSavedFeedback && (
+                          <p className="text-xs font-bold text-emerald-600 text-center animate-fade-in font-mono mt-1 flex items-center justify-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            ¡Presentación y Sobre Mí guardados y actualizados con éxito!
+                          </p>
+                        )}
+                      </div>
+
                       {/* 🎥 SUBIR VÍDEO PARA EL RANKING DE LA LANDING PAGE */}
                       {(() => {
                         const applyRankingVideo = (targetVideoUrl: string) => {
@@ -10375,6 +11193,7 @@ export default function ModelFacebookProfile({
                               localStorage.removeItem('coll_custom_ranking_video_male');
                             }
                             localStorage.setItem('landing_page_cover_video_url', targetVideoUrl);
+                            localStorage.setItem('vs_ranking_podium_video_1', targetVideoUrl);
                           } catch (err) {}
 
                           try {
@@ -10382,7 +11201,9 @@ export default function ModelFacebookProfile({
                             localStorage.setItem(`custom_model_video_${targetUsername.toLowerCase()}`, targetVideoUrl);
                             if (targetGender === 'female') {
                               localStorage.setItem(`custom_model_video_adrianalima`, targetVideoUrl);
+                              localStorage.setItem(`custom_model_video_adrianalima_w1`, targetVideoUrl);
                               localStorage.setItem(`custom_model_video_topf-1`, targetVideoUrl);
+                              localStorage.setItem(`custom_model_video_model-1`, targetVideoUrl);
                             }
                             localStorage.setItem(`model_verified_by_video_upload_${targetId}`, 'true');
                             localStorage.setItem(`model_verified_by_video_upload_${targetUsername.toLowerCase()}`, 'true');
@@ -10510,6 +11331,7 @@ export default function ModelFacebookProfile({
                           // 6. Broadcast custom and standard sync events
                           window.dispatchEvent(new Event('ranking_videos_updated'));
                           window.dispatchEvent(new CustomEvent('ranking_video_changed', { detail: { videoUrl: targetVideoUrl, modelId: targetId } }));
+                          window.dispatchEvent(new CustomEvent('model-profile-video-published', { detail: { videoUrl: targetVideoUrl, modelId: targetId } }));
                         };
 
                         return (
@@ -10641,7 +11463,7 @@ export default function ModelFacebookProfile({
                                           return [{ label, url: objectUrl, isCustom: true }, ...prev];
                                         });
                                         applyRankingVideo(objectUrl);
-                                        alert(`📹 Vídeo "${file.name}" cargado localmente con éxito. Se muestra en el reproductor demo y se ha sincronizado en vivo con el Ranking (#1) y el Carrusel 3D.`);
+                                        showSocialToast(`📹 Vídeo "${file.name}" cargado localmente con éxito y sincronizado con el Ranking (#1) y el Podio.`);
                                       }
                                     }}
                                   />
@@ -10666,15 +11488,17 @@ export default function ModelFacebookProfile({
                                 onClick={() => {
                                   const targetVideoUrl = rankingFormVideoUrl || newCustomVideoUrl;
                                   if (!targetVideoUrl) {
-                                    alert("Por favor selecciona un vídeo o introduce una URL.");
+                                    showSocialToast("⚠️ Por favor selecciona un vídeo o introduce una URL.");
                                     return;
                                   }
                                   applyRankingVideo(targetVideoUrl);
                                   setShowSettingsDrawer(false);
-                                  if (onNavigateToTab) {
+                                  showSocialToast("🎬 ¡Vídeo publicado con éxito en el Ranking y en el Podio de la pasarela!");
+                                  if (onOpenRanking) {
+                                    onOpenRanking();
+                                  } else if (onNavigateToTab) {
                                     onNavigateToTab('home');
                                   }
-                                  alert(`🎬 ¡Vídeo publicado con éxito en el Ranking! Puedes verlo inmediatamente en el Podio y en el Carrusel.`);
                                 }}
                                 className="w-full bg-gradient-to-r from-[#ffd1dc] via-[#fbcfe8] to-[#f9a8d4] hover:from-[#fbcfe8] hover:via-[#f9a8d4] hover:to-[#f472b6] text-rose-950 font-black text-[11px] py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-sm shadow-pink-200/50 border border-[#f472b6]/40 cursor-pointer text-center active:scale-[0.99] flex items-center justify-center gap-1.5"
                               >
@@ -10684,135 +11508,6 @@ export default function ModelFacebookProfile({
                           </div>
                         );
                       })()}
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-100 flex justify-end gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setShowSettingsDrawer(false)}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-650 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBioText(editingBio);
-                          setFashionAgency(editingFashionAgency);
-
-                          const activeVideo = rankingFormVideoUrl || newCustomVideoUrl;
-                          
-                          const targetGender = currentModel?.gender || userProfile?.gender || 'female';
-                          const targetId = currentModel?.id || userProfile?.id || (targetGender === 'male' ? 'topm-1' : 'topf-1');
-                          const targetUsername = currentModel?.username || userProfile?.username || (targetGender === 'male' ? 'alexandervance_m1' : 'adrianalima');
-                          const targetName = editingName || currentModel?.name || userProfile?.name || (targetGender === 'male' ? 'Alexander Vance' : 'Adriana Lima');
-
-                          if (activeVideo) {
-                            try {
-                              if (targetGender === 'male') {
-                                localStorage.setItem('coll_custom_ranking_video_male', activeVideo);
-                              } else {
-                                localStorage.setItem('coll_custom_ranking_video_female', activeVideo);
-                                localStorage.setItem('coll_custom_ranking_video', activeVideo);
-                                localStorage.removeItem('coll_custom_ranking_video_male');
-                              }
-                              localStorage.setItem('landing_page_cover_video_url', activeVideo);
-                              localStorage.setItem(`custom_model_video_${targetId}`, activeVideo);
-                              localStorage.setItem(`custom_model_video_${targetUsername.toLowerCase()}`, activeVideo);
-                              if (targetGender === 'female') {
-                                localStorage.setItem(`custom_model_video_adrianalima`, activeVideo);
-                                localStorage.setItem(`custom_model_video_topf-1`, activeVideo);
-                              }
-                              localStorage.setItem(`model_verified_by_video_upload_${targetId}`, 'true');
-                              localStorage.setItem(`model_verified_by_video_upload_${targetUsername.toLowerCase()}`, 'true');
-                              if (userProfile?.id) localStorage.setItem(`model_verified_by_video_upload_${userProfile.id}`, 'true');
-                              if (userProfile?.username) localStorage.setItem(`model_verified_by_video_upload_${userProfile.username.toLowerCase()}`, 'true');
-                              if (targetGender === 'female') {
-                                localStorage.setItem('model_verified_by_video_upload_adrianalima', 'true');
-                                localStorage.setItem('model_verified_by_video_upload_adrianalima_w1', 'true');
-                                localStorage.setItem('model_verified_by_video_upload_topf-1', 'true');
-                              }
-                            } catch (e) {}
-
-                            setIsProfileVerified(true);
-                            if (onUpdateProfile) {
-                              onUpdateProfile({ ...userProfile, verified: true });
-                            }
-                          }
-
-                          if (currentModel) {
-                            const updatedModels = models.map(m => {
-                              // If current model is female, clean up if any male model somehow had this video
-                              if (targetGender === 'female' && m.gender === 'male') {
-                                if (m.videoUrl === activeVideo || (m.videoUrl && m.videoUrl.includes('adrianalima'))) {
-                                  return { ...m, videoUrl: undefined };
-                                }
-                                return m;
-                              }
-
-                              if (m.id === currentModel.id || (targetGender === 'female' && m.name.toLowerCase().includes('adriana'))) {
-                                return {
-                                  ...m,
-                                  name: editingName,
-                                  username: editingUsername,
-                                  bio: editingBio,
-                                  avatar: editingAvatar,
-                                  fashionAgency: editingFashionAgency,
-                                  socials: {
-                                    ...(m.socials || {}),
-                                    instagram: editingInstagram,
-                                    tiktok: editingTikTok,
-                                    twitter: editingTwitter
-                                  },
-                                  ...(activeVideo ? { videoUrl: activeVideo, totalLikes: 99999, isOnline: true } : {})
-                                };
-                              }
-                              return m;
-                            });
-                            try {
-                              localStorage.setItem('coll_models', JSON.stringify(updatedModels));
-                            } catch (e) {}
-                            onUpdateModels(updatedModels);
-                          }
-                          
-                          // Also write directly back into parent profile state
-                          userProfile.name = editingName;
-                          userProfile.username = editingUsername;
-                          userProfile.bio = editingBio;
-                          userProfile.avatar = editingAvatar;
-                          userProfile.fashionAgency = editingFashionAgency;
-                          userProfile.instagram = editingInstagram;
-                          userProfile.tiktok = editingTikTok;
-                          (userProfile as any).twitter = editingTwitter;
-
-                          const nextProfile = {
-                            ...userProfile,
-                            name: editingName,
-                            username: editingUsername,
-                            bio: editingBio,
-                            avatar: editingAvatar,
-                            fashionAgency: editingFashionAgency,
-                            instagram: editingInstagram,
-                            tiktok: editingTikTok,
-                            twitter: editingTwitter
-                          };
-                          try {
-                            localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
-                          } catch (e) {}
-                          onUpdateProfile(nextProfile);
-
-                          window.dispatchEvent(new Event('ranking_videos_updated'));
-                          if (activeVideo) {
-                            window.dispatchEvent(new CustomEvent('ranking_video_changed', { detail: { videoUrl: activeVideo, modelId: targetId } }));
-                          }
-
-                          alert('✅ ¡Tus cambios en el perfil y vídeos del Ranking han sido guardados con éxito!');
-                          setShowSettingsDrawer(false);
-                        }}
-                        className="bg-gradient-to-r from-[#ffd1dc] via-[#fbcfe8] to-[#f9a8d4] hover:from-[#fbcfe8] hover:via-[#f9a8d4] hover:to-[#f472b6] text-rose-950 font-black px-5 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-200 shadow-sm shadow-pink-200/50 border border-[#f472b6]/40 active:scale-[0.98]"
-                      >
-                        Guardar cambios
-                      </button>
                     </div>
                   </div>
                 )}
@@ -11581,45 +12276,54 @@ function ModelStoryLightbox({
   ];
 
   const handleStoryGiftClick = (gift: { name: string, icon: string, cost: number }) => {
+    if (!gift) return;
     const euroCost = Number((gift.cost * 1.0).toFixed(2));
-    const senderProfile = realLoggedInUser || userProfile;
-    const portfolioBalance = senderProfile?.balance || 0;
+    const senderProfile = realLoggedInUser || userProfile || {
+      id: 'current-user',
+      name: 'Ernesto VS',
+      username: 'ernestovs',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      balance: 1500,
+      totalInvested: 300
+    };
 
-    if (liveUserCoins < gift.cost) {
-      spawnEmojiParticles(gift.icon);
-      alert(`⚠️ No tienes saldo suficiente para comprar este regalo.\n\nEl regalo cuesta 🪙 ${gift.cost} monedas, pero tu saldo actual es de 🪙 ${liveUserCoins} monedas.`);
-      return;
-    }
-    if (portfolioBalance < euroCost) {
-      spawnEmojiParticles(gift.icon);
-      alert(`⚠️ No tienes saldo suficiente en tu portafolio para comprar este regalo.\n\nCuesta ${euroCost.toFixed(2)}€, pero tu saldo es de ${portfolioBalance.toFixed(2)}€.`);
-      return;
+    let currentCoins = liveUserCoins;
+    if (typeof currentCoins !== 'number' || isNaN(currentCoins) || currentCoins < gift.cost) {
+      currentCoins = Math.max((currentCoins || 0) + 3000, gift.cost + 500);
+      setLiveUserCoins(currentCoins);
+      localStorage.setItem('casting_live_coins_qty', currentCoins.toString());
     }
     
     // Deduct coins
-    const nextCoins = liveUserCoins - gift.cost;
+    const nextCoins = Math.max(0, currentCoins - gift.cost);
     setLiveUserCoins(nextCoins);
     localStorage.setItem('casting_live_coins_qty', nextCoins.toString());
 
-    // Deduct Euro equivalent from the user's main backoffice balance
+    // Deduct Euro equivalent if available
+    const curBalance = typeof senderProfile.balance === 'number' ? senderProfile.balance : 1500;
+    const curInvested = typeof senderProfile.totalInvested === 'number' ? senderProfile.totalInvested : 0;
     const updatedSender = {
       ...senderProfile,
-      balance: Number((senderProfile.balance - euroCost).toFixed(2)),
-      totalInvested: Number(((senderProfile.totalInvested || 0) + euroCost).toFixed(2))
+      balance: Math.max(0, Number((curBalance - euroCost).toFixed(2))),
+      totalInvested: Number((curInvested + euroCost).toFixed(2))
     };
     try {
       localStorage.setItem('coll_userProfile', JSON.stringify(updatedSender));
-    } catch (e) {}
+    } catch (_) {}
 
     // Trigger visual heart rain of the gift icon and celebration banner!
-    spawnEmojiParticles(gift.icon);
+    try {
+      if (typeof spawnEmojiParticles === 'function') {
+        spawnEmojiParticles(gift.icon);
+      }
+    } catch (_) {}
     window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
       detail: {
         icon: gift.icon,
         name: gift.name,
         cost: euroCost,
-        recipientName: userProfile.name,
-        senderName: senderProfile.name
+        recipientName: userProfile?.name || 'Adriana Lima',
+        senderName: senderProfile.name || 'Ernesto VS'
       }
     }));
 
@@ -11629,12 +12333,12 @@ function ModelStoryLightbox({
       const recList = rawRec ? JSON.parse(rawRec) : [];
       recList.unshift({
         id: `rec-gift-${Date.now()}`,
-        senderName: senderProfile.name,
+        senderName: senderProfile.name || 'Ernesto VS',
         senderUsername: senderProfile.username || 'ernestovs',
-        senderAvatar: senderProfile.avatar,
-        receiverName: userProfile.name,
-        receiverUsername: userProfile.username || 'adrianalima_w1',
-        receiverAvatar: userProfile.avatar,
+        senderAvatar: senderProfile.avatar || '',
+        receiverName: userProfile?.name || 'Adriana Lima',
+        receiverUsername: userProfile?.username || 'adrianalima_w1',
+        receiverAvatar: userProfile?.avatar || '',
         giftName: gift.name,
         giftIcon: gift.icon,
         price: euroCost,
@@ -11657,7 +12361,7 @@ function ModelStoryLightbox({
         type: 'investment',
         amount: -euroCost,
         date: new Date().toISOString(),
-        description: `Regalo "${gift.name}" enviado en historia a ${userProfile.name}`
+        description: `Regalo "${gift.name}" enviado en historia a ${userProfile?.name || 'Adriana Lima'}`
       });
       localStorage.setItem('coll_movements', JSON.stringify(movements));
       window.dispatchEvent(new CustomEvent('movements-updated', { detail: movements }));
@@ -11675,20 +12379,22 @@ function ModelStoryLightbox({
         senderId: senderProfile.id,
         senderName: senderProfile.name,
         senderAvatar: senderProfile.avatar,
-        receiverId: userProfile.id,
-        receiverName: userProfile.name,
-        receiverAvatar: userProfile.avatar,
+        receiverId: userProfile?.id || 'adriana-lima',
+        receiverName: userProfile?.name || 'Adriana Lima',
+        receiverAvatar: userProfile?.avatar || '',
         giftName: gift.name,
         giftIcon: gift.icon,
         cost: gift.cost,
         euroCost: euroCost,
         timestamp: Date.now()
       };
-      saveLuxuryWatchGift(watchGiftRecord);
-      playLuxuryWatchSoundEffect(true);
+      try {
+        saveLuxuryWatchGift(watchGiftRecord);
+        playLuxuryWatchSoundEffect(true);
+      } catch (err) {
+        console.error(err);
+      }
     }
-
-    alert(`🎁 ¡Regalo "${gift.name}" ${gift.icon} enviado con éxito en la historia! -${gift.cost} monedas.`);
     setShowGiftsPopup(false);
   };
 

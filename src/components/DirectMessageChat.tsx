@@ -251,6 +251,8 @@ export default function DirectMessageChat({
   });
   const [inputText, setInputText] = useState('');
   const [selectedAttachmentImage, setSelectedAttachmentImage] = useState<string | null>(sharedDraftImage);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [chatFeedback, setChatFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (sharedDraftImage) {
@@ -494,17 +496,143 @@ export default function DirectMessageChat({
     setCustomName('');
     setCustomUsername('');
     setShowCustomContactModal(false);
-    alert(`🎉 Chat privado iniciado con @${cleanUsername}`);
+    setChatFeedback(`🎉 Chat privado iniciado con @${cleanUsername}`);
+    setTimeout(() => setChatFeedback(null), 3500);
   };
 
-  const attachImage = () => {
-    const samples = [
-      'https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?auto=format&fit=crop&q=80&w=400',
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400'
-    ];
-    const picked = samples[Math.floor(Math.random() * samples.length)];
-    handleSend({ preventDefault: () => {} } as any, picked);
+  // Open native desktop file dialog to pick any file or picture from user's computer
+  const handleOpenDesktopFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleDesktopFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setSelectedAttachmentImage(result);
+          setChatFeedback(`📷 Imagen "${file.name}" cargada desde tu escritorio lista para enviar.`);
+          setTimeout(() => setChatFeedback(null), 3000);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleSendGiftDirect = (gift: { name: string; icon: string; cost: number }) => {
+    if (isBlocked) {
+      setChatFeedback('⚠️ No puedes enviar regalos a un usuario bloqueado.');
+      setTimeout(() => setChatFeedback(null), 3000);
+      return;
+    }
+
+    if (liveUserCoins < gift.cost) {
+      setChatFeedback(`⚠️ No tienes suficientes monedas para enviar ${gift.name} (necesitas 🪙 ${gift.cost}, tienes 🪙 ${liveUserCoins}).`);
+      setTimeout(() => setChatFeedback(null), 3500);
+      return;
+    }
+
+    // Deduct from balance
+    setLiveUserCoins(prev => prev - gift.cost);
+
+    if (onGiftTransaction) {
+      onGiftTransaction(gift.cost, activeContact?.name || '', activeContact?.id || activeContact?.username || '');
+    }
+
+    // Trigger falling emojis rain effect!
+    const rain: Array<{ id: number; char: string; x: number; delay: number; duration: number; size: number }> = [];
+    for (let i = 0; i < 40; i++) {
+      rain.push({
+        id: Date.now() + i + Math.random(),
+        char: gift.icon,
+        x: Math.random() * 100,
+        delay: Math.random() * 2,
+        duration: 1.5 + Math.random() * 2,
+        size: 18 + Math.random() * 30
+      });
+    }
+    setFallingEmojis(rain);
+    
+    setTimeout(() => {
+      setFallingEmojis([]);
+    }, 4500);
+    
+    // Play audio synth chime
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+      
+      osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+      osc2.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+      
+      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
+      
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc1.start();
+      osc2.start();
+      osc1.stop(audioCtx.currentTime + 0.55);
+      osc2.stop(audioCtx.currentTime + 0.55);
+    } catch (_) {}
+
+    // Send message
+    const newMsgStr = `🎁 ¡He enviado un Regalo Extra: ${gift.icon} ${gift.name}! (🪙 ${gift.cost} monedas)`;
+    const newMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      senderId: currentUserId,
+      receiverId: activeContactId,
+      text: newMsgStr,
+      timestamp: new Date().toISOString()
+    };
+    onSendMessage(newMsg);
+
+    if (gift.name.toLowerCase().includes('reloj') || gift.icon === '⌚' || gift.icon === '⏰') {
+      playLuxuryWatchSoundEffect(true);
+      saveLuxuryWatchGift({
+        id: `watch-${Date.now()}`,
+        senderId: currentUserId,
+        senderName: 'Tú (Inversor)',
+        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+        receiverId: activeContactId,
+        receiverName: activeContact?.name || 'Modelo',
+        receiverAvatar: activeContact?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        giftName: gift.name,
+        giftIcon: gift.icon,
+        cost: gift.cost,
+        euroCost: gift.cost,
+        message: 'Regalado desde el chat directo',
+        timestamp: Date.now()
+      });
+    }
+
+    // Sweet simulated reaction
+    setTimeout(() => {
+      let replyStr = `🎁 ¡Ooooohhh! Un detalle precioso, mil gracias por el regalo de ${gift.icon} ${gift.name}. ¡Me encanta hablar contigo! 🥰`;
+      if (gift.icon === '💋' || gift.name.toLowerCase().includes('beso')) {
+        replyStr = `💋 ¡Muaaaak! ¡Mil besos recibidos con todo el cariño! Eres un encanto, gracias por alegrarme el día con estos besos. 🥰✨`;
+      } else if (activeContact?.role === 'model') {
+        replyStr = `💖 ¡Muchísimas gracias por enviarme ${gift.icon} ${gift.name} de los Regalos Extra! Tu patrocinio me ayuda muchísimo a subir en el Ranking Semanal. ¡Eres un sol! 🥰✨`;
+      }
+      const replyMsg: ChatMessage = {
+        id: `msg-reply-${Date.now()}`,
+        senderId: activeContactId,
+        receiverId: currentUserId,
+        text: replyStr,
+        timestamp: new Date().toISOString()
+      };
+      onSendMessage(replyMsg);
+    }, 1800);
   };
 
   // Filter contacts by selection & text search
@@ -1007,6 +1135,13 @@ export default function DirectMessageChat({
                   {/* SEND INPUT CONTAINER - HOLDS PREMIUM EMOJI-LIKE GIFTS SELECTOR ON HOVER */}
                   <form onSubmit={(e) => handleSend(e)} className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex gap-2 items-center shadow-3xs relative overflow-visible w-full min-w-0">
                     
+                    {chatFeedback && (
+                      <div className="absolute bottom-full left-3 right-3 mb-2 bg-slate-900/95 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl shadow-lg z-50 backdrop-blur-md flex items-center justify-between animate-fade-in border border-white/10">
+                        <span>{chatFeedback}</span>
+                        <button type="button" onClick={() => setChatFeedback(null)} className="ml-2 text-slate-300 hover:text-white cursor-pointer">✕</button>
+                      </div>
+                    )}
+
                     {selectedAttachmentImage && (
                       <div className="absolute bottom-full left-0 right-0 bg-white/95 backdrop-blur-xs border-t border-b border-pink-100 p-2.5 px-4 flex items-center justify-between gap-3 animate-fade-in z-40 shadow-md">
                         <div className="flex items-center gap-3">
@@ -1038,31 +1173,43 @@ export default function DirectMessageChat({
                       </div>
                     )}
 
-                    {/* 📷 PORTRAIT PHOTO ATTACHMENT BUTTON (MATCHING CAPTURE IMAGE.PNG) */}
+                    {/* 📷 CONTENEDOR IZQUIERDO: BUSCADOR DE ARCHIVOS DEL ESCRITORIO CON ICONO AZUL */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleDesktopFileSelect}
+                      accept="image/*,video/*,.png,.jpg,.jpeg,.webp,.gif"
+                      className="hidden"
+                      id="chat-desktop-file-input"
+                    />
                     <button
                       type="button"
-                      onClick={attachImage}
-                      className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 shadow-xs hover:scale-105 active:scale-95 duration-150 transition cursor-pointer"
-                      title="Adjuntar Imagen para el destinatario"
+                      onClick={handleOpenDesktopFilePicker}
+                      className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-blue-200/90 bg-blue-50/60 hover:bg-blue-100/80 text-blue-600 shadow-xs hover:scale-105 active:scale-95 duration-150 transition cursor-pointer"
+                      title="Elegir archivo o foto de mi escritorio"
                     >
-                      <Image className="w-4 h-4 text-zinc-500" />
+                      <Image className="w-5 h-5 text-blue-500 hover:text-blue-600 transition-colors" />
                     </button>
 
-                    {/* 🎁 DETALLES / EXTRA GIFTS HOVER POPUP SELECTOR (ELEGANT EMOJI PICKER STYLE) */}
+                    {/* 💋 CONTENEDOR DERECHO: ICONO DE BESOS Y MENÚ DE REGALOS */}
                     <div 
                       className="relative z-50 shrink-0"
                       onMouseEnter={() => setShowGiftsHoverMenu(true)}
                       onMouseLeave={() => setShowGiftsHoverMenu(false)}
                     >
-                      {/* FIRST GIFT REPRESENTING THE SELECTABLE EMOJI TRIGGER */}
+                      {/* BOTÓN CON ICONO DE BESOS */}
                       <button
                         type="button"
+                        onClick={() => {
+                          const kissGift = EXTRA_GIFTS.find(g => g.icon === '💋' || g.name.toLowerCase().includes('beso')) || { name: 'Besos', icon: '💋', cost: 15 };
+                          handleSendGiftDirect(kissGift);
+                        }}
                         className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-amber-300 bg-gradient-to-tr from-amber-50 to-orange-100/90 hover:from-amber-100 hover:to-orange-200/90 shadow-xs transition-all duration-150 cursor-pointer text-lg relative group"
-                        title="Enviar Regalo Extra (Pasa el ratón para ver más)"
+                        title="Enviar Besos 💋 (Pasa el ratón para ver más regalos)"
                       >
-                        <span className="animate-pulse">{EXTRA_GIFTS[0].icon}</span>
+                        <span className="animate-pulse select-none text-xl">💋</span>
                         <span className="absolute -bottom-1 -right-1 bg-amber-500 text-white font-mono text-[7px] px-1 rounded-full font-black scale-90">
-                          {EXTRA_GIFTS[0].cost}
+                          588
                         </span>
                       </button>
 
@@ -1070,8 +1217,9 @@ export default function DirectMessageChat({
                       {showGiftsHoverMenu && (
                         <div className="absolute bottom-12 -left-12 sm:-left-36 w-[360px] sm:w-[380px] bg-[#FFFDFC]/98 backdrop-blur-md border border-amber-200 rounded-2xl shadow-2xl p-4 z-[9999] animate-bounce-in text-left">
                           <div className="flex items-center justify-between pb-2 border-b border-rose-50 mb-3">
-                            <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider">
-                              🎁 Elige un Regalo (Sponsor)
+                            <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5">
+                              <span>💋</span>
+                              <span>Regalos & Besos (Sponsor)</span>
                             </span>
                             <div className="bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg text-amber-700 text-[10px] font-black font-mono tracking-wide">
                               Saldo: 🪙 {liveUserCoins}
@@ -1087,115 +1235,7 @@ export default function DirectMessageChat({
                                 key={idx}
                                 type="button"
                                 onClick={() => {
-                                  if (isBlocked) {
-                                    alert('No puedes enviar regalos a un usuario bloqueado.');
-                                    return;
-                                  }
-
-                                  if (liveUserCoins < gift.cost) {
-                                    alert(`⚠️ No tienes suficientes monedas para enviar ${gift.name} (necesitas 🪙 ${gift.cost}, tienes 🪙 ${liveUserCoins}).`);
-                                    return;
-                                  }
-
-                                  // Deduct from balance
-                                  setLiveUserCoins(prev => prev - gift.cost);
-
-                                  if (onGiftTransaction) {
-                                    onGiftTransaction(gift.cost, activeContact?.name || '', activeContact?.id || activeContact?.username || '');
-                                  }
-
-                                  // Trigger falling emojis rain effect!
-                                  const rain: Array<{ id: number; char: string; x: number; delay: number; duration: number; size: number }> = [];
-                                  for (let i = 0; i < 40; i++) {
-                                    rain.push({
-                                      id: Date.now() + i + Math.random(),
-                                      char: gift.icon,
-                                      x: Math.random() * 100, // percentage of container width
-                                      delay: Math.random() * 2, // staggered delay in seconds
-                                      duration: 1.5 + Math.random() * 2, // animation duration in seconds
-                                      size: 16 + Math.random() * 32 // size in pixels
-                                    });
-                                  }
-                                  setFallingEmojis(rain);
-                                  
-                                  // Clean up rain after animation finishes
-                                  setTimeout(() => {
-                                    setFallingEmojis([]);
-                                  }, 4500);
-                                  
-                                  // Play audio synth chime
-                                  try {
-                                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                                    const osc1 = audioCtx.createOscillator();
-                                    const osc2 = audioCtx.createOscillator();
-                                    const gain = audioCtx.createGain();
-                                    
-                                    osc1.type = 'sine';
-                                    osc2.type = 'triangle';
-                                    
-                                    osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
-                                    osc2.frequency.setValueAtTime(987.77, audioCtx.currentTime); // B5
-                                    
-                                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
-                                    
-                                    osc1.connect(gain);
-                                    osc2.connect(gain);
-                                    gain.connect(audioCtx.destination);
-                                    
-                                    osc1.start();
-                                    osc2.start();
-                                    osc1.stop(audioCtx.currentTime + 0.55);
-                                    osc2.stop(audioCtx.currentTime + 0.55);
-                                  } catch (_) {}
-
-                                  // Send message
-                                  const newMsgStr = `🎁 ¡He enviado un Regalo Extra del Canal: ${gift.icon} ${gift.name}! (🪙 ${gift.cost} monedas)`;
-                                  const newMsg: ChatMessage = {
-                                    id: `msg-${Date.now()}`,
-                                    senderId: currentUserId,
-                                    receiverId: activeContactId,
-                                    text: newMsgStr,
-                                    timestamp: new Date().toISOString()
-                                  };
-                                  onSendMessage(newMsg);
-
-                                  if (gift.name.toLowerCase().includes('reloj') || gift.icon === '⌚' || gift.icon === '⏰') {
-                                    playLuxuryWatchSoundEffect(true);
-                                    saveLuxuryWatchGift({
-                                      id: `watch-${Date.now()}`,
-                                      senderId: currentUserId,
-                                      senderName: 'Tú (Inversor)',
-                                      senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-                                      receiverId: activeContactId,
-                                      receiverName: activeContact?.name || 'Modelo',
-                                      receiverAvatar: activeContact?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-                                      giftName: gift.name,
-                                      giftIcon: gift.icon,
-                                      cost: gift.cost,
-                                      euroCost: gift.cost,
-                                      message: 'Regalado desde el chat directo',
-                                      timestamp: Date.now()
-                                    });
-                                  }
-
-                                  // Sweet simulated reaction
-                                  setTimeout(() => {
-                                    let replyStr = `🎁 ¡Ooooohhh! Un detalle precioso, mil gracias por el regalo de ${gift.icon} ${gift.name}. ¡Me encanta hablar contigo! 🥰`;
-                                    if (activeContact?.role === 'model') {
-                                      replyStr = `💖 ¡Muchísimas gracias por enviarme ${gift.icon} ${gift.name} de los Regalos Extra! Tu patrocinio me ayuda muchísimo a subir en el Ranking Semanal. ¡Eres un sol! 🥰✨`;
-                                    }
-                                    const replyMsg: ChatMessage = {
-                                      id: `msg-reply-${Date.now()}`,
-                                      senderId: activeContactId,
-                                      receiverId: currentUserId,
-                                      text: replyStr,
-                                      timestamp: new Date().toISOString()
-                                    };
-                                    onSendMessage(replyMsg);
-                                  }, 1300);
-
-                                  // Close menu
+                                  handleSendGiftDirect(gift);
                                   setShowGiftsHoverMenu(false);
                                 }}
                                 className="flex flex-col items-center justify-center p-2 rounded-2xl hover:bg-orange-50/50 border border-slate-100 hover:border-orange-200/40 bg-[#FFFDF9] transition duration-150 cursor-pointer text-center relative group shadow-3xs hover:shadow"

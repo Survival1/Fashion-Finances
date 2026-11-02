@@ -72,6 +72,30 @@
 
   /* Softer generic black */
   --color-black: #0f172a;
+
+  /* Pearl Pink (Rosa Perla) luxury palette */
+  --color-pearl-pink: #fbcfe8;
+  --color-pearl-pink-light: #fdf2f8;
+  --color-pearl-pink-border: #f9a8d4;
+  --color-pearl-pink-dark: #f472b6;
+}
+
+/* Container frames in pearl pink (marcos de los contenedores Rosa Perla) */
+.border-pearl-pink {
+  border-color: #fbcfe8 !important;
+}
+
+.border-pearl-pink-subtle {
+  border-color: #fce7f3 !important;
+}
+
+.border-pearl-pink-accent {
+  border-color: #f9a8d4 !important;
+}
+
+.container-pearl-pink {
+  border: 1.5px solid #f9a8d4 !important;
+  box-shadow: 0 1px 4px rgba(244, 114, 182, 0.1) !important;
 }
 
 /* Global button styling matching clean design (white background, slate border, dark text) */
@@ -457,56 +481,56 @@ body {
 /* 💖 LLUVIA DE CORAZONES EN TODA LA PANTALLA */
 @keyframes heartRainFall {
   0% {
-    transform: translateY(-90px) translateX(0) rotate(0deg) scale(0.6);
+    transform: translateY(-70px) translateX(0) rotate(0deg) scale(0.8);
     opacity: 0;
   }
-  12% {
+  8% {
     opacity: 1;
-    transform: translateY(12vh) translateX(var(--drift-1, -12px)) rotate(var(--rot-1, -15deg)) scale(1.18);
+    transform: translateY(8vh) translateX(var(--drift-1, -8px)) rotate(var(--rot-1, -8deg)) scale(1.05);
   }
   50% {
     opacity: 0.95;
-    transform: translateY(50vh) translateX(var(--drift-2, 16px)) rotate(var(--rot-2, 18deg)) scale(1);
+    transform: translateY(50vh) translateX(var(--drift-2, 10px)) rotate(var(--rot-2, 10deg)) scale(1);
   }
-  85% {
+  88% {
     opacity: 0.85;
-    transform: translateY(85vh) translateX(var(--drift-3, -8px)) rotate(var(--rot-3, -10deg)) scale(0.95);
+    transform: translateY(92vh) translateX(var(--drift-3, -6px)) rotate(var(--rot-3, -6deg)) scale(0.95);
   }
   100% {
-    transform: translateY(106vh) translateX(var(--drift-4, 20px)) rotate(var(--rot-4, 25deg)) scale(0.7);
+    transform: translateY(110vh) translateX(var(--drift-4, 12px)) rotate(var(--rot-4, 14deg)) scale(0.85);
     opacity: 0;
   }
 }
 
 @keyframes heartRainRise {
   0% {
-    transform: translateY(105vh) translateX(0) rotate(0deg) scale(0.5);
+    transform: translateY(105vh) translateX(0) rotate(0deg) scale(0.8);
     opacity: 0;
   }
-  15% {
+  10% {
     opacity: 1;
-    transform: translateY(80vh) translateX(var(--drift-1, 15px)) rotate(var(--rot-1, 12deg)) scale(1.2);
+    transform: translateY(85vh) translateX(var(--drift-1, 10px)) rotate(var(--rot-1, 8deg)) scale(1.05);
   }
   50% {
     opacity: 0.95;
-    transform: translateY(45vh) translateX(var(--drift-2, -18px)) rotate(var(--rot-2, -15deg)) scale(1.05);
+    transform: translateY(50vh) translateX(var(--drift-2, -10px)) rotate(var(--rot-2, -10deg)) scale(1);
   }
-  85% {
+  88% {
     opacity: 0.85;
-    transform: translateY(15vh) translateX(var(--drift-3, 10px)) rotate(var(--rot-3, 15deg)) scale(0.9);
+    transform: translateY(12vh) translateX(var(--drift-3, 6px)) rotate(var(--rot-3, 8deg)) scale(0.95);
   }
   100% {
-    transform: translateY(-80px) translateX(var(--drift-4, -12px)) rotate(var(--rot-4, -20deg)) scale(0.6);
+    transform: translateY(-70px) translateX(var(--drift-4, -8px)) rotate(var(--rot-4, -12deg)) scale(0.85);
     opacity: 0;
   }
 }
 
 .animate-heart-rain-fall {
-  animation: heartRainFall var(--dur, 2.4s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: heartRainFall var(--dur, 1.5s) linear forwards;
 }
 
 .animate-heart-rain-rise {
-  animation: heartRainRise var(--dur, 2.6s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: heartRainRise var(--dur, 1.5s) linear forwards;
 }
 
 /* Hide visible lateral scrollbar on voting projects container while preserving smooth scrolling functionality */

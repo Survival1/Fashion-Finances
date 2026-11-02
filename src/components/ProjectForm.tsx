@@ -22,6 +22,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { generateProjectPDF } from '../utils/pdfGenerator';
+import FashionsFinanceLogo from './FashionsFinanceLogo';
 
 interface ProjectFormProps {
   userProjects: ProjectData[];
@@ -32,22 +33,14 @@ interface ProjectFormProps {
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live') => void;
 }
 
-// Faceted luxury diamond SVG icon
-const DiamondIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="1.8" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <polygon points="6,3 18,3 22,8 12,21 2,8" />
-    <line x1="2" y1="8" x2="22" y2="8" />
-    <polyline points="6,3 10,8 12,21 14,8 18,3" />
-    <line x1="10" y1="8" x2="14" y2="8" />
-  </svg>
+// Realistic brilliant diamond image from z.png (clean transparent cutout, no background layer)
+const DiamondIcon = ({ className = "w-5 h-5", alt = "Diamante" }: { className?: string; alt?: string }) => (
+  <img 
+    src="/assets/aistudio/diamond_transparent.png" 
+    alt={alt} 
+    className={`${className} object-contain inline-block shrink-0 drop-shadow-xs select-none`} 
+    draggable={false}
+  />
 );
 
 export default function ProjectForm({
@@ -305,26 +298,21 @@ export default function ProjectForm({
       {/* LUXURY TOP HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 relative z-10 border-b border-pink-200/60">
         
-        {/* Brand FF Crown Logo & Title */}
-        <div className="flex items-center gap-3.5 sm:gap-4">
-          <img 
-            src="/assets/aistudio/luxury_ff_logo.png" 
-            alt="FF Crown Logo" 
-            className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm shrink-0" 
-          />
+        {/* Brand Logo de la Página Inicial */}
+        <div className="flex items-center gap-3.5 sm:gap-4 select-none">
+          <FashionsFinanceLogo mode="light" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 shadow-xs" />
           <div className="flex flex-col">
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-black tracking-tight leading-none text-slate-950 flex items-center gap-2">
-              <span className="font-black text-slate-900">FASHION</span>
-              <span className="font-normal bg-gradient-to-r from-[#be185d] via-[#db2777] to-[#9d174d] bg-clip-text text-transparent">FINANCES</span>
+            <h2 className="font-display font-semibold text-2xl sm:text-3xl lg:text-[32px] text-slate-950 leading-tight">
+              Fashion Finances
             </h2>
-            <div className="text-[9px] sm:text-[10.5px] font-extrabold text-slate-700 tracking-[0.28em] uppercase mt-1.5 font-sans">
-              FASHION • MODELS • INVESTMENT
+            <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-[0.25em] uppercase mt-1 font-mono">
+              Casting Live & Fashion Models
             </div>
           </div>
         </div>
 
-        {/* Action Buttons: "Volver a Proyectos Guardados" + "CIFRADO DE SEGURIDAD SSL" */}
-        <div className="flex flex-wrap items-center gap-3 relative z-20">
+        {/* Action Button: "Volver" */}
+        <div className="flex items-center gap-3 relative z-20">
           {onNavigateToTab && (
             <button
               type="button"
@@ -332,29 +320,22 @@ export default function ProjectForm({
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-xs sm:text-sm font-bold shadow-lg shadow-pink-600/30 transition-all hover:scale-105 active:scale-95 bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] border border-pink-300/40 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Volver a Proyectos Guardados</span>
+              <span>Volver</span>
             </button>
           )}
-
-          <div className="flex items-center gap-2 px-5 py-2.5 bg-white/95 rounded-full border border-amber-200/90 shadow-sm text-slate-800">
-            <Lock className="w-4 h-4 text-[#991b1b] fill-[#991b1b]/20" />
-            <span className="text-[10px] font-extrabold text-slate-800 tracking-[0.16em] uppercase font-mono">
-              CIFRADO DE SEGURIDAD SSL
-            </span>
-          </div>
         </div>
 
       </div>
 
-      {/* HERO SLOGAN: "Tu idea, EL SIGUIENTE NIVEL" */}
-      <div className="mt-8 mb-8 text-left relative z-10 max-w-2xl">
-        <span className="block text-3xl sm:text-4xl lg:text-[42px] text-[#db2777] font-['Alex_Brush',cursive] leading-none mb-1 -rotate-2 transform origin-left">
+      {/* HERO SLOGAN: "Tu idea, TU SIGUIENTE NIVEL" */}
+      <div className="mt-5 mb-6 text-left relative z-10 max-w-2xl">
+        <span className="block text-2xl sm:text-3xl lg:text-[32px] text-[#db2777] font-['Alex_Brush',cursive] leading-none mb-1 -rotate-2 transform origin-left">
           Tu idea,
         </span>
-        <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black font-serif tracking-tight text-slate-900 leading-[1.05] uppercase">
-          EL SIGUIENTE NIVEL
+        <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-black font-serif tracking-tight text-slate-900 leading-[1.1] uppercase">
+          TU SIGUIENTE NIVEL
         </h1>
-        <div className="text-xs sm:text-sm font-extrabold text-slate-700 tracking-[0.38em] uppercase mt-2.5">
+        <div className="text-[10px] sm:text-xs font-extrabold text-slate-700 tracking-[0.32em] uppercase mt-2">
           FINANCIA • CRECE • BRILLA
         </div>
       </div>
@@ -397,7 +378,7 @@ export default function ProjectForm({
             {/* 3-STEP DIAMOND PROGRESS BAR */}
             <div className="relative pb-6 border-b border-stone-200/80">
               {/* Connecting line between the 3 steps */}
-              <div className="absolute top-6 left-12 right-12 h-0.5 bg-gradient-to-r from-pink-500 via-pink-300 to-pink-200 -z-0" />
+              <div className="absolute top-8 sm:top-10 left-12 right-12 h-0.5 bg-gradient-to-r from-pink-500 via-pink-300 to-pink-200 -z-0" />
 
               <div className="flex justify-between items-start relative z-10">
 
@@ -407,12 +388,12 @@ export default function ProjectForm({
                   onClick={() => setActiveStep('basic')}
                   className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
                 >
-                  <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center p-2 transition-all duration-300 ${
                     activeStep === 'basic'
-                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-lg shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
-                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500'
+                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-xl shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500 shadow-sm hover:scale-105'
                   }`}>
-                    <DiamondIcon className="w-6 h-6" />
+                    <DiamondIcon className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
                   </div>
                   <span className="text-[10px] font-bold text-slate-800 bg-pink-100/70 px-2 py-0.5 rounded-full font-mono">1</span>
                   <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors ${
@@ -428,12 +409,12 @@ export default function ProjectForm({
                   onClick={() => setActiveStep('finance')}
                   className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
                 >
-                  <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center p-2 transition-all duration-300 ${
                     activeStep === 'finance'
-                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-lg shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
-                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500'
+                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-xl shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500 shadow-sm hover:scale-105'
                   }`}>
-                    <DiamondIcon className="w-6 h-6" />
+                    <DiamondIcon className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
                   </div>
                   <span className="text-[10px] font-bold text-slate-800 bg-pink-100/70 px-2 py-0.5 rounded-full font-mono">2</span>
                   <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors ${
@@ -449,12 +430,12 @@ export default function ProjectForm({
                   onClick={() => setActiveStep('team')}
                   className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
                 >
-                  <div className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center p-2 transition-all duration-300 ${
                     activeStep === 'team'
-                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-lg shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
-                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500'
+                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-xl shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500 shadow-sm hover:scale-105'
                   }`}>
-                    <DiamondIcon className="w-6 h-6" />
+                    <DiamondIcon className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
                   </div>
                   <span className="text-[10px] font-bold text-slate-800 bg-pink-100/70 px-2 py-0.5 rounded-full font-mono">3</span>
                   <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors ${

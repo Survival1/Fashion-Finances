@@ -109,7 +109,8 @@ import {
   AlertCircle,
   Square,
   FileText,
-  Reply
+  Reply,
+  Trophy
 } from 'lucide-react';
 import { ModelProfile, UserSessionProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
@@ -167,6 +168,7 @@ interface CastingLiveSectionProps {
   initialSelectedStoreId?: string | null;
   onClearSelectedStoreId?: () => void;
   onOpenHashtag?: (tag: string) => void;
+  onOpenRanking?: (tab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos') => void;
 }
 
 export const accountsQueSigues = [
@@ -2022,7 +2024,8 @@ export default function CastingLiveSection({
   onGiftTransaction,
   initialSelectedStoreId,
   onClearSelectedStoreId,
-  onOpenHashtag
+  onOpenHashtag,
+  onOpenRanking
 }: CastingLiveSectionProps) {
   // ⏸️ Pausar vídeos de CastingLive cuando la pestaña no está activa
   useEffect(() => {
@@ -3038,6 +3041,24 @@ export default function CastingLiveSection({
       window.removeEventListener('hide-live-comments', handleHide);
       window.removeEventListener('show-live-comments', handleShow);
     };
+  }, []);
+
+  // Escuchar evento para abrir modal de opciones de stream/retransmitir
+  useEffect(() => {
+    const handleOpenStreamOptions = () => {
+      const targetCat = {
+        id: 'todos',
+        label: 'Todos en Directo',
+        image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
+        count: '16 Canales'
+      };
+      setStreamOptionsTargetChannel(targetCat);
+      setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${targetCat.label}`);
+      setLiveChannelsCategoryFilter('todos');
+      setShowStreamOptionsModal(true);
+    };
+    window.addEventListener('open-stream-options-modal', handleOpenStreamOptions);
+    return () => window.removeEventListener('open-stream-options-modal', handleOpenStreamOptions);
   }, []);
   const [broadcastBottomCommentText, setBroadcastBottomCommentText] = useState('');
   const [showBroadcastEmojiPopover, setShowBroadcastEmojiPopover] = useState(false);
@@ -7498,9 +7519,13 @@ export default function CastingLiveSection({
   const [fashionChannelMutedMap, setFashionChannelMutedMap] = useState<Record<string, boolean>>({});
   const [fashionChannelPausedMap, setFashionChannelPausedMap] = useState<Record<string, boolean>>({});
   const [showStreamOptionsModal, setShowStreamOptionsModal] = useState<boolean>(false);
-  const [streamOptionsTargetChannel, setStreamOptionsTargetChannel] = useState<{ id: string; label: string; image?: string } | null>(null);
+  const [streamOptionsTargetChannel, setStreamOptionsTargetChannel] = useState<{ id: string; label: string; image?: string } | null>(() => ({
+    id: 'todos',
+    label: 'Todos en Directo',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300'
+  }));
   const [streamOptionsTab, setStreamOptionsTab] = useState<'camera' | 'mic' | 'screen' | 'rtmp' | 'multistream'>('camera');
-  const [streamTitleInput, setStreamTitleInput] = useState<string>('');
+  const [streamTitleInput, setStreamTitleInput] = useState<string>('🔴 En Directo: Retransmisión Especial en Canal Todos en Directo');
   const [streamResolution, setStreamResolution] = useState<'1080p' | '720p' | '4k'>('1080p');
   const [streamNoiseSuppression, setStreamNoiseSuppression] = useState<boolean>(true);
   const [streamMultistreamPlatforms, setStreamMultistreamPlatforms] = useState<Record<string, boolean>>({
@@ -7546,6 +7571,456 @@ export default function CastingLiveSection({
     }
     return null;
   });
+
+  const renderStreamOptionsModal = () => {
+    if (!showStreamOptionsModal || !streamOptionsTargetChannel) return null;
+    return (
+      <div 
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-2.5 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in font-sans overflow-y-auto pointer-events-auto select-none"
+        onClick={() => setShowStreamOptionsModal(false)}
+      >
+        <div 
+          className="bg-slate-950 text-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-800 flex flex-col max-h-[96%] animate-scale-in my-auto pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="bg-slate-900/95 border-b border-slate-800 p-3.5 sm:p-4 flex items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-slate-700 shadow-md">
+                <img 
+                  src={streamOptionsTargetChannel.image || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=300'} 
+                  alt={streamOptionsTargetChannel.label} 
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-slate-950 animate-pulse" />
+              </div>
+              <div className="text-left min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    LIVE STREAM
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/60">
+                    Canal {streamOptionsTargetChannel.label}
+                  </span>
+                </div>
+                <h3 className="font-black text-sm sm:text-base text-white truncate m-0">
+                  Opciones de Stream para Retransmitir en Directo
+                </h3>
+              </div>
+            </div>
+            <button 
+              type="button"
+              onClick={() => setShowStreamOptionsModal(false)}
+              className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-700/80 text-sm font-bold"
+              title="Cerrar opciones"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Navigation Tabs Bar: 2 Filas Horizontales con botones y letras más chicos */}
+          <div className="bg-slate-900/80 border-b border-slate-800 p-2 sm:p-2.5 shrink-0 space-y-1.5 sm:space-y-2">
+            {/* Fila 1: Cámara, Micrófono, Pantalla (3 botones compactos) */}
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full">
+              <button
+                type="button"
+                onClick={() => setStreamOptionsTab('camera')}
+                className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                  streamOptionsTab === 'camera'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
+                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                }`}
+                title="Configuración de Cámara"
+              >
+                <Camera className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <span className="whitespace-nowrap">Cámara</span>
+                {isBroadcastCamOn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStreamOptionsTab('mic')}
+                className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                  streamOptionsTab === 'mic'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
+                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                }`}
+                title="Configuración de Micrófono"
+              >
+                <Mic className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <span className="whitespace-nowrap">Micrófono</span>
+                {isBroadcastMicOn && !isMuted && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStreamOptionsTab('screen')}
+                className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                  streamOptionsTab === 'screen'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
+                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                }`}
+                title="Compartir Pantalla"
+              >
+                <Monitor className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+                <span className="whitespace-nowrap">Pantalla</span>
+                {isScreenSharingActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping shrink-0" />}
+              </button>
+            </div>
+
+            {/* Fila 2: OBS / Claves RTMP y Multistreaming Redes (2 botones compactos) */}
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full">
+              <button
+                type="button"
+                onClick={() => setStreamOptionsTab('rtmp')}
+                className={`w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                  streamOptionsTab === 'rtmp'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/40'
+                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                }`}
+                title="OBS Studio / Claves RTMP"
+              >
+                <Radio className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <span className="whitespace-nowrap">OBS / Claves RTMP</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStreamOptionsTab('multistream')}
+                className={`w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                  streamOptionsTab === 'multistream'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/40'
+                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                }`}
+                title="Multistreaming en Redes Sociales"
+              >
+                <Globe className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                <span className="whitespace-nowrap">Multistreaming Redes</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Body */}
+          <div className="p-3.5 sm:p-5 space-y-4 text-left flex-1 overflow-y-auto max-h-[50vh] sm:max-h-[56vh]">
+            {/* Título de la transmisión general */}
+            <div className="bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 space-y-1">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                Título de tu Retransmisión en Vivo
+              </label>
+              <input 
+                type="text" 
+                value={streamTitleInput} 
+                onChange={(e) => setStreamTitleInput(e.target.value)}
+                placeholder={`Ej: Sesión en Vivo de Diseño en ${streamOptionsTargetChannel.label}`}
+                className="w-full px-3.5 py-2 bg-slate-950 rounded-xl border border-slate-700/80 text-xs font-bold text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+              />
+            </div>
+
+            {/* TAB 1: CÁMARA */}
+            {streamOptionsTab === 'camera' && (
+              <div className="space-y-3.5 animate-fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Dispositivo de cámara */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                      Cámara de Retransmisión
+                    </label>
+                    <select 
+                      value={broadcastCamDevice}
+                      onChange={(e) => setBroadcastCamDevice(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                    >
+                      <option value="Cámara Web HD (Logitech C920 Pro)">📷 Cámara Web HD (Logitech C920 Pro)</option>
+                      <option value="Cámara Frontal Móvil (12MP 4K HDR)">📱 Cámara Frontal Móvil (12MP 4K HDR)</option>
+                      <option value="Cámara Trasera Gran Angular (4K 60fps)">📱 Cámara Trasera Gran Angular (4K 60fps)</option>
+                      <option value="Capturadora HDMI Cam Link 4K (Sony Alpha)">🎥 Capturadora HDMI Cam Link 4K (Sony Alpha)</option>
+                    </select>
+                  </div>
+
+                  {/* Calidad de Vídeo */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                      Resolución y FPS
+                    </label>
+                    <select 
+                      value={streamResolution}
+                      onChange={(e) => setStreamResolution(e.target.value as any)}
+                      className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                    >
+                      <option value="1080p">1080p Full HD • 60 FPS (Recomendado)</option>
+                      <option value="720p">720p HD • 30 FPS (Bajo consumo de red)</option>
+                      <option value="4k">4K Ultra HD • 60 FPS (Ultra Fidelidad)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Estado de Cámara & Preview */}
+                <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBroadcastCamOn ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'}`}>
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-white m-0">
+                        {isBroadcastCamOn ? 'Cámara Activada y Lista' : 'Cámara en Modo Silencioso / Pausa'}
+                      </p>
+                      <p className="text-[10px] text-slate-400 m-0">
+                        {isBroadcastCamOn ? 'Transmite imagen directa al canal al emitir' : 'Haz clic para encender la vista previa'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBroadcastCamOn(!isBroadcastCamOn);
+                      setToastNotification({
+                        title: 'Cámara',
+                        message: !isBroadcastCamOn ? '🎥 Cámara encendida y configurada.' : '🚫 Cámara pausada.'
+                      });
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer border ${
+                      isBroadcastCamOn
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                    }`}
+                  >
+                    {isBroadcastCamOn ? 'Encendida ✓' : 'Encender Cámara'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: MICRÓFONO */}
+            {streamOptionsTab === 'mic' && (
+              <div className="space-y-3.5 animate-fade-in">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                    Dispositivo de Entrada de Audio
+                  </label>
+                  <select 
+                    className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                  >
+                    <option>🎙️ Micrófono Predeterminado del Sistema</option>
+                    <option>🎙️ Micrófono de Solapa Inalámbrico (Røde Wireless GO II)</option>
+                    <option>🎙️ Micrófono de Estudio de Condensador (Shure SM7B)</option>
+                    <option>🎧 Auriculares con Micrófono (AirPods / Headset)</option>
+                  </select>
+                </div>
+
+                {/* VU Meter animado */}
+                <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-300">Medidor de Nivel de Voz</span>
+                    <span className={`text-[10px] font-mono font-bold ${!isMuted ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      {!isMuted ? '-6 dB (Óptimo)' : 'Mute'}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                    <div className={`h-full rounded-full transition-all duration-300 ${!isMuted ? 'w-3/4 bg-gradient-to-r from-emerald-500 via-yellow-400 to-rose-500 animate-pulse' : 'w-0'}`} />
+                  </div>
+                </div>
+
+                {/* Filtros de audio */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <label className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer">
+                    <span className="text-xs font-bold text-slate-200">Supresión de Ruido IA</span>
+                    <input 
+                      type="checkbox" 
+                      checked={streamNoiseSuppression}
+                      onChange={(e) => setStreamNoiseSuppression(e.target.checked)}
+                      className="accent-rose-500 rounded" 
+                    />
+                  </label>
+                  <label className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer">
+                    <span className="text-xs font-bold text-slate-200">Cancelación de Eco Acústico</span>
+                    <input type="checkbox" defaultChecked className="accent-rose-500 rounded" />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PANTALLA */}
+            {streamOptionsTab === 'screen' && (
+              <div className="space-y-3.5 animate-fade-in">
+                <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                      <Monitor className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white m-0">Compartición de Pantalla en Directo</h4>
+                      <p className="text-[10px] text-slate-400 m-0">Transmite bocetos de diseño, pasarelas 3D o tu escritorio al canal</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+                    <button
+                      type="button"
+                      onClick={handleToggleScreenShare}
+                      className={`w-full py-2.5 px-4 rounded-xl font-black text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
+                        isScreenSharingActive
+                          ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-400 animate-pulse'
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400'
+                      }`}
+                    >
+                      <Monitor className="w-4 h-4" />
+                      <span>{isScreenSharingActive ? 'Detener Compartir Pantalla' : 'Activar Captura de Pantalla'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: RTMP / OBS */}
+            {streamOptionsTab === 'rtmp' && (
+              <div className="space-y-3.5 animate-fade-in">
+                <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+                      Codificador Externo (OBS / Streamlabs / vMix)
+                    </span>
+                    <span className="text-[9px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800">
+                      Servidor Online
+                    </span>
+                  </div>
+
+                  {/* Server URL */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 block">URL del Servidor RTMP</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={`rtmp://live.castinglive.com/app/${streamOptionsTargetChannel.id}`} 
+                        className="flex-1 px-3 py-1.5 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 focus:outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setToastNotification({
+                          title: 'URL Copiada',
+                          message: `📋 URL copiada: rtmp://live.castinglive.com/app/${streamOptionsTargetChannel.id}`
+                        })}
+                        className="px-3 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border border-slate-700"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stream Key */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 block">Clave de Retransmisión (Stream Key)</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type={showRtmpKeySecret ? 'text' : 'password'} 
+                        readOnly 
+                        value={`live_${streamOptionsTargetChannel.id}_secret_8492049`} 
+                        className="flex-1 px-3 py-1.5 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 focus:outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowRtmpKeySecret(!showRtmpKeySecret)}
+                        className="px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-xl transition cursor-pointer border border-slate-700"
+                      >
+                        {showRtmpKeySecret ? 'Ocultar' : 'Ver'}
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setToastNotification({
+                          title: 'Clave Copiada',
+                          message: '📋 Clave de emisión copiada. Pégala en Ajustes > Emisión en OBS.'
+                        })}
+                        className="px-3 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border-0"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: MULTISTREAMING */}
+            {streamOptionsTab === 'multistream' && (
+              <div className="space-y-3 animate-fade-in">
+                <p className="text-[11px] text-slate-400 m-0">
+                  Emite simultáneamente en tus redes sociales vinculadas mientras transmites en el canal {streamOptionsTargetChannel.label}:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { key: 'tiktok', name: 'TikTok Live' },
+                    { key: 'youtube', name: 'YouTube Live' },
+                    { key: 'instagram', name: 'Instagram Live' },
+                    { key: 'twitch', name: 'Twitch' },
+                    { key: 'facebook', name: 'Facebook Live' },
+                  ].map((platform) => {
+                    const isActive = streamMultistreamPlatforms[platform.key];
+                    return (
+                      <div 
+                        key={platform.key}
+                        onClick={() => setStreamMultistreamPlatforms(prev => ({ ...prev, [platform.key]: !prev[platform.key] }))}
+                        className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between select-none ${
+                          isActive
+                            ? 'bg-slate-900 border-rose-500 ring-1 ring-rose-500/40'
+                            : 'bg-slate-950/70 border-slate-800 hover:border-slate-700 opacity-70'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-slate-600'}`} />
+                          <span className="text-xs font-black text-white">{platform.name}</span>
+                        </div>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-800 text-slate-400'}`}>
+                          {isActive ? 'Conectado' : 'Desactivado'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer with Actions (Captura z.png: Botones blancos con texto negro) */}
+          <div className="bg-slate-900/95 border-t border-slate-800 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
+            <button 
+              type="button"
+              onClick={() => setShowStreamOptionsModal(false)}
+              className="w-full sm:w-auto px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95"
+            >
+              CERRAR
+            </button>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              {isUserRetransmitting && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStopLiveRetransmission();
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-red-950/80 text-rose-400 border border-rose-800/60 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95"
+                >
+                  Detener Emisión
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleStartLiveRetransmission(streamOptionsTargetChannel);
+                }}
+                className="w-full sm:w-auto px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2 border border-slate-200"
+              >
+                <span>INICIAR RETRANSMISIÓN EN DIRECTO</span>
+                <Radio className="w-4 h-4 stroke-[2.5] text-slate-950" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const getModelCategory = (m: any): 'Fashion' | 'Reels' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' => {
     const name = m.name?.toLowerCase() || '';
@@ -12329,115 +12804,62 @@ export default function CastingLiveSection({
                     </div>
                   </div>
 
-                  {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3), [Retransmitir en Tiendas]) */}
-                  <div className={`grid ${selectedCategoryFilter === 'Tiendas' ? 'grid-cols-5' : 'grid-cols-4'} gap-1.5 sm:gap-2 py-1.5 border-t border-slate-700/60 text-center w-full max-w-full min-w-0`}>
-                    {/* 🎥 Cámara ON */}
+                  {/* Controls Row: Regalos (Izquierda), + En Grande (Centro), Ranking (Derecha) */}
+                  <div className="flex items-center justify-between gap-3 sm:gap-4 py-2 border-t border-slate-700/60 text-center w-full max-w-md mx-auto min-w-0">
+                    {/* Botón Izquierda: Regalos (Redirige al Centro de Regalos y Bóveda Oficial) */}
                     <button
                       type="button"
                       onClick={() => {
-                        if (selectedCategoryFilter === 'Finanzas') {
-                          const isPresenter = Boolean(
-                            sessionCurrentActiveUser?.isSelf ||
-                            sessionCurrentActiveUser?.id === 'user-adriana' ||
-                            sessionCurrentActiveUser?.id === userProfile?.id ||
-                            sessionCurrentActiveUser?.name?.includes('Adriana')
-                          );
-                          const isExpositionPhase = !isVotingPhaseActive && !showFinanzasResults && !showFinanzasRecount;
-                          if (!isPresenter || !isExpositionPhase) {
-                            alert('⚠️ El botón Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación.');
-                            return;
-                          }
-                          handleToggleUserCameraLiveBroadcast();
-                        }
-                        setIsBroadcastCamOn(!isBroadcastCamOn);
-                        alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
+                        if (onOpenRanking) onOpenRanking('regalos');
+                        window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
                       }}
-                      className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
-                        isBroadcastCamOn
-                          ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-black shadow-emerald-950/40'
-                          : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
-                      }`}
-                      title="Configurar Cámara"
+                      className="flex-1 py-2 sm:py-2.5 px-2 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 hover:border-pink-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[56px] sm:h-[62px] active:scale-95 shadow-sm group"
+                      title="Centro de Regalos · Fashion Finances"
+                      id="btn-live-regalos-loc1"
                     >
-                      <Camera className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#10b981] shrink-0" />
-                      <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
+                      <Gift className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-pink-400 group-hover:scale-110 transition-transform shrink-0" />
+                      <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight text-pink-100">Regalos</span>
                     </button>
 
-                    {/* 🎙️ Mic ON */}
+                    {/* Botón Centro: + En Grande (Fondo Rosa Perla y Símbolo + Blanco - Redirige a Retransmitir) */}
                     <button
                       type="button"
                       onClick={() => {
-                        const nextState = isMuted;
-                        setIsMuted(!isMuted);
-                        setIsBroadcastMicOn(nextState);
-                        if (setSystemVoiceNotification) {
-                          setSystemVoiceNotification({
-                            show: true,
-                            message: nextState ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.'
-                          });
-                        }
+                        const targetCat = {
+                          id: 'todos',
+                          label: 'Todos en Directo',
+                          image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
+                          count: '16 Canales'
+                        };
+                        setStreamOptionsTargetChannel(targetCat);
+                        setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${targetCat.label}`);
+                        setLiveChannelsCategoryFilter('todos');
+                        setShowStreamOptionsModal(true);
                       }}
-                      className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
-                        !isMuted && isBroadcastMicOn
-                          ? 'bg-[#0d2a24] text-[#10b981] border-[#10b981] font-black shadow-emerald-950/40'
-                          : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
-                      }`}
-                      title="Configurar Micrófono"
+                      className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl sm:rounded-3xl !bg-[#FADADD] hover:!bg-[#F8C6D8] text-white flex items-center justify-center shadow-lg shadow-pink-300/35 active:scale-95 border-2 border-white/90 hover:border-white hover:scale-105 transition-all shrink-0 cursor-pointer group"
+                      title="Retransmitir en directo (+)"
+                      id="btn-live-center-plus-loc1"
                     >
-                      <Mic className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#10b981] shrink-0" />
-                      <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">{!isMuted ? 'Mic ON' : 'Mute'}</span>
+                      <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[3.5] drop-shadow-[0_1px_2px_rgba(180,80,120,0.35)] group-hover:rotate-90 transition-transform duration-300" />
                     </button>
 
-                    {/* 🖥️ Pantalla */}
-                    <button
-                      type="button"
-                      onClick={handleToggleScreenShare}
-                      className={`py-2 sm:py-2.5 px-1 sm:px-1.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm ${
-                        isScreenSharingActive
-                          ? 'bg-indigo-950/70 text-indigo-300 border-indigo-500 font-black shadow-xs animate-pulse ring-1 ring-indigo-400'
-                          : 'bg-[#1b2030] text-slate-300 border-slate-700/60 hover:bg-[#262c42] font-bold'
-                      }`}
-                      title="Compartir Pantalla"
-                    >
-                      <Monitor className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-200 shrink-0" />
-                      <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
-                    </button>
-
-                    {/* 👥 Invitados (3) */}
+                    {/* Botón Derecha: Ranking */}
                     <button
                       type="button"
                       onClick={() => {
-                        setActiveFinanzasPopupUser(null);
-                        setShowProjectDetailsInPopup(false);
-                        setShowCreateBroadcastModal(true);
-                        setBroadcastModalTab('guests');
-                        if (selectedCategoryFilter === 'Finanzas') {
-                          setShowDuoMenu(true);
-                          setFinanzasDuoSubTool('invitar');
+                        if (onOpenRanking) {
+                          onOpenRanking();
+                        } else {
+                          setShowRankingForm(true);
                         }
                       }}
-                      className="py-2 sm:py-2.5 px-1 sm:px-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm"
-                      title="Invitar Invitados"
+                      className="flex-1 py-2 sm:py-2.5 px-2 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 hover:border-amber-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[56px] sm:h-[62px] active:scale-95 shadow-sm group"
+                      title="Ranking"
+                      id="btn-live-ranking-loc1"
                     >
-                      <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-amber-400 shrink-0" />
-                      <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">Invitados ({broadcastGuests.length || 3})</span>
+                      <Trophy className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                      <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight text-amber-100">Ranking</span>
                     </button>
-
-                    {/* 🌐 Retransmitir (Solo en canal Tiendas) */}
-                    {selectedCategoryFilter === 'Tiendas' && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCreateBroadcastModal(true);
-                          setBroadcastModalTab('multistream');
-                        }}
-                        className="py-2 sm:py-2.5 px-1 sm:px-1.5 bg-[#1b2030] hover:bg-[#262c42] text-slate-200 border border-slate-700/60 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[50px] sm:min-h-[56px] active:scale-95 shadow-sm"
-                        title="Retransmitir en otras plataformas"
-                      >
-                        <Globe className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-rose-400 shrink-0" />
-                        <span className="truncate w-full text-[9px] sm:text-[10px] font-black tracking-tight leading-tight">Retransmitir</span>
-                      </button>
-                    )}
                   </div>
 
                   {/* Bottom Row: Channels in 2 Horizontal Columns (No arrows, slightly reduced size) */}
@@ -27113,10 +27535,10 @@ try {
               </div>
             )}
 
-            {/* 📡 VENTANA DE OPCIONES DE STREAM PARA RETRANSMITIR EN DIRECTO (DENTRO DEL CANAL) */}
-            {showStreamOptionsModal && streamOptionsTargetChannel && (
+            {/* 📡 VENTANA DE OPCIONES DE STREAM PARA RETRANSMITIR EN DIRECTO (Renderizado a nivel raíz con renderStreamOptionsModal()) */}
+            {false && showStreamOptionsModal && streamOptionsTargetChannel && (
               <div 
-                className="absolute inset-0 z-[70] flex items-center justify-center p-2.5 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in font-sans overflow-y-auto pointer-events-auto select-none"
+                className="fixed inset-0 z-[99999] flex items-center justify-center p-2.5 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in font-sans overflow-y-auto pointer-events-auto select-none"
                 onClick={() => setShowStreamOptionsModal(false)}
               >
                 <div 
@@ -27947,31 +28369,6 @@ try {
                   </span>
                 </div>
 
-                {/* 5. Botón Guardar / Favoritos + 112 (Integrado con guardado de z.png) */}
-                <div className="flex flex-col items-center">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleHeroBookmark(heroChannel.categoryLabel || heroChannel.name);
-                    }}
-                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer active:scale-90 ${
-                      isHeroBookmarked 
-                        ? 'bg-amber-500/80 hover:bg-amber-500 text-white border-amber-300' 
-                        : 'bg-black/50 hover:bg-black/70 hover:scale-105 text-white'
-                    }`}
-                    title="Guardar directo en favoritos"
-                  >
-                    <Bookmark
-                      className={`w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2] transition-colors ${
-                        isHeroBookmarked ? 'fill-white text-white' : 'text-white'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-[11px] sm:text-xs font-black text-white text-center tracking-tight mt-1 drop-shadow-md select-none font-sans">
-                    {heroBookmarksCount}
-                  </span>
-                </div>
 
                 {/* 6. Disco de Sonido / Audio con icono estilizado rojo */}
                 <div className="flex flex-col items-center mt-0.5">
@@ -29683,6 +30080,23 @@ try {
                   activeSubTab={activeSubTab}
                   onNavigateToTab={onNavigateToTab}
                   onOpenHashtag={onOpenHashtag}
+                  onOpenRanking={onOpenRanking}
+                  onOpenGifts={() => {
+                    if (onOpenRanking) onOpenRanking('regalos');
+                    window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+                  }}
+                  onOpenStreamOptions={() => {
+                    const targetCat = {
+                      id: 'todos',
+                      label: 'Todos en Directo',
+                      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
+                      count: '16 Canales'
+                    };
+                    setStreamOptionsTargetChannel(targetCat);
+                    setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${targetCat.label}`);
+                    setLiveChannelsCategoryFilter('todos');
+                    setShowStreamOptionsModal(true);
+                  }}
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
                   setActiveFinanzasSessionIndex={setActiveFinanzasSessionIndex}
@@ -30119,109 +30533,62 @@ try {
                       </div>
                     </div>
 
-                    {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados (3)) */}
-                    <div className={`grid ${selectedCategoryFilter === 'Tiendas' ? 'grid-cols-5' : 'grid-cols-4'} gap-2 sm:gap-2.5 pt-1 text-center w-full max-w-full min-w-0`}>
-                      {/* 🎥 Cámara ON */}
+                    {/* Controls Row: Regalos (Izquierda), + En Grande (Centro), Ranking (Derecha) */}
+                    <div className="flex items-center justify-between gap-3 sm:gap-4 pt-1.5 pb-0.5 text-center w-full max-w-md mx-auto min-w-0">
+                      {/* Botón Izquierda: Regalos (Redirige al Centro de Regalos y Bóveda Oficial) */}
                       <button
                         type="button"
                         onClick={() => {
-                          if (selectedCategoryFilter === 'Finanzas') {
-                            const isPresenter = Boolean(
-                              sessionCurrentActiveUser?.isSelf ||
-                              sessionCurrentActiveUser?.id === 'user-adriana' ||
-                              sessionCurrentActiveUser?.id === userProfile?.id ||
-                              sessionCurrentActiveUser?.name?.includes('Adriana')
-                            );
-                            const isExpositionPhase = !isVotingPhaseActive && !showFinanzasResults && !showFinanzasRecount;
-                            if (!isPresenter || !isExpositionPhase) {
-                              alert('⚠️ El botón Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación.');
-                              return;
-                            }
-                            handleToggleUserCameraLiveBroadcast();
-                          }
-                          setIsBroadcastCamOn(!isBroadcastCamOn);
-                          alert(!isBroadcastCamOn ? '🎥 Cámara de transmisión activada.' : '🚫 Cámara desactivada.');
+                          if (onOpenRanking) onOpenRanking('regalos');
+                          window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
                         }}
-                        className={`py-2.5 sm:py-3 px-1.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md ${
-                          isBroadcastCamOn
-                            ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                            : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-                        }`}
-                        title="Configurar Cámara"
+                        className="flex-1 py-2.5 sm:py-3 px-2 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 hover:border-pink-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[58px] sm:h-[66px] active:scale-95 shadow-md group"
+                        title="Centro de Regalos · Fashion Finances"
+                        id="btn-live-regalos-loc2"
                       >
-                        <Camera className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-[#10b981] shrink-0" />
-                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">{isBroadcastCamOn ? 'Cámara ON' : 'Cámara OFF'}</span>
+                        <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400 group-hover:scale-110 transition-transform shrink-0" />
+                        <span className="truncate w-full text-[10px] sm:text-[11.5px] font-black tracking-tight text-pink-100">Regalos</span>
                       </button>
 
-                      {/* 🎙️ Mic ON */}
+                      {/* Botón Centro: + En Grande (Fondo Rosa Perla y Símbolo + Blanco - Redirige a Retransmitir) */}
                       <button
                         type="button"
                         onClick={() => {
-                          setIsMuted(!isMuted);
-                          setIsBroadcastMicOn(isMuted);
-                          alert(isMuted ? '🎙️ Micrófono activado en vivo.' : '🔇 Micrófono silenciado.');
+                          const targetCat = {
+                            id: 'todos',
+                            label: 'Todos en Directo',
+                            image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
+                            count: '16 Canales'
+                          };
+                          setStreamOptionsTargetChannel(targetCat);
+                          setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${targetCat.label}`);
+                          setLiveChannelsCategoryFilter('todos');
+                          setShowStreamOptionsModal(true);
                         }}
-                        className={`py-2.5 sm:py-3 px-1.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md ${
-                          !isMuted && isBroadcastMicOn
-                            ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                            : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-                        }`}
-                        title="Configurar Micrófono"
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl !bg-[#FADADD] hover:!bg-[#F8C6D8] text-white flex items-center justify-center shadow-lg shadow-pink-300/35 active:scale-95 border-2 border-white/90 hover:border-white hover:scale-105 transition-all shrink-0 cursor-pointer group"
+                        title="Retransmitir en directo (+)"
+                        id="btn-live-center-plus-loc2"
                       >
-                        <Mic className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-[#10b981] shrink-0" />
-                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">{!isMuted ? 'Mic ON' : 'Mute'}</span>
+                        <Plus className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[3.5] drop-shadow-[0_1px_2px_rgba(180,80,120,0.35)] group-hover:rotate-90 transition-transform duration-300" />
                       </button>
 
-                      {/* 🖥️ Pantalla */}
-                      <button
-                        type="button"
-                        onClick={handleToggleScreenShare}
-                        className={`py-2.5 sm:py-3 px-1.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md ${
-                          isScreenSharingActive
-                            ? 'bg-indigo-950/70 text-indigo-300 border-2 border-indigo-500 font-black shadow-xs animate-pulse ring-1 ring-indigo-400'
-                            : 'bg-[#181d2a] text-slate-200 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-                        }`}
-                        title="Compartir Pantalla"
-                      >
-                        <Monitor className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-slate-200 shrink-0" />
-                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
-                      </button>
-
-                      {/* 👥 Invitados (3) */}
+                      {/* Botón Derecha: Ranking */}
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveFinanzasPopupUser(null);
-                          setShowProjectDetailsInPopup(false);
-                          setShowCreateBroadcastModal(true);
-                          setBroadcastModalTab('guests');
-                          if (selectedCategoryFilter === 'Finanzas') {
-                            setShowDuoMenu(true);
-                            setFinanzasDuoSubTool('invitar');
+                          if (onOpenRanking) {
+                            onOpenRanking();
+                          } else {
+                            setShowRankingForm(true);
                           }
                         }}
-                        className="py-2.5 sm:py-3 px-1.5 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md"
-                        title="Invitar Invitados"
+                        className="flex-1 py-2.5 sm:py-3 px-2 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 hover:border-amber-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[58px] sm:h-[66px] active:scale-95 shadow-md group"
+                        title="Ranking"
+                        id="btn-live-ranking-loc2"
                       >
-                        <Users className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-amber-400 shrink-0" />
-                        <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">Invitados ({broadcastGuests.length || 3})</span>
+                        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                        <span className="truncate w-full text-[10px] sm:text-[11.5px] font-black tracking-tight text-amber-100">Ranking</span>
                       </button>
-
-                      {/* 🌐 Retransmitir (Solo en canal Tiendas) */}
-                      {selectedCategoryFilter === 'Tiendas' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowCreateBroadcastModal(true);
-                            setBroadcastModalTab('multistream');
-                          }}
-                          className="py-2.5 sm:py-3 px-1.5 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition cursor-pointer font-bold min-w-0 w-full overflow-hidden min-h-[58px] sm:min-h-[64px] active:scale-95 shadow-md"
-                          title="Retransmitir en otras plataformas"
-                        >
-                          <Globe className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-rose-400 shrink-0" />
-                          <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight leading-tight">Retransmitir</span>
-                        </button>
-                      )}
                     </div>
 
                     {/* Bottom Row: Channels in 2 Columns (Captura image.png) */}
@@ -37685,6 +38052,9 @@ try {
 
       {/* ✨ CREATION CHOICE MODAL (Historia vs Reel) */}
       {showCreationTypeModal && renderCreationTypeModal()}
+
+      {/* 📡 MODAL OPCIONES DE STREAM PARA RETRANSMITIR EN DIRECTO (Captura z.png) */}
+      {renderStreamOptionsModal()}
 
       {/* 🗳️ VOTING PROJECTS MODAL (Votar por el mejor proyecto) - En Finanzas se muestra directamente dentro del canal a pantalla completa */}
       {showVotingProjectsModal && selectedCategoryFilter !== 'Finanzas' && renderVotingProjectsModal()}

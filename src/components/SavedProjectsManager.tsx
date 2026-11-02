@@ -865,79 +865,118 @@ export default function SavedProjectsManager({
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
 
   return (
-    <div className="space-y-6 animate-fade-in text-left bg-gradient-to-br from-indigo-50/50 via-[#f1f5f9] to-[#e2e8f0]/40 p-6 sm:p-8 rounded-3xl border border-indigo-150/40 shadow-xs">
+    <div className="space-y-6 animate-fade-in text-left bg-gradient-to-br from-[#FFFDFC] via-[#FFF9FA] to-[#FFF0F4] p-5 sm:p-8 rounded-3xl border-2 border-pink-200/90 shadow-sm">
       
-      {/* HEADER SECTION */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-3xs">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 tracking-tight flex items-center gap-2">
-            <Layers className="w-6 h-6 text-indigo-650" />
-            <span>Proyectos Guardados</span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-1 max-w-xl">
+      {/* 👑 LUXURY HAUTE COUTURE HERO BANNER (MATCHING PANEL_DE_FINANZAS_Y_MODA_ELEGANTE_AD48950A.PNG) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFDFC] via-[#FFF5F7] to-[#FFEBF2] border-2 border-pink-200/90 shadow-sm p-6 sm:p-8 lg:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="z-10 max-w-xl space-y-4 text-left">
+          <div className="flex items-center gap-3">
+            {/* Elegant geometric diamond icon in gold */}
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/40 flex items-center justify-center text-amber-600 shadow-xs shrink-0">
+              <svg className="w-7 h-7 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" />
+                <line x1="2" y1="9" x2="22" y2="9" />
+                <line x1="10" y1="3" x2="8" y2="9" />
+                <line x1="14" y1="3" x2="16" y2="9" />
+                <line x1="12" y1="22" x2="8" y2="9" />
+                <line x1="12" y1="22" x2="16" y2="9" />
+              </svg>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-slate-900 tracking-tight leading-none">
+              Proyectos<br className="hidden sm:inline" /> Guardados
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans max-w-lg">
             Aquí residen tus proyectos de moda registrados en la plataforma. Configura tu portafolio, haz un seguimiento rápido de tus victorias oficiales e invierte de forma directa en cualquiera de nuestras mesas activas.
           </p>
+          <div className="pt-2">
+            <button
+              onClick={() => onNavigateToTab('create_project')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#e11d48] to-[#be185d] hover:from-[#be185d] hover:to-[#9f1239] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-900/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Registrar Proyecto</span>
+              <ChevronRight className="w-4 h-4 ml-0.5" />
+            </button>
+          </div>
         </div>
 
-        <button
-          onClick={() => onNavigateToTab('create_project')}
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all active:scale-95 cursor-pointer self-start lg:self-center"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Registrar Proyecto</span>
-        </button>
+        {/* Hero Fashion Model Photo from Reference Capture */}
+        <div className="relative md:w-1/2 lg:w-7/12 h-52 sm:h-64 md:h-72 w-full overflow-hidden rounded-2xl flex items-center justify-end">
+          <img
+            src="/assets/aistudio/Panel_de_Finanzas_y_Moda_Elegante_ad48950a.png"
+            alt="Haute Couture Fashion Model"
+            className="w-full h-full object-cover object-right rounded-2xl shadow-sm filter contrast-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFFDFC] via-transparent to-transparent md:block hidden pointer-events-none w-1/4" />
+        </div>
       </div>
 
-      {/* QUICK STATUS BENCHMARK */}
+      {/* 3 STAT KPI CARDS (MATCHING CAPTURE WITH LUXURY PINK CIRCLES & GOLD DIAMONDS) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-3xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
-            <Folder className="w-5 h-5" />
+        <div className="bg-white p-5 rounded-2xl border-2 border-pink-200/90 shadow-xs flex items-center justify-between relative group hover:shadow-md transition-all">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-500 shrink-0 shadow-inner">
+              <Folder className="w-5 h-5 text-rose-500" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block font-sans">Proyectos Registrados</span>
+              <strong className="text-2xl font-serif font-black text-slate-900">{userProjects.length}</strong>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Proyectos Registrados</span>
-            <strong className="text-lg font-bold text-slate-800">{userProjects.length}</strong>
-          </div>
+          <span className="text-amber-500/70 text-xs self-end mb-1 select-none">💎</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-3xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-            <Award className="w-5 h-5" />
+        <div className="bg-white p-5 rounded-2xl border-2 border-pink-200/90 shadow-xs flex items-center justify-between relative group hover:shadow-md transition-all">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full bg-pink-50 border border-pink-200/60 flex items-center justify-center text-pink-600 shrink-0 shadow-inner">
+              <Award className="w-5 h-5 text-pink-600" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block font-sans">Mesas Ganadas (80%)</span>
+              <strong className="text-2xl font-serif font-black text-slate-900">{historyWonLog.length}</strong>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Mesas Ganadas (80%)</span>
-            <strong className="text-lg font-bold text-slate-800">{historyWonLog.length}</strong>
-          </div>
+          <span className="text-amber-500/70 text-xs self-end mb-1 select-none">💎</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-3xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
-            <Coins className="w-5 h-5" />
+        <div className="bg-white p-5 rounded-2xl border-2 border-pink-200/90 shadow-xs flex items-center justify-between relative group hover:shadow-md transition-all">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
+              <Coins className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block font-sans">Fondo Acumulado Ganado</span>
+              <strong className="text-2xl font-serif font-black text-slate-900 font-mono">{totalPrizeWon.toFixed(2)}€</strong>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Fondo Acumulado Ganado</span>
-            <strong className="text-lg font-bold text-emerald-600 font-mono">{totalPrizeWon.toFixed(2)}€</strong>
-          </div>
+          <span className="text-amber-500/70 text-xs self-end mb-1 select-none">💎</span>
         </div>
       </div>
 
       <div className="w-full space-y-6">
         
         {/* SECTION A: DETAILED PROJECTS SAVED */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-3xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Folder className="w-4 h-4 text-indigo-500" />
+          <div className="bg-white rounded-3xl border-2 border-pink-200/90 p-6 sm:p-8 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-900 flex items-center gap-3">
+                <Folder className="w-6 h-6 text-rose-500" />
                 <span>Portafolio de Proyectos Guardados</span>
               </h3>
-              <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600">
-                Guardado en Local & SEPA
+              <span className="text-[11px] font-mono font-bold bg-pink-50 border border-pink-200/80 px-3 py-1 rounded-full text-pink-700 self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
+                <span>🔒</span> Guardado en Local & SEPA
               </span>
             </div>
 
+            {/* Golden ornament divider */}
+            <div className="relative flex items-center justify-center py-1">
+              <div className="w-full border-t border-amber-200/70"></div>
+              <span className="absolute px-3 bg-white text-amber-500 text-xs select-none">💎</span>
+            </div>
+
             {userProjects.length === 0 ? (
-              <div className="border border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-3">
-                <Folder className="w-10 h-10 text-slate-300 mx-auto" />
+              <div className="border-2 border-dashed border-pink-200 rounded-2xl p-8 text-center space-y-3 bg-[#FFFDFE]">
+                <Folder className="w-10 h-10 text-rose-300 mx-auto" />
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-slate-700">Ningún proyecto guardado aún</p>
                   <p className="text-[11px] text-slate-400 max-w-sm mx-auto leading-relaxed">
@@ -946,7 +985,7 @@ export default function SavedProjectsManager({
                 </div>
                 <button
                   onClick={() => onNavigateToTab('create_project')}
-                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[10px] font-semibold tracking-wide"
+                  className="px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-full text-[11px] font-bold tracking-wide shadow-sm"
                 >
                   Registrar mi primer proyecto ahora
                 </button>
@@ -954,35 +993,35 @@ export default function SavedProjectsManager({
             ) : (
               <div className="space-y-6 font-sans text-slate-800">
                 {/* Visual Project Selection Deck */}
-                <div className="space-y-2 relative p-3 sm:p-4 rounded-2xl bg-sky-50/50 border border-sky-200/60 shadow-2xs">
+                <div className="space-y-3 relative p-4 sm:p-5 rounded-2xl bg-[#FFF9FA] border-2 border-pink-200/90 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-sky-900 uppercase tracking-wider font-mono flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
-                      Selecciona un proyecto para inspeccionar:
+                    <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider font-sans flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse"></span>
+                      SELECCIONA UN PROYECTO PARA INSPECCIONAR:
                     </span>
                     {/* Slider Navigation Buttons */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={scrollLeft}
-                        className="p-1.5 rounded-lg bg-white hover:bg-sky-50 border border-sky-200 text-sky-700 hover:text-sky-900 transition cursor-pointer active:scale-95 shadow-3xs"
+                        className="w-8 h-8 rounded-full bg-white hover:bg-pink-50 border border-pink-250 text-slate-700 transition cursor-pointer active:scale-95 shadow-3xs flex items-center justify-center"
                         title="Deslizar a la izquierda"
                       >
-                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <ChevronLeft className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={scrollRight}
-                        className="p-1.5 rounded-lg bg-white hover:bg-sky-50 border border-sky-200 text-sky-700 hover:text-sky-900 transition cursor-pointer active:scale-95 shadow-3xs"
+                        className="w-8 h-8 rounded-full bg-white hover:bg-pink-50 border border-pink-250 text-slate-700 transition cursor-pointer active:scale-95 shadow-3xs flex items-center justify-center"
                         title="Deslizar a la derecha"
                       >
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                   <div 
                     ref={scrollContainerRef}
-                    className="flex overflow-x-auto pb-3 pt-1 gap-4 scrollbar-thin scrollbar-thumb-sky-200 scrollbar-track-transparent scroll-smooth"
+                    className="flex overflow-x-auto pb-3 pt-1 gap-4 scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-transparent scroll-smooth"
                   >
                     {userProjects.map((p, idx) => {
                       const isSelected = p.id === selectedProjectId;
@@ -996,46 +1035,38 @@ export default function SavedProjectsManager({
                             setSelectedProjectId(p.id);
                             setIsEditing(false);
                           }}
-                          style={{
-                            backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
-                            backgroundImage: isSelected 
-                              ? 'linear-gradient(135deg, #ffffff 0%, #e0f2fe 35%, #7dd3fc 100%)' 
-                              : 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #e0f2fe 100%)',
-                            borderColor: isSelected ? '#38bdf8' : '#e2e8f0',
-                            color: isSelected ? '#0369a1' : '#0c4a6e'
-                          }}
-                          className={`portfolio-project-card project-card-btn tab-trigger custom-bg text-left p-4 rounded-xl border-2 transition-all duration-300 min-w-[210px] max-w-[240px] flex-1 cursor-pointer relative group ${
+                          className={`portfolio-project-card project-card-btn tab-trigger text-left p-4 rounded-2xl border-2 transition-all duration-300 min-w-[230px] max-w-[260px] flex-1 cursor-pointer relative group bg-white ${
                             isSelected
-                              ? 'shadow-md shadow-sky-200/50 ring-2 ring-sky-300 ring-offset-2'
-                              : 'hover:border-sky-300 text-slate-800 shadow-xs hover:shadow-sm'
+                              ? 'border-pink-400 shadow-md shadow-pink-200/50 ring-2 ring-pink-200'
+                              : 'border-pink-200/80 hover:border-pink-300 shadow-xs hover:shadow-sm'
                           }`}
                         >
                           {isSelected && (
-                            <span className="absolute top-2.5 right-2.5 bg-white text-sky-600 border border-sky-200 rounded-full p-1 shadow-sm flex items-center justify-center">
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <span className="absolute top-2.5 right-2.5 bg-rose-500 text-white rounded-full p-1 shadow-sm flex items-center justify-center">
+                              <Check className="w-3 h-3 stroke-[3]" />
                             </span>
                           )}
                           <span className={`text-[9px] uppercase font-extrabold tracking-wider font-mono block mb-1.5 ${
-                            isSelected ? 'text-sky-800' : 'text-slate-500'
+                            isSelected ? 'text-rose-700' : 'text-slate-500'
                           }`}>
                             {p.category || 'Categoría'}
                           </span>
-                          <strong className={`block text-xs sm:text-sm font-extrabold leading-snug truncate ${
-                            isSelected ? 'text-slate-900' : 'text-slate-800 group-hover:text-sky-950 transition-colors'
+                          <strong className={`block text-xs sm:text-sm font-serif font-black leading-snug truncate ${
+                            isSelected ? 'text-slate-900' : 'text-slate-800 group-hover:text-rose-950 transition-colors'
                           }`}>
                             {p.title || 'Proyecto Sin Título'}
                           </strong>
                           
                           <div className="mt-3.5 space-y-1.5">
                             <div className="flex justify-between items-center text-[9px]">
-                              <span className={isSelected ? 'text-sky-800 font-bold' : 'text-slate-500 font-medium'}>Financiación:</span>
-                              <span className={`font-black font-mono ${isSelected ? 'text-sky-950' : 'text-slate-700'}`}>
+                              <span className={isSelected ? 'text-rose-700 font-bold' : 'text-slate-500 font-medium'}>Financiación:</span>
+                              <span className={`font-black font-mono ${isSelected ? 'text-rose-950' : 'text-slate-700'}`}>
                                 {progressPercent.toFixed(0)}%
                               </span>
                             </div>
-                            <div className={`w-full h-2 rounded-full overflow-hidden ${isSelected ? 'bg-white/80 border border-sky-300/80 shadow-inner' : 'bg-slate-100 border border-slate-200'}`}>
+                            <div className={`w-full h-2 rounded-full overflow-hidden ${isSelected ? 'bg-rose-50 border border-rose-200 shadow-inner' : 'bg-slate-100 border border-slate-200'}`}>
                               <div
-                                className={`h-full rounded-full transition-all duration-500 ${isSelected ? 'bg-sky-500' : 'bg-sky-500'}`}
+                                className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r from-rose-500 to-pink-500`}
                                 style={{ width: `${progressPercent}%` }}
                               />
                             </div>
@@ -1603,18 +1634,18 @@ export default function SavedProjectsManager({
                     return (
                       <div 
                         key={project.id} 
-                        className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm animate-fade-in text-left block relative"
+                        className="rounded-3xl border-2 border-pink-200/90 bg-white overflow-hidden shadow-sm shadow-pink-100/50 animate-fade-in text-left block relative"
                       >
                         {/* HERO COVER BANNER */}
-                        <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900 group">
+                        <div className="relative h-48 sm:h-64 w-full overflow-hidden bg-slate-900 group">
                           {/* BUTTON WITH CAMERA TO CHANGE COVER IMAGE */}
                           <label
                             htmlFor={`cover-upload-${project.id}`}
-                            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white border border-white/25 backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition-all active:scale-95"
+                            className="absolute top-4 right-4 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-slate-950/85 hover:bg-black text-white border border-white/20 backdrop-blur-md text-xs font-semibold shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
                             title="Cambiar imagen de portada"
                           >
-                            <Camera className="w-4 h-4 text-sky-300" />
-                            <span className="text-[11px] font-medium tracking-wide">Cambiar Portada</span>
+                            <Camera className="w-4 h-4 text-white" />
+                            <span className="text-[11px] font-medium tracking-wide">Cambiar Portada ✏️</span>
                             <input
                               id={`cover-upload-${project.id}`}
                               type="file"
@@ -1624,23 +1655,13 @@ export default function SavedProjectsManager({
                             />
                           </label>
 
-                          {hasCoverImage ? (
-                            <>
-                              <img 
-                                src={coverUrl!} 
-                                alt={project.title} 
-                                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" 
-                              />
-                              {/* Subtle bottom gradient only behind text to preserve total clarity across the image */}
-                              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
-                            </>
-                          ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 opacity-95">
-                              {/* Abstract visual background pattern */}
-                              <div className="absolute inset-0 opacity-15 mix-blend-overlay bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-300 via-indigo-500 to-slate-900" />
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-550/10 rounded-full filter blur-3xl pointer-events-none" />
-                            </div>
-                          )}
+                          <img 
+                            src={coverUrl || '/assets/aistudio/Panel_de_Finanzas_y_Moda_Elegante_ad48950a.png'} 
+                            alt={project.title} 
+                            className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700" 
+                          />
+                          {/* Subtle bottom gradient only behind text to preserve total clarity across the image */}
+                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
 
                           {/* OVERLAY HEADER CONTENT */}
                           <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end text-white pointer-events-none">
@@ -1666,18 +1687,18 @@ export default function SavedProjectsManager({
                             </p>
                           </div>
 
-                          {/* PREMIUM FINANCIALS ACUMULADOS PROGRESS CARD */}
-                          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-150 space-y-3.5 shadow-3xs">
+                          {/* PREMIUM FINANCIALS ACUMULADOS PROGRESS CARD (MARCO ROSA PERLA) */}
+                          <div className="p-5 bg-gradient-to-br from-white via-pink-50/15 to-rose-50/20 rounded-2xl border-2 border-pink-200/90 space-y-3.5 shadow-xs shadow-pink-100/30">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <div>
-                                <span className="text-[9px] uppercase font-mono font-bold text-indigo-600 block tracking-wider">Financiación Acumulada Consensuada:</span>
+                                <span className="text-[9px] uppercase font-mono font-bold text-pink-700 block tracking-wider">Financiación Acumulada Consensuada:</span>
                                 <strong className="text-lg sm:text-xl font-bold text-slate-800 font-mono tracking-tight block mt-0.5">
                                   {fundingWon.toFixed(2)}€ <span className="text-xs font-normal text-slate-400">de {project.budget}€</span>
                                 </strong>
                               </div>
                               <div className="text-left sm:text-right">
                                 <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block tracking-wider">Progreso de la Meta:</span>
-                                <span className="text-sm font-extrabold text-indigo-600 block mt-0.5 font-mono">{progressPercent.toFixed(1)}%</span>
+                                <span className="text-sm font-extrabold text-pink-600 block mt-0.5 font-mono">{progressPercent.toFixed(1)}%</span>
                               </div>
                             </div>
 
@@ -1687,15 +1708,15 @@ export default function SavedProjectsManager({
                                 className={`h-full rounded-full transition-all duration-500 ease-out ${
                                   isFullyFunded 
                                     ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
-                                    : 'bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700'
+                                    : 'bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600'
                                 }`} 
                                 style={{ width: `${progressPercent}%` }}
                               />
                             </div>
 
-                            <div className="flex justify-between items-center text-[10px] text-slate-450 border-t border-slate-200/50 pt-2.5">
+                            <div className="flex justify-between items-center text-[10px] text-slate-450 border-t border-pink-100 pt-2.5">
                               <span className="flex items-center gap-1">
-                                <TrendingUp className="w-3.5 h-3.5 text-indigo-500" />
+                                <TrendingUp className="w-3.5 h-3.5 text-pink-500" />
                                 <span>Meta de Presupuesto Rápido</span>
                               </span>
                               {isFullyFunded ? (
@@ -1705,16 +1726,16 @@ export default function SavedProjectsManager({
                                 </span>
                               ) : (
                                 <span className="font-semibold text-slate-600">
-                                  Faltan <strong className="text-indigo-600 font-mono">{(project.budget - fundingWon).toFixed(2)}€</strong> para su tope
+                                  Faltan <strong className="text-pink-600 font-mono">{(project.budget - fundingWon).toFixed(2)}€</strong> para su tope
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          {/* CORE SPECS GRID */}
+                          {/* CORE SPECS GRID (MARCOS ROSA PERLA) */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="p-4 bg-white rounded-xl border border-slate-150 shadow-3xs flex items-start gap-3">
-                              <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 shrink-0">
+                            <div className="p-4 bg-white rounded-xl border-2 border-pink-200/90 shadow-xs flex items-start gap-3">
+                              <div className="p-2 bg-pink-50 rounded-lg text-pink-600 shrink-0 border border-pink-100">
                                 <Coins className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
@@ -1723,18 +1744,18 @@ export default function SavedProjectsManager({
                               </div>
                             </div>
 
-                            <div className="p-4 bg-white rounded-xl border border-slate-150 shadow-3xs flex items-start gap-3">
-                              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 shrink-0">
+                            <div className="p-4 bg-white rounded-xl border-2 border-pink-200/90 shadow-xs flex items-start gap-3">
+                              <div className="p-2 bg-rose-50 rounded-lg text-rose-600 shrink-0 border border-rose-100">
                                 <Award className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
                                 <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider font-mono">Objetivo Recaudación</span>
-                                <strong className="text-sm font-bold text-indigo-600 font-mono block mt-0.5">{project.fundingGoal || 'N/D'}€</strong>
+                                <strong className="text-sm font-bold text-pink-600 font-mono block mt-0.5">{project.fundingGoal || 'N/D'}€</strong>
                               </div>
                             </div>
 
-                            <div className="p-4 bg-white rounded-xl border border-slate-150 shadow-3xs flex items-start gap-3 sm:col-span-2 lg:col-span-1">
-                              <div className="p-2 bg-amber-50 rounded-lg text-amber-600 shrink-0">
+                            <div className="p-4 bg-white rounded-xl border-2 border-pink-200/90 shadow-xs flex items-start gap-3 sm:col-span-2 lg:col-span-1">
+                              <div className="p-2 bg-amber-50 rounded-lg text-amber-600 shrink-0 border border-amber-100">
                                 <Layers className="w-4 h-4" />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -1746,35 +1767,35 @@ export default function SavedProjectsManager({
                             </div>
                           </div>
 
-                          {/* OBJECTIVE AND TIMELINE BENTO */}
+                          {/* OBJECTIVE AND TIMELINE BENTO (MARCOS ROSA PERLA) */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {project.objective && (
-                              <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-150 text-left relative flex flex-col justify-between">
-                                <span className="text-[9px] uppercase font-mono font-extrabold text-slate-400 tracking-wider block mb-1">🎯 Objetivo de la Propuesta</span>
-                                <p className="text-xs text-slate-650 leading-relaxed italic font-medium pl-3 border-l-2 border-indigo-500">
+                              <div className="p-4 bg-white rounded-xl border-2 border-pink-200/90 text-left relative flex flex-col justify-between shadow-xs">
+                                <span className="text-[9px] uppercase font-mono font-extrabold text-pink-700 tracking-wider block mb-1">🎯 Objetivo de la Propuesta</span>
+                                <p className="text-xs text-slate-650 leading-relaxed italic font-medium pl-3 border-l-2 border-pink-400">
                                   "{project.objective}"
                                 </p>
                               </div>
                             )}
 
                             {project.timeline && (
-                              <div className="p-4 bg-indigo-50/10 rounded-xl border border-indigo-100/50 text-left relative flex flex-col justify-between">
-                                <span className="text-[9px] uppercase font-mono font-extrabold text-indigo-600 tracking-wider block mb-1">📅 Cronograma de Lanzamiento</span>
+                              <div className="p-4 bg-white rounded-xl border-2 border-pink-200/90 text-left relative flex flex-col justify-between shadow-xs">
+                                <span className="text-[9px] uppercase font-mono font-extrabold text-pink-700 tracking-wider block mb-1">📅 Cronograma de Lanzamiento</span>
                                 <p className="text-xs text-slate-700 leading-normal font-semibold flex items-center gap-1.5 mt-1">
-                                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shrink-0" />
+                                  <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse shrink-0" />
                                   <span>{project.timeline}</span>
                                 </p>
                               </div>
                             )}
                           </div>
 
-                          {/* CONTACT DETAILS BOX */}
+                          {/* CONTACT DETAILS BOX (MARCO ROSA PERLA) */}
                           {(project.contactEmail || project.contactPhone) && (
-                            <div className="p-4 bg-slate-50/60 rounded-xl border border-slate-150 flex flex-wrap gap-4 text-xs font-sans text-slate-600 items-center">
+                            <div className="p-4 bg-white rounded-xl border-2 border-pink-200/90 flex flex-wrap gap-4 text-xs font-sans text-slate-600 items-center shadow-xs">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Contacto Oficial:</span>
                               {project.contactEmail && (
-                                <a href={`mailto:${project.contactEmail}`} className="flex items-center gap-1.5 text-indigo-650 hover:underline font-medium">
-                                  <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                                <a href={`mailto:${project.contactEmail}`} className="flex items-center gap-1.5 text-pink-650 hover:underline font-medium">
+                                  <Mail className="w-3.5 h-3.5 text-pink-500" />
                                   <span>{project.contactEmail}</span>
                                 </a>
                               )}
@@ -1787,11 +1808,11 @@ export default function SavedProjectsManager({
                             </div>
                           )}
 
-                          {/* DOCUMENTACIÓN REGISTRADA */}
+                          {/* DOCUMENTACIÓN REGISTRADA (MARCO ROSA PERLA) */}
                           {project.documentationName && (
-                            <div className="p-3.5 bg-indigo-50/40 border border-indigo-150 rounded-xl flex flex-col gap-3 text-xs font-sans shadow-3xs">
+                            <div className="p-3.5 bg-white border-2 border-pink-200/90 rounded-xl flex flex-col gap-3 text-xs font-sans shadow-xs">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-100/60 flex items-center justify-center text-indigo-600 shrink-0">
+                                <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 shrink-0 border border-pink-100">
                                   <FileText className="w-5 h-5" />
                                 </div>
                                 <div className="text-left min-w-0">
@@ -1804,7 +1825,7 @@ export default function SavedProjectsManager({
                                   href={project.documentationUrl} 
                                   target="_blank" 
                                   rel="noreferrer" 
-                                  className="w-full text-center py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition text-[10px] shadow-3xs cursor-pointer block"
+                                  className="w-full text-center py-2.5 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold rounded-xl transition text-[10px] shadow-3xs cursor-pointer block"
                                 >
                                   Descargar Dossier
                                 </a>
@@ -1812,19 +1833,19 @@ export default function SavedProjectsManager({
                             </div>
                           )}
 
-                          {/* DETALLE: PRESUPUESTO DESGLOSADO */}
+                          {/* DETALLE: PRESUPUESTO DESGLOSADO (MARCO ROSA PERLA) */}
                           {selectedProjectId === project.id && project.budgetBreakdown && (
-                            <div className="p-4 bg-slate-50/50 border border-slate-150 rounded-xl space-y-2 text-left">
-                              <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 font-mono block">Partidas Presupuestarias Registradas:</span>
-                              <div className="divide-y divide-slate-100 bg-white rounded-xl border border-slate-150 overflow-hidden font-mono text-[11px] shadow-3xs">
+                            <div className="p-4 bg-white border-2 border-pink-200/90 rounded-xl space-y-2 text-left shadow-xs">
+                              <span className="text-[10px] uppercase tracking-wider font-extrabold text-pink-700 font-mono block">Partidas Presupuestarias Registradas:</span>
+                              <div className="divide-y divide-pink-100 bg-white rounded-xl border-2 border-pink-200/90 overflow-hidden font-mono text-[11px] shadow-3xs">
                                 {project.budgetBreakdown.split('\n').filter(line => line.trim()).map((item, id) => {
                                   const parts = item.split(':');
                                   const name = parts[0]?.trim() || '';
                                   const value = parts[1]?.trim() || '';
                                   return (
-                                    <div key={id} className="p-2.5 px-4 flex justify-between items-center text-slate-650 hover:bg-slate-50/50 transition">
+                                    <div key={id} className="p-2.5 px-4 flex justify-between items-center text-slate-650 hover:bg-pink-50/20 transition">
                                       <span className="truncate flex-1 font-sans font-medium text-slate-700">{name}</span>
-                                      <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100/40">{value}</span>
+                                      <span className="font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded border border-pink-200/60">{value}</span>
                                     </div>
                                   );
                                 })}
@@ -1832,7 +1853,7 @@ export default function SavedProjectsManager({
                             </div>
                           )}
 
-                          {/* MULTIMEDIA INTERACTIVA GALLERY */}
+                          {/* MULTIMEDIA INTERACTIVA GALLERY (MARCOS ROSA PERLA) */}
                           {selectedProjectId === project.id && ((project.images && project.images.length > 0) || (project.videos && project.videos.length > 0)) && (
                             <div className="space-y-2.5 text-left">
                               <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 font-mono block">Galería, Diseños & Multimedia:</span>
@@ -1842,7 +1863,7 @@ export default function SavedProjectsManager({
                                     key={`gallery-img-${i}`} 
                                     onMouseEnter={() => setHoveredMedia({ url: imgUrl, type: 'image' })}
                                     onMouseLeave={() => setHoveredMedia(null)}
-                                    className="relative h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-200 hover:border-indigo-400 hover:shadow-md shrink-0 transition-all duration-300 hover:scale-[1.04] cursor-zoom-in group"
+                                    className="relative h-20 sm:h-24 rounded-xl overflow-hidden border-2 border-pink-200/90 hover:border-pink-400 hover:shadow-md shrink-0 transition-all duration-300 hover:scale-[1.04] cursor-zoom-in group shadow-xs"
                                   >
                                     <img src={imgUrl} alt="Boceto o Foto" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                     <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/20 transition-all duration-300 flex items-center justify-center pointer-events-none">
@@ -1855,7 +1876,7 @@ export default function SavedProjectsManager({
                                     key={`gallery-vid-${i}`} 
                                     onMouseEnter={() => setHoveredMedia({ url: vidUrl, type: 'video' })}
                                     onMouseLeave={() => setHoveredMedia(null)}
-                                    className="relative h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-950 hover:border-indigo-400 hover:shadow-md flex flex-col items-center justify-center p-2 text-center text-[10px] text-white font-sans transition-all duration-300 hover:scale-[1.04] cursor-zoom-in group"
+                                    className="relative h-20 sm:h-24 rounded-xl overflow-hidden border-2 border-pink-200/90 bg-slate-950 hover:border-pink-400 hover:shadow-md flex flex-col items-center justify-center p-2 text-center text-[10px] text-white font-sans transition-all duration-300 hover:scale-[1.04] cursor-zoom-in group shadow-xs"
                                   >
                                     <span className="text-lg mb-1 transform group-hover:scale-115 transition duration-300">📹</span>
                                     <span className="truncate w-full text-[9px] font-sans text-slate-300">Video {i + 1}</span>
@@ -1868,7 +1889,7 @@ export default function SavedProjectsManager({
                             </div>
                           )}
 
-                          {/* TEAM SECTION DISPLAY RICH */}
+                          {/* TEAM SECTION DISPLAY RICH (MARCOS ROSA PERLA) */}
                           {project.team && project.team.length > 0 && (
                             <div className="space-y-3 pt-2 text-left">
                               <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 font-mono block">
@@ -1903,13 +1924,13 @@ export default function SavedProjectsManager({
                                   const avatarColor = colorPalette[i % colorPalette.length];
 
                                   return (
-                                    <div key={i} className="p-4 bg-slate-50/50 border border-slate-150 rounded-2xl flex items-start gap-3.5 hover:bg-slate-50 hover:border-indigo-200 transition-all duration-300">
+                                    <div key={i} className="p-4 bg-white border-2 border-pink-200/90 rounded-2xl flex items-start gap-3.5 hover:bg-pink-50/20 hover:border-pink-300 transition-all duration-300 shadow-xs">
                                       {memberAvatar ? (
                                         <div className="relative shrink-0">
                                           <img
                                             src={memberAvatar}
                                             alt={displayName}
-                                            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-slate-200 shadow-xs ring-1 ring-slate-100"
+                                            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-pink-200 shadow-xs ring-1 ring-pink-100"
                                             referrerPolicy="no-referrer"
                                           />
                                         </div>
@@ -1921,16 +1942,16 @@ export default function SavedProjectsManager({
                                       <div className="min-w-0 flex-1 space-y-1">
                                         <div className="flex flex-wrap items-center justify-between gap-1">
                                           <span className="font-bold text-slate-800 text-xs truncate max-w-[130px]" title={displayName}>{displayName}</span>
-                                          <span className="text-[8px] bg-indigo-50/80 text-indigo-700 font-bold px-2 py-0.5 rounded border border-indigo-100">{member.role}</span>
+                                          <span className="text-[8px] bg-pink-50 text-pink-700 font-bold px-2 py-0.5 rounded border border-pink-200">{member.role}</span>
                                         </div>
                                         <p className="text-[10px] text-slate-500 font-medium leading-normal">{member.experience}</p>
                                         {member.bio && (
-                                          <p className="text-[10px] text-slate-600 bg-white p-2 rounded-lg border border-slate-150 leading-relaxed font-sans mt-1.5">
+                                          <p className="text-[10px] text-slate-600 bg-white p-2 rounded-lg border border-pink-200/80 leading-relaxed font-sans mt-1.5">
                                             {member.bio}
                                           </p>
                                         )}
                                         {member.profileLink && (
-                                          <a href={member.profileLink} target="_blank" rel="noreferrer" className="text-[9px] text-indigo-600 hover:underline flex items-center gap-1 font-bold mt-1.5">
+                                          <a href={member.profileLink} target="_blank" rel="noreferrer" className="text-[9px] text-pink-600 hover:underline flex items-center gap-1 font-bold mt-1.5">
                                             <span>🔗 Ver Portfolio</span>
                                           </a>
                                         )}
@@ -2011,10 +2032,10 @@ export default function SavedProjectsManager({
           </div>
 
           {/* SECTION C: ACTIVE SESSION PROJECTS (Pago ya Disparado / Compitiendo) */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-3xs space-y-4 animate-fade-in">
+          <div className="bg-white rounded-2xl border-2 border-pink-200/90 p-6 shadow-xs space-y-4 animate-fade-in">
             <div>
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-indigo-600 animate-pulse" />
+                <Clock className="w-4 h-4 text-pink-600 animate-pulse" />
                 <span>Proyectos Activos en Sesión (Participación y Pago Disparado)</span>
               </h3>
               <p className="text-[11px] text-slate-500 mt-1">
@@ -2023,14 +2044,14 @@ export default function SavedProjectsManager({
             </div>
 
             {activeSessionProjectsList.length === 0 ? (
-              <div className="border border-dashed border-slate-150 rounded-xl p-6 text-center text-xs text-slate-450 bg-slate-50/50">
+              <div className="border-2 border-dashed border-pink-200 rounded-xl p-6 text-center text-xs text-slate-450 bg-pink-50/15">
                 <p className="font-medium text-slate-600">No hay proyectos postulando en sesiones activas de tu perfil</p>
                 <p className="text-[10px] text-slate-450 mt-1 max-w-md mx-auto">
                   Selecciona uno de tus proyectos en el carrusel de arriba y regístralo en cualquiera de las mesas disponibles en el panel derecho para disparar la cuota e iniciar la ronda.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-150 overflow-hidden bg-white">
+              <div className="divide-y divide-pink-100 rounded-xl border-2 border-pink-200/90 overflow-hidden bg-white">
                 {activeSessionProjectsList.map((item, idx) => (
                   <div key={idx} className="p-4 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                     <div>
@@ -2081,8 +2102,8 @@ export default function SavedProjectsManager({
 
           {/* SECTION B: WINNINGS HISTORY log (exclusively won, without participant clutter) */}
           <div 
-            style={{ backgroundColor: '#FDF2F5' }}
-            className="rounded-2xl border border-pink-200/80 p-6 shadow-3xs space-y-5 transition-all"
+            style={{ backgroundColor: '#ff70fe' }}
+            className="rounded-2xl border border-pink-300/80 p-6 shadow-3xs space-y-5 transition-all"
           >
             {/* Header with Title and Global KPI Badges */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-pink-200/60 pb-4">

@@ -33,7 +33,10 @@ import {
   Globe,
   Trash2,
   CornerDownRight,
-  Reply
+  Reply,
+  Gift,
+  Plus,
+  Trophy
 } from 'lucide-react';
 import { 
   TRABAJADORES_USERS, 
@@ -292,6 +295,9 @@ interface TikTokFinanzasFeedProps {
   invitedUsersMap?: Record<string, boolean>;
   onNavigateToTab?: (tab: string) => void;
   onOpenHashtag?: (tag: string) => void;
+  onOpenRanking?: () => void;
+  onOpenGifts?: () => void;
+  onOpenStreamOptions?: () => void;
 }
 
 // Helper to format captions with clickable hashtags and mentions
@@ -363,6 +369,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   onNavigateTo10WindowsLive,
   onNavigateToTab,
   onOpenHashtag,
+  onOpenRanking,
+  onOpenGifts,
+  onOpenStreamOptions,
   handleFinishRetransmissionAndPassToNextParticipant,
   isBroadcastMicOn,
   isMuted,
@@ -2975,20 +2984,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
 
     const selectedEmoji = customEmoji || '❤️';
-    // 85% selected emoji, 15% high-shine sparkles ✨ to accentuate brightness and HD glow
+    // 80% selected emoji, 20% sparkling star ✨ for subtle shine
     const emojiPool = [selectedEmoji, selectedEmoji, selectedEmoji, selectedEmoji, '✨'];
 
     const spawnContinuousWave = (waveIdx: number) => {
-      const count = 28;
+      // Menos corazones por oleada para una lluvia limpia y elegante
+      const count = 6;
       const baseTime = Date.now();
       const waveHearts: typeof showerHearts = [];
 
       for (let i = 0; i < count; i++) {
-        const isRain = Math.random() < 0.88; // 88% continuous waterfall cascade from top
-        const size = Math.floor(Math.random() * 32) + 34; // 34px - 66px (Large, crisp, ultra HD definition)
-        const duration = +(1.9 + Math.random() * 1.5).toFixed(2);
-        const delay = +(Math.random() * 0.45).toFixed(2);
-        const left = Math.floor(Math.random() * 94) + 3; // 3% to 97% width
+        const size = Math.floor(Math.random() * 16) + 32; // 32px - 48px
+        const duration = +(1.25 + Math.random() * 0.35).toFixed(2); // Caída rápida y continua (1.25s - 1.6s)
+        const delay = +(Math.random() * 0.15).toFixed(2);
+        const left = Math.floor(Math.random() * 90) + 5; // 5% a 95% del ancho
 
         waveHearts.push({
           id: baseTime + waveIdx * 10000 + i + Math.floor(Math.random() * 100000),
@@ -2996,39 +3005,40 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           size,
           duration,
           delay,
-          drift1: Math.floor(Math.random() * 40) - 20,
-          drift2: Math.floor(Math.random() * 60) - 30,
-          drift3: Math.floor(Math.random() * 50) - 25,
-          drift4: Math.floor(Math.random() * 70) - 35,
-          rot1: Math.floor(Math.random() * 40) - 20,
-          rot2: Math.floor(Math.random() * 50) - 25,
-          rot3: Math.floor(Math.random() * 60) - 30,
-          rot4: Math.floor(Math.random() * 70) - 35,
+          drift1: Math.floor(Math.random() * 20) - 10,
+          drift2: Math.floor(Math.random() * 30) - 15,
+          drift3: Math.floor(Math.random() * 24) - 12,
+          drift4: Math.floor(Math.random() * 30) - 15,
+          rot1: Math.floor(Math.random() * 20) - 10,
+          rot2: Math.floor(Math.random() * 24) - 12,
+          rot3: Math.floor(Math.random() * 24) - 12,
+          rot4: Math.floor(Math.random() * 30) - 15,
           emoji: emojiPool[Math.floor(Math.random() * emojiPool.length)],
-          type: isRain ? 'rain' : 'rise'
+          type: 'rain' // Caída 100% descendente continua sin paradas
         });
       }
 
-      setShowerHearts(prev => [...prev.slice(-140), ...waveHearts]);
+      setShowerHearts(prev => [...prev.slice(-30), ...waveHearts]);
 
+      // Duración corta: se limpia rápidamente en ~1.9s
       setTimeout(() => {
         setShowerHearts(prev => prev.filter(h => !waveHearts.some(nh => nh.id === h.id)));
-      }, 4800);
+      }, 1900);
     };
 
-    // Instant initial burst
+    // Ráfaga inicial ligera (6 corazones)
     spawnContinuousWave(0);
 
-    // Continuous waves spawned every 480ms for 14 continuous waves = over 7 seconds of dense, steady rain
+    // Segunda y última pequeña ráfaga a los 220ms (total ~12 corazones, duración inferior a 2 segundos)
     let wave = 1;
     continuousRainIntervalRef.current = setInterval(() => {
       spawnContinuousWave(wave);
       wave++;
-      if (wave >= 14) {
+      if (wave >= 2) {
         clearInterval(continuousRainIntervalRef.current);
         continuousRainIntervalRef.current = null;
       }
-    }, 480);
+    }, 220);
   };
 
   const triggerHeartsShower = (customEmoji?: string) => {
@@ -4025,131 +4035,58 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             </button>
           </div>
 
-          {/* Middle Row: Quick Action Buttons (Cámara ON, Mic ON, Pantalla, Invitados) */}
-          <div className="grid grid-cols-4 gap-1.5 pt-0.5 text-center w-full">
-            {/* Cámara ON */}
+          {/* Controls Row: Regalos (Izquierda), + En Grande (Centro), Ranking (Derecha) */}
+          <div className="flex items-center justify-between gap-3 sm:gap-4 pt-1.5 pb-1 text-center w-full max-w-md mx-auto min-w-0">
+            {/* Botón Izquierda: Regalos (Redirige al Centro de Regalos y Bóveda Oficial) */}
             <button
               type="button"
               onClick={() => {
-                const isPresenter = Boolean(
-                  presenter.id === userProfile?.id ||
-                  presenter.name?.includes('Adriana') ||
-                  presenter.isSelf ||
-                  presenter.id === 'user-adriana'
-                );
-                const isExpositionPhase = !isSessionInVotingPhase(session.id);
-                if (!isPresenter || !isExpositionPhase) {
-                  if (setSystemVoiceNotification) {
-                    setSystemVoiceNotification({
-                      show: true,
-                      message: '⚠️ El botón Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación.'
-                    });
-                  }
-                  return;
+                window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+                if (onOpenRanking) {
+                  (onOpenRanking as any)('regalos');
                 }
-                handleToggleUserCameraLiveBroadcast();
-                if (toggleBroadcastCam) {
-                  toggleBroadcastCam();
-                }
-                setIsWatchingPresenterCamera(true);
-                setIsPresenterCameraFullscreen(true);
               }}
-              className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                (!Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf || presenter.id === 'user-adriana') || isSessionInVotingPhase(session.id))
-                  ? 'bg-[#181d2a]/50 text-slate-500 border-slate-800/80 cursor-not-allowed opacity-60'
-                  : (isBroadcastCamOn || isUserLiveStreamingWithCamera)
-                    ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                    : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-              }`}
-              title={
-                (!Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf || presenter.id === 'user-adriana') || isSessionInVotingPhase(session.id))
-                  ? '⚠️ La Cámara ON solo funciona cuando sea Adriana Lima quien esté dando la explicación'
-                  : (isBroadcastCamOn || isUserLiveStreamingWithCamera) ? 'Desconectar Cámara' : 'Conectar Cámara ON'
-              }
-              id="btn-camara-on-channels-menu"
+              className="flex-1 py-2 sm:py-2.5 px-2 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 hover:border-pink-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[56px] sm:h-[62px] active:scale-95 shadow-md group"
+              title="Centro de Regalos · Fashion Finances"
+              id="btn-live-regalos-feed"
             >
-              <Camera className={`w-4 h-4 shrink-0 ${
-                (!Boolean(presenter.id === userProfile?.id || presenter.name?.includes('Adriana') || presenter.isSelf || presenter.id === 'user-adriana') || isSessionInVotingPhase(session.id))
-                  ? 'text-slate-500'
-                  : 'text-[#10b981]'
-              }`} />
-              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">
-                {(isBroadcastCamOn || isUserLiveStreamingWithCamera) ? 'Cámara ON' : 'Cámara OFF'}
-              </span>
+              <Gift className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-pink-400 group-hover:scale-110 transition-transform shrink-0" />
+              <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight text-pink-100">Regalos</span>
             </button>
 
-            {/* Mic ON */}
+            {/* Botón Centro: + En Grande (Fondo Rosa Perla y Símbolo + Blanco - Redirige a Opciones de Retransmisión - Captura z.png) */}
             <button
               type="button"
               onClick={() => {
-                if (toggleBroadcastMic) {
-                  toggleBroadcastMic();
+                if (onOpenStreamOptions) {
+                  onOpenStreamOptions();
+                } else {
+                  window.dispatchEvent(new CustomEvent('open-stream-options-modal'));
                 }
               }}
-              className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                isBroadcastMicOn && !isMuted
-                  ? 'bg-[#0B1E19] text-[#10b981] border-2 border-[#10b981] font-black shadow-emerald-950/40 ring-1 ring-[#10b981]/30'
-                  : 'bg-[#181d2a] text-slate-300 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-              }`}
-              title="Configurar Micrófono"
+              className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl sm:rounded-3xl !bg-[#FADADD] hover:!bg-[#F8C6D8] text-white flex items-center justify-center shadow-lg shadow-pink-300/35 active:scale-95 border-2 border-white/90 hover:border-white hover:scale-105 transition-all shrink-0 cursor-pointer group"
+              title="Opciones de Stream para Retransmitir en Directo (+)"
+              id="btn-live-center-plus-feed"
             >
-              <Mic className="w-4 h-4 text-[#10b981] shrink-0" />
-              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isBroadcastMicOn && !isMuted ? 'Mic ON' : 'Mute'}</span>
+              <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[3.5] drop-shadow-[0_1px_2px_rgba(180,80,120,0.35)] group-hover:rotate-90 transition-transform duration-300" />
             </button>
 
-            {/* Pantalla */}
+            {/* Botón Derecha: Ranking */}
             <button
               type="button"
               onClick={() => {
-                const isPresenter = Boolean(
-                  presenter.id === userProfile?.id ||
-                  presenter.name?.includes('Adriana') ||
-                  presenter.isSelf ||
-                  presenter.id === 'user-adriana'
-                );
-                const isExpositionPhase = !isSessionInVotingPhase(session.id);
-                if (!isPresenter || !isExpositionPhase) {
-                  if (setSystemVoiceNotification) {
-                    setSystemVoiceNotification({
-                      show: true,
-                      message: '⚠️ La opción del botón dividir pantalla solo funciona y puede decidirlo la persona que está dando su exposición de 5 minutos en el momento.'
-                    });
-                  }
-                  return;
-                }
-                setActiveChannelsMenuSessionId(null);
-                if (setShowScreenShareMenu) {
-                  setShowScreenShareMenu(true);
-                }
-                if (onToggleScreenShare) {
-                  onToggleScreenShare();
+                if (onOpenRanking) {
+                  onOpenRanking();
+                } else if (onNavigateToTab) {
+                  onNavigateToTab('home');
                 }
               }}
-              className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer active:scale-95 shadow-md ${
-                isScreenSharingActive
-                  ? 'bg-indigo-950/70 text-indigo-300 border-2 border-indigo-500 font-black ring-1 ring-indigo-400'
-                  : 'bg-[#181d2a] text-slate-200 border border-slate-700/70 hover:bg-[#22293b] font-bold'
-              }`}
-              title="Compartir Pantalla"
-              id="btn-pantalla-on-channels-menu"
+              className="flex-1 py-2 sm:py-2.5 px-2 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 hover:border-amber-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[56px] sm:h-[62px] active:scale-95 shadow-md group"
+              title="Ranking"
+              id="btn-live-ranking-feed"
             >
-              <Monitor className="w-4 h-4 text-slate-200 shrink-0" />
-              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">{isScreenSharingActive ? 'Pantalla ON' : 'Pantalla'}</span>
-            </button>
-
-            {/* Invitados */}
-            <button
-              type="button"
-              onClick={() => {
-                if (onOpenGuestsModal) {
-                  onOpenGuestsModal();
-                }
-              }}
-              className="py-2 px-1 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold active:scale-95 shadow-md"
-              title="Invitar Invitados"
-            >
-              <Users className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="truncate w-full text-[9px] sm:text-[9.5px] font-black tracking-tight">Invitados ({broadcastGuestsCount || 3})</span>
+              <Trophy className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+              <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight text-amber-100">Ranking</span>
             </button>
           </div>
 

@@ -28,8 +28,20 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
     'alexandervance1': '¡Hola! Bienvenido. Soy Alexander y me apasiona la fusión del diseño urbano creativo y las finanzas descentralizadas. Al elegirme como tu patrocinador, contarás con toda mi experiencia de marca y el apoyo de mi comunidad para impulsar tus proyectos en las mesas. ¡Hagamos historia juntos!',
   };
 
-  const welcomeMessage = welcomes[model.username?.toLowerCase() || ''] || 
+  const customSavedWelcome = typeof window !== 'undefined' ? (
+    localStorage.getItem(`custom_welcome_message_${model.id}`) ||
+    localStorage.getItem(`custom_welcome_message_${model.username?.toLowerCase()}`) ||
+    localStorage.getItem('custom_model_welcome_message')
+  ) : null;
+
+  const welcomeMessage = customSavedWelcome || welcomes[model.username?.toLowerCase() || ''] || 
     `¡Hola! Bienvenido a mi espacio oficial en Fashion Finances. Como tu patrocinadora de moda, mi objetivo es empoderar tu creatividad, ayudándote a financiar y difundir tus propuestas en el ecosistema. ¡Únete hoy a mi equipo de referidos y alcancemos el éxito juntos!`;
+
+  const customSavedBio = typeof window !== 'undefined' ? (
+    localStorage.getItem(`custom_model_bio_${model.id}`) ||
+    localStorage.getItem(`custom_model_bio_${model.username?.toLowerCase()}`) ||
+    localStorage.getItem('custom_model_bio')
+  ) : null;
 
   const instagramFollowers = (model.socials?.instagramFollowers) || Math.floor(model.followersCount * 0.58 + 450);
   const tiktokFollowers = (model.socials?.tiktokFollowers) || Math.floor(model.followersCount * 0.72 + 820);
@@ -225,7 +237,7 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
                 Sobre mí
               </span>
               <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-sans font-medium pl-1 bg-slate-50/70 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80">
-                {model.bio || 'Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.'}
+                {customSavedBio || model.bio || 'Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.'}
               </p>
             </div>
 

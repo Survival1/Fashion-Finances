@@ -314,12 +314,12 @@ async function startServer() {
   });
 
   // --- STATIC SERVING & SPA FALLBACK SETUP ---
+  const isProduction = process.env.NODE_ENV === "production";
   const distPath = path.join(process.cwd(), "dist");
   const distIndexHtml = path.join(distPath, "index.html");
-  const hasCompiledDist = fs.existsSync(distIndexHtml);
 
-  if (hasCompiledDist || process.env.NODE_ENV === "production") {
-    // Serve static files from compiled dist folder (preventing Vite HMR client from injecting)
+  if (isProduction && fs.existsSync(distIndexHtml)) {
+    // Serve static files from compiled dist folder in production
     app.use(
       express.static(distPath, {
         setHeaders: (res, filePath) => {
@@ -335,14 +335,20 @@ async function startServer() {
       if (req.path.startsWith("/api")) {
         return res.status(404).json({ error: "API endpoint not found" });
       }
-      res.sendFile(distIndexHtml, (err) => {
-        if (err && !res.headersSent) {
-          next(err);
-        }
-      });
+
+      if (fs.existsSync(distIndexHtml)) {
+        res.sendFile(distIndexHtml, (err) => {
+          if (err && !res.headersSent) {
+            console.error("[Static Serve Error]", err);
+            res.status(500).send("Error al cargar la aplicación.");
+          }
+        });
+      } else {
+        res.status(503).send("La aplicación se está preparando. Por favor recarga en unos segundos.");
+      }
     });
   } else {
-    // Vite middleware for development when dist is not yet compiled
+    // Vite middleware for development (always responsive and never requires dist/index.html to exist)
     const vite = await createViteServer({
       server: {
         middlewareMode: true,

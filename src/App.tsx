@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { ModelProfile, UserSessionProfile, InvestmentSession, ProjectData, ChatMessage, FinancialMovement, HistoryWonRecord } from './types';
 import { seedInitialData, generateTop100Ranking, RankingModel } from './utils/seedData';
 import { compressAndResizeImage } from './utils/imageCompressor';
@@ -27,6 +28,7 @@ import GlobalMobileImageLightbox from './components/GlobalMobileImageLightbox';
 import MobileNavigationMenu from './components/MobileNavigationMenu';
 import { ModelFullscreenExpandedView } from './components/ModelFullscreenExpandedView';
 import AdminPortal from './components/AdminPortal';
+import NotificationCenterModal from './components/NotificationCenterModal';
 import { 
   Sparkles, 
   Home, 
@@ -59,7 +61,10 @@ import {
   X,
   UserCheck,
   Instagram,
-  Crown
+  Crown,
+  Bell,
+  Send,
+  Check
 } from 'lucide-react';
 
 const generateNextUserId = (): string => {
@@ -382,6 +387,17 @@ export default function App() {
   });
 
   const [showVictoriaSecretRanking, setShowVictoriaSecretRanking] = useState(false);
+  const [rankingInitialTab, setRankingInitialTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>('ranking');
+
+  useEffect(() => {
+    const handleOpenRankingEvent = (e: any) => {
+      const targetTab = e?.detail?.tab || 'ranking';
+      setRankingInitialTab(targetTab);
+      setShowVictoriaSecretRanking(true);
+    };
+    window.addEventListener('open-ranking-tab', handleOpenRankingEvent);
+    return () => window.removeEventListener('open-ranking-tab', handleOpenRankingEvent);
+  }, []);
 
   const [top100Rankings, setTop100Rankings] = useState<{ females: RankingModel[], males: RankingModel[] }>(() => {
     const cache = localStorage.getItem('coll_top_100_ranking');
@@ -526,6 +542,19 @@ export default function App() {
     ];
     localStorage.setItem('coll_patrocinados', JSON.stringify(defaultPatrocinados));
     return defaultPatrocinados;
+  });
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem('coll_notifications');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((n: any) => !n.read).length;
+        }
+      }
+    } catch (e) {}
+    return 4;
   });
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [addFundsAmount, setAddFundsAmount] = useState('50');
@@ -805,6 +834,109 @@ export default function App() {
   const [friendsActiveTab, setFriendsActiveTab] = useState<'friends' | 'followers' | 'following'>('friends');
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [activeSocialModalInvestor, setActiveSocialModalInvestor] = useState<'followers' | 'following' | 'friends' | null>(null);
+  const [investorFriendsSubTab, setInvestorFriendsSubTab] = useState<'friends' | 'pending' | 'sent'>('friends');
+  const [investorSearchQuery, setInvestorSearchQuery] = useState<string>('');
+
+  const [investorPendingRequests, setInvestorPendingRequests] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('ff_pending_received_requests');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [
+      {
+        id: 'req-irina',
+        name: 'Irina Shayk',
+        username: 'irinashayk_w6',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
+        bio: 'Top 6 Modelo Femenina Global. Diseñadora de alta costura y embajadora de pasarela.',
+        sentAt: 'Hace 2 horas',
+        mutualFriends: 3,
+        isOnline: true
+      },
+      {
+        id: 'req-david',
+        name: 'David Gandy',
+        username: 'davidgandy_m3',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        bio: 'Top 3 Modelo Masculino Global. Especialista en campañas de sastrería premium y crowdfunding.',
+        sentAt: 'Ayer a las 18:30',
+        mutualFriends: 5,
+        isOnline: false
+      },
+      {
+        id: 'req-sara',
+        name: 'Sara Sampaio',
+        username: 'sarasampaio_w9',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
+        bio: 'Ángel internacional y promotora de fondos de moda ecológica en Milán y París.',
+        sentAt: 'Hace 2 días',
+        mutualFriends: 2,
+        isOnline: true
+      }
+    ];
+  });
+
+  const [investorSentRequests, setInvestorSentRequests] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('ff_sent_friend_requests');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [
+      {
+        id: 'sent-sean',
+        name: "Sean O'Pry",
+        username: 'seanopry_m2',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+        bio: 'Top 2 Modelo Masculino Global. Representante internacional de pasarelas de alta gama.',
+        sentAt: 'Enviada hace 1 día · Esperando aceptación',
+        mutualFriends: 4,
+        isOnline: true
+      },
+      {
+        id: 'sent-gigi',
+        name: 'Gigi Hadid',
+        username: 'gigihadid_w7',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+        bio: 'Supermodelo y creadora de colecciones cápsula para inversores de moda sostenible.',
+        sentAt: 'Enviada hace 3 días · Esperando aceptación',
+        mutualFriends: 6,
+        isOnline: false
+      }
+    ];
+  });
+
+  const handleInvestorAcceptFriend = (reqItem: any) => {
+    const updated = investorPendingRequests.filter(r => r.id !== reqItem.id);
+    setInvestorPendingRequests(updated);
+    try {
+      localStorage.setItem('ff_pending_received_requests', JSON.stringify(updated));
+    } catch (_) {}
+    const newFriend = {
+      id: reqItem.id,
+      name: reqItem.name,
+      username: reqItem.username,
+      avatar: reqItem.avatar,
+      bio: reqItem.bio,
+      role: 'model'
+    };
+    setFriendsList(prev => [newFriend, ...prev]);
+  };
+
+  const handleInvestorRejectFriend = (reqId: string) => {
+    const updated = investorPendingRequests.filter(r => r.id !== reqId);
+    setInvestorPendingRequests(updated);
+    try {
+      localStorage.setItem('ff_pending_received_requests', JSON.stringify(updated));
+    } catch (_) {}
+  };
+
+  const handleInvestorCancelSent = (reqId: string) => {
+    const updated = investorSentRequests.filter(r => r.id !== reqId);
+    setInvestorSentRequests(updated);
+    try {
+      localStorage.setItem('ff_sent_friend_requests', JSON.stringify(updated));
+    } catch (_) {}
+  };
 
   // Filter social lists to never include the logged-in user
   const displayedFriends = useMemo(() => {
@@ -999,6 +1131,30 @@ export default function App() {
       window.removeEventListener('navigate-to-tab', handleNavigateTabGlobal);
     };
   }, []);
+
+  // Determinar si actualmente se está visualizando el perfil de Adriana Lima (Declarado al inicio para cumplir las reglas de Hooks de React)
+  const isViewingAdrianaLimaProfile = useMemo(() => {
+    // Si se está en la pestaña admin, mantener visible
+    if (activeTab === 'admin') {
+      return true;
+    }
+    // Solo puede ser en las pestañas de perfil / home donde se visualiza el perfil
+    if (activeTab !== 'home' && activeTab !== 'profile') {
+      return false;
+    }
+    // Si se está viendo un modelo específico seleccionado:
+    if (selectedModelForView) {
+      const name = (selectedModelForView.name || '').toLowerCase();
+      const username = (selectedModelForView.username || '').toLowerCase();
+      const id = (selectedModelForView.id || '').toLowerCase();
+      return name.includes('adriana') || username.includes('adrianalima') || id === 'topf-1';
+    }
+    // Si no hay modelo seleccionada, se visualiza el perfil del usuario activo: solo mostrar si es Adriana Lima
+    const currentName = (userProfile?.name || '').toLowerCase();
+    const currentUsername = (userProfile?.username || '').toLowerCase();
+    const currentId = (userProfile?.id || '').toLowerCase();
+    return currentName.includes('adriana') || currentUsername.includes('adrianalima') || currentId === 'topf-1';
+  }, [activeTab, selectedModelForView, userProfile]);
 
   // Save changes to localStorage helper
   const saveStateToLocalStorage = (
@@ -3030,7 +3186,11 @@ export default function App() {
       {showVictoriaSecretRanking && (
         <VictoriaSecretRanking
           isOpen={showVictoriaSecretRanking}
-          onClose={() => setShowVictoriaSecretRanking(false)}
+          initialTab={rankingInitialTab}
+          onClose={() => {
+            setShowVictoriaSecretRanking(false);
+            setRankingInitialTab('ranking');
+          }}
           models={models}
           onSelectModel={(model) => {
             setSelectedModelForView(model);
@@ -3053,6 +3213,34 @@ export default function App() {
         />
       )}
 
+      {/* 🔔 CENTRO DE NOTIFICACIONES MODAL */}
+      <NotificationCenterModal
+        isOpen={showNotificationsModal}
+        onClose={() => setShowNotificationsModal(false)}
+        onNavigateToTab={(tab) => {
+          setPreviousTab(activeTab);
+          setActiveTabTab(tab as any);
+          setShowNotificationsModal(false);
+        }}
+        onOpenRanking={() => {
+          setShowVictoriaSecretRanking(true);
+          setShowNotificationsModal(false);
+        }}
+        onOpenFriendsTab={(subTab) => {
+          setShowNotificationsModal(false);
+          if (userProfile?.role === 'model') {
+            setActiveTabTab('home');
+            setProfileSocialModalState('friends');
+            window.dispatchEvent(new CustomEvent('open-friends-modal-tab', { detail: { subTab } }));
+          } else {
+            setActiveTabTab('profile');
+            setActiveSocialModalInvestor('friends');
+            setInvestorFriendsSubTab(subTab);
+          }
+        }}
+        onUnreadCountChange={setUnreadNotificationsCount}
+      />
+
 
       {/* PRIMARY HEADER BRANDING (Hidden on mobile when in casting_live so the live round screen fits 100% without scrolling) */}
       <header className={`bg-white border-b border-slate-100 py-2 sm:py-4 px-3 sm:px-6 sticky top-0 z-[100] shrink-0 shadow-sm ${activeTab === 'casting_live' ? 'max-md:hidden' : ''}`}>
@@ -3068,41 +3256,57 @@ export default function App() {
           </div>
 
           {/* Wallet and user status trigger */}
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block text-right">
-              <span className="text-[10px] text-slate-400 uppercase font-mono block">Rol: {userProfile.role === 'model' ? 'Modelo' : userProfile.role === 'visitor' ? 'Visitante No Registrado' : 'Inversor'}</span>
-              <strong className="text-slate-800 text-sm font-semibold">{userProfile.name}</strong>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Contenedor Notificaciones, Backoffice & Panel Admin: alineados horizontalmente */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {/* 🔔 BOTÓN DE NOTIFICACIONES JUSTO A LA IZQUIERDA DEL BOTÓN BACKOFFICE */}
+              <button
+                type="button"
+                onClick={() => setShowNotificationsModal(true)}
+                className="relative bg-white hover:bg-pink-50/50 border border-slate-200/90 hover:border-pink-300 text-slate-700 hover:text-pink-600 rounded-xl p-2 sm:p-2.5 transition-all cursor-pointer shadow-3xs flex items-center justify-center shrink-0 active:scale-95 group"
+                title="Notificaciones (Rondas, Comisiones, Regalos, Admins, Redes, Mensajes)"
+                id="btn-header-notifications"
+                aria-label="Abrir centro de notificaciones"
+              >
+                <Bell className="w-4 h-4 transition-transform group-hover:rotate-12 text-slate-700 group-hover:text-pink-600" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#fe2c55] text-white font-mono font-black text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs border-2 border-white animate-pulse">
+                    {unreadNotificationsCount}
+                  </span>
+                )}
+              </button>
 
-            {/* Contenedor Backoffice & Panel Admin: en móvil vertical (debajo), en desktop horizontal */}
-            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-3">
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-1 sm:p-1.5 flex items-center justify-between gap-2 sm:gap-3 w-full sm:w-auto">
+              {/* Botón Backoffice */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-1 sm:p-1.5 flex items-center justify-between gap-2 sm:gap-3 w-auto">
                 <div className="px-2 sm:px-2.5">
                   <span className="text-[8.5px] sm:text-[9px] text-slate-400 uppercase font-mono block">Backoffice</span>
                   <strong className="font-mono text-[11px] sm:text-xs text-slate-900 font-bold">{userProfile.balance.toFixed(2)}€</strong>
                 </div>
                 <button
                   onClick={() => setShowAddFundsModal(true)}
-                  className="bg-slate-950 hover:bg-slate-800 text-white rounded-lg p-1.5 sm:p-2 transition-all cursor-pointer flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: '#FF48FE' }}
+                  className="hover:opacity-90 text-white rounded-lg p-1.5 sm:p-2 transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-2xs active:scale-95"
                   title="Añadir fondos simulados"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </div>
 
-              {/* 🛡️ Botón Panel de Administración (en móvil vertical debajo del contenedor del Backoffice) */}
-              <button
-                onClick={() => {
-                  setPreviousTab(activeTab);
-                  setActiveTabTab('admin');
-                }}
-                className="w-full sm:w-auto justify-center px-2.5 sm:px-3.5 py-1 sm:py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:shadow-xs active:scale-95"
-                id="btn-header-admin-portal"
-                title="Abrir Panel de Administración Integral"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-[#fe2c55]" />
-                <span className="font-mono uppercase text-[10px] sm:text-[11px] tracking-wide">Panel Admin</span>
-              </button>
+              {/* 🛡️ Botón Panel de Administración (solo sale en el perfil de Adriana Lima) */}
+              {isViewingAdrianaLimaProfile && (
+                <button
+                  onClick={() => {
+                    setPreviousTab(activeTab);
+                    setActiveTabTab('admin');
+                  }}
+                  className="w-full sm:w-auto justify-center px-2.5 sm:px-3.5 py-1 sm:py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:shadow-xs active:scale-95"
+                  id="btn-header-admin-portal"
+                  title="Abrir Panel de Administración Integral"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#fe2c55]" />
+                  <span className="font-mono uppercase text-[10px] sm:text-[11px] tracking-wide">Panel Admin</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -3385,10 +3589,20 @@ export default function App() {
           {activeTab === 'home' && (
             selectedModelForView ? (
               <div className="space-y-4 animate-fade-in">
-                {/* Volver Navigation Bar */}
+                {/* Volver Navigation Bar (z.png) */}
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-3xs flex items-center justify-between">
                   <button
                     onClick={() => {
+                      if (modelViewSourceTab === 'friends_modal') {
+                        setSelectedModelForView(null);
+                        setModelViewSourceTab(null);
+                        setActiveTabTab('home');
+                        setProfileSocialModalState('friends');
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent('open-friends-modal-tab', { detail: { subTab: 'friends' } }));
+                        }, 40);
+                        return;
+                      }
                       if (modelViewSourceTab === 'ranking') {
                         setShowVictoriaSecretRanking(true);
                       } else if (modelViewSourceTab === 'casting_live') {
@@ -3403,13 +3617,13 @@ export default function App() {
                       setSelectedModelForView(null);
                       setModelViewSourceTab(null);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-205 rounded-xl transition cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase text-slate-800 hover:text-slate-950 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition cursor-pointer shadow-3xs"
                   >
-                    <span>← Volver</span>
+                    <span>← VOLVER</span>
                   </button>
                   <div className="text-right">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Viendo Perfil de Modelo</span>
-                    <span className="text-xs font-black text-slate-800 font-display">{selectedModelForView.name}</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">VIENDO PERFIL DE MODELO</span>
+                    <span className="text-base font-black text-slate-900 font-display">{selectedModelForView.name}</span>
                   </div>
                 </div>
 
@@ -3449,8 +3663,12 @@ export default function App() {
                     setActiveTabTab(tab);
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
-                  onGoToModelProfile={(modelId, modelObj) => {
-                    setModelViewSourceTab(activeTab);
+                  onGoToModelProfile={(modelId, modelObj, source) => {
+                    if (source === 'friends_modal') {
+                      setModelViewSourceTab('friends_modal');
+                    } else {
+                      setModelViewSourceTab(activeTab);
+                    }
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
@@ -3507,8 +3725,12 @@ export default function App() {
                     }
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
-                  onGoToModelProfile={(modelId, modelObj) => {
-                    setModelViewSourceTab(activeTab);
+                  onGoToModelProfile={(modelId, modelObj, source) => {
+                    if (source === 'friends_modal') {
+                      setModelViewSourceTab('friends_modal');
+                    } else {
+                      setModelViewSourceTab(activeTab);
+                    }
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
@@ -3565,8 +3787,12 @@ export default function App() {
                     }
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
-                  onGoToModelProfile={(modelId, modelObj) => {
-                    setModelViewSourceTab(activeTab);
+                  onGoToModelProfile={(modelId, modelObj, source) => {
+                    if (source === 'friends_modal') {
+                      setModelViewSourceTab('friends_modal');
+                    } else {
+                      setModelViewSourceTab(activeTab);
+                    }
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
@@ -4465,6 +4691,10 @@ export default function App() {
               onAddMovement={handleAddMovement}
               onGiftTransaction={handleGiftTransaction}
               onOpenHashtag={handleOpenHashtag}
+              onOpenRanking={(tab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos') => {
+                setRankingInitialTab(tab || 'ranking');
+                setShowVictoriaSecretRanking(true);
+              }}
             />
           </div>
 
@@ -5812,8 +6042,8 @@ export default function App() {
           </div>
         </div>
       )}      {/* 👥 PÁGINA COMPLETA DE SEGUIDORES / SEGUIDOS / AMIGOS PARA INVERSORES */}
-      {activeSocialModalInvestor && (
-        <div className="fixed inset-0 bg-[#FDFBF7] z-[120] flex flex-col text-slate-900 animate-fade-in overflow-hidden">
+      {activeSocialModalInvestor && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-[#FDFBF7] z-[99999] flex flex-col text-slate-900 animate-fade-in overflow-hidden">
           {/* Header Bar */}
           <div className="bg-white border-b border-slate-150 px-4 py-4 sm:px-6 flex items-center justify-between shadow-xs shrink-0">
             <button
@@ -5844,50 +6074,150 @@ export default function App() {
             <div className="max-w-4xl w-full mx-auto p-4 sm:p-8 space-y-6">
               {/* Cover Info Box */}
               <div className="bg-white p-6 rounded-2xl border border-slate-150/80 shadow-3xs flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left justify-between">
-                <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in w-full">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shrink-0 ${
                     activeSocialModalInvestor === 'friends' ? 'bg-pink-50 border-pink-100 text-pink-600' :
                     activeSocialModalInvestor === 'followers' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 
                     'bg-emerald-50 border-emerald-100 text-emerald-600'
                   }`}>
-                    {activeSocialModalInvestor === 'friends' ? <UserPlus2 className="w-7 h-7" /> :
+                    {activeSocialModalInvestor === 'friends' ? (
+                      investorFriendsSubTab === 'pending' ? <Clock className="w-7 h-7 text-pink-600" /> :
+                      investorFriendsSubTab === 'sent' ? <Send className="w-7 h-7 text-indigo-600" /> :
+                      <UserPlus2 className="w-7 h-7" />
+                    ) :
                      activeSocialModalInvestor === 'followers' ? <Users className="w-7 h-7" /> : 
                      <UserCheck className="w-7 h-7" />}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
-                      {activeSocialModalInvestor === 'friends' ? 'Mis Amigos' :
+                      {activeSocialModalInvestor === 'friends' ? (
+                        investorFriendsSubTab === 'pending' ? `Solicitudes de Amistad · Pendientes de Aceptar (${investorPendingRequests.length})` :
+                        investorFriendsSubTab === 'sent' ? `Solicitudes de Amistad · Enviadas (${investorSentRequests.length})` :
+                        'Mis Amigos'
+                      ) :
                        activeSocialModalInvestor === 'followers' ? `Seguidores en mi Colectivo (${displayedFollowers.length})` : 
                        `Portafolio de creadores que sigo (${displayedFollowing.length})`}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">
-                      Gestiona tus conexiones, apoya directamente las pasarelas o lanza un canal premium dentro de Fashion Finances.
+                      {activeSocialModalInvestor === 'friends' ? (
+                        investorFriendsSubTab === 'pending' ? 'Perfiles que te han enviado solicitud de amistad. Acéptalas para conectar e interactuar.' :
+                        investorFriendsSubTab === 'sent' ? 'Solicitudes de amistad que has enviado y aún están a la espera de aceptación.' :
+                        'Gestiona tus conexiones, apoya directamente las pasarelas o lanza un canal premium dentro de Fashion Finances.'
+                      ) : (
+                        'Gestiona tus conexiones, apoya directamente las pasarelas o lanza un canal premium dentro de Fashion Finances.'
+                      )}
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* 🏷️ SUBPESTAÑAS DE MIS AMIGOS PARA INVERSORES */}
+              {activeSocialModalInvestor === 'friends' && (
+                <div className="bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-3xs flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvestorFriendsSubTab('friends');
+                      setInvestorSearchQuery('');
+                    }}
+                    className={`flex-1 min-w-[130px] py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      investorFriendsSubTab === 'friends'
+                        ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent'
+                    }`}
+                  >
+                    <Users className="w-4 h-4 shrink-0 text-slate-800" />
+                    <span className="tracking-wide">AMIGOS</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvestorFriendsSubTab('pending');
+                      setInvestorSearchQuery('');
+                    }}
+                    className={`flex-1 min-w-[170px] py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      investorFriendsSubTab === 'pending'
+                        ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent'
+                    }`}
+                  >
+                    <UserPlus2 className="w-4 h-4 shrink-0 text-pink-600" />
+                    <span>Pendientes de Aceptar</span>
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                      {investorPendingRequests.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvestorFriendsSubTab('sent');
+                      setInvestorSearchQuery('');
+                    }}
+                    className={`flex-1 min-w-[170px] py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      investorFriendsSubTab === 'sent'
+                        ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent'
+                    }`}
+                  >
+                    <Send className="w-4 h-4 shrink-0 text-slate-500" />
+                    <span className="tracking-wide">SOLICITUDES ENVIADAS</span>
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                      {investorSentRequests.length}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* 📬 Banner de aviso rápido si hay solicitudes pendientes */}
+              {activeSocialModalInvestor === 'friends' && investorFriendsSubTab === 'friends' && investorPendingRequests.length > 0 && (
+                <div className="bg-gradient-to-r from-pink-50 via-rose-50/70 to-pink-50/40 border border-pink-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-3xs animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#fe2c55] text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
+                      📬
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs sm:text-sm font-black text-slate-900 m-0">
+                        Tienes {investorPendingRequests.length} solicitudes de amistad pendientes de aceptar
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-medium m-0">
+                        Otros miembros quieren conectar contigo en Fashion Finances.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvestorFriendsSubTab('pending');
+                      setInvestorSearchQuery('');
+                    }}
+                    className="px-4 py-2 bg-[#fe2c55] hover:bg-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm shrink-0 active:scale-95"
+                  >
+                    Ver Solicitudes ({investorPendingRequests.length}) →
+                  </button>
+                </div>
+              )}
+
               {/* Search input inside full page */}
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={`Buscar por nombre, usuario o rol de ${
-                    activeSocialModalInvestor === 'friends' ? 'amigo' :
-                    activeSocialModalInvestor === 'followers' ? 'seguidor' : 
-                    'seguido'
-                  }...`}
+                  value={investorSearchQuery}
+                  placeholder={
+                    activeSocialModalInvestor === 'friends'
+                      ? (investorFriendsSubTab === 'pending'
+                          ? 'Buscar entre las solicitudes pendientes de aceptar...'
+                          : investorFriendsSubTab === 'sent'
+                          ? 'Buscar entre las solicitudes enviadas...'
+                          : 'Buscar por nombre, usuario o rol de amigo...')
+                      : activeSocialModalInvestor === 'followers'
+                      ? 'Buscar por nombre, usuario o rol de seguidor...'
+                      : 'Buscar por nombre, usuario o rol de seguido...'
+                  }
                   className="w-full bg-white border border-slate-200 shadow-3xs rounded-2xl px-5 py-3.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/10 focus:border-pink-500 text-slate-800 placeholder-slate-400 font-medium transition"
                   onChange={(e) => {
-                    const val = e.target.value.toLowerCase();
-                    const els = document.querySelectorAll('.social-investor-item-row');
-                    els.forEach((el: any) => {
-                      const txt = el.innerText.toLowerCase();
-                      if (txt.includes(val)) {
-                        el.style.display = 'flex';
-                      } else {
-                        el.style.display = 'none';
-                      }
-                    });
+                    setInvestorSearchQuery(e.target.value);
                   }}
                 />
               </div>
@@ -5895,15 +6225,169 @@ export default function App() {
               {/* Friends/Followers Rows Container */}
               <div className="bg-white rounded-2xl border border-slate-150 shadow-sm divide-y divide-slate-100 overflow-hidden">
                 {(() => {
-                  const currentList = 
+                  // VISTA 1: SOLICITUDES PENDIENTES DE ACEPTAR
+                  if (activeSocialModalInvestor === 'friends' && investorFriendsSubTab === 'pending') {
+                    const q = investorSearchQuery.toLowerCase().trim();
+                    const list = investorPendingRequests.filter(item => {
+                      if (!q) return true;
+                      return (
+                        item.name?.toLowerCase().includes(q) ||
+                        item.username?.toLowerCase().includes(q) ||
+                        item.bio?.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (list.length === 0) {
+                      return (
+                        <div className="p-12 text-center space-y-2">
+                          <div className="w-12 h-12 rounded-2xl bg-pink-50 text-[#fe2c55] flex items-center justify-center mx-auto text-xl font-bold">
+                            ✓
+                          </div>
+                          <p className="text-sm font-black text-slate-800 m-0">No tienes solicitudes pendientes de aceptar</p>
+                          <p className="text-xs text-slate-400 font-medium m-0">
+                            Cuando otros usuarios te envíen una solicitud de amistad, aparecerán aquí.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return list.map(item => (
+                      <div key={item.id} className="social-investor-item-row flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 hover:bg-slate-50/50 transition text-left">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <img
+                            src={item.avatar}
+                            alt={item.name}
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-150 shrink-0 bg-slate-50"
+                          />
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-sm sm:text-base font-black text-slate-900 truncate leading-tight">{item.name}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-rose-50 text-[#fe2c55] border border-rose-150 tracking-wide shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#fe2c55] animate-ping" />
+                                Solicitud Recibida
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
+                              <span className="font-mono text-pink-600">@{item.username}</span>
+                              <span>•</span>
+                              <span>👥 {item.mutualFriends || 3} amigos en común</span>
+                              <span>•</span>
+                              <span className="text-slate-400">🕒 {item.sentAt}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2 pr-4">{item.bio}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleInvestorAcceptFriend(item)}
+                            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-[#fe2c55] hover:from-pink-600 hover:to-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <span>Aceptar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleInvestorRejectFriend(item.id)}
+                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95 flex items-center gap-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Rechazar</span>
+                          </button>
+                        </div>
+                      </div>
+                    ));
+                  }
+
+                  // VISTA 2: SOLICITUDES ENVIADAS PENDIENTES
+                  if (activeSocialModalInvestor === 'friends' && investorFriendsSubTab === 'sent') {
+                    const q = investorSearchQuery.toLowerCase().trim();
+                    const list = investorSentRequests.filter(item => {
+                      if (!q) return true;
+                      return (
+                        item.name?.toLowerCase().includes(q) ||
+                        item.username?.toLowerCase().includes(q) ||
+                        item.bio?.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (list.length === 0) {
+                      return (
+                        <div className="p-12 text-center space-y-2">
+                          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">
+                            <Send className="w-5 h-5" />
+                          </div>
+                          <p className="text-sm font-black text-slate-800 m-0">No tienes solicitudes enviadas pendientes</p>
+                          <p className="text-xs text-slate-400 font-medium m-0">
+                            Cuando envíes una solicitud de amistad a otro miembro, aparecerá aquí hasta que sea respondida.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return list.map(item => (
+                      <div key={item.id} className="social-investor-item-row flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 hover:bg-slate-50/50 transition text-left">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <img
+                            src={item.avatar}
+                            alt={item.name}
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-150 shrink-0 bg-slate-50"
+                          />
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-sm sm:text-base font-black text-slate-900 truncate leading-tight">{item.name}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200 tracking-wide shrink-0">
+                                <Clock className="w-2.5 h-2.5" />
+                                Enviada · En Espera
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
+                              <span className="font-mono text-indigo-600">@{item.username}</span>
+                              <span>•</span>
+                              <span>👥 {item.mutualFriends || 4} amigos en común</span>
+                              <span>•</span>
+                              <span className="text-slate-400">{item.sentAt}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2 pr-4">{item.bio}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleInvestorCancelSent(item.id)}
+                            className="px-3.5 py-2 border border-rose-200 hover:border-rose-300 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-extrabold transition cursor-pointer active:scale-95 flex items-center gap-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Cancelar Solicitud</span>
+                          </button>
+                        </div>
+                      </div>
+                    ));
+                  }
+
+                  // VISTA 3: MIS AMIGOS / SEGUIDORES / SEGUIDOS
+                  const rawList = 
                     activeSocialModalInvestor === 'friends' ? displayedFriends :
                     activeSocialModalInvestor === 'followers' ? displayedFollowers : 
                     displayedFollowing;
 
+                  const q = investorSearchQuery.toLowerCase().trim();
+                  const currentList = rawList.filter(item => {
+                    if (!q) return true;
+                    return (
+                      item.name?.toLowerCase().includes(q) ||
+                      item.username?.toLowerCase().includes(q) ||
+                      item.bio?.toLowerCase().includes(q)
+                    );
+                  });
+
                   if (currentList.length === 0) {
                     return (
                       <div className="p-12 text-center text-slate-400 font-medium">
-                        No hay perfiles en esta lista todavía.
+                        {investorSearchQuery ? 'No se encontraron resultados para tu búsqueda.' : 'No hay perfiles en esta lista todavía.'}
                       </div>
                     );
                   }
@@ -5919,6 +6403,11 @@ export default function App() {
                         <div className="min-w-0 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <h4 className="text-sm sm:text-base font-black text-slate-900 truncate leading-tight">{item.name}</h4>
+                            {item.isNew && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-[#ffeef2] text-[#fe2c55] border border-pink-200 tracking-wide shrink-0">
+                                ✨ NUEVO AMIGO
+                              </span>
+                            )}
                             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-lg bg-pink-50/50 border border-pink-100 text-[#fe2c55] tracking-wider shrink-0">
                               {item.role === 'model' ? 'Modelo' : 'Inversor'}
                             </span>
@@ -5989,16 +6478,68 @@ export default function App() {
                           </button>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            alert(`Interacción social completada con éxito. Se ha enviado un saludo virtual a ${item.name}.`);
-                            setActiveSocialModalInvestor(null);
-                          }}
-                          className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 text-slate-700 bg-white transition cursor-pointer"
-                        >
-                          Saludar
-                        </button>
+                        {activeSocialModalInvestor === 'friends' ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveSocialModalInvestor(null);
+                                handleLaunchChatWithModel(item.id || item.username);
+                              }}
+                              className="px-4 py-2 border border-pink-200 text-[#fe2c55] bg-white hover:bg-pink-50 rounded-xl text-xs font-bold transition cursor-pointer text-center"
+                            >
+                              Mensaje
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveSocialModalInvestor(null);
+                                const target = models.find(m => 
+                                  (m.id && item.id && m.id.toLowerCase() === item.id.toLowerCase()) ||
+                                  (m.username && item.username && m.username.toLowerCase().replace('@', '') === item.username.toLowerCase().replace('@', '')) ||
+                                  (m.name && item.name && m.name.toLowerCase().trim() === item.name.toLowerCase().trim())
+                                );
+                                const actModel: ModelProfile = target || {
+                                  id: item.id || `friend-${(item.username || item.name || Date.now()).replace(/[^a-zA-Z0-9]/g, '_')}`,
+                                  name: item.name || 'Creador de Contenido',
+                                  username: (item.username || item.name || 'creador').replace('@', '').toLowerCase().replace(/\s+/g, '_'),
+                                  avatar: item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                  bio: item.bio || 'Creador oficial en Fashion Finances. Pasarela y proyectos de moda.',
+                                  role: 'model',
+                                  rating: 5.0,
+                                  followersCount: item.followersCount || 148000,
+                                  verified: true,
+                                  isOnline: !!item.isOnline,
+                                  gender: (item.username?.includes('_m') || item.name?.toLowerCase().includes('david') || item.name?.toLowerCase().includes('alexander') || item.name?.toLowerCase().includes('sean')) ? 'male' : 'female',
+                                  fashionAgency: item.fashionAgency || 'Ford Models',
+                                  totalLikes: 14703,
+                                  referidosCount: 736,
+                                  photos: [
+                                    item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+                                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
+                                  ]
+                                };
+                                setModelViewSourceTab('friends_modal');
+                                setSelectedModelForView(actModel);
+                                setActiveTabTab('home');
+                              }}
+                              className="px-4 py-2 border border-slate-200 text-slate-900 bg-white hover:bg-slate-50 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer text-center"
+                            >
+                              VER PERFIL
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              alert(`Interacción social completada con éxito. Se ha enviado un saludo virtual a ${item.name}.`);
+                              setActiveSocialModalInvestor(null);
+                            }}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 text-slate-700 bg-white transition cursor-pointer"
+                          >
+                            Saludar
+                          </button>
+                        )}
                       </div>
                     </div>
                   ));
@@ -6006,7 +6547,8 @@ export default function App() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* FOOTER */}

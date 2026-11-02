@@ -1151,6 +1151,129 @@ const PRESET_MALE_VIDEOS = [
   'https://assets.mixkit.co/videos/preview/mixkit-man-with-sunglasses-posing-in-creative-light-40496-large.mp4'
 ];
 
+interface PodiumNeonVolumeBarProps {
+  volume: number; // 0 to 1
+  isMuted: boolean;
+  onVolumeChange: (newVol: number) => void;
+  onToggleMute: () => void;
+  className?: string;
+}
+
+function PodiumNeonVolumeBar({
+  volume,
+  isMuted,
+  onVolumeChange,
+  onToggleMute,
+  className = ''
+}: PodiumNeonVolumeBarProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const calculateVolumeFromPointer = (clientY: number) => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const height = rect.height;
+    if (height <= 0) return;
+    const offsetYFromBottom = rect.bottom - clientY;
+    const newVol = Math.max(0, Math.min(1, offsetYFromBottom / height));
+    onVolumeChange(newVol);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    setIsDragging(true);
+    calculateVolumeFromPointer(e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    e.stopPropagation();
+    calculateVolumeFromPointer(e.clientY);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (isDragging) {
+      e.stopPropagation();
+      setIsDragging(false);
+      try {
+        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+      } catch (_) {}
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    onVolumeChange(Math.max(0, Math.min(1, volume + delta)));
+  };
+
+  const displayPercent = isMuted ? 0 : Math.round(volume * 100);
+
+  return (
+    <div 
+      className={`absolute inset-y-0 left-0 w-20 sm:w-24 z-40 group/podium-vol-zone flex items-center justify-start pl-2.5 sm:pl-3.5 select-none pointer-events-auto ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onWheel={handleWheel}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className={`flex flex-col items-center bg-[#070b14]/90 backdrop-blur-md border-[1.5px] border-[#00f2fe] rounded-full py-2.5 px-1 sm:px-1.5 shadow-[0_0_18px_rgba(0,242,254,0.5),0_8px_25px_rgba(0,0,0,0.85)] transition-all duration-300 transform ${
+          isDragging || isHovered
+            ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto ring-1 ring-[#00f2fe]/40'
+            : 'opacity-0 -translate-x-3 scale-95 pointer-events-none group-hover/podium-vol-zone:opacity-100 group-hover/podium-vol-zone:translate-x-0 group-hover/podium-vol-zone:scale-100 group-hover/podium-vol-zone:pointer-events-auto'
+        } hover:scale-105 hover:shadow-[0_0_24px_rgba(0,242,254,0.7)]`}
+      >
+        {/* Botón Altavoz con icono cian / esmeralda (estilo captura image.png) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleMute();
+          }}
+          className="p-0.5 text-white hover:scale-110 active:scale-90 transition cursor-pointer"
+          title={isMuted || volume === 0 ? "Activar audio" : "Silenciar audio"}
+        >
+          {isMuted || volume === 0 ? (
+            <VolumeX className="w-3.5 h-3.5 text-rose-400 drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
+          ) : (
+            <Volume2 className="w-3.5 h-3.5 text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.7)]" />
+          )}
+        </button>
+
+        {/* Track vertical de la barra de volumen */}
+        <div
+          ref={trackRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className="relative w-1.5 sm:w-2 h-24 sm:h-28 bg-slate-900/95 border border-slate-700/80 rounded-full cursor-pointer overflow-hidden my-1 flex flex-col justify-end shadow-inner touch-none select-none"
+          title={`Volumen: ${displayPercent}%`}
+        >
+          {/* Relleno cian neón con degradado esmeralda */}
+          <div
+            className={`w-full rounded-full transition-all duration-75 ${
+              isMuted || volume === 0
+                ? 'bg-rose-500/30'
+                : 'bg-gradient-to-t from-emerald-500 via-teal-400 to-[#00f2fe] shadow-[0_0_12px_rgba(0,242,254,0.85)]'
+            }`}
+            style={{ height: `${displayPercent}%` }}
+          />
+        </div>
+
+        {/* Porcentaje en texto: 88%, etc. */}
+        <span className="text-[7.5px] sm:text-[8px] font-mono font-black text-white tracking-tighter select-none mt-0.5 leading-none">
+          {displayPercent}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
 interface PodiumModelMediaProps {
   model: ModelProfile;
   place: 1 | 2 | 3;
@@ -1173,8 +1296,9 @@ function PodiumModelMedia({
   hideBadges = false
 }: PodiumModelMediaProps) {
   const [videoError, setVideoError] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0.8);
+  // El audio por defecto solo está activo para el 1er lugar; los puestos 2 y 3 inician silenciados
+  const [isMuted, setIsMuted] = useState(place !== 1);
+  const [volume, setVolume] = useState(0.88);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isMale = (model as any)?.gender === 'male';
@@ -1268,12 +1392,18 @@ function PodiumModelMedia({
   }, [videoSrc]);
 
   const handleVolumeChange = (newVol: number) => {
-    setVolume(newVol);
-    if (videoRef.current) {
-      videoRef.current.volume = newVol;
-      videoRef.current.muted = newVol === 0;
+    const clamped = Math.max(0, Math.min(1, newVol));
+    setVolume(clamped);
+    if (clamped > 0 && isMuted) {
+      setIsMuted(false);
     }
-    setIsMuted(newVol === 0);
+    if (videoRef.current) {
+      videoRef.current.volume = clamped;
+      videoRef.current.muted = clamped === 0;
+    }
+    if (clamped === 0) {
+      setIsMuted(true);
+    }
   };
 
   const toggleMute = () => {
@@ -1282,8 +1412,8 @@ function PodiumModelMedia({
       videoRef.current.muted = nextMuted;
       setIsMuted(nextMuted);
       if (!nextMuted && volume === 0) {
-        setVolume(0.8);
-        videoRef.current.volume = 0.8;
+        setVolume(0.88);
+        videoRef.current.volume = 0.88;
       }
     } else {
       setIsMuted(!isMuted);
@@ -1346,45 +1476,14 @@ function PodiumModelMedia({
         {/* Highlight glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
-        {/* Fina y larga barra vertical de volumen: aparece solo al pasar el puntero por encima del margen izquierdo */}
+        {/* Barra vertical de volumen cápsula neón en el lado izquierdo (solo aparece al pasar el puntero) */}
         {!videoError && (
-          <div className="absolute inset-y-0 left-0 w-16 sm:w-20 z-30 group/volume-left-margin pointer-events-auto flex items-center justify-start pl-2">
-            <div 
-              onClick={(e) => e.stopPropagation()} 
-              className="opacity-0 group-hover/volume-left-margin:opacity-100 pointer-events-none group-hover/volume-left-margin:pointer-events-auto transition-opacity duration-300 flex flex-col items-center gap-2.5 bg-slate-950/80 hover:bg-slate-950/95 backdrop-blur-md py-3 px-1 rounded-full border border-white/20 text-white shadow-2xl"
-              title="Ajustar volumen"
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleMute();
-                }}
-                className="text-white hover:text-rose-400 cursor-pointer p-0.5 transition-transform hover:scale-110 active:scale-95"
-                title={isMuted || volume === 0 ? "Activar audio" : "Silenciar"}
-              >
-                {isMuted || volume === 0 ? (
-                  <VolumeX className="w-3 h-3 text-rose-400" />
-                ) : (
-                  <Volume2 className="w-3 h-3 text-white" />
-                )}
-              </button>
-
-              {/* Fina y más larga barra vertical de volumen */}
-              <div className="relative w-3.5 h-28 flex items-center justify-center">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.02"
-                  value={isMuted ? 0 : volume}
-                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                  className="w-28 h-[1.5px] -rotate-90 origin-center accent-rose-500 cursor-pointer rounded-full bg-white/35 appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-rose-500 [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-white"
-                  title={`Volumen: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
-                />
-              </div>
-            </div>
-          </div>
+          <PodiumNeonVolumeBar
+            volume={volume}
+            isMuted={isMuted}
+            onVolumeChange={handleVolumeChange}
+            onToggleMute={toggleMute}
+          />
         )}
       </div>
     </div>
@@ -1398,6 +1497,7 @@ interface VictoriaSecretRankingProps {
   onSelectModel?: (model: ModelProfile) => void;
   onNavigateToStore?: (storeId: string) => void;
   onNavigateToTab?: (tab: string) => void;
+  initialTab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos';
 }
 
 export default function VictoriaSecretRanking({
@@ -1407,8 +1507,25 @@ export default function VictoriaSecretRanking({
   onSelectModel,
   onNavigateToStore,
   onNavigateToTab,
+  initialTab = 'ranking'
 }: VictoriaSecretRankingProps) {
-  const [activeTab, setActiveTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>('ranking');
+  const [activeTab, setActiveTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
+
+  useEffect(() => {
+    const handleOpenEvent = (e: any) => {
+      if (e?.detail?.tab) {
+        setActiveTab(e.detail.tab);
+      }
+    };
+    window.addEventListener('open-ranking-tab', handleOpenEvent);
+    return () => window.removeEventListener('open-ranking-tab', handleOpenEvent);
+  }, []);
   const [rankingSearchQuery, setRankingSearchQuery] = useState('');
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
   const [sponsorCount, setSponsorCount] = useState<1 | 2 | 3>(3);
@@ -2050,6 +2167,129 @@ export default function VictoriaSecretRanking({
   // Estado para elevar la tarjeta del podio (Candice Swanepoel o Alessandra Ambrosio) por encima de Adriana Lima al hacer clic o hover
   const [elevatedPodiumPlace, setElevatedPodiumPlace] = useState<number | null>(null);
 
+  // Published custom video for #1 Adriana Lima (Podium Center Card from z.png)
+  const [firstPlaceVideo, setFirstPlaceVideo] = useState<string>(() => {
+    try {
+      return (
+        localStorage.getItem('vs_ranking_podium_video_1') ||
+        localStorage.getItem('custom_model_video_adrianalima') ||
+        localStorage.getItem('custom_model_video_adrianalima_w1') ||
+        localStorage.getItem('custom_model_video_topf-1') ||
+        (firstPlace?.id ? localStorage.getItem(`custom_model_video_${firstPlace.id}`) : '') ||
+        localStorage.getItem('coll_custom_ranking_video_female') ||
+        localStorage.getItem('coll_custom_ranking_video') ||
+        localStorage.getItem('landing_page_cover_video_url') ||
+        firstPlace?.videoUrl ||
+        PRESET_FEMALE_VIDEOS[0] ||
+        ''
+      );
+    } catch (_) {
+      return firstPlace?.videoUrl || PRESET_FEMALE_VIDEOS[0] || '';
+    }
+  });
+
+  // El volumen para la Modelo en 1ª posición (#1 Adriana Lima) está ACTIVO por defecto (88% y sin silenciar)
+  const [firstPlaceVolume, setFirstPlaceVolume] = useState<number>(0.88);
+  const [firstPlaceMuted, setFirstPlaceMuted] = useState<boolean>(false);
+  const firstPlaceVideoRef = useRef<HTMLVideoElement>(null);
+
+  const handleFirstPlaceVolumeChange = (newVol: number) => {
+    const clamped = Math.max(0, Math.min(1, newVol));
+    setFirstPlaceVolume(clamped);
+    if (clamped > 0 && firstPlaceMuted) {
+      setFirstPlaceMuted(false);
+    }
+    if (firstPlaceVideoRef.current) {
+      firstPlaceVideoRef.current.volume = clamped;
+      firstPlaceVideoRef.current.muted = clamped === 0;
+    }
+    if (clamped === 0) {
+      setFirstPlaceMuted(true);
+    }
+  };
+
+  const toggleFirstPlaceMute = () => {
+    setFirstPlaceMuted(prev => {
+      const next = !prev;
+      if (firstPlaceVideoRef.current) {
+        firstPlaceVideoRef.current.muted = next;
+        if (!next && firstPlaceVolume === 0) {
+          setFirstPlaceVolume(0.88);
+          firstPlaceVideoRef.current.volume = 0.88;
+        } else if (!next) {
+          firstPlaceVideoRef.current.volume = firstPlaceVolume;
+        }
+      }
+      return next;
+    });
+  };
+
+  // Asegura que el vídeo del 1er lugar tenga volumen activo por defecto
+  useEffect(() => {
+    if (firstPlaceVideoRef.current) {
+      firstPlaceVideoRef.current.volume = firstPlaceVolume;
+      firstPlaceVideoRef.current.muted = firstPlaceMuted;
+      const playPromise = firstPlaceVideoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Si el navegador bloquea la reproducción con sonido sin gesto previo del usuario,
+          // silencia temporalmente y activa el sonido al primer clic/interacción del usuario
+          if (firstPlaceVideoRef.current) {
+            firstPlaceVideoRef.current.muted = true;
+            firstPlaceVideoRef.current.play().catch(() => {});
+          }
+          const unlockAudio = () => {
+            if (firstPlaceVideoRef.current && !firstPlaceMuted) {
+              firstPlaceVideoRef.current.muted = false;
+              firstPlaceVideoRef.current.volume = firstPlaceVolume;
+            }
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+            window.removeEventListener('keydown', unlockAudio);
+          };
+          window.addEventListener('click', unlockAudio, { once: true });
+          window.addEventListener('touchstart', unlockAudio, { once: true });
+          window.addEventListener('keydown', unlockAudio, { once: true });
+        });
+      }
+    }
+  }, [firstPlaceVideo, isOpen, firstPlaceMuted, firstPlaceVolume]);
+
+  useEffect(() => {
+    const handleSyncFirstPlaceVideo = (e?: any) => {
+      try {
+        const eventUrl = e?.detail?.videoUrl;
+        const vid =
+          eventUrl ||
+          localStorage.getItem('vs_ranking_podium_video_1') ||
+          localStorage.getItem('custom_model_video_adrianalima') ||
+          localStorage.getItem('custom_model_video_adrianalima_w1') ||
+          localStorage.getItem('custom_model_video_topf-1') ||
+          (firstPlace?.id ? localStorage.getItem(`custom_model_video_${firstPlace.id}`) : '') ||
+          localStorage.getItem('coll_custom_ranking_video_female') ||
+          localStorage.getItem('coll_custom_ranking_video') ||
+          localStorage.getItem('landing_page_cover_video_url') ||
+          firstPlace?.videoUrl ||
+          PRESET_FEMALE_VIDEOS[0] ||
+          '';
+        if (vid) {
+          setFirstPlaceVideo(vid);
+        }
+      } catch (_) {}
+    };
+
+    window.addEventListener('ranking_videos_updated', handleSyncFirstPlaceVideo);
+    window.addEventListener('ranking_video_changed', handleSyncFirstPlaceVideo);
+    window.addEventListener('model-profile-video-published', handleSyncFirstPlaceVideo);
+    window.addEventListener('storage', handleSyncFirstPlaceVideo);
+    return () => {
+      window.removeEventListener('ranking_videos_updated', handleSyncFirstPlaceVideo);
+      window.removeEventListener('ranking_video_changed', handleSyncFirstPlaceVideo);
+      window.removeEventListener('model-profile-video-published', handleSyncFirstPlaceVideo);
+      window.removeEventListener('storage', handleSyncFirstPlaceVideo);
+    };
+  }, [firstPlace?.id, firstPlace?.videoUrl]);
+
   // Master sorted list of exactly 100 items (Hooks declared at the top before any early return)
   const masterSortedRanking = React.useMemo(() => {
     const list = [...models].sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0));
@@ -2150,14 +2390,16 @@ export default function VictoriaSecretRanking({
       {/* Main Container */}
       <div className="bg-white/95 border border-pink-100/80 rounded-[36px] w-full max-w-[1280px] overflow-hidden shadow-[0_25px_80px_rgba(219,39,119,0.18)] relative text-slate-800 my-auto flex flex-col max-h-[96vh] animate-scale-up">
         
-        {/* Close Button top-right */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/80 hover:bg-pink-100 border border-pink-200 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
-          title="Cerrar ranking"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Close Button top-right (solo se muestra en la vista principal de ranking; en subpestañas como regalos se elimina la X de sobra) */}
+        {activeTab === 'ranking' && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/80 hover:bg-pink-100 border border-pink-200 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+            title="Cerrar ranking"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Scrollable container */}
         <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto no-scrollbar relative z-10">
@@ -2175,61 +2417,81 @@ export default function VictoriaSecretRanking({
 
           {activeTab === 'ranking' && (
             <>
-              {/* 🌟 1. TOP HEADER: FASHION FINANCES (LEFT) & BEAUTY CREATES OPPORTUNITIES (RIGHT) */}
-              <div className="w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 pt-2 pb-6 sm:pb-8 px-2 select-none">
-                {/* Left Brand: FASHION FINANCES with 3D Golden Diamond */}
-                <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-                  <div className="flex items-center gap-1.5 text-amber-500 mb-0.5">
-                    <svg className="w-10 h-8 drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)]" viewBox="0 0 40 32" fill="none">
-                      <path d="M12 2L2 12L20 30L38 12L28 2H12Z" fill="url(#goldHeaderDia)" stroke="#d97706" strokeWidth="1.2" strokeLinejoin="round" />
-                      <path d="M12 2L20 12L28 2" stroke="#fef08a" strokeWidth="1.2" />
-                      <path d="M2 12H38" stroke="#fef08a" strokeWidth="1.2" />
-                      <path d="M20 12L20 30" stroke="#fef08a" strokeWidth="1.2" />
-                      <path d="M12 2L20 30L28 2" stroke="#b45309" strokeWidth="0.8" opacity="0.6" />
-                      <defs>
-                        <linearGradient id="goldHeaderDia" x1="0" y1="0" x2="40" y2="32" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#fef08a" />
-                          <stop offset="0.4" stopColor="#f59e0b" />
-                          <stop offset="1" stopColor="#92400e" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  <h1 className="text-3xl sm:text-4xl font-serif font-black tracking-[0.22em] text-slate-900 uppercase leading-none">
-                    FASHION
-                  </h1>
-                  <div className="flex items-center gap-2 my-1.5 w-full max-w-[210px]">
-                    <span className="h-[1px] flex-1 bg-slate-300" />
-                    <span className="text-[11px] sm:text-xs font-serif font-bold tracking-[0.35em] text-slate-800 uppercase">
-                      FINANCES
-                    </span>
-                    <span className="h-[1px] flex-1 bg-slate-300" />
-                  </div>
-                  <span className="text-[9px] font-sans font-bold tracking-[0.3em] text-[#b45309] uppercase">
-                    MODELS × FASHION × FINANCE
-                  </span>
+              {/* 🌟 1. TOP HEADER: LUXURY HERO BANNER MATCHING "Moda, belleza y oportunidades de lujo.png" */}
+              <div className="w-full max-w-5xl mx-auto mb-3 sm:mb-5 select-none">
+                <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.2)] border border-pink-200/90 bg-gradient-to-r from-[#ffe4e6] via-[#fbcfe8] to-[#f472b6]">
+                  <img
+                    src="/assets/aistudio/Moda__belleza_y_oportunidades_de_lujo_87a0501b.png"
+                    alt="FASHIONS FINANCE - Moda, belleza y oportunidades de lujo - Beauty Creates Opportunities"
+                    className="w-full h-auto object-cover select-none pointer-events-none block aspect-[1600/508]"
+                    loading="eager"
+                  />
+                  {/* Subtle golden ambient luxury shimmer */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-pink-950/15 via-transparent to-white/10 pointer-events-none" />
                 </div>
+              </div>
 
-                {/* Right Slogan: BEAUTY CREATES OPPORTUNITIES */}
-                <div className="flex flex-col items-center sm:items-end text-center sm:text-right pt-0.5">
-                  <span className="font-serif italic text-4xl sm:text-5xl font-bold text-[#e11d48] tracking-tight leading-none drop-shadow-xs">
-                    Beauty
-                  </span>
-                  <span className="text-[9.5px] font-sans font-black tracking-[0.3em] text-slate-900 uppercase leading-tight mt-1">
-                    CREATES
-                  </span>
-                  <div className="relative inline-block mt-0.5">
-                    <span className="text-base sm:text-lg font-sans font-bold tracking-[0.18em] text-[#e11d48] uppercase leading-none block">
-                      OPPORTUNITIES
-                    </span>
-                    <div className="w-36 sm:w-40 h-[1.5px] bg-gradient-to-r from-transparent via-[#d97706] to-[#b45309] mt-1 ml-auto rounded-full" />
+              {/* 🌟 ACTION BUTTONS (RANKING, PREMIOS, HALL OF FAME, REGALOS) DIRECTLY ABOVE THE CROWN */}
+              <div className="w-full flex justify-center items-center pt-2 pb-1 relative z-40">
+                <div className="flex items-start justify-center gap-2.5 sm:gap-3.5 select-none">
+                  {/* Col 1: RANKING */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ranking')}
+                    className={`px-5 py-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer shadow-xs ${
+                      activeTab === 'ranking'
+                        ? 'border-[1.5px] border-[#e11d48] bg-[#fff1f2] text-[#e11d48]'
+                        : 'border border-slate-300 bg-white hover:bg-slate-50 text-slate-800'
+                    }`}
+                  >
+                    RANKING
+                  </button>
+
+                  {/* Col 2: PREMIOS + REGALOS underneath */}
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('premios')}
+                      className={`w-full px-5 py-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer border text-center shadow-xs ${
+                        activeTab === 'premios'
+                          ? 'border-[1.5px] border-[#e11d48] bg-[#fff1f2] text-[#e11d48]'
+                          : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-800'
+                      }`}
+                    >
+                      PREMIOS
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('regalos')}
+                      className={`w-full px-5 py-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer border flex items-center justify-center gap-2 shadow-xs ${
+                        activeTab === 'regalos'
+                          ? 'border-[1.5px] border-[#e11d48] bg-[#fff1f2] text-[#e11d48]'
+                          : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-800'
+                      }`}
+                    >
+                      <Gift className="w-4 h-4 text-slate-800" />
+                      <span>REGALOS</span>
+                    </button>
                   </div>
+
+                  {/* Col 3: HALL OF FAME */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('hall_of_fame')}
+                    className={`px-5 py-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer border shadow-xs ${
+                      activeTab === 'hall_of_fame'
+                        ? 'border-[1.5px] border-[#e11d48] bg-[#fff1f2] text-[#e11d48]'
+                        : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-800'
+                    }`}
+                  >
+                    HALL OF FAME
+                  </button>
                 </div>
               </div>
 
               {/* 🏆 THE COUTURE PODIUM (Exact Match to image.png with generous breathing room) */}
               {firstPlace && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5 items-end max-w-5xl mx-auto pt-28 sm:pt-40 md:pt-48 pb-4 px-2 mt-6 sm:mt-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5 items-end max-w-5xl mx-auto pt-20 sm:pt-24 md:pt-28 pb-4 px-2 mt-2 sm:mt-4">
                   
                   {/* RANKING #2 : ALESSANDRA AMBROSIO (LEFT) */}
                   {secondPlace && (
@@ -2301,9 +2563,8 @@ export default function VictoriaSecretRanking({
 
                       {/* 🏆 Glamour Pedestal Column 2: MODELO ORO (Matches Clasificaci_n_glamorosa_de_modelos_con_diamantes) */}
                       <div 
-                        onClick={() => onSelectModel && onSelectModel(secondPlace)}
+                        onClick={() => setElevatedPodiumPlace(prev => prev === 2 ? null : 2)}
                         className="w-full max-w-[280px] sm:max-w-[295px] rounded-[32px] overflow-hidden shadow-[0_15px_35px_rgba(217,119,6,0.35)] hover:shadow-[0_22px_50px_rgba(217,119,6,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-3.5 relative group border-2 border-amber-300/80 bg-gradient-to-b from-[#fef08a] via-[#f59e0b] to-[#b45309] p-0.5"
-                        title="Ver ficha de Alessandra Ambrosio"
                       >
                         <img 
                           src="/assets/aistudio/pedestal_gold_card.png" 
@@ -2337,41 +2598,90 @@ export default function VictoriaSecretRanking({
                           />
                         </div>
 
-                        {/* Golden Metallic Container with MAXIM Diamond Presentation (Matches image.png exactly) */}
+                        {/* Ice Blue Radiant Metallic Container with MAXIM Diamond Presentation or Published Video */}
                         <div 
-                          onClick={() => onSelectModel && onSelectModel(firstPlace)}
-                          className="w-72 sm:w-80 md:w-[315px] h-[390px] sm:h-[430px] rounded-[34px] overflow-hidden shadow-[0_0_45px_rgba(245,158,11,0.65),0_0_75px_rgba(59,130,246,0.35)] hover:shadow-[0_0_60px_rgba(245,158,11,0.85),0_0_90px_rgba(59,130,246,0.5)] transition-all duration-300 relative z-30 cursor-pointer group"
-                          title="Ver ficha de Adriana Lima"
+                          onClick={() => setElevatedPodiumPlace(prev => prev === 1 ? null : 1)}
+                          className="w-72 sm:w-80 md:w-[315px] h-[390px] sm:h-[430px] rounded-[34px] overflow-hidden border-[3.5px] border-[#00f0ff] shadow-[0_0_45px_rgba(0,240,255,0.75),0_0_80px_rgba(56,189,248,0.5)] hover:shadow-[0_0_65px_rgba(0,240,255,0.95),0_0_95px_rgba(56,189,248,0.75)] transition-all duration-300 relative z-30 cursor-pointer group bg-slate-950"
                         >
-                          <img 
-                            src="/assets/aistudio/card_1_maxim_diamonds.png" 
-                            alt="Adriana Lima - MAXIM Diamond Angel" 
-                            className="w-full h-full object-cover rounded-[34px] transition-transform duration-500 group-hover:scale-[1.02]"
-                          />
+                          {firstPlaceVideo ? (
+                            <div className="w-full h-full relative overflow-hidden rounded-[30px] bg-black">
+                              <video 
+                                ref={firstPlaceVideoRef}
+                                key={firstPlaceVideo}
+                                src={firstPlaceVideo}
+                                autoPlay
+                                loop
+                                muted={firstPlaceMuted}
+                                playsInline
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                              />
 
-                          {/* Interactive clickable heart in top right */}
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (firstPlace && onSelectModel) {
-                                onSelectModel(firstPlace);
-                              }
-                            }}
-                            className="absolute top-3.5 right-3.5 z-40 w-8 h-8 rounded-full bg-black/20 hover:bg-black/50 text-white flex items-center justify-center transition cursor-pointer"
-                            title="Me gusta"
-                          >
-                            <Heart className="w-4 h-4 fill-white/20 stroke-white" />
-                          </button>
+                              {/* Barra vertical de volumen cápsula neón en el lado izquierdo (solo aparece al pasar el puntero) */}
+                              <PodiumNeonVolumeBar
+                                volume={firstPlaceVolume}
+                                isMuted={firstPlaceMuted}
+                                onVolumeChange={handleFirstPlaceVolumeChange}
+                                onToggleMute={toggleFirstPlaceMute}
+                              />
+
+                              {/* Top-left pill: EN LÍNEA from z.png */}
+                              <div className="absolute top-3.5 left-3.5 z-40 bg-[#fe2c55] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider pointer-events-none">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                                <span>EN LÍNEA</span>
+                              </div>
+
+                              {/* Interactive clickable heart in top right */}
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className="absolute top-3.5 right-3.5 z-40 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition cursor-pointer border border-white/20 backdrop-blur-xs shadow-md"
+                                title="Me gusta"
+                              >
+                                <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                              </button>
+
+                              {/* Bottom overlay with Adriana Lima 99.999 votos matching z.png */}
+                              <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-14 pb-4 px-4 text-center flex flex-col items-center pointer-events-none">
+                                <h4 className="text-white font-serif font-black text-base sm:text-lg leading-tight flex items-center justify-center gap-1.5 drop-shadow-md">
+                                  <span>{firstPlace.name || 'Adriana Lima'}</span>
+                                  <span className="text-amber-400 text-sm">★</span>
+                                </h4>
+                                <div className="text-white/90 font-medium text-[11px] sm:text-xs flex items-center justify-center gap-1 mt-1 font-mono">
+                                  <span className="text-[#ec4899]">💖</span> {Number(firstPlace.totalLikes || 99999).toLocaleString()} votos
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <img 
+                                src="/assets/aistudio/card_1_maxim_diamonds.png" 
+                                alt="Adriana Lima - MAXIM Diamond Angel" 
+                                className="w-full h-full object-cover rounded-[30px] transition-transform duration-500 group-hover:scale-[1.02]"
+                              />
+
+                              {/* Interactive clickable heart in top right */}
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className="absolute top-3.5 right-3.5 z-40 w-8 h-8 rounded-full bg-black/20 hover:bg-black/50 text-white flex items-center justify-center transition cursor-pointer"
+                                title="Me gusta"
+                              >
+                                <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                              </button>
+                            </>
+                          )}
                         </div>
 
                       </div>
 
                       {/* 💎 Glamour Pedestal Column 1: MODELO DIAMANTE (Matches Clasificaci_n_glamorosa_de_modelos_con_diamantes) */}
                       <div 
-                        onClick={() => onSelectModel && onSelectModel(firstPlace)}
+                        onClick={() => setElevatedPodiumPlace(prev => prev === 1 ? null : 1)}
                         className="w-full max-w-[295px] sm:max-w-[325px] rounded-[36px] overflow-hidden shadow-[0_20px_50px_rgba(30,58,138,0.55),0_0_40px_rgba(59,130,246,0.45)] hover:shadow-[0_25px_60px_rgba(30,58,138,0.7),0_0_55px_rgba(59,130,246,0.65)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-3.5 relative z-20 group border-2 border-cyan-300/90 bg-gradient-to-b from-[#93c5fd] via-[#3b82f6] to-[#1e3a8a] p-0.5"
-                        title="Ver ficha de Adriana Lima"
                       >
                         <img 
                           src="/assets/aistudio/pedestal_diamond_card.png" 
@@ -2448,9 +2758,8 @@ export default function VictoriaSecretRanking({
 
                       {/* 👑 Glamour Pedestal Column 3: MODELO PLATINO (Matches Clasificaci_n_glamorosa_de_modelos_con_diamantes) */}
                       <div 
-                        onClick={() => onSelectModel && onSelectModel(thirdPlace)}
+                        onClick={() => setElevatedPodiumPlace(prev => prev === 3 ? null : 3)}
                         className="w-full max-w-[280px] sm:max-w-[295px] rounded-[32px] overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.35)] hover:shadow-[0_22px_50px_rgba(148,163,184,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-3.5 relative group border-2 border-slate-300/80 bg-gradient-to-b from-slate-100 via-slate-300 to-slate-400 p-0.5"
-                        title="Ver ficha de Candice Swanepoel"
                       >
                         <img 
                           src="/assets/aistudio/pedestal_platinum_card.png" 
@@ -2469,9 +2778,7 @@ export default function VictoriaSecretRanking({
 
               {/* 👑 RECUADRO APARTE - MODELO LEYENDA (Laurel design with exact stats from mockup image) */}
               <div 
-                onClick={() => onSelectModel && onSelectModel(legendModel)}
-                className="max-w-xl mx-auto border-2 border-pink-200/50 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/60 rounded-[28px] p-5 relative overflow-hidden transition-all duration-300 shadow-sm flex flex-col sm:flex-row items-center gap-6 text-left cursor-pointer hover:border-pink-400 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] group/legend"
-                title={`Haga click para ver el escaparate de la tienda de ${legendModel?.name || 'Adriana Lima'}`}
+                className="max-w-xl mx-auto border-2 border-pink-200/50 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/60 rounded-[28px] p-5 relative overflow-hidden transition-all duration-300 shadow-sm flex flex-col sm:flex-row items-center gap-6 text-left hover:border-pink-300 group/legend"
               >
                 
                 {/* Soft ambient glow behind portrait */}
@@ -2566,9 +2873,7 @@ export default function VictoriaSecretRanking({
                   {/* SEGUNDO CLASIFICADO (Plata / Oro) */}
                   {secondPlace && (
                     <div 
-                      onClick={() => onSelectModel && onSelectModel(secondPlace)}
-                      className="group/second border border-slate-100 hover:border-pink-300 bg-slate-50/55 hover:bg-slate-50 rounded-2xl p-4 transition-all duration-300 cursor-pointer shadow-3xs flex flex-col justify-between space-y-3"
-                      title={`Ver escaparate de ${secondPlace.name}`}
+                      className="group/second border border-slate-100 hover:border-pink-200 bg-slate-50/55 rounded-2xl p-4 transition-all duration-300 shadow-3xs flex flex-col justify-between space-y-3"
                     >
                       <div className="flex items-start gap-3">
                         <div className="relative shrink-0 select-none">
@@ -2619,9 +2924,7 @@ export default function VictoriaSecretRanking({
                   {/* TERCER CLASIFICADO (Platino / Cobre) */}
                   {thirdPlace && (
                     <div 
-                      onClick={() => onSelectModel && onSelectModel(thirdPlace)}
-                      className="group/third border border-slate-100 hover:border-pink-300 bg-slate-50/55 hover:bg-slate-50 rounded-2xl p-4 transition-all duration-300 cursor-pointer shadow-3xs flex flex-col justify-between space-y-3"
-                      title={`Ver escaparate de ${thirdPlace.name}`}
+                      className="group/third border border-slate-100 hover:border-pink-200 bg-slate-50/55 rounded-2xl p-4 transition-all duration-300 shadow-3xs flex flex-col justify-between space-y-3"
                     >
                       <div className="flex items-start gap-3">
                         <div className="relative shrink-0 select-none">
@@ -3174,8 +3477,8 @@ export default function VictoriaSecretRanking({
           {activeTab === 'regalos' && (
             <div className="space-y-6 animate-fade-in" id="regalos-extras-channel-container">
               
-              {/* EN VIVO Header Bar with Sub-Tabs Navigation */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-950 via-slate-900 to-rose-950 text-white p-5 sm:p-6 border border-pink-500/30 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-4">
+              {/* EN VIVO Header Bar with Sub-Tabs Navigation (Fondo Rosa) */}
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 text-white p-5 sm:p-6 border border-pink-300/60 shadow-xl shadow-pink-500/20 flex flex-col lg:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5 w-full lg:w-auto">
                   <div className="relative shrink-0">
                     <div className="w-13 h-13 rounded-full ring-2 ring-red-500 p-0.5 overflow-hidden shadow-lg">
@@ -3202,17 +3505,17 @@ export default function VictoriaSecretRanking({
                         <span className="text-red-500">🔴</span> Centro de Regalos · Fashion Finances
                       </h2>
                     </div>
-                    <p className="text-xs text-pink-200/90 font-light truncate">
+                    <p className="text-xs text-white/95 font-medium truncate">
                       Historial de Regalos Recibidos, Enviados y Tienda Extra del Canal
                     </p>
                   </div>
                 </div>
 
-                {/* Right controls: User Balance & Close */}
+                {/* Right controls: User Balance (Sin la X de sobra) */}
                 <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
-                  <div className="bg-black/60 border border-amber-400/40 px-4 py-2 rounded-2xl flex items-center gap-2.5 shadow-inner">
-                    <span className="text-xs text-slate-300 font-medium font-mono">Tu saldo:</span>
-                    <span className="text-base font-black font-mono text-amber-400 flex items-center gap-1 tracking-tight">
+                  <div className="bg-black/30 border border-white/30 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2.5 shadow-inner">
+                    <span className="text-xs text-white/90 font-medium font-mono">Tu saldo:</span>
+                    <span className="text-base font-black font-mono text-amber-300 flex items-center gap-1 tracking-tight">
                       🪙 {userGiftBalance.toLocaleString()}
                     </span>
                     <button
@@ -3228,14 +3531,6 @@ export default function VictoriaSecretRanking({
                       +
                     </button>
                   </div>
-
-                  <button
-                    onClick={() => setActiveTab('ranking')}
-                    className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition-all border border-white/20 hover:scale-105 cursor-pointer shadow-sm shrink-0"
-                    title="Cerrar y volver al Ranking"
-                  >
-                    ✕
-                  </button>
                 </div>
               </div>
 
