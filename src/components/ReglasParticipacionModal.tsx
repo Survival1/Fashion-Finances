@@ -12,7 +12,6 @@ import {
   Mic, 
   Sparkles, 
   AlertTriangle,
-  Database,
   ArrowRight,
   TrendingUp,
   Layers,
@@ -220,20 +219,6 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                 </div>
 
               </div>
-
-              {/* Trazabilidad inmutable en estilo de alta costura Victoria's Secret */}
-              <div className="bg-gradient-to-r from-[#1c0c16] via-[#281320] to-[#1a0a14] text-white rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 border-2 border-pink-400/40 shadow-lg">
-                <div className="flex items-center gap-3">
-                  <Database className="w-6 h-6 text-pink-400 shrink-0" />
-                  <div className="text-left">
-                    <strong className="text-xs sm:text-sm font-black font-serif block text-white tracking-wide">Base de Datos Independiente (REF: 1, REF: 2...)</strong>
-                    <span className="text-[11px] sm:text-xs text-pink-200/80">Cada ronda genera un registro criptográfico independiente e inalterable.</span>
-                  </div>
-                </div>
-                <span className="px-3 py-1 rounded-full bg-pink-500/20 border border-pink-400/50 text-pink-300 text-[10px] font-mono font-black shrink-0 tracking-wider shadow-xs">
-                  INMUTABLE
-                </span>
-              </div>
             </div>
           )}
 
@@ -263,7 +248,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     color: 'border-blue-300 bg-blue-50/40 text-blue-700'
                   },
                   {
-                    name: 'Ronda Glamour ✨',
+                    name: 'Round Glamour ✨',
                     ref: 'REF: 1',
                     fee: '1.000,00 €',
                     pool: '10.000,00 €',
@@ -271,7 +256,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     color: 'border-purple-300 bg-purple-50/40 text-purple-700'
                   },
                   {
-                    name: 'Ronda Elegant & Classic 🤍',
+                    name: 'Round Elegant & Classic 🤍',
                     ref: 'REF: 1',
                     fee: '10.000,00 €',
                     pool: '100.000,00 €',
@@ -279,7 +264,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     color: 'border-amber-300 bg-amber-50/40 text-amber-700'
                   },
                   {
-                    name: 'Ronda High Fashion 👠',
+                    name: 'Round High Fashion 👠',
                     ref: 'REF: 1',
                     fee: '100.000,00 €',
                     pool: '1.000.000,00 €',
@@ -287,7 +272,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     color: 'border-emerald-300 bg-emerald-50/40 text-emerald-700'
                   },
                   {
-                    name: 'Ronda Haute Couture 👑',
+                    name: 'Round de millonarios 👑',
                     ref: 'REF: 1',
                     fee: '1.000.000,00 €',
                     pool: '10.000.000,00 €',
@@ -462,7 +447,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     tag: 'Crecimiento'
                   },
                   {
-                    name: 'Ronda Glamour ✨',
+                    name: 'Round Glamour ✨',
                     fee: '1.000,00 €',
                     prize: '8.000,00 €',
                     profit: '80% (8.000,00 €)',
@@ -472,7 +457,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     tag: 'Consolidación'
                   },
                   {
-                    name: 'Elegant & Classic 🤍',
+                    name: 'Round Elegant & Classic 🤍',
                     fee: '10.000,00 €',
                     prize: '80.000,00 €',
                     profit: '80% (80.000,00 €)',
@@ -482,7 +467,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     tag: 'Alta Gama'
                   },
                   {
-                    name: 'High Fashion 👠',
+                    name: 'Round High Fashion 👠',
                     fee: '100.000,00 €',
                     prize: '800.000,00 €',
                     profit: '80% (800.000,00 €)',
@@ -492,7 +477,7 @@ export const ReglasParticipacionModal: React.FC<ReglasParticipacionModalProps> =
                     tag: 'Prestigio Global'
                   },
                   {
-                    name: 'Haute Couture 👑',
+                    name: 'Round de millonarios 👑',
                     fee: '1.000.000,00 €',
                     prize: '8.000.000,00 €',
                     profit: '80% (8.000.000,00 €)',

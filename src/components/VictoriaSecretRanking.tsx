@@ -2778,7 +2778,7 @@ export default function VictoriaSecretRanking({
 
               {/* 👑 RECUADRO APARTE - MODELO LEYENDA (Laurel design with exact stats from mockup image) */}
               <div 
-                className="max-w-xl mx-auto border-2 border-pink-200/50 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/60 rounded-[28px] p-5 relative overflow-hidden transition-all duration-300 shadow-sm flex flex-col sm:flex-row items-center gap-6 text-left hover:border-pink-300 group/legend"
+                className="max-w-xl mx-auto border-2 border-[#ff007f] bg-gradient-to-r from-pink-50/70 via-white to-pink-50/60 rounded-[28px] p-5 relative overflow-hidden transition-all duration-300 shadow-md shadow-[#ff007f]/20 flex flex-col sm:flex-row items-center gap-6 text-left hover:border-[#ff007f] group/legend"
               >
                 
                 {/* Soft ambient glow behind portrait */}
@@ -2830,9 +2830,18 @@ export default function VictoriaSecretRanking({
                         {legendModel?.name || 'Adriana Lima'}
                       </h3>
                     </div>
-                    <p className="text-[11px] text-pink-500 font-bold font-mono">
-                      @{legendModel?.username || 'adrianalima_w1'}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (legendModel && onSelectModel) onSelectModel(legendModel);
+                      }}
+                      className="text-[11px] text-pink-500 hover:text-pink-700 hover:underline font-bold font-mono cursor-pointer inline-flex items-center gap-1"
+                      title={`Ver perfil de @${legendModel?.username || 'adrianalima_w1'}`}
+                    >
+                      <span>@{legendModel?.username || 'adrianalima_w1'}</span>
+                      <span className="text-[9px]">↗</span>
+                    </button>
                   </div>
 
                   {/* Récord gold-brown chic pill button */}
@@ -2903,9 +2912,18 @@ export default function VictoriaSecretRanking({
                           <h4 className="text-xs font-bold text-slate-800 group-hover/second:text-pink-600 transition-colors truncate mt-1 leading-tight">
                             {secondPlace.name}
                           </h4>
-                          <span className="text-[9.5px] text-slate-400 block font-mono">
-                            @{secondPlace.username}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (secondPlace && onSelectModel) onSelectModel(secondPlace);
+                            }}
+                            className="text-[9.5px] text-slate-400 hover:text-pink-600 hover:underline font-mono cursor-pointer truncate inline-flex items-center gap-0.5"
+                            title={`Ver perfil de @${secondPlace.username}`}
+                          >
+                            <span>@{secondPlace.username}</span>
+                            <span className="text-[8px]">↗</span>
+                          </button>
                         </div>
                       </div>
 
@@ -2954,9 +2972,18 @@ export default function VictoriaSecretRanking({
                           <h4 className="text-xs font-bold text-slate-800 group-hover/third:text-pink-600 transition-colors truncate mt-1 leading-tight">
                             {thirdPlace.name}
                           </h4>
-                          <span className="text-[9.5px] text-slate-400 block font-mono">
-                            @{thirdPlace.username}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (thirdPlace && onSelectModel) onSelectModel(thirdPlace);
+                            }}
+                            className="text-[9.5px] text-slate-400 hover:text-pink-600 hover:underline font-mono cursor-pointer truncate inline-flex items-center gap-0.5"
+                            title={`Ver perfil de @${thirdPlace.username}`}
+                          >
+                            <span>@{thirdPlace.username}</span>
+                            <span className="text-[8px]">↗</span>
+                          </button>
                         </div>
                       </div>
 
@@ -3114,9 +3141,18 @@ export default function VictoriaSecretRanking({
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[10px] text-slate-400 font-medium font-mono block truncate">
-                                @{model.username}
-                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onSelectModel) onSelectModel(model);
+                                }}
+                                className="text-[10px] text-slate-400 hover:text-pink-600 hover:underline font-medium font-mono truncate cursor-pointer inline-flex items-center gap-0.5"
+                                title={`Ver perfil de @${model.username}`}
+                              >
+                                <span>@{model.username}</span>
+                                <span className="text-[8px]">↗</span>
+                              </button>
                             </div>
                           </div>
 
@@ -3477,59 +3513,44 @@ export default function VictoriaSecretRanking({
           {activeTab === 'regalos' && (
             <div className="space-y-6 animate-fade-in" id="regalos-extras-channel-container">
               
-              {/* EN VIVO Header Bar with Sub-Tabs Navigation (Fondo Rosa) */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 text-white p-5 sm:p-6 border border-pink-300/60 shadow-xl shadow-pink-500/20 flex flex-col lg:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5 w-full lg:w-auto">
-                  <div className="relative shrink-0">
-                    <div className="w-13 h-13 rounded-full ring-2 ring-red-500 p-0.5 overflow-hidden shadow-lg">
-                      <img 
-                        src={legendModel.avatar} 
-                        alt="Adriana Lima" 
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover rounded-full" 
-                      />
-                    </div>
-                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-4 w-4 bg-red-600 border border-white"></span>
-                    </span>
-                  </div>
+              {/* Centro de Regalos y Finanzas Banner (Luxury Gold Silk & Diamonds Theme) */}
+              <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300/70 shadow-2xl shadow-amber-950/15 group">
+                <img 
+                  src="/assets/aistudio/Centro_de_Regalos_y_Finanzas_de_Moda_52047950.png" 
+                  alt="Centro de Regalos · Fashion Finances" 
+                  className="w-full h-auto object-cover rounded-3xl block" 
+                />
 
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-black text-[9px] uppercase rounded-sm tracking-wider animate-pulse flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                        EN VIVO
+                {/* Interactive Dynamic Balance & Recharge Hotspot */}
+                <div 
+                  className="absolute left-[7.8%] top-[58.6%] w-[39.2%] h-[20%] flex items-center justify-between px-3 sm:px-6 cursor-pointer group/balance"
+                  onClick={() => {
+                    setUserGiftBalance(prev => prev + 5000);
+                    window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                      detail: { icon: '🪙' }
+                    }));
+                  }}
+                  title="Tu saldo de monedas. Haz clic para recargar 5.000 monedas"
+                >
+                  {/* Subtle dynamic update pill when balance is updated */}
+                  {userGiftBalance !== 2473 && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#fefbf6] via-[#fdf6e6] to-[#faedd0] rounded-full border border-amber-300 shadow-sm flex items-center justify-between px-3 sm:px-6 z-10 pointer-events-none">
+                      <span className="font-serif text-[11px] sm:text-base lg:text-lg text-stone-900 font-bold">Tu saldo:</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-gradient-to-b from-amber-400 to-amber-600 text-white font-bold flex items-center justify-center text-xs sm:text-sm shadow-xs">$</span>
+                        <span className="font-serif font-black text-xs sm:text-xl lg:text-2xl text-stone-950 tracking-tight">
+                          {userGiftBalance.toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="text-[10px] sm:text-xs font-black bg-amber-400 hover:bg-amber-300 text-slate-900 px-2 py-0.5 rounded-full shadow-xs">
+                        +
                       </span>
-                      <h2 className="text-base sm:text-lg font-serif font-black text-white flex items-center gap-1.5 truncate">
-                        <span className="text-red-500">🔴</span> Centro de Regalos · Fashion Finances
-                      </h2>
                     </div>
-                    <p className="text-xs text-white/95 font-medium truncate">
-                      Historial de Regalos Recibidos, Enviados y Tienda Extra del Canal
-                    </p>
-                  </div>
-                </div>
+                  )}
 
-                {/* Right controls: User Balance (Sin la X de sobra) */}
-                <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
-                  <div className="bg-black/30 border border-white/30 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2.5 shadow-inner">
-                    <span className="text-xs text-white/90 font-medium font-mono">Tu saldo:</span>
-                    <span className="text-base font-black font-mono text-amber-300 flex items-center gap-1 tracking-tight">
-                      🪙 {userGiftBalance.toLocaleString()}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setUserGiftBalance(prev => prev + 5000);
-                        window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                          detail: { icon: '🪙' }
-                        }));
-                      }}
-                      className="ml-1 w-6 h-6 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xs transition cursor-pointer"
-                      title="Recargar 5000 monedas"
-                    >
-                      +
-                    </button>
+                  {/* Hover recharge badge tooltip */}
+                  <div className="hidden group-hover/balance:flex absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 text-amber-300 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-amber-400/40 pointer-events-none whitespace-nowrap z-20">
+                    🪙 Saldo: {userGiftBalance.toLocaleString()} · Clic para +5.000
                   </div>
                 </div>
               </div>

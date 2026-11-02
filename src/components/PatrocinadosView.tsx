@@ -338,9 +338,18 @@ export default function PatrocinadosView({
                     <h4 className="font-bold text-slate-900 text-base group-hover:text-rose-600 transition-colors leading-tight truncate">
                       {sponsorModel.name}
                     </h4>
-                    <p className="text-xs text-rose-500 font-mono font-semibold truncate">
-                      @{sponsorModel.username}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSelectModel) onSelectModel(sponsorModel);
+                      }}
+                      className="text-xs text-rose-500 hover:text-rose-700 hover:underline cursor-pointer font-mono font-semibold truncate inline-flex items-center gap-1"
+                      title={`Ver perfil de @${sponsorModel.username}`}
+                    >
+                      <span>@{sponsorModel.username}</span>
+                      <span className="text-[10px]">↗</span>
+                    </button>
                   </div>
                 </div>
                 
@@ -912,161 +921,136 @@ export default function PatrocinadosView({
               const displayEarnings = p.earningsGenerated + personalBonus;
               const currentAvatar = getValidAvatar(p);
 
+              // Find or construct the full profile (supporting both models and investors)
+              let targetProfile = models.find(
+                m => (m.username && m.username.toLowerCase() === p.username.toLowerCase()) ||
+                     (m.name && m.name.toLowerCase() === p.name.toLowerCase()) ||
+                     (m.id && m.id === p.id)
+              );
+
+              if (!targetProfile) {
+                targetProfile = {
+                  id: p.id || `profile-${p.username}`,
+                  name: p.name,
+                  username: p.username,
+                  avatar: currentAvatar,
+                  role: p.role,
+                  bio: `Perfil de ${p.role === 'model' ? 'Modelo Profesional' : 'Inversor Asociado'}: ${p.name}. Colaborador destacado en la red de Fashion Finances Inc.`,
+                  totalLikes: Math.round((parseFloat(p.id.replace(/\D/g, '') || '5') * 15) % 150) + 40,
+                  followersCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '8') * 132) % 1800) + 400,
+                  photos: [
+                    currentAvatar,
+                    "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600",
+                    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600"
+                  ],
+                  referidosCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '2') * 3) % 6),
+                  socials: {
+                    instagram: p.username,
+                    tiktok: p.username
+                  },
+                  isOnline: p.status === 'active',
+                  isCastingLive: false,
+                  gender: p.name.toLowerCase().includes('marcus') || p.name.toLowerCase().includes('carlos') || p.name.toLowerCase().includes('juan') || p.name.toLowerCase().includes('pedro') ? 'male' : 'female'
+                };
+              } else {
+                targetProfile = {
+                  ...targetProfile,
+                  role: p.role || targetProfile.role || 'model',
+                  avatar: targetProfile.avatar || currentAvatar
+                };
+              }
+
+              const handleNavigateToProfile = (e?: React.MouseEvent) => {
+                if (e) e.stopPropagation();
+                if (onSelectModel && targetProfile) {
+                  onSelectModel(targetProfile);
+                }
+              };
+
               return (
                 <div
                   key={p.id}
-                  onClick={() => {
-                    let matchedModel = models.find(
-                      m => m.username?.toLowerCase() === p.username?.toLowerCase() ||
-                           m.name?.toLowerCase() === p.name?.toLowerCase() ||
-                           m.id === p.id
-                    );
-                    if (!matchedModel) {
-                      matchedModel = {
-                        id: p.id || `fallback-profile-${p.username}`,
-                        name: p.name,
-                        username: p.username,
-                        avatar: currentAvatar,
-                        bio: `Perfil de ${p.role === 'model' ? 'Modelo Profesional' : 'Inversor Asociado'}: ${p.name}. Colaborador destacado en la ronda de Fashion Finances Inc.`,
-                        totalLikes: Math.round((parseFloat(p.id.replace(/\D/g, '') || '5') * 15) % 150) + 40,
-                        followersCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '8') * 132) % 1800) + 400,
-                        photos: [
-                          currentAvatar,
-                          "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600",
-                          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600"
-                        ],
-                        referidosCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '2') * 3) % 6),
-                        socials: {
-                          instagram: p.username,
-                          tiktok: p.username
-                        },
-                        isOnline: true,
-                        isCastingLive: false
-                      };
-                    }
-                    if (onSelectModel) {
-                      onSelectModel(matchedModel);
-                    }
-                  }}
+                  onClick={handleNavigateToProfile}
                   className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-rose-50/45 cursor-pointer border-b border-pink-50 last:border-0 transition-colors text-left group"
-                  title={`Ver perfil de ${p.name}`}
+                  title={`Ver perfil de ${p.name} (@${p.username})`}
                 >
                   {/* Profile info & name */}
-                  {(() => {
-                    let matchedModel = models.find(
-                      m => m.username?.toLowerCase() === p.username?.toLowerCase() ||
-                           m.name?.toLowerCase() === p.name?.toLowerCase() ||
-                           m.id === p.id
-                    );
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <img
+                        src={currentAvatar}
+                        alt={p.name}
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150';
+                        }}
+                        onClick={handleNavigateToProfile}
+                        referrerPolicy="no-referrer"
+                        className="w-12 h-12 rounded-xl object-cover border border-slate-200/80 shadow-3xs transition-transform cursor-pointer hover:scale-105 hover:border-pink-400 hover:ring-2 hover:ring-pink-100"
+                        title={`Ver perfil de ${p.name}`}
+                      />
+                      {/* STATUS DOT: 🟢 Activo, 🟡 Pendiente, ⚪ Inactivo */}
+                      <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                        p.status === 'active' 
+                          ? 'bg-emerald-500 animate-pulse' 
+                          : p.status === 'pending'
+                            ? 'bg-amber-500 shadow-xs'
+                            : 'bg-slate-300'
+                      }`} title={`Estado: ${p.status === 'active' ? 'Activo' : p.status === 'pending' ? 'Pendiente' : 'Inactivo'}`} />
+                    </div>
 
-                    // If it's a model but not found in preloaded models database, build a fallback profile automatically
-                    if (!matchedModel && p.role === 'model') {
-                      matchedModel = {
-                        id: p.id || `fallback-model-${p.username}`,
-                        name: p.name,
-                        username: p.username,
-                        avatar: currentAvatar,
-                        bio: `Perfil de Modelo Profesional Referido: ${p.name}. Colaboradora destacada en la ronda de Fashion Finances Inc.`,
-                        totalLikes: Math.round((parseFloat(p.id.replace(/\D/g, '') || '5') * 15) % 150) + 40,
-                        followersCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '8') * 132) % 1800) + 400,
-                        photos: [
-                          currentAvatar,
-                          "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600",
-                          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600"
-                        ],
-                        referidosCount: Math.round((parseFloat(p.id.replace(/\D/g, '') || '2') * 3) % 6),
-                        socials: {
-                          instagram: p.username,
-                          tiktok: p.username
-                        },
-                        isOnline: true,
-                        isCastingLive: false
-                      };
-                    }
+                    <div className="flex flex-col text-left">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4
+                          onClick={handleNavigateToProfile}
+                          className="font-bold text-slate-800 hover:text-rose-700 text-xs sm:text-sm capitalize transition-colors cursor-pointer flex items-center gap-1.5 group-hover:text-rose-700"
+                          title={`Ver perfil de ${p.name}`}
+                        >
+                          <span>{p.name}</span>
+                          <span className="text-[9px] text-rose-500 font-semibold no-underline hover:underline inline-flex items-center gap-0.5">
+                            (Ver Perfil ↗)
+                          </span>
+                        </h4>
+                        
+                        {/* Role Badge */}
+                        <span 
+                          onClick={handleNavigateToProfile}
+                          className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold tracking-wider uppercase inline-flex items-center gap-0.5 cursor-pointer hover:opacity-85 transition ${
+                            p.role === 'model'
+                              ? 'bg-rose-50 text-rose-600 border border-rose-150'
+                              : 'bg-indigo-50 text-indigo-600 border border-indigo-150'
+                          }`}
+                          title={`Ver perfil de ${p.name}`}
+                        >
+                          {p.role === 'model' ? <Heart className="w-2.5 h-2.5 fill-current" /> : <ShieldCheck className="w-2.5 h-2.5" />}
+                          <span>{p.role === 'model' ? 'Modelo' : 'Inversor'}</span>
+                        </span>
 
-                    return (
-                      <div className="flex items-center gap-3">
-                        <div className="relative shrink-0">
-                          <img
-                            src={currentAvatar}
-                            alt={p.name}
-                            onError={(e) => {
-                              e.currentTarget.src = 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150';
-                            }}
-                            onClick={() => {
-                              if (matchedModel && onSelectModel) {
-                                onSelectModel(matchedModel);
-                              }
-                            }}
-                            referrerPolicy="no-referrer"
-                            className={`w-12 h-12 rounded-xl object-cover border border-slate-200/80 shadow-3xs transition-transform ${
-                              matchedModel ? 'cursor-pointer hover:scale-105 hover:border-pink-400 hover:ring-2 hover:ring-pink-100' : ''
-                            }`}
-                            title={matchedModel ? `Ver perfil privado de ${p.name}` : undefined}
-                          />
-                          {/* STATUS DOT: 🟢 Activo, 🟡 Pendiente, ⚪ Inactivo */}
-                          <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                            p.status === 'active' 
-                              ? 'bg-emerald-500 animate-pulse' 
-                              : p.status === 'pending'
-                                ? 'bg-amber-500 shadow-xs'
-                                : 'bg-slate-300'
-                          }`} title={`Estado: ${p.status === 'active' ? 'Activo' : p.status === 'pending' ? 'Pendiente' : 'Inactivo'}`} />
-                        </div>
-
-                        <div className="flex flex-col text-left">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4
-                              onClick={() => {
-                                if (matchedModel && onSelectModel) {
-                                  onSelectModel(matchedModel);
-                                }
-                              }}
-                              className={`font-bold text-slate-750 text-xs sm:text-sm capitalize transition-colors ${
-                                matchedModel ? 'cursor-pointer text-rose-700 hover:text-rose-900 hover:underline flex items-center gap-1' : 'text-slate-700 group-hover:text-rose-700'
-                              }`}
-                              title={matchedModel ? `Ver perfil privado de ${p.name}` : undefined}
-                            >
-                              <span>{p.name}</span>
-                              {matchedModel && <span className="text-[9px] text-rose-500 font-normal no-underline">(Ver Perfil ↗)</span>}
-                            </h4>
-                            
-                            {/* Role Badge */}
-                            <span 
-                              onClick={() => {
-                                if (matchedModel && onSelectModel) {
-                                  onSelectModel(matchedModel);
-                                }
-                              }}
-                              className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold tracking-wider uppercase inline-flex items-center gap-0.5 ${
-                                p.role === 'model'
-                                  ? 'bg-rose-50 text-rose-600 border border-rose-150 cursor-pointer hover:bg-rose-100 transition'
-                                  : 'bg-indigo-50 text-indigo-600 border border-indigo-150'
-                              }`}
-                            >
-                              {p.role === 'model' ? <Heart className="w-2.5 h-2.5 fill-current" /> : <ShieldCheck className="w-2.5 h-2.5" />}
-                              <span>{p.role === 'model' ? 'Modelo' : 'Inversor'}</span>
-                            </span>
-
-                            {/* New Status Badge built with 🟢, 🟡, ⚪ as requested */}
-                            <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold inline-flex items-center gap-1 border ${
-                              p.status === 'active' 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                                : p.status === 'pending'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-100'
-                                  : 'bg-slate-100 text-slate-600 border-slate-200'
-                            }`}>
-                              <span>{p.status === 'active' ? '🟢 Activo' : p.status === 'pending' ? '🟡 Pendiente' : '⚪ Inactivo'}</span>
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-450 font-mono">@{p.username}</span>
-                          </div>
-                        </div>
+                        {/* New Status Badge built with 🟢, 🟡, ⚪ as requested */}
+                        <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold inline-flex items-center gap-1 border ${
+                          p.status === 'active' 
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                            : p.status === 'pending'
+                              ? 'bg-amber-50 text-amber-700 border-amber-100'
+                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}>
+                          <span>{p.status === 'active' ? '🟢 Activo' : p.status === 'pending' ? '🟡 Pendiente' : '⚪ Inactivo'}</span>
+                        </span>
                       </div>
-                    );
-                  })()}
+
+                      {/* Clickable Username Button */}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <button
+                          type="button"
+                          onClick={handleNavigateToProfile}
+                          className="text-[10.5px] font-mono text-rose-600 hover:text-rose-800 hover:underline font-bold cursor-pointer inline-flex items-center gap-1 transition-colors group/user py-0.5"
+                          title={`Ver perfil de @${p.username}`}
+                        >
+                          <span>@{p.username}</span>
+                          <span className="text-[9px] opacity-70 group-hover/user:opacity-100 transition-opacity">↗</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Referred info & dates */}
                   <div className="flex flex-col sm:items-end text-left sm:text-right gap-0.5 font-sans">

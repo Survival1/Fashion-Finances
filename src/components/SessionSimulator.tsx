@@ -97,7 +97,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-pink-950/40 text-pink-300 border-pink-700/50',
         accentText: 'text-pink-200 font-bold',
         progressBarColor: 'bg-pink-500',
-        tierSlogan: 'Ronda Glamour ✨',
+        tierSlogan: 'Round Glamour ✨',
         cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.025]',
       };
     } else if (entryFee === 10000) {
@@ -106,7 +106,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
         accentText: 'text-amber-300 font-black',
         progressBarColor: 'bg-pink-500',
-        tierSlogan: 'Ronda Elegant & Classic 🤍',
+        tierSlogan: 'Round Elegant & Classic 🤍',
         cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.03]',
       };
     } else if (entryFee === 100000) {
@@ -115,7 +115,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
         accentText: 'text-rose-300 font-black',
         progressBarColor: 'bg-rose-400',
-        tierSlogan: 'Ronda High Fashion 👠',
+        tierSlogan: 'Round High Fashion 👠',
         cardShadow: 'shadow-2xl shadow-pink-500/25 scale-[1.03]',
       };
     } else {
@@ -153,7 +153,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
         accentText: 'text-pink-200',
         progressBarColor: 'bg-pink-500',
-        tierSlogan: 'Ronda Glamour ✨',
+        tierSlogan: 'Round Glamour ✨',
         cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else if (entryFee === 10000) {
@@ -162,7 +162,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-pink-950/40 text-pink-300 border-pink-800/40',
         accentText: 'text-amber-400 font-semibold',
         progressBarColor: 'bg-pink-500',
-        tierSlogan: 'Ronda Elegant & Classic 🤍',
+        tierSlogan: 'Round Elegant & Classic 🤍',
         cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else if (entryFee === 100000) {
@@ -171,7 +171,7 @@ const getSessionTheme = (entryFee: number, isSelected: boolean): SessionTheme =>
         badge: 'bg-rose-950/40 text-rose-300 border-rose-800/40',
         accentText: 'text-rose-400 font-semibold',
         progressBarColor: 'bg-rose-500',
-        tierSlogan: 'Ronda High Fashion 👠',
+        tierSlogan: 'Round High Fashion 👠',
         cardShadow: 'shadow-md shadow-pink-500/10 hover:shadow-pink-500/20 hover:-translate-y-0.5',
       };
     } else {
@@ -1033,15 +1033,15 @@ export default function SessionSimulator({
         : fee === 100 
           ? 'Casual & Lifestyle' 
           : fee === 1000 
-            ? 'Glamour'
+            ? 'Round Glamour'
             : fee === 10000
-              ? 'Ronda Elegant & Classic'
+              ? 'Round Elegant & Classic'
               : fee === 100000
-                ? 'High Fashion'
+                ? 'Round High Fashion'
                 : 'Round of Millionaires';
       return {
         id: `sess-fallback-${fee}-${Date.now()}`,
-        title: fee === 1000000 ? 'Round of Millionaires 💎' : fee === 100000 ? 'Ronda High Fashion 👠' : fee === 10000 ? 'Ronda Elegant & Classic 🤍' : fee === 1000 ? 'Ronda Glamour ✨' : `Mesa de Inversión de ${sessionCategory}`,
+        title: fee === 1000000 ? 'Round of Millionaires 💎' : fee === 100000 ? 'Round High Fashion 👠' : fee === 10000 ? 'Round Elegant & Classic 🤍' : fee === 1000 ? 'Round Glamour ✨' : `Mesa de Inversión de ${sessionCategory}`,
         entryFee: fee,
         status: 'filling' as const,
         timeLeft: 1200,
@@ -1303,11 +1303,11 @@ export default function SessionSimulator({
           : sessObj.entryFee === 100
             ? `Round CASUAL & LIFESTYLE - R-${Math.floor(Date.now() % 1000)}`
             : sessObj.entryFee === 1000
-              ? `Ronda Glamour ✨ - R-${Math.floor(Date.now() % 1000)}`
+              ? `Round Glamour ✨ - R-${Math.floor(Date.now() % 1000)}`
               : sessObj.entryFee === 10000
-                ? `Ronda Elegant & Classic 🤍 - R-${Math.floor(Date.now() % 1000)}`
+                ? `Round Elegant & Classic 🤍 - R-${Math.floor(Date.now() % 1000)}`
                 : sessObj.entryFee === 100000
-                  ? `Ronda High Fashion 👠 - R-${Math.floor(Date.now() % 1000)}`
+                  ? `Round High Fashion 👠 - R-${Math.floor(Date.now() % 1000)}`
                   : sessObj.entryFee === 1000000
                     ? `Round of Millionaires 💎 - R-${Math.floor(Date.now() % 1000)}`
                     : `Sesión de Inversión de ${sessionCategory} - R-${Math.floor(Date.now() % 1000)}`,
@@ -1428,23 +1428,23 @@ export default function SessionSimulator({
       zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     } else if (fee === 1000 || sessObj.id === 'sess-businessmen' || (sessObj.title && (sessObj.title.toLowerCase().includes('empresar') || sessObj.title.toLowerCase().includes('acero') || sessObj.title.toLowerCase().includes('glamour')))) {
       targetId = 'sess-empresarios-1';
-      targetTitle = 'Ronda Glamour ✨';
+      targetTitle = 'Round Glamour ✨';
       targetBrand = 'vestidos, belleza, eventos, alfombra roja y looks impactantes.';
-      targetCategory = 'Ronda Glamour ✨';
+      targetCategory = 'Round Glamour ✨';
       targetPresenter = { id: 'f-4', name: 'Sienna Cole', username: 'sienna_cole', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Modelo Patrocinada' };
       zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     } else if (fee === 10000 || sessObj.id === 'sess-topmodels' || (sessObj.title && (sessObj.title.toLowerCase().includes('model') || sessObj.title.toLowerCase().includes('oro') || sessObj.title.toLowerCase().includes('classic') || sessObj.title.toLowerCase().includes('elegant')))) {
       targetId = 'sess-topmodels-1';
-      targetTitle = 'Ronda Elegant & Classic 🤍';
+      targetTitle = 'Round Elegant & Classic 🤍';
       targetBrand = 'sofisticado, clásico, atemporal y refinado.';
-      targetCategory = 'Ronda Elegant & Classic 🤍';
+      targetCategory = 'Round Elegant & Classic 🤍';
       targetPresenter = { id: 'tm-1', name: 'Kendall Jenner', username: 'kendall_jenner_vip', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650', role: 'Top Model Internacional' };
       zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     } else if (fee === 100000 || sessObj.id === 'sess-investors' || (sessObj.title && (sessObj.title.toLowerCase().includes('invers') || sessObj.title.toLowerCase().includes('rosa') || sessObj.title.toLowerCase().includes('fashion')))) {
       targetId = 'sess-inversores-1';
-      targetTitle = 'Ronda High Fashion 👠';
+      targetTitle = 'Round High Fashion 👠';
       targetBrand = 'alta moda, diseñadores, pasarela y tendencias.';
-      targetCategory = 'Ronda High Fashion 👠';
+      targetCategory = 'Round High Fashion 👠';
       targetPresenter = { id: 'f-5', name: 'Liam Cooper', username: 'liam_c_invest', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Socio Inversor' };
       zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     } else if (fee >= 1000000 || sessObj.id === 'sess-millionaires' || (sessObj.title && (sessObj.title.toLowerCase().includes('millonar') || sessObj.title.toLowerCase().includes('platino')))) {
@@ -1540,9 +1540,9 @@ export default function SessionSimulator({
       },
       {
         id: 'sess-empresarios-1',
-        title: 'Ronda Glamour ✨',
+        title: 'Round Glamour ✨',
         brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
-        category: 'Ronda Glamour ✨',
+        category: 'Round Glamour ✨',
         entryFee: 1000,
         presenter: EMPRESARIOS_USERS[0],
         participants: fee === 1000 ? [...EMPRESARIOS_USERS.slice(0, 9), userParticipant] : EMPRESARIOS_USERS.slice(0, 10),
@@ -1550,9 +1550,9 @@ export default function SessionSimulator({
       },
       {
         id: 'sess-topmodels-1',
-        title: 'Ronda Elegant & Classic 🤍',
+        title: 'Round Elegant & Classic 🤍',
         brand: 'sofisticado, clásico, atemporal y refinado.',
-        category: 'Ronda Elegant & Classic 🤍',
+        category: 'Round Elegant & Classic 🤍',
         entryFee: 10000,
         presenter: TOPMODELS_USERS[0],
         participants: fee === 10000 ? [...TOPMODELS_USERS.slice(0, 9), userParticipant] : TOPMODELS_USERS.slice(0, 10),
@@ -1560,9 +1560,9 @@ export default function SessionSimulator({
       },
       {
         id: 'sess-inversores-1',
-        title: 'Ronda High Fashion 👠',
+        title: 'Round High Fashion 👠',
         brand: 'alta moda, diseñadores, pasarela y tendencias.',
-        category: 'Ronda High Fashion 👠',
+        category: 'Round High Fashion 👠',
         entryFee: 100000,
         presenter: INVERSORES_USERS[0],
         participants: fee === 100000 ? [...INVERSORES_USERS.slice(0, 9), userParticipant] : INVERSORES_USERS.slice(0, 10),
@@ -1570,9 +1570,9 @@ export default function SessionSimulator({
       },
       {
         id: 'sess-millonarios-1',
-        title: 'Ronda High Fashion 👠',
-        brand: 'alta moda, diseñadores, pasarela y tendencias.',
-        category: 'Ronda High Fashion 👠',
+        title: 'Round of Millionaires 💎',
+        brand: 'exclusividad, inversores de élite, lujo y alta costura.',
+        category: 'Round of Millionaires 💎',
         entryFee: 1000000,
         presenter: MILLONARIOS_USERS[0],
         participants: fee >= 1000000 ? [...MILLONARIOS_USERS.slice(0, 9), userParticipant] : MILLONARIOS_USERS.slice(0, 10),
@@ -3396,9 +3396,9 @@ export default function SessionSimulator({
   return (
     <div className="bg-white rounded-3xl border border-slate-900/80 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="automated-sessions-section">
       
-      {/* Mensaje de invitación destacado, centrado y con espacio */}
-      <div className="w-full text-center px-2 pt-2 pb-3 mb-2">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug sm:leading-tight max-w-4xl mx-auto">
+      {/* Mensaje de invitación destacado, centrado y con espacio generoso */}
+      <div className="w-full text-center px-4 pt-2 pb-4 mb-6 sm:mb-8">
+        <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-800 tracking-tight leading-snug max-w-3xl mx-auto">
           Quieres que impulsemos tus proyectos, súbelos y participa en nuestras Rondas de financiación.
         </h2>
       </div>
@@ -3523,9 +3523,9 @@ export default function SessionSimulator({
                 >
                   <option value={10}>10.00€ — Round STREETWEAR & URBAN</option>
                   <option value={100}>100.00€ — Round CASUAL & LIFESTYLE</option>
-                  <option value={1000}>1,000.00€ — Ronda Glamour ✨</option>
-                  <option value={10000}>10,000.00€ — Ronda Elegant & Classic 🤍</option>
-                  <option value={100000}>100,000.00€ — Ronda High Fashion 👠</option>
+                  <option value={1000}>1,000.00€ — Round Glamour ✨</option>
+                  <option value={10000}>10,000.00€ — Round Elegant & Classic 🤍</option>
+                  <option value={100000}>100,000.00€ — Round High Fashion 👠</option>
                   <option value={1000000}>1,000,000.00€ — Round of Millionaires 💎</option>
                 </select>
               </div>
@@ -3867,11 +3867,11 @@ export default function SessionSimulator({
                                 : (sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual'))))
                                 ? 'Round CASUAL & LIFESTYLE'
                                 : (sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour'))))
-                                ? 'Ronda Glamour ✨'
+                                ? 'Round Glamour ✨'
                                 : (sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant'))))
-                                ? 'Ronda Elegant & Classic 🤍'
+                                ? 'Round Elegant & Classic 🤍'
                                 : (sess.entryFee === 100000 || sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion'))))
-                                ? 'Ronda High Fashion 👠'
+                                ? 'Round High Fashion 👠'
                                 : (sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino'))))
                                 ? 'Round of Millionaires 💎'
                                 : sess.title.replace('Sesión de Inversión de ', 'Mesa ')}
@@ -4028,11 +4028,11 @@ export default function SessionSimulator({
               : isCasual
               ? 'Round CASUAL & LIFESTYLE'
               : isGlamour
-              ? 'Ronda Glamour ✨'
+              ? 'Round Glamour ✨'
               : isElegant
-              ? 'Ronda Elegant & Classic 🤍'
+              ? 'Round Elegant & Classic 🤍'
               : isHighFashion
-              ? 'Ronda High Fashion 👠'
+              ? 'Round High Fashion 👠'
               : isMillionaires
               ? 'Round of Millionaires 💎'
               : currentSession.title;
@@ -4313,9 +4313,9 @@ export default function SessionSimulator({
                     <button
                       type="button"
                       onClick={() => handleJoinSession(currentSession.id)}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 bg-gradient-to-r from-white via-sky-50 to-sky-100 hover:from-white hover:to-sky-200 text-sky-950 border border-sky-300 font-sans shadow-sm"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 bg-gradient-to-r from-[#fff5f8] via-[#fde8ee] to-[#f8d7e3] hover:from-[#fff0f4] hover:via-[#fad4e2] hover:to-[#f3c2d6] text-pink-950 border border-pink-300/80 font-sans shadow-pink-100"
                     >
-                      <Play className="w-4 h-4 fill-sky-600 text-sky-600" />
+                      <Play className="w-4 h-4 fill-pink-500 text-pink-500" />
                       <span>Disparar Pago de {currentSession.entryFee}€ y Acceder a Votaciones</span>
                     </button>
                   </div>

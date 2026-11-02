@@ -38,24 +38,24 @@ export const ROUND_CATEGORIES: Record<RoundCategoryKey, {
   },
   glamour: {
     key: 'glamour',
-    title: 'Ronda Glamour ✨',
-    category: 'Ronda Glamour ✨',
+    title: 'Round Glamour ✨',
+    category: 'Round Glamour ✨',
     brand: 'vestidos, belleza, eventos, alfombra roja y looks impactantes.',
     entryFee: 1000,
     poolMultiplier: 10
   },
   elegant: {
     key: 'elegant',
-    title: 'Ronda Elegant & Classic 🤍',
-    category: 'Ronda Elegant & Classic 🤍',
+    title: 'Round Elegant & Classic 🤍',
+    category: 'Round Elegant & Classic 🤍',
     brand: 'sofisticado, clásico, atemporal y refinado.',
     entryFee: 10000,
     poolMultiplier: 10
   },
   highfashion_100k: {
     key: 'highfashion_100k',
-    title: 'Ronda High Fashion 👠',
-    category: 'Ronda High Fashion 👠',
+    title: 'Round High Fashion 👠',
+    category: 'Round High Fashion 👠',
     brand: 'alta moda, diseñadores, pasarela y tendencias.',
     entryFee: 100000,
     poolMultiplier: 10

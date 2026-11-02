@@ -87,7 +87,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
       color: 'blue'
     },
     {
-      name: 'Ronda Glamour ✨',
+      name: 'Round Glamour ✨',
       fee: 1000,
       members: 10,
       pool: 10000,
@@ -100,7 +100,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
       color: 'purple'
     },
     {
-      name: 'Ronda Elegant & Classic 🤍',
+      name: 'Round Elegant & Classic 🤍',
       fee: 10000,
       members: 10,
       pool: 100000,
@@ -113,7 +113,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
       color: 'amber'
     },
     {
-      name: 'Ronda High Fashion 👠',
+      name: 'Round High Fashion 👠',
       fee: 100000,
       members: 10,
       pool: 1000000,
@@ -126,7 +126,7 @@ export const ComisionesModal: React.FC<ComisionesModalProps> = ({
       color: 'emerald'
     },
     {
-      name: 'Ronda Haute Couture 👑',
+      name: 'Round de millonarios 👑',
       fee: 1000000,
       members: 10,
       pool: 10000000,

@@ -317,16 +317,16 @@ export default function App() {
               return { ...s, title: 'Round CASUAL & LIFESTYLE', reference: 'REF: 1', roundNumber: 1 };
             }
             if (id.includes('businessmen') || id.includes('empresar') || fee === 1000 || t.includes('acero') || t.includes('empresar') || t.includes('glamour')) {
-              return { ...s, title: 'Ronda Glamour ✨', reference: 'REF: 1', roundNumber: 1 };
+              return { ...s, title: 'Round Glamour ✨', reference: 'REF: 1', roundNumber: 1 };
             }
             if (id.includes('topmodels') || fee === 10000 || t.includes('model') || t.includes('oro') || t.includes('classic') || t.includes('elegant')) {
-              return { ...s, title: 'Ronda Elegant & Classic 🤍', reference: 'REF: 1', roundNumber: 1 };
+              return { ...s, title: 'Round Elegant & Classic 🤍', reference: 'REF: 1', roundNumber: 1 };
             }
             if (id.includes('investors') || id.includes('invers') || fee === 100000 || t.includes('invers') || t.includes('rosa') || t.includes('fashion')) {
-              return { ...s, title: 'Ronda High Fashion 👠', reference: 'REF: 1', roundNumber: 1 };
+              return { ...s, title: 'Round High Fashion 👠', reference: 'REF: 1', roundNumber: 1 };
             }
             if (id.includes('millionaires') || id.includes('millon') || fee === 1000000 || t.includes('millonar') || t.includes('platino')) {
-              return { ...s, title: 'Ronda High Fashion 👠', reference: 'REF: 1', roundNumber: 1 };
+              return { ...s, title: 'Round of Millionaires 💎', reference: 'REF: 1', roundNumber: 1 };
             }
             return s;
           });
@@ -1126,6 +1126,72 @@ export default function App() {
       window.removeEventListener('navigate-to-tab', handleNavigateTabGlobal);
     };
   }, []);
+
+  // Global handler for clicking any username or profile across the app to navigate to their profile
+  useEffect(() => {
+    const handleOpenUserProfileGlobal = (e: any) => {
+      const detail = e.detail;
+      if (!detail) return;
+      let targetProfile = detail.model || detail.userProfile;
+      if (!targetProfile && detail.username) {
+        const cleanUser = String(detail.username).trim().replace(/^@/, '').toLowerCase();
+        targetProfile = models.find(m => 
+          (m.username && m.username.toLowerCase() === cleanUser) ||
+          (m.name && m.name.toLowerCase() === cleanUser) ||
+          (m.id && m.id.toLowerCase() === cleanUser)
+        );
+        if (!targetProfile) {
+          const pat = patrocinadosList.find(p => 
+            p.username.toLowerCase() === cleanUser || 
+            p.name.toLowerCase() === cleanUser ||
+            p.id.toLowerCase() === cleanUser
+          );
+          if (pat) {
+            targetProfile = {
+              id: pat.id,
+              name: pat.name,
+              username: pat.username,
+              avatar: pat.avatar || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+              role: pat.role,
+              bio: `Perfil de ${pat.role === 'model' ? 'Modelo Profesional' : 'Inversor Asociado'}: ${pat.name}. Colaborador destacado en Fashion Finances Inc.`,
+              totalLikes: Math.round((parseFloat(pat.id.replace(/\D/g, '') || '5') * 15) % 150) + 40,
+              followersCount: Math.round((parseFloat(pat.id.replace(/\D/g, '') || '8') * 132) % 1800) + 400,
+              photos: [
+                pat.avatar || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600'
+              ],
+              isOnline: pat.status === 'active'
+            };
+          } else {
+            targetProfile = {
+              id: `user-${cleanUser}`,
+              name: detail.name || `@${cleanUser}`,
+              username: cleanUser,
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+              role: 'user',
+              bio: `Perfil de usuario @${cleanUser} en Fashion Finances.`,
+              totalLikes: 85,
+              followersCount: 520,
+              isOnline: true
+            };
+          }
+        }
+      }
+      if (targetProfile) {
+        setSelectedModelForView(targetProfile);
+        setModelViewSourceTab(activeTab);
+        setActiveTabTab('home');
+        setShowVictoriaSecretRanking(false);
+        try {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch {}
+      }
+    };
+
+    window.addEventListener('open-user-profile', handleOpenUserProfileGlobal);
+    return () => {
+      window.removeEventListener('open-user-profile', handleOpenUserProfileGlobal);
+    };
+  }, [models, patrocinadosList, activeTab]);
 
   // Determinar si actualmente se está visualizando el perfil de Adriana Lima (Declarado al inicio para cumplir las reglas de Hooks de React)
   const isViewingAdrianaLimaProfile = useMemo(() => {
@@ -3617,7 +3683,9 @@ export default function App() {
                     <span>← VOLVER</span>
                   </button>
                   <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">VIENDO PERFIL DE MODELO</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                      VIENDO PERFIL DE {selectedModelForView.role === 'investor' ? 'INVERSOR' : 'MODELO'}
+                    </span>
                     <span className="text-base font-black text-slate-900 font-display">{selectedModelForView.name}</span>
                   </div>
                 </div>
@@ -3628,7 +3696,7 @@ export default function App() {
                     id: selectedModelForView.id,
                     name: selectedModelForView.name,
                     username: selectedModelForView.username,
-                    role: 'model',
+                    role: (selectedModelForView.role as any) || 'model',
                     patrocinadorId: selectedModelForView.id === 'topf-1' ? 'topm-1' : 'topf-1',
                     balance: 1500.00,
                     totalEarnings: (selectedModelForView.followersCount || 120000) * 0.12,
@@ -4123,7 +4191,14 @@ export default function App() {
                             <p className="text-pink-600 font-medium select-text">📷 {userProfile.instagram}</p>
                           )}
                           {userProfile.tiktok && (
-                            <p className="text-slate-700 font-medium font-mono select-text">🎵 {userProfile.tiktok}</p>
+                            <p className="text-slate-700 font-medium font-mono select-text flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5 shrink-0 inline-block" viewBox="0 0 24 24" fill="none" aria-label="TikTok">
+                                <path d="M18.821 5.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 14.728.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.025a8.318 8.318 0 0 0 4.854 1.556V5.062z" fill="#25F4EE" />
+                                <path d="M19.821 6.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.728 1.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V8.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V8.025a8.318 8.318 0 0 0 4.854 1.556V6.062z" fill="#FE2C55" />
+                                <path d="M19.321 5.562a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.228 1h-3.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.48a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.525a8.318 8.318 0 0 0 4.854 1.556V5.562z" fill="#000000" />
+                              </svg>
+                              <span>{userProfile.tiktok}</span>
+                            </p>
                           )}
                         </div>
                         <p className="text-[11px] text-slate-500 font-semibold leading-normal pt-1">
@@ -5593,7 +5668,18 @@ export default function App() {
                                   {friend.role}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-slate-450 font-mono">@{friend.username}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowFriendsModal(false);
+                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: friend.username, name: friend.name } }));
+                                }}
+                                className="text-[10px] text-slate-450 hover:text-indigo-400 hover:underline font-mono cursor-pointer inline-flex items-center gap-0.5 text-left"
+                                title={`Ver perfil de @${friend.username}`}
+                              >
+                                <span>@{friend.username}</span>
+                                <span className="text-[8px]">↗</span>
+                              </button>
                               <p className="text-[10px] text-slate-350 leading-relaxed font-sans line-clamp-2 italic">
                                 "{friend.bio}"
                               </p>
@@ -5685,7 +5771,18 @@ export default function App() {
                                     {follower.role}
                                   </span>
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-mono">@{follower.username}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowFriendsModal(false);
+                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: follower.username, name: follower.name } }));
+                                }}
+                                className="text-[10px] text-slate-400 hover:text-indigo-400 hover:underline font-mono cursor-pointer inline-flex items-center gap-0.5 text-left"
+                                title={`Ver perfil de @${follower.username}`}
+                              >
+                                <span>@{follower.username}</span>
+                                <span className="text-[8px]">↗</span>
+                              </button>
                                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans line-clamp-2 italic">
                                   "{follower.bio}"
                                 </p>
@@ -5779,7 +5876,18 @@ export default function App() {
                                   {followed.role || 'model'}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-slate-450 font-mono">@{followed.username}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowFriendsModal(false);
+                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: followed.username, name: followed.name } }));
+                                }}
+                                className="text-[10px] text-slate-450 hover:text-indigo-400 hover:underline font-mono cursor-pointer inline-flex items-center gap-0.5 text-left"
+                                title={`Ver perfil de @${followed.username}`}
+                              >
+                                <span>@{followed.username}</span>
+                                <span className="text-[8px]">↗</span>
+                              </button>
                               <p className="text-[10px] text-slate-350 leading-relaxed font-sans line-clamp-2 italic">
                                 "{followed.bio}"
                               </p>

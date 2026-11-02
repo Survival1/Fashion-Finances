@@ -284,7 +284,7 @@ export default function ProjectForm({
       {/* GLAMOROUS MODEL BACKGROUND ACCENT AT TOP-RIGHT */}
       <div className="absolute top-0 right-0 w-[460px] max-w-[50vw] h-[400px] pointer-events-none z-0 overflow-hidden">
         <img 
-          src="/assets/aistudio/luxury_model_clean.png" 
+          src="/assets/aistudio/hero_model_clean.png" 
           alt="Fashion Model" 
           className="w-full h-full object-cover object-top opacity-90 mix-blend-multiply mask-radial-fade"
           style={{

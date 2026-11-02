@@ -298,6 +298,9 @@ interface TikTokFinanzasFeedProps {
   onOpenRanking?: () => void;
   onOpenGifts?: () => void;
   onOpenStreamOptions?: () => void;
+  showStreamOptionsModal?: boolean;
+  setShowStreamOptionsModal?: (show: boolean) => void;
+  renderStreamOptionsContent?: () => React.ReactNode;
 }
 
 // Helper to format captions with clickable hashtags and mentions
@@ -425,6 +428,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   showScreenShareMenu = false,
   setShowScreenShareMenu,
   renderScreenShareContent,
+  showStreamOptionsModal = false,
+  setShowStreamOptionsModal,
+  renderStreamOptionsContent,
   enlargedWindowUser,
   setEnlargedWindowUser,
   renderEnlargedParticipantWindow,
@@ -4058,6 +4064,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             <button
               type="button"
               onClick={() => {
+                setActiveChannelsMenuSessionId(null);
                 if (onOpenStreamOptions) {
                   onOpenStreamOptions();
                 } else {
@@ -4271,6 +4278,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
             {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (Strictly matching image.png & z.png) */}
             {renderChannelsOverlay({ id: overlayId })}
+
+            {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
+            {showStreamOptionsModal && isCardActive && renderStreamOptionsContent && (
+              <div 
+                className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-3xl overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
+                onClick={(e) => e.stopPropagation()}
+                id={`phone-stream-options-multimedia-${currentVid.id}`}
+              >
+                {renderStreamOptionsContent()}
+              </div>
+            )}
 
             {/* 📹 Main Fullscreen Vertical Video Element */}
             <div
@@ -5307,6 +5325,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                 {/* 🎛️ EMBEDDED BROADCAST CONTROL & CHANNELS OVERLAY MENU (captura z.png) */}
                 {renderChannelsOverlay(session)}
+
+                {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
+                {showStreamOptionsModal && isCurrentlyActiveRound && renderStreamOptionsContent && (
+                  <div 
+                    className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-[40px] sm:rounded-[48px] overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
+                    onClick={(e) => e.stopPropagation()}
+                    id={`phone-stream-options-wrapper-${session.id}`}
+                  >
+                    {renderStreamOptionsContent()}
+                  </div>
+                )}
 
                 {/* 🖥️ POPUP MODAL: DISTRIBUCIÓN DE PANTALLA (COMPARTIR PANTALLA) EN TAMAÑO COMPLETO */}
                 {showScreenShareMenu && renderScreenShareContent && (

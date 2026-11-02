@@ -681,58 +681,58 @@ export default function DirectMessageChat({
       )}
 
       <div 
-        className={`bg-white border border-slate-150 rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row transition-all duration-300 ${
+        className={`bg-[#fff8fa] border-2 border-pink-200 rounded-3xl overflow-hidden shadow-lg shadow-pink-100/50 flex flex-col md:flex-row transition-all duration-300 ${
           isFullscreen
-            ? 'fixed inset-2 sm:inset-4 md:inset-6 z-[250] h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] shadow-2xl ring-2 ring-black/20'
+            ? 'fixed inset-2 sm:inset-4 md:inset-6 z-[250] h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] shadow-2xl ring-2 ring-pink-500/20'
             : 'w-full h-[calc(100vh-140px)] min-h-[680px] max-h-[960px] 2xl:min-h-[820px] 2xl:max-h-[1200px]'
         }`} 
         id="private-messages-viewport"
       >
         
         {/* LEFT PANE: CONTACT LIST WITH FILTERS & SEARCH */}
-        <div className={`w-full md:w-60 lg:w-64 xl:w-72 shrink-0 border-r border-slate-100 flex flex-col bg-white ${activeContactId ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-60 lg:w-64 xl:w-72 shrink-0 border-r border-pink-200/80 flex flex-col bg-[#fff8fa] ${activeContactId ? 'hidden md:flex' : 'flex'}`}>
           
           {/* Header containing name and Add user option */}
-          <div className="p-3 sm:p-3.5 border-b border-slate-100 bg-white space-y-2.5">
+          <div className="p-3 sm:p-3.5 border-b border-pink-200/80 bg-gradient-to-r from-[#fff0f4] via-[#fdebf1] to-[#fff5f8] space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {onBack && (
                   <button
                     onClick={onBack}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition cursor-pointer shadow-3xs"
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-pink-900 hover:text-pink-950 bg-white hover:bg-pink-50 border border-pink-200 rounded-lg transition cursor-pointer shadow-3xs"
                     title="Volver"
                   >
                     <span>← Volver</span>
                   </button>
                 )}
-                <span className="p-1.5 bg-zinc-100 text-zinc-700 rounded-lg">
+                <span className="p-1.5 bg-pink-500/15 text-pink-600 rounded-lg">
                   <MessageCircle className="w-4 h-4" />
                 </span>
-                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight">Mensajes</h3>
+                <h3 className="font-extrabold text-pink-950 text-sm sm:text-base tracking-tight">Mensajes</h3>
               </div>
             </div>
 
             {/* Search Contacts input */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-pink-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="Buscar por alias, nombre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-slate-100 border-none text-xs rounded-xl w-full pl-8.5 pr-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-zinc-300 placeholder-slate-400 font-medium"
+                className="bg-white border border-pink-200/80 text-xs rounded-xl w-full pl-8.5 pr-3 py-2 text-pink-950 focus:outline-none focus:ring-2 focus:ring-pink-300 placeholder-pink-300 font-medium shadow-3xs"
               />
             </div>
           </div>
 
           {/* Filter Categories Tabs */}
-          <div className="flex border-b border-slate-100 bg-white p-1.5 sm:p-2 gap-1 text-xs select-none">
+          <div className="flex border-b border-pink-200/80 bg-[#fff5f8] p-1.5 sm:p-2 gap-1 text-xs select-none">
             <button
               onClick={() => setSelectedFilter('all')}
               className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
                 selectedFilter === 'all' 
-                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
-                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-600 shadow-sm shadow-pink-300/40' 
+                  : 'text-pink-900/80 hover:bg-pink-100/80 border border-transparent hover:text-pink-950'
               }`}
             >
               Todos
@@ -741,8 +741,8 @@ export default function DirectMessageChat({
               onClick={() => setSelectedFilter('models')}
               className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
                 selectedFilter === 'models' 
-                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
-                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-600 shadow-sm shadow-pink-300/40' 
+                  : 'text-pink-900/80 hover:bg-pink-100/80 border border-transparent hover:text-pink-950'
               }`}
             >
               Sponsores
@@ -751,8 +751,8 @@ export default function DirectMessageChat({
               onClick={() => setSelectedFilter('referred')}
               className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
                 selectedFilter === 'referred' 
-                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
-                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-600 shadow-sm shadow-pink-300/40' 
+                  : 'text-pink-900/80 hover:bg-pink-100/80 border border-transparent hover:text-pink-950'
               }`}
             >
               Referidos
@@ -761,8 +761,8 @@ export default function DirectMessageChat({
               onClick={() => setSelectedFilter('others')}
               className={`tab-trigger flex-1 py-1.5 px-1 rounded-lg text-center text-[10.5px] sm:text-[11px] font-bold transition active:scale-95 cursor-pointer ${
                 selectedFilter === 'others' 
-                  ? 'bg-zinc-950 text-white border border-zinc-950 shadow-sm' 
-                  : 'text-zinc-600 hover:bg-zinc-100 border border-transparent hover:text-zinc-900'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-600 shadow-sm shadow-pink-300/40' 
+                  : 'text-pink-900/80 hover:bg-pink-100/80 border border-transparent hover:text-pink-950'
               }`}
             >
               Otros
@@ -770,14 +770,14 @@ export default function DirectMessageChat({
           </div>
 
           {/* List scroll container */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-1 sm:space-y-1.5 bg-white">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-1 sm:space-y-1.5 bg-[#fff8fa]">
             {filteredContacts.length === 0 ? (
-              <div className="text-center py-10 text-slate-400 text-xs space-y-2">
-                <Users className="w-7 h-7 mx-auto text-slate-300" />
-                <p className="font-semibold text-slate-600 text-[11px]">Ningún contacto coincide.</p>
+              <div className="text-center py-10 text-pink-400 text-xs space-y-2">
+                <Users className="w-7 h-7 mx-auto text-pink-300" />
+                <p className="font-semibold text-pink-700 text-[11px]">Ningún contacto coincide.</p>
                 <button 
                   onClick={() => setShowCustomContactModal(true)} 
-                  className="tab-trigger text-zinc-700 hover:text-zinc-950 font-bold underline text-[11px] border-0 bg-transparent cursor-pointer"
+                  className="tab-trigger text-pink-700 hover:text-pink-950 font-bold underline text-[11px] border-0 bg-transparent cursor-pointer"
                 >
                   Escribir a @usuario personalizado
                 </button>
@@ -801,8 +801,8 @@ export default function DirectMessageChat({
                       }}
                       className={`tab-trigger w-full flex items-center gap-2.5 p-2 sm:p-2.5 rounded-xl text-left transition border cursor-pointer ${
                         isActive
-                          ? 'bg-zinc-100 border-zinc-300 shadow-xs text-zinc-900 font-bold'
-                          : 'hover:bg-zinc-50/90 border-transparent text-zinc-700'
+                          ? 'bg-gradient-to-r from-[#fde8ef] to-[#fce4ec] border-pink-300 shadow-xs text-pink-950 font-bold'
+                          : 'hover:bg-[#fdebf1] border-transparent text-pink-900'
                       }`}
                     >
                       <div className="relative shrink-0">
@@ -810,7 +810,7 @@ export default function DirectMessageChat({
                           src={contact.avatar}
                           alt={contact.name}
                           referrerPolicy="no-referrer"
-                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-slate-200/90 shadow-2xs transition-transform group-hover:scale-102"
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-pink-200/90 shadow-2xs transition-transform group-hover:scale-102"
                         />
                         <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-xs ${
                           contact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'
@@ -819,29 +819,29 @@ export default function DirectMessageChat({
 
                       <div className="truncate flex-1 min-w-0 pr-4">
                         <div className="flex justify-between items-baseline gap-1">
-                          <p className="text-xs sm:text-[13px] font-bold text-slate-900 truncate leading-snug">{contact.name}</p>
+                          <p className="text-xs sm:text-[13px] font-bold text-pink-950 truncate leading-snug">{contact.name}</p>
                           
                           {/* Label Category badge */}
-                          <span className="text-[8.5px] sm:text-[9px] font-mono tracking-wider text-slate-500 capitalize bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded font-bold shrink-0">
+                          <span className="text-[8.5px] sm:text-[9px] font-mono tracking-wider text-pink-700 capitalize bg-pink-100/80 border border-pink-200 px-1.5 py-0.5 rounded font-bold shrink-0">
                             {contact.role === 'model' ? 'Sponsor' : 'User'}
                           </span>
                         </div>
                         
-                        <p className="text-[10.5px] sm:text-[11px] text-slate-400 font-mono truncate mt-0.5 font-medium leading-tight">@{contact.username}</p>
+                        <p className="text-[10.5px] sm:text-[11px] text-pink-400 font-mono truncate mt-0.5 font-medium leading-tight">@{contact.username}</p>
                         
                         {lastMsg ? (
-                          <p className="text-[10.5px] sm:text-[11px] text-slate-600 truncate mt-0.5 font-medium leading-tight">
+                          <p className="text-[10.5px] sm:text-[11px] text-pink-900/80 truncate mt-0.5 font-medium leading-tight">
                             {lastMsg.senderId === currentUserId ? 'Tú: ' : ''}{lastMsg.text || '📍 Imagen enviada'}
                           </p>
                         ) : (
-                          <p className="text-[10px] sm:text-[10.5px] text-zinc-500 font-medium mt-0.5 truncate leading-tight">¡Escríbele un privado!</p>
+                          <p className="text-[10px] sm:text-[10.5px] text-pink-600/70 font-medium mt-0.5 truncate leading-tight">¡Escríbele un privado!</p>
                         )}
                       </div>
                     </button>
 
                     <button
                       onClick={(e) => handleDeleteConversation(e, contact.id)}
-                      className="tab-trigger absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus:opacity-100 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-400 hover:text-rose-600 p-1 rounded-md transition-all duration-150 cursor-pointer z-10 shadow-3xs"
+                      className="tab-trigger absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus:opacity-100 bg-white hover:bg-rose-50 border border-pink-200 hover:border-rose-300 text-pink-400 hover:text-rose-600 p-1 rounded-md transition-all duration-150 cursor-pointer z-10 shadow-3xs"
                       title="Eliminar conversación"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -858,17 +858,17 @@ export default function DirectMessageChat({
         </div>
 
       {/* RIGHT PANE: ACTIVE MESSAGE CHAT GRID viewport */}
-      <div className={`flex-1 min-w-0 flex flex-col bg-slate-50/50 relative ${activeContactId ? 'flex' : 'hidden md:flex'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col bg-[#fff6f8] relative ${activeContactId ? 'flex' : 'hidden md:flex'}`}>
         {activeContact ? (
           <>
             {/* Header chat detail bar */}
-            <div className="p-3 sm:p-4 border-b border-slate-100 bg-white flex items-center justify-between z-10 shadow-3xs gap-2">
+            <div className="p-3 sm:p-4 border-b border-pink-200/80 bg-gradient-to-r from-[#fff0f4] via-[#fdebf1] to-[#fff5f8] flex items-center justify-between z-10 shadow-3xs gap-2">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 {/* Back to Contacts List button on Mobile */}
                 <button
                   type="button"
                   onClick={() => setActiveContactId('')}
-                  className="md:hidden flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition cursor-pointer shadow-3xs shrink-0"
+                  className="md:hidden flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-pink-900 hover:text-pink-950 bg-white hover:bg-pink-50 border border-pink-200 rounded-lg transition cursor-pointer shadow-3xs shrink-0"
                   title="Volver a contactos"
                 >
                   <span>← Contactos</span>
@@ -886,8 +886,8 @@ export default function DirectMessageChat({
                           }
                         }}
                         referrerPolicy="no-referrer"
-                        className={`w-9 h-9 rounded-xl object-cover border border-slate-150 shrink-0 transition-transform ${
-                          matchedModel ? 'cursor-pointer hover:scale-105 hover:border-indigo-400' : ''
+                        className={`w-9 h-9 rounded-xl object-cover border border-pink-200 shrink-0 transition-transform ${
+                          matchedModel ? 'cursor-pointer hover:scale-105 hover:border-pink-400' : ''
                         }`}
                         title={matchedModel ? `Ver perfil completo de ${activeContact.name}` : undefined}
                       />
@@ -898,15 +898,15 @@ export default function DirectMessageChat({
                               onSelectModel(matchedModel);
                             }
                           }}
-                          className={`text-xs sm:text-sm font-bold truncate text-slate-850 flex items-center gap-1.5 ${
-                            matchedModel ? 'cursor-pointer hover:text-indigo-600 hover:underline' : ''
+                          className={`text-xs sm:text-sm font-bold truncate text-pink-950 flex items-center gap-1.5 ${
+                            matchedModel ? 'cursor-pointer hover:text-pink-600 hover:underline' : ''
                           }`}
                           title={matchedModel ? `Ver perfil completo de ${activeContact.name}` : undefined}
                         >
                           <span>{activeContact.name}</span>
                           <span className={`w-2 h-2 rounded-full inline-block shrink-0 ${activeContact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                         </h4>
-                        <p className="text-[10px] text-slate-400 font-mono truncate">@{activeContact.username}</p>
+                        <p className="text-[10px] text-pink-400 font-mono truncate">@{activeContact.username}</p>
                       </div>
                     </>
                   );
@@ -919,8 +919,8 @@ export default function DirectMessageChat({
                   onClick={() => setIsBlocked(!isBlocked)}
                   className={`tab-trigger px-2.5 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider transition ${
                     isBlocked 
-                      ? 'bg-rose-50 text-rose-600 border border-rose-100' 
-                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                      ? 'bg-rose-100 text-rose-700 border border-rose-300' 
+                      : 'bg-pink-100/80 hover:bg-pink-200 text-pink-900 border border-pink-200'
                   }`}
                 >
                   {isBlocked ? 'Bloqueado' : 'Bloquear'}
@@ -938,7 +938,7 @@ export default function DirectMessageChat({
                   : "Perfil oficial verificado en la plataforma. Conéctate conmigo para explorar alianzas, patrocinios y proyectos exclusivos.");
 
                 return (
-                  <div className={`flex-1 flex flex-col items-center justify-center p-6 text-center bg-white border border-slate-100/50 rounded-2xl m-4 shadow-3xs overflow-y-auto ${
+                  <div className={`flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#fff8fa] border border-pink-200/90 rounded-2xl m-4 shadow-3xs overflow-y-auto ${
                     isFullscreen ? 'p-8 sm:p-12 space-y-7' : 'space-y-6'
                   }`}>
                     {/* Model Avatar Details */}
@@ -947,7 +947,7 @@ export default function DirectMessageChat({
                         src={activeContact.avatar}
                         alt={activeContact.name}
                         referrerPolicy="no-referrer"
-                        className={`${isFullscreen ? 'w-28 h-28 sm:w-36 sm:h-36' : 'w-24 h-24 sm:w-28 sm:h-28'} rounded-3xl object-cover border-4 border-indigo-50 shadow-md mx-auto transition-all`}
+                        className={`${isFullscreen ? 'w-28 h-28 sm:w-36 sm:h-36' : 'w-24 h-24 sm:w-28 sm:h-28'} rounded-3xl object-cover border-4 border-pink-200 shadow-md mx-auto transition-all`}
                       />
                       <span className={`absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border-2 border-white uppercase ${
                         activeContact.status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'
@@ -957,24 +957,24 @@ export default function DirectMessageChat({
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className={`${isFullscreen ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl'} font-bold text-slate-900 font-display flex items-center justify-center gap-2`}>
+                      <h3 className={`${isFullscreen ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl'} font-bold text-pink-950 font-display flex items-center justify-center gap-2`}>
                         <span>{activeContact.name}</span>
-                        <span className="bg-slate-100 text-slate-700 text-[10px] font-black tracking-wider px-2 py-0.5 rounded border border-slate-200 uppercase">
+                        <span className="bg-pink-100 text-pink-700 text-[10px] font-black tracking-wider px-2 py-0.5 rounded border border-pink-200 uppercase">
                           {activeContact.role === 'model' || activeContact.id.startsWith('top') ? 'SPONSOR' : activeContact.role.toUpperCase()}
                         </span>
                       </h3>
-                      <p className={`${isFullscreen ? 'text-sm' : 'text-xs'} text-slate-400 font-mono`}>@{activeContact.username}</p>
+                      <p className={`${isFullscreen ? 'text-sm' : 'text-xs'} text-pink-400 font-mono`}>@{activeContact.username}</p>
                     </div>
 
                     {/* Custom personalized description by model */}
-                    <div className={`bg-slate-50 border border-slate-100/80 rounded-2xl text-slate-600 ${
+                    <div className={`bg-white/80 border border-pink-200/80 rounded-2xl text-pink-900 ${
                       isFullscreen ? 'p-6 sm:p-7 text-sm sm:text-base max-w-xl xl:max-w-2xl' : 'p-5 text-xs sm:text-sm max-w-md'
                     } leading-relaxed italic mx-auto relative shadow-3xs transition-all`}>
-                      <span className="absolute -top-3 left-6 text-2xl text-indigo-200 font-serif select-none">“</span>
-                      <p className="font-sans font-medium text-slate-700 max-w-lg mx-auto leading-relaxed">
+                      <span className="absolute -top-3 left-6 text-2xl text-pink-300 font-serif select-none">“</span>
+                      <p className="font-sans font-medium text-pink-950 max-w-lg mx-auto leading-relaxed">
                         {bioText}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-2 font-mono not-italic uppercase tracking-wider font-bold">
+                      <p className="text-[10px] text-pink-400 mt-2 font-mono not-italic uppercase tracking-wider font-bold">
                         — Descripción personalizada por la modelo
                       </p>
                     </div>
@@ -989,7 +989,7 @@ export default function DirectMessageChat({
                               onPatrocinateClick(matchedModel?.id || activeContact.id);
                             }
                           }}
-                          className="w-full sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md shadow-indigo-500/10 hover:shadow-lg hover:shadow-indigo-500/20 active:translate-y-px cursor-pointer"
+                          className="w-full sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white transition-all shadow-md shadow-pink-500/20 active:translate-y-px cursor-pointer border-none"
                         >
                           Patrocíname
                         </button>
@@ -999,7 +999,7 @@ export default function DirectMessageChat({
                         onClick={() => {
                           setUnfoldedContactIds(prev => ({ ...prev, [activeContact.id]: true }));
                         }}
-                        className={`w-full ${isFullscreen ? 'py-4 px-8 text-sm sm:text-base' : 'py-3.5 px-6 text-xs sm:text-sm'} font-bold tracking-wider uppercase bg-white hover:bg-slate-50 text-slate-900 transition-all shadow-xs hover:shadow-sm active:translate-y-px cursor-pointer border border-slate-200 rounded-xl`}
+                        className={`w-full ${isFullscreen ? 'py-4 px-8 text-sm sm:text-base' : 'py-3.5 px-6 text-xs sm:text-sm'} font-bold tracking-wider uppercase bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white transition-all shadow-md shadow-pink-300/40 active:translate-y-px cursor-pointer border-none rounded-xl`}
                       >
                         CHATEA CONMIGO
                       </button>
@@ -1054,31 +1054,31 @@ export default function DirectMessageChat({
                   )}
 
                   {/* MESSAGE STREAMS VIEWER */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-[#fff8fa] via-[#fff3f6] to-[#fdebf1]">
                     
                     {/* Info Notification indicating secure connection */}
-                    <div className="mx-auto max-w-xs text-center py-2 px-3 bg-indigo-50/50 border border-indigo-100/50 text-indigo-750 rounded-xl text-[9px] font-semibold flex items-center justify-center gap-1">
-                      <Sparkles className="w-3 h-3 text-indigo-500 shrink-0" />
+                    <div className="mx-auto max-w-xs text-center py-2 px-3 bg-[#fde8ef] border border-pink-200 text-pink-900 rounded-xl text-[9px] font-semibold flex items-center justify-center gap-1 shadow-3xs">
+                      <Sparkles className="w-3 h-3 text-pink-500 shrink-0" />
                       <span>Conversación de canal privado cifrada punto-a-punto</span>
                     </div>
 
                     {/* 🎁 PROACTIVE GIFT SENDING OFFER BOX FOR USERS */}
-                    <div className="mx-auto max-w-sm bg-gradient-to-tr from-rose-50 to-amber-50 border border-pink-100/80 rounded-2xl p-3.5 text-center space-y-1.5 shadow-3xs animate-fade-in relative z-10">
-                      <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-extrabold text-pink-700 leading-none">
+                    <div className="mx-auto max-w-sm bg-gradient-to-tr from-[#ffe4ed] via-[#fff0f5] to-[#fde8ef] border-2 border-pink-300/80 rounded-2xl p-3.5 text-center space-y-1.5 shadow-sm animate-fade-in relative z-10">
+                      <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-black text-pink-600 leading-none">
                         <Gift className="w-3.5 h-3.5 text-pink-500 animate-bounce" />
                         <span className="uppercase tracking-wider">¿QUIERES IMPRESIONAR A {activeContact.name.toUpperCase()}?</span>
                       </div>
-                      <p className="text-[10px] text-slate-600 leading-relaxed max-w-[280px] mx-auto">
+                      <p className="text-[10px] text-pink-950/80 leading-relaxed max-w-[280px] mx-auto">
                         Ofrécele un <strong>Regalo Extra del Canal</strong> de la barra inferior para captar su atención preferente, acelerar tu rango de sponsor y desbloquear sorpresas.
                       </p>
                     </div>
 
                     {isBlocked && (
-                      <div className="bg-rose-50 border border-rose-100 text-rose-600 text-xs p-3 rounded-2xl flex gap-2 items-start max-w-md mx-auto">
-                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-2xl flex gap-2 items-start max-w-md mx-auto">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
                         <div>
                           <span className="font-bold block">Destinatario Bloqueado</span>
-                          <span className="text-[10px] leading-relaxed block text-rose-500">
+                          <span className="text-[10px] leading-relaxed block text-rose-600">
                             Has bloqueado a @{activeContact.username}. Puedes leer vuestro historial pero no le llegarán mensajes tuyos hasta que no lo desbloquees.
                           </span>
                         </div>
@@ -1086,10 +1086,10 @@ export default function DirectMessageChat({
                     )}
 
                     {currentChatHistory.length === 0 && (
-                      <div className="text-center py-16 text-slate-400 text-xs space-y-1 bg-white/40 border border-dashed border-slate-200 rounded-2xl p-6 max-w-sm mx-auto">
-                        <MessageCircle className="w-8 h-8 text-indigo-400/80 mx-auto mb-1 animate-pulse" />
-                        <p className="font-bold text-slate-700">Sin Mensajes Previos</p>
-                        <p className="text-[10px] text-slate-450 leading-relaxed">
+                      <div className="text-center py-16 text-pink-400 text-xs space-y-1 bg-white/70 border-2 border-dashed border-pink-250 rounded-2xl p-6 max-w-sm mx-auto shadow-3xs">
+                        <MessageCircle className="w-8 h-8 text-pink-400 mx-auto mb-1 animate-pulse" />
+                        <p className="font-bold text-pink-950">Sin Mensajes Previos</p>
+                        <p className="text-[10px] text-pink-900/70 leading-relaxed">
                           Escribe un mensaje privado seguro para iniciar la conversación con @{activeContact.username}.
                         </p>
                       </div>
@@ -1107,22 +1107,22 @@ export default function DirectMessageChat({
                             isMine
                               ? isGiftMsg
                                 ? 'bg-amber-50 text-amber-950 rounded-tr-none shadow-3xs border border-amber-200 ml-auto'
-                                : 'bg-zinc-900 text-white rounded-tr-none shadow-3xs ml-auto'
-                              : 'bg-zinc-100 text-zinc-900 rounded-tl-none border border-zinc-200/80 shadow-3xs mr-auto'
+                                : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-tr-none shadow-sm shadow-pink-300/40 ml-auto'
+                              : 'bg-white text-pink-950 rounded-tl-none border border-pink-200/90 shadow-3xs mr-auto'
                           }`}>
                             {msg.text && <p className={`${isFullscreen ? 'text-sm sm:text-[14px]' : 'text-xs'} font-medium whitespace-pre-wrap leading-relaxed`}>{msg.text}</p>}
                             {msg.imageUrl && (
-                               <div className="rounded-xl overflow-hidden border border-slate-150/50 mt-1 max-w-[200px]">
+                               <div className="rounded-xl overflow-hidden border border-pink-200 mt-1 max-w-[200px]">
                                 <img src={msg.imageUrl} alt="attachment" referrerPolicy="no-referrer" className="w-[200px] h-auto object-cover" />
                               </div>
                             )}
                             
                             <div className={`flex items-center ${isMine ? 'justify-end' : 'justify-start'} gap-1 text-[9px] mt-1 shrink-0 select-none`}>
-                              <span className={isMine ? isGiftMsg ? 'text-amber-700 font-mono' : 'text-zinc-400 font-mono' : 'text-zinc-500 font-mono'}>
+                              <span className={isMine ? isGiftMsg ? 'text-amber-700 font-mono' : 'text-pink-100 font-mono' : 'text-pink-400 font-mono'}>
                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                               {isMine && (
-                                <CheckCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Mensaje Leído por destinatario" />
+                                <CheckCheck className="w-3.5 h-3.5 text-white/90 shrink-0" title="Mensaje Leído por destinatario" />
                               )}
                             </div>
                           </div>
@@ -1133,12 +1133,12 @@ export default function DirectMessageChat({
                   </div>
 
                   {/* SEND INPUT CONTAINER - HOLDS PREMIUM EMOJI-LIKE GIFTS SELECTOR ON HOVER */}
-                  <form onSubmit={(e) => handleSend(e)} className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex gap-2 items-center shadow-3xs relative overflow-visible w-full min-w-0">
+                  <form onSubmit={(e) => handleSend(e)} className="p-2.5 sm:p-3 border-t border-pink-200/80 bg-gradient-to-r from-[#fff0f4] via-[#fdebf1] to-[#fff5f8] flex gap-2 items-center shadow-3xs relative overflow-visible w-full min-w-0">
                     
                     {chatFeedback && (
-                      <div className="absolute bottom-full left-3 right-3 mb-2 bg-slate-900/95 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl shadow-lg z-50 backdrop-blur-md flex items-center justify-between animate-fade-in border border-white/10">
+                      <div className="absolute bottom-full left-3 right-3 mb-2 bg-pink-950/95 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl shadow-lg z-50 backdrop-blur-md flex items-center justify-between animate-fade-in border border-pink-500/30">
                         <span>{chatFeedback}</span>
-                        <button type="button" onClick={() => setChatFeedback(null)} className="ml-2 text-slate-300 hover:text-white cursor-pointer">✕</button>
+                        <button type="button" onClick={() => setChatFeedback(null)} className="ml-2 text-pink-300 hover:text-white cursor-pointer">✕</button>
                       </div>
                     )}
 
@@ -1152,7 +1152,7 @@ export default function DirectMessageChat({
                             <div className="text-[10px] font-black text-pink-600 uppercase tracking-wider leading-none flex items-center gap-1">
                               <span>📷</span> Imagen para compartir en mensaje
                             </div>
-                            <div className="text-[9px] text-slate-500 mt-1 font-medium leading-none">
+                            <div className="text-[9px] text-pink-800/70 mt-1 font-medium leading-none">
                               Se enviará junto con tu mensaje privado
                             </div>
                           </div>
@@ -1173,7 +1173,7 @@ export default function DirectMessageChat({
                       </div>
                     )}
 
-                    {/* 📷 CONTENEDOR IZQUIERDO: BUSCADOR DE ARCHIVOS DEL ESCRITORIO CON ICONO AZUL */}
+                    {/* 📷 CONTENEDOR IZQUIERDO: BUSCADOR DE ARCHIVOS DEL ESCRITORIO CON ICONO ROSA */}
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -1185,10 +1185,10 @@ export default function DirectMessageChat({
                     <button
                       type="button"
                       onClick={handleOpenDesktopFilePicker}
-                      className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-blue-200/90 bg-blue-50/60 hover:bg-blue-100/80 text-blue-600 shadow-xs hover:scale-105 active:scale-95 duration-150 transition cursor-pointer"
+                      className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-pink-300 bg-pink-100/70 hover:bg-pink-200/80 text-pink-600 shadow-xs hover:scale-105 active:scale-95 duration-150 transition cursor-pointer"
                       title="Elegir archivo o foto de mi escritorio"
                     >
-                      <Image className="w-5 h-5 text-blue-500 hover:text-blue-600 transition-colors" />
+                      <Image className="w-5 h-5 text-pink-500 hover:text-pink-600 transition-colors" />
                     </button>
 
                     {/* 💋 CONTENEDOR DERECHO: ICONO DE BESOS Y MENÚ DE REGALOS */}
@@ -1204,24 +1204,24 @@ export default function DirectMessageChat({
                           const kissGift = EXTRA_GIFTS.find(g => g.icon === '💋' || g.name.toLowerCase().includes('beso')) || { name: 'Besos', icon: '💋', cost: 15 };
                           handleSendGiftDirect(kissGift);
                         }}
-                        className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-amber-300 bg-gradient-to-tr from-amber-50 to-orange-100/90 hover:from-amber-100 hover:to-orange-200/90 shadow-xs transition-all duration-150 cursor-pointer text-lg relative group"
+                        className="tab-trigger w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-pink-300 bg-gradient-to-tr from-[#ffe4ed] to-[#fde8ef] hover:from-[#fcd9e5] hover:to-[#fbd0df] shadow-xs transition-all duration-150 cursor-pointer text-lg relative group"
                         title="Enviar Besos 💋 (Pasa el ratón para ver más regalos)"
                       >
                         <span className="animate-pulse select-none text-xl">💋</span>
-                        <span className="absolute -bottom-1 -right-1 bg-amber-500 text-white font-mono text-[7px] px-1 rounded-full font-black scale-90">
+                        <span className="absolute -bottom-1 -right-1 bg-pink-500 text-white font-mono text-[7px] px-1 rounded-full font-black scale-90">
                           588
                         </span>
                       </button>
 
                       {/* POPUP CONTAINER THAT REVEALS ON HOVER LIKE A FLOATING EMOJI BOARD */}
                       {showGiftsHoverMenu && (
-                        <div className="absolute bottom-12 -left-12 sm:-left-36 w-[360px] sm:w-[380px] bg-[#FFFDFC]/98 backdrop-blur-md border border-amber-200 rounded-2xl shadow-2xl p-4 z-[9999] animate-bounce-in text-left">
-                          <div className="flex items-center justify-between pb-2 border-b border-rose-50 mb-3">
-                            <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5">
+                        <div className="absolute bottom-12 -left-12 sm:-left-36 w-[360px] sm:w-[380px] bg-[#FFFDFC]/98 backdrop-blur-md border border-pink-200 rounded-2xl shadow-2xl p-4 z-[9999] animate-bounce-in text-left">
+                          <div className="flex items-center justify-between pb-2 border-b border-pink-100 mb-3">
+                            <span className="text-[11px] font-black uppercase text-pink-700 tracking-wider flex items-center gap-1.5">
                               <span>💋</span>
                               <span>Regalos & Besos (Sponsor)</span>
                             </span>
-                            <div className="bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg text-amber-700 text-[10px] font-black font-mono tracking-wide">
+                            <div className="bg-pink-50 border border-pink-150 px-2.5 py-1 rounded-lg text-pink-700 text-[10px] font-black font-mono tracking-wide">
                               Saldo: 🪙 {liveUserCoins}
                             </div>
                           </div>
@@ -1238,22 +1238,22 @@ export default function DirectMessageChat({
                                   handleSendGiftDirect(gift);
                                   setShowGiftsHoverMenu(false);
                                 }}
-                                className="flex flex-col items-center justify-center p-2 rounded-2xl hover:bg-orange-50/50 border border-slate-100 hover:border-orange-200/40 bg-[#FFFDF9] transition duration-150 cursor-pointer text-center relative group shadow-3xs hover:shadow"
+                                className="flex flex-col items-center justify-center p-2 rounded-2xl hover:bg-pink-50/70 border border-pink-100 hover:border-pink-250 bg-white transition duration-150 cursor-pointer text-center relative group shadow-3xs hover:shadow"
                                 title={`${gift.name} (🪙 ${gift.cost})`}
                               >
                                 <span className="text-3xl select-none mb-1 text-center transform transition-all group-hover:scale-110 active:scale-90 duration-200">{gift.icon}</span>
-                                <span className="text-[10px] text-slate-700 font-bold leading-tight truncate w-full text-center" title={gift.name}>
+                                <span className="text-[10px] text-pink-950 font-bold leading-tight truncate w-full text-center" title={gift.name}>
                                   {gift.name}
                                 </span>
-                                <span className="text-[10px] text-amber-500 font-extrabold font-mono mt-0.5 whitespace-nowrap leading-none flex items-center justify-center gap-0.5">
+                                <span className="text-[10px] text-pink-600 font-extrabold font-mono mt-0.5 whitespace-nowrap leading-none flex items-center justify-center gap-0.5">
                                   🪙 {gift.cost}
                                 </span>
                               </button>
                             ))}
                           </div>
 
-                          <div className="text-[9px] text-slate-400 mt-3 text-center border-t border-slate-100 pt-2.5 leading-none">
-                            Presiona para enviar instantáneamente · Tu saldo: <span className="font-mono text-amber-500 font-bold">🪙 {liveUserCoins}</span>
+                          <div className="text-[9px] text-pink-400 mt-3 text-center border-t border-pink-100 pt-2.5 leading-none">
+                            Presiona para enviar instantáneamente · Tu saldo: <span className="font-mono text-pink-600 font-bold">🪙 {liveUserCoins}</span>
                           </div>
                         </div>
                       )}
@@ -1264,16 +1264,16 @@ export default function DirectMessageChat({
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       placeholder={`Escribe un mensaje privado a @${activeContact?.username || 'user'}...`}
-                      className={`flex-1 min-w-0 bg-slate-50 border border-slate-150 rounded-xl ${
+                      className={`flex-1 min-w-0 bg-white border border-pink-200/90 rounded-xl ${
                         isFullscreen ? 'px-4 py-3 text-sm' : 'px-3 py-2 text-xs'
-                      } text-slate-800 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-100 placeholder-slate-400 transition-all`}
+                      } text-pink-950 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 placeholder-pink-300 transition-all shadow-3xs`}
                     />
 
                     <button
                       type="submit"
-                      className={`tab-trigger bg-zinc-900 hover:bg-zinc-800 text-white shrink-0 ${
+                      className={`tab-trigger bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shrink-0 ${
                         isFullscreen ? 'p-3 px-4' : 'p-2 px-3'
-                      } rounded-xl transition flex items-center justify-center cursor-pointer active:scale-95 shadow-3xs border-none`}
+                      } rounded-xl transition flex items-center justify-center cursor-pointer active:scale-95 shadow-sm shadow-pink-400/40 border-none`}
                     >
                       <Send className={isFullscreen ? "w-4.5 h-4.5" : "w-3.5 h-3.5"} />
                     </button>
@@ -1283,10 +1283,10 @@ export default function DirectMessageChat({
             })()}
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs px-6 py-20 text-center bg-white/40 border-r border-slate-100">
-            <Users className="w-10 h-10 text-slate-300 mb-2" />
-            <p className="font-bold text-slate-600">Selecciona o busca un destinatario</p>
-            <p className="text-[10px] text-slate-400 mt-1 max-w-xs">
+          <div className="flex-1 flex flex-col items-center justify-center text-pink-400 text-xs px-6 py-20 text-center bg-[#fff8fa] border-r border-pink-200/80">
+            <Users className="w-10 h-10 text-pink-300 mb-2" />
+            <p className="font-bold text-pink-950">Selecciona o busca un destinatario</p>
+            <p className="text-[10px] text-pink-900/70 mt-1 max-w-xs">
               Usa la barra izquierda para elegir modelos sponsors, referidos de tu red, o escribe su alias directamente para enviarles mensajes privados de forma libre.
             </p>
           </div>
@@ -1295,61 +1295,61 @@ export default function DirectMessageChat({
 
       {/* DIALOG POPUP: START PRIVATE CHAT BY ENTERING ANY USERNAME */}
       {showCustomContactModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[99999] p-4">
-          <div className="bg-white rounded-3xl border border-slate-150 max-w-sm w-full p-6 space-y-4 shadow-2xl animate-fade-in" id="modal-new-contact">
+        <div className="fixed inset-0 bg-pink-950/40 backdrop-blur-xs flex items-center justify-center z-[99999] p-4">
+          <div className="bg-[#fff8fa] rounded-3xl border-2 border-pink-200 max-w-sm w-full p-6 space-y-4 shadow-2xl animate-fade-in" id="modal-new-contact">
             
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-slate-800">
-                <span className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+              <div className="flex items-center gap-2 text-pink-950">
+                <span className="p-1.5 bg-pink-100 rounded-lg text-pink-600">
                   <UserPlus2 className="w-4 h-4" />
                 </span>
                 <h3 className="font-bold text-sm">Escribir a un @usuario nuevo</h3>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-pink-800/80">
                 Sumoriza o escribe un alias para inicializar la bandeja de mensajes directos.
               </p>
             </div>
 
             <form onSubmit={handleCreateCustomContact} className="space-y-3.5">
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre Completo:</label>
+                <label className="block text-[10px] font-bold text-pink-900 uppercase">Nombre Completo:</label>
                 <input
                   type="text"
                   required
                   placeholder="Ej. Lorena Gómez"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl w-full px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                  className="bg-white border border-pink-200/90 rounded-xl w-full px-3 py-2 text-xs text-pink-950 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre de usuario (Alias):</label>
+                <label className="block text-[10px] font-bold text-pink-900 uppercase">Nombre de usuario (Alias):</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-mono">@</span>
+                  <span className="absolute left-3 top-2.5 text-xs text-pink-400 font-mono">@</span>
                   <input
                     type="text"
                     required
                     placeholder="lorenagomez"
                     value={customUsername}
                     onChange={(e) => setCustomUsername(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl w-full pl-7 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 font-mono"
+                    className="bg-white border border-pink-200/90 rounded-xl w-full pl-7 pr-3 py-2 text-xs text-pink-950 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Rol que desempeña:</label>
+                <label className="block text-[10px] font-bold text-pink-900 uppercase">Rol que desempeña:</label>
                 <div className="flex gap-2">
                   {(['model', 'investor'] as const).map(roleOpt => (
                     <button
                       key={roleOpt}
                       type="button"
                       onClick={() => setCustomRole(roleOpt)}
-                      className={`flex-1 py-2 text-[11px] font-bold capitalize rounded-lg border transition ${
+                      className={`flex-1 py-2 text-[11px] font-bold capitalize rounded-lg border transition cursor-pointer ${
                         customRole === roleOpt 
-                          ? 'bg-slate-900 border-slate-900 text-white' 
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          ? 'bg-gradient-to-r from-pink-500 to-rose-500 border-pink-600 text-white shadow-xs' 
+                          : 'bg-white border-pink-200 text-pink-900 hover:bg-pink-50'
                       }`}
                     >
                       {roleOpt === 'model' ? 'Modelo' : 'Inversor'}
@@ -1362,13 +1362,13 @@ export default function DirectMessageChat({
                 <button
                   type="button"
                   onClick={() => setShowCustomContactModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition"
+                  className="px-4 py-2 text-xs font-semibold text-pink-700 hover:bg-pink-100/70 rounded-xl transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-indigo-650 hover:bg-indigo-750 rounded-xl transition shadow-3xs"
+                  className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-xl transition shadow-sm shadow-pink-300/40 border-none cursor-pointer"
                 >
                   Abrir Bandeja Privada
                 </button>

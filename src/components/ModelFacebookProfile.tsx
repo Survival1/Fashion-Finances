@@ -236,15 +236,21 @@ export function ProfileIntroAndSponsors({
           className="relative overflow-hidden rounded-2xl border-2 border-[#fbcfe8] shadow-[0_4px_24px_rgba(244,114,182,0.18)] p-5 space-y-4 bg-gradient-to-br from-[#ffffff] via-[#fff0f5] to-[#fce7f3] text-slate-800" 
           id="intro-information-card-container"
         >
-          {/* 🪽 Wings background: Luminous white wings on smooth pearl pink background, clear and without harsh saturation */}
+          {/* 🪽 Wings background: Luminous white wings seamlessly feathered and blended into the pearl pink background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
             <img 
-              src="/assets/aistudio/wings_pearl_pink.jpg" 
+              src="/assets/aistudio/wings_seamless.png" 
               alt="Alas de Ángel Rosa Perla" 
-              className="w-full h-full object-fill opacity-90 transition-transform duration-700 rounded-2xl" 
+              className="w-full h-full object-cover object-center opacity-85 transition-transform duration-700 rounded-2xl" 
+              style={{
+                maskImage: 'radial-gradient(ellipse 92% 82% at 50% 50%, black 50%, rgba(0,0,0,0.85) 75%, transparent 100%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 92% 82% at 50% 50%, black 50%, rgba(0,0,0,0.85) 75%, transparent 100%)'
+              }}
             />
             {/* Subtle soft pearl gradient overlay to guarantee perfect contrast and readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#fff0f5]/65 via-transparent to-[#ffffff]/45 rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#fff0f5]/70 via-transparent to-[#ffffff]/50 rounded-2xl" />
+            {/* Soft perimeter vignette dissolving edges into container gradient */}
+            <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_28px_12px_#fff0f5] pointer-events-none" />
           </div>
 
           <div className="relative z-10 space-y-4">
@@ -282,7 +288,14 @@ export function ProfileIntroAndSponsors({
               {/* TikTok */}
               {Boolean(tiktokHandle) && (
                 <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-                  <span className="text-sm shrink-0 leading-none">🎵</span>
+                  <svg className="w-4 h-4 shrink-0 drop-shadow-xs" viewBox="0 0 24 24" fill="none" aria-label="TikTok">
+                    {/* Cyan layer */}
+                    <path d="M18.821 5.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 14.728.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.025a8.318 8.318 0 0 0 4.854 1.556V5.062z" fill="#25F4EE" />
+                    {/* Magenta layer */}
+                    <path d="M19.821 6.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.728 1.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V8.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V8.025a8.318 8.318 0 0 0 4.854 1.556V6.062z" fill="#FE2C55" />
+                    {/* Black main body */}
+                    <path d="M19.321 5.562a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.228 1h-3.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.48a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.525a8.318 8.318 0 0 0 4.854 1.556V5.562z" fill="#000000" />
+                  </svg>
                   <span>Sígueme en TikTok: <strong className="text-slate-900 font-bold">{tiktokHandle}</strong></span>
                 </div>
               )}
@@ -4764,13 +4777,22 @@ export default function ModelFacebookProfile({
                         Model ✓
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
-                      <span>@{post.authorUsername}</span>
+                    <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: post.authorUsername } }));
+                        }}
+                        className="hover:underline hover:text-indigo-600 cursor-pointer font-mono text-[10px]"
+                        title={`Ver perfil de @${post.authorUsername}`}
+                      >
+                        @{post.authorUsername}
+                      </button>
                       <span>•</span>
                       <span>{post.createdAt}</span>
                       <span>•</span>
                       <Globe className="w-3 h-3 text-slate-400" />
-                    </p>
+                    </div>
                   </div>
                 </div>
                 
@@ -10352,7 +10374,18 @@ export default function ModelFacebookProfile({
                               </span>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
-                              <span className="font-mono text-pink-600">@{item.username}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
+                                }}
+                                className="font-mono text-pink-600 hover:text-pink-800 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                                title={`Ver perfil de @${item.username}`}
+                              >
+                                <span>@{item.username}</span>
+                                <span className="text-[9px]">↗</span>
+                              </button>
                               <span>•</span>
                               <span>👥 {item.mutualFriends || 3} amigos en común</span>
                               <span>•</span>
@@ -10441,7 +10474,18 @@ export default function ModelFacebookProfile({
                               </span>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
-                              <span className="font-mono text-indigo-600">@{item.username}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
+                                }}
+                                className="font-mono text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                                title={`Ver perfil de @${item.username}`}
+                              >
+                                <span>@{item.username}</span>
+                                <span className="text-[9px]">↗</span>
+                              </button>
                               <span>•</span>
                               <span>👥 {item.mutualFriends || 4} amigos en común</span>
                               <span>•</span>
@@ -10544,7 +10588,18 @@ export default function ModelFacebookProfile({
                                 </span>
                               ) : null}
                             </div>
-                            <p className="text-[11px] text-slate-400 font-semibold font-mono">@{item.username}</p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
+                              }}
+                              className="text-[11px] text-slate-500 hover:text-pink-600 hover:underline font-semibold font-mono cursor-pointer inline-flex items-center gap-0.5"
+                              title={`Ver perfil de @${item.username}`}
+                            >
+                              <span>@{item.username}</span>
+                              <span className="text-[9px]">↗</span>
+                            </button>
                             <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2 pr-4">{item.bio}</p>
                           </div>
                         </div>

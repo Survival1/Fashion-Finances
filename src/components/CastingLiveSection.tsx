@@ -7572,17 +7572,13 @@ export default function CastingLiveSection({
     return null;
   });
 
-  const renderStreamOptionsModal = () => {
+  const renderStreamOptionsContent = () => {
     if (!showStreamOptionsModal || !streamOptionsTargetChannel) return null;
     return (
       <div 
-        className="fixed inset-0 z-[99999] flex items-center justify-center p-2.5 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in font-sans overflow-y-auto pointer-events-auto select-none"
-        onClick={() => setShowStreamOptionsModal(false)}
+        className="bg-slate-950 text-white w-full h-full overflow-hidden flex flex-col pointer-events-auto select-none rounded-[inherit] shadow-2xl animate-fade-in"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div 
-          className="bg-slate-950 text-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-800 flex flex-col max-h-[96%] animate-scale-in my-auto pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
           {/* Header */}
           <div className="bg-slate-900/95 border-b border-slate-800 p-3.5 sm:p-4 flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
@@ -7702,7 +7698,7 @@ export default function CastingLiveSection({
           </div>
 
           {/* Modal Body */}
-          <div className="p-3.5 sm:p-5 space-y-4 text-left flex-1 overflow-y-auto max-h-[50vh] sm:max-h-[56vh]">
+          <div className="p-3 sm:p-4 space-y-3.5 text-left flex-1 overflow-y-auto min-h-0 custom-scrollbar">
             {/* Título de la transmisión general */}
             <div className="bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 space-y-1">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
@@ -7980,44 +7976,55 @@ export default function CastingLiveSection({
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Footer with Actions (Captura z.png: Botones blancos con texto negro) */}
-          <div className="bg-slate-900/95 border-t border-slate-800 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
-            <button 
-              type="button"
-              onClick={() => setShowStreamOptionsModal(false)}
-              className="w-full sm:w-auto px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95"
-            >
-              CERRAR
-            </button>
+            {/* Botones de acción debajo del contenedor Cámara Activada y Lista */}
+            <div className="pt-2 flex items-center justify-between gap-2.5 w-full">
+              <button 
+                type="button"
+                onClick={() => setShowStreamOptionsModal(false)}
+                className="px-5 sm:px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 shrink-0"
+              >
+                CERRAR
+              </button>
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
-              {isUserRetransmitting && (
+              <div className="flex items-center gap-2">
+                {isUserRetransmitting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleStopLiveRetransmission();
+                    }}
+                    className="px-3.5 py-2.5 bg-slate-800 hover:bg-red-950/80 text-rose-400 border border-rose-800/60 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95 shrink-0"
+                  >
+                    Detener Emisión
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => {
-                    handleStopLiveRetransmission();
+                    handleStartLiveRetransmission(streamOptionsTargetChannel);
                   }}
-                  className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-red-950/80 text-rose-400 border border-rose-800/60 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95"
+                  className="px-4 sm:px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2 border border-slate-200"
                 >
-                  Detener Emisión
+                  <span className="truncate">Iniciar directo</span>
                 </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  handleStartLiveRetransmission(streamOptionsTargetChannel);
-                }}
-                className="w-full sm:w-auto px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2 border border-slate-200"
-              >
-                <span>INICIAR RETRANSMISIÓN EN DIRECTO</span>
-                <Radio className="w-4 h-4 stroke-[2.5] text-slate-950" />
-              </button>
+              </div>
             </div>
           </div>
         </div>
+      );
+    };
+
+  const renderStreamOptionsModal = () => {
+    if (!showStreamOptionsModal || !streamOptionsTargetChannel) return null;
+    return (
+      <div 
+        className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-[inherit] overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in select-none"
+        onClick={(e) => e.stopPropagation()}
+        id="phone-screen-stream-options-wrapper"
+      >
+        {renderStreamOptionsContent()}
       </div>
     );
   };
@@ -13797,6 +13804,17 @@ export default function CastingLiveSection({
               </div>
 
             </div>
+
+            {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
+            {showStreamOptionsModal && streamOptionsTargetChannel && (
+              <div 
+                className="absolute inset-0 z-[120] w-full h-full pointer-events-auto rounded-[inherit] overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+                id="phone-stream-options-combined-device"
+              >
+                {renderStreamOptionsContent()}
+              </div>
+            )}
 
           </div>
 
@@ -27975,8 +27993,7 @@ try {
                         className="w-full sm:w-auto px-6 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xl active:scale-95 flex items-center justify-center gap-2 border border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.4)]"
                       >
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
-                        <span>INICIAR RETRANSMISIÓN EN DIRECTO</span>
-                        <Radio className="w-4 h-4 stroke-[2.5]" />
+                        <span>Iniciar directo</span>
                       </button>
                     </div>
                   </div>
@@ -30177,6 +30194,9 @@ try {
                   enlargedWindowUser={enlargedWindowUser}
                   setEnlargedWindowUser={setEnlargedWindowUser}
                   renderEnlargedParticipantWindow={renderEnlargedParticipantWindow}
+                  showStreamOptionsModal={showStreamOptionsModal}
+                  setShowStreamOptionsModal={setShowStreamOptionsModal}
+                  renderStreamOptionsContent={renderStreamOptionsContent}
                   screenSplitLayout={screenSplitLayout}
                   invitedUsersMap={invitedUsersMap}
                 />
@@ -32517,10 +32537,10 @@ try {
                                   const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
                                   if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
                                   if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
-                                  if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
-                                  if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
-                                  if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
-                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
+                                  if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Round Glamour ✨';
+                                  if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Round Elegant & Classic 🤍';
+                                  if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Round High Fashion 👠';
+                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Round of Millionaires 💎';
                                   return currentFinanzasSession?.title || 'Round Streetwear & Urban';
                                 })()}
                               </span>
@@ -32777,10 +32797,10 @@ try {
 
                                     const titleText = isPinkStreetwear ? `Round STREETWEAR & URBAN (${currentRefStr})` :
                                       isCasualLifestyle ? 'Round CASUAL & LIFESTYLE' :
-                                      isGlamour ? 'Ronda Glamour ✨' :
-                                      isClassic ? 'Ronda Elegant & Classic 🤍' :
-                                      isHighFashion100k ? 'Ronda High Fashion 👠' :
-                                      isHighFashion1m ? 'Ronda High Fashion 👠' :
+                                      isGlamour ? 'Round Glamour ✨' :
+                                      isClassic ? 'Round Elegant & Classic 🤍' :
+                                      isHighFashion100k ? 'Round High Fashion 👠' :
+                                      isHighFashion1m ? 'Round of Millionaires 💎' :
                                       (currentSession?.title || 'Mesa de Inversión');
 
                                     const descText = isPinkStreetwear ? 'Estilo moderno, sneakers, denim y cultura street.' :
@@ -33313,10 +33333,10 @@ try {
                                   const cat = (currentFinanzasSession?.category || currentFinanzasSession?.title || '').toUpperCase();
                                   if (cat.includes('STREETWEAR') || cat.includes('TRABAJADORES') || fee === 10) return 'Round Streetwear & Urban';
                                   if (cat.includes('CASUAL') || cat.includes('EMPRENDEDOR') || fee === 100) return 'Round Casual & Lifestyle';
-                                  if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Ronda Glamour ✨';
-                                  if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Ronda Elegant & Classic 🤍';
-                                  if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Ronda High Fashion 👠';
-                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Ronda High Fashion 👠';
+                                  if (cat.includes('GLAMOUR') || cat.includes('EMPRESARIOS') || fee === 1000) return 'Round Glamour ✨';
+                                  if (cat.includes('ELEGANT') || cat.includes('CLASSIC') || cat.includes('MODELS') || fee === 10000) return 'Round Elegant & Classic 🤍';
+                                  if (cat.includes('HIGH FASHION') || cat.includes('INVERSI') || fee === 100000) return 'Round High Fashion 👠';
+                                  if (cat.includes('MILLONAR') || fee === 1000000) return 'Round of Millionaires 💎';
                                   return currentFinanzasSession?.title || 'Round Streetwear & Urban';
                                 })()}
                               </span>
@@ -38053,8 +38073,8 @@ try {
       {/* ✨ CREATION CHOICE MODAL (Historia vs Reel) */}
       {showCreationTypeModal && renderCreationTypeModal()}
 
-      {/* 📡 MODAL OPCIONES DE STREAM PARA RETRANSMITIR EN DIRECTO (Captura z.png) */}
-      {renderStreamOptionsModal()}
+      {/* 📡 MODAL OPCIONES DE STREAM PARA RETRANSMITIR EN DIRECTO (Se muestra integrado dentro de la pantalla del teléfono) */}
+      {/* renderStreamOptionsModal se renderiza dentro del frame del smartphone */}
 
       {/* 🗳️ VOTING PROJECTS MODAL (Votar por el mejor proyecto) - En Finanzas se muestra directamente dentro del canal a pantalla completa */}
       {showVotingProjectsModal && selectedCategoryFilter !== 'Finanzas' && renderVotingProjectsModal()}

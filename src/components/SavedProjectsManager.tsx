@@ -901,10 +901,10 @@ export default function SavedProjectsManager({
           </div>
         </div>
 
-        {/* Hero Fashion Model Photo from Reference Capture */}
+        {/* Hero Fashion Model Photo - Clean Model Portrait Without Background Text */}
         <div className="relative md:w-1/2 lg:w-7/12 h-52 sm:h-64 md:h-72 w-full overflow-hidden rounded-2xl flex items-center justify-end">
           <img
-            src="/assets/aistudio/Panel_de_Finanzas_y_Moda_Elegante_ad48950a.png"
+            src="/assets/aistudio/hero_model_clean.png"
             alt="Haute Couture Fashion Model"
             className="w-full h-full object-cover object-right rounded-2xl shadow-sm filter contrast-105"
           />
@@ -1656,7 +1656,7 @@ export default function SavedProjectsManager({
                           </label>
 
                           <img 
-                            src={coverUrl || '/assets/aistudio/Panel_de_Finanzas_y_Moda_Elegante_ad48950a.png'} 
+                            src={coverUrl || '/assets/aistudio/hero_model_clean.png'} 
                             alt={project.title} 
                             className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700" 
                           />

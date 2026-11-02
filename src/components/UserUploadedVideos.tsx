@@ -249,7 +249,17 @@ export default function UserUploadedVideos({
                             alt={video.name} 
                             className="w-5 h-5 rounded-full object-cover border border-white/10"
                           />
-                          <span className="text-[10px] font-bold truncate max-w-[100px]">@{video.username}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: video.username, name: video.name } }));
+                            }}
+                            className="text-[10px] font-bold truncate max-w-[100px] hover:underline hover:text-pink-400 cursor-pointer"
+                            title={`Ver perfil de @${video.username}`}
+                          >
+                            @{video.username}
+                          </button>
                         </div>
                         
                         <div className="flex items-center gap-1">
@@ -365,7 +375,17 @@ export default function UserUploadedVideos({
                   />
                   <div>
                     <h4 className="text-xs font-bold text-slate-800">{selectedVideoDetails.name}</h4>
-                    <p className="text-[10px] text-slate-400 font-mono">@{selectedVideoDetails.username}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedVideoDetails(null);
+                        window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: selectedVideoDetails.username, name: selectedVideoDetails.name } }));
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-pink-600 hover:underline font-mono cursor-pointer"
+                      title={`Ver perfil de @${selectedVideoDetails.username}`}
+                    >
+                      @{selectedVideoDetails.username}
+                    </button>
                   </div>
                 </div>
 
