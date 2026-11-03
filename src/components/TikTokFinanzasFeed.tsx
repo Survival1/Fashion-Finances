@@ -238,6 +238,8 @@ interface TikTokFinanzasFeedProps {
   isMuted: boolean;
   toggleBroadcastMic?: () => void;
   isUserLiveStreamingWithCamera: boolean;
+  isUserRetransmitting?: boolean;
+  onStopLiveRetransmission?: () => void;
   userLiveMediaStream?: MediaStream | null;
   liveStreamTimerSeconds?: number;
   formatLiveStreamDuration?: (secs: number) => string;
@@ -380,6 +382,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   isMuted,
   toggleBroadcastMic,
   isUserLiveStreamingWithCamera,
+  isUserRetransmitting = false,
+  onStopLiveRetransmission,
   userLiveMediaStream = null,
   liveStreamTimerSeconds = 14,
   formatLiveStreamDuration = (sec: number) => `${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`,
@@ -460,6 +464,120 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       [videoId]: !prev[videoId]
     }));
   };
+
+  const renderUserLiveCameraStage = () => (
+    <div 
+      className="absolute inset-0 z-[200] w-full h-full bg-[#0a0d16] overflow-hidden flex flex-col justify-start select-none font-sans text-white p-4 sm:p-5 pt-3 animate-fade-in rounded-none"
+      id="user-live-camera-stage-channel"
+    >
+      {/* Smartphone Speaker / Notch Indicator at top center */}
+      <div className="w-20 h-1 bg-slate-700/60 rounded-full mx-auto mb-3 shrink-0" />
+
+      {/* Top Floating Camera Controls (Detener) */}
+      <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/15">
+        <button
+          type="button"
+          onClick={() => {
+            if (onStopLiveRetransmission) onStopLiveRetransmission();
+          }}
+          className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider shadow-md active:scale-95"
+          title="Detener retransmisión"
+        >
+          Detener
+        </button>
+      </div>
+
+      {/* Badge 1: 🔴 TU CÁMARA RETRANSMITIENDO EN DIRECTO */}
+      <div className="flex items-center self-start mb-2">
+        <div className="inline-flex items-center gap-2 bg-[#e60023] text-white text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase px-4 py-1.5 rounded-full shadow-lg border border-red-500/80">
+          <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+          <span>TU CÁMARA RETRANSMITIENDO EN DIRECTO</span>
+        </div>
+      </div>
+
+      {/* Badge 2: 👁️ 19.856 espectadores */}
+      <div className="flex items-center self-start mb-3">
+        <div className="inline-flex items-center gap-1.5 bg-[#0f172a]/90 text-white/95 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-700/60 shadow-sm max-w-max">
+          <span className="text-white/80 text-xs">👁</span>
+          <span>19.856 espectadores</span>
+        </div>
+      </div>
+
+      {/* Profile Header Row */}
+      <div className="flex items-center gap-3 self-start mb-2.5 text-left">
+        <div className="relative shrink-0">
+          <img
+            src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200'}
+            alt="Adriana Lima"
+            className="w-13 h-13 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-[#ff2a6d] shadow-[0_0_12px_rgba(255,42,109,0.7)]"
+          />
+        </div>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-white font-extrabold text-[15px] sm:text-base leading-tight">
+              Adriana Lima (TÚ)
+            </span>
+            <span className="w-4 h-4 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+              ✓
+            </span>
+          </div>
+          <span className="text-slate-400 font-semibold text-xs tracking-tight">
+            @adrianalima_w1
+          </span>
+        </div>
+      </div>
+
+      {/* Live Stream Title Row */}
+      <div className="flex items-start gap-2 self-start mb-4 text-left">
+        <span className="w-3.5 h-3.5 rounded-full bg-red-600 shrink-0 mt-0.5 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.85)]" />
+        <h2 className="text-white font-extrabold text-sm sm:text-[15px] leading-snug">
+          En Directo: Mi Cámara Ocupando Todo el Canal (Todos en Directo)
+        </h2>
+      </div>
+
+      {/* Central Stage Area */}
+      <div className="flex-1 w-full flex items-center justify-center relative overflow-hidden my-auto min-h-[320px]">
+        {userLiveMediaStream ? (
+          <video
+            autoPlay
+            playsInline
+            muted={true}
+            ref={(el) => {
+              if (el && el.srcObject !== userLiveMediaStream) {
+                el.srcObject = userLiveMediaStream;
+              }
+            }}
+            className={`w-full h-full object-cover rounded-2xl transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+          />
+        ) : (
+          <div className="flex items-center justify-center w-full h-full select-none">
+            <svg
+              viewBox="0 0 280 240"
+              className="w-56 h-48 sm:w-64 sm:h-56 text-[#64748b] drop-shadow-xl"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M 98 48 L 118 24 L 162 24 L 182 48" />
+              <rect x="36" y="48" width="208" height="156" rx="26" />
+              <circle cx="140" cy="126" r="42" />
+              <line x1="38" y1="22" x2="242" y2="218" strokeWidth="20" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Handle matching image.png */}
+      <div className="flex items-center gap-1.5 self-start mt-auto pt-3 pb-2 text-white font-black text-sm select-none">
+        <span>@adrianalima_w1</span>
+        <span className="w-4 h-4 rounded-full border border-[#00b4d8] text-[#00b4d8] flex items-center justify-center text-[10px] font-bold">
+          ✓
+        </span>
+      </div>
+    </div>
+  );
 
   const getEnglishTranslation = (text: string, videoId?: string) => {
     if (!text && !videoId) return '';
@@ -4253,7 +4371,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 }
               }
             }}
-            className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border border-slate-800 rounded-3xl shadow-xl overflow-hidden relative flex flex-col justify-between box-border select-none"
+            className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border-0 rounded-none shadow-xl overflow-hidden relative flex flex-col justify-between box-border select-none"
             style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
             id={`multimedia-video-feed-card-${currentVid.id}`}
           >
@@ -4282,12 +4400,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
             {showStreamOptionsModal && isCardActive && renderStreamOptionsContent && (
               <div 
-                className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-3xl overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
+                className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-none overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
                 id={`phone-stream-options-multimedia-${currentVid.id}`}
               >
                 {renderStreamOptionsContent()}
               </div>
+            )}
+
+            {/* 🔴 PANTALLA EN DIRECTO: MI CÁMARA OCUPANDO TODO EL CANAL (captura image.png) */}
+            {(isUserRetransmitting || isUserLiveStreamingWithCamera) && isCardActive && (
+              renderUserLiveCameraStage()
             )}
 
             {/* 📹 Main Fullscreen Vertical Video Element */}
@@ -5239,7 +5362,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               >
                 {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) - 4cm más larga sin tocar ancho */}
                 <div 
-                  className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border border-slate-800 rounded-3xl shadow-xl overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
+                  className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border-0 rounded-none shadow-xl overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
                   style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
                   id={`round-container-box-${session.id}`}
                 >
@@ -5264,7 +5387,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 🗳️ VENTANA DE VOTACIÓN DENTRO DEL CANAL EN PANTALLA COMPLETA (captura image.png) */}
                 {showVotingProjectsModal && isCurrentlyActiveRound && (
                   <div 
-                    className="absolute inset-0 z-[200] bg-white w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[200] bg-white w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
                     id={`voting-projects-in-channel-fullscreen-${session.id}`}
                     onWheel={(e) => {
                       e.stopPropagation();
@@ -5282,10 +5405,27 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
 
+                {/* 📁 VENTANA: PROYECTO COMPLETO DE LUCAS TORRES DENTRO DE LA PANTALLA DEL TELÉFONO */}
+                {showProjectDetailsInPopup && isCurrentlyActiveRound && (
+                  <div 
+                    className="absolute inset-0 z-[280] bg-white w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-800 font-sans pointer-events-auto"
+                    id={`project-details-in-channel-fullscreen-${session.id}`}
+                    onWheel={(e) => {
+                      e.stopPropagation();
+                    }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                  >
+                    {renderProjectDetailsContent ? (
+                      renderProjectDetailsContent()
+                    ) : null}
+                  </div>
+                )}
+
                 {/* 📊 ESCRUTINIO DESCENTRALIZADO (captura imagen.png) EN EL MISMO DISEÑO Y FORMATO DE za.png */}
                 {showFinanzasRecount && isCurrentlyActiveRound && (!completedSessionToDisplay?.id || completedSessionToDisplay.id === session.id) && (
                   <div 
-                    className="absolute inset-0 z-[130] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[130] bg-[#070b14] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
                     id={`finanzas-recount-in-channel-${session.id}`}
                     onWheel={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
@@ -5302,7 +5442,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 🏆 RESULTADOS FINALES (captura zr.png) EN EL MISMO DISEÑO Y FORMATO DE za.png */}
                 {showFinanzasResults && isCurrentlyActiveRound && (!completedSessionToDisplay?.id || completedSessionToDisplay.id === session.id) && (
                   <div 
-                    className="absolute inset-0 z-[140] bg-[#070b14] w-full h-full max-h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col min-h-0 shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[140] bg-[#070b14] w-full h-full max-h-full rounded-none overflow-hidden flex flex-col min-h-0 shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
                     id={`finanzas-results-in-channel-${session.id}`}
                     onWheel={(e) => {
                       e.stopPropagation();
@@ -5329,7 +5469,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
                 {showStreamOptionsModal && isCurrentlyActiveRound && renderStreamOptionsContent && (
                   <div 
-                    className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-[40px] sm:rounded-[48px] overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
+                    className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-none overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
                     onClick={(e) => e.stopPropagation()}
                     id={`phone-stream-options-wrapper-${session.id}`}
                   >
@@ -5337,10 +5477,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
 
+                {/* 🔴 PANTALLA EN DIRECTO: MI CÁMARA OCUPANDO TODO EL CANAL (captura image.png) */}
+                {(isUserRetransmitting || isUserLiveStreamingWithCamera) && isCurrentlyActiveRound && (
+                  renderUserLiveCameraStage()
+                )}
+
                 {/* 🖥️ POPUP MODAL: DISTRIBUCIÓN DE PANTALLA (COMPARTIR PANTALLA) EN TAMAÑO COMPLETO */}
                 {showScreenShareMenu && renderScreenShareContent && (
                   <div 
-                    className="absolute inset-0 w-full h-full z-[220] pointer-events-auto rounded-[40px] sm:rounded-[48px] overflow-hidden"
+                    className="absolute inset-0 w-full h-full z-[220] pointer-events-auto rounded-none overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                     id="fullscreen-screen-distribution-wrapper"
                   >
@@ -5351,7 +5496,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 👥 10 VENTANAS DE LOS PARTICIPANTES EN VIVO (Strictly matching captura z.png) */}
                 {showTenWindowsVotingLive && isCurrentlyActiveRound && (
                   <div 
-                    className="absolute inset-0 z-[230] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto select-none"
+                    className="absolute inset-0 z-[230] bg-[#070b14] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto select-none"
                     id={`ten-windows-live-modal-${session.id}`}
                   >
                     {/* 🔝 CABECERA SUPERIOR DE 10 VENTANAS (con botón X para volver a image.png) */}
@@ -5458,7 +5603,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 🪟 VENTANA EN GRANDE DEL PARTICIPANTE CON COMENTARIOS Y REGALOS EN VIVO */}
                 {enlargedWindowUser && isCurrentlyActiveRound && renderEnlargedParticipantWindow && (
                   <div 
-                    className="absolute inset-0 z-[260] bg-[#070b14] w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[260] bg-[#070b14] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
                     id={`enlarged-window-in-channel-${session.id}`}
                     onClick={(e) => e.stopPropagation()}
                     onMouseEnter={(e) => {
@@ -5473,7 +5618,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 🎥 LIVE EXPOSITION OVERLAY DENTRO DEL CANAL (captura image.png) */}
                 {effectiveCameraFullscreen && isCurrentlyActiveRound && (
                   <div 
-                    className="absolute inset-0 z-[150] bg-black w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
+                    className="absolute inset-0 z-[150] bg-black w-full h-full rounded-none overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto"
                     id={`live-exposition-in-channel-${session.id}`}
                   >
                     {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página) */}
@@ -6036,7 +6181,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                   if (isSplit2Active) {
                     return (
-                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px] grid grid-cols-2 gap-1.5 p-2 pt-14 pb-20 bg-[#070b14] opacity-85">
+                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-none grid grid-cols-2 gap-1.5 p-2 pt-14 pb-20 bg-[#070b14] opacity-85">
                         <div className="relative rounded-2xl overflow-hidden border-2 border-rose-500/70 bg-black flex flex-col justify-between p-1.5">
                           <video
                             src={getParticipantLiveCameraVideo(presenter)}
@@ -6077,7 +6222,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                   if (isSplit3Active) {
                     return (
-                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px] grid grid-cols-2 grid-rows-2 gap-1.5 p-2 pt-14 pb-20 bg-[#070b14] opacity-85">
+                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-none grid grid-cols-2 grid-rows-2 gap-1.5 p-2 pt-14 pb-20 bg-[#070b14] opacity-85">
                         <div className="col-span-2 relative rounded-2xl overflow-hidden border-2 border-rose-500/70 bg-black flex flex-col justify-between p-1.5">
                           <video
                             src={getParticipantLiveCameraVideo(presenter)}
@@ -6136,7 +6281,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   }
 
                   return isLiveActive ? (
-                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-[40px] sm:rounded-[48px]">
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-none">
                       {isPresenter && userLiveMediaStream ? (
                         <LiveUserStreamVideo
                           stream={userLiveMediaStream}

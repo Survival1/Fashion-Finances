@@ -742,46 +742,25 @@ export default function ProjectForm({
 
                   <hr className="border-stone-200" />
 
-                  {/* Budget and goal */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        Presupuesto Referencia de Mesa (EUR) *
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-3 text-sm text-pink-600 font-bold font-mono">€</span>
-                        <input
-                          type="number"
-                          required
-                          value={budget}
-                          onChange={(e) => setBudget(Number(e.target.value))}
-                          className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 font-bold font-mono focus:outline-none focus:border-pink-500"
-                        />
-                      </div>
-                      <span className="text-[10px] text-stone-400 block">
-                        Rango: <strong>10€</strong> (Streetwear), <strong>100€</strong> (Casual) o <strong>1.000€</strong> (Alta Gama).
-                      </span>
+                  {/* Goal */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Objetivo de Recaudación (EUR) *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-3 text-sm text-emerald-600 font-bold font-mono">€</span>
+                      <input
+                        type="number"
+                        required
+                        value={fundingGoal}
+                        onChange={(e) => setFundingGoal(Number(e.target.value))}
+                        placeholder="Ej. 5000"
+                        className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 font-bold font-mono focus:outline-none focus:border-pink-500"
+                      />
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        Objetivo de Recaudación (EUR) *
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-3 text-sm text-emerald-600 font-bold font-mono">€</span>
-                        <input
-                          type="number"
-                          required
-                          value={fundingGoal}
-                          onChange={(e) => setFundingGoal(Number(e.target.value))}
-                          placeholder="Ej. 5000"
-                          className="w-full bg-[#fcfbfa] border border-stone-300 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 font-bold font-mono focus:outline-none focus:border-pink-500"
-                        />
-                      </div>
-                      <span className="text-[10px] text-stone-400 block">
-                        Meta total de financiación requerida para el desarrollo del proyecto.
-                      </span>
-                    </div>
+                    <span className="text-[10px] text-stone-400 block">
+                      Meta total de financiación requerida para el desarrollo del proyecto.
+                    </span>
                   </div>
 
                   {/* Fund usage and objective */}

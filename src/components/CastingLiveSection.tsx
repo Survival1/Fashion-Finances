@@ -5021,7 +5021,7 @@ export default function CastingLiveSection({
 
     return (
       <div 
-        className="absolute inset-0 z-[220] bg-white w-full h-full rounded-[40px] sm:rounded-[48px] overflow-hidden flex flex-col justify-between shadow-2xl animate-fade-in text-slate-900 font-sans pointer-events-auto p-4 sm:p-5 box-border" 
+        className="absolute inset-0 z-[220] bg-white w-full h-full rounded-none overflow-hidden flex flex-col justify-between shadow-2xl animate-fade-in text-slate-900 font-sans pointer-events-auto p-4 sm:p-5 box-border" 
         id="screen-share-options-modal" 
         onClick={(e) => e.stopPropagation()}
       >
@@ -7387,7 +7387,8 @@ export default function CastingLiveSection({
     });
   };
 
-  const handleStartLiveRetransmission = async (targetChannel: { id: string; label: string; image?: string }) => {
+  const handleStartLiveRetransmission = async (targetChannel?: { id: string; label: string; image?: string } | null) => {
+    const channel = targetChannel || streamOptionsTargetChannel || { id: 'todos', label: 'Todos en Directo' };
     let stream = userLiveMediaStream;
     if (!stream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
       try {
@@ -7429,14 +7430,27 @@ export default function CastingLiveSection({
     }
     setIsUserLiveStreamingWithCamera(true);
     setIsUserRetransmitting(true);
-    setUserRetransmittingChannelId(targetChannel.id);
-    if (targetChannel.id === 'atelier') {
+    setUserRetransmittingChannelId(channel.id);
+    if (channel.id === 'atelier') {
       setIsUserRetransmittingToAtelier(true);
     }
-    setLiveChannelsCategoryFilter(targetChannel.id);
-    setSelectedHeroChannelId(`live-user-retransmision-${targetChannel.id}`);
+    setLiveChannelsCategoryFilter(channel.id);
+    setSelectedHeroChannelId(`live-user-retransmision-${channel.id}`);
     setShowStreamOptionsModal(false);
     setIsHeroTopChannelsDropdownOpen(false);
+    setIsTopControlsMenuHovered(false);
+
+    // Switch view directly to the camera broadcast view matching image.png
+    setActiveSubTab('live');
+    setLiveViewMode('stream');
+    setWebRTCPodiumData(null);
+    setShowCreationTypeModal(false);
+    setShowVotingProjectsModal(false);
+    setShowFinanzasResults(false);
+    setShowFinanzasRecount(false);
+    setShowFinanzasInscriptionInChannel(false);
+    setEnlargedWindowUser(null);
+    setShowScreenShareMenu(false);
 
     if (heroVideoRef.current) {
       if (stream) {
@@ -7451,15 +7465,15 @@ export default function CastingLiveSection({
 
     setSystemVoiceNotification({
       show: true,
-      message: `🔴 ¡Cámara conectada en directo! Emitiendo en todo el canal ${targetChannel.label} para todos los usuarios.`
+      message: `🔴 ¡Cámara conectada en directo! Emitiendo en todo el canal ${channel.label} para todos los usuarios.`
     });
     setTimeout(() => {
       setSystemVoiceNotification(prev => ({ ...prev, show: false }));
     }, 4500);
 
-    const heroEl = document.getElementById('live-videos-screen-root');
-    if (heroEl) {
-      heroEl.scrollIntoView({ behavior: 'smooth' });
+    const phoneDeviceEl = document.getElementById('casting_live-combined-device') || document.getElementById('user-live-camera-stage');
+    if (phoneDeviceEl) {
+      phoneDeviceEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -12704,21 +12718,21 @@ export default function CastingLiveSection({
         }`} id="casting_live-center-panel">
 
           {/* Combined vertical smartphone mockup matching iPhone 17 Pro Max dimensions (edge-to-edge on mobile) */}
-          <div className={`flex flex-col items-center justify-center w-full gap-0 my-auto shadow-2xl overflow-hidden border-slate-800 bg-[#161a1e] transition-all duration-300 box-border mx-auto mobile-snap-card ${
+          <div className={`flex flex-col items-center justify-center w-full gap-0 my-auto shadow-2xl overflow-hidden bg-black transition-all duration-300 box-border mx-auto mobile-snap-card ${
             isMobileChannelPinned 
               ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex items-center justify-center p-0 m-0'
-              : 'w-full max-w-full sm:max-w-[460px] md:max-w-[480px] h-[880px] sm:h-[956px] max-h-[100dvh] sm:max-h-[956px] rounded-none sm:rounded-[55px] border-x-0 sm:border-x-[3.5px] border-y-0 sm:border-y-[3.5px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
+              : 'w-full max-w-full sm:max-w-[460px] md:max-w-[480px] h-[880px] sm:h-[956px] max-h-[100dvh] sm:max-h-[956px] rounded-none border-0 shadow-2xl'
           }`} id="casting_live-combined-device">
 
             {/* Main Streaming Smartphone simulation frame */}
-            <div className={`w-full bg-[#161a1e] overflow-hidden relative flex flex-col group/video-container box-border transition-all duration-300 ${
+            <div className={`w-full bg-black overflow-hidden relative flex flex-col group/video-container box-border transition-all duration-300 ${
               isMobileChannelPinned 
-                ? 'w-full max-w-full h-full max-h-[100dvh] sm:max-h-[956px] rounded-2xl border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] mx-auto' 
-                : 'w-full max-w-full h-full rounded-none sm:rounded-[50px]'
+                ? 'w-full max-w-full h-full max-h-[100dvh] sm:max-h-[956px] rounded-none mx-auto' 
+                : 'w-full max-w-full h-full rounded-none'
             }`}>
             
               {/* 🎛️ SENSOR DEL MARGEN SUPERIOR DEL CANAL (Abre la ventana de captura z.png al pasar el puntero) */}
-              {!(enlargedWindowUser || showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
+              {!(isUserRetransmitting || enlargedWindowUser || showVotingProjectsModal || showProjectDetailsInPopup || detailProjectUser || showFinanzasResults || showFinanzasRecount || showFinanzasInscriptionInChannel) && (
                 <div 
                   className="absolute top-0 inset-x-0 h-24 sm:h-28 z-[48] pointer-events-auto cursor-pointer flex justify-center items-start pt-2 group/desktop-top-sensor select-none"
                   id="desktop-video-top-margin-hover-sensor"
@@ -12738,7 +12752,7 @@ export default function CastingLiveSection({
               {/* 🎛️ TOP HOVER ZONE & EMBEDDED CONTROL OVERLAY INSIDE CHANNEL (z.png channels options) */}
               <div 
                 className={`absolute top-0 inset-x-0 h-auto max-h-[92vh] z-50 flex flex-col items-center pt-1.5 px-1.5 sm:pt-2 sm:px-2 transition-all duration-300 ${
-                  (enlargedWindowUser || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
+                  (isUserRetransmitting || enlargedWindowUser || showProjectDetailsInPopup || detailProjectUser || showVotingProjectsModal || showFinanzasRecount || showFinanzasResults || showScreenShareMenu || showCreateBroadcastModal || showLiveToolsModal || showSplitScreenMenu )
                     ? 'pointer-events-none opacity-0 hidden'
                     : isTopControlsMenuHovered
                       ? 'pointer-events-auto'
@@ -13078,27 +13092,14 @@ export default function CastingLiveSection({
                 {/* Dynamic WebRTC burst element */}
                 <div id="webrtc-burst" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-20 w-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-full z-20 pointer-events-none hidden" />
               </div>
-            ) : isUserLiveStreamingWithCamera && userLiveMediaStream ? (
-              // 🔴 REAL USER MOBILE CAMERA LIVE BROADCAST STAGE
-              <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center select-none" id="user-live-camera-stage">
-                <video
-                  ref={userLiveVideoElementRef}
-                  autoPlay
-                  playsInline
-                  muted={true}
-                  className={`w-full h-full object-cover transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
-                />
+            ) : isUserRetransmitting || isUserLiveStreamingWithCamera ? (
+              // 🔴 REAL USER MOBILE CAMERA LIVE BROADCAST STAGE (Matching capture z.png)
+              <div className="relative w-full h-full bg-[#0a0d16] overflow-hidden flex flex-col justify-start select-none font-sans text-white p-4 sm:p-5 pt-3 animate-fade-in" id="user-live-camera-stage">
+                {/* Smartphone Speaker / Notch Indicator at top center */}
+                <div className="w-20 h-1 bg-slate-700/60 rounded-full mx-auto mb-3 shrink-0" />
 
-                {/* Live Floating Camera Tools (Girar Cámara, Silenciar, Finalizar) */}
+                {/* Top Floating Camera Controls (Micrófono, Detener) */}
                 <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/15">
-                  <button
-                    type="button"
-                    onClick={handleFlipLiveCamera}
-                    className="p-1.5 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
-                    title="Girar cámara (Frontal / Trasera)"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 text-cyan-300" />
-                  </button>
                   <button
                     type="button"
                     onClick={handleToggleLiveStreamAudio}
@@ -13113,34 +13114,102 @@ export default function CastingLiveSection({
                   </button>
                   <button
                     type="button"
-                    onClick={handleToggleUserCameraLiveBroadcast}
-                    className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider"
+                    onClick={handleStopLiveRetransmission}
+                    className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl transition cursor-pointer uppercase tracking-wider shadow-md active:scale-95"
                     title="Detener retransmisión"
                   >
                     Detener
                   </button>
                 </div>
 
-                {/* Top Live Badge & Spectator counter */}
-                <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
-                  <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-xl border border-red-400/50 animate-pulse">
-                    <span className="w-2 h-2 rounded-full bg-white"></span>
-                    <span>EN DIRECTO • {formatLiveStreamDuration(liveStreamTimerSeconds)}</span>
-                  </div>
-                  <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-extrabold px-2 py-1 rounded-full border border-white/20 flex items-center gap-1">
-                    <span>👁️</span>
-                    <span>{liveViewerCount.toLocaleString()}</span>
+                {/* Badge 1: 🔴 TU CÁMARA RETRANSMITIENDO EN DIRECTO */}
+                <div className="flex items-center self-start mb-2">
+                  <div className="inline-flex items-center gap-2 bg-[#e60023] text-white text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase px-4 py-1.5 rounded-full shadow-lg border border-red-500/80">
+                    <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+                    <span>TU CÁMARA RETRANSMITIENDO EN DIRECTO</span>
                   </div>
                 </div>
 
-                {/* Bottom Host Badge */}
-                <div className="absolute bottom-3 left-3 z-20 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
-                  <img
-                    src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'}
-                    alt="Tú"
-                    className="w-5 h-5 rounded-full object-cover border border-rose-400"
-                  />
-                  <span className="text-[10px] font-black text-white">TÚ (Grabando y Retransmitiendo en Vivo)</span>
+                {/* Badge 2: 👁️ 19.856 espectadores */}
+                <div className="flex items-center self-start mb-3">
+                  <div className="inline-flex items-center gap-1.5 bg-[#0f172a]/90 text-white/95 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-700/60 shadow-sm max-w-max">
+                    <span className="text-white/80 text-xs">👁</span>
+                    <span>19.856 espectadores</span>
+                  </div>
+                </div>
+
+                {/* Profile Header Row: Avatar con borde rosa brillante, Nombre con check azul, Username */}
+                <div className="flex items-center gap-3 self-start mb-2.5 text-left">
+                  <div className="relative shrink-0">
+                    <img
+                      src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200'}
+                      alt="Adriana Lima"
+                      className="w-13 h-13 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-[#ff2a6d] shadow-[0_0_12px_rgba(255,42,109,0.7)]"
+                    />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white font-extrabold text-[15px] sm:text-base leading-tight">
+                        Adriana Lima (TÚ)
+                      </span>
+                      <span className="w-4 h-4 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                        ✓
+                      </span>
+                    </div>
+                    <span className="text-slate-400 font-semibold text-xs tracking-tight">
+                      @adrianalima_w1
+                    </span>
+                  </div>
+                </div>
+
+                {/* Live Stream Title Row */}
+                <div className="flex items-start gap-2 self-start mb-4 text-left">
+                  <span className="w-3.5 h-3.5 rounded-full bg-red-600 shrink-0 mt-0.5 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.85)]" />
+                  <h2 className="text-white font-extrabold text-sm sm:text-[15px] leading-snug">
+                    En Directo: Mi Cámara Ocupando Todo el Canal (Todos en Directo)
+                  </h2>
+                </div>
+
+                {/* Central Stage Area: Si hay video stream lo muestra, si no muestra el icono grande de cámara tachada idéntico a z.png */}
+                <div className="flex-1 w-full flex items-center justify-center relative overflow-hidden my-auto min-h-[320px]">
+                  {userLiveMediaStream ? (
+                    <video
+                      ref={userLiveVideoElementRef}
+                      autoPlay
+                      playsInline
+                      muted={true}
+                      className={`w-full h-full object-cover rounded-2xl transition-transform ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full select-none">
+                      <svg
+                        viewBox="0 0 280 240"
+                        className="w-56 h-48 sm:w-64 sm:h-56 text-[#64748b] drop-shadow-xl"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="18"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        {/* Camera Top Viewfinder Bump */}
+                        <path d="M 98 48 L 118 24 L 162 24 L 182 48" />
+                        {/* Camera Rounded Body */}
+                        <rect x="36" y="48" width="208" height="156" rx="26" />
+                        {/* Camera Lens Circle */}
+                        <circle cx="140" cy="126" r="42" />
+                        {/* Bold Diagonal Slash across entire camera matching z.png */}
+                        <line x1="38" y1="22" x2="242" y2="218" strokeWidth="20" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Handle matching image.png */}
+                <div className="flex items-center gap-1.5 self-start mt-auto pt-3 pb-2 text-white font-black text-sm select-none">
+                  <span>@adrianalima_w1</span>
+                  <span className="w-4 h-4 rounded-full border border-[#00b4d8] text-[#00b4d8] flex items-center justify-center text-[10px] font-bold">
+                    ✓
+                  </span>
                 </div>
               </div>
             ) : !showLiveTradingChart ? (
@@ -13345,7 +13414,7 @@ export default function CastingLiveSection({
             {/* 🎁 VIRTUAL GIFTS POP-UP MODAL PANEL (REGALOS EXTRA DEL CANAL - image.png) */}
             {showLiveGiftsPopover && (
               <div 
-                className="absolute inset-0 w-full h-full bg-[#121316]/98 backdrop-blur-xl z-50 p-4 sm:p-5 flex flex-col font-sans text-white text-left animate-fade-in rounded-[36px] select-none border border-slate-800 shadow-2xl"
+                className="absolute inset-0 w-full h-full bg-[#121316]/98 backdrop-blur-xl z-50 p-4 sm:p-5 flex flex-col font-sans text-white text-left animate-fade-in rounded-none select-none border-0 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header matching image.png */}
@@ -13538,7 +13607,9 @@ export default function CastingLiveSection({
             )}
 
             {/* 💬 LIVE STREAM CHAT & INPUT OVERLAY (Matches image.png) */}
-            <div className="absolute inset-x-0 bottom-0 z-20 p-3 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col gap-2.5 pointer-events-auto font-sans text-left">
+            {!isUserRetransmitting && (
+              <>
+                <div className="absolute inset-x-0 bottom-0 z-20 p-3 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col gap-2.5 pointer-events-auto font-sans text-left">
               
               {/* Floating Scrolling Comments Panel */}
               {showLiveComments && (
@@ -13804,6 +13875,8 @@ export default function CastingLiveSection({
               </div>
 
             </div>
+              </>
+            )}
 
             {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
             {showStreamOptionsModal && streamOptionsTargetChannel && (
@@ -13819,6 +13892,7 @@ export default function CastingLiveSection({
           </div>
 
           {/* Bottom interactive Gifts Selection Container in sleek dark slate, integrated inside the device wrapper */}
+          {!isUserRetransmitting && (
           <div className="w-full bg-[#161921] border-t border-slate-800/80 p-2.5 flex items-center justify-between gap-1 font-sans text-white z-10" id="casting_live-bottom-gift-panel">
             
             {/* Left Scroll Arrow */}
@@ -13889,6 +13963,7 @@ export default function CastingLiveSection({
             </button>
 
           </div>
+          )}
 
           </div> {/* End of combined vertical smartphone mockup */}
 
@@ -14386,7 +14461,7 @@ export default function CastingLiveSection({
         onClick={() => setShowCreationTypeModal(false)}
       >
         <div 
-          className="bg-white rounded-3xl w-full max-w-md border border-slate-200 p-6 sm:p-7 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans text-left cursor-default"
+          className="bg-white rounded-none w-full max-w-md border border-slate-200 p-6 sm:p-7 space-y-6 shadow-2xl relative animate-scale-up text-slate-800 font-sans text-left cursor-default"
           onClick={(e) => e.stopPropagation()}
         >
           
@@ -14408,7 +14483,7 @@ export default function CastingLiveSection({
               <span>✨ NUEVO CONTENIDO</span>
             </div>
             <h3 className="text-xl font-black text-slate-900 tracking-tight">
-              ¿Qué deseas crear?
+              ¿Qué deseas hacer?
             </h3>
             <p className="text-xs text-slate-500 font-semibold leading-relaxed">
               Selecciona el tipo de publicación para tu audiencia en la plataforma.
@@ -14424,7 +14499,7 @@ export default function CastingLiveSection({
                 setShowCreationTypeModal(false);
                 setShowCreateStoryModal(true);
               }}
-              className="w-full p-4 rounded-2xl border-2 border-slate-200 hover:border-[#fe2c55] bg-slate-50/80 hover:bg-rose-50/30 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md"
+              className="w-full p-4 rounded-2xl border-2 border-pink-300/80 hover:border-[#fe2c55] bg-gradient-to-r from-[#FADADD] via-[#F8C6D8] to-[#FF85A1]/40 hover:from-[#F8C6D8] hover:to-[#FF85A1]/60 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md active:scale-[0.99]"
             >
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-purple-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-md group-hover:scale-105 transition duration-200">
                 📸
@@ -14438,7 +14513,7 @@ export default function CastingLiveSection({
                     ⏱️ 24h
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-snug font-medium m-0">
+                <p className="text-[11px] text-slate-600 leading-snug font-medium m-0">
                   Foto o vídeo efímero visible en la barra superior durante 24 horas.
                 </p>
               </div>
@@ -14453,7 +14528,7 @@ export default function CastingLiveSection({
                 setUploadModalStage('details');
                 setShowUploadModal(true);
               }}
-              className="w-full p-4 rounded-2xl border-2 border-rose-300 hover:border-[#fe2c55] bg-rose-50/50 hover:bg-rose-100/60 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md ring-2 ring-rose-400/20"
+              className="w-full p-4 rounded-2xl border-2 border-pink-300/80 hover:border-[#fe2c55] bg-gradient-to-r from-[#FADADD] via-[#F8C6D8] to-[#FF85A1]/40 hover:from-[#F8C6D8] hover:to-[#FF85A1]/60 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md active:scale-[0.99]"
             >
               <div className="w-12 h-12 rounded-2xl bg-[#fe2c55] text-white flex items-center justify-center text-2xl shrink-0 shadow-md group-hover:scale-105 transition duration-200">
                 🎥
@@ -14469,6 +14544,43 @@ export default function CastingLiveSection({
                 </div>
                 <p className="text-[11px] text-slate-600 leading-snug font-medium m-0">
                   Vídeo HD de máx. 3 minutos con música, recorte y permisos. <strong>Se verá únicamente en el canal de Runway.</strong>
+                </p>
+              </div>
+            </button>
+
+            {/* Option 3: Iniciar directo */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowCreationTypeModal(false);
+                const targetCat = {
+                  id: 'todos',
+                  label: 'Todos en Directo',
+                  image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
+                  count: '16 Canales'
+                };
+                setStreamOptionsTargetChannel(targetCat);
+                setStreamTitleInput('En Directo: Mi Cámara Ocupando Todo el Canal (Todos en Directo)');
+                setLiveChannelsCategoryFilter('todos');
+                setShowStreamOptionsModal(true);
+              }}
+              className="w-full p-4 rounded-2xl border-2 border-pink-300/80 hover:border-[#fe2c55] bg-gradient-to-r from-[#FADADD] via-[#F8C6D8] to-[#FF85A1]/40 hover:from-[#F8C6D8] hover:to-[#FF85A1]/60 transition-all cursor-pointer text-left group flex items-start gap-3.5 shadow-2xs hover:shadow-md active:scale-[0.99]"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#fe2c55] to-rose-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-md group-hover:scale-105 transition duration-200">
+                🔴
+              </div>
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-extrabold text-slate-900 text-sm group-hover:text-[#fe2c55] transition truncate">
+                    Iniciar directo
+                  </span>
+                  <span className="text-[9px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase shrink-0 tracking-wider flex items-center gap-1 shadow-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    EN DIRECTO
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-snug font-medium m-0">
+                  Retransmite con tu cámara en tiempo real para todos los canales y tu audiencia.
                 </p>
               </div>
             </button>
@@ -14522,6 +14634,495 @@ export default function CastingLiveSection({
     };
   }, [showVotingProjectsModal]);
 
+  // --- 📂 Ventana: Proyecto Completo Personalizado por Usuario (Dentro de la pantalla del teléfono) ---
+  const renderUserProjectContent = (targetUserParam?: any) => {
+    const participantsList = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
+      ? currentSessionParticipants10
+      : (currentFinanzasSession?.participants && currentFinanzasSession.participants.length >= 10)
+        ? currentFinanzasSession.participants
+        : TRABAJADORES_USERS;
+
+    const targetUser = targetUserParam || detailProjectUser || participantsList[votingProjectSlideIndex] || participantsList[0] || {
+      id: 'trab-1',
+      name: 'Lucas Torres',
+      username: 'lucas_torres_design',
+      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=650',
+      role: 'Diseñador Gráfico'
+    };
+
+    const proj = getFinanzasProjectDetails(targetUser.id);
+    const initialDefault = targetUser.id === 'f-1' ? 3 : targetUser.id === 'f-2' ? 2 : (targetUser.id === 'f-3' || targetUser.id === 'f-4' || targetUser.id === 'f-5' || targetUser.id === 'f-10' || targetUser.id === 'user' || targetUser.id === 'user-adriana') ? 1 : 0;
+    const userVotes = finanzasVotes[targetUser.id] ?? initialDefault;
+    const isUserVoted = (finanzasVotes[targetUser.id] || 0) > 0 || (finanzasVotedVoterIds || []).includes(targetUser.id);
+
+    // Lookbook & Media Dinámico según el proyecto del participante
+    const getUserMedia = (userId: string, userName: string) => {
+      const lower = (userId || '').toLowerCase();
+      const lowerName = (userName || '').toLowerCase();
+
+      // Álvaro Díaz (FashionTech & Blockchain NFC)
+      if (lower.includes('alvaro') || lower === 'trab-7' || lowerName.includes('álvaro') || lowerName.includes('alvaro')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-woman-using-a-futuristic-holographic-screen-41549-large.mp4',
+          videoTitle: 'Demostración Chip NFC & Smart Contract Blockchain (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600', title: 'Chip NFC Trazabilidad Textil' },
+            { url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=600', title: 'Pasaporte Digital Blockchain' },
+            { url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=600', title: 'Escaneo Prendas Móvil' },
+            { url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600', title: 'Hardware de Micro-sensores' },
+          ]
+        };
+      }
+
+      // Lucas Torres (Streetwear Denim Upcycling)
+      if (lower.includes('lucas') || lower === 'trab-1' || lowerName.includes('lucas')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+          videoTitle: 'Exposición Oficial Colección Denim Upcycling (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&q=80&w=600', title: 'Chaqueta Denim Modular' },
+            { url: 'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&q=80&w=600', title: 'Jeans Reconstruidos' },
+            { url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600', title: 'Total Look Streetwear' },
+            { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600', title: 'Accesorios & Runway' },
+          ]
+        };
+      }
+
+      // Clara Vega (Biotextiles & Tintes Naturales)
+      if (lower.includes('clara') || lower === 'trab-2' || lowerName.includes('clara')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-a-pink-and-purple-dress-walking-down-a-runway-41559-large.mp4',
+          videoTitle: 'Atelier Botánico & Extracción de Pigmentos (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=600', title: 'Tinturas Botánicas Puras' },
+            { url: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=600', title: 'Fibras Vivas de Cáñamo y Lino' },
+            { url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600', title: 'Telas Orgánicas Teñidas' },
+            { url: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&q=80&w=600', title: 'Muestrario de Pigmentos Naturales' },
+          ]
+        };
+      }
+
+      // Mateo Rossi (Calzado Regenerativo & Suelas Bio)
+      if (lower.includes('mateo') || lower === 'trab-3' || lowerName.includes('mateo')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-woman-crafting-a-clay-vase-41551-large.mp4',
+          videoTitle: 'Fabricación de Suelas de Caucho & Micelio (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=600', title: 'Sneakers Suela Orgánica' },
+            { url: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=600', title: 'Calzado Urbano Sostenible' },
+            { url: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&q=80&w=600', title: 'Prototipo Sneakers Biodegradables' },
+            { url: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&q=80&w=600', title: 'Textil de Hojas y Micelio' },
+          ]
+        };
+      }
+
+      // Paula Gómez (Patronaje Circular)
+      if (lower.includes('paula') || lower === 'trab-4' || lowerName.includes('paula')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-neon-lighted-room-41562-large.mp4',
+          videoTitle: 'Desfile & Vestidos Circulares en Movimiento (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600', title: 'Alta Costura Circular' },
+            { url: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=600', title: 'Vestido Pasarela Sostenible' },
+            { url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', title: 'Patronaje de Vanguardia' },
+            { url: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=600', title: 'Colección Cápsula París' },
+          ]
+        };
+      }
+
+      // Hugo Silva (Tailoring Zero Waste)
+      if (lower.includes('hugo') || lower === 'trab-5' || lowerName.includes('hugo')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-young-man-wearing-a-brown-trench-coat-walking-outdoors-41564-large.mp4',
+          videoTitle: 'Sastrería Geométrica Zero Waste en Detalle (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=600', title: 'Traje Lana Reciclada' },
+            { url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=600', title: 'Americana Patronaje Encajado' },
+            { url: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&q=80&w=600', title: 'Sastrería Contemporánea' },
+            { url: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=600', title: 'Corte Geométrico Sin Desperdicio' },
+          ]
+        };
+      }
+
+      // Natalia Cruz (Joyería Textil & Accesorios Upcycled)
+      if (lower.includes('natalia') || lower === 'trab-6' || lowerName.includes('natalia')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-woman-showing-silver-bracelets-41561-large.mp4',
+          videoTitle: 'Orfebrería Textil con Sedas y Metales Nobles (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=600', title: 'Joyería Textil Artesanal' },
+            { url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=600', title: 'Collares con Sedas Rescatadas' },
+            { url: 'https://images.unsplash.com/photo-1611591475870-07e3ea595d7f?auto=format&fit=crop&q=80&w=600', title: 'Bolsos Upcycled Exclusivos' },
+            { url: 'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?auto=format&fit=crop&q=80&w=600', title: 'Accesorios Metales Nobles' },
+          ]
+        };
+      }
+
+      // Lucía Méndez (Prendas Modulares)
+      if (lower.includes('lucia') || lower === 'trab-8' || lowerName.includes('lucía') || lowerName.includes('lucia')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-model-posing-for-the-camera-in-a-studio-41560-large.mp4',
+          videoTitle: 'Demostración de Prendas Modulares Transformables (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&q=80&w=600', title: 'Prenda 3-en-1 Transformable' },
+            { url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=600', title: 'Tejido Anti-desgaste y Durabilidad' },
+            { url: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&q=80&w=600', title: 'Moda Minimalista Modular' },
+            { url: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=600', title: 'Patronaje Desmontable' },
+          ]
+        };
+      }
+
+      // Daniel Ruiz (Impresión 3D Textil)
+      if (lower.includes('daniel') || lower === 'trab-9' || lowerName.includes('daniel')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-high-tech-robotic-arm-in-a-factory-41553-large.mp4',
+          videoTitle: 'Impresión Aditiva 3D de Mallas Flexibles (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600', title: 'Estructuras 3D Textil' },
+            { url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=600', title: 'Malla Polimérica Flexible' },
+            { url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&q=80&w=600', title: 'Corsé Biopolímero Impreso' },
+            { url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600', title: 'Laboratorio de Fabricación 3D' },
+          ]
+        };
+      }
+
+      // Marina Soler (Seda Marina & Algas)
+      if (lower.includes('marina') || lower === 'trab-10' || lowerName.includes('marina')) {
+        return {
+          video: 'https://assets.mixkit.co/videos/preview/mixkit-underwater-fashion-shoot-with-a-model-in-a-flowing-dress-41565-large.mp4',
+          videoTitle: 'Filamentos de Algas & Alta Costura Marina (HD)',
+          images: [
+            { url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600', title: 'Tejido Seda Marina Algas' },
+            { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600', title: 'Vestido Alta Costura Oceánica' },
+            { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', title: 'Biotextil Suave y Biodegradable' },
+            { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600', title: 'Desfile Alta Costura Azul' },
+          ]
+        };
+      }
+
+      // Default (Adriana / Kendall / Otros)
+      return {
+        video: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-neon-lighted-room-41562-large.mp4',
+        videoTitle: `Exposición Oficial de Proyecto · ${userName} (HD)`,
+        images: [
+          { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', title: 'Alta Costura de Pasarela' },
+          { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600', title: 'Diseño Vanguardista' },
+          { url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', title: 'Lookbook Oficial' },
+          { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600', title: 'Colección de Moda y Finanzas' },
+        ]
+      };
+    };
+
+    const media = getUserMedia(targetUser.id, targetUser.name);
+    const firstName = (targetUser.name || 'Participante').split(' ')[0];
+
+    return (
+      <div 
+        className="w-full h-full flex flex-col bg-white text-slate-800 font-sans overflow-y-auto custom-scrollbar select-none relative z-30 animate-fade-in"
+        id={`user-full-project-container-${targetUser.id}`}
+        onWheel={(e) => {
+          e.stopPropagation();
+          const target = e.currentTarget;
+          if (target) {
+            target.scrollTop += e.deltaY;
+          }
+        }}
+      >
+        {/* Sticky Header Superior con botón volver/cerrar */}
+        <div className="sticky top-0 z-40 p-2.5 sm:p-3 border-b border-slate-200 bg-white/95 backdrop-blur-md text-slate-900 shrink-0 shadow-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => setShowProjectDetailsInPopup(false)}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 flex items-center justify-center transition border border-slate-200 shrink-0 cursor-pointer shadow-xs"
+              title="Volver a los proyectos de la mesa"
+              aria-label="Volver"
+              id="btn-back-from-user-project"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-800 stroke-[2.5]" />
+            </button>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[9px] font-black uppercase tracking-wider text-rose-500 font-mono">
+                Proyecto Oficial · {proj.category || 'Mesa Financiera'}
+              </span>
+              <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate m-0">
+                {targetUser.name} · Proyecto Completo
+              </h2>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowProjectDetailsInPopup(false)}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-700 flex items-center justify-center transition border border-slate-200 shrink-0 cursor-pointer shadow-xs"
+            title="Cerrar y volver a la mesa de votación"
+            aria-label="Cerrar"
+            id="btn-close-user-project-modal"
+          >
+            <X className="w-4 h-4 text-slate-700 stroke-[2.5]" />
+          </button>
+        </div>
+
+        {/* Banner de Usuario Logueado (Adriana Lima) */}
+        <div className="bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border-b border-rose-100/90 px-3.5 py-2 flex items-center justify-between text-[10.5px] sm:text-[11px] shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-slate-600 font-semibold truncate">
+              Navegando como: <strong className="text-slate-900">{userProfile?.name || 'Adriana Lima'} (TÚ)</strong>
+            </span>
+          </div>
+          <span className="bg-white/90 text-rose-600 border border-rose-200 font-mono font-black px-2 py-0.5 rounded-full text-[9.5px] shrink-0 shadow-2xs">
+            Mesa de Inversión
+          </span>
+        </div>
+
+        {/* Contenido Principal con Scroll */}
+        <div className="p-3 sm:p-4 space-y-4 flex-1">
+          {/* Card del Creador */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative shrink-0">
+                <img
+                  src={targetUser.avatar}
+                  alt={targetUser.name}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-[#fe2c55] shadow-sm"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 text-[10px] shadow-xs">
+                  ✓
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate m-0">
+                    {targetUser.name}
+                  </h3>
+                  <span className="text-[8.5px] sm:text-[9px] bg-rose-100/80 border border-rose-200 text-rose-700 font-black px-2 py-0.5 rounded-full uppercase">
+                    Creador/a Oficial
+                  </span>
+                </div>
+                <span className="text-xs text-slate-500 font-semibold truncate block">
+                  @{targetUser.username} · {targetUser.role}
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                  📍 Sede: Madrid / Barcelona / Milán Creative District
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bloque 1: Identidad Creativa */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3 text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-100">
+                {proj.category || 'Moda & Finanzas'}
+              </span>
+              <span className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">
+                REF: {targetUser.id.toUpperCase()}
+              </span>
+            </div>
+
+            <div>
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight m-0">
+                {proj.title}
+              </h1>
+              {proj.tagline && (
+                <p className="text-xs sm:text-sm text-amber-700 font-bold italic bg-amber-50/80 p-2.5 rounded-xl border border-amber-200/50 mt-2 leading-snug">
+                  "{proj.tagline}"
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-700 leading-relaxed font-normal">
+              <p className="m-0 font-medium text-slate-800">
+                <strong>Resumen Ejecutivo:</strong> {proj.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Bloque 2: Vídeo Oficial y Lookbook */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-md space-y-2.5 text-white text-left">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <span className="text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                🎬 {media.videoTitle}
+              </span>
+              <span className="text-[9px] font-mono bg-white/10 px-2 py-0.5 rounded text-slate-300">
+                1080p HD
+              </span>
+            </div>
+
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-slate-800">
+              <video 
+                src={media.video}
+                className="w-full h-full object-cover"
+                controls
+                playsInline
+                autoPlay
+                muted
+                loop
+              />
+            </div>
+            <p className="text-[10.5px] text-slate-400 leading-snug m-0">
+              Filmación y demostración técnica oficial del proyecto presentada para los miembros de la mesa de inversión.
+            </p>
+          </div>
+
+          {/* Galería de Fotografías Lookbook */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs space-y-2.5 text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+              <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📸</span> Lookbook & Fotografías Oficiales
+              </span>
+              <span className="text-[9.5px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                {media.images.length} Archivos
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {media.images.map((img, idx) => (
+                <div key={idx} className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-square group relative">
+                  <img 
+                    src={img.url} 
+                    alt={img.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  />
+                  <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded truncate max-w-[90%]">
+                    {img.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bloque 3: Economía, Fondos y Viabilidad */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3 text-left">
+            <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+              <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📈</span> Plan Financiero y Retorno de Inversión
+              </span>
+              <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                {proj.roi?.split('.')[0] || 'ROI Atractivo'}
+              </span>
+            </div>
+
+            {/* Grid 4 métricas */}
+            <div className="grid grid-cols-2 gap-2 text-left">
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[9px] font-black text-slate-400 uppercase block">Meta de Financiación</span>
+                <span className="text-base sm:text-lg font-black text-slate-900 font-mono block mt-0.5">
+                  {proj.fundingGoal || '35.000 €'}
+                </span>
+                <span className="text-[9px] text-slate-500 font-semibold">Presupuesto mesa</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[9px] font-black text-emerald-600 uppercase block">Métricas y Avance</span>
+                <span className="text-xs sm:text-sm font-black text-emerald-700 font-mono block mt-0.5 truncate">
+                  {proj.metrics?.split('•')[1]?.trim() || 'Avance activo'}
+                </span>
+                <span className="text-[9px] text-emerald-600 font-extrabold truncate block">
+                  {proj.metrics?.split('•')[2]?.trim() || 'Comunidad'}
+                </span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs col-span-2">
+                <span className="text-[9px] font-black text-slate-400 uppercase block">Retorno Estimado (ROI)</span>
+                <span className="text-xs font-black text-indigo-700 block mt-0.5">
+                  {proj.roi}
+                </span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs col-span-2">
+                <span className="text-[9px] font-black text-slate-400 uppercase block">Votos Recibidos en Mesa</span>
+                <span className="text-xs sm:text-sm font-black text-rose-600 block mt-0.5">
+                  💼 {userVotes} Votos
+                </span>
+              </div>
+            </div>
+
+            {/* Desglose de Gastos */}
+            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 text-xs text-left">
+              <span className="text-[9.5px] font-black text-slate-500 uppercase block">
+                Desglose de Fondos y Uso:
+              </span>
+              <p className="font-semibold text-slate-800 leading-snug m-0 text-[11px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                {proj.fundUsage}
+              </p>
+            </div>
+
+            {/* Plazo y Documentación */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                <span className="text-[9px] font-black text-slate-400 uppercase block">Plazo de Ejecución</span>
+                <span className="text-xs font-black text-slate-900 block mt-0.5">
+                  {proj.timeline || '4 Meses'}
+                </span>
+              </div>
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-[9px] font-black text-slate-400 uppercase block">Documento Adjunto</span>
+                  <span className="text-[11px] font-extrabold text-slate-900 truncate block">
+                    {proj.documentation || 'Dossier-Oficial.pdf'}
+                  </span>
+                </div>
+                <span className="text-[10px] bg-red-100 text-red-700 font-black px-2 py-0.5 rounded border border-red-200 shrink-0">
+                  PDF 📄
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bloque 4: Equipo y Contacto */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5 text-left">
+            <span className="text-xs font-black text-slate-900 uppercase tracking-wider block border-b border-slate-100 pb-1.5">
+              👥 Equipo Humano y Contacto Directo
+            </span>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Líder del Proyecto:</span>
+                <strong className="text-slate-900">{targetUser.name}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Rol / Especialidad:</span>
+                <strong className="text-slate-900">{targetUser.role}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Email Oficial:</span>
+                <strong className="text-rose-600 font-mono">{proj.contactEmail || 'contacto@fashionsfinances.com'}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Teléfono:</span>
+                <strong className="text-slate-900 font-mono">{proj.contactPhone || '+34 600 000 000'}</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Bloque 5: Botones de Acción */}
+          <div className="space-y-2 pt-1 pb-6">
+            <button
+              type="button"
+              id="btn-votar-desde-proyecto-dinamico"
+              onClick={() => {
+                handleVoteForProject(targetUser);
+                setShowProjectDetailsInPopup(false);
+              }}
+              className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider"
+            >
+              <span className="text-base">🗳️</span>
+              <span>{isUserVoted ? `✓ YA HAS VOTADO POR ${firstName.toUpperCase()} (AÑADIR OTRO VOTO)` : `VOTAR POR ESTE PROYECTO (${firstName.toUpperCase()})`}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowProjectDetailsInPopup(false)}
+              className="w-full bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-extrabold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer border border-slate-200 text-xs sm:text-sm uppercase tracking-wider"
+            >
+              <span>◀ VOLVER A LA MESA DE VOTACIÓN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // --- Single Project Slider & Voting Projects View ---
   const renderSingleProjectSlider = () => {
     const isUserParticipating = isCurrentUserParticipatingInCurrentSession;
@@ -14534,6 +15135,11 @@ export default function CastingLiveSection({
 
     const currentUser = participantsList[votingProjectSlideIndex] || participantsList[0];
     const proj = getFinanzasProjectDetails(currentUser.id);
+
+    // Si se pulsa "VER PROYECTO COMPLETO", renderizamos el proyecto del usuario actual o seleccionado
+    if (showProjectDetailsInPopup) {
+      return renderUserProjectContent(detailProjectUser || currentUser);
+    }
     const initialDefault = currentUser.id === 'f-1' ? 3 : currentUser.id === 'f-2' ? 2 : (currentUser.id === 'f-3' || currentUser.id === 'f-4' || currentUser.id === 'f-5' || currentUser.id === 'f-10' || currentUser.id === 'user' || currentUser.id === 'user-adriana') ? 1 : 0;
     const votesCount = finanzasVotes[currentUser.id] ?? initialDefault;
 
@@ -15285,7 +15891,7 @@ export default function CastingLiveSection({
         }}
       >
         <div 
-          className="bg-white rounded-3xl w-full max-w-2xl h-[92vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden relative animate-scale-up text-slate-800 cursor-default"
+          className="bg-white rounded-none w-full max-w-2xl h-[92vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden relative animate-scale-up text-slate-800 cursor-default"
           onClick={(e) => e.stopPropagation()}
           onWheel={(e) => {
             e.stopPropagation();
@@ -15314,7 +15920,7 @@ export default function CastingLiveSection({
 
     return (
       <div 
-        className="absolute inset-0 w-full h-full bg-[#070b14] z-[250] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto rounded-[40px] sm:rounded-[48px] border-0 shadow-2xl"
+        className="absolute inset-0 w-full h-full bg-[#070b14] z-[250] overflow-hidden flex flex-col justify-between select-none animate-fade-in pointer-events-auto rounded-none border-0 shadow-2xl"
         id="enlarged-participant-window-view"
         onMouseEnter={(e) => {
           e.stopPropagation();
@@ -15676,7 +16282,7 @@ export default function CastingLiveSection({
         {/* 🗳️ Modal de Votación y Proyectos de los Participantes (captura z.png) */}
         {showVotingProjectsModal && (
           <div 
-            className="absolute inset-0 z-[100] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto rounded-[40px] sm:rounded-[48px]"
+            className="absolute inset-0 z-[100] bg-white flex flex-col w-full h-full overflow-hidden text-slate-800 font-sans text-left animate-fade-in select-none pointer-events-auto rounded-none"
             id="enlarged-voting-projects-modal"
             onWheel={(e) => {
               e.stopPropagation();
@@ -27301,7 +27907,6 @@ try {
                     <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider font-sans">
                       Canales & Pasarelas en Vivo ({heroChannelsSliderIdx + 1} de {channelCategories.length})
                     </span>
-                    <span className="text-[10px] text-slate-400 hidden sm:inline">• Explora de uno en uno con las flechas o selecciona el canal</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -30166,7 +30771,7 @@ try {
                   setShowProjectDetailsInPopup={setShowProjectDetailsInPopup}
                   detailProjectUser={detailProjectUser}
                   showProjectDetailsInPopup={showProjectDetailsInPopup}
-                  renderProjectDetailsContent={() => null}
+                  renderProjectDetailsContent={() => renderUserProjectContent(detailProjectUser)}
                   showFinanzasRecount={showFinanzasRecount}
                   renderFinanzasRecountContent={renderFinanzasRecountContent}
                   showFinanzasResults={showFinanzasResults}
@@ -30199,6 +30804,8 @@ try {
                   renderStreamOptionsContent={renderStreamOptionsContent}
                   screenSplitLayout={screenSplitLayout}
                   invitedUsersMap={invitedUsersMap}
+                  isUserRetransmitting={isUserRetransmitting}
+                  onStopLiveRetransmission={handleStopLiveRetransmission}
                 />
               ) : (
                 <div 
@@ -30262,7 +30869,7 @@ try {
                     className={`relative bg-[#070b14] shadow-2xl overflow-hidden flex items-center justify-center min-w-0 flex-1 sm:flex-initial group/video-container mx-auto select-none transition-all duration-300 box-border mobile-snap-card ${
                       isMobileChannelPinned
                         ? 'fixed inset-0 z-[99999] w-full h-[100dvh] max-w-full max-h-[100dvh] bg-[#070913]/98 backdrop-blur-xl flex flex-col items-center justify-center p-0 m-0 border-none shadow-none'
-                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[calc(810px-3cm)] sm:h-[calc(860px-3cm)] max-h-[calc(100dvh-3cm)] sm:max-h-[calc(860px-3cm)] rounded-[44px] sm:rounded-[52px] border border-black shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)]'
+                        : 'w-full max-w-[390px] xs:max-w-[420px] sm:max-w-[450px] md:max-w-[460px] h-[calc(810px-3cm)] sm:h-[calc(860px-3cm)] max-h-[calc(100dvh-3cm)] sm:max-h-[calc(860px-3cm)] rounded-none border-0 shadow-2xl'
                     }`} 
                     id="video-feed-main-card"
                   >
@@ -30782,7 +31389,7 @@ try {
 
                 {/* 👯 POPUP MODAL: OPCIONES DE DÚO Y DÚO COMERCIAL */}
                 {showDuoMenu && (
-                  <div className="absolute inset-0 z-[86] bg-white/98 backdrop-blur-2xl p-3.5 sm:p-5 rounded-3xl border-2 border-[#fe2c55] shadow-2xl animate-fade-in text-slate-900 font-sans text-left pointer-events-auto h-full w-full overflow-y-auto flex flex-col gap-3" id="duo-collaboration-modal">
+                  <div className="absolute inset-0 z-[86] bg-white/98 backdrop-blur-2xl p-3.5 sm:p-5 rounded-none border-2 border-[#fe2c55] shadow-2xl animate-fade-in text-slate-900 font-sans text-left pointer-events-auto h-full w-full overflow-y-auto flex flex-col gap-3" id="duo-collaboration-modal">
                     <div className="relative border-b border-slate-200 pb-2.5 pr-11 shrink-0">
                       <button
                         type="button"
@@ -36745,7 +37352,7 @@ try {
               {/* 📱 FULL-FRAME VIRTUAL GIFTS PANEL (REGALOS EXTRA DEL CANAL - image.png) - OCCUPIES ENTIRE VIDEO FRAME */}
               {isShortVideoGiftPanelOpen && (
                 <div 
-                  className="absolute inset-0 w-full h-full bg-[#121316]/98 backdrop-blur-xl z-[60] p-4 sm:p-5 flex flex-col font-sans text-white text-left animate-fade-in rounded-3xl sm:rounded-[36px] shadow-2xl select-none border border-slate-800"
+                  className="absolute inset-0 w-full h-full bg-[#121316]/98 backdrop-blur-xl z-[60] p-4 sm:p-5 flex flex-col font-sans text-white text-left animate-fade-in rounded-none shadow-2xl select-none border-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header: Title matching image.png */}

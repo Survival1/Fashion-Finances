@@ -236,12 +236,12 @@ export function ProfileIntroAndSponsors({
           className="relative overflow-hidden rounded-2xl border-2 border-[#fbcfe8] shadow-[0_4px_24px_rgba(244,114,182,0.18)] p-5 space-y-4 bg-gradient-to-br from-[#ffffff] via-[#fff0f5] to-[#fce7f3] text-slate-800" 
           id="intro-information-card-container"
         >
-          {/* 🪽 Wings background: Luminous white wings seamlessly feathered and blended into the pearl pink background */}
+          {/* 🪽 Wings background: Luminous white wings seamlessly feathered, positioned lower directly on/above the container divider line */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
             <img 
               src="/assets/aistudio/wings_seamless.png" 
               alt="Alas de Ángel Rosa Perla" 
-              className="w-full h-full object-cover object-center opacity-85 transition-transform duration-700 rounded-2xl" 
+              className="w-full h-full object-cover object-[center_60%] translate-y-8 sm:translate-y-10 opacity-85 transition-transform duration-700 rounded-2xl" 
               style={{
                 maskImage: 'radial-gradient(ellipse 92% 82% at 50% 50%, black 50%, rgba(0,0,0,0.85) 75%, transparent 100%)',
                 WebkitMaskImage: 'radial-gradient(ellipse 92% 82% at 50% 50%, black 50%, rgba(0,0,0,0.85) 75%, transparent 100%)'
@@ -5906,9 +5906,9 @@ export default function ModelFacebookProfile({
 
                 {/* 🏆 PORTAL DE RANKING & PODIO ELITE (Victoria's Secret Angel Wings Runway Background) */}
                 <div className="relative overflow-hidden select-none rounded-[32px] sm:rounded-3xl border-2 border-pink-400/60 p-6 sm:p-9 text-white shadow-[0_12px_45px_rgba(236,72,153,0.35)] min-h-[310px] sm:min-h-[330px] md:min-h-[350px] bg-[#c2185b] flex flex-col justify-center">
-                  {/* 🪽 Background Runway Image with Angel Wings */}
+                  {/* 🪽 Background Runway Image with Angel Wings (Clean background without black letters) */}
                   <img 
-                    src="/assets/aistudio/1760507441-3095-large_4bb26be6.webp" 
+                    src="/assets/aistudio/runway_model_clean.webp" 
                     alt="Victoria's Secret Angel Wings Runway" 
                     className="absolute inset-0 w-full h-full object-cover object-[80%_18%] sm:object-[78%_16%] md:object-[76%_14%] pointer-events-none transition-transform duration-700 hover:scale-[1.02]"
                   />
