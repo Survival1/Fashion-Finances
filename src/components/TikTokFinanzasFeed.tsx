@@ -6892,30 +6892,58 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         localStorage.setItem('finanzas_user_participating', 'true');
                         localStorage.setItem('finanzas_user_is_participating', 'true');
                         localStorage.setItem('finanzas_target_session_id', session.id);
+                        localStorage.setItem(`finanzas_is_voting_phase_active_${session.id}`, 'false');
+                        localStorage.setItem('finanzas_is_voting_phase_active', 'false');
+                        localStorage.removeItem(`finanzas_is_voting_phase_active_${session.id}`);
+                        localStorage.removeItem('finanzas_is_voting_phase_active');
                       } catch (err) {}
 
-                      // 2. Cerrar modales superpuestos para mostrar limpia la sala de espera
+                      // 2. Cerrar modales superpuestos y NUNCA abrir la sala de espera
                       setShowVotingProjectsModal(false);
                       setShowFinanzasInscriptionInChannel(false);
                       setShowProjectDetailsInPopup(false);
                       setDetailProjectUser(null);
                       if (setShowFinanzasResults) setShowFinanzasResults(false);
                       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
-
-                      // 3. Notificar al componente padre para procesar inscripción y pago
-                      if (onExecutePaymentAndJoinSession) {
-                        onExecutePaymentAndJoinSession(session);
+                      if (setShowParticipantsGatheringModal) {
+                        setShowParticipantsGatheringModal(false);
                       }
 
-                      // 4. Redirigir SIEMPRE a la sala de espera (ParticipantsGatheringModal)
-                      if (setShowParticipantsGatheringModal) {
-                        setShowParticipantsGatheringModal(true);
+                      // 3. Salir INMEDIATAMENTE de la fase de votación de 10 min y activar la página de exposición de 5 minutos (image.png)
+                      setSessionVotingPhaseMap(prev => {
+                        const updated = { ...prev, [session.id]: false };
+                        try {
+                          localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(updated));
+                        } catch (e) {}
+                        return updated;
+                      });
+
+                      // Sincronizar cuenta atrás de 5 minutos para el turno 1 de exposición (exactamente 4:29 / 5:00 de image.png)
+                      const now = Date.now();
+                      try {
+                        localStorage.setItem(`finanzas_active_session_start_${session.id}`, String(now - (31 * 1000)));
+                      } catch (e) {}
+                      setSessionExpositionTimerMap(prev => ({
+                        ...prev,
+                        [session.id]: 269
+                      }));
+
+                      // Asegurar que el presentador del turno 1 está en foco
+                      const turn1Presenter = participants[0];
+                      if (turn1Presenter) {
+                        setSessionSelectedPresenterMap(prev => ({ ...prev, [session.id]: turn1Presenter }));
+                        if (setSelectedFinanzasUser) setSelectedFinanzasUser(turn1Presenter);
+                      }
+
+                      // 4. Notificar al componente padre para procesar inscripción, pago y añadir a Adriana Lima
+                      if (onExecutePaymentAndJoinSession) {
+                        onExecutePaymentAndJoinSession(session);
                       }
 
                       if (setSystemVoiceNotification) {
                         setSystemVoiceNotification({
                           show: true,
-                          message: `🎉 ¡Inscripción confirmada (${feeInfo.feeShort})! Redirigiendo a la sala de espera de la ronda.`
+                          message: `🎤 ¡Inscripción confirmada (${feeInfo.feeShort})! Abriendo la ronda en vivo: cada participante tiene 5 minutos para exponer su proyecto.`
                         });
                       }
                     }}
@@ -6925,7 +6953,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9]'
                     }`}
                     id={`btn-inscribirse-ronda-${session.id}`}
-                    title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una ronda de (${feeInfo.feeInWords})`}
+                    title={isUserParticipating ? `Estás inscrita como participante (${feeInfo.feeInWords})` : `Inscribirse en una ronda de (${feeInfo.feeInWords})`}
                   >
                     <span className="text-base shrink-0">✍️</span>
                     <span className="truncate min-w-0 font-black">

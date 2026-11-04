@@ -146,6 +146,165 @@ const DEFAULT_COMMENT_AUTHORS = [
   { name: "Sofía Martínez", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150" }
 ];
 
+export const FOLLOWED_SUGGESTIONS_ACCOUNTS = [
+  {
+    username: 'victorgraciaweb',
+    name: 'victorgraciaweb',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=260',
+    hasHeart: false,
+    isVerified: false
+  },
+  {
+    username: 'adrianalima_w1',
+    name: 'Adriana Lima',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: false
+  },
+  {
+    username: 'alessandraambrosio_w2',
+    name: 'Alessandra Ambrosio',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: false
+  },
+  {
+    username: 'sophialoren_w3',
+    name: 'Sophia Loren',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: false
+  },
+  {
+    username: 'alexandervance_m1',
+    name: 'Alexander Vance',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: false
+  },
+  {
+    username: 'candiceswanepoel_w3',
+    name: 'Candice Swanepoel',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true
+  },
+  {
+    username: 'jasminetookes_w4',
+    name: 'Jasmine Tookes',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true
+  },
+  {
+    username: 'mirandakerr_w5',
+    name: 'Miranda Kerr',
+    avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=260',
+    hasHeart: true,
+    isVerified: true
+  },
+  {
+    username: 'ssoftblooms',
+    name: 'ssoftblooms',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=260',
+    hasHeart: false,
+    isVerified: false
+  }
+];
+
+export const DEFAULT_FRIEND_SUGGESTIONS = [
+  {
+    id: 'sug-victor',
+    username: 'victorgraciaweb',
+    name: 'victorgraciaweb',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 4,
+    hasHeart: false,
+    isVerified: false,
+    category: 'Desarrollador Web3'
+  },
+  {
+    id: 'sug-alessandra',
+    username: 'alessandraambrosio_w2',
+    name: 'Alessandra Ambrosio',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 8,
+    hasHeart: true,
+    isVerified: false,
+    category: 'Top Model Internacional'
+  },
+  {
+    id: 'sug-sophia',
+    username: 'sophialoren_w3',
+    name: 'Sophia Loren',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 5,
+    hasHeart: true,
+    isVerified: false,
+    category: 'Icono París & Moda'
+  },
+  {
+    id: 'sug-alexander',
+    username: 'alexandervance_m1',
+    name: 'Alexander Vance',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 6,
+    hasHeart: true,
+    isVerified: false,
+    category: 'Inversor & Estilismo'
+  },
+  {
+    id: 'sug-candice',
+    username: 'candiceswanepoel_w3',
+    name: 'Candice Swanepoel',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 9,
+    hasHeart: true,
+    isVerified: true,
+    category: 'Supermodelo Tropic of C'
+  },
+  {
+    id: 'sug-jasmine',
+    username: 'jasminetookes_w4',
+    name: 'Jasmine Tookes',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 7,
+    hasHeart: true,
+    isVerified: true,
+    category: 'Top Model JOJA'
+  },
+  {
+    id: 'sug-miranda',
+    username: 'mirandakerr_w5',
+    name: 'Miranda Kerr',
+    avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 11,
+    hasHeart: true,
+    isVerified: true,
+    category: 'Fundadora KORA Organics'
+  },
+  {
+    id: 'sug-ssoftblooms',
+    username: 'ssoftblooms',
+    name: 'ssoftblooms',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=260',
+    mutualFriends: 3,
+    hasHeart: false,
+    isVerified: false,
+    category: 'Estilismo & Fotografía'
+  },
+  {
+    id: 'sug-sean',
+    username: 'seanopry_m2',
+    name: "Sean O'Pry",
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+    mutualFriends: 4,
+    hasHeart: true,
+    isVerified: true,
+    category: 'Top 2 Modelo Masculino'
+  }
+];
+
 // Exported component for Intro & Sponsored Companies container
 export function ProfileIntroAndSponsors({
   userProfile,
@@ -156,17 +315,21 @@ export function ProfileIntroAndSponsors({
   models: propModels,
   onSelectModel,
   friendsCount = 5,
-  hideIntro = false
+  hideIntro = false,
+  hideRanking = false,
+  isFriendSuggestions = false
 }: {
   userProfile: any;
   bioText?: string;
   signedAgreements?: Record<string, any>;
   onNavigateToTab?: (tab: any, targetStoreId?: string) => void;
-  onOpenRanking?: () => void;
+  onOpenRanking?: (tab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos') => void;
   models?: ModelProfile[];
   onSelectModel?: (model: ModelProfile) => void;
   friendsCount?: number;
   hideIntro?: boolean;
+  hideRanking?: boolean;
+  isFriendSuggestions?: boolean;
 }) {
   const [signedAgreements] = useState<Record<string, any>>(() => {
     if (propSignedAgreements) return propSignedAgreements;
@@ -177,6 +340,112 @@ export function ProfileIntroAndSponsors({
       return {};
     }
   });
+
+  // Friend suggestions interactive state
+  const [requestedFriendIds, setRequestedFriendIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('ff_sent_friend_requests');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item: any) => item.username || item.id);
+        }
+      }
+    } catch (_) {}
+    return [];
+  });
+
+  const [dismissedSuggestionIds, setDismissedSuggestionIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('ff_dismissed_friend_suggestions');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return [];
+  });
+
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+
+  const handleSendFriendRequest = (acc: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isAlreadyRequested = requestedFriendIds.includes(acc.username);
+
+    if (isAlreadyRequested) {
+      // Cancel request
+      const next = requestedFriendIds.filter(id => id !== acc.username);
+      setRequestedFriendIds(next);
+      try {
+        const saved = localStorage.getItem('ff_sent_friend_requests');
+        const list = saved ? JSON.parse(saved) : [];
+        const filtered = list.filter((item: any) => item.username !== acc.username);
+        localStorage.setItem('ff_sent_friend_requests', JSON.stringify(filtered));
+      } catch (_) {}
+      setFeedbackToast(`Solicitud a ${acc.name} cancelada`);
+      setTimeout(() => setFeedbackToast(null), 3000);
+      window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+      return;
+    }
+
+    // Add request
+    const next = [...requestedFriendIds, acc.username];
+    setRequestedFriendIds(next);
+    const newRequestItem = {
+      id: `sent-${acc.username}`,
+      name: acc.name,
+      username: acc.username,
+      avatar: acc.avatar,
+      bio: acc.category || 'Creador y amigo sugerido en Fashion Finances',
+      sentAt: 'Enviada ahora mismo · Esperando aceptación',
+      mutualFriends: acc.mutualFriends || 4
+    };
+
+    try {
+      const saved = localStorage.getItem('ff_sent_friend_requests');
+      const list = saved ? JSON.parse(saved) : [];
+      list.push(newRequestItem);
+      localStorage.setItem('ff_sent_friend_requests', JSON.stringify(list));
+    } catch (_) {}
+
+    // Also persist in coll_friends
+    try {
+      const rawFriends = localStorage.getItem('coll_friends');
+      const friends = rawFriends ? JSON.parse(rawFriends) : [];
+      if (!friends.some((f: any) => f.username === acc.username || f.name === acc.name)) {
+        friends.push({
+          id: `friend-${acc.username}`,
+          name: acc.name,
+          username: acc.username,
+          avatar: acc.avatar,
+          bio: acc.category || 'Amigo en Fashion Finances',
+          online: true,
+          addedMe: false
+        });
+        localStorage.setItem('coll_friends', JSON.stringify(friends));
+      }
+    } catch (_) {}
+
+    setFeedbackToast(`🤝 ¡Solicitud enviada a ${acc.name}!`);
+    setTimeout(() => setFeedbackToast(null), 3500);
+    window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+  };
+
+  const handleDismissSuggestion = (acc: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = [...dismissedSuggestionIds, acc.username];
+    setDismissedSuggestionIds(next);
+    try {
+      localStorage.setItem('ff_dismissed_friend_suggestions', JSON.stringify(next));
+    } catch (_) {}
+    setFeedbackToast(`Sugerencia eliminada`);
+    setTimeout(() => setFeedbackToast(null), 2500);
+  };
+
+  const visibleFriendSuggestions = React.useMemo(() => {
+    return DEFAULT_FRIEND_SUGGESTIONS.filter(acc => {
+      if (userProfile?.username && acc.username.toLowerCase() === userProfile.username.toLowerCase()) return false;
+      if (dismissedSuggestionIds.includes(acc.username)) return false;
+      return true;
+    });
+  }, [userProfile, dismissedSuggestionIds]);
 
   // Retrieve models for ranking
   const allModels: ModelProfile[] = React.useMemo(() => {
@@ -330,8 +599,234 @@ export function ProfileIntroAndSponsors({
         </div>
       )}
 
+      {/* 🤝 SUGERENCIAS DE AMISTAD (en columna izquierda) vs CUENTAS QUE SIGUES */}
+      {isFriendSuggestions ? (
+        <>
+          <div 
+            className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 space-y-3.5 shadow-xs text-left" 
+            id="contenedor-sugerencias-de-amistad-sidebar"
+          >
+          <div className="flex items-center justify-between border-b border-slate-100/80 pb-2.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">🤝</span>
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest block font-sans">
+                Sugerencias de amistad
+              </span>
+            </div>
+            <span className="text-[9.5px] font-mono text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+              {visibleFriendSuggestions.length}
+            </span>
+          </div>
+
+          {feedbackToast && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-[10.5px] font-bold px-3 py-1.5 rounded-xl animate-fade-in flex items-center justify-between shadow-2xs">
+              <span>{feedbackToast}</span>
+              <button type="button" onClick={() => setFeedbackToast(null)} className="text-rose-400 hover:text-rose-700 ml-1 text-xs font-black">✕</button>
+            </div>
+          )}
+
+          <div className="space-y-2.5">
+            {visibleFriendSuggestions.map((acc) => {
+              const isRequested = requestedFriendIds.includes(acc.username);
+
+              return (
+                <div
+                  key={acc.username}
+                  onClick={() => {
+                    const matched = allModels.find(m => 
+                      m.username?.toLowerCase() === acc.username.toLowerCase() || 
+                      m.name?.toLowerCase().includes(acc.name.toLowerCase())
+                    );
+                    if (matched && onSelectModel) {
+                      onSelectModel(matched);
+                    } else if (onNavigateToTab) {
+                      onNavigateToTab('casting_live');
+                    }
+                  }}
+                  className="flex items-center justify-between gap-2.5 p-1.5 -mx-1.5 rounded-xl hover:bg-slate-50/80 cursor-pointer active:scale-[0.99] transition group"
+                  title={`Ver perfil de ${acc.name}`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="relative shrink-0">
+                      <img
+                        src={acc.avatar}
+                        alt={acc.name}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-slate-200 group-hover:scale-105 transition shadow-2xs"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" title="En línea" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 min-w-0 leading-tight">
+                        <span className="text-xs sm:text-[12.5px] font-bold text-slate-900 truncate group-hover:text-rose-600 transition">
+                          {acc.name}
+                        </span>
+                        {acc.isVerified && (
+                          <span className="text-[10px] text-sky-500 font-extrabold select-none shrink-0" title="Verificado">
+                            ✓
+                          </span>
+                        )}
+                        {acc.hasHeart && (
+                          <span className="text-[11px] text-rose-500 select-none shrink-0" title="Creadora Oficial">
+                            💖
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-[9.5px] text-slate-400 font-medium truncate mt-0.5">
+                        <span className="text-rose-500 font-semibold">{acc.mutualFriends} en común</span>
+                        <span>•</span>
+                        <span className="truncate">@{acc.username}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Acciones de amistad */}
+                  <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => handleSendFriendRequest(acc, e)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs ${
+                        isRequested
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                          : 'bg-white hover:bg-red-50 text-red-600 border border-red-500 hover:border-red-600'
+                      }`}
+                      title={isRequested ? 'Cancelar solicitud de amistad' : 'Enviar solicitud de amistad'}
+                    >
+                      {isRequested ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>Enviada</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3 h-3 text-red-600" />
+                          <span>Añadir</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleDismissSuggestion(acc, e)}
+                      className="p-1 text-slate-300 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                      title="Eliminar sugerencia"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pie: Enlace a ver solicitudes y lista completa de amigos */}
+          <div className="pt-2 border-t border-slate-100/90 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('open-friends-modal-tab', { detail: { tab: 'friends' } }));
+                if (onNavigateToTab) onNavigateToTab('profile');
+              }}
+              className="w-full py-1.5 px-2 text-center text-[10.5px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50/70 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5 text-rose-500" />
+              <span>Ver mis amigos y solicitudes ({friendsCount})</span>
+              <span className="text-[9px]">→</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Captura App de moda_glamour en directo.png) */}
+        <div 
+          id="contenedor-anuncio-salon-de-la-fama-sidebar"
+          role="button"
+          tabIndex={0}
+          aria-label="Abrir Salón de la Fama Oficial"
+          onClick={() => {
+            if (onOpenRanking) {
+              onOpenRanking('hall_of_fame');
+            }
+            window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              if (onOpenRanking) onOpenRanking('hall_of_fame');
+              window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
+            }
+          }}
+          className="relative overflow-hidden rounded-[22px] sm:rounded-3xl border-2 border-amber-300/70 shadow-[0_8px_28px_rgba(245,158,11,0.20)] hover:shadow-[0_14px_40px_rgba(245,158,11,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fffaf0] to-[#fef3c7]"
+        >
+          <img 
+            src="/assets/aistudio/card_salon_fama.webp" 
+            alt="Salón de la Fama Oficial - Conoce a las supermodelos consagradas y leyendas de la pasarela" 
+            className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[20px] sm:rounded-[22px]"
+          />
+          {/* Luminous subtle sheen on hover */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/0 via-white/10 to-amber-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px] sm:rounded-[22px]" />
+        </div>
+
+        {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura App de moda_glamour en directo.png) */}
+        <div 
+          id="contenedor-anuncio-videos-directo-sidebar"
+          role="button"
+          tabIndex={0}
+          aria-label="Ver Vídeos y Pasarela en Directo"
+          onClick={() => {
+            if (onNavigateToTab) {
+              onNavigateToTab('casting_live');
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              if (onNavigateToTab) onNavigateToTab('casting_live');
+            }
+          }}
+          className="relative overflow-hidden rounded-[22px] sm:rounded-3xl border-2 border-pink-400/70 shadow-[0_8px_30px_rgba(236,72,153,0.24)] hover:shadow-[0_14px_42px_rgba(236,72,153,0.38)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9]"
+        >
+          <img 
+            src="/assets/aistudio/card_videos_directo.webp" 
+            alt="Vídeos y Pasarela en Directo - Sigue las emisiones en tiempo real y participa en los chats" 
+            className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[20px] sm:rounded-[22px]"
+          />
+          {/* Luminous subtle sheen on hover */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-white/10 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px] sm:rounded-[22px]" />
+        </div>
+
+        {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS CON GLAMOUR Y DIAMANTES */}
+        <div 
+          id="contenedor-anuncio-regalos-exclusivos-sidebar"
+          role="button"
+          tabIndex={0}
+          aria-label="Descubre Todos Nuestros Regalos Exclusivos con Glamour y Diamantes"
+          onClick={() => {
+            if (onOpenRanking) {
+              onOpenRanking('regalos');
+            }
+            window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              if (onOpenRanking) onOpenRanking('regalos');
+              window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+            }
+          }}
+          className="relative overflow-hidden rounded-[22px] sm:rounded-3xl border-2 border-pink-400/70 shadow-[0_8px_30px_rgba(236,72,153,0.24)] hover:shadow-[0_14px_42px_rgba(236,72,153,0.38)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9]"
+        >
+          <img 
+            src="/assets/aistudio/card_regalos_exclusivos.webp" 
+            alt="Regalos Exclusivos en Nuestra APP - Fashion Finances: Diamantes, Moda de Lujo, Perfumes Exclusivos" 
+            className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[20px] sm:rounded-[22px]"
+          />
+          {/* Luminous subtle sheen on hover */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/0 via-white/10 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px] sm:rounded-[22px]" />
+        </div>
+        </>
+      ) : null}
+
       {/* 🏆 RANKING DE MODELOS (Debajo de Carolina Herrera España) */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs text-left" id="bloque-ranking-modelos-sidebar">
+      {!hideRanking && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs text-left" id="bloque-ranking-modelos-sidebar">
         <div className="flex items-center justify-between border-b border-slate-100/80 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-xs">
@@ -448,6 +943,7 @@ export function ProfileIntroAndSponsors({
           })}
         </div>
       </div>
+      )}
     </div>
   );
 }
@@ -459,7 +955,7 @@ interface ModelFacebookProfileProps {
   onUpdateModels: (nextModels: ModelProfile[]) => void;
   onSendMessage?: (newMsg: ChatMessage) => void;
   realLoggedInUser?: UserSessionProfile;
-  onOpenRanking?: () => void;
+  onOpenRanking?: (tab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos') => void;
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live', targetStoreId?: string) => void;
   onLaunchChat?: (modelId: string, draftImg?: string) => void;
   onGoToModelProfile?: (modelId: string, modelObj?: any, source?: string) => void;
@@ -5873,6 +6369,21 @@ export default function ModelFacebookProfile({
                   userProfile={userProfile}
                   bioText={bioText}
                   signedAgreements={signedAgreements}
+                  onNavigateToTab={onNavigateToTab}
+                  onOpenRanking={onOpenRanking}
+                  models={models}
+                  onSelectModel={(m) => onGoToModelProfile && onGoToModelProfile(m.id, m)}
+                  friendsCount={socialFriendsList.length}
+                />
+              </div>
+
+              {/* 📱 VISTA TABLET Y MÓVIL: Sugerencias de amistad (captura z.png) y los 3 anuncios de Salón de la Fama, Vídeos en Directo y Regalos Exclusivos (captura image.png) */}
+              <div className="block lg:hidden space-y-4 mb-6" id="contenedor-sugerencias-anuncios-mobile-tablet">
+                <ProfileIntroAndSponsors
+                  hideIntro={true}
+                  hideRanking={true}
+                  isFriendSuggestions={true}
+                  userProfile={userProfile}
                   onNavigateToTab={onNavigateToTab}
                   onOpenRanking={onOpenRanking}
                   models={models}

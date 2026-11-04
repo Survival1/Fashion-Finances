@@ -3593,6 +3593,8 @@ export default function App() {
           <div className="hidden lg:block">
             <ProfileIntroAndSponsors
               hideIntro={activeTab !== 'home'}
+              hideRanking={true}
+              isFriendSuggestions={true}
               userProfile={selectedModelForView ? {
                 id: selectedModelForView.id,
                 name: selectedModelForView.name,
@@ -3610,7 +3612,10 @@ export default function App() {
                 setPreviousTab(activeTab);
                 setActiveTabTab(tab);
               }}
-              onOpenRanking={() => setShowVictoriaSecretRanking(true)}
+              onOpenRanking={(tab) => {
+                if (tab) setRankingInitialTab(tab);
+                setShowVictoriaSecretRanking(true);
+              }}
               models={models}
               onSelectModel={(mod) => {
                 setSelectedModelForView(mod);
@@ -3715,7 +3720,10 @@ export default function App() {
                   onUpdateModels={handleUpdateModelsGlobal}
                   onSendMessage={handleSendMessage}
                   realLoggedInUser={userProfile || undefined}
-                  onOpenRanking={() => setShowVictoriaSecretRanking(true)}
+                  onOpenRanking={(tab) => {
+                    if (tab) setRankingInitialTab(tab);
+                    setShowVictoriaSecretRanking(true);
+                  }}
                   onNavigateToTab={(tab, targetStoreId) => {
                     if (targetStoreId) {
                       localStorage.setItem('came_from_profile_sponsor', 'true');
@@ -3780,7 +3788,10 @@ export default function App() {
                   onUpdateModels={handleUpdateModelsGlobal}
                   onSendMessage={handleSendMessage}
                   realLoggedInUser={userProfile}
-                  onOpenRanking={() => setShowVictoriaSecretRanking(true)}
+                  onOpenRanking={(tab) => {
+                    if (tab) setRankingInitialTab(tab);
+                    setShowVictoriaSecretRanking(true);
+                  }}
                   onNavigateToTab={(tab, targetStoreId) => {
                     setActiveTabTab(tab);
                     if (targetStoreId) {
@@ -3842,7 +3853,10 @@ export default function App() {
                   onUpdateModels={handleUpdateModelsGlobal}
                   onSendMessage={handleSendMessage}
                   realLoggedInUser={userProfile}
-                  onOpenRanking={() => setShowVictoriaSecretRanking(true)}
+                  onOpenRanking={(tab) => {
+                    if (tab) setRankingInitialTab(tab);
+                    setShowVictoriaSecretRanking(true);
+                  }}
                   onNavigateToTab={(tab, targetStoreId) => {
                     setActiveTabTab(tab);
                     if (targetStoreId) {
@@ -4036,7 +4050,10 @@ export default function App() {
                 onUpdateModels={handleUpdateModelsGlobal}
                 onSendMessage={handleSendMessage}
                 realLoggedInUser={userProfile}
-                onOpenRanking={() => setShowVictoriaSecretRanking(true)}
+                onOpenRanking={(tab) => {
+                  if (tab) setRankingInitialTab(tab);
+                  setShowVictoriaSecretRanking(true);
+                }}
                 onNavigateToTab={(tab, targetStoreId) => {
                   if (targetStoreId) {
                     localStorage.setItem('came_from_profile_sponsor', 'true');

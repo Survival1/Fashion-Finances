@@ -4461,10 +4461,12 @@ export default function CastingLiveSection({
     } catch (e) {}
     setForceShowParticipantsPanel(true);
 
-    // Close overlays to display gathering waiting room
+    // Close overlays to display presentation page directly
     setShowFinanzasInscriptionInChannel(false);
     setShowFinanzasPayModal(false);
     setShowVotingProjectsModal(false);
+    setShowParticipantsGatheringModal(false);
+    setIsVotingPhaseActive(false);
 
     // Update presentation queue so participant at index userSlotIndex is Adriana Lima
     const nowTimestamp = Date.now();
@@ -34645,12 +34647,14 @@ try {
                                         }
 
                                         if (isUserParticipating) {
-                                          setShowParticipantsGatheringModal(true);
+                                          setShowParticipantsGatheringModal(false);
+                                          setIsVotingPhaseActive(false);
                                           return;
                                         }
 
+                                        setShowParticipantsGatheringModal(false);
+                                        setIsVotingPhaseActive(false);
                                         handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
-                                        setShowParticipantsGatheringModal(true);
                                       }}
                                       className={`w-full max-w-[400px] font-black text-[10.5px] xs:text-[11.5px] sm:text-[13px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
                                         isUserParticipating

@@ -609,13 +609,13 @@ export default function Top1ModelDonationCard({
         </div>
       </div>
 
-      {/* 🌟 CENTERPIECE GRID: THE #1 MONUMENTAL DIAMOND ANGEL PODIUM & INTERACTION CENTER */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
+      {/* 🌟 CENTERPIECE: THE #1 MONUMENTAL DIAMOND ANGEL PODIUM & INTERACTION CENTER */}
+      <div className="flex flex-col items-center gap-8 relative z-10 w-full max-w-2xl mx-auto">
         
         {/* ========================================================================= */}
-        {/* LEFT / CENTER COLUMN: THE ROYAL VAULTED ARCH & PEDESTAL (FROM zz.png) */}
+        {/* UPPER SECTION: THE ROYAL VAULTED ARCH & PEDESTAL WITH VER DOSSIER */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-6 flex flex-col items-center justify-center text-center relative">
+        <div className="w-full flex flex-col items-center justify-center text-center relative">
           
           {/* Main Arched Monument Frame */}
           <div className="w-full max-w-sm sm:max-w-md mx-auto relative flex flex-col items-center pt-16 sm:pt-20">
@@ -726,75 +726,11 @@ export default function Top1ModelDonationCard({
         </div>
 
         {/* ========================================================================= */}
-        {/* RIGHT COLUMN: VICTORIA ICON RECORD & TRIBUTE / DONATION CENTER */}
+        {/* LOWER SECTION: APORTACIÓN ECONÓMICA DIRECTA (DEBAJO DEL DOSSIER) */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-6 flex flex-col space-y-5">
+        <div className="w-full flex flex-col space-y-5">
           
-          {/* 🌟 1. VICTORIA ICON HISTORICAL SUPREMACY CARD (DIRECTLY FROM zz.png) */}
-          <div className="bg-gradient-to-r from-[#fff5f8] via-[#fffdfa] to-[#fff0f4] border-2 border-rose-200/90 rounded-3xl p-5 sm:p-6 shadow-md relative overflow-hidden text-left space-y-4">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-pink-400/10 rounded-full blur-2xl pointer-events-none" />
-            
-            {/* Header: VICTORIA ICON */}
-            <div className="flex items-center justify-between border-b border-rose-100 pb-2.5">
-              <div className="space-y-0.5">
-                <div className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10.5px] font-serif font-black uppercase tracking-[0.2em] text-rose-900">
-                  <span className="text-amber-500">✦</span>
-                  <span>VICTORIA ICON</span>
-                  <span className="text-amber-500">✦</span>
-                </div>
-                <p className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                  MAYOR TIEMPO DE PERMANENCIA EN EL PUESTO #1
-                </p>
-              </div>
 
-              <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-800 font-serif font-black text-xs border border-rose-300">
-                VS
-              </div>
-            </div>
-
-            {/* 38 Days Record Block */}
-            <div className="flex items-center justify-center w-full py-1">
-              {/* Record Stats Block with Laurels */}
-              <div className="text-center bg-white/90 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 shadow-xs min-w-[200px]">
-                <div className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[8.5px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1">
-                  <span>🏆</span> RÉCORD HISTÓRICO
-                </div>
-                
-                <div className="flex items-center justify-center gap-1.5 my-0.5">
-                  <span className="text-amber-600 text-sm">🌾</span>
-                  <span className="text-2xl sm:text-3xl font-serif font-black text-slate-950 tracking-tight">
-                    38
-                  </span>
-                  <span className="text-amber-600 text-sm transform scale-x-[-1]">🌾</span>
-                </div>
-                
-                <p className="text-[8.5px] font-mono font-black text-rose-900 uppercase tracking-widest m-0">
-                  DÍAS EN EL PUESTO #1
-                </p>
-              </div>
-            </div>
-
-            {/* Global Runway Prestige Metrics Bar (from zz.png) */}
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-rose-100 text-center">
-              <div className="bg-white/80 rounded-xl p-2 border border-rose-100/80">
-                <Globe className="w-3.5 h-3.5 text-rose-600 mx-auto mb-0.5" />
-                <span className="text-[9px] font-black text-slate-900 block leading-tight">TOP 0.1% MUNDIAL</span>
-                <span className="text-[7.5px] text-slate-500 font-semibold uppercase">Más Admiradas</span>
-              </div>
-
-              <div className="bg-white/80 rounded-xl p-2 border border-rose-100/80">
-                <Users className="w-3.5 h-3.5 text-rose-600 mx-auto mb-0.5" />
-                <span className="text-[9px] font-black text-slate-900 block leading-tight">+2.4M VOTOS</span>
-                <span className="text-[7.5px] text-slate-500 font-semibold uppercase">Este Mes</span>
-              </div>
-
-              <div className="bg-white/80 rounded-xl p-2 border border-rose-100/80">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 mx-auto mb-0.5" />
-                <span className="text-[9px] font-black text-slate-900 block leading-tight">100 MODELOS</span>
-                <span className="text-[7.5px] text-slate-500 font-semibold uppercase">En Competición</span>
-              </div>
-            </div>
-          </div>
 
           {/* 🌟 2. TRIBUTE & SPONSORSHIP ENGINE (DONATIONS & HAUTE COUTURE VIP GIFTS) */}
           <div className="bg-white rounded-3xl border-2 border-rose-200/90 p-5 sm:p-6 shadow-lg space-y-4">
