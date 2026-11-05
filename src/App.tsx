@@ -595,7 +595,7 @@ export default function App() {
   const [sharedDraftImage, setSharedDraftImage] = useState<string | null>(null);
   const [profileSocialModalState, setProfileSocialModalState] = useState<'followers' | 'following' | 'friends' | null>(null);
   const [lastProfileTab, setLastProfileTab] = useState<'home' | 'profile'>('profile');
-  const [previousTab, setPreviousTab] = useState<string>('casting_live');
+  const [previousTab, setPreviousTab] = useState<string>('profile');
 
   // Edit Profile form inputs
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -1740,6 +1740,8 @@ export default function App() {
   };
 
   const handleMessageFriend = (friendUsername: string) => {
+    setPreviousTab(activeTab);
+    localStorage.setItem('previous_tab_before_chat', activeTab);
     const foundModel = models.find(m => m.username === friendUsername);
     if (foundModel) {
       setActiveChatTargetId(foundModel.id);
@@ -3518,7 +3520,11 @@ export default function App() {
 
             {userProfile.role !== 'visitor' && (
               <button
-                onClick={() => setActiveTabTab('chat')}
+                onClick={() => {
+                  setPreviousTab(activeTab);
+                  localStorage.setItem('previous_tab_before_chat', activeTab);
+                  setActiveTabTab('chat');
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                   activeTab === 'chat'
                     ? 'bg-slate-950 text-white shadow-md'
@@ -3637,6 +3643,10 @@ export default function App() {
               activeTab={activeTab}
               userRole={userProfile.role}
               onNavigateToTab={(tab) => {
+                if (tab !== activeTab) {
+                  setPreviousTab(activeTab);
+                  localStorage.setItem('previous_tab_before_chat', activeTab);
+                }
                 if (tab === 'home') {
                   setSelectedModelForView(null);
                   setModelViewSourceTab(null);
@@ -3731,6 +3741,7 @@ export default function App() {
                       setInitialSelectedStoreId(targetStoreId);
                     }
                     setPreviousTab(activeTab);
+                    localStorage.setItem('previous_tab_before_chat', activeTab);
                     setActiveTabTab(tab);
                   }}
                   onLaunchChat={handleLaunchChatWithModel}
@@ -3793,6 +3804,8 @@ export default function App() {
                     setShowVictoriaSecretRanking(true);
                   }}
                   onNavigateToTab={(tab, targetStoreId) => {
+                    setPreviousTab(activeTab);
+                    localStorage.setItem('previous_tab_before_chat', activeTab);
                     setActiveTabTab(tab);
                     if (targetStoreId) {
                       setInitialSelectedStoreId(targetStoreId);
@@ -3858,6 +3871,8 @@ export default function App() {
                     setShowVictoriaSecretRanking(true);
                   }}
                   onNavigateToTab={(tab, targetStoreId) => {
+                    setPreviousTab(activeTab);
+                    localStorage.setItem('previous_tab_before_chat', activeTab);
                     setActiveTabTab(tab);
                     if (targetStoreId) {
                       setInitialSelectedStoreId(targetStoreId);
@@ -4031,11 +4046,17 @@ export default function App() {
                 onPatrocinateClick={handlePatrocinateClickFromChat}
                 onGiftTransaction={handleGiftTransaction}
                 onBack={() => {
-                  if (previousTab) {
-                    setActiveTabTab(previousTab as any);
-                  } else {
-                    setActiveTabTab('casting_live');
-                  }
+                  const storedPrev = localStorage.getItem('previous_tab_before_chat');
+                  localStorage.removeItem('previous_tab_before_chat');
+                  const targetTab = (storedPrev && storedPrev !== 'chat')
+                    ? storedPrev
+                    : (previousTab && previousTab !== 'chat')
+                      ? previousTab
+                      : 'profile';
+                  setActiveTabTab(targetTab as any);
+                  try {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } catch {}
                 }}
               />
             </div>
@@ -4061,6 +4082,7 @@ export default function App() {
                     setInitialSelectedStoreId(targetStoreId);
                   }
                   setPreviousTab(activeTab);
+                  localStorage.setItem('previous_tab_before_chat', activeTab);
                   setActiveTabTab(tab);
                 }}
                 onLaunchChat={handleLaunchChatWithModel}

@@ -499,111 +499,13 @@ export function ProfileIntroAndSponsors({
 
   return (
     <div className="space-y-4 font-sans text-left">
-      {/* Intro Information Cards (FB Intro style) */}
-      {!hideIntro && (
-        <div 
-          className="relative overflow-hidden rounded-2xl border-2 border-[#fbcfe8] shadow-[0_4px_24px_rgba(244,114,182,0.18)] p-5 space-y-4 bg-gradient-to-br from-[#ffffff] via-[#fff0f5] to-[#fce7f3] text-slate-800" 
-          id="intro-information-card-container"
-        >
-          {/* 🪽 Wings background: Luminous white wings seamlessly feathered, positioned lower directly on/above the container divider line */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-            <img 
-              src="/assets/aistudio/wings_seamless.png" 
-              alt="Alas de Ángel Rosa Perla" 
-              className="w-full h-full object-cover object-[center_60%] translate-y-8 sm:translate-y-10 opacity-85 transition-transform duration-700 rounded-2xl" 
-              style={{
-                maskImage: 'radial-gradient(ellipse 92% 82% at 50% 50%, black 50%, rgba(0,0,0,0.85) 75%, transparent 100%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 92% 82% at 50% 50%, black 50%, rgba(0,0,0,0.85) 75%, transparent 100%)'
-              }}
-            />
-            {/* Subtle soft pearl gradient overlay to guarantee perfect contrast and readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#fff0f5]/70 via-transparent to-[#ffffff]/50 rounded-2xl" />
-            {/* Soft perimeter vignette dissolving edges into container gradient */}
-            <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_28px_12px_#fff0f5] pointer-events-none" />
-          </div>
+      {/* 🤝 SUGERENCIAS DE AMISTAD vs BLOQUE DE ANUNCIOS (En vista Tablet y Móvil, Sugerencias de Amistad aparece DEBAJO de los Anuncios) */}
 
-          <div className="relative z-10 space-y-4">
-            <div>
-              <h3 className="text-xs font-black text-rose-800 uppercase tracking-widest flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
-                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
-                <span>Información / Intro</span>
-              </h3>
-            </div>
-
-            {/* Custom user-editable presentation/intro text with elegant glassmorphism */}
-            <div className="space-y-2 text-left">
-              <p className="text-xs text-slate-800 leading-relaxed font-semibold bg-white/80 backdrop-blur-md border border-[#fbcfe8] p-3.5 rounded-xl whitespace-pre-line shadow-xs">
-                {bioText || userProfile?.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!'}
-              </p>
-            </div>
-
-            <hr className="border-[#fbcfe8]/70" />
-
-            {/* Status details indicators styled for high-contrast light mode */}
-            <div className="text-xs space-y-2 text-slate-700 font-medium">
-              <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-                <Globe className="w-4 h-4 text-sky-600 font-bold shrink-0" />
-                <span>Espacio de Trabajo: <strong className="text-slate-900 font-bold">España / Remoto</strong></span>
-              </div>
-
-              {/* Instagram */}
-              {Boolean(instagramHandle) && (
-                <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-                  <Instagram className="w-4 h-4 text-rose-600 font-bold shrink-0" />
-                  <span>Sígueme en Instagram: <strong className="text-rose-700 font-bold">{instagramHandle}</strong></span>
-                </div>
-              )}
-
-              {/* TikTok */}
-              {Boolean(tiktokHandle) && (
-                <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-                  <svg className="w-4 h-4 shrink-0 drop-shadow-xs" viewBox="0 0 24 24" fill="none" aria-label="TikTok">
-                    {/* Cyan layer */}
-                    <path d="M18.821 5.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 14.728.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.025a8.318 8.318 0 0 0 4.854 1.556V5.062z" fill="#25F4EE" />
-                    {/* Magenta layer */}
-                    <path d="M19.821 6.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.728 1.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V8.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V8.025a8.318 8.318 0 0 0 4.854 1.556V6.062z" fill="#FE2C55" />
-                    {/* Black main body */}
-                    <path d="M19.321 5.562a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.228 1h-3.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.48a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.525a8.318 8.318 0 0 0 4.854 1.556V5.562z" fill="#000000" />
-                  </svg>
-                  <span>Sígueme en TikTok: <strong className="text-slate-900 font-bold">{tiktokHandle}</strong></span>
-                </div>
-              )}
-
-              {/* X / Twitter */}
-              {Boolean(twitterHandle) && (
-                <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-                  <span className="text-xs font-black font-mono shrink-0 leading-none">𝕏</span>
-                  <span>Sígueme en X / Twitter: <strong className="text-indigo-700 font-bold">{twitterHandle}</strong></span>
-                </div>
-              )}
-              <div 
-                onClick={() => {
-                  if (onOpenRanking) {
-                    onOpenRanking();
-                  } else if (onNavigateToTab) {
-                    onNavigateToTab('casting_live');
-                  }
-                }}
-                className="flex items-center gap-2 cursor-pointer hover:text-amber-700 transition-colors p-1 -m-1 rounded-lg hover:bg-white/60 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]"
-                title="Ver Sponsoring Oficial y Ranking"
-              >
-                <Award className="w-4 h-4 text-amber-600 font-bold shrink-0" />
-                <span>Sponsoring: <strong className="text-emerald-700 font-bold">Comisión 10% activa</strong></span>
-              </div>
-              <div className="flex items-center gap-2 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-                <Users className="w-4 h-4 text-indigo-600 font-bold shrink-0" />
-                <span>Mis amigos: <strong className="text-rose-700 font-bold">{friendsCount} amigos</strong></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🤝 SUGERENCIAS DE AMISTAD (en columna izquierda) vs CUENTAS QUE SIGUES */}
+      {/* 🤝 SUGERENCIAS DE AMISTAD vs BLOQUE DE ANUNCIOS (En vista Tablet y Móvil, Sugerencias de Amistad aparece DEBAJO de los Anuncios) */}
       {isFriendSuggestions ? (
-        <>
+        <div className="flex flex-col gap-6 w-full">
           <div 
-            className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 space-y-3.5 shadow-xs text-left" 
+            className="order-2 lg:order-1 bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 space-y-3.5 shadow-xs text-left max-w-md sm:max-w-2xl mx-auto w-full" 
             id="contenedor-sugerencias-de-amistad-sidebar"
           >
           <div className="flex items-center justify-between border-b border-slate-100/80 pb-2.5">
@@ -737,91 +639,152 @@ export function ProfileIntroAndSponsors({
           </div>
         </div>
 
-        {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Captura App de moda_glamour en directo.png) */}
-        <div 
-          id="contenedor-anuncio-salon-de-la-fama-sidebar"
-          role="button"
-          tabIndex={0}
-          aria-label="Abrir Salón de la Fama Oficial"
-          onClick={() => {
-            if (onOpenRanking) {
-              onOpenRanking('hall_of_fame');
-            }
-            window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              if (onOpenRanking) onOpenRanking('hall_of_fame');
+        {/* 📢 BLOQUE DE ANUNCIOS: SALÓN DE LA FAMA, VÍDEOS EN DIRECTO Y REGALOS EXCLUSIVOS (En vista Tablet y Móvil aparece ARRIBA del bloque de sugerencias con order-1) */}
+        <div className="order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-y-9 sm:gap-x-6 sm:gap-y-6 lg:gap-y-9 max-w-[220px] sm:max-w-2xl lg:max-w-none mx-auto w-full pt-2 pb-2 items-stretch">
+          {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Captura App de moda_glamour en directo.png) */}
+          <div 
+            id="contenedor-anuncio-salon-de-la-fama-sidebar"
+            role="button"
+            tabIndex={0}
+            aria-label="Abrir Salón de la Fama Oficial"
+            onClick={() => {
+              if (onOpenRanking) {
+                onOpenRanking('hall_of_fame');
+              }
               window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
-            }
-          }}
-          className="relative overflow-hidden rounded-[22px] sm:rounded-3xl border-2 border-amber-300/70 shadow-[0_8px_28px_rgba(245,158,11,0.20)] hover:shadow-[0_14px_40px_rgba(245,158,11,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fffaf0] to-[#fef3c7]"
-        >
-          <img 
-            src="/assets/aistudio/card_salon_fama.webp" 
-            alt="Salón de la Fama Oficial - Conoce a las supermodelos consagradas y leyendas de la pasarela" 
-            className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[20px] sm:rounded-[22px]"
-          />
-          {/* Luminous subtle sheen on hover */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/0 via-white/10 to-amber-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px] sm:rounded-[22px]" />
-        </div>
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (onOpenRanking) onOpenRanking('hall_of_fame');
+                window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
+              }
+            }}
+            className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-amber-300/80 shadow-[0_6px_20px_rgba(245,158,11,0.22)] hover:shadow-[0_10px_28px_rgba(245,158,11,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fffaf0] via-[#fef3c7] to-[#fde68a] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
+          >
+            <div className="relative overflow-hidden w-full">
+              <img 
+                src="/assets/aistudio/card_salon_fama.webp" 
+                alt="Salón de la Fama Oficial - Conoce a las supermodelos consagradas y leyendas de la pasarela" 
+                className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
+              />
+              {/* Luminous subtle sheen on hover */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/0 via-white/10 to-amber-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </div>
 
-        {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura App de moda_glamour en directo.png) */}
-        <div 
-          id="contenedor-anuncio-videos-directo-sidebar"
-          role="button"
-          tabIndex={0}
-          aria-label="Ver Vídeos y Pasarela en Directo"
-          onClick={() => {
-            if (onNavigateToTab) {
-              onNavigateToTab('casting_live');
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              if (onNavigateToTab) onNavigateToTab('casting_live');
-            }
-          }}
-          className="relative overflow-hidden rounded-[22px] sm:rounded-3xl border-2 border-pink-400/70 shadow-[0_8px_30px_rgba(236,72,153,0.24)] hover:shadow-[0_14px_42px_rgba(236,72,153,0.38)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9]"
-        >
-          <img 
-            src="/assets/aistudio/card_videos_directo.webp" 
-            alt="Vídeos y Pasarela en Directo - Sigue las emisiones en tiempo real y participa en los chats" 
-            className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[20px] sm:rounded-[22px]"
-          />
-          {/* Luminous subtle sheen on hover */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-white/10 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px] sm:rounded-[22px]" />
-        </div>
+            {/* Opulent bottom section filling the card to match container 3's height */}
+            <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-amber-50/95 via-amber-100/90 to-amber-200/95 border-t border-amber-300/70 flex-1 flex flex-col justify-between">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-300/70 text-amber-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
+                  <span>👑</span> Salón Oficial • Pasarela
+                </div>
+                <p className="text-[10.5px] text-amber-950 font-bold leading-snug m-0">
+                  Conoce las trayectorias consagradas y modelos más admiradas del mundo.
+                </p>
+              </div>
+              
+              <div className="pt-1 space-y-1.5">
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
+                    ★ Élite Global
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
+                    💎 Top 10 Diamante
+                  </span>
+                </div>
+                <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
+                  <span>Ver Salón Completo</span>
+                  <span>➔</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS CON GLAMOUR Y DIAMANTES */}
-        <div 
-          id="contenedor-anuncio-regalos-exclusivos-sidebar"
-          role="button"
-          tabIndex={0}
-          aria-label="Descubre Todos Nuestros Regalos Exclusivos con Glamour y Diamantes"
-          onClick={() => {
-            if (onOpenRanking) {
-              onOpenRanking('regalos');
-            }
-            window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              if (onOpenRanking) onOpenRanking('regalos');
+          {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura App de moda_glamour en directo.png) */}
+          <div 
+            id="contenedor-anuncio-videos-directo-sidebar"
+            role="button"
+            tabIndex={0}
+            aria-label="Ver Vídeos y Pasarela en Directo"
+            onClick={() => {
+              if (onNavigateToTab) {
+                onNavigateToTab('casting_live');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (onNavigateToTab) onNavigateToTab('casting_live');
+              }
+            }}
+            className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/80 shadow-[0_6px_20px_rgba(236,72,153,0.22)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] via-[#ffe4e9] to-[#fbcfe8] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
+          >
+            <div className="relative overflow-hidden w-full">
+              <img 
+                src="/assets/aistudio/card_videos_directo.webp" 
+                alt="Vídeos y Pasarela en Directo - Sigue las emisiones en tiempo real y participa en los chats" 
+                className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
+              />
+              {/* Luminous subtle sheen on hover */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-white/10 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </div>
+
+            {/* Opulent bottom section filling the card to match container 3's height */}
+            <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-rose-50/95 via-pink-100/90 to-pink-200/95 border-t border-pink-300/70 flex-1 flex flex-col justify-between">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-200/80 text-rose-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
+                  <span>🔴</span> Emisiones en Vivo
+                </div>
+                <p className="text-[10.5px] text-rose-950 font-bold leading-snug m-0">
+                  Transmisiones en tiempo real, salas interactivas y regalos exclusivos.
+                </p>
+              </div>
+              
+              <div className="pt-1 space-y-1.5">
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
+                    ⚡ 68 FPS HD
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
+                    🎁 Regalos VIP
+                  </span>
+                </div>
+                <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
+                  <span>Sintonizar en Directo</span>
+                  <span>➔</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS CON GLAMOUR Y DIAMANTES */}
+          <div 
+            id="contenedor-anuncio-regalos-exclusivos-sidebar"
+            role="button"
+            tabIndex={0}
+            aria-label="Descubre Todos Nuestros Regalos Exclusivos con Glamour y Diamantes"
+            onClick={() => {
+              if (onOpenRanking) {
+                onOpenRanking('regalos');
+              }
               window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
-            }
-          }}
-          className="relative overflow-hidden rounded-[22px] sm:rounded-3xl border-2 border-pink-400/70 shadow-[0_8px_30px_rgba(236,72,153,0.24)] hover:shadow-[0_14px_42px_rgba(236,72,153,0.38)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9]"
-        >
-          <img 
-            src="/assets/aistudio/card_regalos_exclusivos.webp" 
-            alt="Regalos Exclusivos en Nuestra APP - Fashion Finances: Diamantes, Moda de Lujo, Perfumes Exclusivos" 
-            className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[20px] sm:rounded-[22px]"
-          />
-          {/* Luminous subtle sheen on hover */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/0 via-white/10 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[20px] sm:rounded-[22px]" />
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (onOpenRanking) onOpenRanking('regalos');
+                window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+              }
+            }}
+            className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/70 shadow-[0_6px_20px_rgba(236,72,153,0.20)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.30)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
+          >
+            <img 
+              src="/assets/aistudio/card_regalos_exclusivos.webp" 
+              alt="Regalos Exclusivos en Nuestra APP - Fashion Finances: Diamantes, Moda de Lujo, Perfumes Exclusivos" 
+              className="w-full h-full object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[16px] sm:rounded-[20px]"
+            />
+            {/* Luminous subtle sheen on hover */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/0 via-white/10 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[16px] sm:rounded-[20px]" />
+          </div>
         </div>
-        </>
+      </div>
       ) : null}
 
       {/* 🏆 RANKING DE MODELOS (Debajo de Carolina Herrera España) */}
@@ -3314,21 +3277,51 @@ export default function ModelFacebookProfile({
     }, 800); // 800ms safety window
   };
 
-  // Cute WhatsApp-style love/good-morning emojis/stickers from com.emoji.stickers.wasticker...
-  // Represented beautifully with individual emojis for stacked overlays and gorgeous screen rain!
-  const STICKER_PACK = [
-    { emojis: ['🥰', '🌹'], label: 'Con rosa' },
-    { emojis: ['😍'], label: 'Me encanta' },
-    { emojis: ['😘'], label: 'Beso amor' },
-    { emojis: ['🥰', '❤️'], label: 'Abrazo' },
-    { emojis: ['🧸', '💖'], label: 'Osito' },
-    { emojis: ['💐'], label: 'Ramo' },
-    { emojis: ['☕'], label: 'Café' },
-    { emojis: ['😴'], label: 'Descanso' },
-    { emojis: ['💖'], label: 'Te quiero' },
-    { emojis: ['🥺'], label: 'Te extraño' },
-    { emojis: ['👋'], label: 'Hola' },
-    { emojis: ['😔'], label: 'Lo siento' }
+  const [selectedStickerCategory, setSelectedStickerCategory] = useState<'todos' | 'amor' | 'glamour' | 'saludos'>('todos');
+
+  // Rich collection of romantic, glamour, fashion and expression stickers
+  const STICKER_PACK: { emojis: string[]; label: string; category: 'amor' | 'glamour' | 'saludos' }[] = [
+    // 💖 Amor & Cariño
+    { emojis: ['🥰', '🌹'], label: 'Con rosa', category: 'amor' },
+    { emojis: ['😍'], label: 'Me encanta', category: 'amor' },
+    { emojis: ['😘'], label: 'Beso amor', category: 'amor' },
+    { emojis: ['🥰', '❤️'], label: 'Abrazo', category: 'amor' },
+    { emojis: ['🧸', '💖'], label: 'Osito', category: 'amor' },
+    { emojis: ['💐'], label: 'Ramo', category: 'amor' },
+    { emojis: ['💖'], label: 'Te quiero', category: 'amor' },
+    { emojis: ['🥺'], label: 'Te extraño', category: 'amor' },
+    { emojis: ['💌', '💕'], label: 'Carta amor', category: 'amor' },
+    { emojis: ['💍', '✨'], label: 'Promesa', category: 'amor' },
+    { emojis: ['👩‍❤️‍💋‍👨'], label: 'Beso dulce', category: 'amor' },
+    { emojis: ['💘'], label: 'Flechazo', category: 'amor' },
+
+    // 👑 Glamour & Pasarela (Fashion Finances)
+    { emojis: ['💎', '✨'], label: 'Diamante', category: 'glamour' },
+    { emojis: ['👑'], label: 'Reina', category: 'glamour' },
+    { emojis: ['💄'], label: 'Glamour', category: 'glamour' },
+    { emojis: ['👠', '✨'], label: 'Pasarela', category: 'glamour' },
+    { emojis: ['👗'], label: 'Alta Moda', category: 'glamour' },
+    { emojis: ['📸', '⚡'], label: 'Flash VIP', category: 'glamour' },
+    { emojis: ['🌟'], label: 'Estrella', category: 'glamour' },
+    { emojis: ['🔥'], label: 'Fuego', category: 'glamour' },
+    { emojis: ['🥂', '🍾'], label: 'Brindis VIP', category: 'glamour' },
+    { emojis: ['🕶️', '💅'], label: 'Diva', category: 'glamour' },
+    { emojis: ['🎀', '✨'], label: 'Lujo', category: 'glamour' },
+    { emojis: ['🌹', '💎'], label: 'Exclusiva', category: 'glamour' },
+
+    // 🌸 Expresiones & Saludos
+    { emojis: ['☕'], label: 'Café', category: 'saludos' },
+    { emojis: ['😴'], label: 'Descanso', category: 'saludos' },
+    { emojis: ['👋'], label: 'Hola', category: 'saludos' },
+    { emojis: ['😔'], label: 'Lo siento', category: 'saludos' },
+    { emojis: ['🎉', '🥳'], label: 'Fiesta', category: 'saludos' },
+    { emojis: ['🦋'], label: 'Mariposa', category: 'saludos' },
+    { emojis: ['💋'], label: 'Labios', category: 'saludos' },
+    { emojis: ['✨', '💫'], label: 'Mágica', category: 'saludos' },
+    { emojis: ['🌸'], label: 'Primavera', category: 'saludos' },
+    { emojis: ['🍫'], label: 'Bombón', category: 'saludos' },
+    { emojis: ['👼'], label: 'Ángel', category: 'saludos' },
+    { emojis: ['👏', '💖'], label: 'Bravo', category: 'saludos' }
   ];
 
   const spawnScreenRain = (emojiString: string) => {
@@ -3788,6 +3781,10 @@ export default function ModelFacebookProfile({
 
   // Compact Stickers popup rendered inside the uploaded image container centered
   const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = true) => {
+    const filteredStickers = selectedStickerCategory === 'todos'
+      ? STICKER_PACK
+      : STICKER_PACK.filter(s => s.category === selectedStickerCategory);
+
     return (
       <div 
         onMouseEnter={() => {
@@ -3798,14 +3795,14 @@ export default function ModelFacebookProfile({
         }}
         className={
           isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[150] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
-            : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:bottom-2 lg:left-3.5 lg:translate-x-0 lg:translate-y-0 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[250] w-[92%] max-w-[320px] sm:max-w-[340px] lg:w-[350px] text-left animate-fade-in select-none"
+            : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[340px] text-left animate-fade-in select-none"
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2.5 shrink-0">
+        <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80 mb-2 shrink-0">
           <span className="text-[10px] sm:text-[11px] text-pink-400 font-extrabold uppercase tracking-wide font-sans flex items-center gap-1.5 select-none">
-            💝 STICKERS EXCLUSIVOS DE AMOR
+            💝 STICKERS & REACCIONES
           </span>
           <button
             type="button"
@@ -3821,9 +3818,35 @@ export default function ModelFacebookProfile({
           </button>
         </div>
         
-        {/* Compact Grid of cute stickers with larger tiles */}
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-          {STICKER_PACK.map((sticker, sIdx) => {
+        {/* Categories selector pills: Todos, Amor, Glamour, Saludos */}
+        <div className="flex items-center gap-1 mb-2 pb-1.5 border-b border-zinc-800/60 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'todos', label: '🌟 Todos', count: STICKER_PACK.length },
+            { id: 'amor', label: '💖 Amor', count: STICKER_PACK.filter(s => s.category === 'amor').length },
+            { id: 'glamour', label: '👑 Glamour', count: STICKER_PACK.filter(s => s.category === 'glamour').length },
+            { id: 'saludos', label: '🌸 Saludos', count: STICKER_PACK.filter(s => s.category === 'saludos').length }
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedStickerCategory(cat.id as any);
+              }}
+              className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-tight transition whitespace-nowrap cursor-pointer ${
+                selectedStickerCategory === cat.id
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-2xs'
+                  : 'bg-zinc-850 text-zinc-400 hover:text-white hover:bg-zinc-800'
+              }`}
+            >
+              {cat.label} ({cat.count})
+            </button>
+          ))}
+        </div>
+        
+        {/* Compact Grid of cute stickers with larger tiles & smooth scroll */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 max-h-[210px] sm:max-h-[250px] overflow-y-auto pr-1">
+          {filteredStickers.map((sticker, sIdx) => {
             const fullEmojiStr = sticker.emojis.join('');
             return (
               <button
@@ -3840,25 +3863,25 @@ export default function ModelFacebookProfile({
                   }
                   setHoveredStickersPostId(null);
                 }}
-                className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50/70 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs"
+                className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs group"
               >
                 <div className="relative flex flex-col items-center justify-center h-6 sm:h-7 w-full">
                   {sticker.emojis.length > 1 ? (
                     <div className="relative h-6 w-6 sm:h-7 sm:w-7 flex items-center justify-center">
-                      <span className="text-sm sm:text-base absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none">
+                      <span className="text-sm sm:text-base absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform">
                         {sticker.emojis[0]}
                       </span>
-                      <span className="text-sm sm:text-base absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none">
+                      <span className="text-sm sm:text-base absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform">
                         {sticker.emojis[1]}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-base sm:text-lg select-none leading-none">
+                    <span className="text-base sm:text-lg select-none leading-none group-hover:scale-110 transition-transform">
                       {sticker.emojis[0]}
                     </span>
                   )}
                 </div>
-                <span className="text-[7.5px] sm:text-[8px] font-extrabold text-zinc-600 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
+                <span className="text-[7px] sm:text-[7.5px] font-extrabold text-zinc-700 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
                   {sticker.label}
                 </span>
               </button>
@@ -3881,7 +3904,7 @@ export default function ModelFacebookProfile({
         }}
         className={
           isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[150] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:bottom-2 lg:left-3.5 lg:translate-x-0 lg:translate-y-0 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[250] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
             : "absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
         }
         onClick={(e) => e.stopPropagation()}
@@ -5369,35 +5392,27 @@ export default function ModelFacebookProfile({
               {/* Attached image if any */}
               {post.image && (
                 <div 
-                  className="rounded-2xl overflow-hidden bg-slate-900/5 border border-slate-150 cursor-pointer group/postimg max-h-96 relative"
+                  className="rounded-2xl overflow-visible bg-slate-900/5 border border-slate-150 cursor-pointer group/postimg relative"
                   title="Ampliar foto"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedPhotoForLightbox(null);
-                    openImageLightbox({
-                      src: post.image,
-                      alt: 'Foto de publicación',
-                      title: userProfile.name
-                    });
-                  }}
                 >
-                  <img 
-                    src={post.image} 
-                    alt="post attachment" 
-                    referrerPolicy="no-referrer"
-                    className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300 rounded-t-2xl"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedPhotoForLightbox(null);
-                      openImageLightbox({
-                        src: post.image,
-                        alt: 'Foto de publicación',
-                        title: userProfile.name
-                      });
-                    }}
-                  />
+                  <div className="rounded-2xl overflow-hidden max-h-96">
+                    <img 
+                      src={post.image} 
+                      alt="post attachment" 
+                      referrerPolicy="no-referrer"
+                      className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedPhotoForLightbox(null);
+                        openImageLightbox({
+                          src: post.image,
+                          alt: 'Foto de publicación',
+                          title: userProfile.name
+                        });
+                      }}
+                    />
+                  </div>
 
                   {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
                   {!selectedPhotoForLightbox && (hoveredStickersPostId === post.id || hoveredStickersPostId === post.image) && (
@@ -11964,12 +11979,18 @@ export default function ModelFacebookProfile({
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          if (isSelected) {
-                                            setRankingFormVideoUrl('');
-                                          } else {
-                                            setRankingFormVideoUrl(preset.url);
-                                            applyRankingVideo(preset.url);
-                                          }
+                                          setRankingFormVideoUrl(preset.url);
+                                          applyRankingVideo(preset.url);
+                                          setTimeout(() => {
+                                            const videoElements = document.querySelectorAll('video');
+                                            videoElements.forEach((vid) => {
+                                              if (vid.src === preset.url || vid.currentSrc === preset.url || vid.src.includes(preset.url)) {
+                                                vid.muted = false;
+                                                vid.volume = 1.0;
+                                                vid.play().catch(() => {});
+                                              }
+                                            });
+                                          }, 50);
                                         }}
                                         className={`w-full p-2.5 cursor-pointer border rounded-xl text-left transition-all duration-200 flex flex-col justify-center ${
                                           isSelected 
@@ -12010,15 +12031,39 @@ export default function ModelFacebookProfile({
                                 <span className="absolute top-3.5 left-3.5 bg-gradient-to-r from-[#f472b6] to-[#ec4899] text-[8.5px] text-white font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-white/60 tracking-wider">
                                   REPRODUCTOR DEMO
                                 </span>
+                                <span className="absolute top-3.5 right-3.5 bg-white/90 backdrop-blur-xs text-[8.5px] text-rose-600 font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-rose-200 tracking-wider flex items-center gap-1">
+                                  <span>🔊</span> Sonido Activado
+                                </span>
                                 <div className="relative w-full aspect-video bg-white/30 rounded-xl overflow-hidden flex items-center justify-center border border-[#ffd1dc]/80 shadow-inner">
                                   <video
+                                    ref={(videoEl) => {
+                                      if (videoEl) {
+                                        videoEl.muted = false;
+                                        videoEl.volume = 1.0;
+                                        const playPromise = videoEl.play();
+                                        if (playPromise !== undefined) {
+                                          playPromise.catch(() => {});
+                                        }
+                                      }
+                                    }}
                                     key={rankingFormVideoUrl || newCustomVideoUrl}
                                     src={rankingFormVideoUrl || newCustomVideoUrl}
                                     autoPlay
                                     loop
-                                    muted
                                     controls
                                     playsInline
+                                    onLoadedMetadata={(e) => {
+                                      const el = e.currentTarget;
+                                      el.muted = false;
+                                      el.volume = 1.0;
+                                      el.play().catch(() => {});
+                                    }}
+                                    onCanPlay={(e) => {
+                                      const el = e.currentTarget;
+                                      el.muted = false;
+                                      el.volume = 1.0;
+                                      el.play().catch(() => {});
+                                    }}
                                     className="w-full h-full object-cover rounded-lg object-center transition-transform duration-700 bg-black"
                                   />
                                 </div>
@@ -12061,7 +12106,17 @@ export default function ModelFacebookProfile({
                                           return [{ label, url: objectUrl, isCustom: true }, ...prev];
                                         });
                                         applyRankingVideo(objectUrl);
-                                        showSocialToast(`📹 Vídeo "${file.name}" cargado localmente con éxito y sincronizado con el Ranking (#1) y el Podio.`);
+                                        setTimeout(() => {
+                                          const videoElements = document.querySelectorAll('video');
+                                          videoElements.forEach((vid) => {
+                                            if (vid.src === objectUrl || vid.currentSrc === objectUrl || vid.src.includes(objectUrl)) {
+                                              vid.muted = false;
+                                              vid.volume = 1.0;
+                                              vid.play().catch(() => {});
+                                            }
+                                          });
+                                        }, 50);
+                                        showSocialToast(`📹 Vídeo "${file.name}" cargado con éxito y reproduciéndose con sonido.`);
                                       }
                                     }}
                                   />

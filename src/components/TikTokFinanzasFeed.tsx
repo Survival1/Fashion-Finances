@@ -5144,59 +5144,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               </div>
             )}
           </div>
-
-          {/* 🧭 NAVEGADOR VERTICAL DE VÍDEOS EN PANTALLAS GRANDES (Oculto en móvil y tablet) */}
-          <div
-            className="hidden lg:flex absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-2 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-3 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
-            id={`floating-channel-videos-navigator-${currentVid.id}`}
-          >
-            <button
-              type="button"
-              disabled={vidIdx <= 0}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (vidIdx > 0) {
-                  const prevVid = videos[vidIdx - 1];
-                  setActiveChannelVideoIdx(vidIdx - 1);
-                  setChannelVideoProgress(0);
-                  setIsChannelVideoPlaying(true);
-                  setIsUserPaused(false);
-                  document.getElementById(`tiktok-round-card-multimedia-${prevVid.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }}
-              className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
-              title="Vídeo anterior (desplazar arriba)"
-            >
-              <ChevronUp className="w-4 h-4 text-white stroke-[2.5]" />
-            </button>
-
-            <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
-              <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">VÍDEO</span>
-              <span className="text-xs sm:text-[13px] font-black font-mono text-[#fe2c55]">
-                {vidIdx + 1}/{videos.length}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              disabled={vidIdx >= videos.length - 1}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (vidIdx < videos.length - 1) {
-                  const nextVid = videos[vidIdx + 1];
-                  setActiveChannelVideoIdx(vidIdx + 1);
-                  setChannelVideoProgress(0);
-                  setIsChannelVideoPlaying(true);
-                  setIsUserPaused(false);
-                  document.getElementById(`tiktok-round-card-multimedia-${nextVid.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }}
-              className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
-              title="Siguiente vídeo (desplazar abajo)"
-            >
-              <ChevronDown className="w-4 h-4 text-white stroke-[2.5]" />
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -7393,45 +7340,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 </div>
 
-                </div>
-
-                {/* 🧭 NAVEGADOR VERTICAL DE RONDAS (Solo en pantallas grandes para evitar desborde en móvil y tablet) */}
-                <div 
-                  className="hidden lg:flex absolute left-[calc(100%+10px)] sm:left-[calc(100%+14px)] lg:left-[calc(100%+18px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-1.5 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-2.5 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
-                  id={`floating-finanzas-rounds-navigator-${session.id}`}
-                >
-                  <button
-                    type="button"
-                    disabled={activeFinanzasSessionIndex <= 0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      scrollToRound(activeFinanzasSessionIndex - 1);
-                    }}
-                    className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
-                    title="Ronda anterior (desplazar arriba)"
-                  >
-                    <ChevronUp className="w-4 h-4 text-white stroke-[2.5]" />
-                  </button>
-
-                  <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
-                    <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">RONDA</span>
-                    <span className="text-xs sm:text-[13px] font-black font-mono text-[#00e676]">
-                      {activeFinanzasSessionIndex + 1}/{activeSessionsOnly.length}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={activeFinanzasSessionIndex >= activeSessionsOnly.length - 1}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      scrollToRound(activeFinanzasSessionIndex + 1);
-                    }}
-                    className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
-                    title="Siguiente ronda (desplazar abajo)"
-                  >
-                    <ChevronDown className="w-4 h-4 text-white stroke-[2.5]" />
-                  </button>
                 </div>
 
               </div>

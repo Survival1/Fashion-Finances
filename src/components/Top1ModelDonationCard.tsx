@@ -124,6 +124,48 @@ export default function Top1ModelDonationCard({
     };
   }, []);
 
+  // Top 1 published video or cover video
+  const [top1Video, setTop1Video] = useState<string>(() => {
+    try {
+      return (
+        localStorage.getItem('vs_ranking_podium_video_1') ||
+        localStorage.getItem('custom_model_video_adrianalima') ||
+        localStorage.getItem('custom_model_video_adrianalima_w1') ||
+        localStorage.getItem('custom_model_video_topf-1') ||
+        localStorage.getItem('coll_custom_ranking_video_female') ||
+        localStorage.getItem('coll_custom_ranking_video') ||
+        localStorage.getItem('landing_page_cover_video_url') ||
+        ''
+      );
+    } catch (_) {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    const handleVideoSync = () => {
+      try {
+        const v = 
+          localStorage.getItem('vs_ranking_podium_video_1') ||
+          localStorage.getItem('custom_model_video_adrianalima') ||
+          localStorage.getItem('custom_model_video_adrianalima_w1') ||
+          localStorage.getItem('custom_model_video_topf-1') ||
+          localStorage.getItem('coll_custom_ranking_video_female') ||
+          localStorage.getItem('coll_custom_ranking_video') ||
+          localStorage.getItem('landing_page_cover_video_url') ||
+          '';
+        if (v) setTop1Video(v);
+      } catch (_) {}
+    };
+
+    window.addEventListener('ranking_videos_updated', handleVideoSync);
+    window.addEventListener('storage', handleVideoSync);
+    return () => {
+      window.removeEventListener('ranking_videos_updated', handleVideoSync);
+      window.removeEventListener('storage', handleVideoSync);
+    };
+  }, []);
+
   // Active donation mode tab
   const [donationMode, setDonationMode] = useState<'economic' | 'gifts'>('economic');
 
@@ -613,114 +655,99 @@ export default function Top1ModelDonationCard({
       <div className="flex flex-col items-center gap-8 relative z-10 w-full max-w-2xl mx-auto">
         
         {/* ========================================================================= */}
-        {/* UPPER SECTION: THE ROYAL VAULTED ARCH & PEDESTAL WITH VER DOSSIER */}
+        {/* UPPER SECTION: THE #1 PODIUM CARD (MATCHING Z.PNG) */}
         {/* ========================================================================= */}
-        <div className="w-full flex flex-col items-center justify-center text-center relative">
+        <div className="w-full flex flex-col items-center justify-center text-center relative pt-16 sm:pt-20 pb-2">
           
-          {/* Main Arched Monument Frame */}
-          <div className="w-full max-w-sm sm:max-w-md mx-auto relative flex flex-col items-center pt-16 sm:pt-20">
+          {/* Main Card Container with Suspended Crown */}
+          <div className="relative flex flex-col items-center">
             
-            {/* Arch Container with Anchor for Suspended Crown */}
-            <div className="relative z-10">
-              {/* 1. Opulent Royal Crown atop the Arch */}
-              <div 
-                style={{ bottom: 'calc(100% + 3px)' }}
-                className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 hover:scale-105"
-              >
-                {top1Model?.gender === 'male' ? (
-                  <RoyalMaleCrown 
-                    imgClassName="w-32 sm:w-40 h-auto"
-                    showSparkles={true}
+            {/* Cyan Ambient Aura behind Crown */}
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-56 h-28 bg-[#00f0ff]/35 rounded-full blur-2xl pointer-events-none" />
+
+            {/* 1. Opulent Royal Crown atop the Card (matching z.png) */}
+            <div 
+              style={{ bottom: 'calc(100% + 8px)' }}
+              className="absolute left-1/2 -translate-x-1/2 z-40 transition-transform duration-500 hover:scale-105 pointer-events-none drop-shadow-[0_12px_28px_rgba(225,29,72,0.35)]"
+            >
+              {top1Model?.gender === 'male' ? (
+                <RoyalMaleCrown 
+                  imgClassName="w-36 sm:w-44 md:w-48 h-auto"
+                  showSparkles={true}
+                />
+              ) : (
+                <RoyalFemaleCrown 
+                  imgClassName="w-36 sm:w-44 md:w-48 h-auto"
+                  showSparkles={true}
+                />
+              )}
+            </div>
+
+            {/* 2. Ice-Blue Radiant Metallic Neon Container (matching z.png) */}
+            <div 
+              onClick={() => onSelectModel && onSelectModel(top1Model)}
+              className="w-72 sm:w-80 md:w-[315px] h-[390px] sm:h-[430px] rounded-[34px] overflow-hidden border-[3.5px] border-[#00f0ff] shadow-[0_0_45px_rgba(0,240,255,0.75),0_0_80px_rgba(56,189,248,0.5)] hover:shadow-[0_0_65px_rgba(0,240,255,0.95),0_0_95px_rgba(56,189,248,0.75)] transition-all duration-300 relative z-30 cursor-pointer group bg-slate-950"
+              title={`Ver perfil completo de ${modelFullName}`}
+            >
+              <div className="w-full h-full relative overflow-hidden rounded-[30px] bg-black">
+                {/* Media: Video or High-Resolution Portrait Photo */}
+                {top1Video ? (
+                  <video 
+                    key={top1Video}
+                    src={top1Video}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                   />
                 ) : (
-                  <RoyalFemaleCrown 
-                    imgClassName="w-32 sm:w-40 h-auto"
-                    showSparkles={true}
-                  />
-                )}
-              </div>
-
-              {/* 3. The Royal Vaulted Arch Frame (Grand high-fashion portrait) */}
-              <div 
-                onClick={() => onSelectModel && onSelectModel(top1Model)}
-                className="w-52 sm:w-64 h-72 sm:h-84 rounded-t-full rounded-b-3xl bg-gradient-to-b from-[#FFF2A3] via-[#FBBF24] to-[#B45309] p-1.5 sm:p-2 shadow-2xl cursor-pointer group/arch transition-all duration-300 hover:scale-[1.02]"
-                title={`Ver ficha completa de ${modelFullName}`}
-              >
-                {/* Inner Arch with glowing border */}
-                <div className="w-full h-full rounded-t-full rounded-b-2xl overflow-hidden relative bg-slate-950 flex flex-col items-center justify-end">
-                  
-                  {/* Model High-Resolution Photo */}
-                  <img
-                    src={top1Model.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650"}
+                  <img 
+                    src={top1Model?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650"}
                     alt={modelFullName}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover object-center group-hover/arch:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
                   />
+                )}
 
-                  {/* Subtle soft dark gradient overlay at base of image */}
-                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+                {/* Top-left pill: EN LÍNEA from z.png */}
+                <div className="absolute top-3.5 left-3.5 z-40 bg-[#fe2c55] text-white font-bold text-[9px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase tracking-wider pointer-events-none">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                  <span>EN LÍNEA</span>
+                </div>
+
+                {/* Top-right interactive clickable heart button */}
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                      detail: {
+                        pureEmoji: true,
+                        emoji: '💖',
+                        icon: '💖',
+                        x: e.clientX,
+                        y: e.clientY
+                      }
+                    }));
+                  }}
+                  className="absolute top-3.5 right-3.5 z-40 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition cursor-pointer border border-white/20 backdrop-blur-xs shadow-md"
+                  title="Me gusta"
+                >
+                  <Heart className="w-4 h-4 fill-white/20 stroke-white" />
+                </button>
+
+                {/* Bottom overlay with Adriana Lima ★ and 100.009 votos matching z.png */}
+                <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-14 pb-4 px-4 text-center flex flex-col items-center pointer-events-none">
+                  <h4 className="text-white font-serif font-black text-base sm:text-lg leading-tight flex items-center justify-center gap-1.5 drop-shadow-md">
+                    <span>{modelFullName}</span>
+                    <span className="text-amber-400 text-sm">★</span>
+                  </h4>
+                  <div className="text-white/90 font-medium text-[11px] sm:text-xs flex items-center justify-center gap-1 mt-1 font-mono">
+                    <span className="text-[#ec4899]">💖</span> {Number(top1Model?.totalLikes || 100009).toLocaleString('es-ES')} votos
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* 4. Live Runway Status Container Badge (Placed below the image with refreshed luxury styling) */}
-            <div className="mt-3 relative z-20">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-950 via-slate-900 to-rose-950 border border-amber-400/80 text-amber-200 text-[10px] sm:text-[11px] font-mono font-bold tracking-wider px-4 py-1.5 rounded-full shadow-lg">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                </span>
-                <span className="text-white font-black tracking-widest text-[9.5px] sm:text-[10px]">Online • EN PASARELA</span>
-              </div>
-            </div>
-
-            {/* 5. Elegant Cream-Marble Nameplate with Gold Trim (Matching zz.png) */}
-            <div className="mt-2.5 bg-gradient-to-b from-white via-[#fffdfa] to-amber-50/40 border-2 border-amber-300/80 rounded-2xl px-6 py-2.5 shadow-md text-center relative z-20 min-w-[75%] max-w-[90%]">
-              <h3 
-                onClick={() => onSelectModel && onSelectModel(top1Model)}
-                className="text-lg sm:text-xl md:text-2xl font-serif font-black text-slate-900 tracking-tight cursor-pointer hover:text-rose-600 transition-colors flex items-center justify-center gap-1.5 m-0"
-              >
-                <span>{modelFullName}</span>
-                <span className="text-amber-500 text-sm">★</span>
-              </h3>
-              
-              <div className="text-rose-600 font-extrabold text-xs sm:text-sm tracking-tight mt-0.5 flex items-center justify-center gap-1 font-sans">
-                <span className="text-rose-500">♥</span>
-                <span>{votesCount} votos</span>
-              </div>
-            </div>
-
-            {/* 6. Majestic Marble Cylindrical Pedestal (Matching zz.png #1 Diamond Angel) */}
-            <div className="w-full max-w-xs sm:max-w-sm mt-2 bg-gradient-to-b from-[#fff8f0] via-[#faede0] to-[#f4ded0] border-2 border-amber-300/90 rounded-3xl p-4 shadow-xl text-center relative overflow-hidden z-10 space-y-2">
-              <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-400" />
-              
-              {/* Embossed Roman Numeral 1 */}
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-amber-600 text-xl select-none">🌾</span>
-                <span className="text-4xl sm:text-5xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-600 via-amber-700 to-amber-900 drop-shadow-sm leading-none">
-                  1
-                </span>
-                <span className="text-amber-600 text-xl transform scale-x-[-1] select-none">🌾</span>
-              </div>
-
-              {/* Diamond Angel Gold Label */}
-              <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-amber-900 bg-amber-200/60 border border-amber-300/80 px-3.5 py-0.8 rounded-full shadow-3xs">
-                <span>✦</span> DIAMOND ANGEL <span>✦</span>
-              </div>
-
-              <p className="text-[9.5px] text-stone-600 uppercase tracking-wider font-bold">
-                MÁXIMO GALARDÓN DE PASARELA MUNDIAL
-              </p>
-
-              {/* Quick Profile Action Button */}
-              <button
-                type="button"
-                onClick={() => onSelectModel && onSelectModel(top1Model)}
-                className="w-full mt-1 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-amber-200 hover:text-amber-100 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-amber-400/30"
-              >
-                <span>VER DOSSIER DE SUPERESTRELLA</span>
-                <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
-              </button>
             </div>
           </div>
         </div>

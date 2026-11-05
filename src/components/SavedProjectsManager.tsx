@@ -462,8 +462,8 @@ export default function SavedProjectsManager({
       alert('⚠️ El título del proyecto es obligatorio.');
       return;
     }
-    if (editBudget <= 0) {
-      alert('⚠️ El presupuesto de referencia debe ser mayor a 0€.');
+    if (editFundingGoal <= 0) {
+      alert('⚠️ El objetivo de recaudación debe ser mayor a 0€.');
       return;
     }
 
@@ -1326,17 +1326,7 @@ export default function SavedProjectsManager({
                       </h5>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Presupuesto Referencia (€) *</label>
-                          <input 
-                            type="number" 
-                            value={editBudget}
-                            onChange={(e) => setEditBudget(Number(e.target.value))}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-600 font-mono font-bold"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
+                        <div className="space-y-1 sm:col-span-2">
                           <label className="block text-[10px] font-bold text-slate-500 uppercase">Objetivo Recaudación (€) *</label>
                           <input 
                             type="number" 

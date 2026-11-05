@@ -3396,11 +3396,30 @@ export default function SessionSimulator({
   return (
     <div className="bg-white rounded-3xl border border-slate-900/80 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="automated-sessions-section">
       
-      {/* Mensaje de invitación destacado, centrado y con espacio generoso */}
-      <div className="w-full text-center px-4 pt-2 pb-4 mb-6 sm:mb-8">
-        <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-800 tracking-tight leading-snug max-w-3xl mx-auto">
-          Quieres que impulsemos tus proyectos, súbelos y participa en nuestras Rondas de financiación.
-        </h2>
+      {/* 💎 BANNER OFICIAL: DIAMANTE ROSA Y FINANCIACIÓN CREATIVA (Captura Diamante rosa y financiación creativa.png) */}
+      <div className="w-full mb-6 sm:mb-8 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-pink-200/90 bg-gradient-to-r from-[#fff0f5] via-white to-[#ffe4e9] group select-none">
+        <img 
+          src="/assets/aistudio/Diamante_rosa_y_financiaci_n_creativa_ca7bffc3.png" 
+          alt="Quieres que impulsemos tus proyectos, súbelos y participa en nuestras Rondas de financiación - Tu talento, nuestra plataforma, un gran futuro juntos"
+          className="w-full h-auto object-cover block"
+        />
+
+        {/* Hotspots interactivos sobre los botones de la captura */}
+        <button
+          type="button"
+          onClick={() => setShowReglasModal(true)}
+          className="absolute top-[34%] right-[1.5%] w-[24%] h-[16%] cursor-pointer rounded-full opacity-0 hover:opacity-100 bg-white/20 active:bg-white/35 transition-all border-2 border-amber-400/80 shadow-md"
+          title="Ver Reglas de Participación"
+          aria-label="Ver Reglas de Participación"
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowComisionesModal(true)}
+          className="absolute top-[52%] right-[1.5%] w-[24%] h-[16%] cursor-pointer rounded-full opacity-0 hover:opacity-100 bg-white/20 active:bg-white/35 transition-all border-2 border-amber-400/80 shadow-md"
+          title="Ver Comisiones"
+          aria-label="Ver Comisiones"
+        />
       </div>
 
       {/* Upper header */}

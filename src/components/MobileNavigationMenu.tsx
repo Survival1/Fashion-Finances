@@ -124,6 +124,7 @@ export default function MobileNavigationMenu({
       <button
         type="button"
         onClick={() => {
+          localStorage.setItem('previous_tab_before_chat', activeTab);
           onNavigateToTab('chat');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}

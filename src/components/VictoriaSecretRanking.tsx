@@ -3374,15 +3374,19 @@ export default function VictoriaSecretRanking({
               {/* Header section */}
               <div className="text-center space-y-2">
                 <div className="flex justify-center mb-1">
-                  <Trophy className="w-8 h-8 text-amber-500" />
+                  <img 
+                    src="/assets/aistudio/Diamante_rosa_brillante_sobre_blanco_dc68f326.png" 
+                    alt="Diamante rosa brillante" 
+                    className="w-14 h-auto max-h-12 object-contain mix-blend-multiply select-none" 
+                  />
                 </div>
                 <h1 className="text-3xl font-serif font-black tracking-wider text-pink-905 uppercase">
                   HALL OF FAME
                 </h1>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">
-                  🏆 Creadores Legendarios con Mayor Historial de Éxitos 🏆
+                  💎 Creadores Legendarios con Mayor Historial de Éxitos 💎
                 </p>
-                <div className="w-16 h-0.5 mx-auto bg-amber-400 rounded-full" />
+                <div className="w-16 h-0.5 mx-auto bg-gradient-to-r from-amber-400 via-pink-400 to-amber-400 rounded-full" />
               </div>
 
               {/* Informative introductory callout */}
@@ -3390,6 +3394,59 @@ export default function VictoriaSecretRanking({
                 <p>
                   El prestigioso Hall de la Fama de <strong>Fashion Finances</strong> celebra a los creadores de contenido que no solo alcanzaron el número 1, sino que establecieron récords históricos y redefinieron lo que significa el glamour digital de alta costura.
                 </p>
+              </div>
+
+              {/* 📊 FASHION FINANCES RECORDS (4 Indicadores de captura image.png) */}
+              <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-7 md:p-8 shadow-xs max-w-2xl mx-auto space-y-5 sm:space-y-6 my-8 sm:my-10" id="fashion-finances-records-hall-of-fame">
+                <h3 className="text-center text-xs sm:text-sm font-black tracking-widest text-slate-900 uppercase font-sans">
+                  FASHION FINANCES RECORDS
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-7">
+                  {/* Indicador 1: Máximo de Votos */}
+                  <div className="bg-[#fff1f7] rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-center space-y-2 transition hover:scale-[1.01] shadow-3xs">
+                    <Crown className="w-5 h-5 text-[#db2777]" />
+                    <span className="text-xl sm:text-2xl font-black text-[#9d174d] font-sans tracking-tight">
+                      100,009
+                    </span>
+                    <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      MÁXIMO DE VOTOS
+                    </span>
+                  </div>
+
+                  {/* Indicador 2: Días como Nº 1 */}
+                  <div className="bg-[#fff8e9] rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-center space-y-2 transition hover:scale-[1.01] shadow-3xs">
+                    <Trophy className="w-5 h-5 text-[#b45309]" />
+                    <span className="text-xl sm:text-2xl font-black text-[#a16207] font-sans tracking-tight">
+                      38
+                    </span>
+                    <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      DÍAS COMO Nº 1
+                    </span>
+                  </div>
+
+                  {/* Indicador 3: Creadores Legendarios */}
+                  <div className="bg-[#f2f6ff] rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-center space-y-2 transition hover:scale-[1.01] shadow-3xs">
+                    <Users className="w-5 h-5 text-[#3b82f6]" />
+                    <span className="text-xl sm:text-2xl font-black text-[#1e40af] font-sans tracking-tight">
+                      TOP 100
+                    </span>
+                    <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      CREADORES LEGENDARIOS
+                    </span>
+                  </div>
+
+                  {/* Indicador 4: Legends Never Fade */}
+                  <div className="bg-[#f8f3ff] rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-center space-y-2 transition hover:scale-[1.01] shadow-3xs">
+                    <Gem className="w-5 h-5 text-[#9333ea]" />
+                    <span className="text-xl sm:text-2xl font-black text-[#7e22ce] font-sans tracking-tight">
+                      ∞
+                    </span>
+                    <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+                      LEGENDS NEVER FADE
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Elegant List of Hall of Famers */}

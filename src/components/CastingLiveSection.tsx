@@ -29851,50 +29851,6 @@ try {
                           </div>
                         )}
                       </div>
-
-                      {/* 🧭 NAVEGADOR VERTICAL DE PANTALLAS (Desktop/Tablet) */}
-                      <div
-                        className="hidden lg:flex absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[180] flex-col items-center gap-2 bg-[#0e1628]/95 backdrop-blur-xl border border-slate-700/80 p-1.5 py-3 rounded-[24px] shadow-2xl select-none animate-fade-in pointer-events-auto shrink-0"
-                      >
-                        <button
-                          type="button"
-                          disabled={idx <= 0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (idx > 0) {
-                              const prevCh = filteredLiveChannels[idx - 1];
-                              document.getElementById(`fashion-round-card-${prevCh.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }}
-                          className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
-                          title="Pantalla anterior (arriba)"
-                        >
-                          <ChevronUp className="w-4 h-4 text-white stroke-[2.5]" />
-                        </button>
-
-                        <div className="flex flex-col items-center py-1 text-center select-none shrink-0">
-                          <span className="text-[7.5px] font-black uppercase text-slate-300 tracking-wider">PANTALLA</span>
-                          <span className="text-xs sm:text-[13px] font-black font-mono text-[#fe2c55]">
-                            {idx + 1}/{filteredLiveChannels.length}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          disabled={idx >= filteredLiveChannels.length - 1}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (idx < filteredLiveChannels.length - 1) {
-                              const nextCh = filteredLiveChannels[idx + 1];
-                              document.getElementById(`fashion-round-card-${nextCh.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }}
-                          className="w-8 h-8 rounded-full bg-[#1b2537] hover:bg-[#253248] disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition active:scale-90 cursor-pointer shadow-sm border border-slate-700/60 shrink-0"
-                          title="Siguiente pantalla (abajo)"
-                        >
-                          <ChevronDown className="w-4 h-4 text-white stroke-[2.5]" />
-                        </button>
-                      </div>
                     </div>
                   </div>
                 );
