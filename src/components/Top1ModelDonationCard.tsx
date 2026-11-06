@@ -667,7 +667,7 @@ export default function Top1ModelDonationCard({
 
             {/* 1. Opulent Royal Crown atop the Card (matching z.png) */}
             <div 
-              style={{ bottom: 'calc(100% + 8px)' }}
+              style={{ bottom: top1Model?.gender === 'male' ? 'calc(100% - 2px)' : 'calc(100% + 8px)' }}
               className="absolute left-1/2 -translate-x-1/2 z-40 transition-transform duration-500 hover:scale-105 pointer-events-none drop-shadow-[0_12px_28px_rgba(225,29,72,0.35)]"
             >
               {top1Model?.gender === 'male' ? (

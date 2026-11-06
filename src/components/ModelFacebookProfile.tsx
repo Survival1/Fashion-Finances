@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { UserSessionProfile, ModelProfile, ChatMessage } from '../types';
 import ModelBookingSystem from './ModelBookingSystem';
 import UserUploadedVideos from './UserUploadedVideos';
+import PresentationGallery from './PresentationGallery';
 import { compressAndResizeImage } from '../utils/imageCompressor';
 import { generateInitialModels } from '../utils/seedData';
 import { 
@@ -3795,8 +3796,8 @@ export default function ModelFacebookProfile({
         }}
         className={
           isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:bottom-2 lg:left-3.5 lg:translate-x-0 lg:translate-y-0 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[250] w-[92%] max-w-[320px] sm:max-w-[340px] lg:w-[350px] text-left animate-fade-in select-none"
-            : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[340px] text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3 z-[250] w-[94%] max-w-[330px] sm:max-w-[350px] max-h-[92%] flex flex-col text-left animate-fade-in select-none"
+            : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[340px] max-h-[90vh] flex flex-col text-left animate-fade-in select-none"
         }
         onClick={(e) => e.stopPropagation()}
       >
@@ -3819,7 +3820,7 @@ export default function ModelFacebookProfile({
         </div>
         
         {/* Categories selector pills: Todos, Amor, Glamour, Saludos */}
-        <div className="flex items-center gap-1 mb-2 pb-1.5 border-b border-zinc-800/60 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 mb-2 pb-1.5 border-b border-zinc-800/60 overflow-x-auto no-scrollbar shrink-0">
           {[
             { id: 'todos', label: '🌟 Todos', count: STICKER_PACK.length },
             { id: 'amor', label: '💖 Amor', count: STICKER_PACK.filter(s => s.category === 'amor').length },
@@ -3844,8 +3845,8 @@ export default function ModelFacebookProfile({
           ))}
         </div>
         
-        {/* Compact Grid of cute stickers with larger tiles & smooth scroll */}
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 max-h-[210px] sm:max-h-[250px] overflow-y-auto pr-1">
+        {/* Compact Grid of cute stickers with all 4 columns fully visible & smooth scroll */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[260px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850">
           {filteredStickers.map((sticker, sIdx) => {
             const fullEmojiStr = sticker.emojis.join('');
             return (
@@ -3863,25 +3864,25 @@ export default function ModelFacebookProfile({
                   }
                   setHoveredStickersPostId(null);
                 }}
-                className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs group"
+                className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs group min-w-0"
               >
-                <div className="relative flex flex-col items-center justify-center h-6 sm:h-7 w-full">
+                <div className="relative flex flex-col items-center justify-center h-5 sm:h-6 w-full">
                   {sticker.emojis.length > 1 ? (
-                    <div className="relative h-6 w-6 sm:h-7 sm:w-7 flex items-center justify-center">
-                      <span className="text-sm sm:text-base absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform">
+                    <div className="relative h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center">
+                      <span className="text-xs sm:text-sm absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform">
                         {sticker.emojis[0]}
                       </span>
-                      <span className="text-sm sm:text-base absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform">
+                      <span className="text-xs sm:text-sm absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform">
                         {sticker.emojis[1]}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-base sm:text-lg select-none leading-none group-hover:scale-110 transition-transform">
+                    <span className="text-sm sm:text-base select-none leading-none group-hover:scale-110 transition-transform">
                       {sticker.emojis[0]}
                     </span>
                   )}
                 </div>
-                <span className="text-[7px] sm:text-[7.5px] font-extrabold text-zinc-700 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase">
+                <span className="text-[6.5px] sm:text-[7.5px] font-extrabold text-zinc-700 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase block w-full px-0.5">
                   {sticker.label}
                 </span>
               </button>
@@ -3904,7 +3905,7 @@ export default function ModelFacebookProfile({
         }}
         className={
           isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:bottom-2 lg:left-3.5 lg:translate-x-0 lg:translate-y-0 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[250] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[250] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
             : "absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
         }
         onClick={(e) => e.stopPropagation()}
@@ -9543,21 +9544,27 @@ export default function ModelFacebookProfile({
                                 setHoveredPhotoUrl(null);
                                 setHoveredHeartAndGiftPhotoUrl(null);
                               }}
-                              className="flex flex-col bg-white rounded-2xl overflow-visible border border-slate-200 group transition duration-300 hover:shadow-md relative"
+                              className={`flex flex-col bg-white rounded-2xl overflow-visible border border-slate-200 group transition duration-300 hover:shadow-md relative ${
+                                hoveredStickersPostId === ph || hoveredHeartAndGiftPhotoUrl === ph ? 'z-40' : 'hover:z-30'
+                              }`}
                             >
 
                               {/* Interactive Image box */}
                               <div 
                                 onClick={(e) => handleOpenPhotoLightbox(ph, e)}
-                                className="aspect-square w-full rounded-t-2xl overflow-hidden bg-slate-100 relative cursor-pointer"
+                                className={`aspect-square w-full rounded-t-2xl relative cursor-pointer bg-slate-100 ${
+                                  hoveredStickersPostId === ph || hoveredHeartAndGiftPhotoUrl === ph ? 'overflow-visible' : 'overflow-hidden'
+                                }`}
                                 title="Haz clic para ampliar la foto"
                               >
-                                <img 
-                                  src={ph} 
-                                  alt={`fashion ${idx}`} 
-                                  referrerPolicy="no-referrer"
-                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                                />
+                                <div className="w-full h-full rounded-t-2xl overflow-hidden">
+                                  <img 
+                                    src={ph} 
+                                    alt={`fashion ${idx}`} 
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                  />
+                                </div>
 
                                 {/* Deletion button in top-right of the image */}
                                 <button
@@ -11761,6 +11768,17 @@ export default function ModelFacebookProfile({
                               </p>
                             )}
                           </div>
+                        </div>
+
+                        {/* 3. GALERÍA DE IMÁGENES / BOOK OFICIAL (HASTA 10 IMÁGENES) */}
+                        <div className="border-t border-stone-200/80 pt-3">
+                          <PresentationGallery
+                            modelId={targetModelId}
+                            modelUsername={targetModelUsername}
+                            modelName={currentModel?.name || userProfile?.name || 'Adriana Lima'}
+                            defaultPhotos={currentModel?.photos || (currentModel?.avatar ? [currentModel.avatar] : undefined)}
+                            isEditingParent={isEditingWelcomeAndBio}
+                          />
                         </div>
 
                         {/* Botón Guardar cuando se está editando */}

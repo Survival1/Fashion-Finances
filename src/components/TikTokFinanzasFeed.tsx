@@ -3758,7 +3758,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       list = [...FINANZAS_USERS.slice(0, 10)];
     } else if (Array.isArray(session?.participants) && session.participants.length >= 10) {
       list = [...session.participants.slice(0, 10)];
-    } else if (sId.includes('trabajadores') || fee === 10) list = [...TRABAJADORES_USERS.slice(0, 10)];
+    } else if (sId.includes('trabajadores') || fee === 10) list = [...FINANZAS_USERS.slice(0, 10)];
     else if (sId.includes('emprendedores') || fee === 100) list = [...FINANZAS_USERS.slice(0, 10)];
     else if (sId.includes('empresarios') || fee === 1000) list = [...FINANZAS_USERS.slice(0, 10)];
     else if (sId.includes('topmodels') || fee === 10000) list = [...TOPMODELS_USERS.slice(0, 10)];
@@ -3768,7 +3768,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
     const isEnrolled = Boolean(
       userPaidSessions[session.id] ||
-      (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${session.id}`) === 'true')
+      (typeof window !== 'undefined' && (
+        localStorage.getItem(`user_paid_session_${session.id}`) === 'true' ||
+        ((session.id === 'sess-trabajadores-1' || session?.entryFee === 10) && (
+          localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true' ||
+          localStorage.getItem('user_paid_session_sess-workers') === 'true' ||
+          localStorage.getItem('finanzas_user_participating') === 'true' ||
+          localStorage.getItem('user_paid_finanzas_session') === 'true'
+        ))
+      ))
     );
 
     // If NOT enrolled in this round: Adriana Lima must NEVER appear in the list!
@@ -5244,7 +5252,15 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           const participants = getSessionParticipants(session);
           const isUserEnrolledInThisRound = Boolean(
             userPaidSessions[session.id] ||
-            (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${session.id}`) === 'true')
+            (typeof window !== 'undefined' && (
+              localStorage.getItem(`user_paid_session_${session.id}`) === 'true' ||
+              ((session.id === 'sess-trabajadores-1' || session?.entryFee === 10) && (
+                localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true' ||
+                localStorage.getItem('user_paid_session_sess-workers') === 'true' ||
+                localStorage.getItem('finanzas_user_participating') === 'true' ||
+                localStorage.getItem('user_paid_finanzas_session') === 'true'
+              ))
+            ))
           );
           // Comprobar si el usuario está participando en esta ronda estrictamente (solo en la que pagó)
           const isUserParticipating = isUserEnrolledInThisRound;
@@ -5369,10 +5385,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 )}
 
-                {/* 📊 ESCRUTINIO DESCENTRALIZADO (captura imagen.png) EN EL MISMO DISEÑO Y FORMATO DE za.png */}
+                {/* 📊 ESCRUTINIO DESCENTRALIZADO (captura imagen.png) EN EL MISMO DISEÑO Y FORMATO DE Gemini_Generated */}
                 {showFinanzasRecount && isCurrentlyActiveRound && (!completedSessionToDisplay?.id || completedSessionToDisplay.id === session.id) && (
                   <div 
-                    className="absolute inset-0 z-[130] bg-[#070b14] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-white font-sans pointer-events-auto"
+                    className="absolute inset-0 z-[130] bg-[#FAF6EE] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-900 font-sans pointer-events-auto"
+                    style={{ backgroundColor: '#FAF6EE' }}
                     id={`finanzas-recount-in-channel-${session.id}`}
                     onWheel={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}

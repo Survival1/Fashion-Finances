@@ -1417,8 +1417,8 @@ export default function SessionSimulator({
       targetTitle = 'Round STREETWEAR & URBAN';
       targetBrand = 'Estilo moderno, sneakers, denim y cultura street.';
       targetCategory = 'Round STREETWEAR & URBAN';
-      targetPresenter = TRABAJADORES_PARTICIPANTS_LIST[0];
-      zTenParticipants = TRABAJADORES_PARTICIPANTS_LIST;
+      targetPresenter = EMPRENDEDORES_PARTICIPANTS_LIST[0]; // Alessia Vance (captura image.png)
+      zTenParticipants = EMPRENDEDORES_PARTICIPANTS_LIST;
     } else if (fee === 100 || sessObj.id === 'sess-entrepreneurs' || (sessObj.title && (sessObj.title.toLowerCase().includes('emprend') || sessObj.title.toLowerCase().includes('bronce') || sessObj.title.toLowerCase().includes('casual')))) {
       targetId = 'sess-emprendedores-1';
       targetTitle = 'Round CASUAL & LIFESTYLE';
@@ -1514,7 +1514,6 @@ export default function SessionSimulator({
     localStorage.setItem('pending_session_welcome_speech', voiceSpeechText);
 
     setGatheringSessionData(currentChannelSession);
-    setShowGatheringModal(true);
 
     // Build the complete list of 6 sessions for the finance channel, with user in the chosen round
     const allSessionsList = [
@@ -1524,8 +1523,8 @@ export default function SessionSimulator({
         brand: 'Estilo moderno, sneakers, denim y cultura street.',
         category: 'Round STREETWEAR & URBAN',
         entryFee: 10,
-        presenter: TRABAJADORES_USERS[0],
-        participants: fee === 10 ? [...TRABAJADORES_USERS.slice(0, 9), userParticipant] : TRABAJADORES_USERS.slice(0, 10),
+        presenter: EMPRENDEDORES_PARTICIPANTS_LIST[0],
+        participants: fee === 10 ? [...EMPRENDEDORES_PARTICIPANTS_LIST.slice(0, 9), userParticipant] : EMPRENDEDORES_PARTICIPANTS_LIST.slice(0, 10),
         status: 'active' as const
       },
       {
@@ -1581,6 +1580,8 @@ export default function SessionSimulator({
     ];
 
     const listStr = JSON.stringify(allSessionsList);
+    localStorage.setItem('open_finanzas_sessions_list_v44', listStr);
+    localStorage.setItem('open_finanzas_sessions_list_v43', listStr);
     localStorage.setItem('open_finanzas_sessions_list_v37', listStr);
     localStorage.setItem('open_finanzas_sessions_list_v35', listStr);
     localStorage.setItem('open_finanzas_sessions_list_v30', listStr);
@@ -1588,21 +1589,35 @@ export default function SessionSimulator({
     localStorage.setItem('open_finanzas_sessions_list_v15', listStr);
     localStorage.setItem('open_finanzas_sessions_list_v3', listStr);
     localStorage.setItem('finanzas_target_session_id', targetId);
+    localStorage.setItem('user_paid_session_sess-trabajadores-1', 'true');
+    localStorage.setItem('user_paid_session_sess-workers', 'true');
+    localStorage.setItem(`user_paid_session_${targetId}`, 'true');
+    localStorage.setItem('user_paid_finanzas_session', 'true');
     localStorage.setItem('finanzas_active_session_fee', String(fee));
     localStorage.setItem('finanzas_target_session_name', targetTitle);
+    localStorage.setItem('finanzas_active_session_index', '0');
     localStorage.setItem('finanzas_scenario', 'present');
     localStorage.setItem('finanzas_is_voting_phase_active', 'false');
     localStorage.setItem('finanzas_voting_phase_timer', '600');
     localStorage.setItem(`finanzas_active_session_start_${targetId}`, String(Date.now()));
     localStorage.setItem('finanzas_user_participating', 'true');
-    localStorage.setItem('user_paid_finanzas_session', 'true');
     localStorage.setItem('casting_live_default_category_filter', 'Finanzas');
+    localStorage.setItem('finanzas_force_show_participants_panel', 'true');
+    localStorage.setItem('finanzas_selected_presenter_id', 'f-1');
     localStorage.setItem('finanzas_user_role', 'Usuario Inversor (10º Participante)');
     localStorage.setItem('finanzas_user_project_id', activeProject.id || 'proj-1');
     localStorage.setItem('finanzas_user_project_title', activeProject.title || 'Eco-Fashion Runway');
+    localStorage.setItem('finanzas_user_slot_index', '9');
 
     // Notify other components of storage update
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('nav_to_casting_live'));
+
+    // Redirigir de inmediato a la Ronda en vivo de la captura image.png
+    setShowGatheringModal(false);
+    if (onNavigateToTab) {
+      onNavigateToTab('casting_live');
+    }
   };
 
   const handleFinishGatheringInSimulator = (completedParticipants?: any[]) => {

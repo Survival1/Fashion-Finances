@@ -447,7 +447,7 @@ function ModelRankingCard({
     >
       {/* 1. Crown positioned atop the frame: Corona Real Femenina anterior para mujeres y Corona Real Masculina para hombres */}
       <div 
-        style={{ bottom: 'calc(100% + 2px)' }}
+        style={{ bottom: isMale ? 'calc(100% - 6px)' : 'calc(100% + 2px)' }}
         className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-transform duration-500 group-hover:scale-105"
       >
         {isMale ? (

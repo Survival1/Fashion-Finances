@@ -2912,13 +2912,13 @@ export default function CastingLiveSection({
                 .filter((sess: any) => sess.id !== 'sess-streetwear-ref-2')
                 .map((sess: any, idx: number) => {
                 const defaultParticipants = (
-                  sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
+                  sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? FINANZAS_USERS.slice(0, 10) :
                   sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
                   sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? FINANZAS_USERS.slice(0, 10) :
                   sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 ? TOPMODELS_USERS.slice(0, 10) :
                   sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? INVERSORES_USERS.slice(0, 10) :
                   sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? MILLONARIOS_USERS.slice(0, 10) :
-                  DEFAULT_FINANZAS_TABLE_SESSIONS[idx % DEFAULT_FINANZAS_TABLE_SESSIONS.length]?.participants || TRABAJADORES_USERS.slice(0, 10)
+                  DEFAULT_FINANZAS_TABLE_SESSIONS[idx % DEFAULT_FINANZAS_TABLE_SESSIONS.length]?.participants || FINANZAS_USERS.slice(0, 10)
                 );
                 return {
                   ...sess,
@@ -2954,12 +2954,23 @@ export default function CastingLiveSection({
             setActiveFinanzasSessionIndex(idx);
           }
         }
-        // If transitioning to live session, only show voting countdown if the user is actively participating
+        // If transitioning to live session, verify user participation
         const isUserParticipatingInit = Boolean(
           (targetSessionId && localStorage.getItem(`user_paid_session_${targetSessionId}`) === 'true') ||
+          localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true' ||
           localStorage.getItem('finanzas_user_participating') === 'true' ||
           localStorage.getItem('user_paid_finanzas_session') === 'true'
         );
+        if (isUserParticipatingInit) {
+          setIsFinanzasUserParticipatingState(true);
+          const enrolledId = targetSessionId || 'sess-trabajadores-1';
+          setUserPaidSessions(prev => ({
+            ...prev,
+            [enrolledId]: true,
+            'sess-trabajadores-1': true,
+            'sess-workers': true
+          }));
+        }
         setIsVotingPhaseActive(false);
         setVotingPhaseTimer(600);
         setIsSpeakingPresenterIntro(false);
@@ -2967,18 +2978,19 @@ export default function CastingLiveSection({
         setFinanzasScenario('present');
         setJoinedPresenterIds(['f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9', 'f-10']);
         setForceShowParticipantsPanel(true);
+        setIsBottomParticipantsHovered(true);
         setShowVotingProjectsModal(false);
         setShowFinanzasRecount(false);
         setShowFinanzasResults(false);
         setShowProjectDetailsInPopup(false);
         setDetailProjectUser(null);
         setActiveFinanzasPopupUser(null);
-        const firstPresenter = TRABAJADORES_USERS[0];
+        const firstPresenter = FINANZAS_USERS[0]; // Alessia Vance - MODELO DIRECTORA (captura image.png)
         setSelectedFinanzasUser(firstPresenter);
-        setFinanzasTimers({ [firstPresenter.id]: 300 });
+        setFinanzasTimers({ [firstPresenter.id]: 205 }); // 3:25 de exposición como en captura image.png
         setFinanzasTimerActive({ [firstPresenter.id]: true });
         setFinanzasPresentationQueue(
-          TRABAJADORES_USERS.map((p, idx) => ({
+          FINANZAS_USERS.map((p, idx) => ({
             id: p.id,
             name: p.name,
             avatar: p.avatar,
@@ -3368,9 +3380,9 @@ export default function CastingLiveSection({
       brand: 'Estilo moderno, sneakers, denim y cultura street.',
       category: 'Round STREETWEAR & URBAN',
       entryFee: 10,
-      presenter: TRABAJADORES_USERS[0],
+      presenter: FINANZAS_USERS[0], // Alessia Vance - Modelo Directora (captura image.png)
       participants: [
-        ...TRABAJADORES_USERS.slice(0, 10)
+        ...FINANZAS_USERS.slice(0, 10)
       ],
       status: 'active' as const
     },
@@ -3439,9 +3451,9 @@ export default function CastingLiveSection({
       reference: 'REF: 1',
       roundNumber: 1,
       roundIndex: 0,
-      title: 'Ronda High Fashion 👠',
+      title: 'Ronda of Millionaires 💎',
       brand: 'alta moda, diseñadores, pasarela y tendencias.',
-      category: 'Ronda High Fashion 👠',
+      category: 'Ronda of Millionaires 💎',
       entryFee: 1000000,
       presenter: MILLONARIOS_USERS[0],
       participants: [
@@ -3485,13 +3497,13 @@ export default function CastingLiveSection({
             }
             const ref = getRoundReference(sess, idx);
             const defaultParticipants = (
-              sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? TRABAJADORES_USERS.slice(0, 10) :
+              sess.id === 'sess-trabajadores-1' || sess.entryFee === 10 ? FINANZAS_USERS.slice(0, 10) :
               sess.id === 'sess-emprendedores-1' || sess.entryFee === 100 ? FINANZAS_USERS.slice(0, 10) :
               sess.id === 'sess-empresarios-1' || sess.entryFee === 1000 ? FINANZAS_USERS.slice(0, 10) :
               sess.id === 'sess-topmodels-1' || sess.entryFee === 10000 ? TOPMODELS_USERS.slice(0, 10) :
               sess.id === 'sess-inversores-1' || sess.entryFee === 100000 ? INVERSORES_USERS.slice(0, 10) :
               sess.id === 'sess-millonarios-1' || sess.entryFee === 1000000 ? MILLONARIOS_USERS.slice(0, 10) :
-              DEFAULT_FINANZAS_TABLE_SESSIONS[idx % DEFAULT_FINANZAS_TABLE_SESSIONS.length]?.participants || TRABAJADORES_USERS.slice(0, 10)
+              DEFAULT_FINANZAS_TABLE_SESSIONS[idx % DEFAULT_FINANZAS_TABLE_SESSIONS.length]?.participants || FINANZAS_USERS.slice(0, 10)
             );
             return {
               ...sess,
@@ -3593,26 +3605,29 @@ export default function CastingLiveSection({
   const sessionScrollLockRef = useRef<boolean>(false);
 
   // States to guarantee instant reactivity when paying and joining sessions
-  // Por defecto al entrar o reiniciar la aplicación, el usuario NUNCA está inscrito en ninguna ronda
   const [userPaidSessions, setUserPaidSessions] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     try {
-      // Limpiar cualquier residuo previo de sess-trabajadores-1 que pudiera haber quedado por defecto
-      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('user_paid_session_') && localStorage.getItem(key) === 'true') {
           const sId = key.replace('user_paid_session_', '');
           initial[sId] = true;
         }
       });
+      if (localStorage.getItem('finanzas_user_participating') === 'true' || localStorage.getItem('user_paid_finanzas_session') === 'true') {
+        initial['sess-trabajadores-1'] = true;
+      }
     } catch (e) {}
     return initial;
   });
   const [isFinanzasUserParticipatingState, setIsFinanzasUserParticipatingState] = useState<boolean>(() => {
     try {
-      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-      if (typeof window !== 'undefined' && !sessionStorage.getItem('app_user_visited_session')) {
-        return false;
+      if (typeof window !== 'undefined' && (
+        localStorage.getItem('finanzas_user_participating') === 'true' ||
+        localStorage.getItem('user_paid_finanzas_session') === 'true' ||
+        localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true'
+      )) {
+        return true;
       }
       return Object.keys(localStorage).some(key => key.startsWith('user_paid_session_') && localStorage.getItem(key) === 'true');
     } catch (e) {
@@ -3637,25 +3652,21 @@ export default function CastingLiveSection({
   // Explicit user selection of arrival position
   const [selectedArrivalSlot, setSelectedArrivalSlot] = useState<number | null>(null);
 
-  // Por defecto al abrir la APP, el usuario NO participa en ninguna ronda por defecto.
-  // Es obligatorio pagar e inscribirse explícitamente para participar.
   useEffect(() => {
     try {
-      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-      setUserPaidSessions(prev => {
-        if (!prev['sess-trabajadores-1']) return prev;
-        const copy = { ...prev };
-        delete copy['sess-trabajadores-1'];
-        return copy;
+      const initial: Record<string, boolean> = {};
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('user_paid_session_') && localStorage.getItem(k) === 'true') {
+          const sId = k.replace('user_paid_session_', '');
+          initial[sId] = true;
+        }
       });
-      const hasAnyPaid = Object.keys(localStorage).some(k => k.startsWith('user_paid_session_') && localStorage.getItem(k) === 'true');
-      if (!hasAnyPaid) {
-        localStorage.removeItem('finanzas_user_participating');
-        localStorage.removeItem('finanzas_user_slot_index');
-        localStorage.removeItem('user_paid_finanzas_session');
-        localStorage.removeItem('finanzas_target_session_id');
-        setIsFinanzasUserParticipatingState(false);
-        setUserPaidSessions({});
+      if (localStorage.getItem('finanzas_user_participating') === 'true' || localStorage.getItem('user_paid_finanzas_session') === 'true') {
+        initial['sess-trabajadores-1'] = true;
+      }
+      setUserPaidSessions(prev => ({ ...prev, ...initial }));
+      if (Object.keys(initial).length > 0) {
+        setIsFinanzasUserParticipatingState(true);
       }
     } catch (e) {}
   }, []);
@@ -3678,8 +3689,6 @@ export default function CastingLiveSection({
   const currentFinanzasSession = activeSessionsOnly[activeFinanzasSessionIndex] || activeSessionsOnly[0] || openFinanzasSessions[0];
 
   // Determine whether current authenticated user is formally participating/enrolled in this session
-  // By default, the user is NOT enrolled in ANY round upon opening the app.
-  // Every participant must pay and enroll in each round individually.
   const isCurrentUserParticipatingInCurrentSession = useMemo(() => {
     if (!currentFinanzasSession?.id) return false;
     const sessId = currentFinanzasSession.id;
@@ -3688,12 +3697,20 @@ export default function CastingLiveSection({
       return true;
     }
 
-    if (typeof window !== 'undefined' && localStorage.getItem(`user_paid_session_${sessId}`) === 'true') {
+    if (typeof window !== 'undefined' && (
+      localStorage.getItem(`user_paid_session_${sessId}`) === 'true' ||
+      ((sessId === 'sess-trabajadores-1' || currentFinanzasSession?.entryFee === 10) && (
+        localStorage.getItem('user_paid_session_sess-trabajadores-1') === 'true' ||
+        localStorage.getItem('user_paid_session_sess-workers') === 'true' ||
+        localStorage.getItem('finanzas_user_participating') === 'true' ||
+        localStorage.getItem('user_paid_finanzas_session') === 'true'
+      ))
+    )) {
       return true;
     }
 
     return false;
-  }, [currentFinanzasSession?.id, userPaidSessions]);
+  }, [currentFinanzasSession?.id, currentFinanzasSession?.entryFee, userPaidSessions, isFinanzasUserParticipatingState]);
 
   // Synchronized 10 participants for current session (strictly identical for central stage above and 2x5 grid below)
   const currentSessionParticipants10 = useMemo(() => {
@@ -3708,7 +3725,7 @@ export default function CastingLiveSection({
     const fallbackCategoryList = currentFinanzasSession?.id?.includes('empresarios')
       ? EMPRESARIOS_USERS
       : (currentFinanzasSession?.id?.includes('trabajadores') || isThisSession10
-          ? TRABAJADORES_USERS
+          ? FINANZAS_USERS
           : (currentFinanzasSession?.id?.includes('topmodels')
               ? TOPMODELS_USERS
               : (currentFinanzasSession?.id?.includes('inversores')
@@ -3718,7 +3735,22 @@ export default function CastingLiveSection({
                       : FINANZAS_USERS))));
 
     // Si Alessia Vance es la ponente activa o seleccionada, priorizar estrictamente FINANZAS_USERS (Alessia, Gisele, Marcus, etc.)
-    if (selectedFinanzasUser?.name?.includes('Alessia') || selectedFinanzasUser?.id === 'f-1') {
+    if (selectedFinanzasUser?.name?.includes('Alessia') || selectedFinanzasUser?.id === 'f-1' || isThisSession10) {
+      if (hasPaidThisSession) {
+        const myId = userProfile?.id || 'user-adriana';
+        const myName = userProfile?.name || 'Adriana Lima';
+        const myUsername = userProfile?.username || 'adrianalima_w1';
+        const myAvatar = userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+        const userParticipant = {
+          id: myId,
+          name: `${myName} (Tú)`,
+          username: myUsername,
+          avatar: myAvatar,
+          role: 'Participante (Tú • Puesto #10)',
+          isSelf: true
+        };
+        return [...FINANZAS_USERS.slice(0, 9), userParticipant];
+      }
       return FINANZAS_USERS.slice(0, 10);
     }
 
@@ -15552,22 +15584,26 @@ export default function CastingLiveSection({
       { name: 'Amara Okafor', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300' },
       { name: 'Dante Moretti', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300' },
       { name: 'Kenji Sato', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300' },
-      { name: userProfile?.name || 'Adriana Lima', role: 'Inversor Principal', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300', isSelf: true },
-      { name: 'Isabella Dubois', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300' },
-      { name: 'Marcus Sterling', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=300' },
-      { name: 'Liam Alvarez', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300' }
+      { name: userProfile?.name || 'Adriana Lima', role: 'Miembro IA', avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300', isSelf: true },
+      { name: 'Isabelle Dubois', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Marcus Sterling', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300' },
+      { name: 'Liam Alvarez', role: 'Miembro IA', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300' }
     ];
 
     return (
-      <div className="w-full h-full bg-[#070b14] text-white p-3 sm:p-4 space-y-3 font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border">
-        {/* Notice bar */}
-        <div className="bg-[#0e1628]/95 border border-rose-500/40 p-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-rose-200 shadow-md">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="animate-spin text-base shrink-0">⏳</span>
-            <span className="truncate text-[11px]">
+      <div 
+        className="w-full h-full bg-[#FAF6EE] text-slate-900 p-3 sm:p-5 space-y-3 sm:space-y-4 font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border"
+        style={{ backgroundColor: '#FAF6EE' }}
+        id="finanzas-recount-container"
+      >
+        {/* Notice bar matching Gemini_Generated */}
+        <div className="bg-[#FFFDF7] border border-[#EADBBD] p-3 sm:p-3.5 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <span className="text-base sm:text-lg shrink-0">⏳</span>
+            <span className="truncate text-xs sm:text-[13px] font-bold text-slate-900">
               {scrutinyVotesCompleted < 10
                 ? `Tabulando firmas... ${formatMMSS(scrutinySeconds)} (${scrutinyVotesCompleted}/10 Votaron)`
-                : `Escrutinio completado. Redirigiendo a Resultados Finales...`}
+                : `Escrutinio completado. Redirigiendo a Res...`}
             </span>
           </div>
           <button
@@ -15581,51 +15617,61 @@ export default function CastingLiveSection({
               setShowFinanzasRecount(false);
               setShowFinanzasResults(true);
             }}
-            className="bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white px-2.5 py-1 rounded-xl font-black text-[9.5px] uppercase tracking-wider cursor-pointer transition shadow-md border border-rose-400/50 active:scale-95 shrink-0"
+            className="bg-[#0A0D14] hover:bg-black text-white px-4 sm:px-5 py-2 rounded-full font-black text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer transition shadow-sm active:scale-95 shrink-0 border-0"
           >
             VER RESULTADOS
           </button>
         </div>
 
-        {/* Gauge panel matching za.png dark luxury styling */}
-        <div className="bg-[#0e1628]/95 border border-slate-800/80 rounded-3xl p-4 space-y-3 text-center shadow-xl">
+        {/* Main Card: Escrutinio Descentralizado matching Gemini_Generated */}
+        <div className="bg-white border border-[#EADBBD] rounded-[26px] sm:rounded-[32px] p-5 sm:p-6 space-y-4 text-center shadow-md relative">
           {/* Circle gauge showing countdown and votes */}
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-rose-500/70 flex items-center justify-center relative bg-[#070b14] shadow-[0_0_25px_rgba(254,44,85,0.25)] mx-auto">
+          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-[5px] border-[#E11D48] shadow-[0_0_24px_rgba(225,29,72,0.3)] flex items-center justify-center relative bg-white mx-auto">
             <div className="space-y-0.5 text-center">
-              <span className="text-2xl sm:text-3xl font-extrabold font-mono text-[#fe2c55] block leading-none">{scrutinyVotesCompleted}</span>
-              <span className="text-[8.5px] font-mono font-bold text-slate-400 uppercase tracking-wider block">DE 10 VOTOS</span>
-              <span className="text-[9.5px] font-mono font-black text-rose-400 block pt-0.5 animate-pulse">⏳ {formatMMSS(scrutinySeconds)}</span>
+              <span className="text-3xl sm:text-4xl font-black font-sans text-[#E11D48] block leading-none tracking-tight">
+                {scrutinyVotesCompleted}
+              </span>
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-widest block mt-1">
+                DE 10 VOTOS
+              </span>
+              <span className="text-[11px] sm:text-xs font-mono font-bold text-[#E11D48] block pt-1">
+                ⏳ {formatMMSS(scrutinySeconds)}
+              </span>
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <h3 className="text-sm font-black text-white tracking-tight m-0">Escrutinio Descentralizado</h3>
-            <p className="text-[10px] text-slate-400 font-medium m-0">Computando resultados instantáneos al completar las firmas.</p>
+            <h3 className="text-base sm:text-lg font-black text-slate-950 tracking-tight m-0">
+              Escrutinio Descentralizado
+            </h3>
+            <p className="text-xs sm:text-[13px] text-slate-600 font-medium m-0">
+              Computando resultados instantáneos al completar las firmas.
+            </p>
           </div>
 
           {/* Progress Bar */}
-          <div className="space-y-1 max-w-xl mx-auto pt-0.5">
-            <div className="flex justify-between items-center text-[11px] font-mono font-bold">
-              <span className="text-slate-300">Progreso de la Votación</span>
-              <span className="text-[#fe2c55] font-extrabold">{scrutinyVotesCompleted * 10}% completado</span>
+          <div className="space-y-1.5 max-w-xl mx-auto pt-1">
+            <div className="flex justify-between items-center text-xs sm:text-sm font-sans font-bold">
+              <span className="text-slate-900">Progreso de la Votación</span>
+              <span className="text-[#E11D48] font-black">{scrutinyVotesCompleted * 10}% completado</span>
             </div>
-            <div className="w-full h-2.5 rounded-full bg-slate-900 border border-slate-800 p-0.5 overflow-hidden">
+            <div className="w-full h-3 rounded-full bg-slate-100 border border-slate-200/90 p-0.5 overflow-hidden shadow-inner">
               <div 
-                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-[#fe2c55] to-rose-700 transition-all duration-500 shadow-[0_0_10px_rgba(254,44,85,0.5)]" 
+                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-[#E11D48] to-amber-500 transition-all duration-500 shadow-sm" 
                 style={{ width: `${scrutinyVotesCompleted * 10}%` }}
               />
             </div>
           </div>
 
           {/* Cierre Banner */}
-          <div className="bg-[#070b14]/90 border border-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between gap-2 text-xs shadow-md">
-            <div className="text-left flex items-center gap-2 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <div className="bg-[#FAFBFD] border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="text-left flex items-center gap-2.5 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
               <div className="min-w-0">
-                <span className="text-[9px] font-black uppercase text-emerald-400 block tracking-wider">
-                  {scrutinyVotesCompleted === 10 ? '● CIERRE Y TABULACIÓN COMPLETA' : '● ESCRUTINIO EN CURSO'}
+                <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-emerald-700 block tracking-wider">
+                  {scrutinyVotesCompleted === 10 ? '• CIERRE Y TABULACIÓN COMPLETA' : '• ESCRUTINIO EN CURSO'}
                 </span>
-                <span className="font-extrabold text-white text-[10.5px] truncate block">
+                <span className="font-bold text-slate-900 text-xs sm:text-[13px] truncate block mt-0.5">
                   {scrutinyVotesCompleted === 10
                     ? 'Todos los participantes han emitido su voto.'
                     : `Procesando firmas y recuento... Votaron ${scrutinyVotesCompleted} de 10.`}
@@ -15633,8 +15679,8 @@ export default function CastingLiveSection({
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-[8.5px] text-slate-400 font-mono font-bold block uppercase">Consenso</span>
-              <span className="text-[11px] font-extrabold text-rose-400 font-mono">
+              <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">CONSENSO</span>
+              <span className="text-sm font-black text-slate-950 font-sans block leading-tight">
                 {10 - scrutinyVotesCompleted} en cola
               </span>
             </div>
@@ -15652,68 +15698,60 @@ export default function CastingLiveSection({
               setShowFinanzasRecount(false);
               setShowFinanzasResults(true);
             }}
-            className="w-full py-2.5 px-3 bg-gradient-to-r from-rose-600 via-[#fe2c55] to-rose-700 hover:opacity-95 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition shadow-lg shadow-rose-950/60 cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 border border-rose-500/40 mt-1"
+            className="w-full py-3.5 px-5 bg-gradient-to-r from-[#FF0055] via-[#E60050] to-[#C90045] hover:opacity-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition shadow-lg shadow-pink-500/30 cursor-pointer active:scale-95 flex items-center justify-center gap-2 border-0 mt-2"
           >
-            <span>🏆</span>
+            <span className="text-sm sm:text-base">🏆</span>
             <span>VER RESULTADOS FINALES Y GANADORES</span>
           </button>
         </div>
 
-        {/* Participant Grid */}
-        <div className="space-y-1.5">
-          <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-300 m-0">
+        {/* Participant Grid matching Gemini_Generated */}
+        <div className="space-y-2 pt-1">
+          <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 font-sans m-0">
             ESTADO DE PARTICIPANTES ({scrutinyVotesCompleted}/10 VOTARON)
           </h4>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {participantsList.map((item, idx) => (
-              <div key={idx} className="bg-[#0e1628]/90 border border-slate-800/80 rounded-2xl p-2 flex flex-col items-center text-center gap-1 shadow-md relative w-full min-w-0 overflow-hidden">
+              <div 
+                key={idx} 
+                className="bg-white border border-[#EADBBD] rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition relative w-full min-w-0 overflow-hidden"
+              >
                 <div className="relative">
                   <img 
                     src={item.avatar} 
                     alt={item.name} 
-                    className="w-10 h-10 rounded-xl object-cover border border-slate-700" 
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-2xs" 
                     referrerPolicy="no-referrer"
                   />
                   {item.isSelf && (
-                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[7px] font-black px-1 py-0.5 rounded-full shadow-xs">
+                    <span className="absolute -top-1.5 -right-1.5 bg-[#10B981] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs uppercase tracking-tight">
                       TÚ
                     </span>
                   )}
                 </div>
 
                 <div className="min-w-0 w-full">
-                  <h5 className="text-[10.5px] font-black text-white truncate m-0 leading-tight">{item.name}</h5>
-                  <span className="text-[8px] text-slate-400 font-semibold block truncate">{item.role}</span>
+                  <h5 className="text-xs sm:text-sm font-black text-slate-950 truncate m-0 leading-tight">
+                    {item.name}
+                  </h5>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate mt-0.5">
+                    {item.role || 'Miembro IA'}
+                  </span>
                 </div>
 
                 {idx < scrutinyVotesCompleted ? (
-                  <div className="w-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-[8px] font-black py-0.5 px-1 rounded-md text-center uppercase tracking-wider mt-0.5 truncate">
+                  <div className="w-full bg-[#D1F7EC] border border-[#A7F3D0] text-[#065F46] text-[10px] sm:text-[11px] font-black py-1 sm:py-1.5 px-2 rounded-xl text-center uppercase tracking-wider truncate shadow-2xs font-sans">
                     ✓ VOTO CARGADO
                   </div>
                 ) : (
-                  <div className="w-full bg-amber-950/80 border border-amber-500/50 text-amber-300 text-[8px] font-bold py-0.5 px-1 rounded-md text-center uppercase tracking-wider mt-0.5 animate-pulse truncate">
+                  <div className="w-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] text-[10px] sm:text-[11px] font-black py-1 sm:py-1.5 px-2 rounded-xl text-center uppercase tracking-wider animate-pulse truncate shadow-2xs font-sans">
                     ⏳ REGISTRANDO...
                   </div>
                 )}
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Bitácora de Consenso y Auditoría Distribuida */}
-        <div className="bg-[#0e1628]/80 border border-slate-800/80 rounded-2xl p-2.5 space-y-1 text-left">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold text-rose-400 font-mono flex items-center gap-1">
-              <span>&gt;_</span> Bitácora de Consenso
-            </span>
-            <span className="bg-rose-950/80 text-rose-300 border border-rose-500/40 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-mono">
-              NODO_CONECTADO
-            </span>
-          </div>
-          <p className="text-[9.5px] font-mono text-slate-300 m-0 leading-relaxed">
-            🔑 Protocolo de custodia encriptado activado con éxito. Computando orden final de votaciones...
-          </p>
         </div>
       </div>
     );
