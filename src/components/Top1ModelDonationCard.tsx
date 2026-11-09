@@ -912,26 +912,26 @@ export default function Top1ModelDonationCard({
                   </div>
                 </div>
 
-                {/* Gifts Grid */}
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-56 overflow-y-auto w-full pr-1">
+                {/* Gifts Grid - Exactamente 4 regalos por línea horizontal con mayor tamaño */}
+                <div className="grid grid-cols-4 gap-2.5 sm:gap-3.5 max-h-72 sm:max-h-84 overflow-y-auto w-full pr-1.5 scrollbar-thin scrollbar-thumb-pink-200">
                   {filteredGifts.map(gift => {
                     const isSelected = selectedGift?.id === gift.id;
                     return (
                       <div
                         key={gift.id}
                         onClick={() => setSelectedGift(gift)}
-                        className={`p-2 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition duration-150 relative select-none ${
+                        className={`group p-2.5 sm:p-3.5 rounded-2xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 relative select-none min-h-[96px] sm:min-h-[110px] ${
                           isSelected
-                            ? 'bg-pink-50 border-rose-500 ring-2 ring-rose-400 shadow-sm scale-105'
-                            : 'bg-slate-50 border-slate-200 hover:bg-rose-50/50 hover:border-pink-300'
+                            ? 'bg-pink-50 border-rose-500 ring-2 ring-rose-400 shadow-md scale-[1.03]'
+                            : 'bg-white hover:bg-rose-50/70 border-slate-200/90 hover:border-pink-300 hover:shadow-xs hover:scale-[1.02]'
                         }`}
                       >
                         {gift.isExclusive && (
-                          <span className="absolute top-1 right-1 text-[8px]" title="Exclusivo de Lujo">👑</span>
+                          <span className="absolute top-1.5 right-1.5 text-[11px] sm:text-xs" title="Exclusivo de Lujo">👑</span>
                         )}
-                        <span className="text-2xl mb-0.5">{gift.icon}</span>
-                        <span className="text-[9px] font-bold text-slate-800 truncate w-full px-0.5 leading-tight">{gift.name}</span>
-                        <span className="text-[9px] font-mono font-black text-rose-600 mt-0.5">{gift.price}€</span>
+                        <span className="text-3xl sm:text-4xl mb-1 filter drop-shadow-xs group-hover:scale-110 transition-transform duration-150">{gift.icon}</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-800 truncate w-full px-0.5 leading-snug">{gift.name}</span>
+                        <span className="text-[10.5px] sm:text-xs font-mono font-black text-rose-600 mt-0.5">{gift.price}€</span>
                       </div>
                     );
                   })}

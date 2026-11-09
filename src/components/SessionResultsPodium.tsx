@@ -620,6 +620,52 @@ const presetProjects: Record<string, any> = {
       "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1200"
     ]
   },
+  'alexander vance': {
+    title: "Vance Executive Sastrería & Relojería",
+    category: "Sastrería & Alta Relojería",
+    descriptionShort: "Colección exclusiva de trajes a medida y cronógrafos suizos para inversores de alta costura.",
+    descriptionLong: "Elegancia masculina sin precedentes adaptada al entorno financiero y eventos de gala. Alexander Vance desarrolla sastrería formal de lujo combinando paños italianos de lana virgen con acabados repelentes y cronógrafos de precisión.",
+    budget: 35000,
+    fundingGoal: 40000,
+    objective: "Perfeccionar la línea de trajes bespoke y consolidar alianzas con casas de alta relojería suiza.",
+    fundUsage: "60% adquisición de textiles de lana virgen italiana, 25% acabados de precisión, 15% transporte y showroom.",
+    timeline: "Fase 1: Taller y patronaje. Fase 2: Pasarela Milano. Fase 3: Showroom privado.",
+    contactEmail: "alexander.vance@vancestyle.com",
+    contactPhone: "+34 91 789 2201",
+    budgetBreakdown: "Lanas Italianas & Sedas: 21.000€\nPatronaje y Corte Bespoke: 9.000€\nShowroom Milano: 5.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Alexander_Vance_Executive_v1.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Alexander Vance", role: "CEO & Embajador de Estilo", experience: "12 años en alta costura masculina", bio: "Modelo internacional y consultor de sastrería ejecutiva." }],
+    images: [
+      "/assets/aistudio/tarjeta_alexander_vance.png",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
+  'proj-alexander': {
+    title: "Vance Executive Sastrería & Relojería",
+    category: "Sastrería & Alta Relojería",
+    descriptionShort: "Colección exclusiva de trajes a medida y cronógrafos suizos para inversores de alta costura.",
+    descriptionLong: "Elegancia masculina sin precedentes adaptada al entorno financiero y eventos de gala.",
+    budget: 35000,
+    fundingGoal: 40000,
+    objective: "Perfeccionar la línea de trajes bespoke y consolidar alianzas con casas de alta relojería suiza.",
+    fundUsage: "60% textiles, 25% patronaje, 15% showroom.",
+    timeline: "Fase 1: Taller. Fase 2: Milano. Fase 3: Showroom.",
+    contactEmail: "alexander.vance@vancestyle.com",
+    contactPhone: "+34 91 789 2201",
+    budgetBreakdown: "Lanas & Sedas: 21.000€\nPatronaje Bespoke: 9.000€\nShowroom: 5.000€",
+    videos: ["https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4"],
+    documentationName: "Alexander_Vance_Executive_v1.pdf",
+    documentationUrl: "#",
+    team: [{ name: "Alexander Vance", role: "CEO & Embajador de Estilo", experience: "12 años en alta costura masculina", bio: "Modelo internacional y consultor de sastrería ejecutiva." }],
+    images: [
+      "/assets/aistudio/tarjeta_alexander_vance.png",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=1200"
+    ]
+  },
   'clara mendez': {
     title: "Mendez Silk Flora: Alta Costura Botánica",
     category: "Alta Costura & Seda",
@@ -983,10 +1029,10 @@ export default function SessionResultsPodium({
       votesReceived: 5
     },
     {
-      userId: 'model-marcus',
-      name: 'Marcus Sterling',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=256',
-      projectId: 'proj-marcus',
+      userId: 'model-alexander',
+      name: 'Alexander Vance',
+      avatar: '/assets/aistudio/marcus_vance_executive.png',
+      projectId: 'proj-alexander',
       hasVoted: true,
       votesReceived: 5
     },
@@ -1300,6 +1346,39 @@ export default function SessionResultsPodium({
 
   const firstPlace = activeWinnersList[activeWinnerIndex] || activeWinnersList[0] || sortedParticipantsForRanking[0];
 
+  // Helper to detect if a participant is male to render the masculine card (Financiación concedida_ Alessia Vance (2).png)
+  const isMaleParticipant = (participant?: { name?: string; gender?: string; role?: string } | null): boolean => {
+    if (!participant?.name) return false;
+    if ((participant as any)?.gender === 'male' || (participant as any)?.gender === 'm') return true;
+    if ((participant as any)?.gender === 'female' || (participant as any)?.gender === 'f') return false;
+
+    const nameLower = participant.name.toLowerCase().trim();
+    
+    // Explicit female exclusions
+    if (nameLower.includes('alessia') || nameLower.includes('alessandra') || nameLower.includes('gisele') || 
+        nameLower.includes('sienna') || nameLower.includes('elena') || nameLower.includes('sofia') || 
+        nameLower.includes('yasmin') || nameLower.includes('clara') || nameLower.includes('paula') || 
+        nameLower.includes('natalia') || nameLower.includes('lucía') || nameLower.includes('lucia') || 
+        nameLower.includes('marina') || nameLower.includes('candice') || nameLower.includes('karlie') || 
+        nameLower.includes('joan') || nameLower.includes('adriana') || nameLower.includes('bella') || 
+        nameLower.includes('gigi') || nameLower.includes('naomi') || nameLower.includes('cara') || 
+        nameLower.includes('irina') || nameLower.includes('alice') || nameLower.includes('abigail') || 
+        nameLower.includes('françoise') || nameLower.includes('valentina') || nameLower.includes('isabella') ||
+        nameLower.includes('mia') || nameLower.includes('carmen')) {
+      return false;
+    }
+
+    const knownMales = [
+      'marcus', 'liam', 'david', 'carlos', 'lucas', 'mateo', 'hugo', 'alvaro', 'álvaro', 
+      'daniel', 'warren', 'bernard', 'francois', 'françois', 'amancio', 'ray', 'tadashi', 
+      'alain', 'gerard', 'gérard', 'elon', 'jeff', 'mark', 'larry', 'bill', 'steve', 
+      'mukesh', 'gautam', 'pablo', 'javier', 'alejandro', 'sergio', 'adrian', 'adrián',
+      'manuel', 'jorge', 'miguel', 'antonio', 'enrique', 'diego', 'victor', 'víctor', 'alexander'
+    ];
+
+    return knownMales.some(m => nameLower.includes(m));
+  };
+
   // Helper to ensure exactly 3 distinct images for the slider
   const ensureThreeImages = (images: string[] | undefined) => {
     const defaultImages = [
@@ -1446,152 +1525,214 @@ export default function SessionResultsPodium({
                 </div>
 
                 {/* 🏆 MAIN SPOTLIGHT CARD FOR FUNDED PROJECT (LUXURY FINTECH REDESIGN) */}
-                <div className="max-w-md mx-auto bg-gradient-to-b from-white via-[#fff7f9] to-[#fff0f4] border-2 border-amber-400 ring-4 ring-amber-300/30 rounded-3.5xl p-5 sm:p-7 shadow-xl relative overflow-hidden transition-all duration-300 group/spotlight text-center space-y-4">
-                  
-                  {/* Subtle golden ambient background glow */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-200/25 to-transparent rounded-full blur-3xl pointer-events-none" />
+                {(() => {
+                  const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
+                  const winnerFundingAmount = isSingleWinner 
+                    ? 800 
+                    : (prizePerWinner > 0 ? (prizePerWinner / (activeWinnersList.length || 1)) : (800 / (activeWinnersList.length || 1)));
+                  const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
+                  const isMale = isMaleParticipant(firstPlace);
+                  const isAlexander = isMale && (
+                    firstPlace.name.toLowerCase().includes('alexander') || 
+                    (firstPlace as any)?.username?.toLowerCase().includes('alexander') ||
+                    firstPlace.name.toLowerCase().includes('alex')
+                  );
+                  const isAlessia = firstPlace.name.toLowerCase().includes('alessia') || 
+                                    firstPlace.name.toLowerCase().includes('alexia') || 
+                                    (firstPlace as any)?.username?.toLowerCase().includes('alessia') || 
+                                    (firstPlace as any)?.username?.toLowerCase().includes('alexia');
 
-                  {/* 1. Top Badge: FUNDING AWARDED / FINANCIACIÓN CONCEDIDA */}
-                  <div className="relative z-10 flex justify-center">
-                    <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-500/60 text-amber-900 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
-                      <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
-                    </div>
-                  </div>
+                  return (
+                    <div className="max-w-md mx-auto w-full space-y-4">
+                      {isMale ? (
+                        <div className="w-full max-w-[420px] mx-auto rounded-[32px] overflow-hidden shadow-2xl relative border-2 border-[#d4af37] ring-4 ring-[#fde68a]/40 bg-gradient-to-b from-[#0a192f] via-[#102a4e] to-[#051124] transition-all duration-300 hover:shadow-cyan-900/40 group/luxcard">
+                          {/* High-fidelity masculine card asset from z.png (Alexander Vance) */}
+                          <img 
+                            src="/assets/aistudio/tarjeta_alexander_vance.png"
+                            alt={`Tarjeta de Financiación Ejecutiva - ${firstPlace.name}`}
+                            className="w-full h-auto block select-none pointer-events-none rounded-[30px]"
+                            referrerPolicy="no-referrer"
+                          />
 
-                  {/* 2. Sophisticated Luxury Golden Diamond Emblem */}
-                  <div className="relative z-10 flex flex-col items-center justify-center pt-1">
-                    <div className="relative inline-flex items-center justify-center">
-                      <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 blur-md opacity-60 rounded-full scale-125 animate-pulse pointer-events-none" />
-                      <svg 
-                        className="w-10 h-10 sm:w-12 sm:h-12 relative z-10 filter drop-shadow-[0_2px_8px_rgba(217,119,6,0.35)]" 
-                        viewBox="0 0 64 64" 
-                        fill="none" 
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <defs>
-                          <linearGradient id="goldTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#FFF2A3" />
-                            <stop offset="50%" stopColor="#F59E0B" />
-                            <stop offset="100%" stopColor="#D97706" />
-                          </linearGradient>
-                          <linearGradient id="goldTableGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#FEF3C7" />
-                            <stop offset="100%" stopColor="#FBBF24" />
-                          </linearGradient>
-                          <linearGradient id="goldFacetLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#FDE68A" />
-                            <stop offset="100%" stopColor="#B45309" />
-                          </linearGradient>
-                          <linearGradient id="goldFacetRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#F59E0B" />
-                            <stop offset="100%" stopColor="#92400E" />
-                          </linearGradient>
-                        </defs>
-                        {/* Diamond Table (top surface) */}
-                        <polygon points="20,16 44,16 54,26 10,26" fill="url(#goldTopGrad)" stroke="#B45309" strokeWidth="1" />
-                        <polygon points="24,17 40,17 48,25 16,25" fill="url(#goldTableGrad)" opacity="0.95" />
-                        {/* Lower Pavilion facets */}
-                        <polygon points="10,26 32,54 22,26" fill="url(#goldFacetLeftGrad)" stroke="#B45309" strokeWidth="1" />
-                        <polygon points="22,26 32,54 42,26" fill="url(#goldTopGrad)" stroke="#B45309" strokeWidth="1" />
-                        <polygon points="42,26 32,54 54,26" fill="url(#goldFacetRightGrad)" stroke="#B45309" strokeWidth="1" />
-                        {/* Top crown facets */}
-                        <polygon points="20,16 10,26 22,26" fill="url(#goldFacetLeftGrad)" stroke="#B45309" strokeWidth="1" />
-                        <polygon points="44,16 54,26 42,26" fill="url(#goldFacetRightGrad)" stroke="#B45309" strokeWidth="1" />
-                        <polygon points="20,16 44,16 32,26" fill="#FEF3C7" opacity="0.9" stroke="#B45309" strokeWidth="1" />
-                        {/* Sparkle light highlights */}
-                        <circle cx="26" cy="20" r="1.5" fill="#FFFFFF" opacity="0.95" />
-                        <circle cx="38" cy="30" r="1.2" fill="#FFFFFF" opacity="0.9" />
-                      </svg>
-                    </div>
-                  </div>
+                          {/* If custom male avatar (different from default executive crop), gracefully position inside the golden ring */}
+                          {!isAlexander && firstPlace.avatar && !firstPlace.avatar.includes('tarjeta_') && !firstPlace.avatar.includes('marcus_vance_executive') && (
+                            <div className="absolute top-[21.1%] left-[29.7%] w-[40.6%] h-[28.8%] rounded-full overflow-hidden pointer-events-none border-2 border-amber-400/60 shadow-inner z-0">
+                              <img
+                                src={firstPlace.avatar}
+                                alt={firstPlace.name}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            </div>
+                          )}
 
-                  {/* 3. Circular creator photo with refined double gold border and soft lighting */}
-                  <div className="relative z-10 my-2 flex justify-center">
-                    <div className="relative inline-block">
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 blur-md scale-105 opacity-60 pointer-events-none" />
-                      <img 
-                        src={firstPlace.avatar} 
-                        alt={firstPlace.name} 
-                        onClick={() => handleNavigateToModelProfile(firstPlace)}
-                        className="w-28 h-28 sm:w-34 sm:h-34 rounded-full object-cover mx-auto border-4 border-amber-300 ring-4 ring-amber-50 shadow-xl cursor-pointer hover:scale-105 transition-all duration-300 relative z-10"
-                        title={`Ver perfil de ${firstPlace.name}`}
-                      />
-                    </div>
-                  </div>
+                          {/* Interactive hotspot 1: Male model avatar */}
+                          <button
+                            type="button"
+                            onClick={() => handleNavigateToModelProfile(firstPlace)}
+                            className="custom-bg absolute top-[20.5%] left-[28.5%] w-[43%] h-[30%] rounded-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400/50 hover:bg-white/10 transition-colors bg-transparent border-0 shadow-none z-10"
+                            title={`Ver perfil de ${firstPlace.name}`}
+                            aria-label={`Ver perfil de ${firstPlace.name}`}
+                          />
 
-                  {/* 4. Information of Creator & Votes (Secondary Hierarchy) */}
-                  <div className="space-y-1 relative z-10">
-                    <h4 
-                      className="text-xl sm:text-2xl font-serif font-black text-slate-900 cursor-pointer hover:text-amber-700 transition-colors tracking-tight block"
-                      onClick={() => handleNavigateToModelProfile(firstPlace)}
-                      title={`Ver perfil de ${firstPlace.name}`}
-                    >
-                      {firstPlace.name}
-                    </h4>
-                    <p className="text-xs text-slate-600 font-semibold flex items-center justify-center gap-1.5">
-                      <span className="text-rose-500">❤️</span> 
-                      <span>{firstPlace.votesReceived} votos recibidos</span>
-                    </p>
-                  </div>
-
-                  {/* Subtle luxury divider */}
-                  <div className="border-t border-rose-200/80 my-2 relative z-10" />
-
-                  {/* 5. FINANCIACIÓN CONSEGUIDA (HIGHLIGHT FINANCIAL BLOCK) */}
-                  {(() => {
-                    const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
-                    const winnerFundingAmount = isSingleWinner 
-                      ? 800 
-                      : (prizePerWinner > 0 ? (prizePerWinner / (activeWinnersList.length || 1)) : (800 / (activeWinnersList.length || 1)));
-                    const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
-
-                    return (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-50/60 to-amber-500/10 border border-amber-400/60 shadow-xs relative z-10 space-y-1">
-                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-800 block">
-                          FINANCIACIÓN CONSEGUIDA
-                        </span>
-                        <div className="text-2xl sm:text-3xl font-sans font-black text-amber-700 tracking-tight block py-0.5">
-                          {formattedFunding}
+                          {/* For Alexander Vance: transparent interactive click area directly over his name as shown in z.png */}
+                          {isAlexander ? (
+                            <button
+                              type="button"
+                              onClick={() => handleNavigateToModelProfile(firstPlace)}
+                              className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[72%] h-[6.8%] rounded-xl cursor-pointer hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-colors bg-transparent border-0 shadow-none z-10"
+                              title={`Ver perfil de ${firstPlace.name}`}
+                              aria-label={`Ver perfil de ${firstPlace.name}`}
+                            />
+                          ) : (
+                            /* Contenedor elegante de alta costura para otros modelos masculinos */
+                            <button
+                              type="button"
+                              onClick={() => handleNavigateToModelProfile(firstPlace)}
+                              className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[68%] h-[6.5%] rounded-xl bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#0a192f] text-amber-200 hover:text-amber-300 border border-amber-400/80 shadow-md hover:border-amber-300 flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                              title={`Ver perfil de ${firstPlace.name}`}
+                              aria-label={`Ver perfil de ${firstPlace.name}`}
+                            >
+                              <span className="font-serif font-black text-base sm:text-lg md:text-xl text-amber-100 tracking-tight truncate select-none leading-none">
+                                {firstPlace.name}
+                              </span>
+                            </button>
+                          )}
                         </div>
-                        <p className="text-[9.5px] text-slate-600 uppercase tracking-wider font-semibold">
-                          Capital asignado por selección comunitaria
-                        </p>
+                      ) : isAlessia ? (
+                        <div className="w-full max-w-[420px] mx-auto rounded-[32px] overflow-hidden shadow-2xl relative border-2 border-[#d4af37] ring-4 ring-[#fde68a]/40 bg-gradient-to-b from-[#fce4ec] to-[#f8bbd0] transition-all duration-300 hover:shadow-pink-300/50 group/luxcard">
+                          {/* High-fidelity card asset from Tarjeta de financiación con diamantes.png */}
+                          <img 
+                            src="/assets/aistudio/tarjeta_financiacion_diamantes.png"
+                            alt="Tarjeta de Financiación con Diamantes - Alessia Vance"
+                            className="w-full h-auto block select-none pointer-events-none rounded-[30px]"
+                            referrerPolicy="no-referrer"
+                          />
+
+                          {/* Interactive hotspot 1: Alessia Vance avatar */}
+                          <button
+                            type="button"
+                            onClick={() => handleNavigateToModelProfile(firstPlace)}
+                            className="custom-bg absolute top-[21%] left-[28%] w-[44%] h-[27%] rounded-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-400/50 hover:bg-white/10 transition-colors bg-transparent border-0 shadow-none"
+                            title={`Ver perfil de ${firstPlace.name}`}
+                            aria-label={`Ver perfil de ${firstPlace.name}`}
+                          />
+
+                          {/* Contenedor con el nombre de Alessia Vance debajo de su imagen */}
+                          <button
+                            type="button"
+                            onClick={() => handleNavigateToModelProfile(firstPlace)}
+                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[62%] h-[6.5%] rounded-xl bg-white/95 hover:bg-white text-[#0f172a] hover:text-[#9e134a] border border-pink-200/90 hover:border-pink-400 shadow-xs hover:shadow-sm flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                            title={`Ver perfil de ${firstPlace.name}`}
+                            aria-label={`Ver perfil de ${firstPlace.name}`}
+                          >
+                            <span className="font-serif font-black text-base sm:text-lg md:text-xl text-[#0f172a] tracking-tight truncate select-none leading-none">
+                              {firstPlace.name}
+                            </span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="max-w-md mx-auto bg-gradient-to-b from-[#fff5f8] via-[#fef0f5] to-[#fce4ec] border-2 border-[#d4af37] ring-4 ring-amber-300/30 rounded-3.5xl p-5 sm:p-7 shadow-xl relative overflow-hidden transition-all duration-300 group/spotlight text-center space-y-4">
+                          {/* 1. Top Badge */}
+                          <div className="relative z-10 flex justify-center">
+                            <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#e6c875] via-[#fff3cc] to-[#dfbc60] border border-[#d4af37] text-[#5c3e0a] text-[10px] sm:text-[11px] font-serif font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
+                              <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
+                            </div>
+                          </div>
+
+                          {/* 2. Brilliant Pink Diamond Emblem */}
+                          <div className="relative z-10 flex flex-col items-center justify-center pt-1">
+                            <div className="relative inline-flex items-center justify-center group/diamond">
+                              <div className="absolute inset-0 bg-gradient-to-r from-pink-400 via-rose-300 to-pink-500 blur-md opacity-70 rounded-full scale-125 animate-pulse pointer-events-none" />
+                              <img
+                                src="/assets/aistudio/pink_diamond_brilliant.png"
+                                alt="Diamante Rosa Brillante"
+                                className="w-14 h-auto sm:w-16 max-h-11 sm:max-h-12 object-contain relative z-10 filter drop-shadow-[0_4px_12px_rgba(244,63,94,0.45)] hover:scale-110 transition-transform duration-300"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 3. Circular creator photo */}
+                          <div className="relative z-10 my-2 flex justify-center">
+                            <div className="relative inline-block">
+                              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 blur-md scale-105 opacity-60 pointer-events-none" />
+                              <img 
+                                src={firstPlace.avatar} 
+                                alt={firstPlace.name} 
+                                onClick={() => handleNavigateToModelProfile(firstPlace)}
+                                className="w-28 h-28 sm:w-34 sm:h-34 rounded-full object-cover mx-auto border-4 border-amber-300 ring-4 ring-amber-50 shadow-xl cursor-pointer hover:scale-105 transition-all duration-300 relative z-10"
+                                title={`Ver perfil de ${firstPlace.name}`}
+                              />
+                            </div>
+                          </div>
+
+                          {/* 4. Information of Creator & Votes */}
+                          <div className="space-y-1 relative z-10">
+                            <h4 
+                              className="text-xl sm:text-2xl font-serif font-black text-slate-900 cursor-pointer hover:text-amber-700 transition-colors tracking-tight block"
+                              onClick={() => handleNavigateToModelProfile(firstPlace)}
+                              title={`Ver perfil de ${firstPlace.name}`}
+                            >
+                              {firstPlace.name}
+                            </h4>
+                            <p className="text-xs text-slate-600 font-semibold flex items-center justify-center gap-1.5">
+                              <span className="text-rose-500">💖</span> 
+                              <span>{firstPlace.votesReceived} votos recibidos</span>
+                            </p>
+                          </div>
+
+                          {/* Subtle luxury divider */}
+                          <div className="border-t border-rose-200/80 my-2 relative z-10" />
+
+                          {/* 5. FINANCIACIÓN CONSEGUIDA */}
+                          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-white/90 via-[#fff8fa] to-[#ffeef4] border border-[#e2a85c] shadow-xs relative z-10 space-y-1">
+                            <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-[#be185d] block">
+                              FINANCIACIÓN CONSEGUIDA
+                            </span>
+                            <div className="text-2xl sm:text-3xl font-serif font-black text-[#831843] tracking-tight block py-0.5">
+                              {formattedFunding}
+                            </div>
+                            <p className="text-[9.5px] text-slate-600 uppercase tracking-wider font-semibold">
+                              Capital asignado por selección comunitaria
+                            </p>
+                          </div>
+
+                          {/* 8. Badge de Empate · Posición #1 */}
+                          <div className="relative z-10 flex justify-center pt-1">
+                            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#ffd3e2] via-[#ffeef5] to-[#fcc2d7] text-[#831843] border border-[#d4af37] text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-xs">
+                              <span>✧</span> EMPATE · POSICIÓN #1 <span>✧</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 7. Navegación entre los Ganadores */}
+                      <div className="flex items-center justify-between pt-3 border-t border-rose-200/80 relative z-10">
+                        <button 
+                          onClick={() => setActiveWinnerIndex(prev => prev === 0 ? activeWinnersList.length - 1 : prev - 1)}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-rose-50 text-slate-800 transition-all border border-rose-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
+                          title="Proyecto financiado anterior"
+                          aria-label="Proyecto financiado anterior"
+                        >
+                          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+                        </button>
+                        
+                        <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-slate-600 font-bold uppercase">
+                          PROYECTO FINANCIADO · {activeWinnerIndex + 1} / {activeWinnersList.length}
+                        </span>
+
+                        <button 
+                          onClick={() => setActiveWinnerIndex(prev => prev === activeWinnersList.length - 1 ? 0 : prev + 1)}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-rose-50 text-slate-800 transition-all border border-rose-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
+                          title="Siguiente proyecto financiado"
+                          aria-label="Siguiente proyecto financiado"
+                        >
+                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+                        </button>
                       </div>
-                    );
-                  })()}
-
-                  {/* 8. Badge de Empate · Posición #1 */}
-                  <div className="relative z-10 flex justify-center pt-1">
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-500/50 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-xs">
-                      <span>✦</span> EMPATE · POSICIÓN #1 <span>✦</span>
                     </div>
-                  </div>
-
-                  {/* 7. Navegación entre los Ganadores */}
-                  <div className="flex items-center justify-between pt-3 border-t border-rose-200/80 relative z-10">
-                    <button 
-                      onClick={() => setActiveWinnerIndex(prev => prev === 0 ? activeWinnersList.length - 1 : prev - 1)}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-rose-50 text-slate-800 transition-all border border-rose-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
-                      title="Proyecto financiado anterior"
-                      aria-label="Proyecto financiado anterior"
-                    >
-                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
-                    </button>
-                    
-                    <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-slate-600 font-bold uppercase">
-                      PROYECTO FINANCIADO · {activeWinnerIndex + 1} / {activeWinnersList.length}
-                    </span>
-
-                    <button 
-                      onClick={() => setActiveWinnerIndex(prev => prev === activeWinnersList.length - 1 ? 0 : prev + 1)}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-rose-50 text-slate-800 transition-all border border-rose-200 shadow-sm flex items-center justify-center cursor-pointer active:scale-90"
-                      title="Siguiente proyecto financiado"
-                      aria-label="Siguiente proyecto financiado"
-                    >
-                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
-                    </button>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Co-Winners List Selector Grid/Row below */}
                 <div className="space-y-2">
@@ -1628,42 +1769,133 @@ export default function SessionResultsPodium({
                   const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
                   const winnerFundingAmount = isSingleWinner ? 800 : (prizePerWinner > 0 ? prizePerWinner : 800);
                   const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
+                  const isMale = isMaleParticipant(firstPlace);
+                  const isAlexander = isMale && (
+                    firstPlace.name.toLowerCase().includes('alexander') || 
+                    (firstPlace as any)?.username?.toLowerCase().includes('alexander') ||
+                    firstPlace.name.toLowerCase().includes('alex')
+                  );
+                  const isAlessia = firstPlace.name.toLowerCase().includes('alessia') || 
+                                    firstPlace.name.toLowerCase().includes('alexia') || 
+                                    (firstPlace as any)?.username?.toLowerCase().includes('alessia') || 
+                                    (firstPlace as any)?.username?.toLowerCase().includes('alexia');
+
+                  if (isMale) {
+                    return (
+                      <div className="w-full max-w-[420px] mx-auto rounded-[32px] overflow-hidden shadow-2xl relative border-2 border-[#d4af37] ring-4 ring-[#fde68a]/40 bg-gradient-to-b from-[#0a192f] via-[#102a4e] to-[#051124] transition-all duration-300 hover:shadow-cyan-900/40 group/luxcard">
+                        {/* High-fidelity masculine card asset from z.png (Alexander Vance) */}
+                        <img 
+                          src="/assets/aistudio/tarjeta_alexander_vance.png"
+                          alt={`Tarjeta de Financiación Ejecutiva - ${firstPlace.name}`}
+                          className="w-full h-auto block select-none pointer-events-none rounded-[30px]"
+                          referrerPolicy="no-referrer"
+                        />
+
+                        {/* If custom male avatar (different from default executive crop), gracefully position inside the golden ring */}
+                        {!isAlexander && firstPlace.avatar && !firstPlace.avatar.includes('tarjeta_') && !firstPlace.avatar.includes('marcus_vance_executive') && (
+                          <div className="absolute top-[21.1%] left-[29.7%] w-[40.6%] h-[28.8%] rounded-full overflow-hidden pointer-events-none border-2 border-amber-400/60 shadow-inner z-0">
+                            <img
+                              src={firstPlace.avatar}
+                              alt={firstPlace.name}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          </div>
+                        )}
+
+                        {/* Interactive hotspot 1: Male model avatar */}
+                        <button
+                          type="button"
+                          onClick={() => handleNavigateToModelProfile(firstPlace)}
+                          className="custom-bg absolute top-[20.5%] left-[28.5%] w-[43%] h-[30%] rounded-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400/50 hover:bg-white/10 transition-colors bg-transparent border-0 shadow-none z-10"
+                          title={`Ver perfil de ${firstPlace.name}`}
+                          aria-label={`Ver perfil de ${firstPlace.name}`}
+                        />
+
+                        {/* For Alexander Vance: transparent interactive click area directly over his name as shown in z.png */}
+                        {isAlexander ? (
+                          <button
+                            type="button"
+                            onClick={() => handleNavigateToModelProfile(firstPlace)}
+                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[72%] h-[6.8%] rounded-xl cursor-pointer hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-colors bg-transparent border-0 shadow-none z-10"
+                            title={`Ver perfil de ${firstPlace.name}`}
+                            aria-label={`Ver perfil de ${firstPlace.name}`}
+                          />
+                        ) : (
+                          /* Contenedor elegante de alta costura para otros modelos masculinos */
+                          <button
+                            type="button"
+                            onClick={() => handleNavigateToModelProfile(firstPlace)}
+                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[68%] h-[6.5%] rounded-xl bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#0a192f] text-amber-200 hover:text-amber-300 border border-amber-400/80 shadow-md hover:border-amber-300 flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                            title={`Ver perfil de ${firstPlace.name}`}
+                            aria-label={`Ver perfil de ${firstPlace.name}`}
+                          >
+                            <span className="font-serif font-black text-base sm:text-lg md:text-xl text-amber-100 tracking-tight truncate select-none leading-none">
+                              {firstPlace.name}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (isAlessia) {
+                    return (
+                      <div className="w-full max-w-[420px] mx-auto rounded-[32px] overflow-hidden shadow-2xl relative border-2 border-[#d4af37] ring-4 ring-[#fde68a]/40 bg-gradient-to-b from-[#fce4ec] to-[#f8bbd0] transition-all duration-300 hover:shadow-pink-300/50 group/luxcard">
+                        {/* High-fidelity card asset from Tarjeta de financiación con diamantes.png */}
+                        <img 
+                          src="/assets/aistudio/tarjeta_financiacion_diamantes.png"
+                          alt="Tarjeta de Financiación con Diamantes - Alessia Vance"
+                          className="w-full h-auto block select-none pointer-events-none rounded-[30px]"
+                          referrerPolicy="no-referrer"
+                        />
+
+                        {/* Interactive hotspot 1: Alessia Vance avatar */}
+                        <button
+                          type="button"
+                          onClick={() => handleNavigateToModelProfile(firstPlace)}
+                          className="custom-bg absolute top-[21%] left-[28%] w-[44%] h-[27%] rounded-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-400/50 hover:bg-white/10 transition-colors bg-transparent border-0 shadow-none"
+                          title={`Ver perfil de ${firstPlace.name}`}
+                          aria-label={`Ver perfil de ${firstPlace.name}`}
+                        />
+
+                        {/* Contenedor con el nombre de Alessia Vance debajo de su imagen */}
+                        <button
+                          type="button"
+                          onClick={() => handleNavigateToModelProfile(firstPlace)}
+                          className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[62%] h-[6.5%] rounded-xl bg-white/95 hover:bg-white text-[#0f172a] hover:text-[#9e134a] border border-pink-200/90 hover:border-pink-400 shadow-xs hover:shadow-sm flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                          title={`Ver perfil de ${firstPlace.name}`}
+                          aria-label={`Ver perfil de ${firstPlace.name}`}
+                        >
+                          <span className="font-serif font-black text-base sm:text-lg md:text-xl text-[#0f172a] tracking-tight truncate select-none leading-none">
+                            {firstPlace.name}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  }
 
                   return (
-                    <div className="w-full bg-gradient-to-b from-white via-[#fff7f9] to-[#fff0f4] border-2 border-amber-400 ring-4 ring-amber-300/30 rounded-3.5xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center space-y-4">
+                    <div className="w-full max-w-[420px] mx-auto bg-gradient-to-b from-[#fff5f8] via-[#fef0f5] to-[#fce4ec] border-2 border-[#d4af37] ring-4 ring-amber-300/30 rounded-3.5xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center space-y-4">
                       {/* Subtle golden ambient background glow */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-amber-200/25 to-transparent rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-to-b from-pink-200/25 to-transparent rounded-full blur-3xl pointer-events-none" />
 
                       {/* Top Badge */}
                       <div className="relative z-10 flex justify-center">
-                        <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-500/60 text-amber-900 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
+                        <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#e6c875] via-[#fff3cc] to-[#dfbc60] border border-[#d4af37] text-[#5c3e0a] text-[10px] sm:text-[11px] font-serif font-black uppercase tracking-[0.2em] px-4 py-1 rounded-full shadow-3xs">
                           <span>✦</span> FINANCIACIÓN CONCEDIDA <span>✦</span>
                         </div>
                       </div>
 
-                      {/* Luxury Gold Diamond */}
+                      {/* Brilliant Pink Diamond Emblem from unnamed.png */}
                       <div className="relative z-10 flex justify-center pt-1">
-                        <div className="relative inline-flex items-center justify-center">
-                          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 blur-md opacity-60 rounded-full scale-125 animate-pulse pointer-events-none" />
-                          <svg 
-                            className="w-10 h-10 sm:w-12 sm:h-12 relative z-10 filter drop-shadow-[0_2px_8px_rgba(217,119,6,0.35)]" 
-                            viewBox="0 0 64 64" 
-                            fill="none" 
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <defs>
-                              <linearGradient id="goldTopGradSingle" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#FFF2A3" />
-                                <stop offset="50%" stopColor="#F59E0B" />
-                                <stop offset="100%" stopColor="#D97706" />
-                              </linearGradient>
-                            </defs>
-                            <polygon points="20,16 44,16 54,26 10,26" fill="url(#goldTopGradSingle)" stroke="#B45309" strokeWidth="1" />
-                            <polygon points="24,17 40,17 48,25 16,25" fill="#FEF3C7" opacity="0.95" />
-                            <polygon points="10,26 32,54 22,26" fill="#FDE68A" stroke="#B45309" strokeWidth="1" />
-                            <polygon points="22,26 32,54 42,26" fill="#F59E0B" stroke="#B45309" strokeWidth="1" />
-                            <polygon points="42,26 32,54 54,26" fill="#B45309" stroke="#B45309" strokeWidth="1" />
-                          </svg>
+                        <div className="relative inline-flex items-center justify-center group/diamond">
+                          <div className="absolute inset-0 bg-gradient-to-r from-pink-400 via-rose-300 to-pink-500 blur-md opacity-70 rounded-full scale-125 animate-pulse pointer-events-none" />
+                          <img
+                            src="/assets/aistudio/pink_diamond_brilliant.png"
+                            alt="Diamante Rosa Brillante"
+                            className="w-14 h-auto sm:w-16 max-h-11 sm:max-h-12 object-contain relative z-10 filter drop-shadow-[0_4px_12px_rgba(244,63,94,0.45)] hover:scale-110 transition-transform duration-300"
+                            referrerPolicy="no-referrer"
+                          />
                         </div>
                       </div>
 
@@ -1691,7 +1923,7 @@ export default function SessionResultsPodium({
                           {firstPlace.name}
                         </h4>
                         <p className="text-xs text-slate-600 font-semibold flex items-center justify-center gap-1.5">
-                          <span className="text-rose-500">❤️</span> 
+                          <span className="text-rose-500">💖</span> 
                           <span>{firstPlace.votesReceived} votos recibidos</span>
                         </p>
                       </div>
@@ -1700,11 +1932,11 @@ export default function SessionResultsPodium({
                       <div className="border-t border-rose-200/80 my-2 relative z-10" />
 
                       {/* Funding block */}
-                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-50/60 to-amber-500/10 border border-amber-400/60 shadow-xs relative z-10 space-y-1">
-                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-amber-800 block">
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-white/90 via-[#fff8fa] to-[#ffeef4] border border-[#e2a85c] shadow-xs relative z-10 space-y-1">
+                        <span className="text-[10px] sm:text-[10.5px] font-mono font-black uppercase tracking-[0.2em] text-[#be185d] block">
                           FINANCIACIÓN CONSEGUIDA
                         </span>
-                        <div className="text-2xl sm:text-3xl font-sans font-black text-amber-700 tracking-tight block py-0.5">
+                        <div className="text-2xl sm:text-3xl font-serif font-black text-[#831843] tracking-tight block py-0.5">
                           {formattedFunding}
                         </div>
                         <p className="text-[9.5px] text-slate-600 uppercase tracking-wider font-semibold">
@@ -1714,8 +1946,8 @@ export default function SessionResultsPodium({
 
                       {/* Position Badge */}
                       <div className="relative z-10 flex justify-center pt-1">
-                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-500/50 text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-xs">
-                          <span>✦</span> POSICIÓN #1 · SELECCIONADO <span>✦</span>
+                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#ffd3e2] via-[#ffeef5] to-[#fcc2d7] text-[#831843] border border-[#d4af37] text-[10px] sm:text-[10.5px] font-black uppercase tracking-widest shadow-xs">
+                          <span>✧</span> POSICIÓN #1 - SELECCIONADO <span>✧</span>
                         </div>
                       </div>
                     </div>

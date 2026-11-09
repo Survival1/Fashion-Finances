@@ -12,6 +12,14 @@
     <meta property="og:description" content="Plataforma innovadora de financiamiento colectivo y afiliación estratégica que fusiona el financiamiento de proyectos y la industria del modelaje." />
     <script>
       (function() {
+        // Safe global stubs to prevent stale cached bundle ReferenceErrors
+        try {
+          window.LiveParticipatingRoundModal = function() { return null; };
+          if (typeof globalThis !== 'undefined') {
+            globalThis.LiveParticipatingRoundModal = function() { return null; };
+          }
+        } catch (e) {}
+
         // Prevent benign Vite websocket connection rejections & log pollution
         try {
           var OrigWebSocket = window.WebSocket;

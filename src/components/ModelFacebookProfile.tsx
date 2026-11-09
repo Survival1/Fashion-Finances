@@ -91,7 +91,9 @@ import {
 import { 
   BOUTIQUE_STORES_INFO, 
   BoutiqueStoreMeta, 
-  renderBoutiqueEmblem 
+  renderBoutiqueEmblem,
+  RECEIVED_GIFTS_STORAGE_KEY,
+  INITIAL_RECEIVED_GIFTS
 } from './VictoriaSecretRanking';
 import RoyalMaleCrown from './RoyalMaleCrown';
 import RoyalFemaleCrown from './RoyalFemaleCrown';
@@ -700,20 +702,26 @@ export function ProfileIntroAndSponsors({
             </div>
           </div>
 
-          {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura App de moda_glamour en directo.png) */}
+          {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura z.png -> redirige a Canales en Directo de imagen.png) */}
           <div 
             id="contenedor-anuncio-videos-directo-sidebar"
             role="button"
             tabIndex={0}
             aria-label="Ver Vídeos y Pasarela en Directo"
             onClick={() => {
+              localStorage.setItem('casting_live_active_subtab', 'live');
               if (onNavigateToTab) {
                 onNavigateToTab('casting_live');
               }
+              window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
+              window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
+                localStorage.setItem('casting_live_active_subtab', 'live');
                 if (onNavigateToTab) onNavigateToTab('casting_live');
+                window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
+                window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
               }
             }}
             className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/80 shadow-[0_6px_20px_rgba(236,72,153,0.22)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] via-[#ffe4e9] to-[#fbcfe8] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
@@ -840,7 +848,6 @@ export function ProfileIntroAndSponsors({
                     ? 'bg-gradient-to-r from-amber-50/30 via-rose-50/20 to-slate-50 border-amber-200/50 hover:border-amber-300/80'
                     : 'bg-slate-50/40 border-slate-100 hover:bg-slate-50 hover:border-slate-200'
                 }`}
-                title={`Ver The Angels Ranking (${model.name})`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   {/* Position Badge */}
@@ -1567,9 +1574,22 @@ export default function ModelFacebookProfile({
         localStorage.setItem('custom_model_welcome_message', editingWelcomeMessage);
         localStorage.setItem(`custom_welcome_message_${targetModelId}`, editingWelcomeMessage);
         localStorage.setItem(`custom_welcome_message_${targetModelUsername}`, editingWelcomeMessage);
+        if (targetModelUsername.includes('adriana') || targetModelId === 'topf-1') {
+          localStorage.setItem('custom_welcome_message_adrianalima', editingWelcomeMessage);
+          localStorage.setItem('custom_welcome_message_adrianalima_w1', editingWelcomeMessage);
+          localStorage.setItem('custom_welcome_message_topf-1', editingWelcomeMessage);
+        }
         localStorage.setItem('custom_model_bio', editingAboutMe);
         localStorage.setItem(`custom_model_bio_${targetModelId}`, editingAboutMe);
         localStorage.setItem(`custom_model_bio_${targetModelUsername}`, editingAboutMe);
+        if (targetModelUsername.includes('adriana') || targetModelId === 'topf-1') {
+          localStorage.setItem('custom_model_bio_adrianalima', editingAboutMe);
+          localStorage.setItem('custom_model_bio_adrianalima_w1', editingAboutMe);
+          localStorage.setItem('custom_model_bio_topf-1', editingAboutMe);
+        }
+        window.dispatchEvent(new CustomEvent('custom_welcome_bio_updated', {
+          detail: { welcome: editingWelcomeMessage, bio: editingAboutMe, modelId: targetModelId }
+        }));
       } catch (e) {}
     }
 
@@ -1670,6 +1690,19 @@ export default function ModelFacebookProfile({
 
     try {
       localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
+      localStorage.setItem(`custom_instagram_${targetModelId}`, editingInstagram);
+      localStorage.setItem(`custom_instagram_${targetModelUsername}`, editingInstagram);
+      localStorage.setItem(`custom_tiktok_${targetModelId}`, editingTikTok);
+      localStorage.setItem(`custom_tiktok_${targetModelUsername}`, editingTikTok);
+      if (targetModelUsername.includes('adriana') || targetModelId === 'topf-1') {
+        localStorage.setItem('custom_instagram_adrianalima', editingInstagram);
+        localStorage.setItem('custom_instagram_adrianalima_w1', editingInstagram);
+        localStorage.setItem('custom_tiktok_adrianalima', editingTikTok);
+        localStorage.setItem('custom_tiktok_adrianalima_w1', editingTikTok);
+      }
+      localStorage.setItem('custom_model_instagram', editingInstagram);
+      localStorage.setItem('custom_model_tiktok', editingTikTok);
+      window.dispatchEvent(new CustomEvent('custom_socials_updated'));
     } catch (e) {}
     onUpdateProfile(nextProfile);
 
@@ -1977,6 +2010,7 @@ export default function ModelFacebookProfile({
   const [newCustomVideoUrl, setNewCustomVideoUrl] = useState<string>('');
   const [newCustomVideoLabel, setNewCustomVideoLabel] = useState<string>('');
   const [rankingFormConfirmCloseup, setRankingFormConfirmCloseup] = useState<boolean>(true);
+  const demoRankingVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     localStorage.setItem('user_ranking_videos', JSON.stringify(userRankingVideos));
@@ -3624,30 +3658,44 @@ export default function ModelFacebookProfile({
       }
     }));
 
-    // Register in ff_received_gifts_v3 so the model receives it in their Victoria's Secret tab
+    // Register in ff_received_gifts_v3 so the model receives it in their Victoria's Secret vault tab (z_51d94d2a.png)
     try {
-      const rawRec = localStorage.getItem('ff_received_gifts_v3');
-      const recList = rawRec ? JSON.parse(rawRec) : [];
+      let recList: any[] = [];
+      const rawRec = localStorage.getItem(RECEIVED_GIFTS_STORAGE_KEY);
+      if (rawRec) {
+        try {
+          const parsed = JSON.parse(rawRec);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            recList = parsed;
+          }
+        } catch (_) {}
+      }
+      if (recList.length === 0) {
+        recList = [...INITIAL_RECEIVED_GIFTS];
+      }
+
       recList.unshift({
         id: `rec-gift-${Date.now()}`,
         senderName: senderProfile.name || 'Ernesto VS',
         senderUsername: senderProfile.username || 'ernestovs',
-        senderAvatar: senderProfile.avatar || '',
+        senderAvatar: senderProfile.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
         receiverName: userProfile?.name || 'Adriana Lima',
         receiverUsername: userProfile?.username || 'adrianalima_w1',
-        receiverAvatar: userProfile?.avatar || '',
+        receiverAvatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
         giftName: gift.name,
         giftIcon: gift.icon,
-        price: euroCost,
+        price: gift.cost,
         euroCost: euroCost,
-        message: customMessage || `¡Regalo "${gift.name}" recibido en tu perfil! ✨💖`,
+        message: customMessage || `¡Regalo especial "${gift.name}" recibido! 🎉💖`,
         dateFormatted: 'Ahora mismo',
         timestamp: Date.now(),
         status: 'delivered',
-        category: gift.cost >= 1000 ? 'lujo' : gift.cost >= 100 ? 'intermedio' : 'basico'
+        isExclusive: gift.cost >= 1000,
+        category: gift.cost >= 1000 ? 'lujo' : (gift.cost >= 100 ? 'intermedio' : 'basico')
       });
-      localStorage.setItem('ff_received_gifts_v3', JSON.stringify(recList));
+      localStorage.setItem(RECEIVED_GIFTS_STORAGE_KEY, JSON.stringify(recList));
       window.dispatchEvent(new CustomEvent('ff-received-gifts-updated', { detail: recList }));
+      window.dispatchEvent(new Event('storage'));
 
       // Register financial movement
       const rawMovements = localStorage.getItem('coll_movements');
@@ -3943,10 +3991,9 @@ export default function ModelFacebookProfile({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setSelectedGiftForConfirm(gift);
-                setGiftConfirmPhotoUrl(targetId);
-                setActiveGiftingPhotoUrl(targetId);
-                setGiftCustomMessage('');
+                handleGiftPhoto(targetId, gift);
+                setHoveredHeartAndGiftPhotoUrl(null);
+                setActiveGiftingPhotoUrl(null);
               }}
               className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-1.5 sm:p-2 rounded-xl aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
             >
@@ -4399,10 +4446,10 @@ export default function ModelFacebookProfile({
                     key={gIdx}
                     type="button"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
-                      setSelectedGiftForConfirm(gift);
-                      setGiftConfirmPhotoUrl(activeGiftingPhotoUrl);
-                      setGiftCustomMessage('');
+                      handleGiftPhoto(activeGiftingPhotoUrl || 'profile_gift_default', gift);
+                      setActiveGiftingPhotoUrl(null);
                     }}
                     className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50 border border-slate-200 hover:border-pink-500 p-2 rounded-lg aspect-square w-full h-auto transition-all duration-150 text-center cursor-pointer select-none shadow-[0_2px_4px_rgba(0,0,0,0.05)]"
                   >
@@ -11420,7 +11467,13 @@ export default function ModelFacebookProfile({
                 {activeSettingsTab === 'profile' && (
                   <div className="space-y-4 animate-fade-in text-xs">
                     <div className="border-b border-slate-100 pb-3">
-                      <h4 className="text-sm font-black text-slate-850">Editarperfil</h4>
+                      <div className="w-full flex items-center justify-center gap-2 pt-1 mb-8 sm:mb-10 text-center">
+                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-500 shrink-0" />
+                        <h3 className="text-base sm:text-lg md:text-xl font-black text-rose-600 tracking-tight font-sans">
+                          Completa todo tu perfil para activar tu cuenta de modelo.
+                        </h3>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-850">Editar Perfil</h4>
                       <p className="text-[10px] text-slate-400 mt-0.5">Actualiza tus detalles públicos y de contacto.</p>
                     </div>
 
@@ -11525,130 +11578,137 @@ export default function ModelFacebookProfile({
                         />
                       </div>
 
-                      {/* 🌐 CONTENEDOR EXACTO A GEMINI_GENERATED_IMAGE CON DISEÑO MINIMALISTA Y NEON GLOW */}
-                      <div className="bg-[#fbf9f5] border border-stone-200/90 rounded-[28px] p-5 sm:p-6 shadow-sm space-y-4 my-2">
-                        {/* Header con icono de enlace y texto limpio */}
-                        <div className="flex items-center gap-2 text-stone-800">
-                          <svg className="w-4 h-4 text-stone-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                          </svg>
-                          <span className="text-[11px] sm:text-xs font-sans font-medium tracking-wider text-stone-800 uppercase">
-                            REDES SOCIALES OFICIALES DEL MODELO:
-                          </span>
-                        </div>
-                        
-                        <div className="flex flex-col gap-3.5 w-full">
-                          {/* Contenedor 1: Instagram (Tarjeta blanca limpia con píldora rosa pastel) */}
-                          <div className="bg-white border border-stone-200/90 rounded-[22px] p-4 sm:p-4.5 shadow-2xs space-y-2.5 transition-all">
-                            <div className="flex items-center gap-2.5">
-                              {/* Logo oficial Instagram con gradiente */}
-                              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                                <defs>
-                                  <linearGradient id="ig-grad-exact" x1="0%" y1="100%" x2="100%" y2="0%">
-                                    <stop offset="0%" stopColor="#fdf497" />
-                                    <stop offset="25%" stopColor="#fd5949" />
-                                    <stop offset="65%" stopColor="#d6249f" />
-                                    <stop offset="100%" stopColor="#285AEB" />
-                                  </linearGradient>
-                                </defs>
-                                <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="url(#ig-grad-exact)" strokeWidth="2.2"/>
-                                <circle cx="12" cy="12" r="4.2" stroke="url(#ig-grad-exact)" strokeWidth="2.2"/>
-                                <circle cx="17.5" cy="6.5" r="1.3" fill="url(#ig-grad-exact)"/>
-                              </svg>
-                              <span className="text-base sm:text-[17px] font-sans font-normal tracking-wide text-stone-900 uppercase">
-                                INSTAGRAM
-                              </span>
-                            </div>
-                            <div className="relative rounded-xl border border-[#fbcfe8] bg-gradient-to-r from-[#ffe4ec] via-[#fde8ef] to-[#fce4ec] px-3.5 py-2 flex items-center gap-2">
-                              <span className="text-[#be185d] font-bold text-sm sm:text-base select-none font-sans">@</span>
+                      {/* 💎 PANEL GLAMUROSO DE REDES SOCIALES CON DIAMANTES (EXACTO A LA CAPTURA) */}
+                      <div className="my-5 w-full">
+                        <div className="relative w-full aspect-[1750/899] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl border-2 border-pink-200/90 select-none bg-gradient-to-br from-[#ffd6e7] via-[#ffb6d5] to-[#ffaecf]">
+                          {/* 1. Fondo de Arte Oficial de Alta Resolución */}
+                          <img 
+                            src="/assets/aistudio/Panel_glamuroso_de_redes_sociales_con_diamantes_aea3b3d1.png"
+                            alt="Panel Glamuroso de Redes Sociales con Diamantes"
+                            className="w-full h-full object-cover block pointer-events-none"
+                            referrerPolicy="no-referrer"
+                          />
+
+                          {/* 2. Capa Interactiva de Entradas y Botones superpuestos con precisión milimétrica */}
+                          <div className="absolute inset-0 w-full h-full">
+                            
+                            {/* --- FILA 1: INSTAGRAM --- */}
+                            {/* Campo de texto interactivo para el handle de Instagram (enmascara el texto estático) */}
+                            <div 
+                              style={{ top: '28.2%', left: '17.2%', width: '22%', height: '5.8%' }}
+                              className="absolute bg-white/95 rounded-md px-1 flex items-center shadow-xs"
+                            >
                               <input
                                 type="text"
-                                value={editingInstagram.replace(/^@/, '')}
+                                value={editingInstagram}
                                 onChange={(e) => {
-                                  const val = e.target.value.trim().replace(/^@/, '');
-                                  setEditingInstagram(val ? `@${val}` : '');
+                                  let val = e.target.value.trim();
+                                  if (!val) {
+                                    setEditingInstagram('');
+                                  } else {
+                                    val = val.startsWith('@') ? val : `@${val}`;
+                                    setEditingInstagram(val);
+                                  }
                                 }}
-                                className="w-full bg-transparent text-xs sm:text-sm font-sans text-stone-850 font-normal focus:outline-none placeholder:text-rose-300"
-                                placeholder="adrianalima_w1"
+                                placeholder="@adrianalima"
+                                className="w-full h-full bg-transparent text-[#e11d48] font-sans font-bold text-[clamp(9px,1.4vw,17px)] leading-none outline-none focus:ring-1 focus:ring-rose-400 placeholder:text-rose-300"
+                                title="Editar usuario de Instagram"
                               />
                             </div>
-                          </div>
+                            {/* Botón Seguir Instagram */}
+                            <a
+                              href={`https://instagram.com/${editingInstagram.replace(/^@/, '') || 'adrianalima'}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ top: '24.2%', left: '74.8%', width: '13.2%', height: '8.4%' }}
+                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all"
+                              title="Abrir Instagram en nueva pestaña"
+                            />
 
-                          {/* Contenedor 2: TikTok (Con borde dual-tone brillante Cyan a Magenta y resplandor neón) */}
-                          <div className="relative rounded-[22px] p-[2.5px] bg-gradient-to-r from-[#00f2fe] via-[#06b6d4] to-[#fe0979] shadow-[0_0_20px_rgba(0,242,254,0.35),0_0_24px_rgba(254,9,121,0.35)] transition-all">
-                            <div className="bg-white rounded-[19.5px] p-4 sm:p-4.5 space-y-2.5">
-                              <div className="flex items-center gap-2.5">
-                                {/* Logo oficial TikTok dual-tone */}
-                                <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="none">
-                                  <path d="M19.321 5.562a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.228 1h-3.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.48a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.525a8.318 8.318 0 0 0 4.854 1.556V5.562z" fill="#000000" />
-                                  <path d="M18.821 5.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 14.728.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V9.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V7.025a8.318 8.318 0 0 0 4.854 1.556V5.062z" fill="#25F4EE" opacity="0.9"/>
-                                  <path d="M19.821 6.062a5.122 5.122 0 0 1-3.585-2.525A5.132 5.132 0 0 1 15.728 1.5h-2.238v14.475a2.637 2.637 0 1 1-2.637-2.637c.307 0 .604.053.88.15V8.98a6.113 6.113 0 0 0-.88-.063 6.114 6.114 0 1 0 6.114 6.114V8.025a8.318 8.318 0 0 0 4.854 1.556V6.062z" fill="#FE2C55" opacity="0.9"/>
-                                </svg>
-                                <span className="text-base sm:text-[17px] font-sans font-normal tracking-wide text-stone-900 uppercase">
-                                  TIKTOK
-                                </span>
-                              </div>
-                              <div className="relative rounded-xl border border-[#a5f3fc] bg-[#e6fafb] px-3.5 py-2 flex items-center gap-2">
-                                <span className="text-teal-700 font-bold text-sm sm:text-base select-none font-sans">@</span>
-                                <input
-                                  type="text"
-                                  value={editingTikTok.replace(/^@/, '')}
-                                  onChange={(e) => {
-                                    const val = e.target.value.trim().replace(/^@/, '');
-                                    setEditingTikTok(val ? `@${val}` : '');
-                                  }}
-                                  className="w-full bg-transparent text-xs sm:text-sm font-sans text-stone-850 font-normal focus:outline-none placeholder:text-teal-400"
-                                  placeholder="adrianalima_w1_tok"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Contenedor 3: X / Twitter (Tarjeta blanca limpia con píldora gris neutral) */}
-                          <div className="bg-white border border-stone-200/90 rounded-[22px] p-4 sm:p-4.5 shadow-2xs space-y-2.5 transition-all">
-                            <div className="flex items-center gap-2.5">
-                              {/* Logo oficial X */}
-                              <svg className="w-4.5 h-4.5 shrink-0 text-black" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                              </svg>
-                              <span className="text-base sm:text-[17px] font-sans font-normal tracking-wide text-stone-900 uppercase">
-                                X (TWITTER)
-                              </span>
-                            </div>
-                            <div className="relative rounded-xl border border-stone-200 bg-[#f1f3f5] px-3.5 py-2 flex items-center gap-2">
-                              <span className="text-stone-500 font-bold text-sm sm:text-base select-none font-sans">@</span>
+                            {/* --- FILA 2: TIKTOK --- */}
+                            {/* Campo de texto interactivo para el handle de TikTok */}
+                            <div 
+                              style={{ top: '48.8%', left: '17.2%', width: '22%', height: '5.8%' }}
+                              className="absolute bg-white/95 rounded-md px-1 flex items-center shadow-xs"
+                            >
                               <input
                                 type="text"
-                                value={editingTwitter.replace(/^@/, '')}
+                                value={editingTikTok}
                                 onChange={(e) => {
-                                  const val = e.target.value.trim().replace(/^@/, '');
-                                  setEditingTwitter(val ? `@${val}` : '');
+                                  let val = e.target.value.trim();
+                                  if (!val) {
+                                    setEditingTikTok('');
+                                  } else {
+                                    val = val.startsWith('@') ? val : `@${val}`;
+                                    setEditingTikTok(val);
+                                  }
                                 }}
-                                className="w-full bg-transparent text-xs sm:text-sm font-sans text-stone-850 font-normal focus:outline-none placeholder:text-stone-400"
-                                placeholder="adrianalima_w1_real"
+                                placeholder="@adrianalima_tok"
+                                className="w-full h-full bg-transparent text-[#e11d48] font-sans font-bold text-[clamp(9px,1.4vw,17px)] leading-none outline-none focus:ring-1 focus:ring-rose-400 placeholder:text-rose-300"
+                                title="Editar usuario de TikTok"
                               />
                             </div>
+                            {/* Botón Seguir TikTok */}
+                            <a
+                              href={`https://tiktok.com/@${editingTikTok.replace(/^@/, '') || 'adrianalima_tok'}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ top: '45.3%', left: '74.8%', width: '13.2%', height: '8.4%' }}
+                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all"
+                              title="Abrir TikTok en nueva pestaña"
+                            />
+
+                            {/* --- FILA 3: X (TWITTER) --- */}
+                            {/* Campo de texto interactivo para el handle de X */}
+                            <div 
+                              style={{ top: '66.8%', left: '17.2%', width: '22%', height: '5.8%' }}
+                              className="absolute bg-white/95 rounded-md px-1 flex items-center shadow-xs"
+                            >
+                              <input
+                                type="text"
+                                value={editingTwitter}
+                                onChange={(e) => {
+                                  let val = e.target.value.trim();
+                                  if (!val) {
+                                    setEditingTwitter('');
+                                  } else {
+                                    val = val.startsWith('@') ? val : `@${val}`;
+                                    setEditingTwitter(val);
+                                  }
+                                }}
+                                placeholder="@adrianalima_real"
+                                className="w-full h-full bg-transparent text-[#e11d48] font-sans font-bold text-[clamp(9px,1.4vw,17px)] leading-none outline-none focus:ring-1 focus:ring-rose-400 placeholder:text-stone-400"
+                                title="Editar usuario de X (Twitter)"
+                              />
+                            </div>
+                            {/* Botón Seguir X */}
+                            <a
+                              href={`https://twitter.com/${editingTwitter.replace(/^@/, '') || 'adrianalima_real'}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ top: '63.4%', left: '74.8%', width: '13.2%', height: '8.4%' }}
+                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all"
+                              title="Abrir X (Twitter) en nueva pestaña"
+                            />
+
+                            {/* --- BOTÓN PRINCIPAL DE GUARDAR: GUARDAR REDES SOCIALES --- */}
+                            <button
+                              type="button"
+                              onClick={handleSaveSocialsOnly}
+                              style={{ top: '78.8%', left: '15.4%', width: '67.2%', height: '11.8%' }}
+                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all"
+                              title="Guardar y actualizar todas tus redes sociales oficiales"
+                            />
                           </div>
                         </div>
 
-                        {/* Botón Guardar Redes Sociales en negro mate de ancho completo exacto a la captura */}
-                        <div className="pt-2">
-                          <button
-                            type="button"
-                            onClick={handleSaveSocialsOnly}
-                            className="w-full bg-[#141414] hover:bg-black text-white font-sans font-normal text-xs sm:text-[13px] uppercase tracking-[0.2em] py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2.5"
-                          >
-                            <Check className="w-4 h-4 stroke-[2.2]" />
-                            <span>GUARDAR REDES SOCIALES</span>
-                          </button>
-                          {socialsSavedFeedback && (
-                            <p className="text-xs font-bold text-emerald-600 text-center animate-fade-in font-mono mt-2.5 flex items-center justify-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                              ¡Redes sociales guardadas y actualizadas!
-                            </p>
-                          )}
-                        </div>
+                        {/* Mensaje de confirmación cuando se guardan las redes */}
+                        {socialsSavedFeedback && (
+                          <div className="mt-3 p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300 text-emerald-800 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm animate-fade-in font-sans">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>¡Redes sociales guardadas y actualizadas con éxito!</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* 📋 CONTENEDOR EXACTO A CAPTURA IMAGE.PNG: MENSAJE DE BIENVENIDA Y SOBRE MÍ (EDITABLE) */}
@@ -11997,18 +12057,42 @@ export default function ModelFacebookProfile({
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          setRankingFormVideoUrl(preset.url);
-                                          applyRankingVideo(preset.url);
-                                          setTimeout(() => {
+                                          const chosenUrl = preset.url;
+                                          setRankingFormVideoUrl(chosenUrl);
+                                          setNewCustomVideoUrl(chosenUrl);
+                                          applyRankingVideo(chosenUrl);
+
+                                          const playWithSound = () => {
+                                            if (demoRankingVideoRef.current) {
+                                              try {
+                                                demoRankingVideoRef.current.src = chosenUrl;
+                                                demoRankingVideoRef.current.muted = false;
+                                                demoRankingVideoRef.current.volume = 1.0;
+                                                demoRankingVideoRef.current.play().catch(() => {
+                                                  if (demoRankingVideoRef.current) {
+                                                    demoRankingVideoRef.current.muted = true;
+                                                    demoRankingVideoRef.current.play().then(() => {
+                                                      if (demoRankingVideoRef.current) {
+                                                        demoRankingVideoRef.current.muted = false;
+                                                        demoRankingVideoRef.current.volume = 1.0;
+                                                      }
+                                                    }).catch(() => {});
+                                                  }
+                                                });
+                                              } catch (err) {}
+                                            }
                                             const videoElements = document.querySelectorAll('video');
                                             videoElements.forEach((vid) => {
-                                              if (vid.src === preset.url || vid.currentSrc === preset.url || vid.src.includes(preset.url)) {
+                                              if (vid.src === chosenUrl || vid.currentSrc === chosenUrl || vid.src.includes(chosenUrl)) {
                                                 vid.muted = false;
                                                 vid.volume = 1.0;
                                                 vid.play().catch(() => {});
                                               }
                                             });
-                                          }, 50);
+                                          };
+
+                                          playWithSound();
+                                          [20, 60, 120, 250, 450, 750].forEach((delay) => setTimeout(playWithSound, delay));
                                         }}
                                         className={`w-full p-2.5 cursor-pointer border rounded-xl text-left transition-all duration-200 flex flex-col justify-center ${
                                           isSelected 
@@ -12049,18 +12133,36 @@ export default function ModelFacebookProfile({
                                 <span className="absolute top-3.5 left-3.5 bg-gradient-to-r from-[#f472b6] to-[#ec4899] text-[8.5px] text-white font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-white/60 tracking-wider">
                                   REPRODUCTOR DEMO
                                 </span>
-                                <span className="absolute top-3.5 right-3.5 bg-white/90 backdrop-blur-xs text-[8.5px] text-rose-600 font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-rose-200 tracking-wider flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (demoRankingVideoRef.current) {
+                                      demoRankingVideoRef.current.muted = false;
+                                      demoRankingVideoRef.current.volume = 1.0;
+                                      demoRankingVideoRef.current.play().catch(() => {});
+                                    }
+                                  }}
+                                  className="absolute top-3.5 right-3.5 bg-white/95 hover:bg-rose-50 text-[8.5px] text-rose-600 font-mono font-black uppercase px-2.5 py-0.5 rounded-full z-10 shadow-sm border border-rose-200 tracking-wider flex items-center gap-1 cursor-pointer transition-all"
+                                  title="Haz clic para activar sonido"
+                                >
                                   <span>🔊</span> Sonido Activado
-                                </span>
+                                </button>
                                 <div className="relative w-full aspect-video bg-white/30 rounded-xl overflow-hidden flex items-center justify-center border border-[#ffd1dc]/80 shadow-inner">
                                   <video
                                     ref={(videoEl) => {
+                                      demoRankingVideoRef.current = videoEl;
                                       if (videoEl) {
                                         videoEl.muted = false;
                                         videoEl.volume = 1.0;
                                         const playPromise = videoEl.play();
                                         if (playPromise !== undefined) {
-                                          playPromise.catch(() => {});
+                                          playPromise.catch(() => {
+                                            videoEl.muted = true;
+                                            videoEl.play().then(() => {
+                                              videoEl.muted = false;
+                                              videoEl.volume = 1.0;
+                                            }).catch(() => {});
+                                          });
                                         }
                                       }
                                     }}
@@ -12081,6 +12183,11 @@ export default function ModelFacebookProfile({
                                       el.muted = false;
                                       el.volume = 1.0;
                                       el.play().catch(() => {});
+                                    }}
+                                    onPlaying={(e) => {
+                                      const el = e.currentTarget;
+                                      el.muted = false;
+                                      el.volume = 1.0;
                                     }}
                                     className="w-full h-full object-cover rounded-lg object-center transition-transform duration-700 bg-black"
                                   />
@@ -12998,30 +13105,41 @@ function ModelStoryLightbox({
       }
     }));
 
-    // Register in received gifts storage for the model
+    // Register in received gifts storage for the model vault (z_51d94d2a.png)
     try {
-      const rawRec = localStorage.getItem('ff_received_gifts_v3');
-      const recList = rawRec ? JSON.parse(rawRec) : [];
+      let recList: any[] = [];
+      const rawRec = localStorage.getItem(RECEIVED_GIFTS_STORAGE_KEY);
+      if (rawRec) {
+        try {
+          const parsed = JSON.parse(rawRec);
+          if (Array.isArray(parsed) && parsed.length > 0) recList = parsed;
+        } catch (_) {}
+      }
+      if (recList.length === 0) {
+        recList = [...INITIAL_RECEIVED_GIFTS];
+      }
       recList.unshift({
         id: `rec-gift-${Date.now()}`,
         senderName: senderProfile.name || 'Ernesto VS',
         senderUsername: senderProfile.username || 'ernestovs',
-        senderAvatar: senderProfile.avatar || '',
+        senderAvatar: senderProfile.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
         receiverName: userProfile?.name || 'Adriana Lima',
         receiverUsername: userProfile?.username || 'adrianalima_w1',
-        receiverAvatar: userProfile?.avatar || '',
+        receiverAvatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
         giftName: gift.name,
         giftIcon: gift.icon,
-        price: euroCost,
+        price: gift.cost,
         euroCost: euroCost,
-        message: `¡Regalo "${gift.name}" recibido en tu historia! ✨💖`,
+        message: `¡Regalo especial "${gift.name}" recibido en tu historia! ✨💖`,
         dateFormatted: 'Ahora mismo',
         timestamp: Date.now(),
         status: 'delivered',
-        category: gift.cost >= 1000 ? 'lujo' : gift.cost >= 100 ? 'intermedio' : 'basico'
+        isExclusive: gift.cost >= 1000,
+        category: gift.cost >= 1000 ? 'lujo' : (gift.cost >= 100 ? 'intermedio' : 'basico')
       });
-      localStorage.setItem('ff_received_gifts_v3', JSON.stringify(recList));
+      localStorage.setItem(RECEIVED_GIFTS_STORAGE_KEY, JSON.stringify(recList));
       window.dispatchEvent(new CustomEvent('ff-received-gifts-updated', { detail: recList }));
+      window.dispatchEvent(new Event('storage'));
 
       // Register movement
       const rawMovements = localStorage.getItem('coll_movements');

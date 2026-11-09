@@ -6315,9 +6315,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </div>
                 </div>
 
-                {/* 🟢 CENTRAL STAGE CARD (Strictly matching image.png during 5m exposition, and zq.png during 10m voting) */}
+                {/* 🌸 CENTRAL STAGE CARD (Styled in Rosa Pink) */}
                 <div 
-                  className="w-full bg-[#0e1628]/95 border border-emerald-500/60 rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-2.5 shadow-[0_16px_48px_rgba(0,0,0,0.85)] flex flex-col items-center text-center my-0.5 xs:my-1 transition-all shrink min-h-0"
+                  className="w-full bg-[#0e1628]/95 border border-pink-500/70 rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-2.5 shadow-[0_16px_48px_rgba(0,0,0,0.85),0_0_25px_rgba(236,72,153,0.2)] flex flex-col items-center text-center my-0.5 xs:my-1 transition-all shrink min-h-0"
                   id={`central-stage-card-${session.id}`}
                 >
                   {isSessionInVoting ? (
@@ -6372,8 +6372,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                           <div className="text-right shrink-0">
                             <span className="text-[7px] sm:text-[7.5px] text-slate-400 block font-black uppercase tracking-wider">RONDA</span>
-                            <span className="font-mono text-emerald-400 font-black text-xs sm:text-sm block leading-tight">10/10</span>
-                            <span className="font-mono text-emerald-400 font-bold text-[8.5px] sm:text-[9px] block leading-tight">(10m)</span>
+                            <span className="font-mono text-pink-400 font-black text-xs sm:text-sm block leading-tight">10/10</span>
+                            <span className="font-mono text-pink-400 font-bold text-[8.5px] sm:text-[9px] block leading-tight">(10m)</span>
                           </div>
                         </div>
 
@@ -6384,10 +6384,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           </span>
                         </div>
 
-                        {/* Multi-color gradient progress bar (green -> yellow -> red) */}
+                        {/* Multi-color gradient progress bar (pink -> rose -> red) */}
                         <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
                           <div 
-                            className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 rounded-full transition-all duration-1000"
+                            className="h-full bg-gradient-to-r from-pink-400 via-rose-500 to-[#fe2c55] rounded-full transition-all duration-1000"
                             style={{ width: `${Math.min(100, Math.max(3, (currentVotingSecs / 600) * 100))}%` }}
                           />
                         </div>
@@ -6460,7 +6460,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       </div>
                     </div>
                   ) : (
-                    /* 🔴 5-MINUTE EXPOSITION CARD (Strictly matching image.png) */
+                    /* 🔴 5-MINUTE EXPOSITION CARD (In Rosa Pink) */
                     <div className="w-full flex flex-col items-center animate-fade-in" id={`exposition-phase-view-${session.id}`}>
                       {/* Top Badge: TURNO X DE 10 • EN EXPOSICIÓN */}
                       <button
@@ -6480,12 +6480,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           }
                         }}
                         title="Haz clic para avanzar al siguiente turno de exposición de la ronda"
-                        className="inline-flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/35 active:scale-95 border border-emerald-500/60 text-emerald-300 px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider mb-1.5 shadow-xs cursor-pointer transition select-none"
+                        className="inline-flex items-center gap-1.5 bg-pink-500/20 hover:bg-pink-500/35 active:scale-95 border border-pink-500/70 text-pink-300 px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider mb-1.5 shadow-xs cursor-pointer transition select-none"
                         id={`btn-turno-badge-${session.id}`}
                       >
                         <span className="relative flex h-2 w-2 shrink-0">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
                         </span>
                         <span>🔴 TURNO {turnNumber} DE 10 • EN EXPOSICIÓN</span>
                       </button>
@@ -6496,7 +6496,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           <img
                             src={presenter.avatar}
                             alt={presenter.name}
-                            className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-emerald-400 shadow-md"
+                            className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-pink-500 ring-2 ring-pink-400/40 shadow-md shadow-pink-500/30"
                             referrerPolicy="no-referrer"
                           />
                           <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[6.5px] xs:text-[7px] sm:text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
@@ -6507,13 +6507,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         <h4 className="text-white font-black text-[11.5px] xs:text-xs sm:text-[13px] mt-0.5 tracking-tight leading-tight">
                           {presenter.name}
                         </h4>
-                        <span className="text-[8px] xs:text-[8.5px] sm:text-[9px] text-emerald-300 font-bold uppercase tracking-wider">
+                        <span className="text-[8px] xs:text-[8.5px] sm:text-[9px] text-pink-400 font-bold uppercase tracking-wider">
                           {presenter.role || 'PATRONISTA TEXTIL'}
                         </span>
                         <span className="text-[7px] xs:text-[7.5px] sm:text-[8px] text-slate-400 italic">
                           Exposición de 5 minutos en directo
                         </span>
-                        {/* Audio exposition live indicator (Clic para escuchar o reactivar la voz de Alessia Vance / Lucas Torres) */}
+                        {/* Audio exposition live indicator */}
                         {(() => {
                           const isAlessiaVoice = presenter.name?.includes('Alessia') || presenter.id === 'f-1';
                           const voicePresenterName = isAlessiaVoice ? 'Alessia Vance' : (presenter.name?.includes('Lucas') ? 'Lucas Torres' : presenter.name);
@@ -6527,23 +6527,23 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               title={`Voz en directo de ${voicePresenterName} activa. Pulsa para escuchar la presentación.`}
                               className={`flex items-center gap-1.5 mt-0.5 px-2.5 py-0.5 rounded-full border text-[7.5px] sm:text-[8px] font-bold shadow-xs transition active:scale-95 cursor-pointer select-none ${
                                 isLucasTorresSpeaking
-                                  ? 'bg-emerald-950/90 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                                  : 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/80'
+                                  ? 'bg-pink-950/90 border-pink-400 text-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.4)]'
+                                  : 'bg-pink-950/70 border-pink-500/50 text-pink-300 hover:bg-pink-900/80'
                               }`}
                             >
-                              <span className={`w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
                               <span className="font-extrabold">{isLucasTorresSpeaking ? `${voicePresenterName} hablando en directo...` : 'Voz en directo conectada'}</span>
                               <span className="flex items-end gap-0.5 h-2 ml-0.5">
-                                <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse' : 'h-1'}`} />
-                                <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse delay-75' : 'h-1.5'}`} />
-                                <span className={`w-0.5 bg-emerald-400 transition-all ${isLucasTorresSpeaking ? 'h-2 animate-pulse delay-150' : 'h-1'}`} />
+                                <span className={`w-0.5 bg-pink-400 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse' : 'h-1'}`} />
+                                <span className={`w-0.5 bg-pink-400 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse delay-75' : 'h-1.5'}`} />
+                                <span className={`w-0.5 bg-pink-400 transition-all ${isLucasTorresSpeaking ? 'h-2 animate-pulse delay-150' : 'h-1'}`} />
                               </span>
                             </button>
                           );
                         })()}
                       </div>
 {/* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: white digital pill timer) */}
-                        <div className="w-full bg-[#070b14] border border-emerald-500/40 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col gap-1 shadow-inner mb-1.5">
+                        <div className="w-full bg-[#070b14] border border-pink-500/50 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col gap-1 shadow-inner mb-1.5">
                           <div className="flex items-center justify-between gap-1.5">
                             <div className="flex items-center gap-1 text-left">
                               <span className="text-xs sm:text-sm">⏱️</span>
@@ -6571,16 +6571,16 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                             <div className="text-right shrink-0">
                               <span className="text-[6.5px] sm:text-[7px] text-slate-400 block font-black uppercase tracking-wider">RONDA</span>
-                              <span className="font-mono text-emerald-400 font-black text-[8.5px] sm:text-[9.5px] block leading-tight">
+                              <span className="font-mono text-pink-400 font-black text-[8.5px] sm:text-[9.5px] block leading-tight">
                                 {turnNumber}/10 (50m)
                               </span>
                             </div>
                           </div>
 
-                          {/* Progress Bar (emerald -> amber -> rose) */}
+                          {/* Progress Bar (pink -> rose -> red) */}
                           <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
                             <div 
-                              className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 rounded-full transition-all duration-1000"
+                              className="h-full bg-gradient-to-r from-pink-400 via-rose-500 to-[#fe2c55] rounded-full transition-all duration-1000"
                               style={{ width: `${Math.min(100, Math.max(10, (timerVal / 300) * 100))}%` }}
                             />
                           </div>
@@ -6604,7 +6604,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             }}
                             className={`w-full py-1.5 px-2 rounded-xl font-black text-[9.5px] sm:text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
                               isBroadcastMicOn && !isMuted
-                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400'
+                                ? 'bg-gradient-to-r from-pink-600 via-pink-500 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border-pink-400 shadow-pink-500/30'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
                             }`}
                             title={isBroadcastMicOn && !isMuted ? "Micrófono encendido: Lucas Torres está hablando. Pulsa para silenciar" : "Micrófono apagado. Pulsa para encender y escuchar a Lucas Torres"}

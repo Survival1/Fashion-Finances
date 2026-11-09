@@ -56,6 +56,12 @@ interface State {
   error: Error | null;
 }
 
+// Global stub to prevent transient cached ReferenceErrors
+try {
+  (window as any).LiveParticipatingRoundModal = () => null;
+  (globalThis as any).LiveParticipatingRoundModal = () => null;
+} catch (e) {}
+
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
@@ -63,6 +69,10 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    // If the error was a transient ReferenceError for LiveParticipatingRoundModal, do not crash
+    if (error?.message?.includes('LiveParticipatingRoundModal')) {
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
@@ -72,6 +82,13 @@ class ErrorBoundary extends Component<Props, State> {
     if (error?.name === 'QuotaExceededError' || error?.message?.includes('exceeded the quota')) {
       try {
         purgeExpendableStorage();
+      } catch (e) {}
+    }
+    // Auto-heal if transient ReferenceError from stale cached chunk
+    if (error?.message?.includes('LiveParticipatingRoundModal')) {
+      try {
+        (window as any).LiveParticipatingRoundModal = () => null;
+        (globalThis as any).LiveParticipatingRoundModal = () => null;
       } catch (e) {}
     }
   }

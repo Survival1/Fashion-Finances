@@ -138,17 +138,17 @@ export default function LandingPage({
             <button
               type="button"
               onClick={onLoginClick}
-              className="text-xs font-semibold text-slate-800 hover:text-slate-950 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5"
+              className="text-xs font-bold text-slate-800 hover:text-pink-600 px-3.5 py-2 rounded-xl bg-white border-2 border-pink-500 hover:border-pink-600 hover:bg-pink-50/60 shadow-xs hover:shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <LogIn className="w-3.5 h-3.5" />
+              <LogIn className="w-3.5 h-3.5 text-pink-500" />
               <span className="hidden sm:inline">Iniciar Sesión</span>
             </button>
             <button
               type="button"
               onClick={onRegisterClick}
-              className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl shadow-xs hover:shadow-md transition flex items-center gap-1.5 active:translate-y-px"
+              className="text-xs font-bold text-slate-800 hover:text-pink-600 px-4 py-2 rounded-xl bg-white border-2 border-pink-500 hover:border-pink-600 hover:bg-pink-50/60 shadow-xs hover:shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <UserPlus2 className="w-3.5 h-3.5" />
+              <UserPlus2 className="w-3.5 h-3.5 text-pink-500" />
               <span>Registrarse</span>
             </button>
           </div>
@@ -181,12 +181,23 @@ export default function LandingPage({
             <span>La Fusión Definitiva de Moda y Finanzas Colectivas</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-sans font-semibold text-slate-900 tracking-tight leading-snug max-w-2xl mx-auto">
-            Somos una comunidad de modelos unidas para patrocinar las empresas, los inversores y emprendedores de élite.
-          </h2>
+          {/* Contenedor del archivo adjunto con contorno Rosa Perla y difuminado estilo z.png */}
+          <div className="relative max-w-3xl mx-auto my-6 sm:my-8">
+            {/* Rosa Perla Ambient Aura */}
+            <div className="absolute -inset-2 sm:-inset-3 bg-[#ff85b3]/35 rounded-[38px] blur-2xl pointer-events-none" />
 
-          {/* Vídeo Oficial de Presentación colocado directamente debajo de "la moda." */}
-          <HeroPresentationVideo onExploreClick={() => scrollToSection(rankingRef)} />
+            {/* Contenedor con borde Rosa Perla y difuminado exacto de z.png */}
+            <div className="relative rounded-[30px] sm:rounded-[34px] bg-white/95 backdrop-blur-md px-6 sm:px-10 py-6 sm:py-8 border-[3.5px] border-[#ff85b3] shadow-[0_0_45px_rgba(255,133,179,0.75),0_0_80px_rgba(244,114,182,0.5)] hover:shadow-[0_0_65px_rgba(255,133,179,0.95),0_0_95px_rgba(244,114,182,0.75)] transition-all duration-300 text-center">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-sans font-semibold text-slate-900 tracking-tight leading-snug max-w-2xl mx-auto">
+                Somos una comunidad de modelos unidas para patrocinar las empresas, los inversores y emprendedores de élite.
+              </h2>
+            </div>
+          </div>
+
+          {/* Vídeo Oficial de Presentación con generoso espacio en blanco superior */}
+          <div className="pt-8 sm:pt-12 lg:pt-16">
+            <HeroPresentationVideo onExploreClick={() => scrollToSection(rankingRef)} />
+          </div>
 
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed font-sans">
             Únete a una comunidad global de modelos e inversores, construyendo juntas un futuro más brillante. Regístrate ahora y lleva tus sueños al siguiente nivel.
@@ -418,32 +429,62 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Hero CTA Block: Regístrate y Empieza */}
-      <section className="bg-white border-t border-slate-200 py-20 px-6 relative overflow-hidden text-slate-900">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-slate-50 rounded-full blur-3xl pointer-events-none" />
+      {/* Hero CTA Block: Aspiraciones de Lujo y Glamour matching Aspiraciones de lujo y glamour 1.png */}
+      <section className="bg-gradient-to-b from-white via-[#fff1f6] to-white py-12 sm:py-16 px-3 sm:px-6 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto space-y-4">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-pink-300/80 ring-1 ring-pink-200/60 bg-[#fce7f3] group select-none">
+            {/* Crisp Banner Image without any duplicate overlay text */}
+            <div className="relative w-full aspect-[1965/800] overflow-hidden">
+              <img
+                src="/assets/aistudio/Aspiraciones_de_lujo_y_glamour_609a3563.png"
+                alt="¿Preparado para transformar tus aspiraciones? - Aspiraciones de Lujo y Glamour"
+                className="w-full h-full object-cover object-center block"
+              />
 
-        <div className="max-w-3xl mx-auto text-center space-y-6 relative z-10">
-          <h3 className="text-2xl sm:text-4xl font-display font-semibold tracking-tight text-slate-950">
-            ¿Preparado para transformar tus aspiraciones?
-          </h3>
-          <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-            Consigue patrocinadores reales para tus obras o genera comisiones estables apoyando colectivamente alternativas exclusivas inspiradas en la economía digital.
-          </p>
+              {/* Interactive Clickable Hotspots mapped directly over the image buttons */}
+              {/* Button 1: REGÍSTRATE Y EMPIEZA */}
+              <button
+                type="button"
+                onClick={onRegisterClick}
+                className="absolute left-[36.5%] top-[77.5%] w-[32.5%] h-[15%] rounded-full cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-white/80 hover:shadow-[0_0_25px_rgba(236,72,153,0.6)] active:scale-95 focus:outline-none"
+                title="Regístrate y empieza"
+                aria-label="Regístrate y empieza"
+              >
+                <span className="sr-only">Regístrate y empieza</span>
+              </button>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 select-none">
+              {/* Button 2: YA TENGO CUENTA */}
+              <button
+                type="button"
+                onClick={onLoginClick}
+                className="absolute left-[70.8%] top-[77.5%] w-[25.8%] h-[15%] rounded-full cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-pink-400 hover:shadow-[0_0_25px_rgba(244,114,182,0.6)] active:scale-95 focus:outline-none"
+                title="Ya tengo cuenta"
+                aria-label="Ya tengo cuenta"
+              >
+                <span className="sr-only">Ya tengo cuenta</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile companion buttons for touch accessibility on small screens */}
+          <div className="sm:hidden flex flex-col gap-2.5 pt-2 px-2">
             <button
               type="button"
               onClick={onRegisterClick}
-              className="w-full sm:w-auto px-10 py-4 bg-slate-950 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-900/15 hover:shadow-xl transition active:translate-y-px cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-[#d9006c] via-[#e60076] to-[#f43f8e] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-pink-500/35 border-2 border-white/90 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
-              REGÍSTRATE Y EMPIEZA
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">👤</span>
+              <span>REGÍSTRATE Y EMPIEZA</span>
+              <span className="text-sm font-bold">›</span>
             </button>
             <button
               type="button"
               onClick={onLoginClick}
-              className="w-full sm:w-auto px-10 py-4 bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-900 font-bold text-xs uppercase tracking-widest rounded-2xl shadow-xs transition active:translate-y-px cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-full bg-white text-[#be185d] font-black text-xs uppercase tracking-wider shadow-md shadow-pink-200/60 border-2 border-[#f472b6] flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
-              YA TENGO CUENTA
+              <span className="text-sm">👁️</span>
+              <span>YA TENGO CUENTA</span>
+              <span className="text-sm font-bold">›</span>
             </button>
           </div>
         </div>

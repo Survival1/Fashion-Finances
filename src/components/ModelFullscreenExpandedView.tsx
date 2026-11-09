@@ -7,7 +7,8 @@ import {
   Crown, 
   Sparkles,
   Award,
-  Users
+  Users,
+  Camera
 } from 'lucide-react';
 
 interface ModelFullscreenExpandedViewProps {
@@ -28,9 +29,12 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
     'alexandervance1': '¡Hola! Bienvenido. Soy Alexander y me apasiona la fusión del diseño urbano creativo y las finanzas descentralizadas. Al elegirme como tu patrocinador, contarás con toda mi experiencia de marca y el apoyo de mi comunidad para impulsar tus proyectos en las mesas. ¡Hagamos historia juntos!',
   };
 
+  const isAdriana = model.id === 'topf-1' || model.username?.toLowerCase().includes('adriana');
+
   const customSavedWelcome = typeof window !== 'undefined' ? (
     localStorage.getItem(`custom_welcome_message_${model.id}`) ||
     localStorage.getItem(`custom_welcome_message_${model.username?.toLowerCase()}`) ||
+    (isAdriana ? localStorage.getItem('custom_welcome_message_adrianalima_w1') || localStorage.getItem('custom_welcome_message_adrianalima') : null) ||
     localStorage.getItem('custom_model_welcome_message')
   ) : null;
 
@@ -40,8 +44,64 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
   const customSavedBio = typeof window !== 'undefined' ? (
     localStorage.getItem(`custom_model_bio_${model.id}`) ||
     localStorage.getItem(`custom_model_bio_${model.username?.toLowerCase()}`) ||
+    (isAdriana ? localStorage.getItem('custom_model_bio_adrianalima_w1') || localStorage.getItem('custom_model_bio_adrianalima') : null) ||
     localStorage.getItem('custom_model_bio')
   ) : null;
+
+  const customSavedInstagram = typeof window !== 'undefined' ? (
+    localStorage.getItem(`custom_instagram_${model.id}`) ||
+    localStorage.getItem(`custom_instagram_${model.username?.toLowerCase()}`) ||
+    (isAdriana ? localStorage.getItem('custom_instagram_adrianalima_w1') || localStorage.getItem('custom_instagram_adrianalima') : null) ||
+    localStorage.getItem('custom_model_instagram')
+  ) : null;
+
+  const customSavedTikTok = typeof window !== 'undefined' ? (
+    localStorage.getItem(`custom_tiktok_${model.id}`) ||
+    localStorage.getItem(`custom_tiktok_${model.username?.toLowerCase()}`) ||
+    (isAdriana ? localStorage.getItem('custom_tiktok_adrianalima_w1') || localStorage.getItem('custom_tiktok_adrianalima') : null) ||
+    localStorage.getItem('custom_model_tiktok')
+  ) : null;
+
+  const [customGalleryImages, setCustomGalleryImages] = React.useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = 
+          localStorage.getItem(`custom_presentation_gallery_${model.id}`) ||
+          localStorage.getItem(`custom_presentation_gallery_${model.username?.toLowerCase()}`) ||
+          (isAdriana ? localStorage.getItem('custom_presentation_gallery_adrianalima_w1') || localStorage.getItem('custom_presentation_gallery_adrianalima') : null) ||
+          localStorage.getItem('custom_presentation_gallery_default');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed.slice(0, 10);
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const saved = 
+            localStorage.getItem(`custom_presentation_gallery_${model.id}`) ||
+            localStorage.getItem(`custom_presentation_gallery_${model.username?.toLowerCase()}`) ||
+            (isAdriana ? localStorage.getItem('custom_presentation_gallery_adrianalima_w1') || localStorage.getItem('custom_presentation_gallery_adrianalima') : null) ||
+            localStorage.getItem('custom_presentation_gallery_default');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) setCustomGalleryImages(parsed.slice(0, 10));
+          }
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('custom_gallery_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('custom_gallery_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [model.id, model.username, isAdriana]);
 
   const instagramFollowers = (model.socials?.instagramFollowers) || Math.floor(model.followersCount * 0.58 + 450);
   const tiktokFollowers = (model.socials?.tiktokFollowers) || Math.floor(model.followersCount * 0.72 + 820);
@@ -157,7 +217,7 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* Botón Instagram */}
                 <a
-                  href={`https://instagram.com/${(model.socials?.instagram || model.username || '').replace('@', '')}`}
+                  href={`https://instagram.com/${(customSavedInstagram || model.socials?.instagram || model.username || '').replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-slate-50 hover:bg-rose-50/70 border border-slate-200 hover:border-rose-300 p-2.5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-2 shadow-2xs transition-all duration-200 group cursor-pointer"
@@ -170,7 +230,7 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
                     <div className="text-left min-w-0">
                       <span className="block text-xs font-black text-slate-900 leading-tight group-hover:text-rose-600 transition-colors">Instagram</span>
                       <span className="block text-[9.5px] text-slate-500 font-mono leading-tight truncate">
-                        {model.socials?.instagram || `@${model.username}`}
+                        {customSavedInstagram || model.socials?.instagram || `@${model.username}`}
                       </span>
                     </div>
                   </div>
@@ -184,7 +244,7 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
 
                 {/* Botón TikTok */}
                 <a
-                  href={`https://tiktok.com/@${(model.socials?.tiktok || model.username || '').replace('@', '')}`}
+                  href={`https://tiktok.com/@${(customSavedTikTok || model.socials?.tiktok || model.username || '').replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-slate-50 hover:bg-cyan-50/70 border border-slate-200 hover:border-cyan-300 p-2.5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-2 shadow-2xs transition-all duration-200 group cursor-pointer"
@@ -199,7 +259,7 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
                     <div className="text-left min-w-0">
                       <span className="block text-xs font-black text-slate-900 leading-tight group-hover:text-cyan-600 transition-colors">TikTok</span>
                       <span className="block text-[9.5px] text-slate-500 font-mono leading-tight truncate">
-                        {model.socials?.tiktok || `@${model.username}_tok`}
+                        {customSavedTikTok || model.socials?.tiktok || `@${model.username}_tok`}
                       </span>
                     </div>
                   </div>
@@ -240,6 +300,39 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
                 {customSavedBio || model.bio || 'Top 1 Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.'}
               </p>
             </div>
+
+            {/* Book Oficial y Fotos (Hasta 10 imágenes) - Idéntico a imagen.png */}
+            {customGalleryImages.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9.5px] font-bold text-[#e11d48] uppercase tracking-widest block font-sans flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-rose-500" />
+                    Book Oficial y Fotos ({customGalleryImages.length}/10)
+                  </span>
+                  <span className="text-[8.5px] font-semibold text-slate-400 font-mono">
+                    Hasta 10 imágenes
+                  </span>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 p-2 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  {customGalleryImages.map((imgUrl, i) => (
+                    <div 
+                      key={i} 
+                      className="aspect-[4/5] rounded-lg overflow-hidden bg-slate-900 border border-slate-200 relative group cursor-pointer shadow-2xs hover:shadow-md transition-all duration-200"
+                      title={`Foto #${i + 1} del Book de ${model.name}`}
+                    >
+                      <img 
+                        src={imgUrl} 
+                        alt={`Book ${model.name} - Foto ${i + 1}`} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                      />
+                      <span className="absolute bottom-0.5 right-0.5 px-1 rounded bg-black/70 text-[8px] text-white font-mono font-bold">
+                        #{i + 1}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Métricas e Indicadores de Patrocinio */}
             <div className="grid grid-cols-2 gap-3 pt-1">

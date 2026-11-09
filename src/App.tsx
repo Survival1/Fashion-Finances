@@ -29,6 +29,7 @@ import MobileNavigationMenu from './components/MobileNavigationMenu';
 import { ModelFullscreenExpandedView } from './components/ModelFullscreenExpandedView';
 import AdminPortal from './components/AdminPortal';
 import NotificationCenterModal from './components/NotificationCenterModal';
+import RegisterModal from './components/RegisterModal';
 import { 
   Sparkles, 
   Home, 
@@ -66,6 +67,7 @@ import {
   Send,
   Check
 } from 'lucide-react';
+import { getFollowedUsersFromStorage, DEFAULT_FOLLOWED_USERS } from './utils/followingService';
 
 const generateNextUserId = (): string => {
   const currentSeqStr = localStorage.getItem('ff_user_id_seq') || '1';
@@ -92,7 +94,60 @@ const DEFAULT_TOP_10_PHOTOS = [
 ];
 
 function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; fullscreen?: boolean }) {
+  const [galleryImages, setGalleryImages] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = 
+          localStorage.getItem(`custom_presentation_gallery_${model.id}`) ||
+          localStorage.getItem(`custom_presentation_gallery_${model.username?.toLowerCase()}`) ||
+          (model.id === 'topf-1' || model.username?.toLowerCase().includes('adriana') 
+            ? localStorage.getItem('custom_presentation_gallery_adrianalima_w1') || localStorage.getItem('custom_presentation_gallery_adrianalima') 
+            : null) ||
+          localStorage.getItem('custom_presentation_gallery_default');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.slice(0, 10);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading gallery in ExpandedModelPhotoSlider:', e);
+      }
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = 
+          localStorage.getItem(`custom_presentation_gallery_${model.id}`) ||
+          localStorage.getItem(`custom_presentation_gallery_${model.username?.toLowerCase()}`) ||
+          (model.id === 'topf-1' || model.username?.toLowerCase().includes('adriana') 
+            ? localStorage.getItem('custom_presentation_gallery_adrianalima_w1') || localStorage.getItem('custom_presentation_gallery_adrianalima') 
+            : null) ||
+          localStorage.getItem('custom_presentation_gallery_default');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setGalleryImages(parsed.slice(0, 10));
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('custom_gallery_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('custom_gallery_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [model.id, model.username]);
+
   const photosList = useMemo(() => {
+    if (galleryImages && galleryImages.length > 0) {
+      return galleryImages.slice(0, 10);
+    }
     const list: string[] = [];
     if (model.avatar) list.push(model.avatar);
     if (model.photos && Array.isArray(model.photos)) {
@@ -106,7 +161,7 @@ function ExpandedModelPhotoSlider({ model, fullscreen }: { model: ModelProfile; 
       }
     });
     return list.slice(0, 10);
-  }, [model]);
+  }, [galleryImages, model]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -800,31 +855,7 @@ export default function App() {
   });
 
   const [followingList, setFollowingList] = useState<any[]>(() => {
-    try {
-      const raw = localStorage.getItem('coll_following');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= 14) return parsed;
-      }
-    } catch (e) {}
-    const defaultFollowing = [
-      { id: 'fol-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Modelo internacional y apasionado/a del fitness.', online: true },
-      { id: 'fol-2', name: 'Alessandra Ambrosio', username: 'alessandraambrosio_w2', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Top Model de pasarela y embajadora de la moda sostenible.', online: true },
-      { id: 'fol-3', name: 'Candice Swanepoel', username: 'candiceswanepoel_w3', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Ángel icónico y diseñadora de moda ecológica.', online: true },
-      { id: 'fol-4', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', role: 'model', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos', online: true },
-      { id: 'fol-5', name: 'Alexander Vance', username: 'alexandervance1', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Creador/a de trends y embajador/a de marcas de alta.', online: true },
-      { id: 'fol-6', name: 'Isabella Dubois', username: 'isabelladubois2', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Enfocado/a en el empoderamiento y nuevos negocios creativos.', online: true },
-      { id: 'fol-7', name: 'Elena Rostova', username: 'elenarostova', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Estilo de vida, moda urbana e innovación sostenible.', online: false },
-      { id: 'fol-8', name: 'Mia Kincaid', username: 'miakincaid', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Influencer de estilo de vida, mentor de creadores emergentes.', online: true },
-      { id: 'fol-9', name: 'Marcus Vance', username: 'marcusvance_m2', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Modelo de pasarela y consultor de moda masculina.', online: true },
-      { id: 'fol-10', name: 'Sienna Cole', username: 'siennacole_w4', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Estilismo prêt-à-porter y creadora de tendencias.', online: true },
-      { id: 'fol-11', name: 'Liam Cooper', username: 'liamcooper_m3', avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Diseño vanguardista y fotografía de pasarela.', online: true },
-      { id: 'fol-12', name: 'Gisele Bündchen', username: 'giselebundchen_w5', avatar: 'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Top model internacional e icono de la moda.', online: true },
-      { id: 'fol-13', name: 'Carmen de la Cruz', username: 'carmen_moda', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', role: 'model', bio: 'Amante de la costura prêt-à-porter y la financiación ética', online: true },
-      { id: 'fol-14', name: 'Valentina Rose', username: 'valentinarose_w6', avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=200', role: 'model', bio: 'Creadora de moda, pasarela y proyectos de financiamiento colectivo.', online: true }
-    ];
-    localStorage.setItem('coll_following', JSON.stringify(defaultFollowing));
-    return defaultFollowing;
+    return getFollowedUsersFromStorage();
   });
   const [friendsActiveTab, setFriendsActiveTab] = useState<'friends' | 'followers' | 'following'>('friends');
   const [showFriendsModal, setShowFriendsModal] = useState(false);
@@ -972,6 +1003,32 @@ export default function App() {
       return !isSelf;
     });
   }, [followingList, userProfile?.id, userProfile?.name, userProfile?.username]);
+
+  // 👥 Sincronización en tiempo real de seguidos (z.png) entre componentes
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const list = e?.detail;
+      if (Array.isArray(list)) {
+        setFollowingList(list);
+      }
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'coll_following' && e.newValue) {
+        try {
+          const list = JSON.parse(e.newValue);
+          if (Array.isArray(list)) {
+            setFollowingList(list);
+          }
+        } catch (_) {}
+      }
+    };
+    window.addEventListener('sync-following-list', handleSync);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('sync-following-list', handleSync);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   // Load / Setup state on mounted
   // Al abrirse o reiniciarse la App NUNCA estar inscrito ni participando por defecto en ninguna ronda
@@ -1193,28 +1250,42 @@ export default function App() {
     };
   }, [models, patrocinadosList, activeTab]);
 
-  // Determinar si actualmente se está visualizando el perfil de Adriana Lima (Declarado al inicio para cumplir las reglas de Hooks de React)
+  // Determinar si actualmente se está visualizando el perfil de Adriana Lima (@adrianalima_w1)
   const isViewingAdrianaLimaProfile = useMemo(() => {
-    // Si se está en la pestaña admin, mantener visible
+    // Si ya se está dentro del panel de administración, mantener el acceso
     if (activeTab === 'admin') {
       return true;
     }
-    // Solo puede ser en las pestañas de perfil / home donde se visualiza el perfil
+    // Solo debe ser visible si la pantalla actual muestra un perfil de usuario ('home' o 'profile')
     if (activeTab !== 'home' && activeTab !== 'profile') {
       return false;
     }
-    // Si se está viendo un modelo específico seleccionado:
-    if (selectedModelForView) {
-      const name = (selectedModelForView.name || '').toLowerCase();
-      const username = (selectedModelForView.username || '').toLowerCase();
-      const id = (selectedModelForView.id || '').toLowerCase();
-      return name.includes('adriana') || username.includes('adrianalima') || id === 'topf-1';
+
+    // Perfil que se está mostrando actualmente en la pantalla:
+    // Si estamos en 'home' y se ha abierto el perfil de una modelo concreta (selectedModelForView), ese es el perfil en pantalla.
+    // En caso contrario (o en 'profile'), el perfil mostrado es el del usuario conectado (userProfile).
+    const displayedProfile = (activeTab === 'home' && selectedModelForView)
+      ? selectedModelForView
+      : userProfile;
+
+    if (!displayedProfile) {
+      return false;
     }
-    // Si no hay modelo seleccionada, se visualiza el perfil del usuario activo: solo mostrar si es Adriana Lima
-    const currentName = (userProfile?.name || '').toLowerCase();
-    const currentUsername = (userProfile?.username || '').toLowerCase();
-    const currentId = (userProfile?.id || '').toLowerCase();
-    return currentName.includes('adriana') || currentUsername.includes('adrianalima') || currentId === 'topf-1';
+
+    const name = (displayedProfile.name || '').toLowerCase().trim();
+    const username = (displayedProfile.username || '').toLowerCase().trim().replace(/^@/, '');
+    const id = (displayedProfile.id || '').toLowerCase().trim();
+
+    // Solo debe salir en el perfil de Adriana Lima (@adrianalima_w1)
+    return (
+      name === 'adriana lima' ||
+      name.includes('adriana') ||
+      username === 'adrianalima_w1' ||
+      username === 'adrianalima' ||
+      id === 'topf-1' ||
+      id === 'friend-1' ||
+      id === 'model-1'
+    );
   }, [activeTab, selectedModelForView, userProfile]);
 
   // Save changes to localStorage helper
@@ -1694,7 +1765,7 @@ export default function App() {
       const nextFollowing = followingList.filter(f => f.username !== model.username);
       setFollowingList(nextFollowing);
       saveStateToLocalStorage(models, userProfile!, projects, sessions, messages, movements, historyWonLog, friendsList, patrocinadosList, followersList, nextFollowing);
-      alert(`❌ Has dejado de seguir a ${model.name}.`);
+      window.dispatchEvent(new CustomEvent('sync-following-list', { detail: nextFollowing }));
     } else {
       const newFollowing = {
         id: model.id,
@@ -1708,13 +1779,12 @@ export default function App() {
       const nextFollowing = [...followingList, newFollowing];
       setFollowingList(nextFollowing);
       saveStateToLocalStorage(models, userProfile!, projects, sessions, messages, movements, historyWonLog, friendsList, patrocinadosList, followersList, nextFollowing);
-      alert(`👀 ¡Ahora sigues a ${model.name}!`);
+      window.dispatchEvent(new CustomEvent('sync-following-list', { detail: nextFollowing }));
     }
   };
 
   const handleFollowFromFollowers = (follower: any) => {
     if (followingList.some(f => f.username === follower.username)) {
-      alert(`ℹ️ Ya sigues a @${follower.username}`);
       return;
     }
     const newFollowing = {
@@ -1729,14 +1799,14 @@ export default function App() {
     const nextFollowing = [...followingList, newFollowing];
     setFollowingList(nextFollowing);
     saveStateToLocalStorage(models, userProfile!, projects, sessions, messages, movements, historyWonLog, friendsList, patrocinadosList, followersList, nextFollowing);
-    alert(`👀 ¡Ahora sigues a ${follower.name}! Se ha añadido a tu lista de Seguidos.`);
+    window.dispatchEvent(new CustomEvent('sync-following-list', { detail: nextFollowing }));
   };
 
-  const handleUnfollow = (followedId: string, name: string) => {
-    const nextFollowing = followingList.filter(f => f.id !== followedId);
+  const handleUnfollow = (followedId: string, _name: string) => {
+    const nextFollowing = followingList.filter(f => f.id !== followedId && f.username !== followedId);
     setFollowingList(nextFollowing);
     saveStateToLocalStorage(models, userProfile!, projects, sessions, messages, movements, historyWonLog, friendsList, patrocinadosList, followersList, nextFollowing);
-    alert(`❌ Has dejado de seguir a ${name}.`);
+    window.dispatchEvent(new CustomEvent('sync-following-list', { detail: nextFollowing }));
   };
 
   const handleMessageFriend = (friendUsername: string) => {
@@ -2459,585 +2529,45 @@ export default function App() {
         />
 
         {/* Render register modal if requested inside landing page */}
-        {showRegisterModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 animate-fade-in overflow-y-auto">
-            <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 sm:p-8 text-slate-900 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] my-8">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <h3 className="text-sm sm:text-base font-bold font-display text-slate-950 flex items-center gap-2">
-                    <UserPlus2 className="w-5 h-5 text-indigo-650" />
-                    <span>Crear Cuenta en Fashion Finances</span>
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Regístrate eligiendo a uno de los 50 modelos del ranking o a tu patrocinador personal.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterModal(false)}
-                  className="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-lg transition"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <form onSubmit={handleRegisterNewAccount} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Nombre *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Carmen"
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Apellidos *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Alvarez"
-                    value={regLastName}
-                    onChange={(e) => setRegLastName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Nombre de Usuario (Username) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. carmenval"
-                    value={regUsername}
-                    onChange={(e) => setRegUsername(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Instagram (@usuario) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. @carmen_diseno"
-                    value={regInstagram}
-                    onChange={(e) => setRegInstagram(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Tik Tok (@usuario) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. @carmen_tok"
-                    value={regTikTok}
-                    onChange={(e) => setRegTikTok(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Dirección *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Calle Gran Vía 45, Madrid"
-                    value={regDireccion}
-                    onChange={(e) => setRegDireccion(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Ciudad *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Madrid"
-                    value={regCiudad}
-                    onChange={(e) => setRegCiudad(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Código Postal *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. 28013"
-                    value={regCodigoPostal}
-                    onChange={(e) => setRegCodigoPostal(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">País *</label>
-                  <select
-                    required
-                    value={regPais}
-                    onChange={(e) => setRegPais(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-950 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  >
-                    <option value="">-- Selecciona tu País --</option>
-                    <option value="España">España</option>
-                    <option value="México">México</option>
-                    <option value="Colombia">Colombia</option>
-                    <option value="Argentina">Argentina</option>
-                    <option value="Chile">Chile</option>
-                    <option value="Perú">Perú</option>
-                    <option value="Venezuela">Venezuela</option>
-                    <option value="Ecuador">Ecuador</option>
-                    <option value="Bolivia">Bolivia</option>
-                    <option value="Uruguay">Uruguay</option>
-                    <option value="Paraguay">Paraguay</option>
-                    <option value="Costa Rica">Costa Rica</option>
-                    <option value="Panamá">Panamá</option>
-                    <option value="República Dominicana">República Dominicana</option>
-                    <option value="Estados Unidos">Estados Unidos</option>
-                    <option value="Abjasia">Abjasia</option>
-                    <option value="Afganistán">Afganistán</option>
-                    <option value="Albania">Albania</option>
-                    <option value="Alemania">Alemania</option>
-                    <option value="Andorra">Andorra</option>
-                    <option value="Angola">Angola</option>
-                    <option value="Antigua y Barbuda">Antigua y Barbuda</option>
-                    <option value="Arabia Saudita">Arabia Saudita</option>
-                    <option value="Argelia">Argelia</option>
-                    <option value="Armenia">Armenia</option>
-                    <option value="Australia">Australia</option>
-                    <option value="Austria">Austria</option>
-                    <option value="Azerbaiyán">Azerbaiyán</option>
-                    <option value="Bahamas">Bahamas</option>
-                    <option value="Bangladés">Bangladés</option>
-                    <option value="Barbados">Barbados</option>
-                    <option value="Baréin">Baréin</option>
-                    <option value="Bélgica">Bélgica</option>
-                    <option value="Belice">Belice</option>
-                    <option value="Benín">Benín</option>
-                    <option value="Bielorrusia">Bielorrusia</option>
-                    <option value="Birmania / Myanmar">Birmania / Myanmar</option>
-                    <option value="Bosnia y Herzegovina">Bosnia y Herzegovina</option>
-                    <option value="Botsuana">Botsuana</option>
-                    <option value="Brasil">Brasil</option>
-                    <option value="Brunéi">Brunéi</option>
-                    <option value="Bulgaria">Bulgaria</option>
-                    <option value="Burkina Faso">Burkina Faso</option>
-                    <option value="Burundi">Burundi</option>
-                    <option value="Bután">Bután</option>
-                    <option value="Cabo Verde">Cabo Verde</option>
-                    <option value="Camboya">Camboya</option>
-                    <option value="Camerún">Camerún</option>
-                    <option value="Canadá">Canadá</option>
-                    <option value="Catar">Catar</option>
-                    <option value="República Centroafricana">República Centroafricana</option>
-                    <option value="Chad">Chad</option>
-                    <option value="China">China</option>
-                    <option value="Chipre">Chipre</option>
-                    <option value="Corea del Norte">Corea del Norte</option>
-                    <option value="Corea del Sur">Corea del Sur</option>
-                    <option value="Costa de Marfil">Costa de Marfil</option>
-                    <option value="Croacia">Croacia</option>
-                    <option value="Cuba">Cuba</option>
-                    <option value="Dinamarca">Dinamarca</option>
-                    <option value="Dominica">Dominica</option>
-                    <option value="Egipto">Egipto</option>
-                    <option value="El Salvador">El Salvador</option>
-                    <option value="Emiratos Árabes Unidos">Emiratos Árabes Unidos</option>
-                    <option value="Eritrea">Eritrea</option>
-                    <option value="Eslovaquia">Eslovaquia</option>
-                    <option value="Eslovenia">Eslovenia</option>
-                    <option value="Estonia">Estonia</option>
-                    <option value="Etiopía">Etiopía</option>
-                    <option value="Filipinas">Filipinas</option>
-                    <option value="Finlandia">Finlandia</option>
-                    <option value="Fiyi">Fiyi</option>
-                    <option value="Francia">Francia</option>
-                    <option value="Gabón">Gabón</option>
-                    <option value="Gambia">Gambia</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="Granada">Granada</option>
-                    <option value="Grecia">Grecia</option>
-                    <option value="Guatemala">Guatemala</option>
-                    <option value="Guinea">Guinea</option>
-                    <option value="Guinea-Bisáu">Guinea-Bisáu</option>
-                    <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
-                    <option value="Guyana">Guyana</option>
-                    <option value="Haití">Haití</option>
-                    <option value="Honduras">Honduras</option>
-                    <option value="Hungría">Hungría</option>
-                    <option value="India">India</option>
-                    <option value="Indonesia">Indonesia</option>
-                    <option value="Irak">Irak</option>
-                    <option value="Irán">Irán</option>
-                    <option value="Irlanda">Irlanda</option>
-                    <option value="Islandia">Islandia</option>
-                    <option value="Israel">Israel</option>
-                    <option value="Italia">Italia</option>
-                    <option value="Jamaica">Jamaica</option>
-                    <option value="Japón">Japón</option>
-                    <option value="Jordania">Jordania</option>
-                    <option value="Kazajistán">Kazajistán</option>
-                    <option value="Kenia">Kenia</option>
-                    <option value="Kirguistán">Kirguistán</option>
-                    <option value="Kiribati">Kiribati</option>
-                    <option value="Kosovo">Kosovo</option>
-                    <option value="Kuwait">Kuwait</option>
-                    <option value="Laos">Laos</option>
-                    <option value="Lesoto">Lesoto</option>
-                    <option value="Letonia">Letonia</option>
-                    <option value="Líbano">Líbano</option>
-                    <option value="Liberia">Liberia</option>
-                    <option value="Libia">Libia</option>
-                    <option value="Liechtenstein">Liechtenstein</option>
-                    <option value="Lituania">Lituania</option>
-                    <option value="Luxemburgo">Luxemburgo</option>
-                    <option value="Macedonia del Norte">Macedonia del Norte</option>
-                    <option value="Madagascar">Madagascar</option>
-                    <option value="Malasia">Malasia</option>
-                    <option value="Malaui">Malaui</option>
-                    <option value="Maldivas">Maldivas</option>
-                    <option value="Malí">Malí</option>
-                    <option value="Malta">Malta</option>
-                    <option value="Marruecos">Marruecos</option>
-                    <option value="Mauricio">Mauricio</option>
-                    <option value="Mauritania">Mauritania</option>
-                    <option value="Micronesia">Micronesia</option>
-                    <option value="Moldavia">Moldavia</option>
-                    <option value="Mónaco">Mónaco</option>
-                    <option value="Mongolia">Mongolia</option>
-                    <option value="Montenegro">Montenegro</option>
-                    <option value="Mozambique">Mozambique</option>
-                    <option value="Namibia">Namibia</option>
-                    <option value="Nauru">Nauru</option>
-                    <option value="Nepal">Nepal</option>
-                    <option value="Nicaragua">Nicaragua</option>
-                    <option value="Níger">Níger</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Noruega">Noruega</option>
-                    <option value="Nueva Zelanda">Nueva Zelanda</option>
-                    <option value="Omán">Omán</option>
-                    <option value="Países Bajos">Países Bajos</option>
-                    <option value="Pakistán">Pakistán</option>
-                    <option value="Palaos">Palaos</option>
-                    <option value="Palestina">Palestina</option>
-                    <option value="Papúa Nueva Guinea">Papúa Nueva Guinea</option>
-                    <option value="Polonia">Polonia</option>
-                    <option value="Portugal">Portugal</option>
-                    <option value="Reino Unido">Reino Unido</option>
-                    <option value="Ruanda">Ruanda</option>
-                    <option value="Rumania">Rumania</option>
-                    <option value="Rusia">Rusia</option>
-                    <option value="Samoa">Samoa</option>
-                    <option value="San Cristóbal y Nieves">San Cristóbal y Nieves</option>
-                    <option value="San Marino">San Marino</option>
-                    <option value="Santa Lucía">Santa Lucía</option>
-                    <option value="Santo Tomé y Príncipe">Santo Tomé y Príncipe</option>
-                    <option value="Senegal">Senegal</option>
-                    <option value="Serbia">Serbia</option>
-                    <option value="Seychelles">Seychelles</option>
-                    <option value="Sierra Leona">Sierra Leona</option>
-                    <option value="Singapur">Singapur</option>
-                    <option value="Siria">Siria</option>
-                    <option value="Somalia">Somalia</option>
-                    <option value="Sri Lanka">Sri Lanka</option>
-                    <option value="Suazilandia">Suazilandia</option>
-                    <option value="Sudáfrica">Sudáfrica</option>
-                    <option value="Sudán">Sudán</option>
-                    <option value="Sudán del Sur">Sudán del Sur</option>
-                    <option value="Suecia">Suecia</option>
-                    <option value="Suiza">Suiza</option>
-                    <option value="Surinam">Surinam</option>
-                    <option value="Tailandia">Tailandia</option>
-                    <option value="Taiwán">Taiwán</option>
-                    <option value="Tanzania">Tanzania</option>
-                    <option value="Tayikistán">Tayikistán</option>
-                    <option value="Timor Oriental">Timor Oriental</option>
-                    <option value="Togo">Togo</option>
-                    <option value="Tonga">Tonga</option>
-                    <option value="Trinidad y Tobago">Trinidad y Tobago</option>
-                    <option value="Túnez">Túnez</option>
-                    <option value="Turkmenistán">Turkmenistán</option>
-                    <option value="Turquía">Turquía</option>
-                    <option value="Tuvalu">Tuvalu</option>
-                    <option value="Ucrania">Ucrania</option>
-                    <option value="Uganda">Uganda</option>
-                    <option value="Uzbekistán">Uzbekistán</option>
-                    <option value="Vanuatu">Vanuatu</option>
-                    <option value="Ciudad del Vaticano">Ciudad del Vaticano</option>
-                    <option value="Vietnam">Vietnam</option>
-                    <option value="Yemen">Yemen</option>
-                    <option value="Yibuti">Yibuti</option>
-                    <option value="Zambia">Zambia</option>
-                    <option value="Zimbabue">Zimbabue</option>
-                    <option value="Otros">Otros</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Teléfono *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Ej. +34 612 345 678"
-                    value={regTelefono}
-                    onChange={(e) => setRegTelefono(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Correo Electrónico (Email) *</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="Ej. usuario@gmail.com"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                  <p className="text-[10px] text-indigo-700 mt-1 font-semibold leading-relaxed">
-                    🎯 Medida de seguridad: Solo cuentas de la arquitectura de Gmail (letras, números, puntos, signo más y extensión @gmail.com o @gmail)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Contraseña *</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Crea una contraseña segura"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Elige Rol Principal *</label>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => setRegRole('investor')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition ${
-                        regRole === 'investor'
-                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      Registro de Inversor
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRegRole('model')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition ${
-                        regRole === 'model'
-                          ? 'bg-pink-600 border-pink-600 text-white shadow-xs'
-                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      Soy Modelo
-                    </button>
-                  </div>
-                </div>
-
-                {regRole === 'model' && (
-                  <div className="bg-pink-50/50 p-4 rounded-2xl border border-pink-100 space-y-2 animate-fade-in">
-                    <label className="block text-pink-950 font-bold">Selecciona tu Género *</label>
-                    <p className="text-[10px] text-pink-700/80">Selecciona si eres modelo masculino o femenino para asignarte al ranking correspondiente.</p>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
-                      <button
-                        type="button"
-                        onClick={() => setRegGender('female')}
-                        className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer ${
-                          regGender === 'female'
-                            ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200'
-                            : 'bg-white border-pink-200 text-pink-700 hover:bg-pink-50'
-                        }`}
-                      >
-                        👩 Mujer / Femenino
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRegGender('male')}
-                        className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer ${
-                          regGender === 'male'
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
-                            : 'bg-white border-indigo-100 text-indigo-700 hover:bg-indigo-50'
-                        }`}
-                      >
-                        👨 Hombre / Masculino
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Obligatory sponsor choice for new registrations with direct Sponsor ID selection */}
-                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                  <div className="space-y-1">
-                    <label className="block text-slate-800 font-semibold">Patrocinador (Sponsor) *</label>
-                    <p className="text-[10px] text-slate-500">Elige un patrocinador de la lista o introduce directamente su ID único de afiliación para vincularte.</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[9px] text-slate-500 font-mono block mb-1">Opción A: Elige un Patrocinador del Ranking</span>
-                      
-                      {/* Buscador de Patrocinadores */}
-                      <div className="relative mb-2">
-                        <input
-                          type="text"
-                          placeholder="🔍 Escribe para buscar patrocinador..."
-                          value={sponsorSearchQuery}
-                          onChange={(e) => setSponsorSearchQuery(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 font-sans"
-                        />
-                        {sponsorSearchQuery && (
-                          <button
-                            type="button"
-                            onClick={() => setSponsorSearchQuery('')}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer bg-transparent border-0"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-
-                      <select
-                        value={regSponsorId}
-                        onChange={(e) => setRegSponsorId(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 text-xs focus:outline-none focus:border-indigo-550"
-                        id="reg-sponsor-select-dropdown"
-                      >
-                        <option value="">-- Elige un Patrocinador --</option>
-                        {models
-                          .filter((model) => {
-                            const query = sponsorSearchQuery.trim().toLowerCase();
-                            if (!query) return true;
-                            return (
-                              model.name.toLowerCase().includes(query) ||
-                              model.id.toLowerCase().includes(query) ||
-                              (model.username && model.username.toLowerCase().includes(query))
-                            );
-                          })
-                          .map((model) => (
-                            <option key={model.id} value={model.id}>
-                              {model.name} (ID: {model.id} - {model.totalLikes} Likes)
-                            </option>
-                          ))}
-                      </select>
-                      {sponsorSearchQuery && (
-                        <p className="text-[10px] text-indigo-700 mt-1 font-sans">
-                          Filtrados {
-                            models.filter((m) => {
-                              const query = sponsorSearchQuery.trim().toLowerCase();
-                              return (
-                                m.name.toLowerCase().includes(query) ||
-                                m.id.toLowerCase().includes(query) ||
-                                (m.username && m.username.toLowerCase().includes(query))
-                              );
-                            }).length
-                          } de {models.length} patrocinadores
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] text-slate-500 font-mono block mb-1">Opción B: Introduce el ID de tu Sponsor</span>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Introduce el ID de tu sponsor (ej: model-1)"
-                        value={regSponsorId}
-                        onChange={(e) => setRegSponsorId(e.target.value.trim())}
-                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-850 placeholder:text-slate-400 focus:outline-none focus:border-indigo-505 font-mono text-xs"
-                        id="reg-sponsor-id-direct-input"
-                      />
-                    </div>
-
-                    {/* Dynamic Verification of typed ID */}
-                    {regSponsorId ? (() => {
-                      const matchedModel = models.find(m => m.id.toLowerCase() === regSponsorId.toLowerCase().trim());
-                      if (matchedModel) {
-                        return (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] animate-fade-in">
-                            <span className="text-emerald-600 font-bold">✓</span>
-                            <span>¡Sponsor Válido! <strong>{matchedModel.name}</strong></span>
-                            {matchedModel.avatar && (
-                              <div className="relative ml-auto shrink-0 mr-1">
-                                <img
-                                  src={matchedModel.avatar}
-                                  alt={matchedModel.name}
-                                  referrerPolicy="no-referrer"
-                                  className="w-7 h-7 rounded-full object-cover border border-emerald-250/60"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setRegSponsorId('')}
-                                  className="absolute -top-1 -right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[8px] font-black border border-white cursor-pointer select-none shadow-xs transition-colors"
-                                  title="Eliminar patrocinador"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 border border-red-100 text-red-700 text-[11px] font-mono animate-fade-in">
-                            <span className="text-red-600">❌</span>
-                            <span>ID de Sponsor no registrado (escribe ej. topm-8, topf-1, o un ID numérico de 11 dígitos como 00000000001)</span>
-                          </div>
-                        );
-                      }
-                    })() : null}
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-normal font-sans">Vínculo verificado de forma segura. En Fashion Finances todos los usuarios se registran bajo un referidor calificado.</p>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowRegisterModal(false)}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
-                  >
-                    Registrarse
-                  </button>
-                </div>
-                <div className="text-center pt-2 border-t border-slate-100">
-                  <p className="text-[11px] text-slate-500">
-                    ¿Ya tienes una cuenta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowRegisterModal(false);
-                        setShowLoginModal(true);
-                      }}
-                      className="text-indigo-600 font-bold hover:underline cursor-pointer bg-transparent border-0 p-0 inline font-sans"
-                    >
-                      Inicia sesión directamente
-                    </button>
-                  </p>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <RegisterModal
+          show={showRegisterModal}
+          onClose={() => setShowRegisterModal(false)}
+          onOpenLogin={() => setShowLoginModal(true)}
+          onSubmit={handleRegisterNewAccount}
+          models={models}
+          regName={regName}
+          setRegName={setRegName}
+          regLastName={regLastName}
+          setRegLastName={setRegLastName}
+          regUsername={regUsername}
+          setRegUsername={setRegUsername}
+          regInstagram={regInstagram}
+          setRegInstagram={setRegInstagram}
+          regTikTok={regTikTok}
+          setRegTikTok={setRegTikTok}
+          regDireccion={regDireccion}
+          setRegDireccion={setRegDireccion}
+          regCiudad={regCiudad}
+          setRegCiudad={setRegCiudad}
+          regCodigoPostal={regCodigoPostal}
+          setRegCodigoPostal={setRegCodigoPostal}
+          regPais={regPais}
+          setRegPais={setRegPais}
+          regTelefono={regTelefono}
+          setRegTelefono={setRegTelefono}
+          regEmail={regEmail}
+          setRegEmail={setRegEmail}
+          regPassword={regPassword}
+          setRegPassword={setRegPassword}
+          regRole={regRole}
+          setRegRole={setRegRole}
+          regGender={regGender}
+          setRegGender={setRegGender}
+          regSponsorId={regSponsorId}
+          setRegSponsorId={setRegSponsorId}
+          sponsorSearchQuery={sponsorSearchQuery}
+          setSponsorSearchQuery={setSponsorSearchQuery}
+        />
 
         {/* 🔑 Choose / Search Simulation Username Login Modal for Guest Users */}
         {showLoginModal && (
@@ -3439,7 +2969,10 @@ export default function App() {
             {userProfile.role !== 'model' ? (
               <>
                 <button
-                  onClick={() => setActiveTabTab('profile')}
+                  onClick={() => {
+                    setSelectedModelForView(null);
+                    setActiveTabTab('profile');
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                     activeTab === 'profile'
                       ? 'bg-slate-950 text-white shadow-md'
@@ -3452,7 +2985,10 @@ export default function App() {
               </>
             ) : (
               <button
-                onClick={() => setActiveTabTab('home')}
+                onClick={() => {
+                  setSelectedModelForView(null);
+                  setActiveTabTab('home');
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                   activeTab === 'home'
                     ? 'bg-slate-950 text-white shadow-md'
@@ -4618,16 +4154,24 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setActiveSocialModalInvestor('following')}
-                      className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none text-slate-800"
+                      className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
+                      title="Ver todos los perfiles seguidos"
+                      id="card-social-seguidos-z"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <UserCheck className="w-4 h-4 text-pink-550 shrink-0" />
+                      <div className="flex items-center gap-3 min-w-0">
+                        <UserCheck className="w-5 h-5 text-slate-900 shrink-0 stroke-[2.2]" />
                         <div className="min-w-0">
-                          <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidos</span>
-                          <span className="text-xs font-black text-slate-800 font-mono">{displayedFollowing.length}</span>
+                          <span className="text-[10px] uppercase font-black text-[#e11d48] tracking-widest font-mono block leading-tight truncate">
+                            SEGUIDOS
+                          </span>
+                          <span className="text-xl font-black text-slate-900 font-mono leading-none block mt-0.5">
+                            {displayedFollowing.length}
+                          </span>
                         </div>
                       </div>
-                      <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                      <span className="text-xs font-black text-[#e11d48] flex items-center gap-1 shrink-0 uppercase tracking-wider font-sans hover:underline">
+                        VER TODOS →
+                      </span>
                     </button>
                   </div>
 
@@ -5013,585 +4557,45 @@ export default function App() {
       )}
 
       {/* 2. Registration account Modal */}
-      {showRegisterModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 animate-fade-in overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 sm:p-8 text-slate-900 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] my-8">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 className="text-sm sm:text-base font-bold font-display text-slate-950 flex items-center gap-2">
-                  <UserPlus2 className="w-5 h-5 text-indigo-600" />
-                  <span>Crear Cuenta en Fashion Finances</span>
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Regístrate eligiendo a uno de los 50 modelos del ranking o a tu patrocinador personal.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowRegisterModal(false)}
-                className="text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-lg transition"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleRegisterNewAccount} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Nombre *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Carmen"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Apellidos *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Alvarez"
-                  value={regLastName}
-                  onChange={(e) => setRegLastName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Nombre de Usuario (Username) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. carmenval"
-                  value={regUsername}
-                  onChange={(e) => setRegUsername(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Instagram (@usuario) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. @carmen_diseno"
-                  value={regInstagram}
-                  onChange={(e) => setRegInstagram(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Tik Tok (@usuario) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. @carmen_tok"
-                  value={regTikTok}
-                  onChange={(e) => setRegTikTok(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Dirección *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Calle Gran Vía 45, Madrid"
-                  value={regDireccion}
-                  onChange={(e) => setRegDireccion(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Ciudad *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Madrid"
-                  value={regCiudad}
-                  onChange={(e) => setRegCiudad(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Código Postal *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. 28013"
-                  value={regCodigoPostal}
-                  onChange={(e) => setRegCodigoPostal(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">País *</label>
-                <select
-                  required
-                  value={regPais}
-                  onChange={(e) => setRegPais(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-950 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                >
-                  <option value="">-- Selecciona tu País --</option>
-                  <option value="España">España</option>
-                  <option value="México">México</option>
-                  <option value="Colombia">Colombia</option>
-                  <option value="Argentina">Argentina</option>
-                  <option value="Chile">Chile</option>
-                  <option value="Perú">Perú</option>
-                  <option value="Venezuela">Venezuela</option>
-                  <option value="Ecuador">Ecuador</option>
-                  <option value="Bolivia">Bolivia</option>
-                  <option value="Uruguay">Uruguay</option>
-                  <option value="Paraguay">Paraguay</option>
-                  <option value="Costa Rica">Costa Rica</option>
-                  <option value="Panamá">Panamá</option>
-                  <option value="República Dominicana">República Dominicana</option>
-                  <option value="Estados Unidos">Estados Unidos</option>
-                  <option value="Abjasia">Abjasia</option>
-                  <option value="Afganistán">Afganistán</option>
-                  <option value="Albania">Albania</option>
-                  <option value="Alemania">Alemania</option>
-                  <option value="Andorra">Andorra</option>
-                  <option value="Angola">Angola</option>
-                  <option value="Antigua y Barbuda">Antigua y Barbuda</option>
-                  <option value="Arabia Saudita">Arabia Saudita</option>
-                  <option value="Argelia">Argelia</option>
-                  <option value="Armenia">Armenia</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Austria">Austria</option>
-                  <option value="Azerbaiyán">Azerbaiyán</option>
-                  <option value="Bahamas">Bahamas</option>
-                  <option value="Bangladés">Bangladés</option>
-                  <option value="Barbados">Barbados</option>
-                  <option value="Baréin">Baréin</option>
-                  <option value="Bélgica">Bélgica</option>
-                  <option value="Belice">Belice</option>
-                  <option value="Benín">Benín</option>
-                  <option value="Bielorrusia">Bielorrusia</option>
-                  <option value="Birmania / Myanmar">Birmania / Myanmar</option>
-                  <option value="Bosnia y Herzegovina">Bosnia y Herzegovina</option>
-                  <option value="Botsuana">Botsuana</option>
-                  <option value="Brasil">Brasil</option>
-                  <option value="Brunéi">Brunéi</option>
-                  <option value="Bulgaria">Bulgaria</option>
-                  <option value="Burkina Faso">Burkina Faso</option>
-                  <option value="Burundi">Burundi</option>
-                  <option value="Bután">Bután</option>
-                  <option value="Cabo Verde">Cabo Verde</option>
-                  <option value="Camboya">Camboya</option>
-                  <option value="Camerún">Camerún</option>
-                  <option value="Canadá">Canadá</option>
-                  <option value="Catar">Catar</option>
-                  <option value="República Centroafricana">República Centroafricana</option>
-                  <option value="Chad">Chad</option>
-                  <option value="China">China</option>
-                  <option value="Chipre">Chipre</option>
-                  <option value="Corea del Norte">Corea del Norte</option>
-                  <option value="Corea del Sur">Corea del Sur</option>
-                  <option value="Costa de Marfil">Costa de Marfil</option>
-                  <option value="Croacia">Croacia</option>
-                  <option value="Cuba">Cuba</option>
-                  <option value="Dinamarca">Dinamarca</option>
-                  <option value="Dominica">Dominica</option>
-                  <option value="Egipto">Egipto</option>
-                  <option value="El Salvador">El Salvador</option>
-                  <option value="Emiratos Árabes Unidos">Emiratos Árabes Unidos</option>
-                  <option value="Eritrea">Eritrea</option>
-                  <option value="Eslovaquia">Eslovaquia</option>
-                  <option value="Eslovenia">Eslovenia</option>
-                  <option value="Estonia">Estonia</option>
-                  <option value="Etiopía">Etiopía</option>
-                  <option value="Filipinas">Filipinas</option>
-                  <option value="Finlandia">Finlandia</option>
-                  <option value="Fiyi">Fiyi</option>
-                  <option value="Francia">Francia</option>
-                  <option value="Gabón">Gabón</option>
-                  <option value="Gambia">Gambia</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Ghana">Ghana</option>
-                  <option value="Granada">Granada</option>
-                  <option value="Grecia">Grecia</option>
-                  <option value="Guatemala">Guatemala</option>
-                  <option value="Guinea">Guinea</option>
-                  <option value="Guinea-Bisáu">Guinea-Bisáu</option>
-                  <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
-                  <option value="Guyana">Guyana</option>
-                  <option value="Haití">Haití</option>
-                  <option value="Honduras">Honduras</option>
-                  <option value="Hungría">Hungría</option>
-                  <option value="India">India</option>
-                  <option value="Indonesia">Indonesia</option>
-                  <option value="Irak">Irak</option>
-                  <option value="Irán">Irán</option>
-                  <option value="Irlanda">Irlanda</option>
-                  <option value="Islandia">Islandia</option>
-                  <option value="Israel">Israel</option>
-                  <option value="Italia">Italia</option>
-                  <option value="Jamaica">Jamaica</option>
-                  <option value="Japón">Japón</option>
-                  <option value="Jordania">Jordania</option>
-                  <option value="Kazajistán">Kazajistán</option>
-                  <option value="Kenia">Kenia</option>
-                  <option value="Kirguistán">Kirguistán</option>
-                  <option value="Kiribati">Kiribati</option>
-                  <option value="Kosovo">Kosovo</option>
-                  <option value="Kuwait">Kuwait</option>
-                  <option value="Laos">Laos</option>
-                  <option value="Lesoto">Lesoto</option>
-                  <option value="Letonia">Letonia</option>
-                  <option value="Líbano">Líbano</option>
-                  <option value="Liberia">Liberia</option>
-                  <option value="Libia">Libia</option>
-                  <option value="Liechtenstein">Liechtenstein</option>
-                  <option value="Lituania">Lituania</option>
-                  <option value="Luxemburgo">Luxemburgo</option>
-                  <option value="Macedonia del Norte">Macedonia del Norte</option>
-                  <option value="Madagascar">Madagascar</option>
-                  <option value="Malasia">Malasia</option>
-                  <option value="Malaui">Malaui</option>
-                  <option value="Maldivas">Maldivas</option>
-                  <option value="Malí">Malí</option>
-                  <option value="Malta">Malta</option>
-                  <option value="Marruecos">Marruecos</option>
-                  <option value="Mauricio">Mauricio</option>
-                  <option value="Mauritania">Mauritania</option>
-                  <option value="Micronesia">Micronesia</option>
-                  <option value="Moldavia">Moldavia</option>
-                  <option value="Mónaco">Mónaco</option>
-                  <option value="Mongolia">Mongolia</option>
-                  <option value="Montenegro">Montenegro</option>
-                  <option value="Mozambique">Mozambique</option>
-                  <option value="Namibia">Namibia</option>
-                  <option value="Nauru">Nauru</option>
-                  <option value="Nepal">Nepal</option>
-                  <option value="Nicaragua">Nicaragua</option>
-                  <option value="Níger">Níger</option>
-                  <option value="Nigeria">Nigeria</option>
-                  <option value="Noruega">Noruega</option>
-                  <option value="Nueva Zelanda">Nueva Zelanda</option>
-                  <option value="Omán">Omán</option>
-                  <option value="Países Bajos">Países Bajos</option>
-                  <option value="Pakistán">Pakistán</option>
-                  <option value="Palaos">Palaos</option>
-                  <option value="Palestina">Palestina</option>
-                  <option value="Papúa Nueva Guinea">Papúa Nueva Guinea</option>
-                  <option value="Polonia">Polonia</option>
-                  <option value="Portugal">Portugal</option>
-                  <option value="Reino Unido">Reino Unido</option>
-                  <option value="Ruanda">Ruanda</option>
-                  <option value="Rumania">Rumania</option>
-                  <option value="Rusia">Rusia</option>
-                  <option value="Samoa">Samoa</option>
-                  <option value="San Cristóbal y Nieves">San Cristóbal y Nieves</option>
-                  <option value="San Marino">San Marino</option>
-                  <option value="Santa Lucía">Santa Lucía</option>
-                  <option value="Santo Tomé y Príncipe">Santo Tomé y Príncipe</option>
-                  <option value="Senegal">Senegal</option>
-                  <option value="Serbia">Serbia</option>
-                  <option value="Seychelles">Seychelles</option>
-                  <option value="Sierra Leona">Sierra Leona</option>
-                  <option value="Singapur">Singapur</option>
-                  <option value="Siria">Siria</option>
-                  <option value="Somalia">Somalia</option>
-                  <option value="Sri Lanka">Sri Lanka</option>
-                  <option value="Suazilandia">Suazilandia</option>
-                  <option value="Sudáfrica">Sudáfrica</option>
-                  <option value="Sudán">Sudán</option>
-                  <option value="Sudán del Sur">Sudán del Sur</option>
-                  <option value="Suecia">Suecia</option>
-                  <option value="Suiza">Suiza</option>
-                  <option value="Surinam">Surinam</option>
-                  <option value="Tailandia">Tailandia</option>
-                  <option value="Taiwán">Taiwán</option>
-                  <option value="Tanzania">Tanzania</option>
-                  <option value="Tayikistán">Tayikistán</option>
-                  <option value="Timor Oriental">Timor Oriental</option>
-                  <option value="Togo">Togo</option>
-                  <option value="Tonga">Tonga</option>
-                  <option value="Trinidad y Tobago">Trinidad y Tobago</option>
-                  <option value="Túnez">Túnez</option>
-                  <option value="Turkmenistán">Turkmenistán</option>
-                  <option value="Turquía">Turquía</option>
-                  <option value="Tuvalu">Tuvalu</option>
-                  <option value="Ucrania">Ucrania</option>
-                  <option value="Uganda">Uganda</option>
-                  <option value="Uzbekistán">Uzbekistán</option>
-                  <option value="Vanuatu">Vanuatu</option>
-                  <option value="Ciudad del Vaticano">Ciudad del Vaticano</option>
-                  <option value="Vietnam">Vietnam</option>
-                  <option value="Yemen">Yemen</option>
-                  <option value="Yibuti">Yibuti</option>
-                  <option value="Zambia">Zambia</option>
-                  <option value="Zimbabue">Zimbabue</option>
-                  <option value="Otros">Otros</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Teléfono *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="Ej. +34 612 345 678"
-                  value={regTelefono}
-                  onChange={(e) => setRegTelefono(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Correo Electrónico (Email) *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="Ej. usuario@gmail.com"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-                <p className="text-[10px] text-indigo-700 mt-1 font-semibold leading-relaxed">
-                  🎯 Medida de seguridad: Solo cuentas de la arquitectura de Gmail (letras, números, puntos, signo más y extensión @gmail.com o @gmail)
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Contraseña *</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Crea una contraseña segura"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Elige Rol Principal *</label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => setRegRole('investor')}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition ${
-                      regRole === 'investor'
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    Registro de Inversor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRegRole('model')}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition ${
-                      regRole === 'model'
-                        ? 'bg-pink-600 border-pink-600 text-white shadow-xs'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    Soy Modelo
-                  </button>
-                </div>
-              </div>
-
-              {regRole === 'model' && (
-                <div className="bg-pink-50/50 p-4 rounded-2xl border border-pink-100 space-y-2 animate-fade-in">
-                  <label className="block text-pink-950 font-bold">Selecciona tu Género *</label>
-                  <p className="text-[10px] text-pink-700/80">Selecciona si eres modelo masculino o femenino para asignarte al ranking correspondiente.</p>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => setRegGender('female')}
-                      className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer ${
-                        regGender === 'female'
-                          ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200'
-                          : 'bg-white border-pink-200 text-pink-700 hover:bg-pink-50'
-                      }`}
-                    >
-                      👩 Mujer / Femenino
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRegGender('male')}
-                      className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer ${
-                        regGender === 'male'
-                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
-                          : 'bg-white border-indigo-100 text-indigo-700 hover:bg-indigo-50'
-                      }`}
-                    >
-                      👨 Hombre / Masculino
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Obligatory sponsor choice for new registrations with direct Sponsor ID selection */}
-              <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                <div className="space-y-1">
-                  <label className="block text-slate-800 font-semibold">Patrocinador (Sponsor) *</label>
-                  <p className="text-[10px] text-slate-500">Elige un patrocinador de la lista o introduce directamente su ID único de afiliación para vincularte.</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[9px] text-slate-500 font-mono block mb-1">Opción A: Elige un Patrocinador del Ranking</span>
-                    
-                    {/* Buscador de Patrocinadores */}
-                    <div className="relative mb-2">
-                      <input
-                        type="text"
-                        placeholder="🔍 Escribe para buscar patrocinador..."
-                        value={sponsorSearchQuery}
-                        onChange={(e) => setSponsorSearchQuery(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 font-sans"
-                      />
-                      {sponsorSearchQuery && (
-                        <button
-                          type="button"
-                          onClick={() => setSponsorSearchQuery('')}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer bg-transparent border-0"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-
-                    <select
-                      value={regSponsorId}
-                      onChange={(e) => setRegSponsorId(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 text-xs focus:outline-none focus:border-indigo-550"
-                      id="reg-sponsor-select-dropdown-logged"
-                    >
-                      <option value="">-- Elige un Patrocinador --</option>
-                      {models
-                        .filter((model) => {
-                          const query = sponsorSearchQuery.trim().toLowerCase();
-                          if (!query) return true;
-                          return (
-                            model.name.toLowerCase().includes(query) ||
-                            model.id.toLowerCase().includes(query) ||
-                            (model.username && model.username.toLowerCase().includes(query))
-                          );
-                        })
-                        .map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.name} (ID: {model.id} - {model.totalLikes} Likes)
-                          </option>
-                        ))}
-                    </select>
-                    {sponsorSearchQuery && (
-                      <p className="text-[10px] text-indigo-700 mt-1 font-sans">
-                        Filtrados {
-                          models.filter((m) => {
-                            const query = sponsorSearchQuery.trim().toLowerCase();
-                            return (
-                              m.name.toLowerCase().includes(query) ||
-                              m.id.toLowerCase().includes(query) ||
-                              (m.username && m.username.toLowerCase().includes(query))
-                            );
-                          }).length
-                        } de {models.length} patrocinadores
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="text-[9px] text-slate-500 font-mono block mb-1">Opción B: Introduce el ID de tu Sponsor</span>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Introduce el ID de tu sponsor (ej: model-1)"
-                      value={regSponsorId}
-                      onChange={(e) => setRegSponsorId(e.target.value.trim())}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-850 placeholder:text-slate-400 focus:outline-none focus:border-indigo-505 font-mono text-xs"
-                      id="reg-sponsor-id-direct-input-logged"
-                    />
-                  </div>
-
-                  {/* Dynamic Verification of typed ID */}
-                  {regSponsorId ? (() => {
-                    const matchedModel = models.find(m => m.id.toLowerCase() === regSponsorId.toLowerCase().trim());
-                    if (matchedModel) {
-                      return (
-                        <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] animate-fade-in">
-                          <span className="text-emerald-600 font-bold">✓</span>
-                          <span>¡Sponsor Válido! <strong>{matchedModel.name}</strong></span>
-                          {matchedModel.avatar && (
-                            <div className="relative ml-auto shrink-0 mr-1">
-                              <img
-                                src={matchedModel.avatar}
-                                alt={matchedModel.name}
-                                referrerPolicy="no-referrer"
-                                className="w-7 h-7 rounded-full object-cover border border-emerald-250/60"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setRegSponsorId('')}
-                                className="absolute -top-1 -right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[8px] font-black border border-white cursor-pointer select-none shadow-xs transition-colors"
-                                title="Eliminar patrocinador"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 border border-red-100 text-red-700 text-[11px] font-mono animate-fade-in">
-                          <span className="text-red-600">❌</span>
-                          <span>ID de Sponsor no registrado (escribe ej. topm-8, topf-1, o un ID numérico de 11 dígitos como 00000000001)</span>
-                        </div>
-                      );
-                    }
-                  })() : null}
-                </div>
-                <p className="text-[10px] text-slate-500 mt-1 leading-normal font-sans">Vínculo verificado de forma segura. En Fashion Finances todos los usuarios se registran bajo un referidor calificado.</p>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterModal(false)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
-                >
-                  Registrarse
-                </button>
-              </div>
-              <div className="text-center pt-2 border-t border-slate-100">
-                <p className="text-[11px] text-slate-500">
-                  ¿Ya tienes una cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowRegisterModal(false);
-                      setShowLoginModal(true);
-                    }}
-                    className="text-indigo-600 font-bold hover:underline cursor-pointer bg-transparent border-0 p-0 inline font-sans"
-                  >
-                    Inicia sesión directamente
-                  </button>
-                </p>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <RegisterModal
+        show={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onOpenLogin={() => setShowLoginModal(true)}
+        onSubmit={handleRegisterNewAccount}
+        models={models}
+        regName={regName}
+        setRegName={setRegName}
+        regLastName={regLastName}
+        setRegLastName={setRegLastName}
+        regUsername={regUsername}
+        setRegUsername={setRegUsername}
+        regInstagram={regInstagram}
+        setRegInstagram={setRegInstagram}
+        regTikTok={regTikTok}
+        setRegTikTok={setRegTikTok}
+        regDireccion={regDireccion}
+        setRegDireccion={setRegDireccion}
+        regCiudad={regCiudad}
+        setRegCiudad={setRegCiudad}
+        regCodigoPostal={regCodigoPostal}
+        setRegCodigoPostal={setRegCodigoPostal}
+        regPais={regPais}
+        setRegPais={setRegPais}
+        regTelefono={regTelefono}
+        setRegTelefono={setRegTelefono}
+        regEmail={regEmail}
+        setRegEmail={setRegEmail}
+        regPassword={regPassword}
+        setRegPassword={setRegPassword}
+        regRole={regRole}
+        setRegRole={setRegRole}
+        regGender={regGender}
+        setRegGender={setRegGender}
+        regSponsorId={regSponsorId}
+        setRegSponsorId={setRegSponsorId}
+        sponsorSearchQuery={sponsorSearchQuery}
+        setSponsorSearchQuery={setSponsorSearchQuery}
+      />
 
       {/* 3. Friends Circle Modal */}
       {showFriendsModal && (

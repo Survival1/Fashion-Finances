@@ -51,7 +51,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
-  Pause
+  Pause,
+  Trash2
 } from 'lucide-react';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
@@ -501,10 +502,10 @@ export interface UserGiftItem {
   category?: 'basico' | 'intermedio' | 'lujo' | 'alta_costura';
 }
 
-const RECEIVED_GIFTS_STORAGE_KEY = 'ff_received_gifts_v3';
-const SENT_GIFTS_STORAGE_KEY = 'ff_sent_gifts_v3';
+export const RECEIVED_GIFTS_STORAGE_KEY = 'ff_received_gifts_v3';
+export const SENT_GIFTS_STORAGE_KEY = 'ff_sent_gifts_v3';
 
-const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
+export const INITIAL_RECEIVED_GIFTS: UserGiftItem[] = [
   // --- ACTUALES (Última semana: ≤ 7 días) ---
   {
     id: 'rec-1',
@@ -1490,6 +1491,87 @@ function PodiumModelMedia({
   );
 }
 
+export interface SpecialDistinctionItem {
+  id: string;
+  name: string;
+  subtitle: string;
+  image: string;
+  badge: string;
+  description: string;
+  recipient: string;
+  achievedCriteria: string;
+  tier: string;
+}
+
+export const SPECIAL_DISTINCTIONS_DATA: SpecialDistinctionItem[] = [
+  {
+    id: 'diamond-queen',
+    name: 'Diamond Queen',
+    subtitle: 'Reina histórica',
+    image: '/assets/aistudio/distinction_diamond_queen.png',
+    badge: '👑 Corona de Diamantes Rosas 18K',
+    description: 'Máximo galardón conferido a la modelo con el récord histórico de permanencia continuada en el primer puesto del podio.',
+    recipient: 'Adriana Lima',
+    achievedCriteria: '38 días consecutivos en el Top 1 global',
+    tier: 'Supreme Honor'
+  },
+  {
+    id: 'golden-legend',
+    name: 'Golden Legend',
+    subtitle: 'Éxito extraordinario',
+    image: '/assets/aistudio/distinction_golden_legend.png',
+    badge: '⭐ Trofeo Estrella de Oro Puro',
+    description: 'Distinción concedida por alcanzar logros y métricas superlativas en rondas de financiación y respaldo masivo de inversores.',
+    recipient: 'Supermodelos de Alto Rendimiento',
+    achievedCriteria: 'Superar 100.000 votos y récord de mecenazgo',
+    tier: 'Gold Tier'
+  },
+  {
+    id: 'platinum-star',
+    name: 'Platinum Star',
+    subtitle: 'Reconocimiento especial',
+    image: '/assets/aistudio/distinction_platinum_star.png',
+    badge: '💎 Medalla Emblema Platino & Diamante',
+    description: 'Reconocimiento especial del comité de selección de Fashion Finances por su virtuosismo estético y porte aristocrático.',
+    recipient: 'Alessandra Ambrosio',
+    achievedCriteria: 'Precursora oficial del estilo Runway Oro',
+    tier: 'Platinum Tier'
+  },
+  {
+    id: 'rising-star',
+    name: 'Rising Star',
+    subtitle: 'Talento emergente',
+    image: '/assets/aistudio/distinction_rising_star.png',
+    badge: '🦋 Mariposa de Cristal Rosa Facetada',
+    description: 'Premio honorífico reservado al talento emergente con la progresión más rápida y prometedora de la temporada.',
+    recipient: 'Nuevas Promesas de Pasarela',
+    achievedCriteria: 'Mayor ratio de crecimiento en votos y mecenazgo',
+    tier: 'Rising Honor'
+  },
+  {
+    id: 'hall-legend',
+    name: 'Hall Legend',
+    subtitle: 'Miembro histórico',
+    image: '/assets/aistudio/distinction_hall_legend.png',
+    badge: '🏆 Copa Laureada de la Fama',
+    description: 'Condecoración con la que se consagra la entrada perpetua y el legado inmortal en el Salón de la Fama.',
+    recipient: 'Leyendas Inmortales de la Moda',
+    achievedCriteria: 'Trayectoria legendaria consolidada en el Pódium',
+    tier: 'Hall of Fame Icon'
+  },
+  {
+    id: 'peoples-choice',
+    name: 'People\'s Choice',
+    subtitle: 'Favorita del público',
+    image: '/assets/aistudio/distinction_peoples_choice.png',
+    badge: '💖 Corazón Filigrana de Zafiro Rosa',
+    description: 'Galardón soberano otorgado directamente por la comunidad de seguidores y mecenas mediante votaciones en vivo en Casting Live.',
+    recipient: 'Candice Swanepoel',
+    achievedCriteria: 'Mayor volumen de votos y mecenazgo popular',
+    tier: 'Community Choice'
+  }
+];
+
 interface VictoriaSecretRankingProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1543,12 +1625,10 @@ export default function VictoriaSecretRanking({
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge to ensure all vault gifts from different users are available
-          const existingIds = new Set(parsed.map((g: any) => g.id));
-          const missing = INITIAL_RECEIVED_GIFTS.filter(g => !existingIds.has(g.id));
-          return [...parsed, ...missing];
+          return parsed;
         }
       }
+      localStorage.setItem(RECEIVED_GIFTS_STORAGE_KEY, JSON.stringify(INITIAL_RECEIVED_GIFTS));
     } catch (e) {
       console.error("Error loading received gifts:", e);
     }
@@ -1745,12 +1825,24 @@ export default function VictoriaSecretRanking({
       name: newGift.giftName,
       icon: newGift.giftIcon,
       price: newGift.price,
-      recipientName: `Bóveda (de ${newGift.senderName})`
+      senderName: newGift.senderName,
+      recipientName: `Bóveda (de ${newGift.senderName})`,
+      mode: 'received'
     });
+    setTimeout(() => {
+      setSentGiftToast(null);
+    }, 5000);
     window.dispatchEvent(new CustomEvent('trigger-heart-rain', { detail: { icon: newGift.giftIcon } }));
   };
 
-  const [sentGiftToast, setSentGiftToast] = useState<{ name: string; icon: string; price: number; recipientName?: string } | null>(null);
+  const [sentGiftToast, setSentGiftToast] = useState<{
+    name: string;
+    icon: string;
+    price: number;
+    recipientName?: string;
+    senderName?: string;
+    mode?: 'sent' | 'received';
+  } | null>(null);
   const [thankYouToast, setThankYouToast] = useState<{ senderName: string; giftName: string } | null>(null);
   const [showLuxuryWatchModal, setShowLuxuryWatchModal] = useState<boolean>(false);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
@@ -1759,6 +1851,7 @@ export default function VictoriaSecretRanking({
   const [selectedShowcaseGiftId, setSelectedShowcaseGiftId] = useState<string>('g-1');
   const [activeModalGift, setActiveModalGift] = useState<UserGiftItem | null>(null);
   const [watchTickAngle, setWatchTickAngle] = useState<number>(0);
+  const [selectedDistinctionModal, setSelectedDistinctionModal] = useState<SpecialDistinctionItem | null>(null);
 
   // Modal for composing a personalized gift dedication
   const [selectedGiftToDedicate, setSelectedGiftToDedicate] = useState<ChannelGiftItem | null>(null);
@@ -2091,6 +2184,42 @@ export default function VictoriaSecretRanking({
     }));
     setTimeout(() => {
       setThankYouToast(null);
+    }, 3500);
+  };
+
+  const handleDeleteReceivedGift = (giftId: string) => {
+    const giftToDelete = receivedGifts.find(g => g.id === giftId);
+    if (!giftToDelete) return;
+
+    setReceivedGifts(prev => {
+      const updated = prev.filter(g => g.id !== giftId);
+      try {
+        localStorage.setItem(RECEIVED_GIFTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+
+    if (selectedShowcaseGiftId === giftId) {
+      const remaining = receivedGifts.filter(g => g.id !== giftId);
+      if (remaining.length > 0) {
+        setSelectedShowcaseGiftId(remaining[0].id);
+      } else {
+        setSelectedShowcaseGiftId('');
+      }
+    }
+
+    setSentGiftToast({
+      name: giftToDelete.giftName,
+      icon: giftToDelete.giftIcon,
+      price: giftToDelete.price,
+      recipientName: 'Regalo eliminado de la Bóveda 🗑️',
+      mode: 'received'
+    });
+
+    setTimeout(() => {
+      setSentGiftToast(null);
     }, 3500);
   };
 
@@ -3254,13 +3383,17 @@ export default function VictoriaSecretRanking({
               {/* Header section */}
               <div className="text-center space-y-2">
                 <div className="flex justify-center mb-1">
-                  <Gift className="w-8 h-8 text-pink-600" />
+                  <img
+                    src="/assets/aistudio/Diamante_rosa_brillante_transparente.png"
+                    alt="Diamante Rosa Brillante"
+                    className="w-16 h-auto max-h-14 sm:w-20 sm:max-h-16 object-contain drop-shadow-[0_4px_14px_rgba(236,72,153,0.35)] hover:scale-110 transition-transform duration-300 pointer-events-none select-none"
+                  />
                 </div>
                 <h1 className="text-3xl font-serif font-black tracking-wider text-pink-905 uppercase">
                   PREMIOS FASHION FINANCES
                 </h1>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">
-                  🎁 Recompensas de la Pasarela Elite de Alta Costura 🎁
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center justify-center gap-1.5">
+                  <span>💎</span> Recompensas de la Pasarela Elite de Alta Costura <span>💎</span>
                 </p>
                 <div className="w-16 h-0.5 mx-auto bg-pink-300 rounded-full" />
               </div>
@@ -3449,6 +3582,81 @@ export default function VictoriaSecretRanking({
                 </div>
               </div>
 
+              {/* ======================================================== */}
+              {/* 👑 PREMIOS Y DISTINCIONES ESPECIALES (image_b74d5185.png) */}
+              {/* ======================================================== */}
+              <div className="bg-white/85 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-pink-100 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100/70 pb-5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-black uppercase tracking-widest text-pink-600 font-mono">
+                        👑 GALARDONES OFICIALES
+                      </span>
+                      <span className="text-xs text-slate-300">·</span>
+                      <span className="text-xs font-semibold text-slate-500">Salón de la Fama</span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-serif font-black text-rose-950 mt-1">
+                      Premios y Distinciones Especiales
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                      Condecoraciones de alta joyería y trofeos honoríficos reservados para los mayores logros de la pasarela
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <span className="text-xs font-mono font-bold text-pink-700 bg-pink-50 border border-pink-200/80 px-3.5 py-1.5 rounded-full">
+                      6 Distinciones Activas
+                    </span>
+                  </div>
+                </div>
+
+                {/* Grid 3 columnas coincidiendo con la captura image.png */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {SPECIAL_DISTINCTIONS_DATA.map((distinction) => (
+                    <div
+                      key={distinction.id}
+                      onClick={() => setSelectedDistinctionModal(distinction)}
+                      className="bg-white rounded-3xl border border-slate-200/90 hover:border-pink-400 p-5 shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Contenedor de la ilustración del galardón */}
+                        <div className="w-full aspect-[4/3] rounded-2xl bg-white flex items-center justify-center p-3 mb-4 overflow-hidden border border-slate-100/90 group-hover:bg-pink-50/20 transition-colors">
+                          <img
+                            src={distinction.image}
+                            alt={distinction.name}
+                            className="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        {/* Título y subtítulo idénticos a image.png */}
+                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-pink-600 transition-colors font-sans">
+                          {distinction.name}
+                        </h4>
+                        <p className="text-sm text-slate-500 font-sans mt-0.5">
+                          {distinction.subtitle}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-pink-600 font-medium">
+                        <span className="font-mono text-[11px]">Ver condecoración</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section Header: Modelos Legendarias Consagradas */}
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <h3 className="text-xl font-serif font-black text-rose-950">
+                    Modelos Consagradas en el Salón de la Fama
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Iconos que han alcanzado la cúspide de la moda y portan las distinciones máximas
+                  </p>
+                </div>
+              </div>
+
               {/* Elegant List of Hall of Famers */}
               <div className="space-y-4">
                 
@@ -3469,13 +3677,21 @@ export default function VictoriaSecretRanking({
                         />
                       </div>
                       <div className="flex-1 text-center md:text-left space-y-1">
-                        <div className="flex flex-col md:flex-row md:items-center gap-1.5">
+                        <div className="flex flex-col md:flex-row md:items-center gap-1.5 flex-wrap">
                           <h3 className="text-lg font-serif font-black text-rose-950">
                             {legendModel.name}
                           </h3>
                           <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-block max-w-max mx-auto md:mx-0">
                             38 días en el puesto #1
                           </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDistinctionModal(SPECIAL_DISTINCTIONS_DATA[0])}
+                            className="text-[10px] uppercase font-bold text-amber-800 bg-amber-100/80 hover:bg-amber-200 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1 max-w-max mx-auto md:mx-0 transition-colors cursor-pointer"
+                            title="Ver galardón Diamond Queen"
+                          >
+                            <span>👑 Diamond Queen</span>
+                          </button>
                         </div>
                         <p className="text-xs text-slate-500">
                           Consistencia excepcional, acumulando un récord global de votos simultáneos de inversores y con la mayor tasa de patrocinio de toda la plataforma.
@@ -3502,13 +3718,21 @@ export default function VictoriaSecretRanking({
                     />
                   </div>
                   <div className="flex-1 text-center md:text-left space-y-1">
-                    <div className="flex flex-col md:flex-row md:items-center gap-1.5">
+                    <div className="flex flex-col md:flex-row md:items-center gap-1.5 flex-wrap">
                       <h3 className="text-lg font-serif font-black text-slate-800">
                         Alessandra Ambrosio
                       </h3>
                       <span className="text-[10px] uppercase font-bold text-pink-600 bg-pink-50 border border-pink-200 px-2 py-0.5 rounded-full inline-block max-w-max mx-auto md:mx-0">
                         Precursora Runway Oro
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDistinctionModal(SPECIAL_DISTINCTIONS_DATA[2])}
+                        className="text-[10px] uppercase font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1 max-w-max mx-auto md:mx-0 transition-colors cursor-pointer"
+                        title="Ver galardón Platinum Star"
+                      >
+                        <span>💎 Platinum Star</span>
+                      </button>
                     </div>
                     <p className="text-xs text-slate-500">
                       Reconocida internacionalmente por la calidad de las interacciones en sus fotos de alta costura y videos vanguardistas.
@@ -3531,13 +3755,21 @@ export default function VictoriaSecretRanking({
                     />
                   </div>
                   <div className="flex-1 text-center md:text-left space-y-1">
-                    <div className="flex flex-col md:flex-row md:items-center gap-1.5">
+                    <div className="flex flex-col md:flex-row md:items-center gap-1.5 flex-wrap">
                       <h3 className="text-lg font-serif font-black text-slate-800">
                         Candice Swanepoel
                       </h3>
                       <span className="text-[10px] uppercase font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full inline-block max-w-max mx-auto md:mx-0">
                         Favorita del Público
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDistinctionModal(SPECIAL_DISTINCTIONS_DATA[5])}
+                        className="text-[10px] uppercase font-bold text-pink-700 bg-pink-50 hover:bg-pink-100 border border-pink-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 max-w-max mx-auto md:mx-0 transition-colors cursor-pointer"
+                        title="Ver galardón People's Choice"
+                      >
+                        <span>💖 People's Choice</span>
+                      </button>
                     </div>
                     <p className="text-xs text-slate-500">
                       Inspirada por el mecenazgo estético, Candice Swanepoel ha sido coronada consecutivamente como "Runway Queen" de la sección Casting Live.
@@ -3782,25 +4014,76 @@ export default function VictoriaSecretRanking({
                 </div>
               </div>
 
-              {/* Toast confirmation for sent gift */}
+              {/* Toast confirmation for sent gift - Luxury Silk & Imperial Crown Design */}
               {sentGiftToast && (
-                <div className="p-3.5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl shadow-lg border border-emerald-400/40 flex items-center justify-between animate-bounce">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-2xl">{sentGiftToast.icon}</span>
-                    <div>
-                      <span className="font-extrabold text-sm block">¡Regalo enviado con éxito! 🎁</span>
-                      <span className="text-xs text-emerald-100">
-                        Has enviado <strong>"{sentGiftToast.name}"</strong> por 🪙 {sentGiftToast.price.toLocaleString()} {sentGiftToast.recipientName ? `a ${sentGiftToast.recipientName}` : 'en DIRECTO'}.
-                      </span>
+                <div className="relative w-full rounded-2xl sm:rounded-full overflow-hidden border-2 border-[#eab308]/80 shadow-[0_10px_35px_rgba(244,63,94,0.25)] ring-1 ring-pink-300/60 bg-gradient-to-r from-[#ffe4ec] via-[#fff0f5] to-[#fce7f3] p-3 sm:p-4 my-2 transition-all duration-300 animate-fade-in group">
+                  
+                  {/* Silky satin background with soft luminous sheen (zero duplicate text) */}
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/80 via-transparent to-pink-100/40 pointer-events-none z-0" />
+                  <div className="absolute -top-10 -left-10 w-44 h-44 bg-pink-200/40 rounded-full blur-2xl pointer-events-none z-0" />
+                  <div className="absolute -bottom-10 -right-10 w-44 h-44 bg-rose-200/30 rounded-full blur-2xl pointer-events-none z-0" />
+
+                  {/* Sparkle stars on metallic borders */}
+                  <div className="absolute top-1.5 left-10 text-amber-400 text-xs animate-pulse pointer-events-none z-10">✦</div>
+                  <div className="absolute bottom-1.5 right-16 text-amber-400 text-xs animate-pulse delay-300 pointer-events-none z-10">✦</div>
+                  <div className="absolute top-2 right-1/3 text-pink-400 text-xs animate-pulse delay-500 pointer-events-none z-10">✧</div>
+
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 px-2 sm:px-4">
+                    
+                    {/* Left Icon: Realistic Imperial Crown & Diamond */}
+                    <div className="flex items-center gap-3.5 flex-shrink-0">
+                      <div className="relative flex items-center justify-center">
+                        <img
+                          src="/female_crown_tiara.png"
+                          alt="Corona Imperial"
+                          className="w-14 sm:w-16 h-auto object-contain drop-shadow-[0_4px_10px_rgba(217,0,108,0.3)] filter brightness-105"
+                        />
+                        <img
+                          src="/assets/aistudio/Diamante_rosa_brillante_transparente.png"
+                          alt="Diamante Rosa"
+                          className="w-6 h-6 object-contain absolute -bottom-1 -left-2 drop-shadow-md"
+                        />
+                      </div>
+
+                      {/* Text details */}
+                      <div className="text-left">
+                        <div className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-1.5">
+                          <span>{sentGiftToast.mode === 'received' ? '¡Regalo recibido con éxito!' : '¡Regalo enviado con éxito!'}</span>
+                          <span className="text-base">🎁</span>
+                        </div>
+                        <p className="text-xs sm:text-[13px] text-slate-800 font-medium leading-snug">
+                          {sentGiftToast.mode === 'received' ? (
+                            <>
+                              Has recibido <strong className="text-[#e11d48] font-bold">"{sentGiftToast.name}"</strong> por <span className="inline-flex items-center gap-1 font-bold text-amber-600"><span className="text-xs">🪙</span> {sentGiftToast.price.toLocaleString()}</span> de {sentGiftToast.senderName || 'Naomi Campbell'} en tu Bóveda.
+                            </>
+                          ) : (
+                            <>
+                              Has enviado <strong className="text-[#e11d48] font-bold">"{sentGiftToast.name}"</strong> por <span className="inline-flex items-center gap-1 font-bold text-amber-600"><span className="text-xs">🪙</span> {sentGiftToast.price.toLocaleString()}</span> a {sentGiftToast.recipientName || 'Bóveda (de Naomi Campbell)'}.
+                            </>
+                          )}
+                        </p>
+                      </div>
                     </div>
+
+                    {/* Right side: Pink diamond and Hot Pink luxury button */}
+                    <div className="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto justify-end">
+                      <img
+                        src="/assets/aistudio/Diamante_rosa_brillante_transparente.png"
+                        alt="Diamante"
+                        className="hidden md:block w-9 h-9 object-contain drop-shadow-[0_4px_10px_rgba(244,114,182,0.4)] animate-pulse"
+                      />
+                      <button 
+                        onClick={() => setGiftsSubTab(sentGiftToast.mode === 'received' ? 'received' : 'sent')}
+                        className="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#d9006c] via-[#e60076] to-[#ec4899] hover:from-[#c2005f] hover:to-[#d9006c] text-white font-black text-xs sm:text-[13px] tracking-wide shadow-lg shadow-pink-500/40 border-2 border-white/90 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer group"
+                      >
+                        <span className="leading-tight text-center">
+                          {sentGiftToast.mode === 'received' ? 'Ver en Bóveda' : 'Ver en Enviados'}
+                        </span>
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      </button>
+                    </div>
+
                   </div>
-                  <button 
-                    onClick={() => setGiftsSubTab('sent')}
-                    className="text-xs font-mono bg-black/40 hover:bg-black/60 px-3 py-1.5 rounded-xl border border-white/20 flex items-center gap-1 transition cursor-pointer"
-                  >
-                    <span>Ver en Enviados</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
                 </div>
               )}
 
@@ -4079,6 +4362,23 @@ export default function VictoriaSecretRanking({
                               <span>Ver en Grande</span>
                             </button>
                           )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const giftToDelete = receivedGifts.find(
+                                g => g.id === selectedShowcaseGiftId || g.giftName.toLowerCase() === currentFeaturedGift.name.toLowerCase()
+                              );
+                              if (giftToDelete) {
+                                handleDeleteReceivedGift(giftToDelete.id);
+                              }
+                            }}
+                            className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                            title="Eliminar este regalo de la bóveda"
+                          >
+                            <Trash2 className="w-3 h-3 text-white" />
+                            <span>Eliminar</span>
+                          </button>
 
                           <button
                             type="button"
@@ -4365,6 +4665,15 @@ export default function VictoriaSecretRanking({
                                         >
                                           <Heart className="w-2.5 h-2.5" />
                                         </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteReceivedGift(gift.id)}
+                                          className="p-1 bg-rose-50 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-200 rounded transition cursor-pointer"
+                                          title={`Eliminar "${gift.giftName}"`}
+                                        >
+                                          <Trash2 className="w-2.5 h-2.5" />
+                                        </button>
                                       </div>
                                     </div>
 
@@ -4377,10 +4686,10 @@ export default function VictoriaSecretRanking({
                       );
                     }
 
-                    {/* VISTA 2: GRID COMPACTO (CELDAS DE BÓVEDA - TAMAÑO CHICO) */}
+                    {/* VISTA 2: GRID DE REGALOS (DE TRES EN TRES EN CADA FILA) */}
                     if (vaultViewMode === 'grid') {
                       return (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-3.5">
                           {filteredReceived.map((gift) => {
                             const isCert = gift.giftName.toLowerCase().includes('certificado');
                             const isWatch = gift.giftName.toLowerCase().includes('reloj');
@@ -4392,17 +4701,31 @@ export default function VictoriaSecretRanking({
                                 onClick={() => {
                                   setSelectedShowcaseGiftId(gift.id);
                                 }}
-                                className={`rounded-xl border p-2 sm:p-2.5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-1.5 relative group cursor-pointer text-left ${
+                                className={`rounded-2xl border p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-2 relative group cursor-pointer text-left ${
                                   isSelected 
                                     ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/70 shadow-xs' 
                                     : 'bg-white border-slate-200/90 hover:border-pink-300 hover:bg-pink-50/20'
                                 }`}
                               >
-                                {/* Active Indicator Dot */}
+                                {/* Active Indicator Dot & Delete Selected Button */}
                                 {isSelected && (
-                                  <span className="absolute -top-1.5 right-1.5 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[7.5px] rounded-full uppercase tracking-wider font-mono shadow-xs">
-                                    ★ ACTIVO
-                                  </span>
+                                  <div className="absolute -top-2.5 right-2 flex items-center gap-1 z-10">
+                                    <span className="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-[8px] rounded-full uppercase tracking-wider font-mono shadow-xs">
+                                      ★ ACTIVO
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteReceivedGift(gift.id);
+                                      }}
+                                      className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-[8px] rounded-full uppercase tracking-wider font-mono shadow-xs flex items-center gap-1 cursor-pointer transition hover:scale-105 active:scale-95"
+                                      title="Eliminar este regalo seleccionado"
+                                    >
+                                      <Trash2 className="w-2.5 h-2.5" />
+                                      <span>Eliminar</span>
+                                    </button>
+                                  </div>
                                 )}
 
                                 {/* Card Header: Sender Mini-Avatar & Info + Price */}
@@ -4434,28 +4757,28 @@ export default function VictoriaSecretRanking({
                                 </div>
 
                                 {/* Card Body: Icon & Compact Title */}
-                                <div className="flex items-center gap-1.5">
-                                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-50 to-pink-50 border border-amber-200/60 flex items-center justify-center text-base sm:text-lg shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-amber-50 to-pink-50 border border-amber-200/60 flex items-center justify-center text-lg sm:text-xl shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
                                     {gift.giftIcon}
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <h4 className="text-[11px] font-black text-slate-900 truncate font-serif leading-tight">
+                                    <h4 className="text-xs font-black text-slate-900 truncate font-serif leading-tight">
                                       {gift.giftName}
                                     </h4>
-                                    <span className="text-[7px] font-mono uppercase font-bold text-amber-800 bg-amber-100/70 px-1 py-0.2 rounded inline-block leading-none mt-0.5">
+                                    <span className="text-[7.5px] font-mono uppercase font-bold text-amber-800 bg-amber-100/70 px-1.5 py-0.2 rounded inline-block leading-none mt-0.5">
                                       {gift.category === 'lujo' ? '👑 Lujo' : gift.category === 'intermedio' ? '💎 Joya' : '⭐ Esencial'}
                                     </span>
                                   </div>
                                 </div>
 
                                 {/* Compact 1-line quotation */}
-                                <div className="text-[8.5px] italic text-slate-500 truncate font-serif bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title={gift.message}>
+                                <div className="text-[9px] italic text-slate-500 truncate font-serif bg-slate-50 px-2 py-1 rounded-lg border border-slate-100" title={gift.message}>
                                   "{gift.message}"
                                 </div>
 
                                 {/* Card Footer: Date & Quick Action Buttons */}
-                                <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[8px] font-mono text-slate-400">
-                                  <span className="truncate max-w-[65px]">{gift.dateFormatted.split('•')[0]}</span>
+                                <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[8px] font-mono text-slate-400">
+                                  <span className="truncate max-w-[70px]">{gift.dateFormatted.split('•')[0]}</span>
 
                                   <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                     <button
@@ -4483,7 +4806,7 @@ export default function VictoriaSecretRanking({
                                           setShowGenericGiftModal(true);
                                         }
                                       }}
-                                      className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
+                                      className="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8.5px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
                                       title="Inspeccionar en grande"
                                     >
                                       <Sparkles className="w-2 h-2" />
@@ -4497,6 +4820,15 @@ export default function VictoriaSecretRanking({
                                       title={`Agradecer a ${gift.senderName}`}
                                     >
                                       <Heart className="w-2.5 h-2.5" />
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteReceivedGift(gift.id)}
+                                      className="p-1 bg-rose-50 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-200 rounded transition cursor-pointer"
+                                      title={`Eliminar "${gift.giftName}"`}
+                                    >
+                                      <Trash2 className="w-2.5 h-2.5" />
                                     </button>
                                   </div>
                                 </div>
@@ -4595,9 +4927,18 @@ export default function VictoriaSecretRanking({
                                         <button
                                           type="button"
                                           onClick={() => handleThankSender(gift)}
-                                          className="px-2 py-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded text-[9px] font-bold transition"
+                                          className="px-2 py-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded text-[9px] font-bold transition cursor-pointer"
                                         >
                                           ❤️ Agradecer
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteReceivedGift(gift.id)}
+                                          className="px-2 py-1 bg-rose-50 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-200 rounded text-[9px] font-bold transition cursor-pointer flex items-center gap-1"
+                                          title={`Eliminar "${gift.giftName}"`}
+                                        >
+                                          <Trash2 className="w-2.5 h-2.5" />
+                                          <span>Eliminar</span>
                                         </button>
                                       </div>
                                     </td>
@@ -4832,38 +5173,64 @@ export default function VictoriaSecretRanking({
               {/* ======================================================== */}
               {giftsSubTab === 'catalog' && (
                 <div className="space-y-6 animate-fade-in">
-                  {/* Bottom Notice & Saldo Bar */}
-                  <div className="p-4 rounded-2xl bg-white border border-pink-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                  {/* Top Notice & Saldo Bar without the two removed buttons */}
+                  <div className="p-4 rounded-2xl bg-white border border-pink-100 shadow-sm flex items-center justify-between gap-3 text-left">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-pink-600 shrink-0" />
                       <p className="text-xs text-slate-600 font-medium">
                         <strong className="text-slate-800">Catálogo de regalos</strong> · Tu saldo disponible: <span className="font-mono font-black text-pink-600 text-sm">🪙 {userGiftBalance.toLocaleString()}</span>
                       </p>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setUserGiftBalance(prev => prev + 2500);
-                          window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                            detail: { icon: '🪙' }
-                          }));
-                        }}
-                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black text-xs rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Recargar Monedas</span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('ranking')}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer"
-                      >
-                        Volver al Ranking
-                      </button>
-                    </div>
                   </div>
 
+                  {/* REGALOS EXTRA Catalog matching z.png */}
+                  <div className="bg-[#12151e] border border-zinc-700/80 shadow-2xl rounded-2xl p-4 sm:p-5 text-left select-none space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2">
+                        <span className="text-yellow-400 font-black text-sm sm:text-base tracking-wider uppercase font-sans flex items-center gap-1.5">
+                          🎁 REGALOS EXTRA
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-zinc-800/90 text-yellow-350 font-black px-2.5 py-1 rounded-lg font-mono flex items-center gap-1 border border-zinc-700/50">
+                          🪙 {userGiftBalance.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Gifts Grid matching 4 per row */}
+                    <div className="grid grid-cols-4 gap-2.5 sm:gap-3 max-h-[560px] overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-1">
+                      {CHANNEL_EXTRA_GIFTS.map((gift) => (
+                        <button
+                          key={gift.id}
+                          type="button"
+                          onClick={() => handleSendGift(gift)}
+                          className="group relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/80 border border-slate-200 hover:border-pink-400 p-2.5 sm:p-3 rounded-2xl aspect-square w-full transition-all duration-150 text-center cursor-pointer select-none shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-95"
+                          title={`Enviar ${gift.name} por 🪙 ${gift.price.toLocaleString()}`}
+                        >
+                          <span className="text-3xl sm:text-4xl filter drop-shadow group-hover:scale-110 transition transform duration-150">
+                            {gift.icon}
+                          </span>
+                          <span className="text-[10px] sm:text-[11px] font-black text-slate-800 mt-2 truncate w-full px-1 leading-tight select-none uppercase">
+                            {gift.name.length > 11 ? `${gift.name.substring(0, 10).toUpperCase()}..` : gift.name.toUpperCase()}
+                          </span>
+                          <div className="flex items-center justify-center gap-0.5 mt-1 select-none shrink-0 leading-none">
+                            <span className="text-[10px] sm:text-[11px] font-black text-amber-600 font-mono">
+                              🪙 {gift.price.toLocaleString()}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Footer matching z.png */}
+                    <div className="text-[10px] sm:text-xs text-zinc-400 text-center pt-3 border-t border-zinc-800/80 italic uppercase font-mono tracking-wider flex items-center justify-center gap-2">
+                      <span>PRESIONA PARA ENVIAR</span>
+                      <span>·</span>
+                      <span className="text-yellow-400 font-bold">🪙 {userGiftBalance.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -5168,29 +5535,94 @@ export default function VictoriaSecretRanking({
                         <span>Valor: 🪙 {selectedGenericModalGift.price.toLocaleString()} ({selectedGenericModalGift.euroCost.toLocaleString()}€)</span>
                       </div>
                     </div>
-
-                    {/* Actions */}
-                    <button
-                      onClick={() => {
-                        const giftObj = CHANNEL_EXTRA_GIFTS.find(g => g.name === selectedGenericModalGift.name) || {
-                          id: 'g-custom',
-                          name: selectedGenericModalGift.name,
-                          price: selectedGenericModalGift.price,
-                          icon: selectedGenericModalGift.icon,
-                          category: 'basico'
-                        };
-                        handleSendGift(giftObj as any);
-                        setShowGenericGiftModal(false);
-                      }}
-                      className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-sm py-3.5 rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <Gift className="w-4 h-4" />
-                      <span>Enviar "{selectedGenericModalGift.name}" a {models.find(m => m.id === recipientModelId)?.name || 'Adriana Lima'} (🪙 {selectedGenericModalGift.price.toLocaleString()})</span>
-                    </button>
                   </div>
                 </div>
               )}
 
+            </div>
+          )}
+
+          {/* 👑 SPECIAL DISTINCTION INSPECTION MODAL */}
+          {selectedDistinctionModal && (
+            <div 
+              className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
+              onClick={() => setSelectedDistinctionModal(null)}
+            >
+              <div 
+                className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-pink-200 relative animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header with luxury gradient */}
+                <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-rose-900 p-6 text-white relative">
+                  <button
+                    onClick={() => setSelectedDistinctionModal(null)}
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors text-sm font-bold cursor-pointer"
+                    aria-label="Cerrar modal"
+                  >
+                    ✕
+                  </button>
+                  <span className="text-[10px] font-mono font-black tracking-widest text-pink-300 uppercase">
+                    {selectedDistinctionModal.tier} · Salón de la Fama
+                  </span>
+                  <h3 className="text-2xl font-serif font-black tracking-tight mt-1">
+                    {selectedDistinctionModal.name}
+                  </h3>
+                  <p className="text-xs text-rose-200/90 font-medium mt-0.5">
+                    {selectedDistinctionModal.subtitle}
+                  </p>
+                </div>
+
+                {/* Distinction Artwork & Details */}
+                <div className="p-6 text-center space-y-5">
+                  <div className="w-56 h-48 mx-auto rounded-2xl bg-slate-50/60 border border-slate-100 flex items-center justify-center p-4 shadow-inner">
+                    <img
+                      src={selectedDistinctionModal.image}
+                      alt={selectedDistinctionModal.name}
+                      className="max-h-full max-w-full object-contain drop-shadow-xl"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+
+                  {/* Insignia / Badge */}
+                  <div className="inline-block bg-pink-50 border border-pink-200 text-pink-800 text-xs font-semibold px-4 py-1.5 rounded-full">
+                    {selectedDistinctionModal.badge}
+                  </div>
+
+                  {/* Description & Criteria */}
+                  <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100 space-y-2.5 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-800 block text-[11px] uppercase tracking-wider font-mono">
+                        Significado & Récord
+                      </span>
+                      <p className="text-slate-600 mt-0.5 leading-relaxed">
+                        {selectedDistinctionModal.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 font-mono">Criterio: </span>
+                        <strong className="text-slate-700">{selectedDistinctionModal.achievedCriteria}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-mono">Portadora: </span>
+                        <strong className="text-pink-600 font-serif">{selectedDistinctionModal.recipient}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action button */}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDistinctionModal(null)}
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 px-6 rounded-xl transition-all shadow-sm cursor-pointer"
+                    >
+                      Cerrar Condecoración
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

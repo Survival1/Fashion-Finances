@@ -1613,7 +1613,7 @@ export default function SessionSimulator({
     window.dispatchEvent(new Event('storage'));
     window.dispatchEvent(new CustomEvent('nav_to_casting_live'));
 
-    // Redirigir de inmediato a la Ronda en vivo de la captura image.png
+    // Redirigir de inmediato a la Ronda en vivo
     setShowGatheringModal(false);
     if (onNavigateToTab) {
       onNavigateToTab('casting_live');

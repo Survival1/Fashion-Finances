@@ -17,6 +17,11 @@ import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/bra
 import { saveLuxuryWatchGift, playLuxuryWatchSoundEffect } from './LuxuryWatchAnimation';
 import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { 
+  getFollowedUsersFromStorage, 
+  isUserFollowedInStorage, 
+  toggleFollowUserInStorage 
+} from '../utils/followingService';
+import { 
   Sparkles, 
   Database,
   Home, 
@@ -1724,7 +1729,7 @@ const PRESET_SONGS = [
 export const FINANZAS_USERS = [
   { id: 'f-1', name: 'Alessia Vance', username: 'alessia_vance_w1', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=650', role: 'Modelo Directora' },
   { id: 'f-2', name: 'Gisele Bündchen', username: 'gisele_invest', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650', role: 'Inversora Principal' },
-  { id: 'f-3', name: 'Marcus Vance', username: 'marcus_v_capital', avatar: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=650', role: 'Asesor Fintech' },
+  { id: 'f-3', name: 'Alexander Vance', username: 'alexandervance1', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650', role: 'Modelo Ejecutivo & Embajador' },
   { id: 'f-4', name: 'Sienna Cole', username: 'sienna_cole', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=650', role: 'Modelo Patrocinada' },
   { id: 'f-5', name: 'Liam Cooper', username: 'liam_c_invest', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=650', role: 'Socio Inversor' },
   { id: 'f-6', name: 'Elena Rostova', username: 'elena_r_finanzas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650', role: 'Gestora de Cuentas' },
@@ -2585,6 +2590,237 @@ export default function CastingLiveSection({
       music: 'Studio Talk Sessions - Interview Beats',
       category: 'explorar',
       videoCategory: 'Interview'
+    },
+    {
+      id: 'vid-lux-2',
+      modelId: 'model-5',
+      username: 'victoria_luxury_life',
+      name: 'Victoria Royale',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 8940,
+      comments: [
+        { id: 'c-lx2-1', user: 'cannes_gala', text: 'Impresionante vestido y elegancia pura en la gala de Cannes 🍸✨', date: 'Hace 1 hora', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 410,
+      favorites: 1250,
+      description: 'Noche de Gala en Cannes: Alta Costura, diamantes talla brillante y cóctel privado exclusivo. 🍸💎 #luxury #cannes #hautecouture #vip',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Royal Velvet & Champagne - Luxury Lounge',
+      category: 'explorar',
+      videoCategory: 'Luxury'
+    },
+    {
+      id: 'vid-lux-3',
+      modelId: 'model-alexander',
+      username: 'alexandervance1',
+      name: 'Alexander Vance',
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stylish-young-man-walking-in-a-urban-setting-41712-large.mp4',
+      likes: 7350,
+      comments: [
+        { id: 'c-lx3-1', user: 'geneva_watches', text: 'Ese traje a medida con cronógrafo es un espectáculo ⌚🍾', date: 'Hace 30 min', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 340,
+      favorites: 980,
+      description: 'Elegancia ejecutiva en Ginebra. Presentando la nueva línea de trajes sastre y alta relojería de lujo. 🍸⌚ #luxury #bespoke #alexandervance #hautecouture',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Milano Executive Sunset - Vance Suite',
+      category: 'explorar',
+      videoCategory: 'Luxury'
+    },
+    {
+      id: 'vid-fin-2',
+      modelId: 'model-alexander',
+      username: 'alexandervance1',
+      name: 'Alexander Vance',
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-talking-in-a-studio-interview-41720-large.mp4',
+      likes: 5890,
+      comments: [
+        { id: 'c-fin2-1', user: 'investor_group', text: 'Claves indispensables de estructuración de capital en moda 📈💡', date: 'Hace 2 horas', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 220,
+      favorites: 710,
+      description: 'Retorno de Inversión (ROI) en Pasarelas de Alta Costura: Financiación de colecciones cápsula para inversores privados. 📈💰 #finanzas #fashioninvest #business #alexandervance',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Fintech Beats - Investment Audio',
+      category: 'explorar',
+      videoCategory: 'Finanzas'
+    },
+    {
+      id: 'vid-fin-3',
+      modelId: 'model-marcus',
+      username: 'marcus_v_capital',
+      name: 'Marcus Vance',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-makeup-posing-under-neon-light-40478-large.mp4',
+      likes: 4210,
+      comments: [
+        { id: 'c-fin3-1', user: 'venture_capital', text: 'Excelente análisis de valoración de marca personal 📈', date: 'Hace 4 horas', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 175,
+      favorites: 530,
+      description: 'Estrategias de crowdfunding y mecenazgo colectivo para nuevos talentos de pasarela. 📈🏦 #finanzas #crowdfunding #inversor',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Capital Flow - Ambient Future',
+      category: 'explorar',
+      videoCategory: 'Finanzas'
+    },
+    {
+      id: 'vid-jewel-2',
+      modelId: 'model-1',
+      username: 'victoria_luxury_life',
+      name: 'Victoria Royale',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-with-luxury-jewelry-posing-in-a-studio-41718-large.mp4',
+      likes: 6730,
+      comments: [
+        { id: 'c-jwl2-1', user: 'emerald_collector', text: 'Esas esmeraldas colombianas tienen una pureza inigualable 💎✨', date: 'Hace 1 hora', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 290,
+      favorites: 880,
+      description: 'Colección Privada: Gargantilla de diamantes y esmeraldas montadas en platino para la subasta benéfica. 💎👑 #jewellery #alta_joyeria #diamonds #investors',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Diamond Shimmer - Lounge Studio',
+      category: 'explorar',
+      videoCategory: 'Investors'
+    },
+    {
+      id: 'vid-cast-2',
+      modelId: 'model-2',
+      username: 'sofia_sensations',
+      name: 'Sophia Loren',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4',
+      likes: 5120,
+      comments: [
+        { id: 'c-cst2-1', user: 'casting_director', text: 'Esa postura y seguridad al girar es justo lo que buscamos 👠👏', date: 'Hace 3 horas', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 180,
+      favorites: 640,
+      description: 'Audición en directo para la pasarela de otoño: Pasos firmes, control de tempo y mirada fija al objetivo. 👠✨ #casting #catwalk #audiciones #modelagency',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Catwalk Rhythm - High Fashion Beat',
+      category: 'explorar',
+      videoCategory: 'Casting'
+    },
+    {
+      id: 'vid-fit-2',
+      modelId: 'model-2',
+      username: 'clara_fit_pro',
+      name: 'Clara Fitness',
+      avatar: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-warm-up-exercises-in-a-gym-42999-large.mp4',
+      likes: 6240,
+      comments: [
+        { id: 'c-fit2-1', user: 'mobility_coach', text: 'Movilidad de cadera fundamental para no lesionarse en pasarela 💪', date: 'Hace 2 horas', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 210,
+      favorites: 790,
+      description: 'Sesión de pilates y elongación activa post-desfile. Estiramientos clave para cuello, espalda y pies. 💪🧘‍♀️ #fitnes #fitness #pilates #wellness #training',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Zen Pulse - Deep Flow',
+      category: 'explorar',
+      videoCategory: 'Fitnes'
+    },
+    {
+      id: 'vid-beauty-2',
+      modelId: 'model-3',
+      username: 'camila_beauty_glow',
+      name: 'Camila Glow',
+      avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-applying-lip-gloss-with-glitter-makeup-40480-large.mp4',
+      likes: 5430,
+      comments: [
+        { id: 'c-bty2-1', user: 'glow_addict', text: 'Ese delineado gráfico con destellos plateados es puro arte 💄😍', date: 'Hace 1 hora', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 230,
+      favorites: 860,
+      description: 'Delineado editorial gráfico y piel efecto seda: Secretos de maquillaje para reflectores de pasarela. 💄✨ #beauty #maquillaje #eyeliner #glowingskin',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Beauty Lounge - Ambient Cosmetics',
+      category: 'explorar',
+      videoCategory: 'Beauty'
+    },
+    {
+      id: 'vid-infl-2',
+      modelId: 'model-4',
+      username: 'leo_lifestyle_infl',
+      name: 'Leo Valenti',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stylish-young-man-walking-in-a-urban-setting-41712-large.mp4',
+      likes: 7190,
+      comments: [
+        { id: 'c-inf2-1', user: 'lifestyle_daily', text: '¡Esa transición de outfits en el showroom quedó increíble! 📱🔥', date: 'Hace 40 min', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 310,
+      favorites: 990,
+      description: 'GRWM: Preparando 3 looks de transición día-noche para la semana de la moda. 📱✨ #influencer #grwm #lifestyle #fashiontrends',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Viral Hype - Urban Groove',
+      category: 'explorar',
+      videoCategory: 'Influencer'
+    },
+    {
+      id: 'vid-int-2',
+      modelId: 'model-6',
+      username: 'derek_fashion_talks',
+      name: 'Derek Interviewer',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-talking-in-a-studio-interview-41720-large.mp4',
+      likes: 6410,
+      comments: [
+        { id: 'c-int2-1', user: 'podcast_fan', text: 'Preguntas al grano y respuestas súper honestas de los modelos 🎙️⭐', date: 'Hace 1 hora', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 260,
+      favorites: 780,
+      description: 'Entrevista Exclusiva: Cómo negociar tus primeros contratos de patrocinio y derechos de imagen. 🎙️💼 #interview #podcast #fashionindustry #talks',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Studio Acoustic - Clean Talks',
+      category: 'explorar',
+      videoCategory: 'Interview'
+    },
+    {
+      id: 'vid-run-2',
+      modelId: 'model-1',
+      username: 'sofia_sensations',
+      name: 'Sophia Loren',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-in-a-studio-with-flashing-lights-40485-large.mp4',
+      likes: 9230,
+      comments: [
+        { id: 'c-rn2-1', user: 'milan_fashion', text: '¡Desfile impecable, el vestido flotaba en la pasarela! 👑✨', date: 'Hace 2 horas', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=85&w=100' }
+      ],
+      shares: 480,
+      favorites: 1420,
+      description: 'Gran Cierre de Pasarela: Traje de seda blanco con cola arquitectónica en Milán Fashion Week. 👑👠 #runway #modelos #milanfashion #pasarela',
+      isLiked: false,
+      isFavorited: false,
+      isFollowing: false,
+      music: 'Runway Symphony - Grand Finale',
+      category: 'explorar',
+      videoCategory: 'Modelos'
     }
   ];
 
@@ -7250,6 +7486,7 @@ export default function CastingLiveSection({
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
 
   const [activeSubTab, setActiveSubTab] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos' | 'live'>('para-ti');
+  const [selectedExploreVideo, setSelectedExploreVideo] = useState<CastingLiveVideo | null>(null);
   const [liveViewMode, setLiveViewMode] = useState<'grid' | 'stream'>('grid');
   const [liveHeroMuted, setLiveHeroMuted] = useState<boolean>(true);
   const [isHeroVideoPaused, setIsHeroVideoPaused] = useState<boolean>(false);
@@ -8201,15 +8438,38 @@ export default function CastingLiveSection({
   }, [currentLiveModel.id, activeSubTab]);
 
   useEffect(() => {
-    const cachedTab = localStorage.getItem('casting_live_active_subtab');
-    if (cachedTab === 'para-ti') {
-      setActiveSubTab('para-ti');
-      localStorage.removeItem('casting_live_active_subtab');
-    } else if (cachedTab === 'live' || selectedLiveModelId) {
-      setActiveSubTab('live');
-      localStorage.removeItem('casting_live_active_subtab');
-    }
-  }, [selectedLiveModelId]);
+    const handleCheckLiveSubtab = (e?: any) => {
+      const explicitSubTab = e?.detail?.subTab || localStorage.getItem('casting_live_active_subtab');
+      if (explicitSubTab === 'live' || selectedLiveModelId) {
+        setActiveSubTab('live');
+        setLiveViewMode('grid');
+        setHeroChannelsSliderIdx(0);
+        setLiveChannelsCategoryFilter('todos');
+        setActiveVideoIndex(0);
+        setViewingTikTokProfileUsername(null);
+        localStorage.removeItem('casting_live_active_subtab');
+        setTimeout(() => {
+          const rootEl = document.getElementById('live-videos-screen-root');
+          if (rootEl) {
+            rootEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 50);
+      } else if (explicitSubTab === 'para-ti') {
+        setActiveSubTab('para-ti');
+        localStorage.removeItem('casting_live_active_subtab');
+      }
+    };
+
+    handleCheckLiveSubtab();
+    window.addEventListener('nav_to_casting_live', handleCheckLiveSubtab);
+    window.addEventListener('open_casting_live_subtab', handleCheckLiveSubtab);
+    window.addEventListener('storage', handleCheckLiveSubtab);
+    return () => {
+      window.removeEventListener('nav_to_casting_live', handleCheckLiveSubtab);
+      window.removeEventListener('open_casting_live_subtab', handleCheckLiveSubtab);
+      window.removeEventListener('storage', handleCheckLiveSubtab);
+    };
+  }, [selectedLiveModelId, isActiveTab]);
 
   // Clean up bloated localStorage from previous redundant saved_videos keys
   useEffect(() => {
@@ -11106,20 +11366,31 @@ export default function CastingLiveSection({
       const vidCat = (vid.videoCategory || vid.category || '').toLowerCase();
       
       let isMatch = false;
+      const descLower = (vid.description || '').toLowerCase();
       if (targetCat === 'modelos' || targetCat === 'runway') {
-        isMatch = vidCat === 'modelos' || vidCat === 'runway';
+        isMatch = vidCat === 'modelos' || vidCat === 'runway' || descLower.includes('runway') || descLower.includes('pasarela');
       } else if (targetCat === 'backstage') {
-        isMatch = vidCat === 'backstage';
+        isMatch = vidCat === 'backstage' || descLower.includes('backstage') || descLower.includes('camerino');
       } else if (targetCat === 'investors' || targetCat === 'jewellery') {
-        isMatch = vidCat === 'investors' || vidCat === 'jewellery';
+        isMatch = vidCat === 'investors' || vidCat === 'jewellery' || descLower.includes('jewellery') || descLower.includes('joyer') || descLower.includes('invers');
       } else if (targetCat === 'tiendas') {
-        isMatch = vidCat === 'tiendas' || !!vid.pinnedProduct;
+        isMatch = vidCat === 'tiendas' || !!vid.pinnedProduct || descLower.includes('tienda');
       } else if (targetCat === 'catwalk' || targetCat === 'casting') {
-        isMatch = vidCat === 'catwalk' || vidCat === 'casting';
+        isMatch = vidCat === 'catwalk' || vidCat === 'casting' || descLower.includes('casting');
       } else if (targetCat === 'fashion') {
-        isMatch = vidCat === 'fashion' || vidCat === 'moda';
+        isMatch = vidCat === 'fashion' || vidCat === 'moda' || descLower.includes('fashion') || descLower.includes('moda');
       } else if (targetCat === 'fitnes') {
-        isMatch = vidCat === 'fitnes' || vidCat === 'fitness';
+        isMatch = vidCat === 'fitnes' || vidCat === 'fitness' || descLower.includes('fitnes') || descLower.includes('fitness') || descLower.includes('workout');
+      } else if (targetCat === 'finanzas') {
+        isMatch = vidCat === 'finanzas' || descLower.includes('finanz') || descLower.includes('invest') || descLower.includes('roi');
+      } else if (targetCat === 'beauty') {
+        isMatch = vidCat === 'beauty' || descLower.includes('beauty') || descLower.includes('makeup') || descLower.includes('maquillaje') || descLower.includes('skincare');
+      } else if (targetCat === 'influencer') {
+        isMatch = vidCat === 'influencer' || descLower.includes('influencer') || descLower.includes('creator') || descLower.includes('collab');
+      } else if (targetCat === 'luxury') {
+        isMatch = vidCat === 'luxury' || descLower.includes('luxury') || descLower.includes('lujo') || descLower.includes('hautecouture');
+      } else if (targetCat === 'interview') {
+        isMatch = vidCat === 'interview' || descLower.includes('interview') || descLower.includes('entrevista') || descLower.includes('podcast');
       } else {
         isMatch = vidCat === targetCat;
       }
@@ -11183,14 +11454,20 @@ export default function CastingLiveSection({
     if (list.length === 0 && selectedCategoryFilter !== 'Todos') {
       const targetCat = selectedCategoryFilter.toLowerCase();
       list = videosList.filter(v => {
-        const c = (v.videoCategory || '').toLowerCase();
-        if (targetCat === 'backstage') return c === 'backstage';
-        if (targetCat === 'modelos' || targetCat === 'runway') return c === 'modelos' || c === 'runway';
-        if (targetCat === 'investors' || targetCat === 'jewellery') return c === 'investors' || c === 'jewellery';
-        if (targetCat === 'tiendas') return c === 'tiendas' || !!v.pinnedProduct;
-        if (targetCat === 'catwalk' || targetCat === 'casting') return c === 'catwalk' || c === 'casting';
-        if (targetCat === 'fashion') return c === 'fashion' || c === 'moda';
-        if (targetCat === 'fitnes') return c === 'fitnes' || c === 'fitness';
+        const c = (v.videoCategory || v.category || '').toLowerCase();
+        const d = (v.description || '').toLowerCase();
+        if (targetCat === 'backstage') return c === 'backstage' || d.includes('backstage') || d.includes('camerino');
+        if (targetCat === 'modelos' || targetCat === 'runway') return c === 'modelos' || c === 'runway' || d.includes('runway') || d.includes('pasarela');
+        if (targetCat === 'investors' || targetCat === 'jewellery') return c === 'investors' || c === 'jewellery' || d.includes('jewellery') || d.includes('joyer');
+        if (targetCat === 'tiendas') return c === 'tiendas' || !!v.pinnedProduct || d.includes('tienda');
+        if (targetCat === 'catwalk' || targetCat === 'casting') return c === 'catwalk' || c === 'casting' || d.includes('casting');
+        if (targetCat === 'fashion') return c === 'fashion' || c === 'moda' || d.includes('fashion') || d.includes('moda');
+        if (targetCat === 'fitnes') return c === 'fitnes' || c === 'fitness' || d.includes('fitnes') || d.includes('fitness') || d.includes('workout');
+        if (targetCat === 'finanzas') return c === 'finanzas' || d.includes('finanz') || d.includes('invest') || d.includes('roi');
+        if (targetCat === 'beauty') return c === 'beauty' || d.includes('beauty') || d.includes('makeup') || d.includes('maquillaje');
+        if (targetCat === 'influencer') return c === 'influencer' || d.includes('influencer') || d.includes('creator');
+        if (targetCat === 'luxury') return c === 'luxury' || d.includes('luxury') || d.includes('lujo');
+        if (targetCat === 'interview') return c === 'interview' || d.includes('interview') || d.includes('entrevista');
         return c === targetCat;
       });
     }
@@ -11472,7 +11749,10 @@ export default function CastingLiveSection({
     }
   };
 
-  const handleCategoryFilterChange = (cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview') => {
+  const handleCategoryFilterChange = (
+    cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview',
+    stayOnCurrentTab = false
+  ) => {
     try {
       sessionStorage.setItem('explicit_category_set_by_user', cat);
     } catch (e) {}
@@ -11503,7 +11783,9 @@ export default function CastingLiveSection({
     setSelectedLiveCategory(cat);
     setActiveVideoIndex(0);
     setSearchTerm('');
-    setActiveSubTab('para-ti');
+    if (!stayOnCurrentTab && activeSubTab !== 'explorar') {
+      setActiveSubTab('para-ti');
+    }
     setActiveFinanzasPopupUser(null);
     setIsFinanzasLiveConnected(true);
     setCategoryLiveConnectedMap((prev) => {
@@ -30040,7 +30322,7 @@ try {
             </div>
             {selectedCategoryFilter !== 'Todos' && (
               <button
-                onClick={() => setSelectedCategoryFilter('Todos')}
+                onClick={() => handleCategoryFilterChange('Todos', true)}
                 className="text-[10px] text-rose-550 font-black uppercase hover:underline cursor-pointer border-0 bg-transparent"
               >
                 Limpiar Filtros
@@ -30055,7 +30337,7 @@ try {
               return (
                 <button
                   key={cat}
-                  onClick={() => handleCategoryFilterChange(cat as any)}
+                  onClick={() => handleCategoryFilterChange(cat as any, true)}
                   className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer border-0 shadow-xs ${
                     isSelected 
                       ? 'bg-[#fe2c55] text-white' 
@@ -30082,7 +30364,7 @@ try {
             <button
               onClick={() => {
                 setSearchTerm('');
-                setSelectedCategoryFilter('Todos');
+                handleCategoryFilterChange('Todos', true);
               }}
               className="bg-[#fe2c55] hover:bg-red-650 text-white font-black text-xs py-2 px-5 rounded-full shadow-md transition transform hover:scale-105 active:scale-95 cursor-pointer border-0"
             >
@@ -30091,17 +30373,13 @@ try {
           </div>
         ) : (
           <div className="space-y-8 w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-5 w-full" id="explore-videos-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 w-full" id="explore-videos-grid">
               {filteredVideos.slice(0, visibleExploreCount).map((vid) => {
                 return (
                   <div
                     key={vid.id}
                     onClick={() => {
-                      const idx = filteredVideos.findIndex(v => v.id === vid.id);
-                      if (idx !== -1) {
-                        setActiveVideoIndex(idx);
-                        setActiveSubTab('para-ti');
-                      }
+                      setSelectedExploreVideo(vid);
                     }}
                     className="relative group cursor-pointer aspect-[3/4] bg-slate-950 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1.5 border border-slate-100"
                   >
@@ -30165,10 +30443,85 @@ try {
                   className="px-8 py-3 bg-gradient-to-r from-pink-500 via-rose-500 to-[#fe2c55] text-white text-xs font-black rounded-full shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer border-0 uppercase tracking-widest hover:brightness-[1.04]"
                   id="cargar-mas-button"
                 >
-                  Cargar más imágenes
+                  Cargar más vídeos
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Modal Inline Video Player in Explore Grid */}
+        {selectedExploreVideo && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+            onClick={() => setSelectedExploreVideo(null)}
+          >
+            <div 
+              className="relative w-full max-w-[420px] max-h-[88vh] aspect-[9/16] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top Controls: Close button and Category tag */}
+              <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between pointer-events-auto">
+                <span className="bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full border border-white/20 uppercase tracking-wider">
+                  {selectedCategoryFilter !== 'Todos' ? selectedCategoryFilter : (selectedExploreVideo.videoCategory || 'Video')}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedExploreVideo(null)}
+                  className="w-9 h-9 rounded-full bg-black/70 hover:bg-[#fe2c55] text-white flex items-center justify-center font-bold text-sm cursor-pointer border border-white/20 transition-all hover:scale-105 active:scale-95 shadow-md"
+                  title="Cerrar reproductor"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Video Element */}
+              <video
+                src={selectedExploreVideo.videoUrl}
+                autoPlay
+                playsInline
+                loop
+                controls
+                className="w-full h-full object-cover"
+              />
+
+              {/* Bottom Info Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-20 pointer-events-none">
+                <div className="flex items-center gap-2 mb-2 pointer-events-auto">
+                  <img
+                    src={selectedExploreVideo.avatar}
+                    alt={selectedExploreVideo.name}
+                    className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm"
+                  />
+                  <div>
+                    <span className="text-sm font-black text-white block leading-tight">@{selectedExploreVideo.username}</span>
+                    <span className="text-[11px] text-white/75 font-semibold block">{selectedExploreVideo.name}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-white/95 line-clamp-3 leading-relaxed mb-3 font-medium drop-shadow-xs">
+                  {selectedExploreVideo.description}
+                </p>
+                <div className="flex items-center justify-between pt-1 border-t border-white/10 pointer-events-auto">
+                  <span className="text-xs text-rose-400 font-extrabold flex items-center gap-1">
+                    💖 {selectedExploreVideo.likes.toLocaleString()} me gusta
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const idx = filteredVideos.findIndex(v => v.id === selectedExploreVideo.id);
+                      if (idx !== -1) {
+                        setActiveVideoIndex(idx);
+                        setSelectedExploreVideo(null);
+                        setActiveSubTab('para-ti');
+                      }
+                    }}
+                    className="text-[11px] bg-white/20 hover:bg-[#fe2c55] text-white px-3.5 py-1.5 rounded-full font-bold cursor-pointer transition-colors border border-white/25 shadow-xs"
+                  >
+                    Ver en Feed Completo →
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -33992,8 +34345,8 @@ try {
                                   {!shouldShowVotingCountdownCard ? (
                                     <>
                                       {/* Header Turn Badge */}
-                                      <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 shadow-xs">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                                      <div className="inline-flex items-center gap-1.5 bg-pink-500/20 border border-pink-400/60 text-pink-300 px-3 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-wider mb-2 shadow-xs">
+                                        <span className="w-2 h-2 rounded-full bg-pink-400 animate-ping shrink-0" />
                                         <span>
                                           {`🔴 TURNO ${currentParticipantNumber} DE 10 • EN EXPOSICIÓN`}
                                         </span>
@@ -34030,7 +34383,7 @@ try {
                                                 <img 
                                                   src={activeUser.avatar} 
                                                   alt={activeUser.name}
-                                                  className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-emerald-400 shadow-xl ring-1 ring-emerald-500/40"
+                                                  className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-pink-500 shadow-xl ring-1 ring-pink-500/40"
                                                   referrerPolicy="no-referrer"
                                                 />
                                                 <span className="absolute -bottom-1 -right-1 bg-[#fe2c55] text-white text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
@@ -34040,7 +34393,7 @@ try {
                                             )
                                           ) : (
                                             isWatchingPresenterCamera ? (
-                                              <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-emerald-400 shadow-xl ring-1 ring-emerald-500/40 relative bg-black">
+                                              <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-pink-500 shadow-xl ring-1 ring-pink-500/40 relative bg-black">
                                                 <video
                                                   src={getParticipantLiveCameraVideo(activeUser)}
                                                   onError={(e) => { e.currentTarget.src = '/hero_video.mp4'; }}
@@ -34050,7 +34403,7 @@ try {
                                                   muted={isPresenterCameraAudioMuted}
                                                   className="w-full h-full object-cover"
                                                 />
-                                                <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md flex items-center gap-0.5">
+                                                <span className="absolute -bottom-1 -right-1 bg-pink-500 text-slate-950 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md flex items-center gap-0.5">
                                                   <span className="w-1 h-1 rounded-full bg-slate-950 animate-ping" />
                                                   CÁMARA
                                                 </span>
@@ -34060,7 +34413,7 @@ try {
                                                 <img 
                                                   src={activeUser.avatar} 
                                                   alt={activeUser.name}
-                                                  className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-emerald-400 shadow-xl ring-1 ring-emerald-500/40"
+                                                  className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl object-cover border border-pink-500 shadow-xl ring-1 ring-pink-500/40"
                                                   referrerPolicy="no-referrer"
                                                 />
                                                 <span className="absolute -bottom-1 -right-1 bg-[#fe2c55] text-white text-[7.5px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
@@ -34077,7 +34430,7 @@ try {
                                           <span className="text-slate-300 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate mt-0.5">
                                             {activeUser.role || 'Community Manager'}
                                           </span>
-                                          <span className="text-emerald-400 text-[9px] sm:text-[9.5px] font-bold block mt-0.5">
+                                          <span className="text-pink-400 text-[9px] sm:text-[9.5px] font-bold block mt-0.5">
                                             Exposición de 5 minutos en directo
                                           </span>
                                         </div>
@@ -34214,19 +34567,19 @@ try {
                                           </button>
                                           <div className="text-right shrink-0">
                                             <span className="text-[7px] sm:text-[8px] text-slate-400 block font-bold uppercase tracking-wider">RONDA</span>
-                                            <span className="font-mono text-emerald-400 font-black text-[9px] sm:text-[10px] block leading-tight">
+                                            <span className="font-mono text-pink-400 font-black text-[9px] sm:text-[10px] block leading-tight">
                                               {currentParticipantNumber}/10
                                             </span>
-                                            <span className="font-mono text-emerald-400 font-black text-[8.5px] sm:text-[9.5px] block leading-tight">
+                                            <span className="font-mono text-pink-400 font-black text-[8.5px] sm:text-[9.5px] block leading-tight">
                                               (50m)
                                             </span>
                                           </div>
                                         </div>
 
-                                        {/* Visual Progress Bar matching z.png */}
+                                        {/* Visual Progress Bar (pink -> rose -> red) */}
                                         <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
                                           <div 
-                                            className="bg-gradient-to-r from-emerald-500 via-amber-400 to-[#fe2c55] h-full transition-all duration-1000 ease-linear rounded-full"
+                                            className="bg-gradient-to-r from-pink-400 via-rose-500 to-[#fe2c55] h-full transition-all duration-1000 ease-linear rounded-full"
                                             style={{ width: `${progressPercent}%` }}
                                           />
                                         </div>
@@ -34242,7 +34595,7 @@ try {
                                           }}
                                           className={`w-full font-black text-[10.5px] sm:text-[11.5px] py-2 px-2.5 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border box-border ${
                                             isBroadcastMicOn && !isMuted
-                                              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
+                                              ? 'bg-gradient-to-r from-pink-600 via-pink-500 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border-pink-400/80 shadow-[0_0_12px_rgba(236,72,153,0.35)]'
                                               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
                                           }`}
                                           id="btn-toggle-mic-active"

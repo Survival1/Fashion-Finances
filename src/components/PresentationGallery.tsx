@@ -79,14 +79,39 @@ export default function PresentationGallery({
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(storageKey, JSON.stringify(capped));
+        if (modelId) {
+          localStorage.setItem(`custom_presentation_gallery_${modelId}`, JSON.stringify(capped));
+        }
         if (modelUsername) {
           localStorage.setItem(`custom_presentation_gallery_${modelUsername.toLowerCase()}`, JSON.stringify(capped));
         }
+        // Always mirror for top model Adriana Lima and default
+        if (!modelId || modelId === 'topf-1' || modelUsername?.toLowerCase().includes('adriana')) {
+          localStorage.setItem('custom_presentation_gallery_adrianalima', JSON.stringify(capped));
+          localStorage.setItem('custom_presentation_gallery_adrianalima_w1', JSON.stringify(capped));
+          localStorage.setItem('custom_presentation_gallery_topf-1', JSON.stringify(capped));
+        }
+        localStorage.setItem('custom_presentation_gallery_default', JSON.stringify(capped));
+
+        // Dispatch window sync event
+        window.dispatchEvent(new CustomEvent('custom_gallery_updated', { 
+          detail: { images: capped, modelId, modelUsername } 
+        }));
       } catch (err) {
         console.error('Error saving presentation gallery:', err);
       }
     }
-  }, [storageKey, modelUsername]);
+  }, [storageKey, modelId, modelUsername]);
+
+  // Ensure initial images are saved to localStorage so z.png can always access them immediately
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const existing = localStorage.getItem(storageKey);
+      if (!existing && images.length > 0) {
+        saveImages(images);
+      }
+    }
+  }, [storageKey, images, saveImages]);
 
   const showToast = (text: string, type: 'success' | 'warning' | 'error' = 'success') => {
     setFeedbackMessage({ text, type });
