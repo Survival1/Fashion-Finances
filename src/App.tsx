@@ -68,6 +68,7 @@ import {
   Check
 } from 'lucide-react';
 import { getFollowedUsersFromStorage, DEFAULT_FOLLOWED_USERS } from './utils/followingService';
+import { getFriendsFromStorage, saveFriendsToStorage, DEFAULT_FRIENDS } from './utils/friendsService';
 
 const generateNextUserId = (): string => {
   const currentSeqStr = localStorage.getItem('ff_user_id_seq') || '1';
@@ -698,66 +699,9 @@ export default function App() {
     };
   }, [activeTab]);
   
-  // Friends list persistent state
+  // Friends list persistent state (synchronized with friendsService)
   const [friendsList, setFriendsList] = useState<any[]>(() => {
-    try {
-      const raw = localStorage.getItem('coll_friends');
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    const defaultFriends = [
-      {
-        id: 'friend-1',
-        name: 'Adriana Lima',
-        username: 'adrianalima_w1',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-        role: 'model',
-        bio: 'Modelo internacional y apasionado/a del fitness.',
-        online: true,
-        addedMe: true
-      },
-      {
-        id: 'friend-2',
-        name: 'Alexander Vance',
-        username: 'alexandervance1',
-        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
-        role: 'model',
-        bio: 'Creador/a de trends y embajador/a de marcas de alta.',
-        online: true,
-        addedMe: true
-      },
-      {
-        id: 'friend-3',
-        name: 'Isabella Dubois',
-        username: 'isabelladubois2',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200',
-        role: 'model',
-        bio: 'Enfocado/a en el empoderamiento y nuevos negocios creativos.',
-        online: true,
-        addedMe: false
-      },
-      {
-        id: 'friend-4',
-        name: 'Mia Kincaid',
-        username: 'miakincaid',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
-        role: 'model',
-        bio: 'Influencer de estilo de vida, mentor de creadores emergentes.',
-        online: true,
-        addedMe: true
-      },
-      {
-        id: 'friend-5',
-        name: 'Elena Rostova',
-        username: 'elenarostova',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=200',
-        role: 'model',
-        bio: 'Estilo de vida, moda urbana e innovación sostenible.',
-        online: false,
-        addedMe: true
-      }
-    ];
-    localStorage.setItem('coll_friends', JSON.stringify(defaultFriends));
-    return defaultFriends;
+    return getFriendsFromStorage();
   });
 
   const [followersList, setFollowersList] = useState<any[]>(() => {
@@ -1026,6 +970,38 @@ export default function App() {
     window.addEventListener('storage', handleStorage);
     return () => {
       window.removeEventListener('sync-following-list', handleSync);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
+  // 🤝 Sincronización en tiempo real de amigos entre Mi Perfil (z.png) y Mis Finanzas (image.png)
+  useEffect(() => {
+    const handleFriendsSync = (e: any) => {
+      const list = e?.detail;
+      if (Array.isArray(list)) {
+        setFriendsList(list);
+      } else {
+        setFriendsList(getFriendsFromStorage());
+      }
+    };
+    const handleOpenTab = (e: Event) => {
+      const ce = e as CustomEvent<{ subTab?: 'friends' | 'pending' | 'sent' }>;
+      setActiveSocialModalInvestor('friends');
+      if (ce.detail?.subTab) {
+        setInvestorFriendsSubTab(ce.detail.subTab);
+      }
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'coll_friends' || e.key === 'ff_accepted_extra_friends') {
+        setFriendsList(getFriendsFromStorage());
+      }
+    };
+    window.addEventListener('sync-friends-list', handleFriendsSync);
+    window.addEventListener('open-friends-modal-tab', handleOpenTab);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('sync-friends-list', handleFriendsSync);
+      window.removeEventListener('open-friends-modal-tab', handleOpenTab);
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
@@ -1731,16 +1707,15 @@ export default function App() {
     saveStateToLocalStorage(models, updatedProfile, projects, sessions, messages, nextMovements);
   };
 
-  const handleDeleteFriend = (friendId: string, name: string) => {
-    const nextFriends = friendsList.filter(f => f.id !== friendId);
+  const handleDeleteFriend = (friendId: string, _name: string) => {
+    const nextFriends = friendsList.filter(f => f.id !== friendId && f.username !== friendId);
     setFriendsList(nextFriends);
+    saveFriendsToStorage(nextFriends);
     saveStateToLocalStorage(models, userProfile!, projects, sessions, messages, movements, historyWonLog, nextFriends);
-    alert(`🗑️ Has eliminado a ${name} de tus amigos.`);
   };
 
   const handleCreateFriend = (model: ModelProfile) => {
     if (friendsList.some(f => f.username === model.username)) {
-      alert('ℹ️ Este modelo ya es tu amigo.');
       return;
     }
     const newFriend = {
@@ -1755,8 +1730,8 @@ export default function App() {
     };
     const nextFriends = [...friendsList, newFriend];
     setFriendsList(nextFriends);
+    saveFriendsToStorage(nextFriends);
     saveStateToLocalStorage(models, userProfile!, projects, sessions, messages, movements, historyWonLog, nextFriends);
-    alert(`🤝 ¡Has agregado a ${model.name} como amigo! El se añadirá a tu círculo de amigos.`);
   };
 
   const handleToggleFollow = (model: ModelProfile) => {
@@ -3100,9 +3075,9 @@ export default function App() {
                 }`}
                 id="btn-nav-casting_live"
               >
-                <Video className="w-4 h-4 text-red-500 animate-pulse" />
+                <Video className="w-4 h-4 text-pink-600 animate-pulse" />
                 <span>Casting Live</span>
-                <span className="ml-auto bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-bounce">NUEVO</span>
+                <span className="ml-auto bg-pink-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-bounce">NUEVO</span>
               </button>
             )}
 
@@ -3483,11 +3458,14 @@ export default function App() {
                 totalEarnings={userProfile.totalEarnings}
                 totalInvested={userProfile.totalInvested}
                 totalCommissions={userProfile.totalCommissions}
-                friendsCount={friendsList.length >= 5 ? friendsList.length : 5}
-                followersCount={followersList.length >= 8 ? followersList.length : 8}
-                followingCount={followingList.length >= 14 ? followingList.length : 14}
+                friendsCount={displayedFriends.length}
+                followersCount={displayedFollowers.length}
+                followingCount={displayedFollowing.length}
                 referralsOnlineCount={patrocinadosList.length >= 7 ? patrocinadosList.length : 7}
                 onNavigateToTab={setActiveTabTab}
+                onOpenFriendsModal={() => {
+                  setActiveSocialModalInvestor('friends');
+                }}
                 isVisitor={userProfile.role === 'visitor'}
                 onSelectModel={(model) => {
                   handleSwitchToModelProfile(model);
@@ -4059,7 +4037,7 @@ export default function App() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] text-slate-400 font-semibold block uppercase">Dirección</span>
                             {userProfile.shareDireccion === false ? (
-                              <span className="text-[8px] bg-red-50 text-red-600 border border-red-200/50 px-1 rounded font-bold uppercase tracking-wider">Privado 🔒</span>
+                              <span className="text-[8px] bg-pink-50 text-pink-600 border border-pink-200/50 px-1 rounded font-bold uppercase tracking-wider">Privado 🔒</span>
                             ) : (
                               <span className="text-[8px] bg-emerald-50 text-emerald-600 border border-emerald-200/50 px-1 rounded font-bold uppercase tracking-wider">Público 🌐</span>
                             )}
@@ -4075,7 +4053,7 @@ export default function App() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] text-slate-400 font-semibold block uppercase">Teléfono</span>
                             {userProfile.shareTelefono === false ? (
-                              <span className="text-[8px] bg-red-50 text-red-600 border border-red-200/50 px-1 rounded font-bold uppercase tracking-wider">Privado 🔒</span>
+                              <span className="text-[8px] bg-pink-50 text-pink-600 border border-pink-200/50 px-1 rounded font-bold uppercase tracking-wider">Privado 🔒</span>
                             ) : (
                               <span className="text-[8px] bg-emerald-50 text-emerald-600 border border-emerald-200/50 px-1 rounded font-bold uppercase tracking-wider">Público 🌐</span>
                             )}
@@ -4091,7 +4069,7 @@ export default function App() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] text-slate-400 font-semibold block uppercase">Correo Electrónico (Email)</span>
                             {userProfile.shareEmail === false ? (
-                              <span className="text-[8px] bg-red-50 text-red-600 border border-red-200/50 px-1 rounded font-bold uppercase tracking-wider">Privado 🔒</span>
+                              <span className="text-[8px] bg-pink-50 text-pink-600 border border-pink-200/50 px-1 rounded font-bold uppercase tracking-wider">Privado 🔒</span>
                             ) : (
                               <span className="text-[8px] bg-emerald-50 text-emerald-600 border border-emerald-200/50 px-1 rounded font-bold uppercase tracking-wider">Público 🌐</span>
                             )}

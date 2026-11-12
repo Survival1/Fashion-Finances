@@ -21,6 +21,7 @@ import {
   isUserFollowedInStorage, 
   toggleFollowUserInStorage 
 } from '../utils/followingService';
+import { getSynchronizedBioAndWebsite } from '../utils/creatorSync';
 import { 
   Sparkles, 
   Database,
@@ -3360,7 +3361,13 @@ export default function CastingLiveSection({
   });
 
   // States for vote recount and final results podium overlay inside this channel
-  const [showFinanzasResults, setShowFinanzasResults] = useState<boolean>(false);
+  const [showFinanzasResults, setShowFinanzasResults] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('finanzas_contest_pending_close') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
   const [showFinanzasRecount, setShowFinanzasRecount] = useState<boolean>(false);
   const [showFinanzasPayModal, setShowFinanzasPayModal] = useState<boolean>(false);
   const [showFinanzasInscriptionInChannel, setShowFinanzasInscriptionInChannel] = useState<boolean>(false);
@@ -3373,6 +3380,39 @@ export default function CastingLiveSection({
   const [gatheringParticipantsList, setGatheringParticipantsList] = useState<any[]>(TRABAJADORES_USERS);
   const [selectedInscriptionProjectId, setSelectedInscriptionProjectId] = useState<string>('proj-eco-fashion');
   const [completedSessionToDisplay, setCompletedSessionToDisplay] = useState<any | null>(null);
+  const [isContestPendingClose, setIsContestPendingClose] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('finanzas_contest_pending_close') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const handleContestClosed = () => {
+      setIsContestPendingClose(false);
+      setShowFinanzasResults(false);
+      setCompletedSessionToDisplay(null);
+      try {
+        localStorage.removeItem('finanzas_contest_pending_close');
+      } catch (e) {}
+    };
+    const handleStorageChange = () => {
+      try {
+        const isPending = localStorage.getItem('finanzas_contest_pending_close') === 'true';
+        if (isPending) {
+          setIsContestPendingClose(true);
+          setShowFinanzasResults(true);
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('finanzas-contest-closed', handleContestClosed);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('finanzas-contest-closed', handleContestClosed);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
   const [isCastingPublished, setIsCastingPublished] = useState<boolean>(true);
   const [scrutinySeconds, setScrutinySeconds] = useState<number>(3000);
   const [scrutinyVotesCount, setScrutinyVotesCount] = useState<number>(1);
@@ -3452,6 +3492,10 @@ export default function CastingLiveSection({
             setTimeout(() => {
               setShowFinanzasRecount(false);
               setShowFinanzasResults(true); // Final results page (zas.png)
+              try {
+                localStorage.setItem('finanzas_contest_pending_close', 'true');
+              } catch (e) {}
+              setIsContestPendingClose(true);
               // 🛑 La página de Resultados Finales permanece fija hasta que el usuario pulse 'Cerrar Concurso'
             }, 1200);
             return 10;
@@ -4279,6 +4323,20 @@ export default function CastingLiveSection({
   // Helper function for user participation in current open session
   const handleUserJoinCurrentSession = () => {
     if (!currentFinanzasSession) return;
+    const isPendingClose = 
+      isContestPendingClose || 
+      localStorage.getItem('finanzas_contest_pending_close') === 'true' || 
+      showFinanzasResults || 
+      Boolean(completedSessionToDisplay);
+    if (isPendingClose) {
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: '⚠️ No puedes participar en ninguna otra ronda de financiación hasta que hagas clic en el botón "Cerrar Concurso".'
+        });
+      }
+      return;
+    }
     const myId = userProfile?.id || '';
     const myUsername = userProfile?.username || '';
     const myName = userProfile?.name || '';
@@ -4301,6 +4359,22 @@ export default function CastingLiveSection({
   };
 
   const handleGatheringComplete = (completedParticipants?: any[]) => {
+    const isPendingClose = 
+      isContestPendingClose || 
+      localStorage.getItem('finanzas_contest_pending_close') === 'true' || 
+      showFinanzasResults || 
+      Boolean(completedSessionToDisplay);
+
+    if (isPendingClose) {
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: '⚠️ No puedes participar en ninguna otra ronda de financiación hasta que hagas clic en el botón "Cerrar Concurso".'
+        });
+      }
+      return;
+    }
+
     setShowParticipantsGatheringModal(false);
     setShowFinanzasInscriptionInChannel(false);
     setShowVotingProjectsModal(false);
@@ -4496,6 +4570,36 @@ export default function CastingLiveSection({
   // Handler to process inscription fee payment & join table (matching captura z.png & image.png)
   const handleExecutePaymentAndJoinSession = (projectId?: string, explicitFee?: number, explicitArrivalSlot?: number, explicitSession?: any) => {
     if (!currentFinanzasSession && openFinanzasSessions.length === 0) return;
+    const isPendingClose = 
+      isContestPendingClose || 
+      localStorage.getItem('finanzas_contest_pending_close') === 'true' || 
+      showFinanzasResults || 
+      Boolean(completedSessionToDisplay);
+
+    if (isPendingClose) {
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: '⚠️ No puedes participar en ninguna otra ronda de financiación hasta que hagas clic en el botón "Cerrar Concurso".'
+        });
+      }
+      return;
+    }
+
+    const currentEnrolledSessionId = localStorage.getItem('finanzas_target_session_id');
+    const isAlreadyParticipating = 
+      localStorage.getItem('finanzas_user_participating') === 'true' || 
+      localStorage.getItem('user_paid_finanzas_session') === 'true';
+
+    if (isAlreadyParticipating && currentEnrolledSessionId && explicitSession?.id && currentEnrolledSessionId !== explicitSession.id) {
+      if (setSystemVoiceNotification) {
+        setSystemVoiceNotification({
+          show: true,
+          message: '⚠️ Ya estás participando en una ronda activa. Debes finalizarla y pulsar en "Cerrar Concurso" antes de inscribirte en otra ronda.'
+        });
+      }
+      return;
+    }
     const myId = userProfile?.id || "user-adriana";
     const myName = userProfile?.name || "Adriana Lima";
     const myUsername = userProfile?.username || "adrianalima";
@@ -4849,6 +4953,11 @@ export default function CastingLiveSection({
     const closedSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
 
     try {
+      localStorage.removeItem('finanzas_contest_pending_close');
+      setIsContestPendingClose(false);
+      try {
+        window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
+      } catch (e) {}
       localStorage.removeItem('finanzas_user_participating');
       localStorage.removeItem('user_paid_finanzas_session');
       localStorage.removeItem('finanzas_target_session_id');
@@ -7711,9 +7820,9 @@ export default function CastingLiveSection({
     setIsHeroTopChannelsDropdownOpen(false);
     setIsTopControlsMenuHovered(false);
 
-    // Switch view directly to the camera broadcast view matching image.png
+    // Mantener la pantalla de Canales en Vivo para que la cámara del usuario se vea en directo en el canal
     setActiveSubTab('live');
-    setLiveViewMode('stream');
+    setLiveViewMode('grid');
     setWebRTCPodiumData(null);
     setShowCreationTypeModal(false);
     setShowVotingProjectsModal(false);
@@ -7742,9 +7851,9 @@ export default function CastingLiveSection({
       setSystemVoiceNotification(prev => ({ ...prev, show: false }));
     }, 4500);
 
-    const phoneDeviceEl = document.getElementById('casting_live-combined-device') || document.getElementById('user-live-camera-stage');
-    if (phoneDeviceEl) {
-      phoneDeviceEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const liveRootEl = document.getElementById('live-videos-screen-root') || document.getElementById('casting_live-combined-device') || document.getElementById('user-live-camera-stage');
+    if (liveRootEl) {
+      liveRootEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -15420,7 +15529,7 @@ export default function CastingLiveSection({
                 handleVoteForProject(targetUser);
                 setShowProjectDetailsInPopup(false);
               }}
-              className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider"
+              className="w-full bg-white hover:bg-pink-50/60 active:scale-95 text-slate-900 font-black py-3.5 px-4 rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-2 border-pink-500 hover:border-pink-600 text-xs sm:text-sm uppercase tracking-wider font-sans"
             >
               <span className="text-base">🗳️</span>
               <span>{isUserVoted ? `✓ YA HAS VOTADO POR ${firstName.toUpperCase()} (AÑADIR OTRO VOTO)` : `VOTAR POR ESTE PROYECTO (${firstName.toUpperCase()})`}</span>
@@ -15775,22 +15884,20 @@ export default function CastingLiveSection({
               </div>
             </div>
 
-            {/* Action Buttons: Vote for Selected Project (only for participants) & View Full Project */}
+            {/* Action Buttons: Vote for Selected Project & View Full Project */}
             <div className="pt-1 flex flex-col gap-2">
-              {isUserParticipating && (
-                <button
-                  type="button"
-                  id="btn-votar-por-proyecto-elegido"
-                  onClick={() => {
-                    handleVoteForProject(currentUser);
-                    setShowVotingProjectsModal(false);
-                  }}
-                  className="w-full bg-[#fe2c55] hover:bg-[#df2046] active:scale-95 text-white font-black py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs sm:text-sm uppercase tracking-wider"
-                >
-                  <span className="text-base">🗳️</span>
-                  <span>VOTAR POR ESTE PROYECTO ({currentUser.name.split(' ')[0]})</span>
-                </button>
-              )}
+              <button
+                type="button"
+                id="btn-votar-por-proyecto-elegido"
+                onClick={() => {
+                  handleVoteForProject(currentUser);
+                  setShowVotingProjectsModal(false);
+                }}
+                className="w-full bg-white hover:bg-pink-50/60 active:scale-[0.99] text-slate-900 font-black py-3.5 px-4 rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-2 border-pink-500 hover:border-pink-600 text-xs sm:text-sm uppercase tracking-wider font-sans"
+              >
+                <span className="text-base">🗳️</span>
+                <span>VOTAR POR ESTE PROYECTO ({currentUser.name.split(' ')[0]})</span>
+              </button>
 
               <button
                 type="button"
@@ -15801,7 +15908,7 @@ export default function CastingLiveSection({
                   setShowProjectDetailsInPopup(true);
                   setShowQueueInPopup(false);
                 }}
-                className="w-full bg-white hover:bg-slate-50 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-xl shadow-xs hover:shadow transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 text-xs sm:text-sm uppercase tracking-wider font-sans"
+                className="w-full bg-white hover:bg-pink-50/60 active:scale-[0.99] text-slate-900 font-black py-3 px-4 rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-2 border-pink-500 hover:border-pink-600 text-xs sm:text-sm uppercase tracking-wider font-sans"
               >
                 <span className="text-sm">🔍</span>
                 <span>VER PROYECTO COMPLETO</span>
@@ -15834,7 +15941,7 @@ export default function CastingLiveSection({
                 title={`Ver proyecto ${i + 1} de ${participantsList.length}`}
                 aria-label={`Proyecto ${i + 1}`}
                 className={`h-1.5 sm:h-2 rounded-full transition-all cursor-pointer ${
-                  i === votingProjectSlideIndex ? 'w-3.5 sm:w-4 bg-[#fe2c55]' : 'w-1.5 sm:w-2 bg-slate-300 hover:bg-slate-400'
+                  i === votingProjectSlideIndex ? 'w-3.5 sm:w-4 bg-pink-500' : 'w-1.5 sm:w-2 bg-slate-300 hover:bg-slate-400'
                 }`}
               />
             ))}
@@ -15844,7 +15951,7 @@ export default function CastingLiveSection({
             type="button"
             disabled={votingProjectSlideIndex === participantsList.length - 1}
             onClick={() => setVotingProjectSlideIndex(prev => Math.min(prev + 1, participantsList.length - 1))}
-            className="flex-1 min-w-0 max-w-[110px] xs:max-w-[125px] sm:max-w-[140px] py-2 px-2 sm:px-3 rounded-xl bg-[#fe2c55] hover:bg-[#df2046] disabled:opacity-30 disabled:cursor-not-allowed text-white font-extrabold text-[10px] sm:text-[11px] uppercase transition flex items-center justify-center gap-1 border border-rose-600 cursor-pointer shadow-xs shrink whitespace-nowrap"
+            className="flex-1 min-w-0 max-w-[110px] xs:max-w-[125px] sm:max-w-[140px] py-2 px-2 sm:px-3 rounded-xl bg-pink-500 hover:bg-pink-600 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed text-white font-extrabold text-[10px] sm:text-[11px] uppercase transition flex items-center justify-center gap-1 border border-pink-500 cursor-pointer shadow-xs shrink whitespace-nowrap"
             title="Siguiente proyecto"
             aria-label="Siguiente proyecto"
           >
@@ -16055,55 +16162,6 @@ export default function CastingLiveSection({
           }
         }}
       >
-        {/* Fixed Header bar inside phone container matching zr.png */}
-        <div 
-          className="bg-white/95 border-b border-rose-200/80 p-2.5 sm:p-3 shrink-0 shadow-xs z-20 flex flex-col gap-1.5"
-          onWheel={(e) => {
-            e.stopPropagation();
-            const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-            if (wrapper) {
-              wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
-            }
-          }}
-        >
-          <div className="flex items-center justify-between gap-2 w-full">
-            <button
-              type="button"
-              onClick={() => {
-                setShowFinanzasResults(false);
-                setCompletedSessionToDisplay(null);
-                setShowFinanzasRecount(false);
-                setFinanzasVotes({});
-                setScrutinyVotesCount(0);
-                setVotingCountdownSeconds(600);
-                setShowProjectDetailsInPopup(false);
-                setDetailProjectUser(null);
-                setActiveFinanzasPopupUser(null);
-                handleFinishCurrentSessionAndNext();
-              }}
-              className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[10px] px-3 py-1.5 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-1.5 border border-rose-500/40 active:scale-95"
-            >
-              <span>🛑</span>
-              <span>Cerrar Concurso</span>
-            </button>
-            <span className="text-[9px] text-emerald-800 font-extrabold bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Directo Finalizado
-            </span>
-          </div>
-
-          <div className="flex items-start gap-1.5 pt-1 border-t border-rose-200/80">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0 mt-0.5" />
-            <div>
-              <h2 className="text-[10.5px] sm:text-[11px] font-black uppercase text-amber-800 tracking-wider font-sans leading-snug m-0">
-                🏆 RESULTADOS FINALES Y RECUENTO DE VOTACIONES
-              </h2>
-              <p className="text-[8.5px] text-slate-500 font-medium font-sans m-0 mt-0.5 leading-tight">
-                Canal de Finanzas • Todos los participantes pueden ver la retransmisión en directo
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Podium content in dark luxury styling - Cómodo desplazamiento completo con rueda de ratón hasta abajo del todo */}
         <div 
           className="flex-1 min-h-0 w-full max-w-full overflow-y-auto overflow-x-hidden p-0 touch-pan-y overscroll-contain podium-results-scrollbar"
@@ -16167,6 +16225,11 @@ export default function CastingLiveSection({
               setShowProjectDetailsInPopup(false);
               setDetailProjectUser(null);
               setActiveFinanzasPopupUser(null);
+              try {
+                localStorage.removeItem('finanzas_contest_pending_close');
+                window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
+              } catch (e) {}
+              setIsContestPendingClose(false);
               handleFinishCurrentSessionAndNext();
             }}
           />
@@ -26426,21 +26489,26 @@ try {
               </button>
             </div>
 
-            {/* 7. CUSTOM BIO & OFFICIAL BIO LINK */}
-            <div className="space-y-1 text-xs text-slate-700 font-medium leading-relaxed max-w-lg">
-              {profile.bio.split('\n').map((line: string, idx: number) => (
-                <p key={idx}>{line}</p>
-              ))}
-              <button 
-                onClick={() => setShowBioLinkModal(true)}
-                className="text-[#fe2c55] hover:underline font-bold flex items-center gap-1 pt-0.5 cursor-pointer max-w-max border-0 bg-transparent p-0"
-                id="btn-bio-link"
-                title="Abrir enlace de la biografía"
-              >
-                <Link className="w-3.5 h-3.5 text-[#fe2c55]" />
-                <span>{(profile as any).website || `${profile.username}.com/...`}</span>
-              </button>
-            </div>
+            {/* 7. CUSTOM BIO & OFFICIAL BIO LINK - Sincronizado con ModelFacebookProfile */}
+            {(() => {
+              const syncData = getSynchronizedBioAndWebsite(profile.username, (profile as any).id, profile.bio, (profile as any).website);
+              return (
+                <div className="space-y-1 text-xs text-slate-700 font-medium leading-relaxed max-w-lg">
+                  {syncData.bio.split('\n').map((line: string, idx: number) => (
+                    <p key={idx}>{line}</p>
+                  ))}
+                  <button 
+                    onClick={() => setShowBioLinkModal(true)}
+                    className="text-[#fe2c55] hover:underline font-bold flex items-center gap-1 pt-0.5 cursor-pointer max-w-max border-0 bg-transparent p-0"
+                    id="btn-bio-link"
+                    title="Abrir enlace de la biografía"
+                  >
+                    <Link className="w-3.5 h-3.5 text-[#fe2c55]" />
+                    <span>{syncData.website}</span>
+                  </button>
+                </div>
+              );
+            })()}
 
           </div>
         </div>
@@ -28024,14 +28092,14 @@ try {
         {/* Top Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-[9.5px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
               <span className="w-2 h-2 rounded-full bg-white animate-ping" />
               <span>PANTALLA DE VIDEOS EN DIRECTO</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight flex items-center gap-2">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-750 tracking-tight flex items-center gap-2">
               <span>Canales en vivo</span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 font-medium">
               Sigue a las top models en tiempo real con desfiles de moda, ensayos y backstage interactivo.
             </p>
           </div>
@@ -28042,7 +28110,7 @@ try {
               onClick={() => {
                 setActiveSubTab('para-ti');
               }}
-              className="px-3 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-white hover:bg-slate-50 text-slate-650 border border-slate-200 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer shadow-xs active:scale-95"
               title="Volver al feed general"
             >
               Volver al Feed
@@ -28052,33 +28120,35 @@ try {
 
         {/* Live Counters Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-black text-lg">
+          <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-base">
               🔴
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Canales Activos</p>
-              <p className="text-lg font-black text-slate-900">{liveStreamChannels.length} en Vivo</p>
+              <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">Canales Activos</p>
+              <p className="text-sm sm:text-base font-bold text-slate-700">
+                <span className="font-extrabold text-slate-750">{liveStreamChannels.length}</span> <span className="text-[11px] sm:text-xs font-medium text-slate-500">en Vivo</span>
+              </p>
             </div>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-black text-lg">
+          <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-base">
               👁️
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Audiencia en Vivo</p>
-              <p className="text-lg font-black text-slate-900">18,420</p>
+              <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">Audiencia en Vivo</p>
+              <p className="text-sm sm:text-base font-bold text-slate-750">18,420</p>
             </div>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-black text-lg">
+          <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-base">
               ❤️
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reacciones Hoy</p>
-              <p className="text-lg font-black text-slate-900">142.5K</p>
+              <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">Reacciones Hoy</p>
+              <p className="text-sm sm:text-base font-bold text-slate-750">142.5K</p>
             </div>
           </div>
         </div>
@@ -28104,6 +28174,7 @@ try {
               <div className="relative w-full h-full min-h-full bg-black flex items-center justify-center overflow-hidden">
                 {userLiveMediaStream ? (
                   <video 
+                    key="user-live-stream-camera-feed"
                     ref={(el) => {
                       heroVideoRef.current = el;
                       if (el && el.srcObject !== userLiveMediaStream) {
@@ -28114,6 +28185,9 @@ try {
                     autoPlay
                     playsInline
                     muted
+                    onLoadedMetadata={(e) => {
+                      e.currentTarget.play().catch(() => {});
+                    }}
                     className={`w-full h-full object-cover select-none ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                     style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                   />
@@ -28305,49 +28379,39 @@ try {
                               LIVE
                             </span>
                             {isSelected && (
-                              <span className="text-[11px] font-black text-emerald-800 bg-emerald-100 border border-emerald-400/80 px-3 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                              <span className="text-[10px] sm:text-[10.5px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                                 ✓ Canal Seleccionado
                               </span>
                             )}
                           </div>
 
-                          <h4 className={`font-black text-slate-950 tracking-tight drop-shadow-xs ${
+                          <h4 className={`font-bold text-slate-750 tracking-tight drop-shadow-xs ${
                             currentCat.id === 'haute_couture' || currentCat.label.toLowerCase().includes('haute')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'commercial_model' || currentCat.label.toLowerCase().includes('commercial')
-                              ? 'text-[11px] sm:text-xs md:text-[13px]'
+                              ? 'text-[11px] sm:text-xs'
                               : currentCat.id === 'plus_size_model' || currentCat.label.toLowerCase().includes('plus')
-                              ? 'text-[11px] sm:text-xs md:text-[13px]'
+                              ? 'text-[11px] sm:text-xs'
                               : currentCat.id === 'petite_model' || currentCat.label.toLowerCase().includes('petite')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'lingerie_model' || currentCat.label.toLowerCase().includes('lingerie')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'swimsuit_model' || currentCat.label.toLowerCase().includes('swimsuit')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'fitness_model' || currentCat.label.toLowerCase().includes('fitness')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'parts_model' || currentCat.label.toLowerCase().includes('parts')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'mature_model' || currentCat.label.toLowerCase().includes('mature')
-                              ? 'text-xs sm:text-[13px] md:text-sm'
+                              ? 'text-xs sm:text-[12.5px]'
                               : currentCat.id === 'real_people_models' || currentCat.label.toLowerCase().includes('real people')
-                              ? 'text-[11px] sm:text-xs md:text-[13px]'
-                              : currentCat.id === 'runway_model' || currentCat.label.toLowerCase().includes('runway')
-                              ? 'text-xs sm:text-sm md:text-base'
-                              : currentCat.id === 'catalog_model' || currentCat.label.toLowerCase().includes('catalog')
-                              ? 'text-xs sm:text-sm md:text-base'
-                              : currentCat.id === 'todos'
-                              ? 'text-sm sm:text-base md:text-lg'
-                              : currentCat.id === 'atelier'
-                              ? 'text-sm sm:text-base md:text-lg'
-                              : currentCat.id === 'fashion_model' || currentCat.label.toLowerCase().includes('fashion') || currentCat.id === 'streetwear' || currentCat.label.toLowerCase().includes('streetwear') || currentCat.label.toLowerCase().includes('urban')
-                              ? 'text-xs sm:text-sm md:text-base'
-                              : 'text-xs sm:text-sm md:text-sm'
+                              ? 'text-[11px] sm:text-xs'
+                              : 'text-xs sm:text-[13px] md:text-sm'
                           }`}>
                             {currentCat.label}
                           </h4>
 
-                          <p className="text-xs sm:text-sm text-slate-700 font-medium">
+                          <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
                             Transmisión temática exclusiva • Haz clic para sintonizar este canal
                           </p>
 
@@ -28372,10 +28436,10 @@ try {
                                 }
                                 setIsHeroTopChannelsDropdownOpen(false);
                               }}
-                              className={`w-full sm:w-auto max-w-full px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 ${
+                              className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 ${
                                 isSelected
                                   ? 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white ring-2 ring-rose-400/50 hover:opacity-95'
-                                  : 'bg-white hover:bg-rose-50 text-rose-950 border border-rose-300 shadow-sm font-black'
+                                  : 'bg-white hover:bg-rose-50 text-slate-750 border border-rose-300 shadow-sm font-bold'
                               }`}
                               title={`Sintonizar canal ${currentCat.label}`}
                             >
@@ -28383,7 +28447,7 @@ try {
                               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
                             </button>
 
-                            {/* Botón Retransmitir / Retransmitiendo (Clic en Retransmitiendo para la retransmisión) */}
+                            {/* Botón Retransmitir / Retransmitiendo (Activa la cámara en directo y la muestra en el canal) */}
                             {(() => {
                               const isRetransmittingThis = Boolean(
                                 (isUserRetransmitting && (userRetransmittingChannelId === currentCat.id || (!userRetransmittingChannelId && liveChannelsCategoryFilter === currentCat.id))) ||
@@ -28393,36 +28457,32 @@ try {
                               return (
                                 <button
                                   type="button"
-                                  onClick={(e) => {
+                                  onClick={async (e) => {
                                     e.stopPropagation();
                                     if (isRetransmittingThis) {
                                       handleStopLiveRetransmission();
                                       return;
                                     }
-                                    setStreamOptionsTargetChannel(currentCat);
-                                    setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${currentCat.label}`);
-                                    setLiveChannelsCategoryFilter(currentCat.id);
-                                    if (currentCat.id === 'atelier' && !isUserRetransmittingToAtelier) {
-                                      setSelectedHeroChannelId('live-isabella-atelier');
-                                    } else {
-                                      setSelectedHeroChannelId(null);
-                                    }
                                     setIsHeroTopChannelsDropdownOpen(false);
-                                    setShowStreamOptionsModal(true);
+                                    await handleStartLiveRetransmission(currentCat);
+                                    const heroEl = document.getElementById('live-videos-screen-root');
+                                    if (heroEl) {
+                                      heroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }
                                   }}
-                                  className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10.5px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border truncate ${
+                                  className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-normal sm:tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border truncate ${
                                     isRetransmittingThis
-                                      ? 'bg-rose-100 text-rose-800 border-rose-400 ring-2 ring-rose-500/30 font-black hover:bg-rose-200'
-                                      : 'bg-white hover:bg-rose-50 text-rose-950 border border-rose-200 shadow-sm font-black'
+                                      ? 'bg-rose-100 text-rose-800 border-rose-400 ring-2 ring-rose-500/30 font-bold hover:bg-rose-200'
+                                      : 'bg-white hover:bg-rose-50 text-slate-700 border border-rose-200 shadow-sm font-bold'
                                   }`}
                                   title={
                                     isRetransmittingThis
-                                      ? 'Detener retransmisión en directo'
-                                      : `Configurar opciones de stream para retransmitir en el canal ${currentCat.label}`
+                                      ? 'Detener retransmisión de tu cámara'
+                                      : `Activar cámara y retransmitir en vivo en el canal ${currentCat.label}`
                                   }
                                 >
                                   {isRetransmittingThis && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-pink-600 animate-ping shrink-0" />
                                   )}
                                   <span className="truncate">
                                     {isRetransmittingThis 
@@ -28956,6 +29016,17 @@ try {
                     <span>👁️</span>
                     <span>{heroChannel.viewers.toLocaleString()} espectadores</span>
                   </div>
+                  {isUserRetransmitting && (
+                    <button
+                      type="button"
+                      onClick={() => handleStopLiveRetransmission()}
+                      className="bg-rose-600/90 hover:bg-rose-700 text-white text-[9.5px] font-bold px-2.5 py-1 rounded-full border border-rose-400/80 shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                      title="Detener retransmisión de tu cámara"
+                    >
+                      <Square className="w-2.5 h-2.5 fill-white text-white" />
+                      <span>Detener Cámara</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -29647,41 +29718,41 @@ try {
                 {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter) ? (
                   <>
                     🔴 Transmisión de tu cámara en vivo y en directo para todos los usuarios de CastingLive ocupando todo el canal.{' '}
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('micamara') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'micamara' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#micamara</button>{' '}
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('directo') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'directo' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#directo</button>{' '}
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('envivo') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'envivo' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#envivo</button>{' '}
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('castinglive') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'castinglive' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#castinglive</button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('micamara') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'micamara' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#micamara</button>{' '}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('directo') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'directo' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#directo</button>{' '}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('envivo') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'envivo' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#envivo</button>{' '}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('castinglive') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'castinglive' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#castinglive</button>
                   </>
                 ) : liveChannelsCategoryFilter === 'atelier' ? (
                   heroCaptionTranslated ? (
                     <>
                       Live pattern making, cutting and tailoring session from the Atelier boutique: "{heroChannel.title}". Presenting the handcrafted Haute Couture Collection! ✂️✨{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('atelier') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'atelier' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#atelier</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('confeccion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'confeccion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#confeccion</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('altacostura') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'altacostura' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#altacostura</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('atelier') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'atelier' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#atelier</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('confeccion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'confeccion' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#confeccion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('altacostura') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'altacostura' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#altacostura</button>
                     </>
                   ) : (
                     <>
                       Sesión de taller de patronaje, corte y confección en vivo desde el Atelier boutique: "{heroChannel.title}". Presentando la nueva Colección Atelier de Alta Costura confeccionada a mano! ✂️✨{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('atelier') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'atelier' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#atelier</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('confeccion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'confeccion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#confeccion</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('altacostura') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'altacostura' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#altacostura</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('atelier') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'atelier' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#atelier</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('confeccion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'confeccion' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#confeccion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('altacostura') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'altacostura' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#altacostura</button>
                     </>
                   )
                 ) : (
                   heroCaptionTranslated ? (
                     <>
                       Futuristic high fashion session. Presenting Glitter Makeup for the Barcelona show! ✨{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('highfashion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'highfashion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#highfashion</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('modamexicana') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'modamexicana' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#modamexicana</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('futuristic') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'futuristic' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#futuristic</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('highfashion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'highfashion' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#highfashion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('modamexicana') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'modamexicana' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#modamexicana</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('futuristic') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'futuristic' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#futuristic</button>
                     </>
                   ) : (
                     <>
                       Sesión de alta costura futurista. Presentando Glitter Makeup para el show de Barcelona! ✨{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('highfashion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'highfashion' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#highfashion</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('modamexicana') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'modamexicana' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#modamexicana</button>{' '}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('futuristic') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'futuristic' } })); }} className="font-semibold text-rose-300 hover:text-rose-100 hover:underline cursor-pointer">#futuristic</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('highfashion') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'highfashion' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#highfashion</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('modamexicana') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'modamexicana' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#modamexicana</button>{' '}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onOpenHashtag ? onOpenHashtag('futuristic') : window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'futuristic' } })); }} className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline cursor-pointer transition uppercase">#futuristic</button>
                     </>
                   )
                 )}
@@ -30084,7 +30155,7 @@ try {
                                   if (onOpenHashtag) onOpenHashtag(cleanTag);
                                   else window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: cleanTag } }));
                                 }}
-                                className="text-rose-300 hover:text-rose-100 hover:underline font-semibold mr-1 cursor-pointer transition inline-block"
+                                className="hashtag-btn bg-transparent text-white font-bold hover:text-white/80 hover:underline mr-1 cursor-pointer transition inline-block uppercase"
                               >
                                 {t}
                               </button>
@@ -33655,7 +33726,7 @@ try {
                       >
                         {renderSingleProjectSlider()}
                       </div>
-                    ) : showFinanzasResults ? (
+                    ) : (showFinanzasResults || isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true')) ? (
                       renderFinanzasResultsContent()
                     ) : showFinanzasInscriptionInChannel ? (
                       (() => {
@@ -34110,7 +34181,6 @@ try {
                                         </div>
                                         <div className="flex items-center justify-between text-[9.5px] text-slate-500 font-medium">
                                           <span>{proj.category}</span>
-                                          <span>Presupuesto: <strong className="font-mono text-slate-800 font-bold">{proj.budget}€</strong></span>
                                         </div>
                                         <p className="text-[9.5px] text-slate-600 m-0 line-clamp-1">
                                           🎯 {proj.objective}
@@ -34970,6 +35040,33 @@ try {
                                     <button
                                       type="button"
                                       onClick={() => {
+                                        const isPendingClose = 
+                                          isContestPendingClose || 
+                                          localStorage.getItem('finanzas_contest_pending_close') === 'true' || 
+                                          showFinanzasResults || 
+                                          Boolean(completedSessionToDisplay);
+
+                                        if (isPendingClose) {
+                                          setShowFinanzasResults(true);
+                                          setIsContestPendingClose(true);
+                                          try {
+                                            localStorage.setItem('finanzas_contest_pending_close', 'true');
+                                          } catch (e) {}
+                                          if (setSystemVoiceNotification) {
+                                            setSystemVoiceNotification({
+                                              show: true,
+                                              message: '⚠️ Debes hacer clic en el botón "Cerrar Concurso" antes de continuar.'
+                                            });
+                                          }
+                                          const resultsElem = document.getElementById('finanzas-results-in-channel') || 
+                                                              document.getElementById('podium-scrollable-content-wrapper') ||
+                                                              document.getElementById('podium-results-screen');
+                                          if (resultsElem) {
+                                            resultsElem.scrollIntoView({ behavior: 'smooth' });
+                                          }
+                                          return;
+                                        }
+
                                         // Ensure the current session is selected
                                         const currentSessionId = currentFinanzasSession?.id;
                                         const currIdx = activeSessionsOnly.findIndex(s => s.id === currentSessionId);
@@ -35004,16 +35101,28 @@ try {
                                         handleExecutePaymentAndJoinSession(undefined, currentSessionFeeInfo.fee, targetUserArrivalSlot, currentFinanzasSession);
                                       }}
                                       className={`w-full max-w-[400px] font-black text-[10.5px] xs:text-[11.5px] sm:text-[13px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-full transition duration-200 border flex items-center justify-center gap-2 cursor-pointer font-sans shadow-lg box-border active:scale-95 ${
-                                        isUserParticipating
+                                        isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults
+                                          ? 'bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-amber-500/25 text-amber-200 border-amber-400/60'
+                                          : isUserParticipating
                                           ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] animate-pulse ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
                                           : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9] shadow-pink-900/25'
                                       }`}
                                       id="btn-inscribirse-en-esta-sesion"
-                                      title={isUserParticipating ? "Ver sala de espera de la ronda" : `Inscribirse en una ronda de (${currentSessionFeeInfo.feeInWords})`}
+                                      title={
+                                        (isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults)
+                                          ? 'Debes pulsar "Cerrar Concurso" antes de participar en otra ronda de financiación'
+                                          : isUserParticipating 
+                                          ? "Ver sala de espera de la ronda" 
+                                          : `Inscribirse en una ronda de (${currentSessionFeeInfo.feeInWords})`
+                                      }
                                     >
-                                      <span className={`text-sm shrink-0 ${isUserParticipating ? 'animate-bounce' : ''}`}>✍️</span>
+                                      <span className={`text-sm shrink-0 ${isUserParticipating ? 'animate-bounce' : ''}`}>
+                                        {(isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults) ? '🔒' : '✍️'}
+                                      </span>
                                       <span className={`truncate min-w-0 font-black tracking-tight ${isUserParticipating ? 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]' : ''}`}>
-                                        {isUserParticipating 
+                                        {(isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults)
+                                          ? '🔒 PENDIENTE: CERRAR CONCURSO'
+                                          : isUserParticipating 
                                           ? `Estás inscrita como participante (${currentSessionFeeInfo.feeInWords})` 
                                           : `Inscribirse en una ronda de (${currentSessionFeeInfo.feeInWords})`}
                                       </span>

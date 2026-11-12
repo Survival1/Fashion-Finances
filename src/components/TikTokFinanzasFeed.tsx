@@ -446,6 +446,49 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [activeChannelsMenuSessionId, setActiveChannelsMenuSessionId] = useState<string | null>(null);
   const channelsMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showCameraParticipantsGrid, setShowCameraParticipantsGrid] = useState<Record<string, boolean>>({});
+  const [isContestPendingClose, setIsContestPendingClose] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('finanzas_contest_pending_close') === 'true' || Boolean(showFinanzasResults);
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const handleContestClosed = () => {
+      setIsContestPendingClose(false);
+      if (setShowFinanzasResults) setShowFinanzasResults(false);
+      try {
+        localStorage.removeItem('finanzas_contest_pending_close');
+      } catch (e) {}
+    };
+    const handleStorageChange = () => {
+      try {
+        const isPending = localStorage.getItem('finanzas_contest_pending_close') === 'true';
+        if (isPending) {
+          setIsContestPendingClose(true);
+          if (setShowFinanzasResults) setShowFinanzasResults(true);
+        } else {
+          setIsContestPendingClose(false);
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('finanzas-contest-closed', handleContestClosed);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('finanzas-contest-closed', handleContestClosed);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [setShowFinanzasResults]);
+
+  useEffect(() => {
+    if (showFinanzasResults) {
+      setIsContestPendingClose(true);
+      try {
+        localStorage.setItem('finanzas_contest_pending_close', 'true');
+      } catch (e) {}
+    }
+  }, [showFinanzasResults]);
 
   // 📺 Canal seleccionado internamente para conmutar al instante dentro de esta misma pantalla
   const [currentChannel, setCurrentChannel] = useState<string>(() => {
@@ -1923,7 +1966,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     // 🛑 Si estamos dentro del contenedor del podio de resultados finales o escrutinio:
     // La página permanece FIJA en pantalla. NO salir de la pantalla ni cambiar de ronda por scroll.
     // Permitir desplazarse cómodamente con el ratón hasta abajo del todo.
-    if (showFinanzasResults || showFinanzasRecount || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('#finanzas-results-in-channel') || target.closest('[id^="finanzas-results-in-channel"]')) {
+    if (showFinanzasResults || isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') || showFinanzasRecount || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('#finanzas-results-in-channel') || target.closest('[id^="finanzas-results-in-channel"]') || target.closest('#finanzas-results-locked-screen')) {
       const wrapper = document.getElementById('podium-scrollable-content-wrapper');
       if (wrapper && !target.closest('#podium-scrollable-content-wrapper')) {
         wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
@@ -1966,11 +2009,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     if (
       showVotingProjectsModal ||
       showFinanzasResults ||
+      isContestPendingClose ||
+      (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') ||
       showFinanzasRecount ||
       target.closest('.overflow-y-auto:not(#tiktok-rounds-vertical-feed)') ||
       target.closest('#voting-projects-scrollable-container') ||
       target.closest('[id^="voting-projects-in-channel"]') ||
       target.closest('[id^="finanzas-results-in-channel"]') ||
+      target.closest('#finanzas-results-locked-screen') ||
       target.closest('#podium-scrollable-content-wrapper') ||
       target.closest('#podium-results-screen') ||
       target.closest('#ten-windows-live-modal') ||
@@ -1983,6 +2029,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   };
   const handleTouchEndFeed = (e: React.TouchEvent) => {
     if (touchStartYRef.current === null) return;
+    if (isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') || showFinanzasResults) {
+      touchStartYRef.current = null;
+      return;
+    }
     const diff = touchStartYRef.current - e.changedTouches[0].clientY;
     touchStartYRef.current = null;
     if (Math.abs(diff) > 40) {
@@ -1999,7 +2049,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
       if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
-      if (showVotingProjectsModal || showFinanzasResults || showFinanzasRecount) return;
+      if (showVotingProjectsModal || showFinanzasResults || showFinanzasRecount || isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true')) return;
       if (e.key === 'ArrowDown' || e.key === 'PageDown') {
         e.preventDefault();
         scrollToRound(activeFinanzasSessionIndex + 1);
@@ -4054,6 +4104,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // Programmatic scroll to next / prev round
   const scrollToRound = (targetIndex: number) => {
     setActiveChannelsMenuSessionId(null);
+    if (isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') || showFinanzasResults) {
+      return;
+    }
     if (targetIndex < 0 || targetIndex >= activeSessionsOnly.length) return;
     const targetSession = activeSessionsOnly[targetIndex];
     if (!targetSession) return;
@@ -5243,6 +5296,27 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       >
         {currentChannel !== 'Finanzas' || activeSubTab === 'amigos' ? (
           renderMultimediaChannelVideoFeed()
+        ) : (isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') || showFinanzasResults) ? (
+          /* 🏆 ESTADO: PENDIENTE DE CERRAR CONCURSO -> MOSTRAR PÁGINA IMAGE.PNG BLOQUEADA HASTA PULSAR CERRAR CONCURSO */
+          <div 
+            className="w-full max-w-[480px] h-[calc(100dvh-50px)] min-h-[580px] bg-[#fff0f3] rounded-none sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col z-[300] pointer-events-auto border border-pink-200"
+            id="finanzas-results-locked-screen"
+            onWheel={(e) => {
+              e.stopPropagation();
+              const wrapper = document.getElementById('podium-scrollable-content-wrapper');
+              if (wrapper && !e.target.closest('#podium-scrollable-content-wrapper')) {
+                wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
+              }
+            }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            {renderFinanzasResultsContent ? (
+              renderFinanzasResultsContent()
+            ) : null}
+          </div>
         ) : (
           activeSessionsOnly.map((session, index) => {
           const roundRef = getFinanzasRoundRef(session, index);
@@ -6332,8 +6406,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         <span>🗳️ CUENTA ATRÁS • 10 MINUTOS PARA VOTAR</span>
                       </div>
 
-                      {/* 🔴 RED GLOWING CONTAINER BOX (Strictly matching zq.png) */}
-                      <div className="w-full bg-[#0d0714] border-2 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.35)] rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 flex flex-col gap-2 mb-2">
+                      {/* 🌸 ROSA PINK GLOWING CONTAINER BOX */}
+                      <div className="w-full bg-[#161e2c] border-2 border-pink-500 shadow-[0_0_25px_rgba(255,45,133,0.35)] rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 flex flex-col gap-2 mb-2">
                         {/* Top Row: Left 10 min votación, Center 09:31, Right Ronda 10/10 (10m) */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 text-left">
@@ -6378,7 +6452,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         </div>
 
                         {/* Middle Banner: TIENEN 10 MINUTOS PARA VOTAR. */}
-                        <div className="w-full bg-[#1e0a14] border border-red-600/80 rounded-full py-1.5 px-3 text-center shadow-inner">
+                        <div className="w-full bg-[#1e2636] border border-pink-500/80 rounded-full py-1.5 px-3 text-center shadow-inner">
                           <span className="text-white font-black text-xs sm:text-[13px] tracking-wider uppercase drop-shadow-xs">
                             TIENEN 10 MINUTOS PARA VOTAR.
                           </span>
@@ -6499,7 +6573,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-pink-500 ring-2 ring-pink-400/40 shadow-md shadow-pink-500/30"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[6.5px] xs:text-[7px] sm:text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-pink-600 text-white text-[6.5px] xs:text-[7px] sm:text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
                             EN VIVO
                           </span>
                         </div>
@@ -6618,7 +6692,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             onClick={() => {
                               handlePresenterFinalize(session, index);
                             }}
-                            className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-[9.5px] sm:text-[10px] py-1.5 px-2 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-rose-400/80"
+                            className="w-full bg-gradient-to-r from-pink-600 via-pink-500 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-[9.5px] sm:text-[10px] py-1.5 px-2 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-pink-400/80"
                             id={`btn-finalizar-turno-${session.id}`}
                           >
                             <Square className="w-2.5 h-2.5 fill-white text-white shrink-0" />
@@ -6655,7 +6729,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               }}
                               className={`w-full py-1.5 px-2.5 rounded-xl font-black text-[9.5px] sm:text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
                                 isLiveActive
-                                  ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.5)] animate-pulse'
+                                  ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:to-rose-400 text-white border-pink-400 shadow-[0_0_14px_rgba(255,45,133,0.5)] animate-pulse'
                                   : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
                               }`}
                               id={`btn-live-camera-${session.id}`}
@@ -6688,12 +6762,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   {/* Header: Red pulsing dot + Round Title (left) & 10 ONLINE (right) */}
                   <div className="flex items-center justify-between px-1 w-full gap-2">
                     <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-500/50 shrink-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse shadow-sm shadow-pink-500/50 shrink-0" />
                       <span className="text-xs sm:text-[13px] font-black uppercase tracking-wider text-white truncate font-sans">
                         {roundTitle}
                       </span>
                     </div>
-                    <span className="bg-[#fe2c55] text-white text-[8.5px] sm:text-[9.5px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse shrink-0">
+                    <span className="bg-pink-600 text-white text-[8.5px] sm:text-[9.5px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse shrink-0">
                       10 ONLINE
                     </span>
                   </div>
@@ -6772,6 +6846,50 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+
+                      const isPendingClose = 
+                        isContestPendingClose || 
+                        localStorage.getItem('finanzas_contest_pending_close') === 'true' || 
+                        showFinanzasResults || 
+                        Boolean(completedSessionToDisplay);
+
+                      if (isPendingClose) {
+                        setIsContestPendingClose(true);
+                        if (setShowFinanzasResults) setShowFinanzasResults(true);
+                        try {
+                          localStorage.setItem('finanzas_contest_pending_close', 'true');
+                        } catch (e) {}
+                        if (setSystemVoiceNotification) {
+                          setSystemVoiceNotification({
+                            show: true,
+                            message: '⚠️ Debes hacer clic en el botón "Cerrar Concurso" antes de continuar.'
+                          });
+                        }
+                        const resultsElem = document.getElementById('finanzas-results-in-channel') || 
+                                            document.getElementById('finanzas-results-locked-screen') ||
+                                            document.getElementById(`finanzas-results-in-channel-${session.id}`) ||
+                                            document.getElementById('podium-scrollable-content-wrapper') ||
+                                            document.getElementById('podium-results-screen');
+                        if (resultsElem) {
+                          resultsElem.scrollIntoView({ behavior: 'smooth' });
+                        }
+                        return;
+                      }
+
+                      const currentEnrolledSessionId = localStorage.getItem('finanzas_target_session_id');
+                      const isAlreadyParticipating = 
+                        localStorage.getItem('finanzas_user_participating') === 'true' || 
+                        localStorage.getItem('user_paid_finanzas_session') === 'true';
+
+                      if (isAlreadyParticipating && currentEnrolledSessionId && currentEnrolledSessionId !== session.id) {
+                        if (setSystemVoiceNotification) {
+                          setSystemVoiceNotification({
+                            show: true,
+                            message: '⚠️ Ya estás participando en una ronda activa. Debes finalizarla y pulsar en "Cerrar Concurso" antes de inscribirte en otra ronda.'
+                          });
+                        }
+                        return;
+                      }
 
                       const sessionFee = session?.entryFee || 10;
                       const is1000EuroRound = sessionFee === 1000 || feeInfo?.feeInWords?.includes('1.000');
@@ -6912,16 +7030,28 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       }
                     }}
                     className={`w-full font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border shadow-md flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 cursor-pointer active:scale-95 ${
-                      isUserEnrolledInThisRound
-                        ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white border-red-400 shadow-[0_0_22px_rgba(239,68,68,0.7)] ring-2 ring-red-400/80 ring-offset-2 ring-offset-[#070b14]'
+                      isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults
+                        ? 'bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-amber-500/25 text-amber-200 border-amber-400/60'
+                        : isUserEnrolledInThisRound
+                        ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:via-rose-400 hover:to-pink-500 text-white border-pink-400 shadow-[0_0_22px_rgba(255,45,133,0.7)] ring-2 ring-pink-400/80 ring-offset-2 ring-offset-[#070b14]'
                         : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9]'
                     }`}
                     id={`btn-inscribirse-ronda-${session.id}`}
-                    title={isUserParticipating ? `Estás inscrita como participante (${feeInfo.feeInWords})` : `Inscribirse en una ronda de (${feeInfo.feeInWords})`}
+                    title={
+                      (isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults)
+                        ? 'Debes pulsar "Cerrar Concurso" antes de participar en otra ronda de financiación'
+                        : isUserParticipating 
+                        ? `Estás inscrita como participante (${feeInfo.feeInWords})` 
+                        : `Inscribirse en una ronda de (${feeInfo.feeInWords})`
+                    }
                   >
-                    <span className="text-base shrink-0">✍️</span>
+                    <span className="text-base shrink-0">
+                      {(isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults) ? '🔒' : '✍️'}
+                    </span>
                     <span className="truncate min-w-0 font-black">
-                      {isUserEnrolledInThisRound
+                      {(isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults)
+                        ? '🔒 PENDIENTE: CERRAR CONCURSO'
+                        : isUserEnrolledInThisRound
                         ? `Estás inscrita como participante (${feeInfo.feeInWords})`
                         : `Inscribirse en una ronda de (${feeInfo.feeInWords})`}
                     </span>

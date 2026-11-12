@@ -19,6 +19,7 @@ import {
   playLuxuryWatchSoundEffect 
 } from './LuxuryWatchAnimation';
 import { openImageLightbox } from './GlobalMobileImageLightbox';
+import { getFriendsFromStorage, saveFriendsToStorage, FriendUser } from '../utils/friendsService';
 import { 
   Heart, 
   Trash2,
@@ -97,6 +98,10 @@ import {
 } from './VictoriaSecretRanking';
 import RoyalMaleCrown from './RoyalMaleCrown';
 import RoyalFemaleCrown from './RoyalFemaleCrown';
+import { 
+  getSynchronizedBioAndWebsite, 
+  saveSynchronizedBioAndWebsite 
+} from '../utils/creatorSync';
 
 interface FBComment {
   id: string;
@@ -367,6 +372,32 @@ export function ProfileIntroAndSponsors({
   });
 
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+  const INITIAL_SUGGESTIONS_COUNT = 3;
+  const [suggestionsLimit, setSuggestionsLimit] = useState<number>(INITIAL_SUGGESTIONS_COUNT);
+
+  // Retrieve models for ranking and dynamic suggestions
+  const allModels: ModelProfile[] = React.useMemo(() => {
+    if (propModels && propModels.length >= 100) return propModels;
+    try {
+      const raw = localStorage.getItem('coll_models');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= 100) return parsed;
+      }
+    } catch {}
+    if (propModels && propModels.length > 0) {
+      const initial = generateInitialModels();
+      const existingIds = new Set(propModels.map(m => m.id));
+      const combined = [...propModels];
+      for (const m of initial) {
+        if (!existingIds.has(m.id)) {
+          combined.push(m);
+        }
+      }
+      return combined.slice(0, 100);
+    }
+    return generateInitialModels();
+  }, [propModels]);
 
   const handleSendFriendRequest = (acc: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -442,37 +473,40 @@ export function ProfileIntroAndSponsors({
     setTimeout(() => setFeedbackToast(null), 2500);
   };
 
-  const visibleFriendSuggestions = React.useMemo(() => {
-    return DEFAULT_FRIEND_SUGGESTIONS.filter(acc => {
+  const allFriendSuggestions = React.useMemo(() => {
+    const list: typeof DEFAULT_FRIEND_SUGGESTIONS = [...DEFAULT_FRIEND_SUGGESTIONS];
+    const seenUsernames = new Set(list.map(s => s.username.toLowerCase()));
+    if (userProfile?.username) seenUsernames.add(userProfile.username.toLowerCase());
+
+    if (allModels && allModels.length > 0) {
+      for (const m of allModels) {
+        const u = (m.username || m.name.toLowerCase().replace(/[^a-z0-9]/g, '_')).toLowerCase();
+        if (!seenUsernames.has(u)) {
+          seenUsernames.add(u);
+          list.push({
+            id: `sug-${m.id || u}`,
+            username: m.username || u,
+            name: m.name,
+            avatar: m.avatar || m.photos?.[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
+            mutualFriends: Math.floor(Math.random() * 8) + 2,
+            hasHeart: (m.totalLikes || 0) > 20000,
+            isVerified: (m.totalLikes || 0) > 50000,
+            category: (m as any).specialty || (m as any).category || (m as any).agency || 'Modelo Oficial'
+          });
+        }
+      }
+    }
+
+    return list.filter(acc => {
       if (userProfile?.username && acc.username.toLowerCase() === userProfile.username.toLowerCase()) return false;
       if (dismissedSuggestionIds.includes(acc.username)) return false;
       return true;
     });
-  }, [userProfile, dismissedSuggestionIds]);
+  }, [userProfile, dismissedSuggestionIds, allModels]);
 
-  // Retrieve models for ranking
-  const allModels: ModelProfile[] = React.useMemo(() => {
-    if (propModels && propModels.length >= 100) return propModels;
-    try {
-      const raw = localStorage.getItem('coll_models');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= 100) return parsed;
-      }
-    } catch {}
-    if (propModels && propModels.length > 0) {
-      const initial = generateInitialModels();
-      const existingIds = new Set(propModels.map(m => m.id));
-      const combined = [...propModels];
-      for (const m of initial) {
-        if (!existingIds.has(m.id)) {
-          combined.push(m);
-        }
-      }
-      return combined.slice(0, 100);
-    }
-    return generateInitialModels();
-  }, [propModels]);
+  const visibleFriendSuggestions = React.useMemo(() => {
+    return allFriendSuggestions.slice(0, suggestionsLimit);
+  }, [allFriendSuggestions, suggestionsLimit]);
 
   const sortedRankingModels = React.useMemo(() => {
     let list = [...allModels].sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0));
@@ -519,7 +553,7 @@ export function ProfileIntroAndSponsors({
               </span>
             </div>
             <span className="text-[9.5px] font-mono text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-              {visibleFriendSuggestions.length}
+              {visibleFriendSuggestions.length} de {allFriendSuggestions.length}
             </span>
           </div>
 
@@ -594,7 +628,7 @@ export function ProfileIntroAndSponsors({
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs ${
                         isRequested
                           ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                          : 'bg-white hover:bg-red-50 text-red-600 border border-red-500 hover:border-red-600'
+                          : 'bg-white hover:bg-pink-50 text-pink-600 border border-pink-500 hover:border-pink-600'
                       }`}
                       title={isRequested ? 'Cancelar solicitud de amistad' : 'Enviar solicitud de amistad'}
                     >
@@ -605,7 +639,7 @@ export function ProfileIntroAndSponsors({
                         </>
                       ) : (
                         <>
-                          <UserPlus className="w-3 h-3 text-red-600" />
+                          <UserPlus className="w-3 h-3 text-pink-600" />
                           <span>Añadir</span>
                         </>
                       )}
@@ -625,19 +659,38 @@ export function ProfileIntroAndSponsors({
             })}
           </div>
 
-          {/* Pie: Enlace a ver solicitudes y lista completa de amigos */}
-          <div className="pt-2 border-t border-slate-100/90 text-center">
+          {/* Botones: Desplegar más sugerencias y Contraer lista */}
+          <div className="pt-2.5 border-t border-slate-100/90 space-y-1.5">
             <button
               type="button"
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('open-friends-modal-tab', { detail: { tab: 'friends' } }));
-                if (onNavigateToTab) onNavigateToTab('profile');
-              }}
-              className="w-full py-1.5 px-2 text-center text-[10.5px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50/70 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+              onClick={() => setSuggestionsLimit(prev => Math.min(prev + 4, allFriendSuggestions.length))}
+              disabled={suggestionsLimit >= allFriendSuggestions.length}
+              className={`w-full py-1.5 px-3 text-center text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs ${
+                suggestionsLimit < allFriendSuggestions.length
+                  ? 'bg-rose-50 hover:bg-rose-100/90 text-rose-600 border border-rose-200/90 cursor-pointer active:scale-95'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200/80 cursor-not-allowed opacity-60'
+              }`}
+              title={suggestionsLimit < allFriendSuggestions.length ? 'Desplegar a más sugerencias de usuarios' : 'No hay más sugerencias disponibles'}
+              id="btn-desplegar-sugerencias-usuarios"
             >
-              <Users className="w-3.5 h-3.5 text-rose-500" />
-              <span>Ver mis amigos y solicitudes ({friendsCount})</span>
-              <span className="text-[9px]">→</span>
+              <ChevronDown className="w-3.5 h-3.5 text-rose-500 stroke-[2.5]" />
+              <span>Desplegar más sugerencias</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSuggestionsLimit(INITIAL_SUGGESTIONS_COUNT)}
+              disabled={suggestionsLimit <= INITIAL_SUGGESTIONS_COUNT}
+              className={`w-full py-1.5 px-3 text-center text-[10.5px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs ${
+                suggestionsLimit > INITIAL_SUGGESTIONS_COUNT
+                  ? 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 cursor-pointer active:scale-95'
+                  : 'bg-slate-50/60 text-slate-400 border border-slate-100 cursor-not-allowed opacity-50'
+              }`}
+              title={suggestionsLimit > INITIAL_SUGGESTIONS_COUNT ? 'Contraer la lista de sugerencias' : 'La lista ya está en su tamaño inicial'}
+              id="btn-contraer-lista-sugerencias"
+            >
+              <ChevronUp className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
+              <span>Contraer lista</span>
             </button>
           </div>
         </div>
@@ -1171,6 +1224,8 @@ export default function ModelFacebookProfile({
       username: reqItem.username,
       avatar: reqItem.avatar,
       bio: reqItem.bio || 'Amiga conectada en Fashion Finances',
+      online: true,
+      addedMe: true,
       isNew: true
     };
     const updatedAccepted = [newFriend, ...acceptedExtraFriends.filter(f => f.id !== newFriend.id)];
@@ -1178,6 +1233,11 @@ export default function ModelFacebookProfile({
     try {
       localStorage.setItem('ff_accepted_extra_friends', JSON.stringify(updatedAccepted));
     } catch (_) {}
+
+    // Persist in unified coll_friends
+    const currentStoredFriends = getFriendsFromStorage();
+    const updatedFriends = [newFriend, ...currentStoredFriends.filter(f => f.id !== newFriend.id && f.username !== newFriend.username)];
+    saveFriendsToStorage(updatedFriends);
 
     showSocialToast(`¡Solicitud aceptada! Ahora ${reqItem.name} (@${reqItem.username}) y tú sois amigos.`);
     window.dispatchEvent(new CustomEvent('sync-friend-requests'));
@@ -1237,32 +1297,25 @@ export default function ModelFacebookProfile({
   }, []);
 
   // Dynamic social lists: exactly in sync between button counter and full page list
-  const socialFriendsList = useMemo(() => {
-    const candidateFriends = [
-      ...acceptedExtraFriends,
-      { id: 'topf-1', name: 'Adriana Lima', username: 'adrianalima_w1', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', bio: 'Model and best friend. High fashion enthusiast.' },
-      { id: 'topf-3', name: 'Candice Swanepoel', username: 'candiceswanepoel_w3', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
-      ...models.map((m) => ({
-        id: m.id,
-        name: m.name,
-        username: m.username,
-        avatar: m.avatar,
-        bio: m.bio || 'Colega de modelaje y amiga de Casting Live'
-      }))
-    ];
+  const [syncedFriendsList, setSyncedFriendsList] = useState<FriendUser[]>(() => {
+    return getFriendsFromStorage(userProfile);
+  });
 
-    const seen = new Set<string>();
-    const list: any[] = [];
-    for (const item of candidateFriends) {
-      if (isSelfContact(item)) continue;
-      const key = (item.username || item.id).toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      list.push(item);
-    }
-    // Fixed base + any newly accepted friends
-    return list.slice(0, 5 + acceptedExtraFriends.length);
-  }, [models, isSelfContact, acceptedExtraFriends]);
+  useEffect(() => {
+    const handleSyncFriends = (e: any) => {
+      setSyncedFriendsList(getFriendsFromStorage(userProfile));
+    };
+    window.addEventListener('sync-friends-list', handleSyncFriends);
+    window.addEventListener('sync-friend-requests', handleSyncFriends);
+    return () => {
+      window.removeEventListener('sync-friends-list', handleSyncFriends);
+      window.removeEventListener('sync-friend-requests', handleSyncFriends);
+    };
+  }, [userProfile]);
+
+  const socialFriendsList = useMemo(() => {
+    return syncedFriendsList;
+  }, [syncedFriendsList]);
 
   const socialFollowersList = useMemo(() => {
     const candidateFollowers = [
@@ -1326,7 +1379,34 @@ export default function ModelFacebookProfile({
   const [agreementCompany, setAgreementCompany] = useState('Empresa Inversora Asociada S.L.');
   const [agreementAmount, setAgreementAmount] = useState('25000');
   const [agreementCampaign, setAgreementCampaign] = useState('Colección Cápsula Internacional - Verano');
-  const [bioText, setBioText] = useState(currentModel?.bio || userProfile.bio || 'Mecanismo de afiliación activo. ¡Apóyame en las mesas de inversión!');
+  const initialSyncBioData = getSynchronizedBioAndWebsite(
+    userProfile.username, 
+    userProfile.id, 
+    userProfile.bio, 
+    (currentModel as any)?.socials?.website || (currentModel as any)?.website
+  );
+  const [bioText, setBioText] = useState<string>(initialSyncBioData.bio);
+  const [creatorWebsite, setCreatorWebsite] = useState<string>(initialSyncBioData.website);
+
+  // Sincronización continua de la biografía y web con la página de z.png
+  useEffect(() => {
+    const handleSyncProfile = () => {
+      const updated = getSynchronizedBioAndWebsite(
+        userProfile.username, 
+        userProfile.id, 
+        userProfile.bio, 
+        (currentModel as any)?.socials?.website || (currentModel as any)?.website
+      );
+      setBioText(updated.bio);
+      setCreatorWebsite(updated.website);
+    };
+    window.addEventListener('sync_creator_profile', handleSyncProfile);
+    window.addEventListener('storage', handleSyncProfile);
+    return () => {
+      window.removeEventListener('sync_creator_profile', handleSyncProfile);
+      window.removeEventListener('storage', handleSyncProfile);
+    };
+  }, [userProfile.username, userProfile.id, userProfile.bio, currentModel]);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempAvatarUrl, setTempAvatarUrl] = useState(userProfile.avatar);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
@@ -1529,6 +1609,15 @@ export default function ModelFacebookProfile({
   const [editingName, setEditingName] = useState(userProfile.name);
   const [editingUsername, setEditingUsername] = useState(userProfile.username);
   const [editingBio, setEditingBio] = useState(bioText);
+  const [editingWebsite, setEditingWebsite] = useState(creatorWebsite);
+
+  useEffect(() => {
+    setEditingWebsite(creatorWebsite);
+  }, [creatorWebsite]);
+
+  useEffect(() => {
+    setEditingBio(bioText);
+  }, [bioText]);
   const [editingAvatar, setEditingAvatar] = useState(userProfile.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150');
   const [fashionAgency, setFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
   const [editingFashionAgency, setEditingFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
@@ -4049,8 +4138,8 @@ export default function ModelFacebookProfile({
                   onLikeClick(e);
                 }}
                 onMouseEnter={() => {
-                  if (id) {
-                    handleStickersMouseEnter(hoverKey || id);
+                  if (id && hoverKey && hoverKey !== 'none') {
+                    handleStickersMouseEnter(hoverKey);
                   }
                 }}
                 onMouseLeave={() => {
@@ -5306,7 +5395,7 @@ export default function ModelFacebookProfile({
 
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-rose-500 to-[#fe2c55] hover:brightness-[1.04] text-white font-black uppercase text-[11px] rounded-xl px-5 py-2.5 transition cursor-pointer border-0 shadow-md active:scale-98"
+                    className="bg-gradient-to-r from-rose-500 to-[#ff2d85] hover:brightness-[1.04] text-white font-black uppercase text-[11px] rounded-xl px-5 py-2.5 transition cursor-pointer border-0 shadow-md active:scale-98"
                   >
                     PUBLICAR ACTUALIZACIÓN
                   </button>
@@ -5914,7 +6003,7 @@ export default function ModelFacebookProfile({
               }}
               className={`w-32 h-32 rounded-full overflow-hidden shadow-md relative bg-slate-100 z-15 group -mt-16 sm:-mt-20 shrink-0 transition-all duration-300 ${
                 profileActiveStories.length > 0 
-                  ? 'p-[4px] bg-gradient-to-tr from-yellow-400 via-[#fe2c55] to-purple-600 ring-4 ring-offset-2 ring-[#fe2c55]/80 cursor-pointer animate-pulse-subtle' 
+                  ? 'p-[4px] bg-gradient-to-tr from-yellow-400 via-[#ff2d85] to-purple-600 ring-4 ring-offset-2 ring-[#ff2d85]/80 cursor-pointer animate-pulse-subtle' 
                   : 'border-4 border-white'
               }`}
             >
@@ -5950,7 +6039,7 @@ export default function ModelFacebookProfile({
               {/* Text description details */}
               <div className="text-center sm:text-left space-y-1 z-10">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
-                  <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 leading-tight whitespace-nowrap">
+                  <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-800 leading-tight whitespace-nowrap">
                     {userProfile.name}
                   </h2>
                   {isProfileVerified && (
@@ -5973,10 +6062,30 @@ export default function ModelFacebookProfile({
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 font-mono">@{userProfile.username}</p>
+                {/* 📝 Biografía del Perfil sincronizada con la página de la captura z.png */}
+                {bioText && (
+                  <div className="space-y-0.5 text-xs sm:text-[13px] text-slate-700 font-medium leading-relaxed max-w-2xl mt-1.5 text-center sm:text-left select-text">
+                    {bioText.split('\n').map((line: string, idx: number) => (
+                      <p key={idx} className="leading-snug">{line}</p>
+                    ))}
+                    {creatorWebsite && (
+                      <a
+                        href={`https://${creatorWebsite.replace(/^https?:\/\//, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#ff2d85] hover:underline font-bold inline-flex items-center gap-1 pt-0.5 cursor-pointer select-none"
+                        title="Abrir enlace oficial de la biografía"
+                      >
+                        <Link className="w-3.5 h-3.5 text-[#ff2d85] shrink-0" />
+                        <span>{creatorWebsite}</span>
+                      </a>
+                    )}
+                  </div>
+                )}
                 {fashionAgency && (
-                  <div className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-slate-700 bg-pink-50/60 border border-pink-100/80 px-3 py-1 rounded-full shadow-3xs animate-fade-in select-none">
-                    <span className="text-pink-500 font-extrabold animate-pulse">✦</span>
-                    <span>Agencia / Firma: <strong className="text-pink-600 font-bold">{fashionAgency}</strong></span>
+                  <div className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-slate-700 bg-pink-50/70 border border-pink-100/90 px-3 py-1 rounded-full shadow-3xs animate-fade-in select-none">
+                    <span className="text-[#ff2d85] font-extrabold animate-pulse">✦</span>
+                    <span>Agencia / Firma: <strong className="text-[#ff2d85] font-bold">{fashionAgency}</strong></span>
                   </div>
                 )}
               </div>
@@ -6108,7 +6217,7 @@ export default function ModelFacebookProfile({
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                         <span className="text-[10px] text-slate-400 font-bold uppercase block">Likes Totales</span>
                         <div className="flex items-center justify-center gap-1 mt-0.5">
-                          <Heart className="w-3.5 h-3.5 text-rose-500 fill-current" />
+                          <Heart className="w-3.5 h-3.5 text-[#ff2d85] fill-[#ff2d85]" />
                           <strong className="text-slate-800 text-sm font-mono">{currentModel?.totalLikes ?? 0}</strong>
                         </div>
                       </div>
@@ -6142,7 +6251,7 @@ export default function ModelFacebookProfile({
 
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                         <span className="text-[10px] text-slate-400 font-bold uppercase block">Comisiones Recibidas</span>
-                        <strong className="text-rose-600 text-sm font-mono block mt-0.5">+{userProfile.totalCommissions.toFixed(2)}€</strong>
+                        <strong className="text-[#ff2d85] text-sm font-mono block mt-0.5">+{userProfile.totalCommissions.toFixed(2)}€</strong>
                       </div>
                     </>
                   )}
@@ -6157,53 +6266,155 @@ export default function ModelFacebookProfile({
                 >
                   <button
                     onClick={() => handleSetSocialModal('friends')}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
+                    className="flex items-center justify-between px-3.5 py-3 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
+                    id="btn-social-friends-counter"
+                    title="Ver todos los amigos sincronizados"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <UserPlus className="w-4 h-4 text-pink-550 shrink-0" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <UserPlus className="w-5 h-5 text-slate-700 shrink-0 stroke-[2.2]" />
                       <div className="min-w-0">
-                        <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Amigos</span>
-                        <span className="text-xs font-black text-slate-800 font-mono">
+                        <span className="text-[10px] uppercase font-black text-[#ff2d85] tracking-widest font-mono block leading-tight truncate">
+                          AMIGOS
+                        </span>
+                        <span className="text-xl font-black text-slate-800 font-mono leading-none block mt-0.5">
                           {socialFriendsList.length}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                    <span className="text-xs font-black text-[#ff2d85] flex items-center gap-1 shrink-0 uppercase tracking-wider font-sans hover:underline">
+                      VER TODOS →
+                    </span>
                   </button>
 
                   <button
                     onClick={() => handleSetSocialModal('followers')}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
+                    className="flex items-center justify-between px-3.5 py-3 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
+                    id="btn-social-followers-counter"
+                    title="Ver todos los seguidores"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Users className="w-4 h-4 text-pink-550 shrink-0" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Users className="w-5 h-5 text-slate-700 shrink-0 stroke-[2.2]" />
                       <div className="min-w-0">
-                        <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidores</span>
-                        <span className="text-xs font-black text-slate-800 font-mono">
+                        <span className="text-[10px] uppercase font-black text-[#ff2d85] tracking-widest font-mono block leading-tight truncate">
+                          SEGUIDORES
+                        </span>
+                        <span className="text-xl font-black text-slate-800 font-mono leading-none block mt-0.5">
                           {socialFollowersList.length}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                    <span className="text-xs font-black text-[#ff2d85] flex items-center gap-1 shrink-0 uppercase tracking-wider font-sans hover:underline">
+                      VER TODOS →
+                    </span>
                   </button>
 
                   <button
                     onClick={() => handleSetSocialModal('following')}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-pink-200 bg-gradient-to-r from-white to-pink-50/40 hover:from-pink-50 hover:to-pink-100/40 transition duration-150 cursor-pointer text-left select-none"
+                    className="flex items-center justify-between px-3.5 py-3 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
+                    id="btn-social-following-counter"
+                    title="Ver todos los perfiles seguidos"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <UserCheck className="w-4 h-4 text-pink-550 shrink-0" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <UserCheck className="w-5 h-5 text-slate-700 shrink-0 stroke-[2.2]" />
                       <div className="min-w-0">
-                        <span className="text-[8.5px] uppercase font-bold text-pink-500 tracking-wider font-mono block truncate">Seguidos</span>
-                        <span className="text-xs font-black text-slate-800 font-mono">
+                        <span className="text-[10px] uppercase font-black text-[#ff2d85] tracking-widest font-mono block leading-tight truncate">
+                          SEGUIDOS
+                        </span>
+                        <span className="text-xl font-black text-slate-800 font-mono leading-none block mt-0.5">
                           {socialFollowingList.length}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[9.5px] font-bold text-pink-600 flex items-center gap-0.5 shrink-0">Ver todos <span className="text-[7.5px]">→</span></span>
+                    <span className="text-xs font-black text-[#ff2d85] flex items-center gap-1 shrink-0 uppercase tracking-wider font-sans hover:underline">
+                      VER TODOS →
+                    </span>
                   </button>
                 </div>
               )}
+
+              {/* 🕊️ INFORMACIÓN Y REDES SOCIALES CON ALAS DE ÁNGEL (captura z2.png) */}
+              <div 
+                className="mt-4 pt-4 border-t border-slate-100 relative overflow-hidden rounded-[22px] sm:rounded-2.5xl p-4 sm:p-5 bg-gradient-to-r from-[#fff7fa] via-[#ffedf4] to-[#fff0f6] border border-pink-150/90 shadow-xs text-left select-none animate-fade-in"
+                id="perfil-social-info-z2-card"
+              >
+                {/* 🪽 Las alas ocupan todo el espacio del fondo del contenedor y se ven por detrás de las letras */}
+                <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none z-0">
+                  <img 
+                     src="/assets/aistudio/wings_pearl_pink.png" 
+                    alt="Alas de Ángel de Fondo" 
+                    className="w-full h-full object-cover object-center opacity-75 sm:opacity-85 select-none filter contrast-125 brightness-105 pointer-events-none" 
+                  />
+                  {/* Overlay muy sutil para asegurar máximo contraste y nitidez en las letras */}
+                  <div className="absolute inset-0 bg-white/15 pointer-events-none" />
+                </div>
+
+                {/* Left Area Content: 6 rows matching captura z2.png con visibilidad perfecta sobre las alas */}
+                <div className="relative z-10 space-y-2 sm:space-y-2.5 max-w-xl text-left drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
+                  {/* 1. Espacio de Trabajo: España / Remoto */}
+                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                    <Globe className="w-4.5 h-4.5 text-[#0284c7] shrink-0" />
+                    <span className="text-slate-600 font-medium">Espacio de Trabajo:</span>
+                    <strong className="text-slate-800 font-extrabold tracking-tight">España / Remoto</strong>
+                  </div>
+
+                  {/* 2. Sígueme en Instagram: @adrianalima */}
+                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                    <svg className="w-4.5 h-4.5 text-[#ff2d85] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    <span className="text-slate-600 font-medium">Sígueme en Instagram:</span>
+                    <a 
+                      href={`https://instagram.com/${userProfile?.username || 'adrianalima'}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[#ff2d85] font-extrabold hover:underline tracking-tight"
+                    >
+                      @{userProfile?.username || 'adrianalima'}
+                    </a>
+                  </div>
+
+                  {/* 3. Sígueme en TikTok: @adrianalima */}
+                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                    <svg className="w-4.5 h-4.5 text-[#5850ec] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.87-4.47V8.71a8.16 8.16 0 0 0 4.9 1.62v-3.64z"/>
+                    </svg>
+                    <span className="text-slate-600 font-medium">Sígueme en TikTok:</span>
+                    <a 
+                      href={`https://tiktok.com/@${userProfile?.username || 'adrianalima'}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-slate-800 font-extrabold hover:underline tracking-tight"
+                    >
+                      @{userProfile?.username || 'adrianalima'}
+                    </a>
+                  </div>
+
+                  {/* 4. Sígueme en X / Twitter: @adrianalima */}
+                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                    <svg className="w-4 h-4 text-slate-700 shrink-0 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    <span className="text-slate-600 font-medium">Sígueme en X / Twitter:</span>
+                    <a 
+                      href={`https://x.com/${userProfile?.username || 'adrianalima'}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-slate-800 font-extrabold hover:underline tracking-tight"
+                    >
+                      @{userProfile?.username || 'adrianalima'}
+                    </a>
+                  </div>
+
+                  {/* 5. Sponsoring: Comisión 10% activa */}
+                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                    <Award className="w-4.5 h-4.5 text-[#d97706] shrink-0" />
+                    <span className="text-slate-600 font-medium">Sponsoring:</span>
+                    <strong className="text-[#059669] font-extrabold tracking-tight">Comisión 10% activa</strong>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -6965,7 +7176,7 @@ export default function ModelFacebookProfile({
                         <div className="space-y-4 text-left">
                           {/* Nombre Empresa */}
                           <div className="space-y-1 relative">
-                            <label className="text-[10px] uppercase font-bold text-[#fe2c55] block font-mono">Busca tu empresa:</label>
+                            <label className="text-[10px] uppercase font-bold text-[#ff2d85] block font-mono">Busca tu empresa:</label>
                             <div className="relative">
                               <input
                                 type="text"
@@ -7131,7 +7342,7 @@ export default function ModelFacebookProfile({
                                 <div className="space-y-1.5 flex flex-col items-center">
                                   <div className="relative">
                                     <img src={newSponsorLogoUrl || undefined} alt="Logo Preview" className="w-14 h-14 rounded-full object-cover shadow-xs border border-pink-100" />
-                                    <span className="text-[9px] font-mono text-[#fe2c55] mt-1 block max-w-[120px] truncate">{newSponsorLogoFilename || 'logo_cargado.png'}</span>
+                                    <span className="text-[9px] font-mono text-[#ff2d85] mt-1 block max-w-[120px] truncate">{newSponsorLogoFilename || 'logo_cargado.png'}</span>
                                   </div>
                                   <span className="text-[8.5px] uppercase font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">Click para Cambiar</span>
                                 </div>
@@ -7139,7 +7350,7 @@ export default function ModelFacebookProfile({
                                 <>
                                   <Upload className="w-6 h-6 text-slate-400" />
                                   <div className="text-[10px] text-slate-600">
-                                    <span className="font-extrabold text-[#fe2c55]">Arrastra tu logotipo</span> o haz click para buscar
+                                    <span className="font-extrabold text-[#ff2d85]">Arrastra tu logotipo</span> o haz click para buscar
                                   </div>
                                   <span className="text-[8px] text-slate-400 block">Formatos recomendados: PNG transparente o SVG</span>
                                 </>
@@ -7223,7 +7434,7 @@ export default function ModelFacebookProfile({
                                 });
                               }
                             }}
-                            className="w-full py-3 bg-gradient-to-r from-rose-500 to-[#fe2c55] hover:brightness-[1.04] text-white font-black text-xs rounded-xl transition cursor-pointer border-0 shadow-md active:scale-98"
+                            className="w-full py-3 bg-gradient-to-r from-rose-500 to-[#ff2d85] hover:brightness-[1.04] text-white font-black text-xs rounded-xl transition cursor-pointer border-0 shadow-md active:scale-98"
                           >
                             Firmar Contrato de Patrocinio Seguro B2B
                           </button>
@@ -7370,14 +7581,14 @@ export default function ModelFacebookProfile({
                                     }}
                                     className={`px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase transition cursor-pointer border flex items-center gap-1.5 focus:outline-none whitespace-nowrap shrink-0 ${
                                       isSelected 
-                                        ? 'bg-rose-50 border-rose-200 text-[#fe2c55] hover:bg-rose-100 shadow-3xs ring-1 ring-rose-200' 
+                                        ? 'bg-rose-50 border-rose-200 text-[#ff2d85] hover:bg-rose-100 shadow-3xs ring-1 ring-rose-200' 
                                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-4xs'
                                     }`}
                                     title="Habilitar esta marca como el Sponsor Oficial para la gala de resultados finales"
                                   >
                                     {isSelected ? (
                                       <>
-                                        <Check className="w-3 h-3 text-[#fe2c55] stroke-[3] shrink-0" />
+                                        <Check className="w-3 h-3 text-[#ff2d85] stroke-[3] shrink-0" />
                                         <span className="whitespace-nowrap">Sponsor Activo</span>
                                       </>
                                     ) : (
@@ -7459,7 +7670,7 @@ export default function ModelFacebookProfile({
                           </div>
                           <div className="bg-rose-50 border border-rose-100 rounded-2xl px-3.5 py-2 text-right shrink-0">
                             <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Total Acumulado</span>
-                            <span className="text-sm font-mono font-black text-[#fe2c55] block mt-0.5">
+                            <span className="text-sm font-mono font-black text-[#ff2d85] block mt-0.5">
                               € {totalAccumulatedEarnings.toLocaleString()}
                             </span>
                           </div>
@@ -7470,10 +7681,10 @@ export default function ModelFacebookProfile({
                           {/* BLOCK 1: PRESENT AGREEMENTS (PRESENTES) */}
                           <div className="space-y-3 bg-rose-50/20 p-3 rounded-2xl border border-rose-100/40">
                             <div className="flex items-center justify-between border-b border-rose-100 pb-1.5">
-                              <span className="text-[11px] font-extrabold text-[#fe2c55] uppercase tracking-wider flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#fe2c55] animate-ping" /> Presentes hoy ({presentSponsors.length})
+                              <span className="text-[11px] font-extrabold text-[#ff2d85] uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#ff2d85] animate-ping" /> Presentes hoy ({presentSponsors.length})
                               </span>
-                              <span className="text-[9px] font-mono font-black text-[#fe2c55] bg-rose-100 px-1.5 py-0.2 rounded-full">PRESENTE</span>
+                              <span className="text-[9px] font-mono font-black text-[#ff2d85] bg-rose-100 px-1.5 py-0.2 rounded-full">PRESENTE</span>
                             </div>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                               {presentSponsors.length === 0 ? (
@@ -7485,8 +7696,8 @@ export default function ModelFacebookProfile({
                                   const start = sponsor.startDate || sponsor.hiredDate || '2026-06-18';
                                   const end = sponsor.endDate || '2027-06-18';
                                   return (
-                                    <div key={sponsor.id} className="bg-white border-2 border-[#fe2c55]/20 rounded-xl p-3 hover:border-[#fe2c55]/50 hover:shadow-4xs transition-all text-left relative overflow-hidden group">
-                                      <div className="absolute top-0 right-0 bg-[#fe2c55] text-white text-[7px] font-black uppercase px-2 py-0.5 rounded-bl-lg tracking-wider">
+                                    <div key={sponsor.id} className="bg-white border-2 border-[#ff2d85]/20 rounded-xl p-3 hover:border-[#ff2d85]/50 hover:shadow-4xs transition-all text-left relative overflow-hidden group">
+                                      <div className="absolute top-0 right-0 bg-[#ff2d85] text-white text-[7px] font-black uppercase px-2 py-0.5 rounded-bl-lg tracking-wider">
                                         Activo
                                       </div>
                                       <div className="flex items-center justify-between gap-3 pt-1">
@@ -7501,7 +7712,7 @@ export default function ModelFacebookProfile({
                                         </div>
                                       </div>
                                       <div className="mt-2 text-left">
-                                        <span className="text-[12px] font-mono font-black text-[#fe2c55]">€ {sponsor.amount.toLocaleString()}</span>
+                                        <span className="text-[12px] font-mono font-black text-[#ff2d85]">€ {sponsor.amount.toLocaleString()}</span>
                                       </div>
                                       <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-0.5 text-[9px] font-mono text-slate-500">
                                         <span>Fecha Inicio: <strong className="text-slate-700 font-extrabold">{start}</strong></span>
@@ -8208,7 +8419,7 @@ export default function ModelFacebookProfile({
                               });
                             }
                           }}
-                          className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-[#fe2c55] hover:brightness-[1.04] text-white font-black text-xs rounded-xl transition cursor-pointer border-0 shadow-md active:scale-98"
+                          className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-[#ff2d85] hover:brightness-[1.04] text-white font-black text-xs rounded-xl transition cursor-pointer border-0 shadow-md active:scale-98"
                         >
                           Emitir con Saldo de Backoffice
                         </button>
@@ -8299,7 +8510,7 @@ export default function ModelFacebookProfile({
                 onClick={() => setActiveProfileOrWallTab('perfil')}
                 className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
                   activeProfileOrWallTab === 'perfil'
-                    ? 'bg-rose-50 border-rose-200 text-[#fe2c55] shadow-xs font-black'
+                    ? 'bg-rose-50 border-rose-200 text-[#ff2d85] shadow-xs font-black'
                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-650'
                 }`}
               >
@@ -8311,7 +8522,7 @@ export default function ModelFacebookProfile({
                 onClick={() => setActiveProfileOrWallTab('muro')}
                 className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
                   activeProfileOrWallTab === 'muro'
-                    ? 'bg-rose-50 border-rose-200 text-[#fe2c55] shadow-xs font-black'
+                    ? 'bg-rose-50 border-rose-200 text-[#ff2d85] shadow-xs font-black'
                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-650'
                 }`}
               >
@@ -8890,7 +9101,7 @@ export default function ModelFacebookProfile({
                                     <button
                                       type="button"
                                       onClick={() => setSelectedStoryForPreview({ id: vid.id, title: vid.title, image: vid.videoUrl, isVideo: true })}
-                                      className="pointer-events-auto w-14 h-14 rounded-full bg-black/60 hover:bg-[#fe2c55] text-white border border-white/20 hover:border-transparent flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-115 active:scale-95 cursor-pointer backdrop-blur-xs group/play"
+                                      className="pointer-events-auto w-14 h-14 rounded-full bg-black/60 hover:bg-[#ff2d85] text-white border border-white/20 hover:border-transparent flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-115 active:scale-95 cursor-pointer backdrop-blur-xs group/play"
                                       title="Reproducir Vídeo"
                                     >
                                       <Play className="w-5.5 h-5.5 text-white fill-current translate-x-0.5 transition-transform duration-300 group-hover/play:scale-110" />
@@ -8941,7 +9152,7 @@ export default function ModelFacebookProfile({
                                     type="button"
                                     onClick={(e) => handleToggleFollowSavedVideo(vid.id, e)}
                                     className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4.5 h-4.5 rounded-full flex items-center justify-center text-white text-[10px] font-black border border-slate-900 shadow-md transition-all cursor-pointer ${
-                                      vid.isFollowing ? 'bg-emerald-500 scale-90' : 'bg-[#fe2c55] hover:scale-110 active:scale-90'
+                                      vid.isFollowing ? 'bg-emerald-500 scale-90' : 'bg-[#ff2d85] hover:scale-110 active:scale-90'
                                     }`}
                                     title={vid.isFollowing ? "Siguiendo" : "Seguir a este creador"}
                                   >
@@ -8956,14 +9167,14 @@ export default function ModelFacebookProfile({
                                     onClick={(e) => handleToggleLikeSavedVideo(vid.id, e)}
                                     className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-75 cursor-pointer backdrop-blur-md ${
                                       vid.isLiked
-                                        ? 'bg-[#0b101d]/90 ring-2 ring-[#fe2c55] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
+                                        ? 'bg-[#0b101d]/90 ring-2 ring-[#ff2d85] border-2 border-rose-500 shadow-[0_0_20px_rgba(254,44,85,0.85)] scale-105'
                                         : 'bg-black/50 hover:bg-black/70 text-white border border-white/20'
                                     }`}
                                     title={vid.isLiked ? "¡Marcado con Me Gusta!" : "Me gusta"}
                                   >
-                                    <Heart className={`w-5 h-5 ${vid.isLiked ? 'fill-[#fe2c55] text-[#fe2c55] drop-shadow-[0_0_6px_rgba(254,44,85,0.9)] animate-heart-beat' : 'text-white'}`} />
+                                    <Heart className={`w-5 h-5 ${vid.isLiked ? 'fill-[#ff2d85] text-[#ff2d85] drop-shadow-[0_0_6px_rgba(254,44,85,0.9)] animate-heart-beat' : 'text-white'}`} />
                                   </button>
-                                  <span className={`text-[10px] sm:text-[11px] font-black mt-1 drop-shadow-md select-none ${vid.isLiked ? 'text-[#fe2c55]' : 'text-white'}`}>
+                                  <span className={`text-[10px] sm:text-[11px] font-black mt-1 drop-shadow-md select-none ${vid.isLiked ? 'text-[#ff2d85]' : 'text-white'}`}>
                                     {vid.likes || 842}
                                   </span>
                                 </div>
@@ -9039,7 +9250,7 @@ export default function ModelFacebookProfile({
                                     }`}
                                     title={isProfileVideoMuted ? "Activar sonido" : "Silenciar sonido"}
                                   >
-                                    <Music className="w-4.5 h-4.5 text-[#fe2c55]" />
+                                    <Music className="w-4.5 h-4.5 text-[#ff2d85]" />
                                   </button>
                                 </div>
 
@@ -9136,11 +9347,11 @@ export default function ModelFacebookProfile({
                                             handleVideoAddComment(vid.id);
                                           }
                                         }}
-                                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] focus:outline-hidden focus:ring-1 focus:ring-[#fe2c55] text-slate-900"
+                                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] focus:outline-hidden focus:ring-1 focus:ring-[#ff2d85] text-slate-900"
                                       />
                                       <button
                                         onClick={() => handleVideoAddComment(vid.id)}
-                                        className="p-1 bg-[#fe2c55] hover:bg-rose-600 text-white rounded-lg transition active:scale-95 cursor-pointer"
+                                        className="p-1 bg-[#ff2d85] hover:bg-rose-600 text-white rounded-lg transition active:scale-95 cursor-pointer"
                                         title="Enviar"
                                       >
                                         <Send className="w-3 h-3" />
@@ -9596,20 +9807,16 @@ export default function ModelFacebookProfile({
                               }`}
                             >
 
-                              {/* Interactive Image box */}
+                              {/* Static Clean Image Box (no se amplía en ningún momento, se mantiene siempre visible y fija) */}
                               <div 
-                                onClick={(e) => handleOpenPhotoLightbox(ph, e)}
-                                className={`aspect-square w-full rounded-t-2xl relative cursor-pointer bg-slate-100 ${
-                                  hoveredStickersPostId === ph || hoveredHeartAndGiftPhotoUrl === ph ? 'overflow-visible' : 'overflow-hidden'
-                                }`}
-                                title="Haz clic para ampliar la foto"
+                                className="aspect-square w-full rounded-t-2xl relative overflow-hidden bg-slate-100 select-none"
                               >
                                 <div className="w-full h-full rounded-t-2xl overflow-hidden">
                                   <img 
                                     src={ph} 
                                     alt={`fashion ${idx}`} 
                                     referrerPolicy="no-referrer"
-                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                    className="w-full h-full object-cover block"
                                   />
                                 </div>
 
@@ -9642,19 +9849,6 @@ export default function ModelFacebookProfile({
                                 >
                                   <X className="w-4.5 h-4.5 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
                                 </button>
-
-                                {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                                {!selectedPhotoForLightbox && hoveredStickersPostId === ph && (
-                                  renderCompactStickersPopup(ph, true, true)
-                                )}
-
-                                {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                                {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === ph && (
-                                  renderCompactGiftsPopup(ph, true, true)
-                                )}
-
-                                {/* 📤 Renders the custom Full-Size Share Overlay covering the image exactly */}
-                                {!selectedPhotoForLightbox && activeShareMenuPostId === ph && renderShareOverlay(ph, ph)}
                               </div>
  
                               {/* Action Row styled exactly like image.png */}
@@ -9669,20 +9863,19 @@ export default function ModelFacebookProfile({
                                 (e) => {
                                   e.stopPropagation();
                                   handleLikePhoto(ph, e);
-                                  setHoveredStickersPostId(prev => prev === ph ? null : ph);
                                 },
                                 (e) => {
                                   e.stopPropagation();
                                   setHoveredHeartAndGiftPhotoUrl(prev => prev === ph ? null : ph);
                                 },
-                                () => handleOpenPhotoLightbox(ph),
+                                undefined,
                                 () => handleToggleRepost(ph),
                                 (e) => {
                                   e.stopPropagation();
                                   setActiveShareMenuPostId(activeShareMenuPostId === ph ? null : ph);
                                 },
                                 () => handleToggleBookmark(ph),
-                                ph
+                                undefined
                               )}
                               
                               {!selectedPhotoForLightbox && giftConfirmPhotoUrl === ph && renderConfirmGiftOverlay(ph)}
@@ -9928,7 +10121,7 @@ export default function ModelFacebookProfile({
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-xl border border-slate-150 animate-fade-in text-left overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center pb-2.5 border-b border-rose-100">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 font-display uppercase tracking-wide">
-                <Film className="w-4 h-4 text-[#fe2c55] animate-pulse" />
+                <Film className="w-4 h-4 text-[#ff2d85] animate-pulse" />
                 <span>Gestión de Vídeos de Portada (Landing Page)</span>
               </h3>
               <button 
@@ -10854,7 +11047,7 @@ export default function ModelFacebookProfile({
               {activeSocialModal === 'friends' && friendsSubTab === 'friends' && pendingReceivedRequests.length > 0 && (
                 <div className="bg-gradient-to-r from-pink-50 via-rose-50/70 to-pink-50/40 border border-pink-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-3xs animate-fade-in">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#fe2c55] text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#ff2d85] text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
                       📬
                     </div>
                     <div className="text-left">
@@ -10872,7 +11065,7 @@ export default function ModelFacebookProfile({
                       setFriendsSubTab('pending');
                       setSocialSearchQuery('');
                     }}
-                    className="px-4 py-2 bg-[#fe2c55] hover:bg-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm shrink-0 active:scale-95"
+                    className="px-4 py-2 bg-[#ff2d85] hover:bg-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm shrink-0 active:scale-95"
                   >
                     Ver Solicitudes ({pendingReceivedRequests.length}) →
                   </button>
@@ -10921,7 +11114,7 @@ export default function ModelFacebookProfile({
                     if (list.length === 0) {
                       return (
                         <div className="p-12 text-center space-y-2">
-                          <div className="w-12 h-12 rounded-2xl bg-pink-50 text-[#fe2c55] flex items-center justify-center mx-auto text-xl font-bold">
+                          <div className="w-12 h-12 rounded-2xl bg-pink-50 text-[#ff2d85] flex items-center justify-center mx-auto text-xl font-bold">
                             ✓
                           </div>
                           <p className="text-sm font-black text-slate-800 m-0">No tienes solicitudes pendientes de aceptar</p>
@@ -10948,8 +11141,8 @@ export default function ModelFacebookProfile({
                           <div className="min-w-0 space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate leading-tight">{item.name}</h4>
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-rose-50 text-[#fe2c55] border border-rose-150 tracking-wide shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#fe2c55] animate-ping" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-rose-50 text-[#ff2d85] border border-rose-150 tracking-wide shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#ff2d85] animate-ping" />
                                 Solicitud Recibida
                               </span>
                             </div>
@@ -10979,7 +11172,7 @@ export default function ModelFacebookProfile({
                           <button
                             type="button"
                             onClick={() => handleAcceptFriendRequest(item)}
-                            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-[#fe2c55] hover:from-pink-600 hover:to-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
+                            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-[#ff2d85] hover:from-pink-600 hover:to-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
                           >
                             <Check className="w-3.5 h-3.5 stroke-[3]" />
                             <span>Aceptar</span>
@@ -11150,7 +11343,7 @@ export default function ModelFacebookProfile({
                               
                               {/* Newly accepted friend badge */}
                               {item.isNew && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-[#ffeef2] text-[#fe2c55] border border-pink-200 tracking-wide shrink-0">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-[#ffeef2] text-[#ff2d85] border border-pink-200 tracking-wide shrink-0">
                                   ✨ NUEVO AMIGO
                                 </span>
                               )}
@@ -11204,7 +11397,7 @@ export default function ModelFacebookProfile({
                                 alert(`Iniciaste contacto con @${item.username}. Un asesor agilizará el chat pronto.`);
                               }
                             }}
-                            className="px-4 py-2 border border-pink-200 text-[#fe2c55] bg-white hover:bg-pink-50 rounded-xl text-xs font-bold transition cursor-pointer text-center"
+                            className="px-4 py-2 border border-pink-200 text-[#ff2d85] bg-white hover:bg-pink-50 rounded-xl text-xs font-bold transition cursor-pointer text-center"
                           >
                             Mensaje
                           </button>
@@ -11578,6 +11771,28 @@ export default function ModelFacebookProfile({
                         />
                       </div>
 
+                      {/* 🔗 Contenedor para poner el link de la página web que tenga el usuario (sincronizado con z.png) */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-550 uppercase mb-1">
+                          Página Web / Link Oficial (Enlace en Bio):
+                        </label>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3.5 text-[#ff2d85] pointer-events-none">
+                            <Link className="w-3.5 h-3.5 text-[#ff2d85]" />
+                          </span>
+                          <input
+                            type="text"
+                            value={editingWebsite}
+                            onChange={(e) => setEditingWebsite(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-rose-500 font-medium text-slate-850"
+                            placeholder="adrianalima.com/runway-vip... o https://tuweb.com"
+                          />
+                        </div>
+                        <span className="text-[9.5px] text-slate-400 font-medium mt-1 block">
+                          Este link aparecerá automáticamente con el icono de enlace debajo de tu biografía y sincronizado en todo el portal.
+                        </span>
+                      </div>
+
                       {/* 💎 PANEL GLAMUROSO DE REDES SOCIALES CON DIAMANTES (EXACTO A LA CAPTURA) */}
                       <div className="my-5 w-full">
                         <div className="relative w-full aspect-[1750/899] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl border-2 border-pink-200/90 select-none bg-gradient-to-br from-[#ffd6e7] via-[#ffb6d5] to-[#ffaecf]">
@@ -11592,12 +11807,35 @@ export default function ModelFacebookProfile({
                           {/* 2. Capa Interactiva de Entradas y Botones superpuestos con precisión milimétrica */}
                           <div className="absolute inset-0 w-full h-full">
                             
-                            {/* --- FILA 1: INSTAGRAM --- */}
-                            {/* Campo de texto interactivo para el handle de Instagram (enmascara el texto estático) */}
+                            {/* --- CONTENEDOR 1 SUPERIOR: REDES SOCIALES OFICIALES DEL MODELO CON FONDO BLANCO --- */}
                             <div 
-                              style={{ top: '28.2%', left: '17.2%', width: '22%', height: '5.8%' }}
-                              className="absolute bg-white/95 rounded-md px-1 flex items-center shadow-xs"
+                              style={{ top: '3.6%', left: '4.2%', width: '91.6%', height: '13%' }}
+                              className="absolute bg-white rounded-full px-4 sm:px-6 flex items-center justify-between shadow-xs border border-pink-200/90 z-10 select-none"
                             >
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-1 h-4 sm:h-5 bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 rounded-full" />
+                                <span className="text-[clamp(10px,1.4vw,17px)] font-serif font-black tracking-wide">
+                                  <span className="text-slate-800">REDES SOCIALES </span>
+                                  <span className="text-[#ff2d85]">OFICIALES </span>
+                                  <span className="text-slate-800">DEL MODELO:</span>
+                                </span>
+                              </div>
+
+                              {/* Pin de oro con diamante decorativo en el lateral derecho */}
+                              <div className="flex items-center gap-2 pr-2 sm:pr-4">
+                                <div className="w-10 sm:w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-amber-500 rounded-full" />
+                                <span className="text-xs sm:text-sm select-none">💎</span>
+                              </div>
+                            </div>
+
+                            {/* --- CONTENEDOR 2: FILA 1 (INSTAGRAM) CON FONDO BLANCO (SIN BOTÓN SEGUIR) --- */}
+                            <div 
+                              style={{ top: '21.5%', left: '16.8%', width: '35%', height: '13%' }}
+                              className="absolute bg-white rounded-xl px-2.5 flex flex-col justify-center text-left shadow-xs border border-pink-100/60 z-10"
+                            >
+                              <span className="text-[clamp(10px,1.2vw,14px)] font-black tracking-widest text-slate-800 font-sans uppercase leading-tight select-none">
+                                INSTAGRAM
+                              </span>
                               <input
                                 type="text"
                                 value={editingInstagram}
@@ -11611,26 +11849,24 @@ export default function ModelFacebookProfile({
                                   }
                                 }}
                                 placeholder="@adrianalima"
-                                className="w-full h-full bg-transparent text-[#e11d48] font-sans font-bold text-[clamp(9px,1.4vw,17px)] leading-none outline-none focus:ring-1 focus:ring-rose-400 placeholder:text-rose-300"
+                                className="w-full bg-transparent text-[#ff2d85] font-sans font-extrabold text-[clamp(10px,1.35vw,16px)] leading-tight outline-none focus:text-[#e11470] placeholder:text-rose-300 py-0.5"
                                 title="Editar usuario de Instagram"
                               />
                             </div>
-                            {/* Botón Seguir Instagram */}
-                            <a
-                              href={`https://instagram.com/${editingInstagram.replace(/^@/, '') || 'adrianalima'}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ top: '24.2%', left: '74.8%', width: '13.2%', height: '8.4%' }}
-                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all"
-                              title="Abrir Instagram en nueva pestaña"
+                            {/* Eliminación de botón Seguir: fondo blanco continuo en extremo derecho */}
+                            <div 
+                              style={{ top: '21.5%', left: '73.5%', width: '15.5%', height: '13%' }}
+                              className="absolute bg-white rounded-r-2xl pointer-events-none z-10"
                             />
 
-                            {/* --- FILA 2: TIKTOK --- */}
-                            {/* Campo de texto interactivo para el handle de TikTok */}
+                            {/* --- CONTENEDOR 3: FILA 2 (TIKTOK) CON FONDO BLANCO (SIN BOTÓN SEGUIR) --- */}
                             <div 
-                              style={{ top: '48.8%', left: '17.2%', width: '22%', height: '5.8%' }}
-                              className="absolute bg-white/95 rounded-md px-1 flex items-center shadow-xs"
+                              style={{ top: '42.5%', left: '16.8%', width: '35%', height: '13%' }}
+                              className="absolute bg-white rounded-xl px-2.5 flex flex-col justify-center text-left shadow-xs border border-pink-100/60 z-10"
                             >
+                              <span className="text-[clamp(10px,1.2vw,14px)] font-black tracking-widest text-slate-800 font-sans uppercase leading-tight select-none">
+                                TIKTOK
+                              </span>
                               <input
                                 type="text"
                                 value={editingTikTok}
@@ -11644,26 +11880,24 @@ export default function ModelFacebookProfile({
                                   }
                                 }}
                                 placeholder="@adrianalima_tok"
-                                className="w-full h-full bg-transparent text-[#e11d48] font-sans font-bold text-[clamp(9px,1.4vw,17px)] leading-none outline-none focus:ring-1 focus:ring-rose-400 placeholder:text-rose-300"
+                                className="w-full bg-transparent text-[#ff2d85] font-sans font-extrabold text-[clamp(10px,1.35vw,16px)] leading-tight outline-none focus:text-[#e11470] placeholder:text-rose-300 py-0.5"
                                 title="Editar usuario de TikTok"
                               />
                             </div>
-                            {/* Botón Seguir TikTok */}
-                            <a
-                              href={`https://tiktok.com/@${editingTikTok.replace(/^@/, '') || 'adrianalima_tok'}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ top: '45.3%', left: '74.8%', width: '13.2%', height: '8.4%' }}
-                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all"
-                              title="Abrir TikTok en nueva pestaña"
+                            {/* Eliminación de botón Seguir: fondo blanco continuo en extremo derecho */}
+                            <div 
+                              style={{ top: '42.5%', left: '73.5%', width: '15.5%', height: '13%' }}
+                              className="absolute bg-white rounded-r-2xl pointer-events-none z-10"
                             />
 
-                            {/* --- FILA 3: X (TWITTER) --- */}
-                            {/* Campo de texto interactivo para el handle de X */}
+                            {/* --- CONTENEDOR 4: FILA 3 (X / TWITTER) CON FONDO BLANCO (SIN BOTÓN SEGUIR) --- */}
                             <div 
-                              style={{ top: '66.8%', left: '17.2%', width: '22%', height: '5.8%' }}
-                              className="absolute bg-white/95 rounded-md px-1 flex items-center shadow-xs"
+                              style={{ top: '60.5%', left: '16.8%', width: '35%', height: '13%' }}
+                              className="absolute bg-white rounded-xl px-2.5 flex flex-col justify-center text-left shadow-xs border border-pink-100/60 z-10"
                             >
+                              <span className="text-[clamp(10px,1.2vw,14px)] font-black tracking-widest text-slate-800 font-sans uppercase leading-tight select-none">
+                                X (TWITTER)
+                              </span>
                               <input
                                 type="text"
                                 value={editingTwitter}
@@ -11677,18 +11911,14 @@ export default function ModelFacebookProfile({
                                   }
                                 }}
                                 placeholder="@adrianalima_real"
-                                className="w-full h-full bg-transparent text-[#e11d48] font-sans font-bold text-[clamp(9px,1.4vw,17px)] leading-none outline-none focus:ring-1 focus:ring-rose-400 placeholder:text-stone-400"
+                                className="w-full bg-transparent text-[#ff2d85] font-sans font-extrabold text-[clamp(10px,1.35vw,16px)] leading-tight outline-none focus:text-[#e11470] placeholder:text-stone-400 py-0.5"
                                 title="Editar usuario de X (Twitter)"
                               />
                             </div>
-                            {/* Botón Seguir X */}
-                            <a
-                              href={`https://twitter.com/${editingTwitter.replace(/^@/, '') || 'adrianalima_real'}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ top: '63.4%', left: '74.8%', width: '13.2%', height: '8.4%' }}
-                              className="absolute rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all"
-                              title="Abrir X (Twitter) en nueva pestaña"
+                            {/* Eliminación de botón Seguir: fondo blanco continuo en extremo derecho */}
+                            <div 
+                              style={{ top: '60.5%', left: '73.5%', width: '15.5%', height: '13%' }}
+                              className="absolute bg-white rounded-r-2xl pointer-events-none z-10"
                             />
 
                             {/* --- BOTÓN PRINCIPAL DE GUARDAR: GUARDAR REDES SOCIALES --- */}
@@ -11709,6 +11939,60 @@ export default function ModelFacebookProfile({
                             <span>¡Redes sociales guardadas y actualizadas con éxito!</span>
                           </div>
                         )}
+                      </div>
+
+                      {/* Botón Guardar Cambios centrado con fondo color Rosa Pink */}
+                      <div className="flex justify-center items-center pt-4 pb-2 my-3 border-t border-slate-100 w-full">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const trimmedBio = editingBio.trim();
+                            const trimmedWebsite = editingWebsite.trim();
+                            const trimmedName = editingName.trim() || userProfile.name;
+                            const trimmedUsername = (editingUsername.trim() || userProfile.username).replace(/^@/, '');
+                            const trimmedAgency = editingFashionAgency.trim();
+                            const updatedUser = {
+                              ...userProfile,
+                              name: trimmedName,
+                              username: trimmedUsername,
+                              fashionAgency: trimmedAgency,
+                              bio: trimmedBio,
+                              website: trimmedWebsite,
+                              avatar: editingAvatar || userProfile.avatar
+                            };
+                            setBioText(trimmedBio);
+                            setCreatorWebsite(trimmedWebsite);
+                            setFashionAgency(trimmedAgency);
+                            try {
+                              localStorage.setItem('coll_current_user', JSON.stringify(updatedUser));
+                              localStorage.setItem('custom_model_bio', trimmedBio);
+                              localStorage.setItem(`custom_model_bio_${userProfile.id}`, trimmedBio);
+                              localStorage.setItem(`custom_model_website_${userProfile.id}`, trimmedWebsite);
+                              if (userProfile.username) {
+                                localStorage.setItem(`custom_model_bio_${userProfile.username.toLowerCase()}`, trimmedBio);
+                                localStorage.setItem(`custom_model_website_${userProfile.username.toLowerCase()}`, trimmedWebsite);
+                              }
+                              localStorage.setItem('custom_model_fashion_agency', trimmedAgency);
+                            } catch (e) {}
+                            saveSynchronizedBioAndWebsite(trimmedUsername, trimmedBio, trimmedWebsite, userProfile.id);
+                            if (onUpdateProfile) {
+                              onUpdateProfile(updatedUser);
+                            }
+                            showSocialToast("✅ ¡Cambios guardados con éxito!");
+                          }}
+                          style={{ backgroundColor: '#ff2d75', color: '#ffffff' }}
+                          className="px-8 py-3 bg-[#ff2d75] hover:bg-[#e62066] active:bg-[#d61858] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all cursor-pointer shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40 active:scale-95 flex items-center justify-center gap-2.5 select-none border-0"
+                        >
+                          <Check className="w-5 h-5 stroke-[3] text-white" />
+                          <span className="text-white">Guardar cambios</span>
+                        </button>
+                      </div>
+
+                      {/* Más espacio en blanco y frase centrada con mayor tamaño de letra */}
+                      <div className="pt-10 pb-6 my-4 text-center flex items-center justify-center w-full">
+                        <span className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight block font-sans">
+                          Sección Landing Page.
+                        </span>
                       </div>
 
                       {/* 📋 CONTENEDOR EXACTO A CAPTURA IMAGE.PNG: MENSAJE DE BIENVENIDA Y SOBRE MÍ (EDITABLE) */}
@@ -11801,7 +12085,7 @@ export default function ModelFacebookProfile({
                         {/* 2. SOBRE MÍ */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] sm:text-xs font-bold text-[#e11d48] uppercase tracking-wider font-sans">
+                            <span className="text-[11px] sm:text-xs font-bold text-[#ff2d85] uppercase tracking-wider font-sans">
                               SOBRE MÍ
                             </span>
                           </div>
@@ -12453,7 +12737,7 @@ export default function ModelFacebookProfile({
                           placeholder="Escribe el nombre o @usuario para bloquear..."
                           value={blockedSearchQuery}
                           onChange={(e) => setBlockedSearchQuery(e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-red-500 font-medium text-slate-800"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-pink-500 font-medium text-slate-800"
                         />
                       </div>
 
@@ -13659,7 +13943,7 @@ function ModelStoryLightbox({
                   {/* Charming song and Online status indicator */}
                   <div className="flex items-center gap-1 mt-0.5 text-white/90 text-[8.5px] font-bold tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                     {isOnlineUser(currentActiveSubStory.username || currentActiveSubStory.name || currentActiveSubStory.title || '') ? (
-                      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-xs bg-red-500/90 text-white font-extrabold text-[7.5px] tracking-wider uppercase leading-none scale-90">
+                      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-xs bg-pink-600/90 text-white font-extrabold text-[7.5px] tracking-wider uppercase leading-none scale-90">
                         🟢 EN DIRECTO
                       </span>
                     ) : (
@@ -13891,7 +14175,7 @@ function ModelStoryLightbox({
                       e.stopPropagation();
                       handleStoryUserRedirectWithStory(combinedList[currentIdx + 1]);
                     }}
-                    className="w-[50px] h-[50px] lg:w-[58px] lg:h-[58px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                    className="w-[50px] h-[50px] lg:w-[58px] lg:h-[58px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#ff2d85] via-purple-500 to-amber-500 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
                     title={`Ver perfil de ${combinedList[currentIdx + 1].username}`}
                   >
                     <img src={combinedList[currentIdx + 1].avatar} alt="" className="w-full h-full rounded-full object-cover border-2 border-[#121214]" />
@@ -13930,7 +14214,7 @@ function ModelStoryLightbox({
                       e.stopPropagation();
                       handleStoryUserRedirectWithStory(combinedList[currentIdx + 2]);
                     }}
-                    className="w-[44px] h-[44px] lg:w-[50px] lg:h-[50px] rounded-full p-[2px] bg-gradient-to-tr from-[#fe2c55] via-purple-500 to-amber-500 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                    className="w-[44px] h-[44px] lg:w-[50px] lg:h-[50px] rounded-full p-[2px] bg-gradient-to-tr from-[#ff2d85] via-purple-500 to-amber-500 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform"
                     title={`Ver perfil de ${combinedList[currentIdx + 2].username}`}
                   >
                     <img src={combinedList[currentIdx + 2].avatar} alt="" className="w-full h-full rounded-full object-cover border-2 border-[#121214]" />

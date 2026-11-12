@@ -1159,6 +1159,13 @@ export default function SessionSimulator({
       alert('⚠️ No puedes unirte a mesas de inversión como visitante no registrado. Por favor, crea una cuenta o inicia sesión.');
       return;
     }
+    const isContestPendingClose = 
+      localStorage.getItem('finanzas_contest_pending_close') === 'true' || 
+      Boolean(completedSessionToDisplay);
+    if (isContestPendingClose) {
+      alert('⚠️ No puedes participar en ninguna otra ronda de financiación hasta que hagas clic en el botón "Cerrar Concurso".');
+      return;
+    }
     const sessObj = sessions.find(s => s.id === sessionId);
     if (!sessObj) return;
 
@@ -2427,9 +2434,6 @@ export default function SessionSimulator({
           <h2 className="text-2xl sm:text-3xl font-black tracking-wide text-slate-100 flex items-center justify-center gap-1.5">
             <span className="font-sans font-black">RESULTADOS FINALES</span>
           </h2>
-          <p className="text-[10px] sm:text-xs font-black font-mono tracking-widest text-[#9aa8c6] uppercase">
-            SISTEMA DE BLOQUES POR PUNTUACIÓN: AGRUPACIÓN DINÁMICA POR VOTOS
-          </p>
         </div>
 
         {/* MAIN BODY GRID */}
@@ -3155,7 +3159,12 @@ export default function SessionSimulator({
                    setSimulationLogs([]);
                    setIsCastingPublished(false);
                  }
+                 try {
+                   localStorage.removeItem('finanzas_contest_pending_close');
+                   window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
+                 } catch (e) {}
                }}
+               id="btn-cerrar-concurso-simulator"
                className="flex-1 sm:flex-initial px-4 py-2.5 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 text-black border border-pink-250 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-md"
             >
               <span>Cerrar Concurso</span>
@@ -3440,10 +3449,7 @@ export default function SessionSimulator({
       {/* Upper header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
         <div className="text-left">
-          <span className="text-[10px] font-extrabold text-slate-800 uppercase tracking-widest flex items-center gap-1.5 font-mono">
-            <span>⚙️ MESA DE SESIONES COLECTIVAS</span>
-          </span>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1 animate-fade-in">Rondas de Financiación</h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight animate-fade-in">Rondas de Financiación</h2>
           <p className="text-xs text-slate-500 max-w-xl leading-relaxed mt-0.5">
             Únete a nuestras Rondas de financiación con tu proyecto y conseguirás los fondos que deseas.
           </p>
@@ -3741,31 +3747,31 @@ export default function SessionSimulator({
 
       {/* SLIDER NAVIGATION FOR SESSIONS (ELEGANT 3D CAROUSEL DESIGN MATCHING ZZ.PNG) */}
       {(() => {
-        // Dimensions: Compact and balanced card sizing (un poco más chica)
-        let cardWidth = 800;
-        let cardHeight = 410;
-        let spacing = 580;
+        // Dimensions: Compact and balanced card sizing (recuadro más chico según solicitud)
+        let cardWidth = 560;
+        let cardHeight = 310;
+        let spacing = 410;
         let rotateYVal = 7;
 
         if (containerWidth < 500) {
           // Mobile / small viewport
-          cardWidth = Math.max(300, Math.floor(containerWidth * 0.90));
-          cardHeight = 390;
-          spacing = Math.round(cardWidth * 0.90);
+          cardWidth = Math.max(280, Math.floor(containerWidth * 0.82));
+          cardHeight = 290;
+          spacing = Math.round(cardWidth * 0.84);
           rotateYVal = 4;
         } else if (containerWidth < 768) {
-          cardWidth = Math.max(420, Math.floor(containerWidth * 0.82));
-          cardHeight = 400;
-          spacing = Math.round(cardWidth * 0.80);
+          cardWidth = Math.max(360, Math.floor(containerWidth * 0.70));
+          cardHeight = 300;
+          spacing = Math.round(cardWidth * 0.76);
           rotateYVal = 6;
         } else if (containerWidth < 1100) {
-          cardWidth = Math.min(680, Math.floor(containerWidth * 0.72));
-          cardHeight = 410;
-          spacing = Math.round(cardWidth * 0.74);
+          cardWidth = Math.min(500, Math.floor(containerWidth * 0.58));
+          cardHeight = 310;
+          spacing = Math.round(cardWidth * 0.72);
           rotateYVal = 7;
         } else {
-          cardWidth = Math.min(820, Math.floor(containerWidth * 0.68));
-          cardHeight = 410;
+          cardWidth = Math.min(560, Math.floor(containerWidth * 0.48));
+          cardHeight = 315;
           spacing = Math.round(cardWidth * 0.68);
           rotateYVal = 8;
         }
@@ -3793,7 +3799,7 @@ export default function SessionSimulator({
             <div 
               className="relative w-full flex items-center justify-center overflow-visible"
               style={{ 
-                height: `${cardHeight + 30}px`,
+                height: `${cardHeight + 20}px`,
                 perspective: '1400px',
                 perspectiveOrigin: '50% 50%'
               }}
@@ -3802,10 +3808,10 @@ export default function SessionSimulator({
               <button
                 type="button"
                 onClick={handlePrevSession}
-                className="absolute left-1 sm:left-4 lg:left-8 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+                className="absolute left-1 sm:left-4 lg:left-8 z-50 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Ver mesa anterior"
               >
-                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 pointer-events-none stroke-[2.5]" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 pointer-events-none stroke-[2.5]" />
               </button>
 
               {/* 3D Cards Stage */}
@@ -3848,7 +3854,7 @@ export default function SessionSimulator({
                       onClick={() => {
                         setActiveSessionId(sess.id);
                       }}
-                      className={`pointer-events-auto absolute shrink-0 rounded-3xl p-3.5 sm:p-5.5 text-left cursor-pointer flex flex-col justify-between overflow-hidden group box-border ${pinkFrameClass} ${theme.cardShadow}`}
+                      className={`pointer-events-auto absolute shrink-0 rounded-3xl p-3 sm:p-4 text-left cursor-pointer flex flex-col justify-between overflow-hidden group box-border ${pinkFrameClass} ${theme.cardShadow}`}
                       style={{
                         width: `${cardWidth}px`,
                         minWidth: `${cardWidth}px`,
@@ -3880,22 +3886,22 @@ export default function SessionSimulator({
                       {/* Capa de contenido en primer plano */}
                       <div className="relative z-10 flex flex-col justify-between h-full w-full">
                         {/* Header Decoration */}
-                        <div className="flex justify-between items-start gap-2 mb-2">
-                          <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full border leading-none shadow-md backdrop-blur-md ${theme.badge}`}>
+                        <div className="flex justify-between items-start gap-1.5 mb-1.5">
+                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border leading-none shadow-md backdrop-blur-md ${theme.badge}`}>
                             {theme.tierSlogan}
                           </span>
-                          <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-black/60 text-pink-200 border border-pink-400/50 backdrop-blur-md shadow-md">
+                          <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/60 text-pink-200 border border-pink-400/50 backdrop-blur-md shadow-md">
                             {modelStyle.styleTag}
                           </span>
                         </div>
 
                         {/* Zona central amplia para contemplar la foto de las modelos de moda */}
-                        <div className="flex-1 my-1" />
+                        <div className="flex-1 my-0.5" />
 
                         {/* Card Title & Value Specs en formato ancho amplio sin solapamientos */}
-                        <div className="space-y-2.5 bg-slate-950/85 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/15 shadow-2xl w-full box-border">
+                        <div className="space-y-1.5 sm:space-y-2 bg-slate-950/85 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/15 shadow-2xl w-full box-border">
                           <div className="space-y-0.5">
-                            <h3 className="font-black text-sm sm:text-base md:text-xl tracking-tight text-white drop-shadow-md">
+                            <h3 className="font-black text-xs sm:text-sm md:text-base tracking-tight text-white drop-shadow-md">
                               {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear'))))
                                 ? 'Round STREETWEAR & URBAN'
                                 : (sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual'))))
@@ -3912,53 +3918,53 @@ export default function SessionSimulator({
                             </h3>
 
                             {(sess.entryFee === 10 || sess.id === 'sess-workers' || (sess.title && (sess.title.toLowerCase().includes('trabajad') || sess.title.toLowerCase().includes('streetwear')))) && (
-                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-slate-200">
+                              <p className="text-[10px] sm:text-[10.5px] leading-tight font-medium text-slate-200">
                                 Estilo moderno, sneakers, denim y cultura street.
                               </p>
                             )}
                             {(sess.entryFee === 100 || sess.id === 'sess-entrepreneurs' || (sess.title && (sess.title.toLowerCase().includes('bronce') || sess.title.toLowerCase().includes('emprend') || sess.title.toLowerCase().includes('casual')))) && (
-                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-200">
+                              <p className="text-[10px] sm:text-[10.5px] leading-tight font-medium text-amber-200">
                                 Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.
                               </p>
                             )}
                             {(sess.entryFee === 1000 || sess.id === 'sess-businessmen' || (sess.title && (sess.title.toLowerCase().includes('empresar') || sess.title.toLowerCase().includes('acero') || sess.title.toLowerCase().includes('glamour')))) && (
-                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-rose-200">
+                              <p className="text-[10px] sm:text-[10.5px] leading-tight font-medium text-rose-200">
                                 vestidos, belleza, eventos, alfombra roja y looks impactantes.
                               </p>
                             )}
                             {(sess.entryFee === 10000 || sess.id === 'sess-topmodels' || (sess.title && (sess.title.toLowerCase().includes('model') || sess.title.toLowerCase().includes('oro') || sess.title.toLowerCase().includes('classic') || sess.title.toLowerCase().includes('elegant')))) && (
-                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-100">
+                              <p className="text-[10px] sm:text-[10.5px] leading-tight font-medium text-amber-100">
                                 sofisticado, clásico, atemporal y refinado.
                               </p>
                             )}
                             {(sess.entryFee === 100000 || (sess.entryFee !== 1000000 && (sess.id === 'sess-investors' || (sess.title && (sess.title.toLowerCase().includes('invers') || sess.title.toLowerCase().includes('rosa') || sess.title.toLowerCase().includes('fashion')))))) && (
-                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-rose-100">
+                              <p className="text-[10px] sm:text-[10.5px] leading-tight font-medium text-rose-100">
                                 alta moda, diseñadores, pasarela y tendencias.
                               </p>
                             )}
                             {(sess.entryFee === 1000000 || sess.id === 'sess-millionaires' || (sess.title && (sess.title.toLowerCase().includes('millonar') || sess.title.toLowerCase().includes('platino')))) && (
-                              <p className="text-[11px] sm:text-xs leading-snug font-medium text-amber-100">
+                              <p className="text-[10px] sm:text-[10.5px] leading-tight font-medium text-amber-100">
                                 exclusividad, inversores de élite, lujo y alta costura.
                               </p>
                             )}
                           </div>
 
-                          {/* Grid horizontal amplio de 3 columnas para Monto, Miembros y Pool */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3.5 pt-2 border-t border-white/15">
+                          {/* Grid horizontal compacto de 3 columnas para Monto, Miembros y Pool */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pt-1.5 border-t border-white/15">
                             {/* Monto de entrada */}
-                            <div className="flex flex-col items-start justify-center gap-0.5 min-w-[120px] shrink-0">
-                              <span className="text-[9.5px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                            <div className="flex flex-col items-start justify-center gap-0.5 min-w-[95px] shrink-0">
+                              <span className="text-[8px] sm:text-[8.5px] font-bold text-slate-300 uppercase tracking-wider block">
                                 MONTO DE ENTRADA:
                               </span>
-                              <strong className={`font-mono text-xs sm:text-base md:text-lg font-black ${theme.accentText} tracking-tight drop-shadow-md`}>
+                              <strong className={`font-mono text-xs sm:text-sm font-black ${theme.accentText} tracking-tight drop-shadow-md`}>
                                 {sess.entryFee === 10 ? '10,00 Euros' : `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sess.entryFee)} Euros`}
                               </strong>
                             </div>
 
                             {/* Barra de Miembros */}
-                            <div className="flex-1 max-w-full sm:max-w-xs space-y-1">
-                              <div className="flex justify-between items-center text-[9.5px] sm:text-[10px] font-extrabold font-mono tracking-wide">
-                                <span className="text-[8.5px] uppercase tracking-wider text-slate-300">
+                            <div className="flex-1 max-w-full sm:max-w-[180px] space-y-0.5">
+                              <div className="flex justify-between items-center text-[8.5px] sm:text-[9px] font-extrabold font-mono tracking-wide">
+                                <span className="text-[7.5px] uppercase tracking-wider text-slate-300">
                                   Miembros
                                 </span>
                                 <span className="text-white font-black">
@@ -3966,7 +3972,7 @@ export default function SessionSimulator({
                                 </span>
                               </div>
 
-                              <div className="w-full h-2 rounded-full overflow-hidden bg-white/15 border border-white/10">
+                              <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/15 border border-white/10">
                                 <div
                                   className={`h-full rounded-full transition-all duration-550 ${theme.progressBarColor}`}
                                   style={{ width: `${percent}%` }}
@@ -3975,17 +3981,17 @@ export default function SessionSimulator({
                             </div>
 
                             {/* Status y Pool Total */}
-                            <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-1">
-                              <span className="text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300">
+                            <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-0.5">
+                              <span className="text-[7.5px] sm:text-[8px] font-black uppercase tracking-widest inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300">
                                 <span className={`w-1.5 h-1.5 rounded-full inline-block ${
                                   sess.status === 'voting' ? 'bg-rose-500 animate-ping' : 'bg-pink-500'
                                 }`} />
                                 <span className="font-black">{sess.status === 'voting' ? 'Escrutinio' : 'Reclutando'}</span>
                               </span>
 
-                              <div className="text-[10px] sm:text-xs font-bold flex items-baseline gap-1.5">
-                                <span className="text-slate-300 font-medium text-[9px] sm:text-[10px]">Pool:</span>
-                                <span className="font-mono font-black text-xs sm:text-sm text-amber-300">
+                              <div className="text-[9px] sm:text-[10px] font-bold flex items-baseline gap-1">
+                                <span className="text-slate-300 font-medium text-[8px] sm:text-[8.5px]">Pool:</span>
+                                <span className="font-mono font-black text-[10px] sm:text-xs text-amber-300">
                                   {formattedPool}
                                 </span>
                               </div>
@@ -4002,10 +4008,10 @@ export default function SessionSimulator({
               <button
                 type="button"
                 onClick={handleNextSession}
-                className="absolute right-2 sm:right-4 lg:right-8 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+                className="absolute right-1 sm:right-4 lg:right-8 z-50 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-pink-400 bg-white/95 hover:bg-white text-pink-600 shadow-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Ver mesa siguiente"
               >
-                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 pointer-events-none stroke-[2.5]" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 pointer-events-none stroke-[2.5]" />
               </button>
             </div>
 
@@ -4085,7 +4091,7 @@ export default function SessionSimulator({
 
             if (isStreetwear) {
               return (
-                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
                   <img
                     src="/assets/aistudio/Moda__finanzas_y_oportunidades_urbanas_62beb248.png"
                     alt="Moda, finanzas y oportunidades urbanas - Round STREETWEAR & URBAN"
@@ -4097,7 +4103,7 @@ export default function SessionSimulator({
 
             if (isCasual) {
               return (
-                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
                   <img
                     src="/assets/aistudio/Moda_casual_y_estilo_de_vida_glamuroso_a25ddc2b.png"
                     alt="Moda casual y estilo de vida glamuroso - Round CASUAL & LIFESTYLE"
@@ -4109,7 +4115,7 @@ export default function SessionSimulator({
 
             if (isGlamour) {
               return (
-                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
                   <img
                     src="/assets/aistudio/Gemini_Generated_Image_mizl7umizl7umizl_1dd942c2.jpg"
                     alt="Round Glamour - Fashions Finance"
@@ -4121,7 +4127,7 @@ export default function SessionSimulator({
 
             if (isElegant) {
               return (
-                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
                   <img
                     src="/assets/aistudio/Gemini_Generated_Image_76lmsq76lmsq76lm_f12a9bd7.jpg"
                     alt="Round Elegant Classic - Fashions Finance"
@@ -4133,7 +4139,7 @@ export default function SessionSimulator({
 
             if (isHighFashion) {
               return (
-                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
                   <img
                     src="/assets/aistudio/Gemini_Generated_Image_210s3d210s3d210s_b39d065b.jpg"
                     alt="Round High Fashion - Fashions Finance"
@@ -4145,7 +4151,7 @@ export default function SessionSimulator({
 
             if (isMillionaires) {
               return (
-                <div className="w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
+                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
                   <img
                     src="/assets/aistudio/Gemini_Generated_Image_icag8zicag8zicag_1a7f0fe4.jpg"
                     alt="Round of Millionaires - Fashions Finance"
@@ -4156,7 +4162,7 @@ export default function SessionSimulator({
             }
 
             return (
-              <div className="bg-gradient-to-r from-[#ffe4ed] via-[#ffd6e6] to-[#fce4ec] text-slate-900 p-6 sm:p-8 rounded-3xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg border-2 border-pink-300/80" id="detail-active-ribbon">
+              <div className="w-full max-w-[560px] mx-auto bg-gradient-to-r from-[#ffe4ed] via-[#ffd6e6] to-[#fce4ec] text-slate-900 p-6 sm:p-8 rounded-3xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg border-2 border-pink-300/80" id="detail-active-ribbon">
                 <div className="absolute -top-10 -left-10 w-36 h-36 bg-pink-400/20 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute -bottom-10 -right-10 w-36 h-36 bg-rose-400/20 rounded-full blur-2xl pointer-events-none" />
                 
@@ -4235,20 +4241,20 @@ export default function SessionSimulator({
                 </div>
               ) : (
                 <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
-                  <div className="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200/90 shadow-2xs space-y-1.5">
-                    <label className="block text-[11px] font-black text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse inline-block" />
+                  <div className="p-3.5 rounded-xl bg-pink-50/70 border border-pink-200/90 shadow-2xs space-y-1.5">
+                    <label className="block text-[11px] font-black text-[#ff2d75] uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#ff2d75] animate-pulse inline-block" />
                       <span>Selecciona Cuál de tus proyectos vas a inscribir:</span>
                     </label>
                     <select
                       value={enrollProjectId}
                       onChange={(e) => setEnrollProjectId(e.target.value)}
-                      className="w-full bg-white border-2 border-rose-500 hover:border-rose-600 focus:border-rose-600 rounded-xl px-3.5 py-2.5 text-xs text-rose-950 focus:outline-none focus:ring-3 focus:ring-rose-200/80 font-black cursor-pointer shadow-sm transition"
+                      className="w-full bg-white border-2 border-[#ff2d75] hover:border-[#e02466] focus:border-[#ff2d75] rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-3 focus:ring-pink-200/80 font-black cursor-pointer shadow-sm transition"
                     >
                       <option value="" className="text-slate-500 font-normal">-- Elige un proyecto de la lista --</option>
                       {userProjects.map((proj) => (
                         <option key={proj.id} value={proj.id} className="text-slate-900 font-bold">
-                          {proj.title} ({proj.category}) — Presupuesto: {proj.budget}€
+                          {proj.title} ({proj.category})
                         </option>
                       ))}
                     </select>

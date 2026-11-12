@@ -5288,7 +5288,7 @@ export default function VictoriaSecretRanking({
                             style={{ transform: 'rotate(70deg)' }}
                           />
                           <div 
-                            className="absolute w-[1.5px] h-18 bg-red-500 rounded-full origin-bottom -translate-y-9" 
+                            className="absolute w-[1.5px] h-18 bg-pink-500 rounded-full origin-bottom -translate-y-9" 
                             style={{ transform: `rotate(${watchTickAngle}deg)` }}
                           />
 

@@ -56,7 +56,7 @@
   --color-purple-800: #1e293b;
   --color-purple-900: #0f172a;
 
-  /* Clean and elegant slate colors with true gray scale and pure white base */
+  /* Clean and softened dark slate colors (eliminating harsh pure blacks) */
   --color-slate-50: #ffffff;
   --color-slate-100: #f8fafc;
   --color-slate-200: #f1f5f9;
@@ -65,13 +65,39 @@
   --color-slate-500: #64748b;
   --color-slate-600: #475569;
   --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-850: #0f172a;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+  --color-slate-800: #252e3e;
+  --color-slate-850: #1e2636;
+  --color-slate-900: #1e2636;
+  --color-slate-950: #161d28;
 
-  /* Softer generic black */
-  --color-black: #0f172a;
+  /* Suavizado general de negros hacia elegantes tonos carbón suave */
+  --color-black: #1e2636;
+  --color-zinc-950: #1a2230;
+  --color-neutral-950: #1a2230;
+
+  /* Convierte toda la gama de rojos en Rosa Pink (#ff2d85) */
+  --color-red-50: #fff1f6;
+  --color-red-100: #ffe4ee;
+  --color-red-200: #fecddf;
+  --color-red-300: #fba0c3;
+  --color-red-400: #f472a1;
+  --color-red-500: #ff2d85;
+  --color-red-550: #ff2d85;
+  --color-red-600: #ff2d85;
+  --color-red-650: #e11470;
+  --color-red-655: #e11470;
+  --color-red-700: #db2777;
+  --color-red-800: #be185d;
+  --color-red-900: #9d174d;
+  --color-red-950: #500724;
+
+  /* Rosa Pink y Rose vibrante */
+  --color-pink-500: #ff2d85;
+  --color-pink-600: #ff2d85;
+  --color-pink-700: #e11470;
+  --color-rose-500: #ff2d85;
+  --color-rose-600: #ff2d85;
+  --color-rose-700: #e11470;
 
   /* Pearl Pink (Rosa Perla) luxury palette */
   --color-pearl-pink: #fbcfe8;
@@ -99,7 +125,7 @@
 }
 
 /* Global button styling matching clean design (white background, slate border, dark text) */
-button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]) {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not(.hashtag-btn):not(.hashtag-link):not(.inline-tag):not([class*="bg-transparent"]):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]) {
   background-color: #ffffff !important;
   background-image: none !important;
   color: #0f172a !important; /* Soft dark text */
@@ -112,15 +138,54 @@ button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.
   cursor: pointer !important;
 }
 
-button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):hover {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not(.hashtag-btn):not(.hashtag-link):not(.inline-tag):not([class*="bg-transparent"]):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):hover {
   background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
   transform: translateY(-0.5px) !important;
 }
 
-button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):active {
+button:not(.icon-only):not(.project-card-btn):not(.portfolio-project-card):not(.tab-trigger):not(.custom-bg):not(.pearl-pink-btn):not(.pearl-pink-btn-disabled):not(.settings-menu-btn):not(.hashtag-btn):not(.hashtag-link):not(.inline-tag):not([class*="bg-transparent"]):not([class*="bg-pink"]):not([class*="bg-rose"]):not([class*="bg-sky"]):not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="w-5"]):not([class*="w-6"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="rounded-full"]):not([class*="p-0"]):not([class*="p-1"]):not([class*="nav-"]):active {
   transform: translateY(0px) !important;
   filter: brightness(0.98) !important;
+}
+
+/* Hashtag links / inline tag buttons: transparent background, pure white text */
+button.hashtag-btn,
+button.hashtag-link,
+button.inline-tag,
+.hashtag-btn,
+.hashtag-link,
+.inline-tag {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 3px !important;
+  margin: 0 !important;
+  display: inline-block !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  cursor: pointer !important;
+  transition: opacity 0.15s ease !important;
+}
+
+button.hashtag-btn:hover,
+button.hashtag-link:hover,
+button.inline-tag:hover,
+.hashtag-btn:hover,
+.hashtag-link:hover,
+.inline-tag:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #ffffff !important;
+  text-decoration: underline !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 0.85 !important;
 }
 
 /* Settings drawer borderless buttons with pure white background */
@@ -186,23 +251,101 @@ button.settings-menu-btn.active-tab,
   transform: none !important;
 }
 
-/* Global replacement of heavy red/rose backgrounds with modern clean styles */
-.bg-rose-500,
-.bg-rose-600,
-.bg-rose-700,
-.bg-pink-600,
-.bg-pink-700 {
-  background-image: none !important;
-  background-color: #0f172a !important; /* Dark slate */
-  color: #ffffff !important;
-  border-color: #1e293b !important;
+/* =========================================================================
+   CONVERSIÓN DE ROJOS A ROSA PINK & SUAVIZADO DE NEGROS
+   ========================================================================= */
+
+/* Suavizado global de colores negros a tonos carbón/slate refinados */
+.bg-black {
+  background-color: #1e2636 !important;
 }
 
-/* Ensure any text inside those overridden background spans/tags gets clean text */
-.bg-rose-600 *,
-.bg-rose-500 *,
-.bg-red-650 * {
-  color: #ffffff !important;
+.text-black {
+  color: #242c38 !important;
+}
+
+.border-black {
+  border-color: #334155 !important;
+}
+
+/* Suavizado de fondos oscuros ultra-profundos hacia un slate sofisticado */
+.bg-\[\#070b14\],
+.bg-\[\#070b14\]\/95,
+.bg-\[\#070b14\]\/98 {
+  background-color: #161e2c !important;
+}
+
+.bg-\[\#0d0714\] {
+  background-color: #1a1b2b !important;
+}
+
+.bg-\[\#0a0d16\],
+.bg-\[\#090d16\],
+.bg-\[\#090D15\]\/90,
+.bg-\[\#0B0F19\],
+.bg-\[\#0B0F19\]\/90,
+.bg-\[\#0B0F19\]\/98 {
+  background-color: #182130 !important;
+}
+
+.bg-\[\#1e0a14\] {
+  background-color: #221526 !important;
+}
+
+/* Conversión explícita de rojos a Rosa Pink (#ff2d85 / #e11470) */
+.text-red-400,
+.text-red-500,
+.text-red-550,
+.text-red-600,
+.text-red-650,
+.text-red-655,
+.text-red-700 {
+  color: #ff2d85 !important;
+}
+
+.fill-red-500,
+.fill-red-550,
+.fill-red-600 {
+  fill: #ff2d85 !important;
+}
+
+.bg-red-500,
+.bg-red-550,
+.bg-red-600,
+.bg-red-650,
+.bg-\[\#e60023\] {
+  background-color: #ff2d85 !important;
+}
+
+.hover\:bg-red-500:hover,
+.hover\:bg-red-600:hover,
+.hover\:bg-red-700:hover {
+  background-color: #e11470 !important;
+}
+
+.border-red-400,
+.border-red-500,
+.border-red-550,
+.border-red-600,
+.border-red-700 {
+  border-color: #ff2d85 !important;
+}
+
+.border-red-200,
+.border-red-200\/50 {
+  border-color: #fbcfe8 !important;
+}
+
+.bg-red-50 {
+  background-color: #fff1f6 !important;
+}
+
+.hover\:bg-red-50:hover {
+  background-color: #ffe4ee !important;
+}
+
+.focus\:border-red-500:focus {
+  border-color: #ff2d85 !important;
 }
 
 @keyframes live-floating {

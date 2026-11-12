@@ -898,8 +898,12 @@ export default function SessionResultsPodium({
   const [isSimulatedFiveWinners, setIsSimulatedFiveWinners] = useState(false);
   const lastBottomScrollTimeRef = useRef<number>(0);
 
-  // Immediately cancel any active speech synthesis and ongoing audio voiceovers when results page mounts
+  // Immediately cancel any active speech synthesis and set pending contest close when results page mounts
   useEffect(() => {
+    try {
+      localStorage.setItem('finanzas_contest_pending_close', 'true');
+    } catch (e) {}
+
     if ('speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -1419,35 +1423,9 @@ export default function SessionResultsPodium({
 
       {/* SECTION 1: HEADER BRAND TITLE */}
       <div className="text-center pt-4 sm:pt-6 pb-4 border-b border-rose-200/70 relative z-10 flex flex-col items-center">
-        {/* Prominent Finish Session Button */}
-        <button
-          type="button"
-          onClick={() => {
-            try {
-              localStorage.removeItem('finanzas_user_participating');
-              localStorage.removeItem('user_paid_finanzas_session');
-              localStorage.removeItem('finanzas_target_session_id');
-              localStorage.removeItem('finanzas_user_slot_index');
-              localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-            } catch (e) {}
-            if (onFinishParticipationSession) {
-              onFinishParticipationSession();
-            } else if (setCompletedSessionToDisplay) {
-              setCompletedSessionToDisplay(null);
-            }
-          }}
-          className="mb-3 bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-2xl shadow-md border border-rose-400/50 uppercase tracking-wider transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2.5 z-20"
-        >
-          <span className="text-base animate-pulse">🛑</span>
-          <span>Sesión Finalizada</span>
-        </button>
-
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black tracking-wider uppercase text-slate-900 mt-2 mb-1.5 animate-fade-in">
           Resultados Finales
         </h2>
-        <p className="text-[10px] sm:text-xs font-black font-mono tracking-widest text-slate-500 uppercase max-w-xl mx-auto leading-normal">
-          SISTEMA DE BLOQUES POR PUNTUACIÓN: AGRUPACIÓN DINÁMICA POR VOTOS DETECTADA
-        </p>
       </div>
 
       {/* 🧪 TESTING CONTROLLER FOR MULTI-WINNER SCENARIOS */}
@@ -1492,22 +1470,48 @@ export default function SessionResultsPodium({
         </div>
       </div>
 
+      {/* 🏷️ FRASE CON LETRAS NEGRAS Y CONTORNO ROSA PINK EN FONDO ROSA PERLA */}
+      <div className="flex justify-center my-2 sm:my-3 relative z-10 animate-fade-in select-none">
+        <div 
+          className="inline-flex flex-col items-center justify-center text-center px-5 py-2 sm:px-7 sm:py-2.5 rounded-2xl border border-[#f9a8d4] shadow-sm max-w-xs sm:max-w-md mx-auto"
+          style={{
+            backgroundColor: '#fce7f3',
+            backgroundImage: 'linear-gradient(135deg, #fff1f5 0%, #fce7f3 50%, #fbcfe8 100%)',
+            boxShadow: '0 2px 10px rgba(244, 114, 182, 0.2)'
+          }}
+        >
+          <h3
+            className="font-black uppercase tracking-wider text-xs sm:text-sm md:text-base leading-tight m-0"
+            style={{
+              color: '#000000',
+              WebkitTextStroke: '1px #ff2a85',
+              paintOrder: 'stroke fill',
+              textShadow: '-0.5px -0.5px 0 #ff2a85, 0.5px -0.5px 0 #ff2a85, -0.5px 0.5px 0 #ff2a85, 0.5px 0.5px 0 #ff2a85'
+            }}
+          >
+            Round
+          </h3>
+          <p
+            className="font-black uppercase tracking-wider text-[11px] sm:text-xs md:text-sm leading-tight mt-0.5 m-0"
+            style={{
+              color: '#000000',
+              WebkitTextStroke: '1px #ff2a85',
+              paintOrder: 'stroke fill',
+              textShadow: '-0.5px -0.5px 0 #ff2a85, 0.5px -0.5px 0 #ff2a85, -0.5px 0.5px 0 #ff2a85, 0.5px 0.5px 0 #ff2a85'
+            }}
+          >
+            Streetwear and Urban
+          </p>
+        </div>
+      </div>
+
       {/* 🏛️ CONTENEDORES ORDENADOS VERTICALMENTE CON DISEÑO COHESIVO Y ELEGANTE */}
       <div className="flex flex-col gap-6 relative z-10 w-full max-w-full">
         {/* 🏆 CONTENEDOR 1: EL PODIO DE NUESTROS GANADORES */}
         <div className="bg-white/95 p-4 sm:p-6 rounded-3xl border border-rose-200/90 shadow-xl relative overflow-hidden flex flex-col justify-center text-center space-y-5" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}>
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-rose-200/20 to-transparent pointer-events-none" />
           
-          {/* Decorative title - Desduplicado: Podio de Ganadores */}
-          <div className="text-center space-y-2 relative z-10">
-            <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-slate-900 tracking-wide uppercase leading-snug break-words px-2 m-0">
-              PODIO DE GANADORES • {completedSessionToDisplay.title}
-            </h3>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-50 border border-cyan-400/60 rounded-full text-[9.5px] sm:text-[10px] font-mono text-cyan-800 mx-auto">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-              <span>Base de Datos Archivada: {completedSessionToDisplay.reference || 'REF: 1'} (Ronda #{completedSessionToDisplay.roundNumber ? completedSessionToDisplay.roundNumber - 1 : 0})</span>
-            </div>
-          </div>
+
 
             {/* Podium pedestal columns or Multi-winner Slider */}
             {isMultiWinner ? (
@@ -2224,66 +2228,160 @@ export default function SessionResultsPodium({
             );
           })()}
 
-          {/* COMPONENT: BENEFICIO DE PATROCINADOR (10%) */}
-          <div className="bg-gradient-to-r from-pink-50/70 via-white to-pink-50/70 rounded-3xl border border-pink-200 p-5 shadow-sm relative overflow-hidden" id="financial-share-angels">
-            <div className="absolute top-0 right-0 py-1 px-3 bg-amber-400 text-slate-950 font-sans tracking-widest font-black text-[9px] uppercase rounded-bl-xl shadow-xs">
-              BENEFICIO DE PATROCINADOR
-            </div>
+          {/* COMPONENT: BENEFICIO DE PATROCINADOR - Banner de Alta Costura Alexander Vance (captura Beneficio del patrocinador Alexander Vance.png) */}
+          {(() => {
+            let sponsorModel = models.find(m => m.id === 'topm-1' || m.name.toLowerCase().includes('alexander') || m.username.includes('alexander')) ||
+              (userProfile?.patrocinadorId && models.find(m => m.id === userProfile.patrocinadorId)) ||
+              models[1] ||
+              models[0];
+            const sponsorName = 'Alexander Vance';
+            const sponsorAvatar = '/assets/aistudio/marcus_vance_executive.png';
 
-            <div className="flex flex-col text-left pt-2">
-              {/* Sponsor Share Box (10%) */}
-              {(() => {
-                let sponsorModel = models.find(m => m.id === 'topm-1' || m.name.toLowerCase().includes('alexander') || m.username.includes('alexander')) ||
-                  (userProfile?.patrocinadorId && models.find(m => m.id === userProfile.patrocinadorId)) ||
-                  models[1] ||
-                  models[0];
-                const sponsorName = sponsorModel?.name || 'Alexander Vance';
-                const sponsorAvatar = sponsorModel?.avatar || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=256";
+            return (
+              <div 
+                className="w-full max-w-sm mx-auto rounded-[24px] sm:rounded-[28px] border-2 border-[#d4af37]/80 shadow-[0_8px_30px_rgba(225,29,72,0.12),0_4px_12px_rgba(217,119,6,0.1)] relative overflow-hidden p-4 sm:p-5 animate-fade-in text-center my-2.5 box-border" 
+                style={{
+                  background: 'linear-gradient(135deg, #FFF0F6 0%, #FFE2EC 25%, #FFF5F9 50%, #FFD8E7 70%, #FFF0F6 100%)'
+                }}
+                id="financial-share-angels"
+              >
+                {/* Silky satin ambient drapery and sparkles */}
+                <div className="absolute -top-10 -left-10 w-44 h-44 bg-gradient-to-br from-pink-300/30 via-rose-200/15 to-transparent rounded-full blur-xl pointer-events-none" />
+                <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-gradient-to-tl from-rose-300/25 via-pink-200/20 to-transparent rounded-full blur-xl pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/70 via-transparent to-pink-200/20 pointer-events-none" />
 
-                return (
-                  <div className="flex items-center gap-4 bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/80 shadow-xs">
-                    <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center shrink-0 relative shadow-sm border border-amber-250">
-                      <img
-                        src={sponsorAvatar}
-                        alt={sponsorName}
-                        onClick={() => {
-                          if (sponsorModel && onSelectModel) {
-                            onSelectModel(sponsorModel);
-                          }
-                        }}
-                        className="w-14 h-14 rounded-full object-cover cursor-pointer hover:scale-105 duration-100 transition border-2 border-amber-400"
-                        title={`Ver perfil de ${sponsorName} (Patrocinador)`}
-                      />
-                      {/* Apretón de manos por fuera del área de la imagen */}
-                      <span className="absolute -top-1.5 -left-1.5 bg-amber-400 border border-amber-300 text-xs w-6 h-6 flex items-center justify-center rounded-full shadow-md z-10">
-                        🤝
-                      </span>
-                      <span className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 font-mono font-black text-[9px] px-1.5 py-0.2 rounded-full leading-none z-10">
-                        10%
-                      </span>
+                <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-2.5 sm:space-y-3 w-full max-w-xs mx-auto">
+                  {/* Top: Alexander Vance in Golden Ring + Medallion + Diamonds */}
+                  <div className="relative shrink-0 flex items-center justify-center my-1">
+                    {/* Golden Ring Medallion (Compact & Centered) */}
+                    <div 
+                      onClick={() => {
+                        if (sponsorModel && onSelectModel) {
+                          onSelectModel(sponsorModel);
+                        }
+                      }}
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 sm:p-1.5 bg-gradient-to-tr from-[#996515] via-[#f7d070] to-[#b8860b] shadow-[0_6px_18px_rgba(184,134,11,0.38)] cursor-pointer hover:scale-[1.03] transition-transform duration-200 relative group"
+                      title={`Ver perfil de ${sponsorName} (Patrocinador)`}
+                    >
+                      <div className="w-full h-full rounded-full overflow-hidden border-2 border-[#fff9e6] shadow-inner bg-slate-900">
+                        <img
+                          src={sponsorAvatar}
+                          alt={sponsorName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-900 font-sans">
-                        BENEFICIO DE PATROCINADOR (10%)
-                      </h4>
-                      <p className="text-xs text-slate-600 font-semibold leading-relaxed mt-0.5">
-                        La persona que invitó a Adriana Lima a registrarse en esta aplicación, su patrocinador <strong 
-                          onClick={() => {
-                            if (sponsorModel && onSelectModel) {
-                              onSelectModel(sponsorModel);
-                            }
+
+                    {/* Gold Seal / Medal with 10% and Ribbon Tails (Compact) */}
+                    <div className="absolute -bottom-1.5 -right-1.5 z-20 flex flex-col items-center">
+                      {/* Round Golden Medal */}
+                      <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#fff3b0] shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center border border-amber-200 relative z-20">
+                        <div className="w-full h-full rounded-full bg-gradient-to-b from-[#ffd54f] via-[#ffca28] to-[#ffb300] border border-[#ffecb3] flex flex-col items-center justify-center p-0.5 text-center shadow-inner relative overflow-hidden">
+                          {/* Crown on top of medal */}
+                          <div className="text-[7.5px] sm:text-[8.5px] text-amber-900 leading-none mb-0.5">
+                            👑
+                          </div>
+                          {/* 10% in crimson serif */}
+                          <span className="text-[#9f1239] font-black font-serif text-[11px] sm:text-xs leading-none tracking-tight">
+                            10%
+                          </span>
+                          {/* Laurel leaf stars */}
+                          <span className="text-[6.5px] sm:text-[7.5px] text-amber-900/80 font-serif leading-none mt-0.5">
+                            ★★★
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Notched Ribbon Tails */}
+                      <div className="flex items-center justify-center -mt-1 gap-0.5 z-10">
+                        <div 
+                          className="w-2.5 sm:w-3 h-4 sm:h-5 bg-gradient-to-b from-[#db2777] to-[#9f1239] shadow-sm origin-top -rotate-12"
+                          style={{
+                            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'
                           }}
-                          className="text-amber-800 hover:text-amber-600 hover:underline cursor-pointer font-bold inline-flex items-center gap-0.5"
-                        >
-                          {sponsorName} ↗
-                        </strong>, recibe el <strong>10% por éxito del patrocinio</strong>, equivalente a <strong className="text-amber-800 font-mono">+{(pool * 0.1).toFixed(2)}€</strong> de comisión directa.
-                      </p>
+                        />
+                        <div 
+                          className="w-2.5 sm:w-3 h-4 sm:h-5 bg-gradient-to-b from-[#db2777] to-[#9f1239] shadow-md origin-top rotate-12"
+                          style={{
+                            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Sparkling Pink Diamonds at bottom-left */}
+                    <div className="absolute -bottom-2 -left-2 z-20 flex items-end pointer-events-none">
+                      <img
+                        src="/assets/aistudio/pink_diamond_brilliant.png"
+                        alt="Pink Diamond"
+                        className="w-8 h-6 sm:w-10 sm:h-7 drop-shadow-[0_2px_6px_rgba(219,39,119,0.35)] filter brightness-110"
+                      />
+                      <span className="text-pink-400 text-[10px] animate-pulse -ml-1.5 -mb-0.5">✦</span>
                     </div>
                   </div>
-                );
-              })()}
-            </div>
-          </div>
+
+                  {/* Royal Golden Crown */}
+                  <div className="flex items-center justify-center pt-0.5">
+                    <svg className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-[0_2px_6px_rgba(217,119,6,0.3)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 46L14 18L26 34L32 12L38 34L50 18L58 46H6Z" fill="url(#crownGold)" stroke="#b8860b" strokeWidth="1.5" strokeLinejoin="round" />
+                      <circle cx="14" cy="18" r="3" fill="#ffd700" stroke="#b8860b" strokeWidth="1" />
+                      <circle cx="32" cy="12" r="3.5" fill="#ffd700" stroke="#b8860b" strokeWidth="1" />
+                      <circle cx="50" cy="18" r="3" fill="#ffd700" stroke="#b8860b" strokeWidth="1" />
+                      <rect x="6" y="46" width="52" height="6" rx="2" fill="url(#crownBase)" stroke="#b8860b" strokeWidth="1.2" />
+                      <circle cx="20" cy="49" r="1.5" fill="#ffffff" />
+                      <circle cx="32" cy="49" r="1.8" fill="#e11d48" />
+                      <circle cx="44" cy="49" r="1.5" fill="#ffffff" />
+                      <defs>
+                        <linearGradient id="crownGold" x1="6" y1="12" x2="58" y2="46" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="#ffe082" />
+                          <stop offset="0.5" stopColor="#ffb300" />
+                          <stop offset="1" stopColor="#ffd54f" />
+                        </linearGradient>
+                        <linearGradient id="crownBase" x1="6" y1="46" x2="58" y2="52" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="#ffc107" />
+                          <stop offset="0.5" stopColor="#fff8e1" />
+                          <stop offset="1" stopColor="#ffa000" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+
+                  {/* BENEFICIO DEL PATROCINADOR Headline */}
+                  <h3 className="font-serif font-black tracking-[0.14em] sm:tracking-[0.18em] text-slate-900 uppercase text-[11px] sm:text-xs md:text-sm m-0 leading-tight max-w-full px-1">
+                    BENEFICIO DEL PATROCINADOR
+                  </h3>
+
+                  {/* Glossy Ruby-Rose Pill Banner: Alexander Vance */}
+                  <div 
+                    onClick={() => {
+                      if (sponsorModel && onSelectModel) {
+                        onSelectModel(sponsorModel);
+                      }
+                    }}
+                    className="px-6 sm:px-8 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#c2185b] via-[#e91e63] to-[#c2185b] border border-amber-300 shadow-[0_4px_14px_rgba(233,30,99,0.38),inset_0_1.5px_3px_rgba(255,255,255,0.45)] cursor-pointer hover:scale-[1.02] transition-transform duration-200 inline-block max-w-[90%]"
+                    title="Ver perfil de Alexander Vance"
+                  >
+                    <span className="font-serif font-bold text-sm sm:text-base md:text-lg text-white tracking-wide drop-shadow-xs block truncate">
+                      {sponsorName}
+                    </span>
+                  </div>
+
+                  {/* Reward explanation text in vertical layout */}
+                  <div className="font-serif text-slate-900 leading-snug space-y-0.5 pt-0.5 text-center">
+                    <p className="text-xs sm:text-sm font-bold m-0">
+                      Recibe el <span className="text-[#e11d48] font-black text-xs sm:text-sm">10 %</span> por éxito
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold m-0">
+                      del patrocinio equivalente a
+                    </p>
+                    <p className="text-xs sm:text-sm font-black m-0 pt-0.5">
+                      <span className="text-[#e11d48] font-black text-sm sm:text-base tracking-tight">+100.00€</span> de comisión.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 💼 CONTENEDOR 5: MI PORTAFOLIO CREATIVO */}
           <div className="bg-white/95 border border-rose-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xl text-center">
@@ -2371,12 +2469,17 @@ export default function SessionResultsPodium({
                setIsCastingPublished(false);
              }
              try {
+               localStorage.removeItem('finanzas_contest_pending_close');
+               window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
+               window.dispatchEvent(new Event('storage'));
                window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next', force: true } }));
              } catch (e) {}
            }}
-           className="px-5 py-2.5 bg-gradient-to-r from-white via-pink-100 to-pink-500 hover:brightness-105 text-black border border-pink-250 font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-md"
+           id="btn-cerrar-concurso-podium"
+           className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-black text-xs uppercase rounded-xl tracking-wider shadow-sm transition active:scale-95 cursor-pointer flex flex-col items-center justify-center leading-tight whitespace-nowrap"
         >
-          Cerrar Concurso
+          <span>CERRAR</span>
+          <span>CONCURSO</span>
         </button>
       </div>
 

@@ -28,6 +28,7 @@ interface DashboardStatsProps {
   totalCommissions: number;
   onSelectModel?: (model: ModelProfile) => void;
   onNavigateToTab?: (tab: any) => void;
+  onOpenFriendsModal?: () => void;
   friendsCount?: number;
   followersCount?: number;
   followingCount?: number;
@@ -45,7 +46,8 @@ export default function DashboardStats({
   totalCommissions: rawTotalCommissions,
   onSelectModel,
   onNavigateToTab,
-  friendsCount: rawFriendsCount = 5,
+  onOpenFriendsModal,
+  friendsCount: rawFriendsCount = 11,
   followersCount: rawFollowersCount = 8,
   followingCount: rawFollowingCount = 14,
   referralsOnlineCount: rawReferralsOnlineCount = 7,
@@ -58,7 +60,7 @@ export default function DashboardStats({
   const totalEarnings = isVisitor ? 0 : rawTotalEarnings;
   const totalInvested = isVisitor ? 0 : rawTotalInvested;
   const totalCommissions = isVisitor ? 0 : rawTotalCommissions;
-  const friendsCount = isVisitor ? 0 : (rawFriendsCount > 0 ? rawFriendsCount : 5);
+  const friendsCount = isVisitor ? 0 : (rawFriendsCount > 0 ? rawFriendsCount : 11);
   const followersCount = isVisitor ? 0 : (rawFollowersCount > 0 ? rawFollowersCount : 8);
   const followingCount = isVisitor ? 0 : (rawFollowingCount > 0 ? rawFollowingCount : 14);
   const referralsOnlineCount = isVisitor ? 0 : (rawReferralsOnlineCount > 0 ? rawReferralsOnlineCount : 7);
@@ -335,7 +337,19 @@ export default function DashboardStats({
 
             {/* Card 6: AMIGOS (Victoria's Secret Luxury Pink Satin) */}
             <div
-              className="p-5 sm:p-6 rounded-[24px] border border-pink-200/90 hover:border-pink-300/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px]"
+              onClick={() => {
+                if (onOpenFriendsModal) {
+                  onOpenFriendsModal();
+                } else if (onNavigateToTab) {
+                  onNavigateToTab('profile');
+                  window.dispatchEvent(new CustomEvent('open-friends-modal-tab', { detail: { subTab: 'friends' } }));
+                } else {
+                  window.dispatchEvent(new CustomEvent('open-friends-modal-tab', { detail: { subTab: 'friends' } }));
+                }
+              }}
+              className="p-5 sm:p-6 rounded-[24px] border border-pink-200/90 hover:border-pink-300/90 hover:scale-[1.01] transition-all relative overflow-hidden flex flex-col justify-between min-h-[170px] cursor-pointer"
+              title="Ver y gestionar amigos sincronizados"
+              id="card-amigos-mis-finanzas"
               style={{
                 background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF5F8 35%, #FDF2F8 68%, #FCE7F3 100%)',
                 boxShadow: '0 10px 25px -5px rgba(225, 29, 72, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(244, 114, 182, 0.18)'
@@ -351,7 +365,7 @@ export default function DashboardStats({
                     </p>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-rose-950 mt-1.5 font-serif tracking-tight leading-none">
-                    {friendsCount > 0 ? friendsCount : 5}
+                    {friendsCount > 0 ? friendsCount : 11}
                   </h3>
                 </div>
                 <div className="shrink-0 pl-2">
