@@ -3254,7 +3254,9 @@ export default function ModelFacebookProfile({
   };
 
   // Photo Lightbox Interactive States
+  const profileContainerRef = useRef<HTMLDivElement>(null);
   const [selectedPhotoForLightbox, setSelectedPhotoForLightbox] = useState<string | null>(null);
+  const [lightboxBounds, setLightboxBounds] = useState<{ left: number; width: number } | null>(null);
   const isClosingLightboxRef = useRef(false);
 
   const handleOpenPhotoLightbox = (ph: string, e?: React.MouseEvent) => {
@@ -3283,14 +3285,36 @@ export default function ModelFacebookProfile({
   };
 
   useEffect(() => {
-    if (!selectedPhotoForLightbox) return;
+    if (!selectedPhotoForLightbox) {
+      setLightboxBounds(null);
+      return;
+    }
+    const updateLightboxBounds = () => {
+      const container = profileContainerRef.current || document.getElementById('facebook-profile-view');
+      if (!container || window.innerWidth < 768) {
+        setLightboxBounds(null);
+        return;
+      }
+      const rect = container.getBoundingClientRect();
+      if (rect.width > 0) {
+        setLightboxBounds({
+          left: Math.max(0, Math.round(rect.left)),
+          width: Math.min(window.innerWidth, Math.round(rect.width)),
+        });
+      }
+    };
+    updateLightboxBounds();
+    window.addEventListener('resize', updateLightboxBounds);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleClosePhotoLightbox(e);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('resize', updateLightboxBounds);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [selectedPhotoForLightbox]);
 
   // Synchronize with global lightbox: if global image lightbox opens or closes, ensure z1 (split comments lightbox) is closed
@@ -3350,6 +3374,10 @@ export default function ModelFacebookProfile({
     const handleGlobalClick = () => {
       setActiveEmojiPicker(null);
       setActiveShareMenuPostId(null);
+      pinnedStickersIdRef.current = null;
+      pinnedGiftIdRef.current = null;
+      setHoveredStickersPostId(null);
+      setHoveredHeartAndGiftPhotoUrl(null);
     };
     document.addEventListener('click', handleGlobalClick);
     return () => {
@@ -3360,6 +3388,7 @@ export default function ModelFacebookProfile({
   // Active photo being gifted with Extra Canal Gifts centered modal
   const [activeGiftingPhotoUrl, setActiveGiftingPhotoUrl] = useState<string | null>(null);
   const [hoveredHeartAndGiftPhotoUrl, setHoveredHeartAndGiftPhotoUrl] = useState<string | null>(null);
+  const pinnedGiftIdRef = React.useRef<string | null>(null);
 
   // Confirmation states for customized gift with optional text message
   const [selectedGiftForConfirm, setSelectedGiftForConfirm] = useState<{ name: string, icon: string, cost: number } | null>(null);
@@ -3397,6 +3426,7 @@ export default function ModelFacebookProfile({
 
   const [hoveredStickersPostId, setHoveredStickersPostId] = useState<string | null>(null);
   const stickersHoverTimeoutRef = React.useRef<any>(null);
+  const pinnedStickersIdRef = React.useRef<string | null>(null);
 
   const [screenRainParticles, setScreenRainParticles] = useState<{ id: string; emoji: string; left: number; top: number; size: number; delay: number; duration: number }[]>([]);
 
@@ -3405,15 +3435,20 @@ export default function ModelFacebookProfile({
       clearTimeout(stickersHoverTimeoutRef.current);
       stickersHoverTimeoutRef.current = null;
     }
-    setHoveredStickersPostId(postId);
+    if (!pinnedStickersIdRef.current) {
+      setHoveredStickersPostId(postId);
+    }
   };
 
   const handleStickersMouseLeave = () => {
+    if (pinnedStickersIdRef.current) return;
     if (stickersHoverTimeoutRef.current) {
       clearTimeout(stickersHoverTimeoutRef.current);
     }
     stickersHoverTimeoutRef.current = setTimeout(() => {
-      setHoveredStickersPostId(null);
+      if (!pinnedStickersIdRef.current) {
+        setHoveredStickersPostId(null);
+      }
     }, 800); // 800ms safety window
   };
 
@@ -3590,15 +3625,20 @@ export default function ModelFacebookProfile({
       clearTimeout(giftHoverTimeoutRef.current);
       giftHoverTimeoutRef.current = null;
     }
-    setHoveredHeartAndGiftPhotoUrl(photoUrl);
+    if (!pinnedGiftIdRef.current) {
+      setHoveredHeartAndGiftPhotoUrl(photoUrl);
+    }
   };
 
   const handleGiftMouseLeave = () => {
+    if (pinnedGiftIdRef.current) return;
     if (giftHoverTimeoutRef.current) {
       clearTimeout(giftHoverTimeoutRef.current);
     }
     giftHoverTimeoutRef.current = setTimeout(() => {
-      setHoveredHeartAndGiftPhotoUrl(null);
+      if (!pinnedGiftIdRef.current) {
+        setHoveredHeartAndGiftPhotoUrl(null);
+      }
     }, 800); // 800ms safety window to smoothly bridge distance between trigger details and popover
   };
 
@@ -3933,8 +3973,8 @@ export default function ModelFacebookProfile({
     setActiveEmojiPicker(null);
   };
 
-  // Compact Stickers popup rendered inside the uploaded image container centered
-  const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = true) => {
+  // Compact Stickers popup rendered inside the uploaded image container (full-image size or centered)
+  const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = true, matchImageSize = false) => {
     const filteredStickers = selectedStickerCategory === 'todos'
       ? STICKER_PACK
       : STICKER_PACK.filter(s => s.category === selectedStickerCategory);
@@ -3948,7 +3988,9 @@ export default function ModelFacebookProfile({
           if (targetId) handleStickersMouseLeave();
         }}
         className={
-          isCentered
+          matchImageSize
+            ? "absolute inset-0 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-t-2xl p-2.5 sm:p-3 z-[250] w-full h-full flex flex-col text-left animate-fade-in select-none"
+            : isCentered
             ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3 z-[250] w-[94%] max-w-[330px] sm:max-w-[350px] max-h-[92%] flex flex-col text-left animate-fade-in select-none"
             : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[340px] max-h-[90vh] flex flex-col text-left animate-fade-in select-none"
         }
@@ -3963,6 +4005,7 @@ export default function ModelFacebookProfile({
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
+              pinnedStickersIdRef.current = null;
               setHoveredStickersPostId(null);
             }}
             className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[10px] font-bold border border-zinc-800 cursor-pointer transition"
@@ -3999,7 +4042,7 @@ export default function ModelFacebookProfile({
         </div>
         
         {/* Compact Grid of cute stickers with all 4 columns fully visible & smooth scroll */}
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[260px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850">
+        <div className={matchImageSize ? "grid grid-cols-4 gap-1.5 sm:gap-2 flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start" : "grid grid-cols-4 gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[260px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850"}>
           {filteredStickers.map((sticker, sIdx) => {
             const fullEmojiStr = sticker.emojis.join('');
             return (
@@ -4015,6 +4058,7 @@ export default function ModelFacebookProfile({
                   } else {
                     handleStickerReactToPost(targetId, fullEmojiStr, e);
                   }
+                  pinnedStickersIdRef.current = null;
                   setHoveredStickersPostId(null);
                 }}
                 className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs group min-w-0"
@@ -4058,7 +4102,7 @@ export default function ModelFacebookProfile({
         }}
         className={
           isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3.5 z-[250] w-[90%] max-w-[310px] sm:max-w-[330px] max-h-[90%] overflow-y-auto no-scrollbar text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3 z-[250] w-[92%] max-w-[300px] sm:max-w-[320px] max-h-[92%] flex flex-col text-left animate-fade-in select-none"
             : "absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
         }
         onClick={(e) => e.stopPropagation()}
@@ -4076,6 +4120,7 @@ export default function ModelFacebookProfile({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
+                pinnedGiftIdRef.current = null;
                 setHoveredHeartAndGiftPhotoUrl(null);
                 setActiveGiftingPhotoUrl(null);
               }}
@@ -4088,7 +4133,7 @@ export default function ModelFacebookProfile({
         </div>
 
         {/* Compact Grid with hidden scrollbar and larger tiles */}
-        <div className="grid grid-cols-3 gap-1.5 max-h-[170px] sm:max-h-[200px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="grid grid-cols-3 gap-1.5 flex-1 min-h-0 max-h-[175px] sm:max-h-[205px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {EXTRA_GIFTS.map((gift, gIdx) => (
             <button
               key={gIdx}
@@ -4097,6 +4142,7 @@ export default function ModelFacebookProfile({
                 e.preventDefault();
                 e.stopPropagation();
                 handleGiftPhoto(targetId, gift);
+                pinnedGiftIdRef.current = null;
                 setHoveredHeartAndGiftPhotoUrl(null);
                 setActiveGiftingPhotoUrl(null);
               }}
@@ -4117,7 +4163,7 @@ export default function ModelFacebookProfile({
           ))}
         </div>
         
-        <div className="text-[7.5px] sm:text-[8px] text-zinc-400 text-center mt-1.5 pt-1.5 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider">
+        <div className="text-[7.5px] sm:text-[8px] text-zinc-400 text-center mt-1.5 pt-1.5 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider shrink-0">
           Presiona para enviar · 🪙 {liveUserCoins}
         </div>
       </div>
@@ -4164,6 +4210,7 @@ export default function ModelFacebookProfile({
                   }
                 }}
                 className="flex items-center gap-1.5 bg-[#ffeef2] hover:bg-[#ffd5df] active:scale-95 px-3 py-1.5 rounded-full cursor-pointer transition-all border border-pink-100/50"
+                title="Enviar emojis"
               >
                 <span className="text-xs select-none">💵</span>
                 <span className="text-[12px] font-extrabold text-slate-800 leading-none">{likesCount}</span>
@@ -5567,9 +5614,9 @@ export default function ModelFacebookProfile({
                     />
                   </div>
 
-                  {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                  {/* 💝 STICKERS POPUP SIZED EXACTLY TO THE UPLOADED IMAGE */}
                   {!selectedPhotoForLightbox && (hoveredStickersPostId === post.id || hoveredStickersPostId === post.image) && (
-                    renderCompactStickersPopup(post.image || post.id, false, true)
+                    renderCompactStickersPopup(post.image || post.id, false, true, true)
                   )}
 
                   {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
@@ -5613,12 +5660,35 @@ export default function ModelFacebookProfile({
                 (e) => {
                   e.stopPropagation();
                   handleLikePost(post.id, e);
-                  setHoveredStickersPostId(prev => (prev === (post.image || post.id)) ? null : (post.image || post.id));
+                  const targetKey = post.image || post.id;
+                  if (stickersHoverTimeoutRef.current) clearTimeout(stickersHoverTimeoutRef.current);
+                  if (giftHoverTimeoutRef.current) clearTimeout(giftHoverTimeoutRef.current);
+                  pinnedGiftIdRef.current = null;
+                  setHoveredHeartAndGiftPhotoUrl(null);
+                  setActiveShareMenuPostId(null);
+                  if (pinnedStickersIdRef.current === targetKey) {
+                    pinnedStickersIdRef.current = null;
+                    setHoveredStickersPostId(null);
+                  } else {
+                    pinnedStickersIdRef.current = targetKey;
+                    setHoveredStickersPostId(targetKey);
+                  }
                 },
                 (e) => {
                   e.stopPropagation();
                   const targetKey = post.image || post.id;
-                  setHoveredHeartAndGiftPhotoUrl(prev => prev === targetKey ? null : targetKey);
+                  if (stickersHoverTimeoutRef.current) clearTimeout(stickersHoverTimeoutRef.current);
+                  if (giftHoverTimeoutRef.current) clearTimeout(giftHoverTimeoutRef.current);
+                  pinnedStickersIdRef.current = null;
+                  setHoveredStickersPostId(null);
+                  setActiveShareMenuPostId(null);
+                  if (pinnedGiftIdRef.current === targetKey) {
+                    pinnedGiftIdRef.current = null;
+                    setHoveredHeartAndGiftPhotoUrl(null);
+                  } else {
+                    pinnedGiftIdRef.current = targetKey;
+                    setHoveredHeartAndGiftPhotoUrl(targetKey);
+                  }
                 },
                 () => setActiveCommentsPostId(activeCommentsPostId === post.id ? null : post.id),
                 () => handleToggleRepost(post.id),
@@ -5898,7 +5968,7 @@ export default function ModelFacebookProfile({
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden" id="facebook-profile-view">
+    <div ref={profileContainerRef} className="space-y-6 max-w-full overflow-x-hidden" id="facebook-profile-view">
       {/* 📘 FACEBOOK BLUE BRAND BAR INFO BOX */}
       <div className="bg-indigo-620/10 text-indigo-700 p-4 rounded-2xl flex items-center gap-3 border border-indigo-200">
         <Sparkles className="w-5 h-5 text-indigo-600 shrink-0" />
@@ -9816,7 +9886,12 @@ export default function ModelFacebookProfile({
                               onMouseEnter={() => setHoveredPhotoUrl(ph)}
                               onMouseLeave={() => {
                                 setHoveredPhotoUrl(null);
-                                setHoveredHeartAndGiftPhotoUrl(null);
+                                if (pinnedGiftIdRef.current !== ph) {
+                                  setHoveredHeartAndGiftPhotoUrl(null);
+                                }
+                                if (pinnedStickersIdRef.current !== ph) {
+                                  setHoveredStickersPostId(null);
+                                }
                               }}
                               className={`flex flex-col bg-white rounded-2xl overflow-visible border border-slate-200 group transition duration-300 hover:shadow-md relative ${
                                 hoveredStickersPostId === ph || hoveredHeartAndGiftPhotoUrl === ph ? 'z-40' : 'hover:z-30'
@@ -9865,6 +9940,19 @@ export default function ModelFacebookProfile({
                                 >
                                   <X className="w-4.5 h-4.5 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
                                 </button>
+
+                                {/* 💝 STICKERS & EMOJIS OVERLAY: Exact same size as the image */}
+                                {!selectedPhotoForLightbox && hoveredStickersPostId === ph && (
+                                  renderCompactStickersPopup(ph, true, true, true)
+                                )}
+
+                                {/* 🎁 REGALOS EXTRA POPUP: Centered inside the image */}
+                                {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === ph && (
+                                  renderCompactGiftsPopup(ph, true, true)
+                                )}
+
+                                {/* 📤 SHARE OVERLAY: Covering the image */}
+                                {!selectedPhotoForLightbox && activeShareMenuPostId === ph && renderShareOverlay(ph, ph)}
                               </div>
  
                               {/* Action Row styled exactly like image.png */}
@@ -9879,19 +9967,46 @@ export default function ModelFacebookProfile({
                                 (e) => {
                                   e.stopPropagation();
                                   handleLikePhoto(ph, e);
+                                  if (stickersHoverTimeoutRef.current) clearTimeout(stickersHoverTimeoutRef.current);
+                                  if (giftHoverTimeoutRef.current) clearTimeout(giftHoverTimeoutRef.current);
+                                  pinnedGiftIdRef.current = null;
+                                  setHoveredHeartAndGiftPhotoUrl(null);
+                                  setActiveShareMenuPostId(null);
+                                  if (pinnedStickersIdRef.current === ph) {
+                                    pinnedStickersIdRef.current = null;
+                                    setHoveredStickersPostId(null);
+                                  } else {
+                                    pinnedStickersIdRef.current = ph;
+                                    setHoveredStickersPostId(ph);
+                                  }
                                 },
                                 (e) => {
                                   e.stopPropagation();
-                                  setHoveredHeartAndGiftPhotoUrl(prev => prev === ph ? null : ph);
+                                  if (stickersHoverTimeoutRef.current) clearTimeout(stickersHoverTimeoutRef.current);
+                                  if (giftHoverTimeoutRef.current) clearTimeout(giftHoverTimeoutRef.current);
+                                  pinnedStickersIdRef.current = null;
+                                  setHoveredStickersPostId(null);
+                                  setActiveShareMenuPostId(null);
+                                  if (pinnedGiftIdRef.current === ph) {
+                                    pinnedGiftIdRef.current = null;
+                                    setHoveredHeartAndGiftPhotoUrl(null);
+                                  } else {
+                                    pinnedGiftIdRef.current = ph;
+                                    setHoveredHeartAndGiftPhotoUrl(ph);
+                                  }
                                 },
-                                undefined,
+                                (e) => handleOpenPhotoLightbox(ph, e),
                                 () => handleToggleRepost(ph),
                                 (e) => {
                                   e.stopPropagation();
+                                  pinnedStickersIdRef.current = null;
+                                  pinnedGiftIdRef.current = null;
+                                  setHoveredStickersPostId(null);
+                                  setHoveredHeartAndGiftPhotoUrl(null);
                                   setActiveShareMenuPostId(activeShareMenuPostId === ph ? null : ph);
                                 },
                                 () => handleToggleBookmark(ph),
-                                undefined
+                                ph
                               )}
                               
                               {!selectedPhotoForLightbox && giftConfirmPhotoUrl === ph && renderConfirmGiftOverlay(ph)}
@@ -10474,97 +10589,97 @@ export default function ModelFacebookProfile({
 
         return (
           <div 
-            className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-fade-in duration-200"
+            className="fixed inset-0 z-[120] bg-transparent"
             onClick={handleClosePhotoLightbox}
           >
-            {/* Click backdrop to close */}
-            <div 
-              className="absolute inset-0 cursor-zoom-out" 
+            {/* Lightbox backdrop strictly constrained to the profile page width on desktop */}
+            <div
+              className="fixed inset-y-0 z-[121] bg-black/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-fade-in duration-200 rounded-none sm:rounded-2xl"
+              style={
+                lightboxBounds
+                  ? { left: `${lightboxBounds.left}px`, width: `${lightboxBounds.width}px` }
+                  : { left: 0, right: 0 }
+              }
               onClick={handleClosePhotoLightbox}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            />
-
-            {/* Top-Right Floating Universal Close Button */}
-            <button
-              type="button"
-              onClick={handleClosePhotoLightbox}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              className="fixed top-4 right-4 z-[130] bg-slate-900/90 hover:bg-black text-white px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xl transition-all duration-150 cursor-pointer text-xs font-bold border border-white/20 backdrop-blur-md hover:scale-105 active:scale-95"
-              title="Cerrar (Esc)"
             >
-              <X className="w-4 h-4 stroke-[2.5]" />
-              <span>Cerrar</span>
-            </button>
-
-            {/* Lightbox Container */}
-            <div 
-              className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] md:max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] border border-slate-200/40 relative z-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-150 transition-all duration-300"
-              onClick={(e) => e.stopPropagation()}
-            >
-              
-              {/* Close Button on Mobile Stage */}
-              <button 
+              {/* Top-Right Close Button positioned inside the page-width overlay */}
+              <button
                 type="button"
                 onClick={handleClosePhotoLightbox}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="absolute top-4 right-4 md:hidden z-30 bg-slate-950/80 hover:bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center transition duration-150 shadow-md cursor-pointer"
-                title="Cerrar"
+                className="hidden md:flex absolute top-3 right-3 z-[130] bg-slate-900/90 hover:bg-black text-white px-3 py-1.5 rounded-full items-center gap-1.5 shadow-xl transition-all duration-150 cursor-pointer text-xs font-bold border border-white/20 backdrop-blur-md hover:scale-105 active:scale-95"
+                title="Cerrar (Esc)"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Cerrar</span>
               </button>
 
-              {/* LEFT: Image Stage */}
-              <div className="md:w-[55%] bg-[#0d0f14] flex items-center justify-center p-0 relative min-h-[220px] sm:min-h-[300px] md:h-[450px] lg:h-[550px] overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group/stage">
-                {/* Ambient Blur Glow Background */}
-                <img 
-                  src={selectedPhotoForLightbox} 
-                  alt=""
-                  referrerPolicy="no-referrer"
-                  className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-25 scale-110 pointer-events-none select-none"
-                />
-
-                <img 
-                  src={selectedPhotoForLightbox} 
-                  alt="Muestra de moda en grande"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain max-h-[35vh] sm:max-h-[40vh] md:max-h-[75vh] relative z-10 transition-all duration-300 group-hover/stage:scale-[1.015] cursor-pointer"
-                  onClick={(e) => {
+              {/* Lightbox Container */}
+              <div 
+                className="bg-white rounded-3xl overflow-hidden max-w-3xl w-full max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] border border-slate-200/40 relative z-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-150 transition-all duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
+              
+                {/* Close Button on Mobile Stage */}
+                <button 
+                  type="button"
+                  onClick={handleClosePhotoLightbox}
+                  onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const ph = selectedPhotoForLightbox;
-                    setSelectedPhotoForLightbox(null);
-                    openImageLightbox({
-                      src: ph,
-                      alt: userProfile.name,
-                      title: userProfile.name
-                    });
                   }}
-                />
+                  className="absolute top-3 right-3 md:hidden z-30 bg-slate-950/80 hover:bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center transition duration-150 shadow-md cursor-pointer"
+                  title="Cerrar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
 
-                {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                {hoveredStickersPostId === selectedPhotoForLightbox && (
-                  renderCompactStickersPopup(selectedPhotoForLightbox, true, true)
-                )}
+                {/* LEFT: Image Stage */}
+                <div className="md:w-[54%] bg-[#0d0f14] flex items-center justify-center p-0 relative min-h-[200px] sm:min-h-[280px] md:h-[410px] lg:h-[460px] overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group/stage">
+                  {/* Ambient Blur Glow Background */}
+                  <img 
+                    src={selectedPhotoForLightbox} 
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-25 scale-110 pointer-events-none select-none"
+                  />
 
-                {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
-                  renderCompactGiftsPopup(selectedPhotoForLightbox, true, true)
-                )}
+                  <img 
+                    src={selectedPhotoForLightbox} 
+                    alt="Muestra de moda en grande"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain max-h-[34vh] sm:max-h-[38vh] md:max-h-[460px] relative z-10 transition-all duration-300 group-hover/stage:scale-[1.015] cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const ph = selectedPhotoForLightbox;
+                      setSelectedPhotoForLightbox(null);
+                      openImageLightbox({
+                        src: ph,
+                        alt: userProfile.name,
+                        title: userProfile.name
+                      });
+                    }}
+                  />
 
-                {giftConfirmPhotoUrl === selectedPhotoForLightbox && renderConfirmGiftOverlay(selectedPhotoForLightbox, true)}
-              </div>
+                  {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                  {hoveredStickersPostId === selectedPhotoForLightbox && (
+                    renderCompactStickersPopup(selectedPhotoForLightbox, true, true)
+                  )}
 
-              {/* RIGHT: Feed panel with Likes and comments */}
-              <div className="md:w-[45%] flex flex-col h-[480px] md:h-[450px] lg:h-[550px] justify-between bg-white relative">
+                  {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
+                  {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
+                    renderCompactGiftsPopup(selectedPhotoForLightbox, true, true)
+                  )}
+
+                  {giftConfirmPhotoUrl === selectedPhotoForLightbox && renderConfirmGiftOverlay(selectedPhotoForLightbox, true)}
+                </div>
+
+                {/* RIGHT: Feed panel with Likes and comments */}
+                <div className="md:w-[46%] flex flex-col h-[420px] md:h-[410px] lg:h-[460px] justify-between bg-white relative">
                 
                 {/* Header (Model profile card link) */}
                 <div className="p-4 border-b border-slate-150 flex justify-between items-center bg-slate-50/50">
@@ -10916,6 +11031,7 @@ export default function ModelFacebookProfile({
                   </div>
                 </div>
 
+                </div>
               </div>
             </div>
           </div>

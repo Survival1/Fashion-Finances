@@ -6,6 +6,7 @@ import SessionResultsPodium from './SessionResultsPodium';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import ReglasParticipacionModal from './ReglasParticipacionModal';
 import ComisionesModal from './ComisionesModal';
+import rondasGoldCrown from '../assets/images/rondas_gold_crown_isolated_1794581342574.jpg';
 import { 
   TRABAJADORES_USERS, 
   FINANZAS_USERS, 
@@ -3478,30 +3479,79 @@ export default function SessionSimulator({
   return (
     <div className="bg-white rounded-3xl border border-slate-900/80 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" id="automated-sessions-section">
       
-      {/* 💎 BANNER OFICIAL: DIAMANTE ROSA Y FINANCIACIÓN CREATIVA (Captura Diamante rosa y financiación creativa.png) */}
-      <div className="w-full mb-6 sm:mb-8 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-pink-200/90 bg-gradient-to-r from-[#fff0f5] via-white to-[#ffe4e9] group select-none">
-        <img 
-          src="/assets/aistudio/Diamante_rosa_y_financiaci_n_creativa_ca7bffc3.png" 
-          alt="Quieres que impulsemos tus proyectos, súbelos y participa en nuestras Rondas de financiación - Tu talento, nuestra plataforma, un gran futuro juntos"
-          className="w-full h-auto object-cover block"
-        />
+      {/* 👑 HEADER BANNER LIMPIO: CORONA DORADA SIN TELA NI DIAMANTES + CAPA DE TEXTO TRADUCIBLE Y BOTONES A LA DERECHA */}
+      <div className="w-full mb-6 sm:mb-8 bg-white py-4 sm:py-6 px-2 sm:px-6 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
+        {/* Bloque de Texto Editorial Centrado */}
+        <div className="flex-1 flex flex-col items-center text-center">
+          {/* Corona dorada superior con líneas doradas */}
+          <div className="w-full max-w-[380px] flex items-center justify-center gap-3 sm:gap-4 mb-2 select-none">
+            <span className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#c9a468]/80 to-[#b0833d]" />
+            <img
+              src={rondasGoldCrown}
+              alt=""
+              aria-hidden="true"
+              referrerPolicy="no-referrer"
+              className="h-9 sm:h-11 w-auto object-contain mix-blend-multiply pointer-events-none shrink-0"
+              draggable={false}
+            />
+            <span className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#c9a468]/80 to-[#b0833d]" />
+          </div>
 
-        {/* Hotspots interactivos sobre los botones de la captura */}
-        <button
-          type="button"
-          onClick={() => setShowReglasModal(true)}
-          className="absolute top-[34%] right-[1.5%] w-[24%] h-[16%] cursor-pointer rounded-full opacity-0 hover:opacity-100 bg-white/20 active:bg-white/35 transition-all border-2 border-amber-400/80 shadow-md"
-          title="Ver Reglas de Participación"
-          aria-label="Ver Reglas de Participación"
-        />
+          {/* Capa de texto real traducible automáticamente */}
+          <h3 className="font-display text-[#1e2636] text-xl sm:text-3xl md:text-[32px] leading-[1.18] tracking-tight font-normal">
+            <span className="block">Quieres que impulsemos tus proyectos,</span>
+            <span className="block">súbelos y participa en nuestras</span>
+            <span className="block text-[#ff2d85] font-bold">Rondas de financiación.</span>
+          </h3>
 
-        <button
-          type="button"
-          onClick={() => setShowComisionesModal(true)}
-          className="absolute top-[52%] right-[1.5%] w-[24%] h-[16%] cursor-pointer rounded-full opacity-0 hover:opacity-100 bg-white/20 active:bg-white/35 transition-all border-2 border-amber-400/80 shadow-md"
-          title="Ver Comisiones"
-          aria-label="Ver Comisiones"
-        />
+          {/* Línea divisoria dorada sutil */}
+          <div className="w-full max-w-[340px] flex items-center justify-center my-3 sm:my-3.5 select-none">
+            <span className="h-[1px] w-full bg-gradient-to-r from-transparent via-[#c9a468] to-transparent" />
+          </div>
+
+          <p className="font-sans text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.22em] text-slate-600">
+            Tu talento, nuestra plataforma, un gran futuro juntos
+          </p>
+        </div>
+
+        {/* Dos botones de la derecha conservando su estilo dorado elegante */}
+        <div className="flex flex-col gap-3 shrink-0 w-full sm:w-auto items-center lg:items-end">
+          <button
+            type="button"
+            onClick={() => setShowReglasModal(true)}
+            className="custom-bg w-full sm:min-w-[250px] rounded-full bg-gradient-to-b from-white to-[#fdf9f2] hover:from-[#fffdf9] hover:to-[#fbf4e6] border-[1.5px] border-[#d6b36b] shadow-[0_4px_14px_rgba(180,145,80,0.16)] px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3 transition-all cursor-pointer active:scale-95"
+            title="Ver Reglas de Participación"
+            aria-label="Ver Reglas de Participación"
+            id="btn-open-reglas-participacion"
+          >
+            <span className="flex items-center gap-3">
+              <span className="text-base leading-none select-none">📜</span>
+              <span className="w-px h-5 bg-[#d6b36b]/55" />
+              <span className="text-[11px] font-extrabold text-[#1e2636] uppercase tracking-wider whitespace-nowrap">
+                Reglas de participación
+              </span>
+            </span>
+            <ChevronRight className="w-4 h-4 text-[#ff2d85] stroke-[2.5] shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowComisionesModal(true)}
+            className="custom-bg w-full sm:min-w-[250px] rounded-full bg-gradient-to-b from-white to-[#fdf9f2] hover:from-[#fffdf9] hover:to-[#fbf4e6] border-[1.5px] border-[#d6b36b] shadow-[0_4px_14px_rgba(180,145,80,0.16)] px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3 transition-all cursor-pointer active:scale-95"
+            title="Ver Comisiones"
+            aria-label="Ver Comisiones"
+            id="btn-open-comisiones"
+          >
+            <span className="flex items-center gap-3">
+              <span className="text-base leading-none select-none">💰</span>
+              <span className="w-px h-5 bg-[#d6b36b]/55" />
+              <span className="text-[11px] font-extrabold text-[#1e2636] uppercase tracking-wider whitespace-nowrap">
+                Comisiones
+              </span>
+            </span>
+            <ChevronRight className="w-4 h-4 text-[#ff2d85] stroke-[2.5] shrink-0" />
+          </button>
+        </div>
       </div>
 
       {/* Upper header */}
@@ -3511,33 +3561,6 @@ export default function SessionSimulator({
           <p className="text-xs text-slate-500 max-w-xl leading-relaxed mt-0.5">
             Únete a nuestras Rondas de financiación con tu proyecto y conseguirás los fondos que deseas.
           </p>
-        </div>
-
-        {/* Dynamic Action Buttons: Reglas de participación y Comisiones en vertical */}
-        <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
-          {/* Botón: Reglas de participación */}
-          <button
-            type="button"
-            onClick={() => setShowReglasModal(true)}
-            className="w-full px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95 uppercase"
-            title="Ver reglas de participación completas"
-            id="btn-open-reglas-participacion"
-          >
-            <span className="text-sm">📜</span>
-            <span>REGLAS DE PARTICIPACIÓN</span>
-          </button>
-
-          {/* Botón: Comisiones */}
-          <button
-            type="button"
-            onClick={() => setShowComisionesModal(true)}
-            className="w-full px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 shadow-xs active:scale-95 uppercase"
-            title="Ver desglose y estructura de comisiones"
-            id="btn-open-comisiones"
-          >
-            <span className="text-sm">💰</span>
-            <span>COMISIONES</span>
-          </button>
         </div>
       </div>
 
