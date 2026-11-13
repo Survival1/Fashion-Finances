@@ -1530,10 +1530,11 @@ export default function SessionResultsPodium({
 
                 {/* 🏆 MAIN SPOTLIGHT CARD FOR FUNDED PROJECT (LUXURY FINTECH REDESIGN) */}
                 {(() => {
-                  const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
-                  const winnerFundingAmount = isSingleWinner 
-                    ? 800 
-                    : (prizePerWinner > 0 ? (prizePerWinner / (activeWinnersList.length || 1)) : (800 / (activeWinnersList.length || 1)));
+                  const winnerFundingAmount = isSimulatedFiveWinners
+                    ? (prizeTotal80 / (activeWinnersList.length || 1))
+                    : (prizePerWinner > 0
+                        ? prizePerWinner
+                        : (prizeTotal80 / (activeWinnersList.length || 1)));
                   const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
                   const isMale = isMaleParticipant(firstPlace);
                   const isAlexander = isMale && (
@@ -1770,8 +1771,7 @@ export default function SessionResultsPodium({
             ) : (
               <div className="flex flex-col items-center justify-center pt-2 max-w-md mx-auto w-full relative z-10 animate-fade-in">
                 {firstPlace && (() => {
-                  const isSingleWinner = !isMultiWinner || activeWinnersList.length <= 1;
-                  const winnerFundingAmount = isSingleWinner ? 800 : (prizePerWinner > 0 ? prizePerWinner : 800);
+                  const winnerFundingAmount = prizePerWinner > 0 ? prizePerWinner : prizeTotal80;
                   const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
                   const isMale = isMaleParticipant(firstPlace);
                   const isAlexander = isMale && (

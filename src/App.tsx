@@ -30,6 +30,15 @@ import { ModelFullscreenExpandedView } from './components/ModelFullscreenExpande
 import AdminPortal from './components/AdminPortal';
 import NotificationCenterModal from './components/NotificationCenterModal';
 import RegisterModal from './components/RegisterModal';
+import LanguageTranslatorDropdown from './components/LanguageTranslatorDropdown';
+import {
+  SupportedLanguage,
+  LANGUAGE_CHANGE_EVENT,
+  getStoredLanguage,
+  setStoredLanguage,
+  applyPageTranslation,
+  startPageTranslationObserver,
+} from './utils/pageTranslator';
 import { 
   Sparkles, 
   Home, 
@@ -422,7 +431,7 @@ export default function App() {
     return seed.movements;
   });
 
-  const [historyWonLog, setHistoryWonLog] = useState<{ id: string; title: string; prize: number; date: string; projectId?: string; projectName?: string }[]>(() => {
+  const [historyWonLog, setHistoryWonLog] = useState<HistoryWonRecord[]>(() => {
     try {
       const raw = localStorage.getItem('coll_historyLog');
       const version = localStorage.getItem('db_version_v8');
@@ -430,12 +439,37 @@ export default function App() {
         return JSON.parse(raw) || [];
       }
     } catch (e) {}
-    const initialLog = [
-      { id: 'sess-old-1', title: 'Sesión Emprendedores - Genesis R1', prize: 80.00, date: '2026-05-30T16:00:00Z', projectId: 'proj-1', projectName: 'Eco-Fashion Runway' }
+    const initialLog: HistoryWonRecord[] = [
+      {
+        id: 'sess-old-1',
+        title: 'Sesión Emprendedores - Genesis R1',
+        prize: 80.00,
+        date: '2026-05-30T16:00:00Z',
+        projectId: 'proj-1',
+        projectName: 'Eco-Fashion Runway',
+        votesReceived: 7,
+        coWinnersCount: 0,
+        coWinnersNames: [],
+        totalWinnersCount: 1
+      }
     ];
     localStorage.setItem('coll_historyLog', JSON.stringify(initialLog));
     return initialLog;
   });
+
+  // Synchronous state mirrors to avoid stale closure overwrites when mutators run back-to-back
+  const modelsRef = useRef(models);
+  modelsRef.current = models;
+  const userProfileRef = useRef(userProfile);
+  userProfileRef.current = userProfile;
+  const projectsRef = useRef(projects);
+  projectsRef.current = projects;
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
+  const movementsRef = useRef(movements);
+  movementsRef.current = movements;
+  const historyWonLogRef = useRef(historyWonLog);
+  historyWonLogRef.current = historyWonLog;
 
   const [showVictoriaSecretRanking, setShowVictoriaSecretRanking] = useState(false);
   const [rankingInitialTab, setRankingInitialTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>('ranking');
@@ -611,6 +645,44 @@ export default function App() {
   const [addFundsAmount, setAddFundsAmount] = useState('50');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const [appLanguage, setAppLanguage] = useState<SupportedLanguage>(() => getStoredLanguage());
+  const appLanguageRef = useRef<SupportedLanguage>(appLanguage);
+  appLanguageRef.current = appLanguage;
+
+  useEffect(() => {
+    const onLanguageEvent = (e: Event) => {
+      const next = (e as CustomEvent<{ lang?: SupportedLanguage }>).detail?.lang;
+      if (next && (next === 'es' || next === 'en' || next === 'fr' || next === 'de')) {
+        setAppLanguage(next);
+      } else {
+        setAppLanguage(getStoredLanguage());
+      }
+    };
+    window.addEventListener(LANGUAGE_CHANGE_EVENT, onLanguageEvent);
+    const stopObserver = startPageTranslationObserver(() => appLanguageRef.current);
+    return () => {
+      window.removeEventListener(LANGUAGE_CHANGE_EVENT, onLanguageEvent);
+      stopObserver();
+    };
+  }, []);
+
+  useEffect(() => {
+    setStoredLanguage(appLanguage);
+    applyPageTranslation(appLanguage);
+    const rafId = requestAnimationFrame(() => applyPageTranslation(appLanguage));
+    return () => cancelAnimationFrame(rafId);
+  }, [
+    appLanguage,
+    activeTab,
+    userProfile?.id,
+    userProfile?.role,
+    showVictoriaSecretRanking,
+    showNotificationsModal,
+    showAddFundsModal,
+    showRegisterModal,
+    showLoginModal,
+  ]);
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   
@@ -1492,18 +1564,29 @@ export default function App() {
   // --- Core State Mutators ---
 
   const handleUpdateSessions = (nextSessions: InvestmentSession[]) => {
-    if (!userProfile) return;
+    const activeProfile = userProfileRef.current;
+    if (!activeProfile) return;
+    sessionsRef.current = nextSessions;
     setSessions(nextSessions);
-    saveStateToLocalStorage(models, userProfile, projects, nextSessions, messages, movements);
+    saveStateToLocalStorage(
+      modelsRef.current,
+      activeProfile,
+      projectsRef.current,
+      nextSessions,
+      messages,
+      movementsRef.current,
+      historyWonLogRef.current
+    );
   };
 
   const handleUpdateProfile = (nextProfile: UserSessionProfile) => {
+    userProfileRef.current = nextProfile;
     setUserProfile(nextProfile);
     
     // If our profile username matches an existing Model, also synchronize model's profile info!
-    let nextModels = models;
+    let nextModels = modelsRef.current;
     if (nextProfile.role === 'model') {
-      nextModels = models.map(m => {
+      nextModels = nextModels.map(m => {
         if (m.id === nextProfile.id) {
           return {
             ...m,
@@ -1522,10 +1605,19 @@ export default function App() {
         }
         return m;
       });
+      modelsRef.current = nextModels;
       setModels(nextModels);
     }
 
-    saveStateToLocalStorage(nextModels, nextProfile, projects, sessions, messages, movements);
+    saveStateToLocalStorage(
+      nextModels,
+      nextProfile,
+      projectsRef.current,
+      sessionsRef.current,
+      messages,
+      movementsRef.current,
+      historyWonLogRef.current
+    );
   };
 
   const handleGiftTransaction = (giftCostInCoins: number, recipientName: string, recipientIdOrUsername: string) => {
@@ -1800,38 +1892,107 @@ export default function App() {
   };
 
   const handleUpdateModelsGlobal = (nextModels: ModelProfile[]) => {
-    if (!userProfile) return;
+    const activeProfile = userProfileRef.current;
+    if (!activeProfile) return;
+    modelsRef.current = nextModels;
     setModels(nextModels);
-    saveStateToLocalStorage(nextModels, userProfile, projects, sessions, messages, movements);
+    saveStateToLocalStorage(
+      nextModels,
+      activeProfile,
+      projectsRef.current,
+      sessionsRef.current,
+      messages,
+      movementsRef.current,
+      historyWonLogRef.current
+    );
   };
 
   const handleAddMovement = (newMov: FinancialMovement) => {
-    if (!userProfile) return;
-    const nextMovs = [newMov, ...movements];
+    const activeProfile = userProfileRef.current;
+    if (!activeProfile) return;
+    const rawMov = newMov as any;
+    const normalizedMov: FinancialMovement = {
+      ...newMov,
+      userId: newMov.userId || activeProfile.id,
+      date: newMov.date || rawMov.timestamp || new Date().toISOString()
+    };
+    const nextMovs = [normalizedMov, ...movementsRef.current];
+    movementsRef.current = nextMovs;
     setMovements(nextMovs);
-    saveStateToLocalStorage(models, userProfile, projects, sessions, messages, nextMovs);
+    saveStateToLocalStorage(
+      modelsRef.current,
+      activeProfile,
+      projectsRef.current,
+      sessionsRef.current,
+      messages,
+      nextMovs,
+      historyWonLogRef.current
+    );
   };
 
   const handleAddSystemHistory = (completedSess: InvestmentSession, won: boolean, totalPrize: number) => {
-    if (!userProfile) return;
-    let nextHistory = historyWonLog;
+    const activeProfile = userProfileRef.current;
+    if (!activeProfile) return;
+    const currentProjects = projectsRef.current;
+    let nextHistory = historyWonLogRef.current;
     if (won) {
-      const userPart = completedSess.participants?.find(p => p.userId === userProfile.id || p.name === userProfile.name);
-      const matchedProj = userPart?.projectId ? projects.find(pr => pr.id === userPart.projectId) : projects[0];
-      nextHistory = [
-        {
-          id: completedSess.id,
-          title: completedSess.title,
-          prize: totalPrize,
-          date: new Date().toISOString(),
-          projectId: matchedProj?.id || 'proj-1',
-          projectName: matchedProj?.title || 'Eco-Fashion Runway'
-        },
-        ...historyWonLog
-      ];
+      const cleanMyName = (activeProfile.name || '').replace(' (Tú)', '').trim().toLowerCase();
+      const userPart = completedSess.participants?.find(p => {
+        const cleanPartName = (p.name || '').replace(' (Tú)', '').trim().toLowerCase();
+        return (
+          p.userId === activeProfile.id ||
+          (p as any).isSelf === true ||
+          (cleanMyName && cleanPartName === cleanMyName)
+        );
+      });
+      const storedProjId = typeof window !== 'undefined' ? localStorage.getItem('finanzas_user_project_id') : null;
+      const storedProjTitle = typeof window !== 'undefined' ? localStorage.getItem('finanzas_user_project_title') : null;
+      const partProjTitle = (userPart as any)?.projectTitle || storedProjTitle;
+
+      const matchedProj =
+        (userPart?.projectId ? currentProjects.find(pr => pr.id === userPart.projectId) : undefined) ||
+        (storedProjId ? currentProjects.find(pr => pr.id === storedProjId) : undefined) ||
+        (partProjTitle ? currentProjects.find(pr => pr.title.trim().toLowerCase() === partProjTitle.trim().toLowerCase()) : undefined) ||
+        currentProjects[0];
+
+      const participantsList = completedSess.participants || [];
+      const maxVotes = Math.max(...participantsList.map(p => p.votesReceived || 0), 0);
+      const winnerParts = participantsList.filter(p => (p.votesReceived || 0) === maxVotes && maxVotes > 0);
+      const coWinners = winnerParts.filter(w => {
+        const cleanWName = (w.name || '').replace(' (Tú)', '').trim().toLowerCase();
+        return w.userId !== userPart?.userId && cleanWName !== cleanMyName;
+      });
+
+      const entryId = completedSess.id && !nextHistory.some(h => h.id === completedSess.id)
+        ? completedSess.id
+        : `${completedSess.id || 'round'}-${Date.now()}`;
+
+      const newRecord: HistoryWonRecord = {
+        id: entryId,
+        title: completedSess.title,
+        prize: Number(totalPrize.toFixed(2)),
+        date: new Date().toISOString(),
+        projectId: matchedProj?.id || userPart?.projectId || 'proj-1',
+        projectName: matchedProj?.title || partProjTitle || 'Eco-Fashion Runway',
+        votesReceived: userPart?.votesReceived ?? maxVotes,
+        coWinnersCount: coWinners.length,
+        coWinnersNames: coWinners.map(c => (c.name || '').replace(' (Tú)', '').trim()),
+        totalWinnersCount: Math.max(1, winnerParts.length)
+      };
+
+      nextHistory = [newRecord, ...nextHistory];
+      historyWonLogRef.current = nextHistory;
       setHistoryWonLog(nextHistory);
     }
-    saveStateToLocalStorage(models, userProfile, projects, sessions, messages, movements, nextHistory);
+    saveStateToLocalStorage(
+      modelsRef.current,
+      activeProfile,
+      currentProjects,
+      sessionsRef.current,
+      messages,
+      movementsRef.current,
+      nextHistory
+    );
   };
 
   // 1-1 Chat Sender Engine
@@ -1937,19 +2098,41 @@ export default function App() {
 
   // Add Project
   const handleAddProject = (newProject: ProjectData) => {
-    if (!userProfile) return;
-    if (userProfile.role === 'visitor') {
+    const activeProfile = userProfileRef.current;
+    if (!activeProfile) return;
+    if (activeProfile.role === 'visitor') {
       alert('⚠️ No puedes registrar propuestas de proyecto como visitante no registrado. Por favor, crea una cuenta o inicia sesión.');
       return;
     }
-    const nextProj = [newProject, ...projects];
+    const nextProj = [newProject, ...projectsRef.current];
+    projectsRef.current = nextProj;
     setProjects(nextProj);
-    saveStateToLocalStorage(models, userProfile, nextProj, sessions, messages, movements);
+    saveStateToLocalStorage(
+      modelsRef.current,
+      activeProfile,
+      nextProj,
+      sessionsRef.current,
+      messages,
+      movementsRef.current,
+      historyWonLogRef.current
+    );
   };
 
   const handleUpdateProjects = (nextProjects: ProjectData[]) => {
+    const activeProfile = userProfileRef.current;
+    projectsRef.current = nextProjects;
     setProjects(nextProjects);
-    saveStateToLocalStorage(models, userProfile, nextProjects, sessions, messages, movements);
+    if (activeProfile) {
+      saveStateToLocalStorage(
+        modelsRef.current,
+        activeProfile,
+        nextProjects,
+        sessionsRef.current,
+        messages,
+        movementsRef.current,
+        historyWonLogRef.current
+      );
+    }
   };
 
   // Verify User identity toggler on profile/project section
@@ -2825,8 +3008,11 @@ export default function App() {
 
           {/* Wallet and user status trigger */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Contenedor Notificaciones, Backoffice & Panel Admin: alineados horizontalmente */}
+            {/* Contenedor Traductor, Notificaciones, Backoffice & Panel Admin: alineados horizontalmente */}
             <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {/* 🌐 TRADUCTOR DE IDIOMAS (EN / ES / FR / DE) */}
+              <LanguageTranslatorDropdown />
+
               {/* 🔔 BOTÓN DE NOTIFICACIONES JUSTO A LA IZQUIERDA DEL BOTÓN BACKOFFICE */}
               <button
                 type="button"
@@ -2997,7 +3183,7 @@ export default function App() {
                 }`}
               >
                 <Award className="w-4 h-4" />
-                <span>Sesiones</span>
+                <span>Rondas</span>
               </button>
             )}
 
@@ -4249,9 +4435,13 @@ export default function App() {
               isActiveTab={activeTab === 'casting_live'}
               models={models}
               userProfile={userProfile}
+              userProjects={projects}
+              sessions={sessions}
               selectedLiveModelId={selectedLiveModelId}
               initialSelectedStoreId={initialSelectedStoreId}
               onClearSelectedStoreId={() => setInitialSelectedStoreId(null)}
+              onUpdateSessions={handleUpdateSessions}
+              onAddSystemHistory={handleAddSystemHistory}
               onOpenChatWithModel={(modelId) => {
                 const target = models.find(m => m.id === modelId || m.username.toLowerCase() === modelId.toLowerCase()) ||
                                patrocinadosList.find(p => p.id === modelId || p.username.toLowerCase() === modelId.toLowerCase());

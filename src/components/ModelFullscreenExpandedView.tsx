@@ -123,30 +123,6 @@ export const ModelFullscreenExpandedView: React.FC<ModelFullscreenExpandedViewPr
             <ArrowLeft className="w-4 h-4 text-slate-600" />
             <span className="hidden sm:inline">Volver</span>
           </button>
-
-          <div className="h-5 w-px bg-slate-200 shrink-0 hidden sm:block" />
-
-          <div className="flex items-center gap-2.5 min-w-0">
-            <img
-              src={model.avatar}
-              alt={model.name}
-              referrerPolicy="no-referrer"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-rose-500 shrink-0 shadow-xs"
-            />
-            <div className="min-w-0 text-left">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h2 className="font-display font-black text-slate-900 text-sm sm:text-base leading-tight truncate">
-                  {model.name}
-                </h2>
-                <span className="bg-rose-500/10 text-rose-600 border border-rose-500/30 text-[8.5px] sm:text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                  Patrocinador Oficial
-                </span>
-              </div>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono block truncate">
-                @{model.username}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Acciones derecha: Elegir como Patrocinador */}

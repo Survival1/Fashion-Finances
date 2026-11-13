@@ -69,7 +69,7 @@ export default function MobileNavigationMenu({
         </div>
       </button>
 
-      {/* 3. SESIONES */}
+      {/* 3. RONDAS */}
       <button
         type="button"
         onClick={() => {
@@ -82,7 +82,7 @@ export default function MobileNavigationMenu({
       >
         <div className="flex items-center gap-3">
           <Award className="w-4 h-4 text-slate-750" />
-          <span className="text-[11.5px] font-black text-slate-850 uppercase tracking-wider font-mono">SESIONES</span>
+          <span className="text-[11.5px] font-black text-slate-850 uppercase tracking-wider font-mono">RONDAS</span>
         </div>
       </button>
 

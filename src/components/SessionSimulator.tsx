@@ -420,7 +420,15 @@ export default function SessionSimulator({
 }: SessionSimulatorProps) {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string>('');
-  const [enrollProjectId, setEnrollProjectId] = useState<string>('');
+  const [enrollProjectId, setEnrollProjectId] = useState<string>(() => {
+    try {
+      const savedId = localStorage.getItem('finanzas_user_project_id');
+      if (savedId && userProjects.some(p => p.id === savedId)) {
+        return savedId;
+      }
+    } catch (e) {}
+    return userProjects[0]?.id || '';
+  });
   const [showGatheringModal, setShowGatheringModal] = useState<boolean>(false);
   const [gatheringSessionData, setGatheringSessionData] = useState<InvestmentSession | null>(null);
   const [showReglasModal, setShowReglasModal] = useState<boolean>(false);
@@ -971,10 +979,52 @@ export default function SessionSimulator({
   };
 
   useEffect(() => {
-    if (userProjects.length > 0 && !enrollProjectId) {
-      setEnrollProjectId(userProjects[0].id);
+    if (userProjects.length === 0) return;
+    let targetId = enrollProjectId;
+    if (!targetId || !userProjects.some(p => p.id === targetId)) {
+      try {
+        const savedId = localStorage.getItem('finanzas_user_project_id');
+        if (savedId && userProjects.some(p => p.id === savedId)) {
+          targetId = savedId;
+        } else {
+          targetId = userProjects[0].id;
+        }
+      } catch (e) {
+        targetId = userProjects[0].id;
+      }
+      setEnrollProjectId(targetId);
+    }
+    const chosenProj = userProjects.find(p => p.id === targetId) || userProjects[0];
+    if (chosenProj) {
+      try {
+        localStorage.setItem('finanzas_user_project_id', chosenProj.id);
+        localStorage.setItem('finanzas_user_project_title', chosenProj.title);
+      } catch (e) {}
     }
   }, [userProjects, enrollProjectId]);
+
+  useEffect(() => {
+    const syncProjectFromStorage = () => {
+      try {
+        const savedId = localStorage.getItem('finanzas_user_project_id');
+        if (savedId && userProjects.some(p => p.id === savedId) && savedId !== enrollProjectId) {
+          setEnrollProjectId(savedId);
+        }
+        const syncedSimSessId = localStorage.getItem('finanzas_enrolled_simulator_session_id');
+        if (syncedSimSessId && sessions.some(s => s.id === syncedSimSessId)) {
+          setActiveSessionId(syncedSimSessId);
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('finanzas-project-selection-changed', syncProjectFromStorage);
+    window.addEventListener('finanzas-round-synced', syncProjectFromStorage);
+    window.addEventListener('storage', syncProjectFromStorage);
+    return () => {
+      window.removeEventListener('finanzas-project-selection-changed', syncProjectFromStorage);
+      window.removeEventListener('finanzas-round-synced', syncProjectFromStorage);
+      window.removeEventListener('storage', syncProjectFromStorage);
+    };
+  }, [userProjects, enrollProjectId, sessions]);
 
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? Math.min(window.innerWidth, 1200) : 1000);
@@ -1067,6 +1117,14 @@ export default function SessionSimulator({
   }, [sessions, activeSessionId]);
 
   const currentSession = getVisibleSessions().find(s => s.id === activeSessionId);
+
+  useEffect(() => {
+    if (!currentSession) return;
+    try {
+      localStorage.setItem('finanzas_simulator_selected_session_id', currentSession.id);
+      localStorage.setItem('finanzas_simulator_selected_fee', String(currentSession.entryFee));
+    } catch (e) {}
+  }, [currentSession?.id, currentSession?.entryFee]);
 
   // Initialize and run the automated step-by-step consensus process once user votes
   useEffect(() => {
@@ -4248,7 +4306,20 @@ export default function SessionSimulator({
                     </label>
                     <select
                       value={enrollProjectId}
-                      onChange={(e) => setEnrollProjectId(e.target.value)}
+                      onChange={(e) => {
+                        const nextId = e.target.value;
+                        setEnrollProjectId(nextId);
+                        const chosen = userProjects.find(p => p.id === nextId);
+                        if (chosen) {
+                          try {
+                            localStorage.setItem('finanzas_user_project_id', chosen.id);
+                            localStorage.setItem('finanzas_user_project_title', chosen.title);
+                            window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+                              detail: { projectId: chosen.id, projectTitle: chosen.title }
+                            }));
+                          } catch (err) {}
+                        }
+                      }}
                       className="w-full bg-white border-2 border-[#ff2d75] hover:border-[#e02466] focus:border-[#ff2d75] rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-3 focus:ring-pink-200/80 font-black cursor-pointer shadow-sm transition"
                     >
                       <option value="" className="text-slate-500 font-normal">-- Elige un proyecto de la lista --</option>

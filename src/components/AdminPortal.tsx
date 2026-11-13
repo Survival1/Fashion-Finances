@@ -53,6 +53,7 @@ import {
 } from 'lucide-react';
 import { UserSessionProfile, InvestmentSession, ProjectData, ModelProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
+import LanguageTranslatorDropdown from './LanguageTranslatorDropdown';
 
 interface AdminPortalProps {
   currentUser: UserSessionProfile;
@@ -486,6 +487,7 @@ export default function AdminPortal({
 
           {/* Quick Actions & Admin Profile */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+            <LanguageTranslatorDropdown compact />
             
             {/* Live refresh */}
             <button

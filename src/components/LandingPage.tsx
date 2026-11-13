@@ -22,6 +22,7 @@ import { ModelProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 import FashionRankingSlider from './FashionRankingSlider';
 import HeroPresentationVideo from './HeroPresentationVideo';
+import LanguageTranslatorDropdown from './LanguageTranslatorDropdown';
 
 interface LandingPageProps {
   models: ModelProfile[];
@@ -128,6 +129,7 @@ export default function LandingPage({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageTranslatorDropdown compact />
             <button
               type="button"
               onClick={() => scrollToSection(simulaRef)}

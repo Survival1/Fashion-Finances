@@ -118,7 +118,8 @@ import {
   Reply,
   Trophy
 } from 'lucide-react';
-import { ModelProfile, UserSessionProfile } from '../types';
+import { ModelProfile, UserSessionProfile, ProjectData, InvestmentSession } from '../types';
+import { seedInitialData } from '../utils/seedData';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 
 interface CastingLiveComment {
@@ -164,12 +165,16 @@ interface CastingLiveSectionProps {
   isActiveTab?: boolean;
   models: ModelProfile[];
   userProfile: UserSessionProfile | null;
+  userProjects?: ProjectData[];
+  sessions?: InvestmentSession[];
   selectedLiveModelId?: string;
   onOpenChatWithModel?: (modelId: string) => void;
   onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
   onNavigateToTab?: (tab: 'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu', targetStoreId?: string) => void;
   onUpdateUserProfile?: (profile: UserSessionProfile) => void;
   onAddMovement?: (movement: any) => void;
+  onUpdateSessions?: (sessions: InvestmentSession[]) => void;
+  onAddSystemHistory?: (session: InvestmentSession, won: boolean, totalPrize: number) => void;
   onGiftTransaction?: (giftCostInCoins: number, recipientName: string, recipientIdOrUsername: string) => void;
   initialSelectedStoreId?: string | null;
   onClearSelectedStoreId?: () => void;
@@ -2021,12 +2026,16 @@ export default function CastingLiveSection({
   isActiveTab = true,
   models, 
   userProfile, 
+  userProjects = [],
+  sessions = [],
   selectedLiveModelId,
   onOpenChatWithModel,
   onGoToModelProfile,
   onNavigateToTab,
   onUpdateUserProfile,
   onAddMovement,
+  onUpdateSessions,
+  onAddSystemHistory,
   onGiftTransaction,
   initialSelectedStoreId,
   onClearSelectedStoreId,
@@ -3378,8 +3387,23 @@ export default function CastingLiveSection({
   const [isRoundDatabaseModalOpen, setIsRoundDatabaseModalOpen] = useState<boolean>(false);
   const [roundDatabaseModalTargetId, setRoundDatabaseModalTargetId] = useState<string | undefined>(undefined);
   const [gatheringParticipantsList, setGatheringParticipantsList] = useState<any[]>(TRABAJADORES_USERS);
-  const [selectedInscriptionProjectId, setSelectedInscriptionProjectId] = useState<string>('proj-eco-fashion');
+  const [selectedInscriptionProjectId, setSelectedInscriptionProjectId] = useState<string>(() => {
+    try {
+      const savedProjId = localStorage.getItem('finanzas_user_project_id');
+      if (savedProjId) return savedProjId;
+    } catch (e) {}
+    return userProjects?.[0]?.id || 'proj-1';
+  });
   const [completedSessionToDisplay, setCompletedSessionToDisplay] = useState<any | null>(null);
+  const settledRoundKeysRef = useRef<Set<string>>((() => {
+    try {
+      const raw = localStorage.getItem('finanzas_settled_round_keys_v1');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return new Set<string>(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return new Set<string>();
+    }
+  })());
   const [isContestPendingClose, setIsContestPendingClose] = useState<boolean>(() => {
     try {
       return localStorage.getItem('finanzas_contest_pending_close') === 'true';
@@ -3404,12 +3428,24 @@ export default function CastingLiveSection({
           setIsContestPendingClose(true);
           setShowFinanzasResults(true);
         }
+        const syncedProjId = localStorage.getItem('finanzas_user_project_id');
+        if (syncedProjId) {
+          setSelectedInscriptionProjectId(syncedProjId);
+        }
       } catch (e) {}
     };
+    const handleProjectSelectionChanged = (e: any) => {
+      const projId = e?.detail?.projectId || localStorage.getItem('finanzas_user_project_id');
+      if (projId) {
+        setSelectedInscriptionProjectId(projId);
+      }
+    };
     window.addEventListener('finanzas-contest-closed', handleContestClosed);
+    window.addEventListener('finanzas-project-selection-changed', handleProjectSelectionChanged);
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('finanzas-contest-closed', handleContestClosed);
+      window.removeEventListener('finanzas-project-selection-changed', handleProjectSelectionChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
@@ -3419,10 +3455,10 @@ export default function CastingLiveSection({
   const [isFinanzasLiveConnected, setIsFinanzasLiveConnected] = useState<boolean>(true);
   const [votingCountdownSeconds, setVotingCountdownSeconds] = useState<number>(600); // 10 minutos (600s) para la mesa de votación
 
-  // Default user projects for proposal inscription page (matching captura z.png)
+  // Default fallback proposals (merged after user's real projects from App.tsx / SessionSimulator)
   const defaultInscriptionProposals = [
     {
-      id: 'proj-eco-fashion',
+      id: 'proj-1',
       title: 'Eco-Fashion Runway',
       category: 'Sostenibilidad o impacto ambiental',
       budget: 1000,
@@ -3454,6 +3490,57 @@ export default function CastingLiveSection({
       fundUsage: '60% desarrollo de software y red neuronal, 25% pruebas de usuario con agencias, 15% infraestructura cloud.'
     }
   ];
+
+  // Canonical merged list: user's real projects from App.tsx (SessionSimulator / image.png) come first
+  const mergedInscriptionProposals = useMemo(() => {
+    const mappedUserProjs = (userProjects || []).map(p => ({
+      id: p.id,
+      title: p.title,
+      category: p.category,
+      budget: p.budget,
+      objective: p.objective,
+      fundUsage: p.fundUsage,
+      images: p.images,
+      descriptionShort: p.descriptionShort
+    }));
+    const seenTitles = new Set(mappedUserProjs.map(p => (p.title || '').trim().toLowerCase()));
+    const seenIds = new Set(mappedUserProjs.map(p => p.id));
+    const extras = defaultInscriptionProposals.filter(
+      d => !seenIds.has(d.id) && !seenTitles.has((d.title || '').trim().toLowerCase())
+    );
+    return [...mappedUserProjs, ...extras];
+  }, [userProjects]);
+
+  const resolveEnrolledUserProject = (explicitProjId?: string) => {
+    let savedProjId: string | null = null;
+    let savedProjTitle: string | null = null;
+    try {
+      savedProjId = localStorage.getItem('finanzas_user_project_id');
+      savedProjTitle = localStorage.getItem('finanzas_user_project_title');
+    } catch (e) {}
+
+    const byExplicit = explicitProjId
+      ? mergedInscriptionProposals.find(p => p.id === explicitProjId)
+      : undefined;
+    if (byExplicit) return byExplicit;
+
+    const bySavedId = savedProjId
+      ? mergedInscriptionProposals.find(p => p.id === savedProjId)
+      : undefined;
+    if (bySavedId) return bySavedId;
+
+    const bySavedTitle = savedProjTitle
+      ? mergedInscriptionProposals.find(p => (p.title || '').trim().toLowerCase() === savedProjTitle!.trim().toLowerCase())
+      : undefined;
+    if (bySavedTitle) return bySavedTitle;
+
+    const byStateId = selectedInscriptionProjectId
+      ? mergedInscriptionProposals.find(p => p.id === selectedInscriptionProjectId)
+      : undefined;
+    if (byStateId) return byStateId;
+
+    return mergedInscriptionProposals[0];
+  };
 
   // Helper to format total seconds into MM:SS (e.g. 3000 -> 50:00)
   const formatMMSS = (totalSecs: number) => {
@@ -4615,12 +4702,20 @@ export default function CastingLiveSection({
     const fee = explicitFee !== undefined ? explicitFee : (targetSession?.entryFee || 10);
 
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
-    const selectedProj = defaultInscriptionProposals.find(p => p.id === (projectId || selectedInscriptionProjectId)) || defaultInscriptionProposals[0];
+    const selectedProj = resolveEnrolledUserProject(projectId);
 
     const currentBalance = typeof userProfile?.balance === 'number' ? userProfile.balance : 0;
 
     // Check if user has sufficient balance to pay the fee
     if (currentBalance < fee) {
+      try {
+        localStorage.removeItem('finanzas_user_participating');
+        localStorage.removeItem('finanzas_user_is_participating');
+        localStorage.removeItem('user_paid_finanzas_session');
+        if (targetSession?.id) {
+          localStorage.removeItem(`user_paid_session_${targetSession.id}`);
+        }
+      } catch (e) {}
       const diff = (fee - currentBalance).toFixed(2);
       const errMsg = `❌ Saldo insuficiente: El precio de inscripción es de ${feeFormatted}, pero tu saldo disponible es de ${currentBalance.toFixed(2)}€ (te faltan ${diff}€). Por favor, añade fondos a tu balance.`;
       setInscriptionBalanceError(errMsg);
@@ -4629,6 +4724,14 @@ export default function CastingLiveSection({
     }
 
     setInscriptionBalanceError(null);
+    try {
+      localStorage.setItem('finanzas_user_project_id', selectedProj.id);
+      localStorage.setItem('finanzas_user_project_title', selectedProj.title);
+      localStorage.setItem('finanzas_enrolled_entry_fee', String(fee));
+      window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+        detail: { projectId: selectedProj.id, projectTitle: selectedProj.title }
+      }));
+    } catch (e) {}
 
     // Deduct user balance strictly by the fee amount marked on the button
     const nextBalance = Number((currentBalance - fee).toFixed(2));
@@ -4643,12 +4746,12 @@ export default function CastingLiveSection({
     if (onAddMovement) {
       onAddMovement({
         id: `mov-${Date.now()}`,
+        userId: myId,
         type: 'investment',
-        amount: fee,
-        description: `Inscripción y Pago de Mesa • ${targetSession?.title || 'Round STREETWEAR & URBAN'}`,
-        timestamp: new Date().toISOString(),
-        status: 'completed',
-        currency: 'EUR'
+        amount: -fee,
+        date: new Date().toISOString(),
+        description: `Inversión - Inscripción en ronda ${targetSession?.title || 'Round STREETWEAR & URBAN'}`,
+        projectName: selectedProj.title
       });
     }
 
@@ -4812,6 +4915,84 @@ export default function CastingLiveSection({
       localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(updatedSessions));
     } catch (e) {}
 
+    // Reset votes cleanly for this newly enrolled round and generate unique round key
+    const roundInstanceKey = `${effectiveTargetSessionId}_${Date.now()}`;
+    setFinanzasVotes({});
+    setFinanzasVotedVoterIds([]);
+    try {
+      localStorage.removeItem('finanzas_project_votes');
+      localStorage.setItem('finanzas_voted_voter_ids_v2', JSON.stringify([]));
+      localStorage.setItem('finanzas_enrolled_round_key', roundInstanceKey);
+    } catch (e) {}
+
+    // Sync enrollment into App.tsx simulator sessions (image.png -> SessionSimulator.tsx)
+    if (onUpdateSessions && sessions && sessions.length > 0) {
+      const targetSimSession =
+        sessions.find(s => s.entryFee === fee && s.status === 'filling') ||
+        sessions.find(s => s.entryFee === fee && s.status === 'voting') ||
+        sessions.find(s => s.entryFee === fee);
+
+      if (targetSimSession) {
+        const simulatorParticipants = finalTen.map((fp: any) => ({
+          userId: fp.isSelf || fp.id === myId ? myId : fp.id,
+          name: fp.isSelf || fp.id === myId ? myName : (fp.name || 'Participante'),
+          avatar: fp.avatar || myAvatar,
+          projectId: fp.isSelf || fp.id === myId ? selectedProj.id : (fp.projectId || `proj-sim-${fp.id}`),
+          votesReceived: 0,
+          hasVoted: false
+        }));
+
+        const updatedAppSessions = sessions.map(s => {
+          if (s.id === targetSimSession.id) {
+            return {
+              ...s,
+              participants: simulatorParticipants,
+              poolTotal: 10 * s.entryFee,
+              status: 'voting' as const,
+              timeLeft: 1200
+            };
+          }
+          return s;
+        });
+
+        const hasOpenFillingSameFee = updatedAppSessions.some(
+          s => s.entryFee === fee && s.status === 'filling'
+        );
+        const finalAppSessions = hasOpenFillingSameFee
+          ? updatedAppSessions
+          : [
+              ...updatedAppSessions,
+              {
+                id: `sess-auto-${Date.now()}`,
+                title:
+                  fee === 10
+                    ? `Round STREETWEAR & URBAN - R-${Math.floor(Date.now() % 1000)}`
+                    : fee === 100
+                      ? `Round CASUAL & LIFESTYLE - R-${Math.floor(Date.now() % 1000)}`
+                      : fee === 1000
+                        ? `Round Glamour ✨ - R-${Math.floor(Date.now() % 1000)}`
+                        : fee === 10000
+                          ? `Round Elegant & Classic 🤍 - R-${Math.floor(Date.now() % 1000)}`
+                          : fee === 100000
+                            ? `Round High Fashion 👠 - R-${Math.floor(Date.now() % 1000)}`
+                            : `Round of Millionaires 💎 - R-${Math.floor(Date.now() % 1000)}`,
+                entryFee: fee,
+                status: 'filling' as const,
+                timeLeft: 1200,
+                createdAt: new Date().toISOString(),
+                poolTotal: 0,
+                participants: []
+              }
+            ];
+
+        onUpdateSessions(finalAppSessions);
+        try {
+          localStorage.setItem('finanzas_enrolled_simulator_session_id', targetSimSession.id);
+          window.dispatchEvent(new CustomEvent('finanzas-round-synced'));
+        } catch (e) {}
+      }
+    }
+
     setIsFinanzasUserParticipatingState(true);
     setIsVotingPhaseActive(false);
     setScreenSplitLayout('single');
@@ -4959,10 +5140,15 @@ export default function CastingLiveSection({
         window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
       } catch (e) {}
       localStorage.removeItem('finanzas_user_participating');
+      localStorage.removeItem('finanzas_user_is_participating');
       localStorage.removeItem('user_paid_finanzas_session');
       localStorage.removeItem('finanzas_target_session_id');
       localStorage.removeItem('finanzas_user_slot_index');
+      localStorage.removeItem('finanzas_enrolled_simulator_session_id');
+      localStorage.removeItem('finanzas_enrolled_round_key');
+      localStorage.removeItem('finanzas_enrolled_entry_fee');
       localStorage.removeItem('user_paid_session_sess-trabajadores-1');
+      localStorage.removeItem('user_paid_session_sess-streetwear-ref-2');
       localStorage.removeItem('user_paid_session_sess-emprendedores-1');
       localStorage.removeItem('user_paid_session_sess-empresarios-1');
       localStorage.removeItem('user_paid_session_sess-topmodels-1');
@@ -6517,30 +6703,11 @@ export default function CastingLiveSection({
   }, [isVotingPhaseActive, votingPhaseTimer]);
 
   const buildFinanzasCompletedSession = (votesMap: Record<string, number>) => {
-    const defaultParticipantVotes: Record<string, number> = {
-      'trab-0': 3,
-      'trab-1': 2,
-      'trab-2': 1,
-      'trab-3': 1,
-      'trab-4': 1,
-      'trab-5': 0,
-      'trab-6': 0,
-      'trab-7': 0,
-      'trab-8': 0,
-      'trab-9': 2,
-      'f-1': 3,
-      'f-2': 2,
-      'f-3': 1,
-      'f-4': 1,
-      'f-5': 1,
-      'f-6': 0,
-      'f-7': 0,
-      'f-8': 0,
-      'f-9': 0,
-      'f-10': 2,
-      'user': 2
-    };
-    const mergedVotes = { ...defaultParticipantVotes, ...votesMap };
+    const myId = userProfile?.id || 'user-adriana';
+    const myName = userProfile?.name || 'Adriana Lima';
+    const myUsername = userProfile?.username || 'adrianalima_w1';
+    const myAvatar = userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650';
+    const enrolledProj = resolveEnrolledUserProject();
 
     const sourceList = (currentSessionParticipants10 && currentSessionParticipants10.length >= 10)
       ? currentSessionParticipants10
@@ -6548,32 +6715,234 @@ export default function CastingLiveSection({
         ? currentFinanzasSession.participants
         : TRABAJADORES_USERS;
 
+    const cleanMyName = myName.replace(' (Tú)', '').trim().toLowerCase();
+    const isUserEnrolledHere = isFinanzasUserParticipatingState || isCurrentUserParticipatingInCurrentSession;
+
+    // Collect any explicit votes already cast for the current session's 10 participants
+    const explicitVotesPerIdx = sourceList.map((fu: any) => {
+      const cleanFuName = (fu.name || '').replace(' (Tú)', '').trim().toLowerCase();
+      const isUser = Boolean(
+        fu.isSelf ||
+        fu.id === myId ||
+        fu.id === 'user' ||
+        fu.id === 'user-adriana' ||
+        (isUserEnrolledHere && (fu.username === myUsername || cleanFuName === cleanMyName))
+      );
+      if (isUser) {
+        return Number(votesMap[myId] ?? votesMap[fu.id] ?? votesMap['user'] ?? 0) || 0;
+      }
+      return Number(votesMap[fu.id] ?? 0) || 0;
+    });
+
+    const totalExplicitVotes = explicitVotesPerIdx.reduce((a, b) => a + b, 0);
+    let finalVotesPerIdx = [...explicitVotesPerIdx];
+
+    // If fewer than 10 total ballots match current participants, simulate remaining AI ballots up to 10
+    if (totalExplicitVotes < 10) {
+      let remainingBallots = 10 - totalExplicitVotes;
+      const weights = sourceList.map((fu: any, idx: number) => {
+        const cleanFuName = (fu.name || '').replace(' (Tú)', '').trim().toLowerCase();
+        const isUser = Boolean(
+          fu.isSelf ||
+          fu.id === myId ||
+          fu.id === 'user' ||
+          fu.id === 'user-adriana' ||
+          (isUserEnrolledHere && (fu.username === myUsername || cleanFuName === cleanMyName))
+        );
+        if (isUser) return 5; // Competitive weight for user's selected proposal (matching SessionSimulator model)
+        if (idx === 0 || idx === 1) return 2;
+        return 1;
+      });
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      while (remainingBallots > 0) {
+        let r = Math.random() * totalWeight;
+        let pickedIdx = 0;
+        for (let i = 0; i < weights.length; i++) {
+          r -= weights[i];
+          if (r <= 0) {
+            pickedIdx = i;
+            break;
+          }
+        }
+        finalVotesPerIdx[pickedIdx] += 1;
+        remainingBallots -= 1;
+      }
+    }
+
     const participants = sourceList.map((fu: any, idx: number) => {
-      const isUser = fu.id === 'user' || (fu.id === 'trab-9' && isFinanzasUserParticipatingState) || (fu.id === 'f-10' && isFinanzasUserParticipatingState);
-      const name = isUser && userProfile?.name ? userProfile.name : fu.name;
-      const avatar = isUser && userProfile?.avatar ? userProfile.avatar : fu.avatar;
-      const votesReceived = mergedVotes[fu.id] ?? (idx === 0 ? 3 : idx === 1 ? 2 : idx === 9 ? 2 : (idx < 5 ? 1 : 0));
+      const cleanFuName = (fu.name || '').replace(' (Tú)', '').trim().toLowerCase();
+      const isUser = Boolean(
+        fu.isSelf ||
+        fu.id === myId ||
+        fu.id === 'user' ||
+        fu.id === 'user-adriana' ||
+        (isUserEnrolledHere && (fu.username === myUsername || cleanFuName === cleanMyName))
+      );
+      const name = isUser ? myName : (fu.name || 'Participante');
+      const avatar = isUser ? myAvatar : fu.avatar;
       return {
-        userId: fu.id,
-        name: name,
-        avatar: avatar,
+        userId: isUser ? myId : fu.id,
+        name,
+        avatar,
         hasVoted: true,
-        votesReceived: votesReceived,
-        projectId: fu.id
+        votesReceived: finalVotesPerIdx[idx] ?? 0,
+        projectId: isUser ? enrolledProj.id : (fu.projectId || fu.id),
+        projectTitle: isUser ? enrolledProj.title : fu.projectTitle,
+        isSelf: isUser
       };
     });
 
     const maxVotes = Math.max(...participants.map((p: any) => p.votesReceived), 1);
     const winners = participants.filter((p: any) => p.votesReceived === maxVotes).map((p: any) => p.name);
+    const activeEntryFee = currentFinanzasSession?.entryFee || Number(localStorage.getItem('finanzas_enrolled_entry_fee') || 10);
+    const roundRef = getFinanzasRoundRef(currentFinanzasSession, activeFinanzasSessionIndex);
+    const roundInstanceKey = (() => {
+      try {
+        return localStorage.getItem('finanzas_enrolled_round_key') || `${currentFinanzasSession?.id || 'sess-trabajadores-1'}_${roundRef}`;
+      } catch {
+        return `${currentFinanzasSession?.id || 'sess-trabajadores-1'}_${roundRef}`;
+      }
+    })();
 
     return {
       id: currentFinanzasSession?.id || 'sess-trabajadores-1',
-      title: currentFinanzasSession?.title || 'Ronda de Financiación y Modaparati Directo',
-      participants: participants,
-      poolTotal: currentFinanzasSession?.entryFee ? currentFinanzasSession.entryFee * 10 : 1000,
-      winners: winners
+      reference: roundRef,
+      roundNumber: currentFinanzasSession?.roundNumber || 1,
+      entryFee: activeEntryFee,
+      roundInstanceKey,
+      title: `${currentFinanzasSession?.title || 'Round STREETWEAR & URBAN'}${roundRef ? ` (${roundRef})` : ''}`,
+      participants,
+      poolTotal: activeEntryFee * 10,
+      winners
     };
   };
+
+  // Synchronize finished round outcome cleanly (exactly once per paid round) with App.tsx (z1.png, z3.png, z4.png, image.png)
+  const syncRoundOutcomeToApp = (settledSession: any) => {
+    if (!settledSession || !userProfile) return;
+    const roundKey = settledSession.roundInstanceKey || `${settledSession.id}_${settledSession.reference || 'r1'}`;
+    if (settledRoundKeysRef.current.has(roundKey)) return;
+
+    const myId = userProfile.id;
+    const cleanMyName = (userProfile.name || '').replace(' (Tú)', '').trim().toLowerCase();
+    const participants: any[] = settledSession.participants || [];
+    const userPart = participants.find(p => {
+      const cleanPName = (p.name || '').replace(' (Tú)', '').trim().toLowerCase();
+      return p.isSelf || p.userId === myId || (cleanMyName && cleanPName === cleanMyName);
+    });
+
+    // Only credit & persist history if the logged-in user actually participated in this round
+    const wasUserEnrolled = Boolean(
+      userPart && (
+        isFinanzasUserParticipatingState ||
+        isCurrentUserParticipatingInCurrentSession ||
+        localStorage.getItem('finanzas_user_participating') === 'true' ||
+        localStorage.getItem('user_paid_finanzas_session') === 'true'
+      )
+    );
+    if (!wasUserEnrolled) return;
+
+    settledRoundKeysRef.current.add(roundKey);
+    try {
+      localStorage.setItem('finanzas_settled_round_keys_v1', JSON.stringify(Array.from(settledRoundKeysRef.current)));
+    } catch (e) {}
+
+    const activeEntryFee = Number(settledSession.entryFee || currentFinanzasSession?.entryFee || 10);
+    const poolTotal = Number(settledSession.poolTotal || (activeEntryFee * 10));
+    const maxVotes = Math.max(...participants.map(p => p.votesReceived || 0), 0);
+    const winnerParts = maxVotes > 0
+      ? participants.filter(p => (p.votesReceived || 0) === maxVotes)
+      : participants.slice(0, 1);
+
+    const prizeTotal80 = poolTotal * 0.80;
+    const prizePerWinner = Number((prizeTotal80 / Math.max(1, winnerParts.length)).toFixed(2));
+    const userWon = winnerParts.some(w => {
+      const cleanWName = (w.name || '').replace(' (Tú)', '').trim().toLowerCase();
+      return w.isSelf || w.userId === myId || (cleanMyName && cleanWName === cleanMyName);
+    });
+
+    const enrolledProj = resolveEnrolledUserProject(userPart?.projectId);
+
+    if (userWon) {
+      if (onUpdateUserProfile) {
+        onUpdateUserProfile({
+          ...userProfile,
+          balance: Number((userProfile.balance + prizePerWinner).toFixed(2)),
+          totalEarnings: Number(((userProfile.totalEarnings || 0) + prizePerWinner).toFixed(2))
+        });
+      }
+
+      if (onAddMovement) {
+        onAddMovement({
+          id: `mov-prize-${Date.now()}`,
+          userId: myId,
+          type: 'prize',
+          amount: prizePerWinner,
+          date: new Date().toISOString(),
+          description: `🏆 ¡Ganador de ${settledSession.title}! (${winnerParts.length > 1 ? `Empate de ${winnerParts.length}` : 'Ganador único'})`,
+          projectName: enrolledProj.title
+        });
+      }
+    }
+
+    if (onAddSystemHistory) {
+      const normalizedSession: InvestmentSession = {
+        id: `${settledSession.id}-${Date.now()}`,
+        reference: settledSession.reference,
+        roundNumber: settledSession.roundNumber,
+        title: settledSession.title,
+        entryFee: activeEntryFee,
+        status: 'completed',
+        timeLeft: 0,
+        createdAt: new Date().toISOString(),
+        winners: winnerParts.map((w: any) => w.name),
+        patrocinadoresPaid: [],
+        poolTotal,
+        participants: participants.map((p: any) => ({
+          userId: p.isSelf ? myId : p.userId,
+          name: (p.name || '').replace(' (Tú)', '').trim(),
+          avatar: p.avatar,
+          projectId: p.isSelf ? enrolledProj.id : p.projectId,
+          votesReceived: p.votesReceived || 0,
+          hasVoted: true
+        }))
+      };
+      onAddSystemHistory(normalizedSession, userWon, userWon ? prizePerWinner : 0);
+    }
+
+    // Keep SessionSimulator (image.png) sessions list clean and synchronized
+    if (onUpdateSessions && sessions && sessions.length > 0) {
+      let simSessionId: string | null = null;
+      try {
+        simSessionId = localStorage.getItem('finanzas_enrolled_simulator_session_id');
+      } catch (e) {}
+
+      const targetSimId = simSessionId || sessions.find(
+        s => s.entryFee === activeEntryFee && s.participants.some(p => p.userId === myId)
+      )?.id;
+
+      if (targetSimId) {
+        const coreIds = ['sess-workers', 'sess-entrepreneurs', 'sess-businessmen', 'sess-topmodels', 'sess-investors', 'sess-millionaires'];
+        const nextSimSessions = sessions
+          .map(s => {
+            if (s.id === targetSimId && coreIds.includes(s.id)) {
+              const seedData = seedInitialData();
+              const freshSess = seedData.sessions.find(fs => fs.id === s.id);
+              if (freshSess) return freshSess;
+            }
+            return s;
+          })
+          .filter(s => !(s.id === targetSimId && !coreIds.includes(s.id)));
+        onUpdateSessions(nextSimSessions);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (showFinanzasResults && completedSessionToDisplay) {
+      syncRoundOutcomeToApp(completedSessionToDisplay);
+    }
+  }, [showFinanzasResults, completedSessionToDisplay]);
 
   // Reset selected user when switching sessions so stale presenter from another session never leaks
   useEffect(() => {
@@ -13317,7 +13686,23 @@ export default function CastingLiveSection({
                           Canales en Directo
                         </span>
                         <span className="text-[9px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
-                          {selectedCategoryFilter}
+                          {({
+                            atelier: 'Atelier',
+                            haute_couture: 'Haute Couture',
+                            streetwear: 'Streetwear & Urban',
+                            fashion_model: 'Fashion Model',
+                            runway_model: 'Runway Model',
+                            catalog_model: 'Catalog Model',
+                            commercial_model: 'Commercial Model',
+                            plus_size_model: 'Plus Size Model',
+                            petite_model: 'Petite Model',
+                            lingerie_model: 'Lingerie Model',
+                            swimsuit_model: 'Swimsuite Model',
+                            fitness_model: 'Fitnes Model',
+                            parts_model: 'Part Models',
+                            mature_model: 'Mature Model',
+                            real_people_models: 'Real People Model'
+                          } as Record<string, string>)[selectedCategoryFilter] || selectedCategoryFilter}
                         </span>
                       </div>
 
@@ -13327,18 +13712,21 @@ export default function CastingLiveSection({
                         id="channel-categories-2cols-grid"
                       >
                         {[
-                          { id: 'Todos', label: 'Todos 🌍' },
-                          { id: 'Fashion', label: 'Fashion ✨' },
-                          { id: 'Finanzas', label: 'Finanzas 📈' },
-                          { id: 'Modelos', label: 'Runway 👑' },
-                          { id: 'BackStage', label: 'BackStage 🎬' },
-                          { id: 'Investors', label: 'Jewellery 💎' },
-                          { id: 'Casting', label: 'Casting 👠' },
-                          { id: 'Fitnes', label: 'Fitnes 💪' },
-                          { id: 'Beauty', label: 'Beauty 💄' },
-                          { id: 'Influencer', label: 'Influencer 📱' },
-                          { id: 'Luxury', label: 'Luxury 🍸' },
-                          { id: 'Interview', label: 'Interview 🎙️' }
+                          { id: 'atelier', label: 'Atelier ✂️' },
+                          { id: 'haute_couture', label: 'Haute Couture 👑' },
+                          { id: 'streetwear', label: 'Streetwear & Urban ⚡' },
+                          { id: 'fashion_model', label: 'Fashion Model ✨' },
+                          { id: 'runway_model', label: 'Runway Model 👠' },
+                          { id: 'catalog_model', label: 'Catalog Model 📸' },
+                          { id: 'commercial_model', label: 'Commercial Model 🎬' },
+                          { id: 'plus_size_model', label: 'Plus Size Model 💖' },
+                          { id: 'petite_model', label: 'Petite Model 🌸' },
+                          { id: 'lingerie_model', label: 'Lingerie Model 🎀' },
+                          { id: 'swimsuit_model', label: 'Swimsuite Model ☀️' },
+                          { id: 'fitness_model', label: 'Fitnes Model 💪' },
+                          { id: 'parts_model', label: 'Part Models 💎' },
+                          { id: 'mature_model', label: 'Mature Model 🌟' },
+                          { id: 'real_people_models', label: 'Real People Model 🌍' }
                         ].map(cat => {
                           const isActive = selectedCategoryFilter === cat.id;
                           return (
@@ -16149,6 +16537,49 @@ export default function CastingLiveSection({
   // --- 🏆 Finanzas Results Content (captura zr.png) styled in za.png format ---
   const renderFinanzasResultsContent = () => {
     const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
+    const activeParticipants: any[] = activeSessionToDisplay?.participants || [];
+    const activeEntryFee = activeSessionToDisplay?.entryFee || currentFinanzasSession?.entryFee || 10;
+    const dynamicPool = activeSessionToDisplay?.poolTotal || (activeEntryFee * 10);
+    const dynamicMaxVotes = Math.max(...activeParticipants.map(p => p.votesReceived || 0), 1);
+    const dynamicWinners = activeParticipants.filter(p => (p.votesReceived || 0) === dynamicMaxVotes);
+    const dynamicIsTie = dynamicWinners.length > 1;
+    const dynamicPrizePerWinner = Number(((dynamicPool * 0.80) / Math.max(1, dynamicWinners.length)).toFixed(2));
+
+    const mergedPodiumProjects = [
+      ...(userProjects || []).map(p => ({
+        id: p.id,
+        userId: userProfile?.id || p.userId || 'user-adriana',
+        title: p.title,
+        description: p.descriptionShort || p.descriptionLong || p.objective,
+        metrics: `${p.budget}€ Meta`,
+        roi: '80% Pool',
+        tagline: p.category,
+        images: (p.images && p.images.length > 0)
+          ? p.images
+          : [
+              'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
+              'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
+            ]
+      })),
+      ...FINANZAS_USERS.map(fu => {
+        const details = getFinanzasProjectDetails(fu.id);
+        return {
+          id: fu.id,
+          userId: fu.id,
+          title: details.title,
+          description: details.description,
+          metrics: details.metrics,
+          roi: details.roi,
+          tagline: details.tagline,
+          images: [
+            fu.avatar,
+            'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
+          ]
+        };
+      })
+    ];
+
     return (
       <div 
         className="w-full h-full max-h-full bg-[#fff0f3] text-slate-900 flex flex-col font-sans text-left overflow-hidden min-h-0 animate-fade-in pointer-events-auto box-border" 
@@ -16176,31 +16607,18 @@ export default function CastingLiveSection({
         >
           <SessionResultsPodium
             completedSessionToDisplay={activeSessionToDisplay}
-            pool={1000}
-            prizePerWinner={800}
+            pool={dynamicPool}
+            prizePerWinner={dynamicPrizePerWinner}
+            isTie={dynamicIsTie}
+            winnersToDisplay={dynamicWinners}
+            maxVotes={dynamicMaxVotes}
             userProfile={{
               id: userProfile?.id || 'user',
               name: userProfile?.name || 'TÚ (Inversor)',
               balance: userProfile?.balance || 150000,
               patrocinadorId: userProfile?.patrocinadorId
             }}
-            userProjects={FINANZAS_USERS.map(fu => {
-              const details = getFinanzasProjectDetails(fu.id);
-              return {
-                id: fu.id,
-                userId: fu.id,
-                title: details.title,
-                description: details.description,
-                metrics: details.metrics,
-                roi: details.roi,
-                tagline: details.tagline,
-                images: [
-                  fu.avatar,
-                  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
-                  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=800'
-                ]
-              };
-            })}
+            userProjects={mergedPodiumProjects}
             models={models}
             onSelectModel={(m) => onGoToModelProfile?.(m.id || m.name)}
             onNavigateToTab={onNavigateToTab}
@@ -26163,297 +26581,6 @@ try {
                   <MessageCircle className="w-3.5 h-3.5 text-slate-600" />
                   <span>MENSAJE</span>
                 </button>
-
-
-
-                {/* 3. USER PLUS BUTTON (Sugerencias & Favoritos) */}
-                <div className="relative">
-                  <button 
-                    onClick={() => {
-                      setShowSuggestedFriendsModal(prev => !prev);
-                      setShowShareProfileModal(false);
-                      setShowMoreProfileOptions(false);
-                    }}
-                    className={`p-2 rounded-md border transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center ${
-                      showSuggestedFriendsModal || isFavorite
-                        ? 'bg-rose-50 text-[#fe2c55] border-rose-200 font-black' 
-                        : 'bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 border-slate-200'
-                    }`}
-                    id="btn-suggested-friends"
-                    title="Cuentas sugeridas & opciones de amistad"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                  </button>
-
-                  {/* Popover Drawer for UserPlus */}
-                  {showSuggestedFriendsModal && (
-                    <div className="absolute top-9 left-0 sm:right-0 sm:left-auto w-72 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 animate-fade-in text-left">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2.5">
-                        <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5 text-rose-500" />
-                          Conexión con Creador
-                        </span>
-                        <button 
-                          onClick={() => setShowSuggestedFriendsModal(false)}
-                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {/* Favorite Toggle Button */}
-                      <button
-                        onClick={() => {
-                          const nextFav = !isFavorite;
-                          setIsProfileFavorite(prev => ({ ...prev, [profile.username]: nextFav }));
-                          triggerToast(nextFav ? `⭐ ${profile.name} añadida a tus creadores favoritos` : `${profile.name} eliminada de favoritos`);
-                        }}
-                        className={`w-full text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-between mb-2 transition ${
-                          isFavorite ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200'
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <Star className={`w-3.5 h-3.5 ${isFavorite ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
-                          <span>{isFavorite ? 'En tus creadores favoritos' : 'Añadir a favoritos'}</span>
-                        </span>
-                        <span className="text-[10px] font-mono font-bold text-slate-400">{isFavorite ? 'ACTIVO' : 'AÑADIR'}</span>
-                      </button>
-
-                      {/* Notification Priority Toggle */}
-                      <button
-                        onClick={() => {
-                          const nextMute = !isMuted;
-                          setIsProfileMuted(prev => ({ ...prev, [profile.username]: nextMute }));
-                          triggerToast(nextMute ? `🔕 Notificaciones silenciadas para @${profile.username}` : `🔔 Notificaciones activadas para @${profile.username}`);
-                        }}
-                        className="w-full text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-between mb-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <Bell className={`w-3.5 h-3.5 ${!isMuted ? 'text-rose-500' : 'text-slate-400'}`} />
-                          <span>{!isMuted ? 'Notificaciones activas' : 'Notificaciones en silencio'}</span>
-                        </span>
-                        <span className="text-[10px] font-mono font-bold text-slate-400">{!isMuted ? 'ON' : 'OFF'}</span>
-                      </button>
-
-                      {/* Suggested Similar Creators */}
-                      <div className="pt-1 border-t border-slate-100">
-                        <span className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-2">
-                          Creadores sugeridos para ti
-                        </span>
-                        <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-                          {accountsQueSigues
-                            .filter(acc => acc.username !== profile.username)
-                            .slice(0, 3)
-                            .map(acc => {
-                              const followingThis = !!isProfileFollowing[acc.username];
-                              return (
-                                <div key={acc.username} className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-slate-50">
-                                  <div 
-                                    className="flex items-center gap-2 cursor-pointer min-w-0"
-                                    onClick={() => {
-                                      setViewingTikTokProfileUsername(acc.username);
-                                      setShowSuggestedFriendsModal(false);
-                                    }}
-                                  >
-                                    <img src={acc.avatar} alt={acc.name} className="w-7 h-7 rounded-full object-cover" />
-                                    <div className="min-w-0">
-                                      <p className="text-xs font-bold text-slate-800 truncate">{acc.name}</p>
-                                      <p className="text-[10px] text-slate-400 truncate">@{acc.username}</p>
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      setIsProfileFollowing(prev => ({ ...prev, [acc.username]: !prev[acc.username] }));
-                                      triggerToast(followingThis ? `Dejaste de seguir a ${acc.name}` : `¡Ahora sigues a ${acc.name}!`);
-                                    }}
-                                    className={`text-[10px] font-bold px-2.5 py-1 rounded transition ${
-                                      followingThis ? 'bg-slate-100 text-slate-600' : 'bg-[#fe2c55] text-white hover:bg-rose-600'
-                                    }`}
-                                  >
-                                    {followingThis ? 'Siguiendo' : 'Seguir'}
-                                  </button>
-                                </div>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 4. SHARE BUTTON (Compartir Perfil) */}
-                <div className="relative">
-                  <button 
-                    onClick={() => {
-                      setShowShareProfileModal(prev => !prev);
-                      setShowSuggestedFriendsModal(false);
-                      setShowMoreProfileOptions(false);
-                    }}
-                    className={`p-2 rounded-md border transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center ${
-                      showShareProfileModal 
-                        ? 'bg-rose-50 text-[#fe2c55] border-rose-200 font-black' 
-                        : 'bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 border-slate-200'
-                    }`}
-                    id="btn-share-profile"
-                    title="Compartir perfil"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                  </button>
-
-                  {/* Share Options Dropdown */}
-                  {showShareProfileModal && (
-                    <div className="absolute top-9 left-0 sm:right-0 sm:left-auto w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 animate-fade-in text-left">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
-                        <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                          <Share2 className="w-3.5 h-3.5 text-rose-500" />
-                          Compartir perfil
-                        </span>
-                        <button 
-                          onClick={() => setShowShareProfileModal(false)}
-                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <button
-                          onClick={handleCopyLink}
-                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center justify-between transition"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Copy className="w-3.5 h-3.5 text-slate-500" />
-                            <span>{copiedLinkSuccess ? '¡Enlace copiado! ✓' : 'Copiar enlace'}</span>
-                          </span>
-                          {copiedLinkSuccess && <span className="text-[10px] text-emerald-600 font-bold">COPIADO</span>}
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const text = encodeURIComponent(`¡Mira el perfil oficial de ${profile.name} (@${profile.username}) en Casting Live!`);
-                            const url = encodeURIComponent(`https://castinglive.app/@${profile.username}`);
-                            window.open(`https://api.whatsapp.com/send?text=${text}%20${url}`, '_blank');
-                            setShowShareProfileModal(false);
-                          }}
-                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-emerald-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
-                        >
-                          <span className="w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[9px] font-black">W</span>
-                          <span>Compartir en WhatsApp</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const text = encodeURIComponent(`Perfil oficial de ${profile.name} (@${profile.username})`);
-                            const url = encodeURIComponent(`https://castinglive.app/@${profile.username}`);
-                            window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
-                            setShowShareProfileModal(false);
-                          }}
-                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-sky-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
-                        >
-                          <span className="w-4 h-4 bg-sky-500 text-white rounded-full flex items-center justify-center text-[9px] font-black">T</span>
-                          <span>Compartir en Telegram</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const text = encodeURIComponent(`Descubre a ${profile.name} en @CastingLive: https://castinglive.app/@${profile.username}`);
-                            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-                            setShowShareProfileModal(false);
-                          }}
-                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-100 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
-                        >
-                          <span className="w-4 h-4 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-black">𝕏</span>
-                          <span>Compartir en X (Twitter)</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setShowShareProfileModal(false);
-                            handleOpenMessage();
-                          }}
-                          className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-rose-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
-                        >
-                          <Send className="w-3.5 h-3.5 text-rose-500" />
-                          <span>Enviar por mensaje privado</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 5. MORE OPTIONS BUTTON (Opciones adicionales) */}
-                <div className="relative">
-                  <button 
-                    onClick={() => {
-                      setShowMoreProfileOptions(prev => !prev);
-                      setShowShareProfileModal(false);
-                      setShowSuggestedFriendsModal(false);
-                    }}
-                    className={`p-2 rounded-md border transition active:scale-90 cursor-pointer h-7.5 w-7.5 flex items-center justify-center ${
-                      showMoreProfileOptions 
-                        ? 'bg-rose-50 text-[#fe2c55] border-rose-200 font-black' 
-                        : 'bg-slate-50 hover:bg-slate-100 hover:text-[#fe2c55] text-slate-700 border-slate-200'
-                    }`}
-                    id="btn-more-options"
-                    title="Más opciones de cuenta"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-
-                  {/* More Options Dropdown */}
-                  {showMoreProfileOptions && (
-                    <div className="absolute top-9 left-0 sm:right-0 sm:left-auto w-56 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 z-50 animate-fade-in text-left">
-                      <div className="space-y-1">
-                        <button
-                          onClick={() => {
-                            const nextMute = !isMuted;
-                            setIsProfileMuted(prev => ({ ...prev, [profile.username]: nextMute }));
-                            triggerToast(nextMute ? `🔕 Notificaciones silenciadas` : `🔔 Notificaciones activadas`);
-                            setShowMoreProfileOptions(false);
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
-                        >
-                          <Bell className="w-3.5 h-3.5 text-slate-500" />
-                          <span>{isMuted ? 'Activar notificaciones' : 'Silenciar notificaciones'}</span>
-                        </button>
-
-                        <button
-                          onClick={handleCopyLink}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-2 transition"
-                        >
-                          <Copy className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Copiar enlace del perfil</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const nextBlock = !isBlocked;
-                            setIsProfileBlocked(prev => ({ ...prev, [profile.username]: nextBlock }));
-                            triggerToast(nextBlock ? `🚫 Cuenta @${profile.username} bloqueada` : `Cuenta @${profile.username} desbloqueada`);
-                            setShowMoreProfileOptions(false);
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-xs font-bold text-red-600 flex items-center gap-2 transition"
-                        >
-                          <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                          <span>{isBlocked ? 'Desbloquear cuenta' : 'Bloquear cuenta'}</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setProfileReportSubmitted(false);
-                            setShowMoreProfileOptions(false);
-                            triggerToast(`🛡️ Reporte enviado para revisión: @${profile.username}`);
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-rose-50 text-xs font-bold text-rose-600 flex items-center gap-2 transition"
-                        >
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
-                          <span>Denunciar perfil</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
               </div>
             </div>
             
@@ -29029,32 +29156,6 @@ try {
                   )}
                 </div>
               </div>
-
-              {/* Row 2: Perfil y título en todo el ancho del canal (sin botón Entrar al Directo) */}
-              <div className="w-full pointer-events-auto">
-                <div className="space-y-2 w-full">
-                  {/* Avatar y Nombre de usuario */}
-                  <div className="flex items-center gap-2.5">
-                    <img 
-                      src={heroChannel.avatar} 
-                      alt={heroChannel.name}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-rose-500 shadow-md"
-                    />
-                    <div>
-                      <h3 className="font-extrabold text-sm sm:text-base text-white flex items-center gap-1.5 drop-shadow-md">
-                        <span>{heroChannel.name}</span>
-                        <span className="text-cyan-400 text-xs font-bold">✓</span>
-                      </h3>
-                      <p className="text-[11px] text-slate-200 drop-shadow-sm font-medium">@{heroChannel.username}</p>
-                    </div>
-                  </div>
-
-                  {/* Título en todo el ancho del canal (letra más chica) */}
-                  <h4 className="text-xs sm:text-sm font-bold text-white/95 leading-snug drop-shadow-md w-full block">
-                    {heroChannel.title}
-                  </h4>
-                </div>
-              </div>
             </div>
 
             {/* 🎯 SENSOR DEL MARGEN IZQUIERDO DEL CANAL (z.png): Al pasar el puntero por el lado izquierdo del canal aparece la barra de volumen de la captura image.png */}
@@ -29227,7 +29328,7 @@ try {
                         setIsHeroFollowed(prev => !prev);
                         if (!isHeroFollowed) {
                           setToastNotification({
-                            message: `¡Ahora sigues a ${liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : '@' + heroChannel.username}!`,
+                            message: `¡Ahora sigues a ${liveChannelsCategoryFilter === 'todos' ? '@adrianalima' : '@' + heroChannel.username}!`,
                             title: 'Siguiendo'
                           });
                         }
@@ -29680,7 +29781,7 @@ try {
                     ? `@${userProfile?.username || 'mi_camara_live'}`
                     : liveChannelsCategoryFilter === 'atelier' 
                     ? `@${heroChannel.username}` 
-                    : (liveChannelsCategoryFilter === 'todos' ? '@sofia_sensations' : `@${heroChannel.username}`)}
+                    : (liveChannelsCategoryFilter === 'todos' ? '@adrianalima' : `@${heroChannel.username}`)}
                 </span>
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
                 {/* Contenedor "Tu cámara en vivo" eliminado según petición del usuario */}
@@ -29703,14 +29804,6 @@ try {
                       : (liveChannelsCategoryFilter === 'todos' ? 'TODOS' : (heroChannel.categoryLabel || heroChannel.category).toUpperCase())}
                   </span>
                 )}
-              </div>
-
-              {/* Badge: SUBIDO DESDE CASTING LIVE */}
-              <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
-                  <Sparkles className="w-3 h-3 text-yellow-300" />
-                  <span>SUBIDO DESDE CASTING LIVE</span>
-                </span>
               </div>
 
               {/* Descripción con hashtags adaptada al canal */}
@@ -30831,8 +30924,32 @@ try {
             </div>
             
             {(() => {
+              const loggedUsername = (userProfile?.username || '').toLowerCase().trim().replace(/^@/, '');
+              const loggedBaseUsername = loggedUsername.replace(/_[wm]\d+$/i, '');
+              const loggedName = (userProfile?.name || '').toLowerCase().trim();
+
               const allFilteredAccounts = accountsQueSigues
-                .filter((acc) => !acc.username.includes('victoriassecret') && !acc.name.toLowerCase().includes('victoria') && !customZxsStores.some(s => s.username === acc.username || s.id === acc.username));
+                .filter((acc) => {
+                  if (acc.username.includes('victoriassecret') || acc.name.toLowerCase().includes('victoria')) return false;
+                  if (customZxsStores.some(s => s.username === acc.username || s.id === acc.username)) return false;
+
+                  const accUsername = (acc.username || '').toLowerCase().trim().replace(/^@/, '');
+                  const accBaseUsername = accUsername.replace(/_[wm]\d+$/i, '');
+                  const accName = (acc.name || '').toLowerCase().trim();
+
+                  if (
+                    loggedUsername &&
+                    (accUsername === loggedUsername ||
+                      accBaseUsername === loggedUsername ||
+                      (loggedBaseUsername && accBaseUsername === loggedBaseUsername))
+                  ) {
+                    return false;
+                  }
+                  if (loggedName && accName && accName === loggedName) {
+                    return false;
+                  }
+                  return true;
+                });
               
               const visibleAccounts = isExpandedFollowingAccounts 
                 ? allFilteredAccounts 
@@ -31647,7 +31764,27 @@ try {
                             CANALES EN DIRECTO
                           </span>
                           <span className="text-[10px] sm:text-[11px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-3 py-0.5 rounded-full border border-[#fe2c55]/60">
-                            {selectedCategoryFilter === 'Modelos' ? 'Runway' : selectedCategoryFilter === 'Investors' ? 'Jewellery' : (selectedCategoryFilter === 'Catwalk' || selectedCategoryFilter === 'Casting') ? 'Casting' : selectedCategoryFilter}
+                            {({
+                              atelier: 'Atelier',
+                              haute_couture: 'Haute Couture',
+                              streetwear: 'Streetwear & Urban',
+                              fashion_model: 'Fashion Model',
+                              runway_model: 'Runway Model',
+                              catalog_model: 'Catalog Model',
+                              commercial_model: 'Commercial Model',
+                              plus_size_model: 'Plus Size Model',
+                              petite_model: 'Petite Model',
+                              lingerie_model: 'Lingerie Model',
+                              swimsuit_model: 'Swimsuite Model',
+                              fitness_model: 'Fitnes Model',
+                              parts_model: 'Part Models',
+                              mature_model: 'Mature Model',
+                              real_people_models: 'Real People Model',
+                              Modelos: 'Runway',
+                              Investors: 'Jewellery',
+                              Catwalk: 'Casting',
+                              Casting: 'Casting'
+                            } as Record<string, string>)[selectedCategoryFilter] || selectedCategoryFilter}
                           </span>
                         </div>
 
@@ -31657,20 +31794,23 @@ try {
                           id="embedded-channel-categories-2cols-grid"
                         >
                           {[
-                            { id: 'Todos', label: 'Todos 🌍' },
-                            { id: 'Fashion', label: 'Fashion ✨' },
-                            { id: 'Finanzas', label: 'Finanzas 📈' },
-                            { id: 'Modelos', label: 'Runway 👑' },
-                            { id: 'BackStage', label: 'BackStage 🎬' },
-                            { id: 'Investors', label: 'Jewellery 💎' },
-                            { id: 'Casting', label: 'Casting 👠' },
-                            { id: 'Fitnes', label: 'Fitnes 💪' },
-                            { id: 'Beauty', label: 'Beauty 💄' },
-                            { id: 'Influencer', label: 'Influencer 📱' },
-                            { id: 'Luxury', label: 'Luxury 🍸' },
-                            { id: 'Interview', label: 'Interview 🎙️' }
+                            { id: 'atelier', label: 'Atelier ✂️' },
+                            { id: 'haute_couture', label: 'Haute Couture 👑' },
+                            { id: 'streetwear', label: 'Streetwear & Urban ⚡' },
+                            { id: 'fashion_model', label: 'Fashion Model ✨' },
+                            { id: 'runway_model', label: 'Runway Model 👠' },
+                            { id: 'catalog_model', label: 'Catalog Model 📸' },
+                            { id: 'commercial_model', label: 'Commercial Model 🎬' },
+                            { id: 'plus_size_model', label: 'Plus Size Model 💖' },
+                            { id: 'petite_model', label: 'Petite Model 🌸' },
+                            { id: 'lingerie_model', label: 'Lingerie Model 🎀' },
+                            { id: 'swimsuit_model', label: 'Swimsuite Model ☀️' },
+                            { id: 'fitness_model', label: 'Fitnes Model 💪' },
+                            { id: 'parts_model', label: 'Part Models 💎' },
+                            { id: 'mature_model', label: 'Mature Model 🌟' },
+                            { id: 'real_people_models', label: 'Real People Model 🌍' }
                           ].map(cat => {
-                            const isActive = selectedCategoryFilter === cat.id || (cat.id === 'Casting' && selectedCategoryFilter === 'Catwalk');
+                            const isActive = selectedCategoryFilter === cat.id;
                             return (
                               <button
                                 key={cat.id}
@@ -33731,7 +33871,7 @@ try {
                     ) : showFinanzasInscriptionInChannel ? (
                       (() => {
                         const currentSession = activeSessionsOnly[activeFinanzasSessionIndex] || currentFinanzasSession || activeSessionsOnly[0];
-                        const selectedProj = defaultInscriptionProposals.find(p => p.id === selectedInscriptionProjectId) || defaultInscriptionProposals[0];
+                        const selectedProj = resolveEnrolledUserProject();
                         const activeFee = currentSession?.entryFee || currentFinanzasSession?.entryFee || 10;
                         const feeFormatted = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(activeFee) + '€';
                         const poolFormatted = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(activeFee * 10) + '€';
@@ -34145,19 +34285,28 @@ try {
                                     📁 SELECCIONA CUÁL DE TUS PROYECTOS VAS A INSCRIBIR:
                                   </label>
                                   <span className="text-[9px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
-                                    {defaultInscriptionProposals.length} Proyectos
+                                    {mergedInscriptionProposals.length} Proyectos
                                   </span>
                                 </div>
 
                                 {/* Interactive Project Selection Cards */}
                                 <div className="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-0.5">
-                                  {defaultInscriptionProposals.map(proj => {
-                                    const isSelected = selectedInscriptionProjectId === proj.id;
+                                  {mergedInscriptionProposals.map(proj => {
+                                    const isSelected = selectedProj.id === proj.id;
                                     return (
                                       <button
                                         type="button"
                                         key={proj.id}
-                                        onClick={() => setSelectedInscriptionProjectId(proj.id)}
+                                        onClick={() => {
+                                          setSelectedInscriptionProjectId(proj.id);
+                                          try {
+                                            localStorage.setItem('finanzas_user_project_id', proj.id);
+                                            localStorage.setItem('finanzas_user_project_title', proj.title);
+                                            window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+                                              detail: { projectId: proj.id, projectTitle: proj.title }
+                                            }));
+                                          } catch (e) {}
+                                        }}
                                         className={`w-full p-2.5 rounded-xl border-2 transition text-left cursor-pointer flex flex-col gap-1 ${
                                           isSelected
                                             ? 'border-pink-500 bg-pink-50/80 shadow-xs ring-1 ring-pink-400'
@@ -34303,7 +34452,7 @@ try {
 
                                 <button
                                   type="button"
-                                  onClick={() => handleExecutePaymentAndJoinSession(selectedInscriptionProjectId, activeFee, targetUserArrivalSlot, currentSession)}
+                                  onClick={() => handleExecutePaymentAndJoinSession(selectedProj.id, activeFee, targetUserArrivalSlot, currentSession)}
                                   className="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700 text-center"
                                   id="btn-disparar-pago-inscribir-mesa"
                                 >

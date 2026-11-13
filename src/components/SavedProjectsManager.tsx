@@ -48,9 +48,13 @@ import {
   Eye,
   Trophy,
   X,
-  Download
+  Download,
+  Crown,
+  Users
 } from 'lucide-react';
 import { generateProjectPDF } from '../utils/pdfGenerator';
+import glamourHeroBackdrop from '../assets/images/glamour_history_hero_backdrop_1794565838319.jpg';
+import goldCoinsStackImg from '../assets/images/gold_coins_stack_icon_1794565838068.jpg';
 
 interface SavedProjectsProps {
   userProjects: ProjectData[];
@@ -870,18 +874,14 @@ export default function SavedProjectsManager({
       {/* 👑 LUXURY HAUTE COUTURE HERO BANNER (MATCHING PANEL_DE_FINANZAS_Y_MODA_ELEGANTE_AD48950A.PNG) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFDFC] via-[#FFF5F7] to-[#FFEBF2] border-2 border-pink-200/90 shadow-sm p-6 sm:p-8 lg:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="z-10 max-w-xl space-y-4 text-left">
-          <div className="flex items-center gap-3">
-            {/* Elegant geometric diamond icon in gold */}
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/40 flex items-center justify-center text-amber-600 shadow-xs shrink-0">
-              <svg className="w-7 h-7 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" />
-                <line x1="2" y1="9" x2="22" y2="9" />
-                <line x1="10" y1="3" x2="8" y2="9" />
-                <line x1="14" y1="3" x2="16" y2="9" />
-                <line x1="12" y1="22" x2="8" y2="9" />
-                <line x1="12" y1="22" x2="16" y2="9" />
-              </svg>
-            </div>
+          <div className="flex items-center gap-3.5">
+            {/* Brilliant Pink Diamond (without background layer) */}
+            <img
+              src="/assets/aistudio/pink_diamond_brilliant.png"
+              alt="Diamante Proyectos Guardados"
+              className="w-14 h-auto sm:w-16 object-contain shrink-0 filter drop-shadow-[0_4px_10px_rgba(244,63,94,0.32)] select-none"
+              referrerPolicy="no-referrer"
+            />
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-slate-900 tracking-tight leading-none">
               Proyectos<br className="hidden sm:inline" /> Guardados
             </h2>
@@ -2090,72 +2090,147 @@ export default function SavedProjectsManager({
             )}
           </div>
 
-          {/* SECTION B: WINNINGS HISTORY log (exclusively won, without participant clutter) */}
-          <div 
-            style={{ backgroundColor: '#ff70fe' }}
-            className="rounded-2xl border border-pink-300/80 p-6 shadow-3xs space-y-5 transition-all"
-          >
-            {/* Header with Title and Global KPI Badges */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-pink-200/60 pb-4">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <History className="w-4 h-4 text-emerald-600" />
-                  <span>Historial de Rondas de Inversión Ganadas</span>
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Registro exclusivo de tus éxitos comerciales. No se muestran proyectos que participaron pero no ganaron.
-                </p>
+          {/* SECTION B: WINNINGS HISTORY log (Luxury Pink Glamour Design matching Panel de Inversión con Glamour Rosa) */}
+          <div className="rounded-[28px] overflow-hidden border border-[#f2c1d1] shadow-[0_18px_45px_rgba(176,14,79,0.16)] bg-[#ffeef5] transition-all">
+            {/* TOP HERO BANNER: Deep Burgundy-Magenta Velvet + Model Portrait + Serif Title + Pearl KPI Badges */}
+            <div className="relative overflow-hidden bg-[#5e062c] min-h-[195px] sm:min-h-[215px] flex flex-col justify-center">
+              {/* Background Model & Runway Photo */}
+              <img
+                src={glamourHeroBackdrop}
+                alt="Pasarela Glamour de Inversión"
+                className="absolute inset-0 w-full h-full object-cover object-left select-none pointer-events-none"
+                referrerPolicy="no-referrer"
+              />
+              {/* Scrim for high-contrast serif legibility across center & right */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(64,4,30,0.12) 0%, rgba(88,6,40,0.72) 34%, rgba(122,10,59,0.88) 65%, rgba(145,14,72,0.84) 100%)'
+                }}
+              />
+
+              {/* Hero Content Grid */}
+              <div className="relative z-10 px-5 sm:px-8 pt-6 pb-10 sm:pb-12 grid grid-cols-1 lg:grid-cols-12 items-center gap-5">
+                {/* Left spacer over model portrait on desktop */}
+                <div className="hidden lg:block lg:col-span-3" />
+
+                {/* Center Editorial Serif Title & Subtitle */}
+                <div className="lg:col-span-5 text-center space-y-2.5 pl-24 sm:pl-36 lg:pl-0">
+                  <div className="flex justify-center">
+                    <Crown className="w-5 h-5 text-amber-300 drop-shadow-[0_2px_6px_rgba(251,191,36,0.45)]" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl xl:text-[28px] font-serif font-bold text-white leading-tight tracking-tight text-balance drop-shadow-sm">
+                    Historial de Rondas de Inversión Ganadas
+                  </h3>
+                  <div className="flex items-center justify-center gap-2 py-0.5">
+                    <span className="h-px w-16 bg-gradient-to-r from-transparent to-amber-300/80" />
+                    <span className="w-1.5 h-1.5 rotate-45 bg-amber-300/90" />
+                    <span className="h-px w-16 bg-gradient-to-l from-transparent to-amber-300/80" />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-rose-100/95 italic max-w-sm mx-auto leading-relaxed">
+                    Registro exclusivo de tus éxitos comerciales. No se muestran proyectos que participaron pero no ganaron.
+                  </p>
+                </div>
+
+                {/* Right KPI Capsule Cluster */}
+                {historyWonLog.length > 0 && (
+                  <div className="lg:col-span-4 flex flex-wrap lg:flex-col items-center lg:items-end justify-center gap-2.5">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-gradient-to-r from-[#fffafc] to-[#ffeaf2] border border-[#f5c7d9] rounded-full text-xs font-bold text-[#5c0b2e] shadow-md min-w-[185px]">
+                      <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span className="font-serif text-[13px]">{historyWonLog.length} {historyWonLog.length === 1 ? 'Victoria' : 'Victorias'}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-gradient-to-r from-[#fffafc] to-[#ffeaf2] border border-[#f5c7d9] rounded-full text-xs font-bold text-[#5c0b2e] shadow-md min-w-[185px]">
+                      <Folder className="w-4 h-4 text-[#8c1646] shrink-0" />
+                      <span className="font-serif text-[13px]">{projectWinningsSummary.length} {projectWinningsSummary.length === 1 ? 'Proyecto Ganador' : 'Proyectos Ganadores'}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-[#fffafc] to-[#ffeaf2] border border-[#f5c7d9] rounded-full text-xs font-extrabold text-[#047857] font-mono tabular-nums shadow-md min-w-[185px]">
+                      <img
+                        src={goldCoinsStackImg}
+                        alt="Monedas de oro"
+                        className="w-5 h-5 object-contain mix-blend-multiply shrink-0"
+                      />
+                      <span>+{historyWonLog.reduce((acc, curr) => acc + curr.prize, 0).toFixed(2)}€ Acumulados</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {historyWonLog.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 border border-pink-200 rounded-xl text-xs font-bold text-rose-800 shadow-3xs">
-                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                    <span>{historyWonLog.length} {historyWonLog.length === 1 ? 'Victoria' : 'Victorias'}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 border border-pink-200 rounded-xl text-xs font-bold text-slate-700 shadow-3xs">
-                    <Folder className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>{projectWinningsSummary.length} {projectWinningsSummary.length === 1 ? 'Proyecto Ganador' : 'Proyectos Ganadores'}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/95 border border-emerald-200 rounded-xl text-xs font-extrabold text-emerald-700 font-mono shadow-3xs">
-                    <span>+{historyWonLog.reduce((acc, curr) => acc + curr.prize, 0).toFixed(2)}€ Acumulados</span>
-                  </span>
-                </div>
-              )}
+              {/* Left Pink Diamond Accent on Wave Edge */}
+              <img
+                src="/assets/aistudio/pink_diamond_brilliant.png"
+                alt="Diamante rosa"
+                className="w-20 sm:w-28 h-auto object-contain absolute -bottom-2 left-2 sm:left-4 z-20 drop-shadow-[0_6px_14px_rgba(216,27,96,0.45)] pointer-events-none select-none"
+                referrerPolicy="no-referrer"
+              />
+
+              {/* Curved Blush-Silk Bottom Wave Transition */}
+              <svg
+                viewBox="0 0 1440 64"
+                preserveAspectRatio="none"
+                className="w-full h-7 sm:h-9 block absolute bottom-0 inset-x-0 z-10 pointer-events-none"
+              >
+                <path
+                  d="M0,26 C340,68 720,0 1440,36 L1440,64 L0,64 Z"
+                  fill="#ffeef5"
+                />
+                <path
+                  d="M0,26 C340,68 720,0 1440,36"
+                  fill="none"
+                  stroke="#f4d08c"
+                  strokeWidth="2.5"
+                />
+              </svg>
             </div>
 
-            {/* BARRA DE HERRAMIENTAS, BÚSQUEDA Y FILTRADO (Organización cuando hay muchos proyectos) */}
-            {historyWonLog.length > 0 && (
-              <div className="bg-white/90 backdrop-blur-xs rounded-xl border border-pink-200/80 p-3 shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                {/* Search Bar */}
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={historySearchQuery}
-                    onChange={(e) => setHistorySearchQuery(e.target.value)}
-                    placeholder="Buscar por proyecto, sesión o categoría..."
-                    className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50/70 border border-pink-200/80 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-rose-400 focus:bg-white transition"
-                  />
-                  {historySearchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setHistorySearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
-                      title="Borrar búsqueda"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
+            {/* SILK ROSE BODY AREA */}
+            <div
+              className="relative px-4 sm:px-7 pt-3 pb-7 space-y-5"
+              style={{
+                background: 'linear-gradient(180deg, #ffeef5 0%, #ffd8e8 50%, #ffc4dd 100%)'
+              }}
+            >
+              {/* Subtle Right Silk Diamond Ornament */}
+              <img
+                src="/assets/aistudio/pink_diamond_brilliant.png"
+                alt=""
+                aria-hidden="true"
+                className="hidden md:block w-16 h-auto object-contain absolute top-6 right-5 z-0 opacity-90 drop-shadow-[0_4px_10px_rgba(190,24,93,0.28)] pointer-events-none select-none rotate-[8deg]"
+                referrerPolicy="no-referrer"
+              />
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Selector de Proyecto */}
-                  <div className="relative">
+              {/* BARRA DE HERRAMIENTAS, BÚSQUEDA Y FILTRADO */}
+              {historyWonLog.length > 0 && (
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  {/* Rounded White Search Input */}
+                  <div className="relative flex-1 max-w-md min-w-[220px]">
+                    <Search className="w-4 h-4 text-[#9d174d] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={historySearchQuery}
+                      onChange={(e) => setHistorySearchQuery(e.target.value)}
+                      placeholder="Buscar por proyecto, sesión..."
+                      className="w-full pl-10.5 pr-9 py-2.5 text-xs italic bg-white/95 border border-[#f5c0d4] rounded-full text-[#3b0a22] placeholder-[#9d174d]/60 shadow-sm focus:outline-hidden focus:border-[#d81b60] focus:bg-white transition"
+                    />
+                    {historySearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setHistorySearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9d174d]/70 hover:text-[#9d174d] p-0.5 rounded-full cursor-pointer"
+                        title="Borrar búsqueda"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Right Stacked/Aligned Filter Controls */}
+                  <div className="flex flex-wrap items-center gap-2.5 lg:pr-16">
+                    {/* Selector de Proyecto */}
                     <select
                       value={historySelectedProjectFilter}
                       onChange={(e) => setHistorySelectedProjectFilter(e.target.value)}
-                      className="text-xs bg-white border border-pink-200/90 text-slate-700 rounded-lg px-2.5 py-1.5 pr-7 font-medium focus:outline-hidden focus:border-rose-400 cursor-pointer shadow-3xs max-w-[220px] truncate"
+                      className="text-xs bg-white/95 border border-[#e86da0] text-[#4c0524] rounded-full px-4 py-2 font-semibold focus:outline-hidden focus:border-[#be185d] cursor-pointer shadow-sm max-w-[240px] truncate"
                     >
                       <option value="all">Todos los proyectos ({projectWinningsSummary.length})</option>
                       {projectWinningsSummary.map(p => (
@@ -2164,343 +2239,389 @@ export default function SavedProjectsManager({
                         </option>
                       ))}
                     </select>
-                  </div>
 
-                  {/* Toggle de Modo de Vista */}
-                  <div className="flex items-center bg-pink-100/70 p-0.5 rounded-lg border border-pink-200">
-                    <button
-                      type="button"
-                      onClick={() => setHistoryViewMode('by_project')}
-                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer ${
-                        historyViewMode === 'by_project'
-                          ? 'bg-white text-rose-800 shadow-3xs'
-                          : 'text-slate-600 hover:text-slate-800'
-                      }`}
-                      title="Vista agrupada por proyecto (ideal para organizar muchos proyectos)"
-                    >
-                      <Layers className="w-3 h-3" />
-                      <span>Por Proyecto</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHistoryViewMode('table')}
-                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer ${
-                        historyViewMode === 'table'
-                          ? 'bg-white text-rose-800 shadow-3xs'
-                          : 'text-slate-600 hover:text-slate-800'
-                      }`}
-                      title="Vista de lista cronológica"
-                    >
-                      <FileText className="w-3 h-3" />
-                      <span>Todas las Rondas</span>
-                    </button>
-                  </div>
-
-                  {/* Botones de Expandir / Contraer todos (solo visible en modo by_project) */}
-                  {historyViewMode === 'by_project' && filteredProjectSummaries.length > 1 && (
-                    <div className="flex items-center gap-1 text-[11px]">
+                    {/* Toggle de Modo de Vista */}
+                    <div className="inline-flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => expandAllProjects(filteredProjectSummaries.map(p => p.projectId))}
-                        className="px-2 py-1 bg-white hover:bg-rose-50 border border-pink-200 rounded-md text-slate-600 font-semibold cursor-pointer transition shadow-3xs"
+                        onClick={() => setHistoryViewMode('by_project')}
+                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition cursor-pointer whitespace-nowrap shrink-0 ${
+                          historyViewMode === 'by_project'
+                            ? 'bg-gradient-to-r from-[#d81b60] to-[#ad1457] text-white border-[#9c0d49] shadow-md'
+                            : 'bg-white/90 text-[#4c0524] border-[#f3bfd4] hover:bg-white'
+                        }`}
+                        title="Vista agrupada por proyecto"
                       >
-                        Expandir
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>Por Proyecto</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => collapseAllProjects(filteredProjectSummaries.map(p => p.projectId))}
-                        className="px-2 py-1 bg-white hover:bg-rose-50 border border-pink-200 rounded-md text-slate-600 font-semibold cursor-pointer transition shadow-3xs"
+                        onClick={() => setHistoryViewMode('table')}
+                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition cursor-pointer whitespace-nowrap shrink-0 ${
+                          historyViewMode === 'table'
+                            ? 'bg-gradient-to-r from-[#d81b60] to-[#ad1457] text-white border-[#9c0d49] shadow-md'
+                            : 'bg-white/90 text-[#4c0524] border-[#f3bfd4] hover:bg-white'
+                        }`}
+                        title="Vista de lista cronológica"
                       >
-                        Contraer
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Todas las Rondas</span>
                       </button>
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {/* VISTA 1: AGRUPADA POR PROYECTO (Acordeón Ultra-Cómodo para muchos proyectos) */}
-            {historyWonLog.length > 0 && historyViewMode === 'by_project' && (
-              <div className="space-y-3">
-                {filteredProjectSummaries.length === 0 ? (
-                  <div className="bg-white/90 border border-dashed border-pink-200 rounded-xl p-6 text-center text-xs text-slate-500">
-                    No se encontraron proyectos con victorias que coincidan con los filtros seleccionados.
-                    <button
-                      type="button"
-                      onClick={() => { setHistorySearchQuery(''); setHistorySelectedProjectFilter('all'); }}
-                      className="block mx-auto mt-2 text-rose-600 font-bold hover:underline cursor-pointer"
-                    >
-                      Restablecer filtros
-                    </button>
-                  </div>
-                ) : (
-                  filteredProjectSummaries.map((pSummary) => {
-                    const isOpen = expandedProjects[pSummary.projectId] ?? true;
-                    return (
-                      <div
-                        key={pSummary.projectId}
-                        className="bg-white/95 rounded-xl border border-pink-200/90 shadow-3xs overflow-hidden transition-all hover:border-pink-300"
-                      >
-                        {/* Cabecera del Proyecto (Fila interactiva que resume todo limpiamente) */}
-                        <div
-                          onClick={() => toggleProjectAccordion(pSummary.projectId)}
-                          className="p-4 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-rose-50/30 transition-colors select-none"
+                    {/* Botones de Expandir / Contraer todos (solo visible en modo by_project con múltiples proyectos) */}
+                    {historyViewMode === 'by_project' && filteredProjectSummaries.length > 1 && (
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => expandAllProjects(filteredProjectSummaries.map(p => p.projectId))}
+                          className="px-3 py-1.5 bg-white/90 hover:bg-white border border-[#f3bfd4] rounded-xl text-[#4c0524] font-semibold cursor-pointer transition shadow-2xs"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-pink-50 border border-pink-200 flex items-center justify-center shrink-0">
-                              <Trophy className="w-5 h-5 text-amber-500" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                <span className="text-[9.5px] font-extrabold uppercase font-mono bg-pink-100/70 text-rose-700 px-2 py-0.5 rounded border border-pink-200">
-                                  {pSummary.projectCategory || 'Proyecto de Moda'}
-                                </span>
-                                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10.5px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-200">
-                                  🏆 Ha ganado {pSummary.winCount} {pSummary.winCount === 1 ? 'vez' : 'veces'}
-                                </span>
+                          Expandir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => collapseAllProjects(filteredProjectSummaries.map(p => p.projectId))}
+                          className="px-3 py-1.5 bg-white/90 hover:bg-white border border-[#f3bfd4] rounded-xl text-[#4c0524] font-semibold cursor-pointer transition shadow-2xs"
+                        >
+                          Contraer
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* VISTA 1: AGRUPADA POR PROYECTO (Luxury Card with Gold Metallic Hairline Border) */}
+              {historyWonLog.length > 0 && historyViewMode === 'by_project' && (
+                <div className="relative z-10 space-y-4">
+                  {filteredProjectSummaries.length === 0 ? (
+                    <div className="bg-white/95 border-[1.5px] border-[#e6be78]/85 rounded-[22px] p-8 text-center text-xs text-slate-600 shadow-md">
+                      No se encontraron proyectos con victorias que coincidan con los filtros seleccionados.
+                      <button
+                        type="button"
+                        onClick={() => { setHistorySearchQuery(''); setHistorySelectedProjectFilter('all'); }}
+                        className="block mx-auto mt-2.5 text-[#c2185b] font-bold hover:underline cursor-pointer"
+                      >
+                        Restablecer filtros
+                      </button>
+                    </div>
+                  ) : (
+                    filteredProjectSummaries.map((pSummary) => {
+                      const isOpen = expandedProjects[pSummary.projectId] ?? true;
+                      return (
+                        <div
+                          key={pSummary.projectId}
+                          className="bg-white/98 rounded-[22px] border-[1.5px] border-[#e6be78]/90 shadow-[0_14px_34px_rgba(176,14,79,0.12)] overflow-hidden transition-all"
+                        >
+                          {/* Cabecera del Proyecto */}
+                          <div
+                            onClick={() => toggleProjectAccordion(pSummary.projectId)}
+                            className="p-5 sm:p-6 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#fff9fb] transition-colors select-none"
+                          >
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className="w-13 h-13 rounded-full bg-gradient-to-br from-[#fffaf0] via-[#fef2d0] to-[#fae1a4] border-2 border-[#e2b85f] flex items-center justify-center shrink-0 shadow-sm">
+                                <Trophy className="w-6 h-6 text-[#d97706]" />
                               </div>
-                              <h4 className="font-bold text-slate-900 text-sm leading-tight truncate" title={pSummary.projectTitle}>
-                                {pSummary.projectTitle}
-                              </h4>
-                            </div>
-                          </div>
-
-                          {/* Métricas y Control de Apertura */}
-                          <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-pink-100">
-                            {/* En cuántas sesiones */}
-                            <div className="text-left sm:text-right">
-                              <span className="text-[10px] text-slate-500 uppercase font-mono block">Sesiones ganadas</span>
-                              <span className="text-xs font-bold text-indigo-700 inline-flex items-center gap-1">
-                                <Layers className="w-3 h-3 text-indigo-500" />
-                                {pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}
-                              </span>
-                            </div>
-
-                            {/* Cuánto es el total ganado a la fecha */}
-                            <div className="text-right">
-                              <span className="text-[10px] text-slate-500 uppercase font-mono block">Total hasta la fecha</span>
-                              <span className="text-sm sm:text-base font-black text-emerald-600 font-mono">
-                                +{pSummary.totalPrize.toFixed(2)}€
-                              </span>
-                            </div>
-
-                            {/* Botón Acordeón */}
-                            <div className="pl-1">
-                              <div className={`p-1.5 rounded-lg bg-pink-50 border border-pink-200 text-slate-600 transition-transform duration-200 ${isOpen ? 'rotate-180 bg-pink-100 text-rose-800' : ''}`}>
-                                <ChevronDown className="w-4 h-4" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Desglose de Sesiones (Solo cuando está abierto) */}
-                        {isOpen && (
-                          <div className="border-t border-pink-100/90 bg-slate-50/50 p-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
-                                <span>Sesiones y Rondas en las que ha ganado ({pSummary.sessionsList.length}):</span>
-                              </span>
-                            </div>
-
-                            <div className="overflow-x-auto rounded-lg border border-pink-200/70 bg-white shadow-3xs">
-                              <table className="w-full text-left border-collapse">
-                                <thead>
-                                  <tr className="bg-[#FFF8FA] text-[10px] font-extrabold uppercase text-rose-900/80 font-mono border-b border-pink-200/60">
-                                    <th className="p-2.5">Sesión / Ronda</th>
-                                    <th className="p-2.5">Fecha de Consumación</th>
-                                    <th className="p-2.5">Estado</th>
-                                    <th className="p-2.5">Votos Obtenidos</th>
-                                    <th className="p-2.5">Otros Ganadores Contigo</th>
-                                    <th className="p-2.5 text-right">Premio Recibido (80%)</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-pink-100/70 text-[11px]">
-                                  {pSummary.sessionsList.map((sess, idx) => (
-                                    <tr key={sess.id + '-' + idx} className="hover:bg-rose-50/30 transition">
-                                      <td className="p-2.5 font-bold text-slate-800 flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                                        <span>{sess.title}</span>
-                                      </td>
-                                      <td className="p-2.5 text-slate-500 whitespace-nowrap">
-                                        {new Date(sess.date).toLocaleDateString('es-ES', {
-                                          day: 'numeric',
-                                          month: 'short',
-                                          year: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                        })}
-                                      </td>
-                                      <td className="p-2.5">
-                                        <span className="inline-flex items-center gap-1 text-[9.5px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
-                                          <Check className="w-2.5 h-2.5" />
-                                          <span>✓ GANADOR</span>
-                                        </span>
-                                      </td>
-                                      <td className="p-2.5 whitespace-nowrap">
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md font-mono">
-                                          🗳️ {sess.votesReceived ?? 7} {sess.votesReceived === 1 ? 'voto' : 'votos'}
-                                        </span>
-                                      </td>
-                                      <td className="p-2.5 whitespace-nowrap">
-                                        {(sess.coWinnersCount ?? 0) > 0 ? (
-                                          <span 
-                                            className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md"
-                                            title={sess.coWinnersNames && sess.coWinnersNames.length > 0 ? `Co-ganadores: ${sess.coWinnersNames.join(', ')}` : undefined}
-                                          >
-                                            👥 {sess.coWinnersCount} {sess.coWinnersCount === 1 ? 'persona más' : 'personas más'} contigo ({(sess.coWinnersCount || 0) + 1} en total)
-                                          </span>
-                                        ) : (
-                                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50/90 border border-emerald-200 px-2 py-0.5 rounded-md">
-                                            🥇 Ganador único (0 personas más)
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="p-2.5 text-right font-bold text-emerald-600 font-mono text-xs whitespace-nowrap">
-                                        +{sess.prize.toFixed(2)}€
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-
-                            {/* Resumen del proyecto al pie */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px] text-slate-600 bg-pink-50/40 p-3 rounded-lg border border-pink-100">
-                              <div className="space-y-0.5">
-                                <div>
-                                  Este proyecto ha obtenido <strong>{pSummary.winCount} {pSummary.winCount === 1 ? 'victoria oficial' : 'victorias oficiales'}</strong> en <strong>{pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}</strong> de inversión.
-                                </div>
-                                <div className="text-[10px] text-slate-500 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                                  <span>🗳️ Votos conseguidos: <strong>{pSummary.sessionsList.map(s => s.votesReceived ?? 7).join(', ')} votos</strong></span>
-                                  <span>•</span>
-                                  <span>
-                                    👥 Co-ganadores: <strong>
-                                      {pSummary.sessionsList.some(s => (s.coWinnersCount ?? 0) > 0) 
-                                        ? `${pSummary.sessionsList.reduce((acc, s) => acc + (s.coWinnersCount ?? 0), 0)} persona(s) adicional(es) en empate` 
-                                        : '0 (victoria exclusiva sin otros ganadores)'}
-                                    </strong>
+                              <div className="min-w-0 space-y-1.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#e11d74] to-[#be185d] text-white px-3.5 py-1 rounded-full shadow-2xs">
+                                    {pSummary.projectCategory || 'Proyecto de Moda'}
+                                  </span>
+                                  <span className="inline-flex items-center gap-1.5 bg-[#e8faf1] text-[#047857] text-[11px] font-bold px-3 py-0.5 rounded-full border border-[#a7f3d0]">
+                                    <UserCheck className="w-3.5 h-3.5" />
+                                    <span>Ha ganado {pSummary.winCount} {pSummary.winCount === 1 ? 'vez' : 'veces'}</span>
                                   </span>
                                 </div>
+                                <h4 className="font-serif font-bold text-slate-900 text-lg sm:text-xl leading-tight truncate" title={pSummary.projectTitle}>
+                                  {pSummary.projectTitle}
+                                </h4>
                               </div>
-                              <span className="font-extrabold text-emerald-700 font-mono text-xs whitespace-nowrap">
-                                Total acumulado: +{pSummary.totalPrize.toFixed(2)}€
-                              </span>
+                            </div>
+
+                            {/* Métricas y Control de Apertura */}
+                            <div className="flex items-center justify-between md:justify-end gap-5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-pink-100">
+                              <div className="text-left md:text-right">
+                                <span className="text-[10px] text-[#d81b60] font-bold uppercase tracking-wider block">Sesiones ganadas</span>
+                                <span className="text-sm font-bold text-slate-800 inline-flex items-center gap-1.5 mt-0.5">
+                                  <Layers className="w-3.5 h-3.5 text-[#8c1646]" />
+                                  <span>{pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}</span>
+                                </span>
+                              </div>
+
+                              <div className="hidden sm:block h-9 w-px bg-pink-100" />
+
+                              <div className="text-right">
+                                <span className="text-[10px] text-[#d81b60] font-bold uppercase tracking-wider block">Total hasta la fecha</span>
+                                <span className="text-lg sm:text-xl font-black text-[#047857] font-mono tabular-nums block mt-0.5">
+                                  +{pSummary.totalPrize.toFixed(2)}€
+                                </span>
+                              </div>
+
+                              <div className="pl-1">
+                                <div className={`w-9 h-9 rounded-xl bg-[#fff0f6] border border-[#f5c2d7] text-[#be185d] flex items-center justify-center transition-transform duration-200 shadow-2xs ${isOpen ? 'rotate-180 bg-[#ffe4ef]' : ''}`}>
+                                  <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
 
-            {/* VISTA 2: CRONOLÓGICA GENERAL (Tabla completa sin apreturas) */}
-            {historyWonLog.length > 0 && historyViewMode === 'table' && (
-              <div className="overflow-x-auto rounded-xl border border-pink-200/80 bg-white shadow-3xs">
-                {filteredHistoryWonLog.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-slate-500">
-                    No hay rondas que coincidan con la búsqueda.
-                    <button
-                      type="button"
-                      onClick={() => { setHistorySearchQuery(''); setHistorySelectedProjectFilter('all'); }}
-                      className="block mx-auto mt-2 text-rose-600 font-bold hover:underline cursor-pointer"
-                    >
-                      Restablecer filtros
-                    </button>
-                  </div>
-                ) : (
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-[#FFF5F8] text-[10px] font-extrabold uppercase text-rose-900/80 font-mono border-b border-pink-200/70">
-                        <th className="p-3">Código / Ronda</th>
-                        <th className="p-3">Proyecto Ganador</th>
-                        <th className="p-3">Categoría</th>
-                        <th className="p-3">Estado</th>
-                        <th className="p-3">Votos Obtenidos</th>
-                        <th className="p-3">Otros Ganadores Contigo</th>
-                        <th className="p-3">Fecha de Consumación</th>
-                        <th className="p-3 text-right">Premio Recibido (80%)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-pink-100/70 text-[11px]">
-                      {filteredHistoryWonLog.map((log) => {
-                        const projSummary = projectWinningsSummary.find(p => p.projectId === log.projectId || p.projectTitle === log.projectName) 
-                          || projectWinningsSummary[0];
-                        const projectName = log.projectName || projSummary?.projectTitle || userProjects[0]?.title || 'Eco-Fashion Runway';
-                        const category = projSummary?.projectCategory || 'Moda';
-
-                        return (
-                          <tr key={log.id} className="hover:bg-rose-50/40 transition-colors">
-                            <td className="p-3 font-semibold text-slate-800">
-                              {log.title}
-                            </td>
-                            <td className="p-3">
-                              <span className="font-bold text-slate-800 block text-xs">
-                                {projectName}
-                              </span>
-                              <span className="text-[10px] text-slate-400">
-                                Proyecto titular
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <span className="text-[9.5px] font-extrabold uppercase font-mono bg-pink-50 text-rose-700 px-2 py-0.5 rounded border border-pink-150 inline-block">
-                                {category}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
-                                <Check className="w-2.5 h-2.5" />
-                                <span>✓ GANADOR</span>
-                              </span>
-                            </td>
-                            <td className="p-3 whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md font-mono">
-                                🗳️ {log.votesReceived ?? 7} {log.votesReceived === 1 ? 'voto' : 'votos'}
-                              </span>
-                            </td>
-                            <td className="p-3 whitespace-nowrap">
-                              {(log.coWinnersCount ?? 0) > 0 ? (
-                                <span 
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md"
-                                  title={log.coWinnersNames && log.coWinnersNames.length > 0 ? `Co-ganadores: ${log.coWinnersNames.join(', ')}` : undefined}
-                                >
-                                  👥 {log.coWinnersCount} {log.coWinnersCount === 1 ? 'persona más' : 'personas más'} contigo ({(log.coWinnersCount || 0) + 1} en total)
+                          {/* Desglose de Sesiones */}
+                          {isOpen && (
+                            <div className="border-t border-[#f8d7e5] bg-white px-5 sm:px-6 pb-5 sm:pb-6 pt-4 space-y-4">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs sm:text-[13px] font-bold text-slate-900 flex items-center gap-2">
+                                  <TrendingUp className="w-4 h-4 text-[#d81b60]" />
+                                  <span>Sesiones y Rondas en las que ha ganado ({pSummary.sessionsList.length}):</span>
                                 </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50/90 border border-emerald-200 px-2 py-0.5 rounded-md">
-                                  🥇 Ganador único (0 personas más)
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-3 text-slate-500 whitespace-nowrap">
-                              {new Date(log.date).toLocaleDateString('es-ES', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </td>
-                            <td className="p-3 text-right font-bold text-emerald-600 font-mono text-xs whitespace-nowrap">
-                              +{log.prize.toFixed(2)}€
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            )}
+                              </div>
 
-            {historyWonLog.length === 0 && (
-              <div className="border border-dashed border-pink-200 rounded-xl p-6 text-center text-xs text-slate-500 bg-white/70">
-                <Award className="w-8 h-8 text-rose-300 mx-auto mb-2" />
-                Aún no has ganado un premio oficial de ronda de inversión. Participa en las sesiones de inversión rápida para competir con tu proyecto y calificar en las elecciones automatizadas.
+                              <div className="overflow-x-auto rounded-2xl border border-[#f5c8db] bg-white shadow-2xs">
+                                <table className="w-full text-left border-collapse">
+                                  <thead>
+                                    <tr className="bg-gradient-to-r from-[#ffe6f0] via-[#ffdce9] to-[#ffe6f0] text-[10px] sm:text-[10.5px] font-extrabold uppercase tracking-wide text-[#c2185b] border-b border-[#f5c8db]">
+                                      <th className="p-3">Sesión / Ronda</th>
+                                      <th className="p-3">Fecha de Consumación</th>
+                                      <th className="p-3 text-center">Estado</th>
+                                      <th className="p-3 text-center">Votos Obtenidos</th>
+                                      <th className="p-3 text-center">Otros Ganadores Contigo</th>
+                                      <th className="p-3 text-right">Premio (80%)</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-pink-100 text-xs">
+                                    {pSummary.sessionsList.map((sess, idx) => (
+                                      <tr key={sess.id + '-' + idx} className="hover:bg-[#fff9fb] transition-colors">
+                                        <td className="p-3.5 font-bold text-slate-900">
+                                          <div className="flex items-center gap-2.5">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                                            <span>{sess.title}</span>
+                                          </div>
+                                        </td>
+                                        <td className="p-3.5 text-slate-600 whitespace-nowrap font-medium">
+                                          {new Date(sess.date).toLocaleDateString('es-ES', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}
+                                        </td>
+                                        <td className="p-3.5 text-center whitespace-nowrap">
+                                          <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-[#047857] bg-[#edfcf4] px-3 py-1 rounded-lg border border-[#86efac]">
+                                            <Check className="w-3 h-3 stroke-[2.5]" />
+                                            <span>GANADOR</span>
+                                          </span>
+                                        </td>
+                                        <td className="p-3.5 text-center whitespace-nowrap">
+                                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#4c1d95] bg-[#f7f4ff] border border-[#ddd6fe] px-2.5 py-1 rounded-lg font-mono tabular-nums">
+                                            <span>🗳️</span>
+                                            <span>{sess.votesReceived ?? 7} {sess.votesReceived === 1 ? 'voto' : 'votos'}</span>
+                                          </span>
+                                        </td>
+                                        <td className="p-3.5 text-center whitespace-nowrap">
+                                          {(sess.coWinnersCount ?? 0) > 0 ? (
+                                            <span
+                                              className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-purple-800 bg-purple-50 border border-purple-200 px-3 py-1 rounded-lg"
+                                              title={sess.coWinnersNames && sess.coWinnersNames.length > 0 ? `Co-ganadores: ${sess.coWinnersNames.join(', ')}` : undefined}
+                                            >
+                                              <span>👥</span>
+                                              <span>{sess.coWinnersCount} {sess.coWinnersCount === 1 ? 'persona más' : 'personas más'} ({(sess.coWinnersCount || 0) + 1} total)</span>
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-[#047857] bg-[#edfcf4] border border-[#a7f3d0] px-3 py-1 rounded-lg">
+                                              <span>🥇</span>
+                                              <span>Ganador único</span>
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="p-3.5 text-right font-extrabold text-[#047857] font-mono tabular-nums text-xs sm:text-sm whitespace-nowrap">
+                                          +{sess.prize.toFixed(2)}€
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              {/* Resumen del proyecto al pie */}
+                              <div className="rounded-2xl bg-gradient-to-r from-[#fff3f8] via-[#ffeef5] to-[#ffe7f0] border border-[#f5c2d7] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-1.5 text-xs text-slate-700">
+                                  <div>
+                                    Este proyecto ha obtenido <strong className="text-slate-900">{pSummary.winCount} {pSummary.winCount === 1 ? 'victoria oficial' : 'victorias oficiales'}</strong> en <strong className="text-slate-900">{pSummary.sessionsList.length} {pSummary.sessionsList.length === 1 ? 'sesión' : 'sesiones'}</strong> de inversión.
+                                  </div>
+                                  <div className="text-[11px] text-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    <span className="inline-flex items-center gap-1.5">
+                                      <TrendingUp className="w-3.5 h-3.5 text-[#8c1646]" />
+                                      <span>Votos conseguidos: <strong className="text-slate-900 tabular-nums">{pSummary.sessionsList.map(s => s.votesReceived ?? 7).join(', ')} votos</strong></span>
+                                    </span>
+                                    <span aria-hidden="true">·</span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                      <Users className="w-3.5 h-3.5 text-[#8c1646]" />
+                                      <span>
+                                        Co-ganadores: <strong className="text-slate-900">
+                                          {pSummary.sessionsList.some(s => (s.coWinnersCount ?? 0) > 0)
+                                            ? `${pSummary.sessionsList.reduce((acc, s) => acc + (s.coWinnersCount ?? 0), 0)} persona(s) adicional(es) en empate`
+                                            : '0 (victoria exclusiva sin otros ganadores)'}
+                                        </strong>
+                                      </span>
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 sm:border-l sm:border-[#e6be78]/60 sm:pl-5 shrink-0">
+                                  <div className="text-left sm:text-right">
+                                    <span className="text-[11px] font-bold text-slate-800 block">Total acumulado:</span>
+                                    <span className="text-xl sm:text-2xl font-black text-[#047857] font-mono tabular-nums leading-none">
+                                      +{pSummary.totalPrize.toFixed(2)}€
+                                    </span>
+                                  </div>
+                                  <img
+                                    src={goldCoinsStackImg}
+                                    alt="Monedas acumuladas"
+                                    className="w-11 h-11 object-contain mix-blend-multiply shrink-0"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* VISTA 2: CRONOLÓGICA GENERAL */}
+              {historyWonLog.length > 0 && historyViewMode === 'table' && (
+                <div className="relative z-10 overflow-x-auto rounded-[22px] border-[1.5px] border-[#e6be78]/90 bg-white/98 shadow-[0_14px_34px_rgba(176,14,79,0.12)]">
+                  {filteredHistoryWonLog.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-600">
+                      No hay rondas que coincidan con la búsqueda.
+                      <button
+                        type="button"
+                        onClick={() => { setHistorySearchQuery(''); setHistorySelectedProjectFilter('all'); }}
+                        className="block mx-auto mt-2.5 text-[#c2185b] font-bold hover:underline cursor-pointer"
+                      >
+                        Restablecer filtros
+                      </button>
+                    </div>
+                  ) : (
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-[#ffe6f0] via-[#ffdce9] to-[#ffe6f0] text-[10px] sm:text-[10.5px] font-extrabold uppercase tracking-wide text-[#c2185b] border-b border-[#f5c8db]">
+                          <th className="p-3.5">Código / Ronda</th>
+                          <th className="p-3.5">Proyecto Ganador</th>
+                          <th className="p-3.5">Categoría</th>
+                          <th className="p-3.5">Estado</th>
+                          <th className="p-3.5">Votos Obtenidos</th>
+                          <th className="p-3.5">Otros Ganadores Contigo</th>
+                          <th className="p-3.5">Fecha de Consumación</th>
+                          <th className="p-3.5 text-right">Premio (80%)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-pink-100 text-xs">
+                        {filteredHistoryWonLog.map((log) => {
+                          const projSummary = projectWinningsSummary.find(p => p.projectId === log.projectId || p.projectTitle === log.projectName)
+                            || projectWinningsSummary[0];
+                          const projectName = log.projectName || projSummary?.projectTitle || userProjects[0]?.title || 'Eco-Fashion Runway';
+                          const category = projSummary?.projectCategory || 'Moda';
+
+                          return (
+                            <tr key={log.id} className="hover:bg-[#fff9fb] transition-colors">
+                              <td className="p-3.5 font-bold text-slate-900">
+                                {log.title}
+                              </td>
+                              <td className="p-3.5">
+                                <span className="font-serif font-bold text-slate-900 block text-xs sm:text-sm">
+                                  {projectName}
+                                </span>
+                                <span className="text-[10px] text-slate-500">
+                                  Proyecto titular
+                                </span>
+                              </td>
+                              <td className="p-3.5">
+                                <span className="text-[9.5px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#e11d74] to-[#be185d] text-white px-2.5 py-0.5 rounded-full inline-block">
+                                  {category}
+                                </span>
+                              </td>
+                              <td className="p-3.5 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#047857] bg-[#edfcf4] px-2.5 py-1 rounded-lg border border-[#86efac]">
+                                  <Check className="w-3 h-3 stroke-[2.5]" />
+                                  <span>GANADOR</span>
+                                </span>
+                              </td>
+                              <td className="p-3.5 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#4c1d95] bg-[#f7f4ff] border border-[#ddd6fe] px-2.5 py-1 rounded-lg font-mono tabular-nums">
+                                  🗳️ {log.votesReceived ?? 7} {log.votesReceived === 1 ? 'voto' : 'votos'}
+                                </span>
+                              </td>
+                              <td className="p-3.5 whitespace-nowrap">
+                                {(log.coWinnersCount ?? 0) > 0 ? (
+                                  <span
+                                    className="inline-flex items-center gap-1 text-[10.5px] font-bold text-purple-800 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg"
+                                    title={log.coWinnersNames && log.coWinnersNames.length > 0 ? `Co-ganadores: ${log.coWinnersNames.join(', ')}` : undefined}
+                                  >
+                                    👥 {log.coWinnersCount} {log.coWinnersCount === 1 ? 'persona más' : 'personas más'} ({(log.coWinnersCount || 0) + 1} total)
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#047857] bg-[#edfcf4] border border-[#a7f3d0] px-2.5 py-1 rounded-lg">
+                                    🥇 Ganador único
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3.5 text-slate-600 whitespace-nowrap">
+                                {new Date(log.date).toLocaleDateString('es-ES', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </td>
+                              <td className="p-3.5 text-right font-extrabold text-[#047857] font-mono tabular-nums text-xs sm:text-sm whitespace-nowrap">
+                                +{log.prize.toFixed(2)}€
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+
+              {historyWonLog.length === 0 && (
+                <div className="relative z-10 border-[1.5px] border-dashed border-[#e6be78] rounded-[22px] p-8 text-center text-xs text-slate-600 bg-white/95 shadow-sm">
+                  <Award className="w-9 h-9 text-[#d81b60]/50 mx-auto mb-2.5" />
+                  Aún no has ganado un premio oficial de ronda de inversión. Participa en las sesiones de inversión rápida para competir con tu proyecto y calificar en las elecciones automatizadas.
+                </div>
+              )}
+            </div>
+
+            {/* BOTTOM LUXURY SILK RIBBON FOOTER */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-[#830b47] via-[#b81260] to-[#7a093b] border-t border-[#e6be78]/70 py-3.5 px-6 flex items-center justify-center">
+              <img
+                src="/assets/aistudio/pink_diamond_brilliant.png"
+                alt=""
+                aria-hidden="true"
+                className="w-14 h-auto object-contain absolute -bottom-2 -left-1 opacity-85 -rotate-12 pointer-events-none select-none"
+                referrerPolicy="no-referrer"
+              />
+              <img
+                src="/assets/aistudio/pink_diamond_brilliant.png"
+                alt=""
+                aria-hidden="true"
+                className="w-14 h-auto object-contain absolute -bottom-2 -right-1 opacity-85 rotate-12 pointer-events-none select-none"
+                referrerPolicy="no-referrer"
+              />
+              <div className="relative z-10 flex flex-col items-center gap-1 text-center">
+                <Crown className="w-4 h-4 text-amber-300" />
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-100/95">
+                  Fashion · Finance · Success
+                </span>
               </div>
-            )}
+            </div>
           </div>
 
           {/* TOTAL DE PROYECTOS FINANCIADOS (Debajo del recuadro de historial y rondas ganadas) */}

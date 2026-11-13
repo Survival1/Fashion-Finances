@@ -169,7 +169,10 @@ export default function DashboardStats({
                     </p>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-rose-950 mt-1.5 font-serif tracking-tight leading-none">
-                    {(balance > 0 ? (balance === 45.5 ? 1500 : balance) : 1500).toFixed(2)}€
+                    {((movements.length > 0 || totalInvested > 0 || totalEarnings > 0)
+                      ? balance
+                      : (balance > 0 ? (balance === 45.5 ? 1500 : balance) : 1500)
+                    ).toFixed(2)}€
                   </h3>
                 </div>
                 <div className="shrink-0 pl-2">

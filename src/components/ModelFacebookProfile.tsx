@@ -497,8 +497,24 @@ export function ProfileIntroAndSponsors({
       }
     }
 
+    const loggedUsername = (userProfile?.username || '').toLowerCase().trim().replace(/^@/, '');
+    const loggedBaseUsername = loggedUsername.replace(/_[wm]\d+$/i, '');
+    const loggedName = (userProfile?.name || '').toLowerCase().trim();
+
     return list.filter(acc => {
-      if (userProfile?.username && acc.username.toLowerCase() === userProfile.username.toLowerCase()) return false;
+      const accUsername = (acc.username || '').toLowerCase().trim().replace(/^@/, '');
+      const accBaseUsername = accUsername.replace(/_[wm]\d+$/i, '');
+      const accName = (acc.name || '').toLowerCase().trim();
+
+      if (
+        loggedUsername &&
+        (accUsername === loggedUsername ||
+          accBaseUsername === loggedUsername ||
+          (loggedBaseUsername && accBaseUsername === loggedBaseUsername))
+      ) {
+        return false;
+      }
+      if (loggedName && accName && accName === loggedName) return false;
       if (dismissedSuggestionIds.includes(acc.username)) return false;
       return true;
     });
@@ -876,7 +892,7 @@ export function ProfileIntroAndSponsors({
 
         {/* List of Models */}
         <div className="space-y-2">
-          {sortedRankingModels.slice(0, 10).map((model, idx) => {
+          {sortedRankingModels.slice(0, 5).map((model, idx) => {
             const rank = idx + 1;
             const isFirst = rank === 1;
             const isSecond = rank === 2;

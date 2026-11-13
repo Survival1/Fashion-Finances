@@ -23,6 +23,8 @@ import {
   Database,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Play,
   Pause,
   Film,
@@ -47,6 +49,7 @@ import {
   MILLONARIOS_USERS,
   getParticipantLiveCameraVideo
 } from './CastingLiveSection';
+import pearlHeelsBg from '../assets/images/pearl_heels_bg_1794559301641.jpg';
 
 const CHANNELS_LIST = [
   { id: 'Todos', label: 'Todos 🌍' },
@@ -445,6 +448,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   // 🎛️ Channels menu hover & toggle state
   const [activeChannelsMenuSessionId, setActiveChannelsMenuSessionId] = useState<string | null>(null);
   const channelsMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const liveChannelsSliderRef = useRef<HTMLDivElement | null>(null);
   const [showCameraParticipantsGrid, setShowCameraParticipantsGrid] = useState<Record<string, boolean>>({});
   const [isContestPendingClose, setIsContestPendingClose] = useState<boolean>(() => {
     try {
@@ -2276,51 +2280,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
   const EMOJI_LIST = ['❤️', '🔥', '👏', '🚀', '💯', '😂', '😍', '🙌', '💡', '💰', '🏆', '✨', '👍', '🌟', '🤩', '💎', '📈', '🎯', '💪', '🎉', '😎', '🥳', '👑', '💸'];
 
-  // 💖 Glosario de 30 emojis (6 columnas x 5 filas) idéntico a la captura image.png
+  // 💖 Glosario de 72 emojis (6 columnas, desplazable con ratón para ver más)
   const TIKTOK_HEART_HOVER_EMOJIS = [
     '❤️', '💖', '🔥', '👏', '🤩', '🎉',
     '👍', '⭐', '🥰', '😘', '💕', '💘',
     '💗', '💓', '💞', '😍', '🥳', '😎',
     '🤣', '😂', '😜', '🤤', '🤯', '🥵',
-    '😻', '🙌', '🙏', '💪', '👀', '✨'
+    '😻', '🙌', '🙏', '💪', '👀', '✨',
+    '👑', '💎', '👠', '👗', '💄', '💋',
+    '🌹', '🌸', '🌺', '🦋', '🥂', '🍾',
+    '💯', '🚀', '⚡', '🌟', '🌈', '🪩',
+    '🫶', '🫰', '🤍', '🩷', '💜', '💝',
+    '😇', '🥹', '🤗', '🤭', '😏', '😈',
+    '💃', '🕺', '📸', '🎬', '🏆', '🥇',
+    '💸', '💰', '🎀', '🛍️', '👜', '🕶️'
   ];
-
-  // 🌐 Nombres de los emojis en inglés para el traductor solicitado sobre captura image.png
-  const EMOJI_ENGLISH_NAMES: Record<string, string> = {
-    '❤️': 'Red Heart',
-    '💖': 'Sparkling Heart',
-    '🔥': 'Fire',
-    '👏': 'Clapping Hands',
-    '🤩': 'Star-Struck',
-    '🎉': 'Party Popper',
-    '👍': 'Thumbs Up',
-    '⭐': 'Star',
-    '🥰': 'Smiling Face with Hearts',
-    '😘': 'Face Blowing a Kiss',
-    '💕': 'Two Hearts',
-    '💘': 'Heart with Arrow',
-    '💗': 'Growing Heart',
-    '💓': 'Beating Heart',
-    '💞': 'Revolving Hearts',
-    '😍': 'Heart Eyes',
-    '🥳': 'Partying Face',
-    '😎': 'Smiling Face with Sunglasses',
-    '🤣': 'Rolling on Floor Laughing',
-    '😂': 'Face with Tears of Joy',
-    '😜': 'Winking Face with Tongue',
-    '🤤': 'Drooling Face',
-    '🤯': 'Exploding Head',
-    '🥵': 'Hot Face',
-    '😻': 'Smiling Cat with Heart-Eyes',
-    '🙌': 'Raising Hands',
-    '🙏': 'Folded Hands',
-    '💪': 'Flexed Biceps',
-    '👀': 'Eyes',
-    '✨': 'Sparkles'
-  };
-
-  const [isEmojiEnglish, setIsEmojiEnglish] = useState<boolean>(false);
-  const [hoveredEmojiName, setHoveredEmojiName] = useState<string | null>(null);
 
   const [isChannelHeartHovered, setIsChannelHeartHovered] = useState<boolean>(false);
   const channelHeartHoverTimeoutRef = useRef<any>(null);
@@ -4287,46 +4261,76 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               </span>
             </div>
 
-            {/* Selector de categorías en carrusel horizontal (idéntico al selector de categorías de captura z.png) */}
-            <div className="w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-2 mb-1.5 px-0.5 select-none">
-              {[
-                { id: 'Fashion', label: 'Fashion ✨', bg: 'bg-[#fff0f3] text-[#be185d]', activeBg: 'bg-gradient-to-r from-pink-500 to-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/30' },
-                { id: 'Finanzas', label: 'Finanzas 📈', bg: 'bg-[#ecfdf5] text-[#047857]', activeBg: 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30' },
-                { id: 'Modelos', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309]', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-600/30' },
-                { id: 'BackStage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2]', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-md' },
-                { id: 'Investors', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf]', activeBg: 'bg-purple-600 text-white border-purple-500 shadow-md' },
-                { id: 'Casting', label: 'Casting 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed]', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-md' },
-                { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669]', activeBg: 'bg-emerald-600 text-white border-emerald-500 shadow-md' },
-                { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48]', activeBg: 'bg-rose-600 text-white border-rose-500 shadow-md' },
-                { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04]', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-md' },
-                { id: 'Luxury', label: 'Luxury 🍸', bg: 'bg-[#fff7ed] text-[#c2410c]', activeBg: 'bg-gradient-to-r from-amber-600 to-orange-600 text-white border-orange-500 shadow-md' },
-                { id: 'Interview', label: 'Interview 🎙️', bg: 'bg-[#f0fdf4] text-[#15803d]', activeBg: 'bg-emerald-700 text-white border-emerald-600 shadow-md' },
-                { id: 'Todos', label: 'Todos 🌍', bg: 'bg-slate-800 text-slate-300', activeBg: 'bg-slate-700 text-white border-slate-500 shadow-md' }
-              ].map(cat => {
-                const isActive = (currentChannel || 'Finanzas') === cat.id;
-                return (
-                  <button
-                    key={`pill-cat-${cat.id}`}
-                    type="button"
-                    onClick={() => {
-                      setCurrentChannel(cat.id);
-                      setSessionSelectedPresenterMap({});
-                      setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
-                      setActiveChannelsMenuSessionId(null);
-                      if (onCategoryFilterChange) {
-                        onCategoryFilterChange(cat.id);
-                      }
-                    }}
-                    className={`shrink-0 px-2.5 py-1 rounded-full text-[9.5px] font-black transition-all cursor-pointer border active:scale-95 ${
-                      isActive 
-                        ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-rose-950 border-rose-400 ring-2 ring-rose-400/50 scale-105 font-black shadow-md' 
-                        : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] text-slate-800 border-rose-200/80 hover:border-rose-300'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                );
-              })}
+            {/* Slider horizontal de canales en directo con flechas */}
+            <div className="flex items-center gap-1.5 w-full pb-2 mb-1.5 select-none">
+              <button
+                type="button"
+                onClick={() => {
+                  liveChannelsSliderRef.current?.scrollBy({ left: -220, behavior: 'smooth' });
+                }}
+                aria-label="Desplazar canales a la izquierda"
+                className="custom-bg shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-[#e11470] border border-rose-300/90 shadow-md flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4 stroke-[2.75]" />
+              </button>
+
+              <div
+                ref={liveChannelsSliderRef}
+                className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-2 px-0.5 py-0.5"
+              >
+                {[
+                  { id: 'Atelier', label: 'Atelier' },
+                  { id: 'Haute Couture', label: 'Haute Couture' },
+                  { id: 'Streetwear & Urban', label: 'Streetwear & Urban' },
+                  { id: 'Fashion Model', label: 'Fashion Model' },
+                  { id: 'Runway Model', label: 'Runway Model' },
+                  { id: 'Catalog Model', label: 'Catalog Model' },
+                  { id: 'Commercial Model', label: 'Commercial Model' },
+                  { id: 'Plus Size Model', label: 'Plus Size Model' },
+                  { id: 'Petite Model', label: 'Petite Model' },
+                  { id: 'Lingerie Model', label: 'Lingerie Model' },
+                  { id: 'Swimsuit Model', label: 'Swimsuit Model' },
+                  { id: 'Fitness Model', label: 'Fitness Model' },
+                  { id: 'Parts Model', label: 'Parts Model' },
+                  { id: 'Mature Model', label: 'Mature Model' },
+                  { id: 'Real People Model', label: 'Real People Model' }
+                ].map(cat => {
+                  const isActive = (currentChannel || 'Finanzas') === cat.id;
+                  return (
+                    <button
+                      key={`pill-cat-${cat.id}`}
+                      type="button"
+                      onClick={() => {
+                        setCurrentChannel(cat.id);
+                        setSessionSelectedPresenterMap({});
+                        setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
+                        setActiveChannelsMenuSessionId(null);
+                        if (onCategoryFilterChange) {
+                          onCategoryFilterChange(cat.id);
+                        }
+                      }}
+                      className={`custom-bg shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap transition-all cursor-pointer border active:scale-95 ${
+                        isActive
+                          ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-rose-950 border-rose-400 ring-2 ring-rose-400/50 scale-105 shadow-md'
+                          : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] text-slate-800 border-rose-200/80 hover:border-rose-300 shadow-sm'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  liveChannelsSliderRef.current?.scrollBy({ left: 220, behavior: 'smooth' });
+                }}
+                aria-label="Desplazar canales a la derecha"
+                className="custom-bg shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-[#e11470] border border-rose-300/90 shadow-md flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4 stroke-[2.75]" />
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 w-full max-h-[40vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/90 border border-slate-800 shadow-inner scrollbar-none">
@@ -4741,7 +4745,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     handleChannelHeartMouseLeave();
                   }}
                 >
-                  {/* 💖 Glosario de 30 Emojis que se abre al pasar el puntero por encima del corazón (captura image.png) */}
+                  {/* 💖 Glosario de Emojis desplazable con el ratón al pasar el puntero por encima del corazón */}
                   <div 
                     className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[500] w-[284px] min-w-[284px] max-w-[284px] box-border bg-[#090d16]/98 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.98)] ring-1 ring-white/10 select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-5 transition-all duration-200 pointer-events-auto ${
                       isCardHeartHovered
@@ -4750,74 +4754,46 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     }`}
                     id={`tiktok-heart-hover-emoji-glossary-${currentVid.id}`}
                     onClick={(e) => e.stopPropagation()}
+                    onWheel={(e) => e.stopPropagation()}
                   >
-                    {/* 🌐 Traductor a Inglés en el Glosario de Emojis (solicitado sobre captura image.png) */}
-                    <div className="flex items-center justify-between px-1 pb-2 mb-1.5 border-b border-white/10">
-                      <div className="flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                        <span className="text-[10px] font-black uppercase text-slate-200 tracking-wider">
-                          {isEmojiEnglish ? 'ENGLISH TRANSLATOR' : 'TRADUCTOR A INGLÉS'}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsEmojiEnglish(prev => !prev);
-                        }}
-                        className="px-2 py-0.5 rounded-full text-[9px] font-black border transition active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40"
-                        title="Activar o desactivar traductor a inglés"
-                      >
-                        <span className="text-[10px]">🌐</span>
-                        <span>{isEmojiEnglish ? 'EN ✓' : 'Inglés'}</span>
-                      </button>
+                    {/* Rejilla de emojis con desplazamiento vertical mediante rueda del ratón */}
+                    <div className="grid grid-cols-6 gap-1 w-full justify-items-center max-h-[210px] overflow-y-auto overscroll-contain pr-0.5 py-0.5 scrollbar-thin">
+                      {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            currentVid.isLiked = true;
+                            setChannelVideoLikesMap(prev => {
+                              const cur = prev[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
+                              return {
+                                ...prev,
+                                [currentVid.id]: {
+                                  count: cur.userLiked ? cur.count : cur.count + 1,
+                                  userLiked: true
+                                }
+                              };
+                            });
+                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                              detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
+                            }));
+                            triggerContinuousRain(emoji);
+                            setIsChannelHeartHovered(false);
+                            setHoveredHeartVideoId(null);
+                          }}
+                          className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
+                          title={`Reaccionar con ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
                     </div>
 
-                    {/* Rejilla de 30 emojis (6 columnas x 5 filas) idéntica a la captura image.png */}
-                    <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
-                      {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => {
-                        const englishName = EMOJI_ENGLISH_NAMES[emoji] || emoji;
-                        return (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onMouseEnter={() => setHoveredEmojiName(englishName)}
-                            onMouseLeave={() => setHoveredEmojiName(null)}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              currentVid.isLiked = true;
-                              setChannelVideoLikesMap(prev => {
-                                const cur = prev[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
-                                return {
-                                  ...prev,
-                                  [currentVid.id]: {
-                                    count: cur.userLiked ? cur.count : cur.count + 1,
-                                    userLiked: true
-                                  }
-                                };
-                              });
-                              window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                                detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
-                              }));
-                              triggerContinuousRain(emoji);
-                              setIsChannelHeartHovered(false);
-                              setHoveredHeartVideoId(null);
-                            }}
-                            className="w-9 h-9 min-w-9 min-h-9 text-[22px] sm:text-[24px] flex items-center justify-center hover:scale-125 active:scale-90 hover:bg-white/15 rounded-xl transition-all transform cursor-pointer bg-transparent border-0 select-none shrink-0"
-                            title={isEmojiEnglish ? `${emoji} ${englishName} (English)` : `Reaccionar con ${emoji}`}
-                          >
-                            {emoji}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Pie informativo de traducción activa */}
-                    <div className="mt-1.5 pt-1.5 border-t border-white/10 px-1 flex items-center justify-between text-[9px] text-slate-300 font-mono">
-                      <span className="truncate text-rose-300 font-bold">
-                        {hoveredEmojiName ? `English: ${hoveredEmojiName}` : isEmojiEnglish ? 'Traducido a Inglés ✓' : 'Traductor disponible'}
-                      </span>
-                      <span className="text-[8px] text-slate-400 uppercase font-black">30 Emojis</span>
+                    {/* Pie informativo de desplazamiento */}
+                    <div className="mt-1.5 pt-1.5 border-t border-white/10 px-1 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+                      <span>Desplaza para ver más ↕</span>
+                      <span className="text-[8px] text-slate-400 uppercase font-black">{TIKTOK_HEART_HOVER_EMOJIS.length} Emojis</span>
                     </div>
                   </div>
 
@@ -5397,14 +5373,27 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 className="relative flex items-center justify-center w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] overflow-x-hidden lg:overflow-x-visible h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)]"
                 style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
               >
-                {/* 🎴 THE MAIN ROUND CONTAINER CARD (Strictly matching z.png) - 4cm más larga sin tocar ancho */}
+                {/* 🎴 THE MAIN ROUND CONTAINER CARD (Luxury Pearl Pink & White design matching image.png) */}
                 <div 
-                  className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#070b14] border-0 rounded-none shadow-xl overflow-hidden relative flex flex-col justify-between px-1.5 xs:px-2 sm:px-3 pt-1 xs:pt-1.5 sm:pt-2 pb-1.5 xs:pb-2 sm:pb-2.5 box-border select-none"
+                  className="w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] bg-[#faf0f3] border border-[#ebd7dc] rounded-none shadow-xl overflow-hidden relative flex flex-col justify-between px-2 xs:px-2.5 sm:px-3.5 pt-1.5 sm:pt-2 pb-2 sm:pb-2.5 box-border select-none"
                   style={{ height: 'calc(680px + 4cm)', maxHeight: 'calc(680px + 4cm)', minHeight: 'calc(660px + 4cm)' }}
                   id={`round-container-box-${session.id}`}
                 >
-                {/* 📱 Subtle top speaker notch matching z.png */}
-                <div className="w-16 h-1 bg-white/20 rounded-full mx-auto mb-0.5 opacity-60 shrink-0 pointer-events-none" />
+                {/* 🌸 Subtle Pearl Pink Stiletto Heels Editorial Backdrop (image.png) */}
+                {!isLiveActive && (
+                  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+                    <img
+                      src={pearlHeelsBg}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-full h-full object-cover object-center opacity-80"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#faf0f3]/65 via-[#faf0f3]/15 to-[#f5e3e8]/65" />
+                  </div>
+                )}
+
+                {/* 📱 Subtle top speaker notch matching image.png */}
+                <div className="w-16 h-1 bg-[#c5b3b8]/70 rounded-full mx-auto mb-0.5 shrink-0 pointer-events-none relative z-10" />
                 {/* 🎯 ZONA SUPERIOR DE ACTIVACIÓN POR HOVER (Por arriba del todo de esta página y por encima de Ronda en Curso) - DESACTIVADA DURANTE LA VOTACIÓN FINAL */}
                 {!isSessionInVoting && (
                   <div 
@@ -5418,7 +5407,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     id={`top-hover-trigger-zone-${session.id}`}
                     title="Pasa el puntero por la parte superior para desplegar las opciones de los canales"
                   >
-                    <div className="w-16 sm:w-20 h-1.5 bg-white/40 group-hover/top-margin-sensor:bg-white/80 group-hover/top-margin-sensor:scale-105 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
+                    <div className="w-16 sm:w-20 h-1.5 bg-[#b89fa6]/50 group-hover/top-margin-sensor:bg-[#e11d74]/70 group-hover/top-margin-sensor:scale-105 rounded-full transition-all duration-300 pointer-events-none opacity-80" />
                   </div>
                 )}
                 {/* 🗳️ VENTANA DE VOTACIÓN DENTRO DEL CANAL EN PANTALLA COMPLETA (captura image.png) */}
@@ -6340,13 +6329,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     </div>
                   ) : null;
                 })()}
-                {/* 🔴 TOP BANNER (z.png): RONDA EN CURSO • REF:X */}
+                {/* 🔴 TOP BANNER (image.png): CANAL FINANZAS • RONDA EN CURSO */}
                 <div 
                   className="w-full flex flex-col items-center justify-center text-center pt-0.5 sm:pt-1 relative z-30 pointer-events-auto shrink-0"
                   onMouseEnter={!isSessionInVoting ? () => handleMouseEnterRonda(session.id) : undefined}
                   onMouseLeave={!isSessionInVoting ? handleMouseLeaveRonda : undefined}
                 >
-                  {/* Red badge with pulsing dot - hover to open channels menu (desactivado durante votación) */}
+                  {/* Solid magenta pink pill badge with pale pink dot */}
                   <button
                     type="button"
                     onMouseEnter={!isSessionInVoting ? () => handleMouseEnterRonda(session.id) : undefined}
@@ -6357,73 +6346,72 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         toggleChannelsMenu(session.id);
                       }
                     }}
-                    className={`inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 px-2.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-black uppercase tracking-wider mb-1 shadow-xs transition-all ${
+                    className={`custom-bg inline-flex items-center gap-1.5 bg-gradient-to-r from-[#df1773] via-[#e91e78] to-[#d81b70] border border-[#be185d]/30 text-white px-3.5 py-1 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider mb-1 shadow-sm transition-all ${
                       !isSessionInVoting
-                        ? 'hover:bg-rose-500/35 hover:border-rose-400 cursor-pointer hover:scale-105 active:scale-95 group/ronda-pill'
-                        : 'cursor-default opacity-90'
+                        ? 'hover:brightness-110 cursor-pointer hover:scale-[1.03] active:scale-95 group/ronda-pill'
+                        : 'cursor-default opacity-95'
                     }`}
                     title={!isSessionInVoting ? "Pasa el ratón o pulsa para abrir el menú de opciones" : undefined}
                     id={`ronda-en-curso-pill-${session.id}`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-pink-200 animate-pulse shrink-0" />
                     <span>{isUserEnrolledInThisRound ? 'Ronda en la que estás participando' : `Canal ${getChannelCleanName(currentChannel)} • Ronda en Curso`}</span>
                     {!isSessionInVoting && (
-                      <span className="text-[7.5px] text-rose-400 opacity-70 group-hover/ronda-pill:opacity-100 transition-transform group-hover/ronda-pill:translate-y-0.5">▼</span>
+                      <span className="text-[7.5px] text-white/90 transition-transform group-hover/ronda-pill:translate-y-0.5">▼</span>
                     )}
                   </button>
 
-                  {/* Main Round Title */}
-                  <h3 className="text-xs sm:text-[13px] md:text-sm font-black text-white uppercase tracking-wider font-sans drop-shadow-md leading-tight m-0 flex items-center justify-center gap-1.5 flex-wrap">
+                  {/* Main Round Title (Elegant Dark Serif matching image.png) */}
+                  <h3 className="text-sm sm:text-base md:text-lg font-serif font-extrabold text-[#1a1416] uppercase tracking-wide leading-tight m-0 mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
                     <span>{roundTitle}</span>
                   </h3>
 
                   {/* Subtitle with accent lines: 10€ Inscripción • 10 Participantes */}
-                  <div className="flex items-center justify-center gap-1.5 mt-1">
-                    <span className="h-0.5 w-5 sm:w-6 bg-gradient-to-r from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
-                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-300 font-mono tracking-wider uppercase flex items-center gap-1 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
+                  <div className="flex items-center justify-center gap-2 mt-1 mb-1">
+                    <span className="h-[1.5px] w-7 sm:w-9 bg-gradient-to-r from-transparent to-[#c8b2b6] rounded-full" />
+                    <span className="text-[8.5px] sm:text-[9.5px] font-bold text-[#3f3337] tracking-wider uppercase flex items-center gap-1.5 bg-[#f4e9ec]/95 px-3 py-0.5 rounded-full border border-[#d6c2c6] shadow-2xs">
                       <span>{feeInfo.feeShort} Inscripción</span>
-                      <span className="text-slate-500">•</span>
+                      <span className="text-[#9e868c]">•</span>
                       <span>10 Participantes</span>
                     </span>
-                    <span className="h-0.5 w-6 sm:w-8 bg-gradient-to-l from-transparent via-rose-500 to-[#fe2c55] rounded-full" />
+                    <span className="h-[1.5px] w-7 sm:w-9 bg-gradient-to-l from-transparent to-[#c8b2b6] rounded-full" />
                   </div>
                 </div>
 
-                {/* 🌸 CENTRAL STAGE CARD (Styled in Rosa Pink) */}
+                {/* 🌸 CENTRAL STAGE CARD (Crisp White Pearl Luxury Card matching image.png) */}
                 <div 
-                  className="w-full bg-[#0e1628]/95 border border-pink-500/70 rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-2.5 shadow-[0_16px_48px_rgba(0,0,0,0.85),0_0_25px_rgba(236,72,153,0.2)] flex flex-col items-center text-center my-0.5 xs:my-1 transition-all shrink min-h-0"
+                  className="w-full relative z-20 bg-white/95 backdrop-blur-sm border-[1.5px] border-[#cbb1b6] rounded-2xl sm:rounded-3xl p-2 sm:p-3 shadow-[0_12px_32px_rgba(135,90,105,0.14)] flex flex-col items-center text-center my-0.5 transition-all shrink min-h-0"
                   id={`central-stage-card-${session.id}`}
                 >
                   {isSessionInVoting ? (
-                    /* 🗳️ 10-MINUTE VOTING STAGE CARD (Strictly matching zq.png) */
+                    /* 🗳️ 10-MINUTE VOTING STAGE CARD (Pearl Pink & White luxury design) */
                     <div className="w-full flex flex-col items-center animate-fade-in" id={`voting-phase-view-${session.id}`}>
-                      {/* Top Pill Badge: • 🗳️ CUENTA ATRÁS • 10 MINUTOS PARA VOTAR */}
+                      {/* Top Pill Badge */}
                       <div
-                        className="inline-flex items-center gap-1.5 bg-[#170e28] border border-rose-500/50 text-rose-200 px-3 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider mb-1.5 shadow-xs select-none"
+                        className="inline-flex items-center gap-1.5 bg-[#e11d74] border border-[#be185d]/30 text-white px-3.5 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider mb-2 shadow-sm select-none"
                         id={`voting-pill-badge-${session.id}`}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-pink-200 animate-pulse shrink-0" />
                         <span>🗳️ CUENTA ATRÁS • 10 MINUTOS PARA VOTAR</span>
                       </div>
 
-                      {/* 🌸 ROSA PINK GLOWING CONTAINER BOX */}
-                      <div className="w-full bg-[#161e2c] border-2 border-pink-500 shadow-[0_0_25px_rgba(255,45,133,0.35)] rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 flex flex-col gap-2 mb-2">
+                      {/* 🌸 PEARL PINK GLOWING CONTAINER BOX */}
+                      <div className="w-full bg-[#fdf6f7] border border-[#dfc8cc] shadow-inner rounded-2xl p-2 sm:p-2.5 flex flex-col gap-2 mb-2">
                         {/* Top Row: Left 10 min votación, Center 09:31, Right Ronda 10/10 (10m) */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 text-left">
                             <span className="text-sm sm:text-base">⏱️</span>
                             <div>
-                              <span className="text-[7px] sm:text-[7.5px] text-slate-300 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
-                              <span className="text-[11px] sm:text-[12px] text-white font-black block leading-none">10 min</span>
-                              <span className="text-[8px] text-slate-400 block leading-tight">votación</span>
+                              <span className="text-[7px] sm:text-[7.5px] text-[#5c4f53] font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
+                              <span className="text-[11px] sm:text-[12px] text-[#1a1416] font-black block leading-none">10 min</span>
+                              <span className="text-[8px] text-[#6d5c61] block leading-tight">votación</span>
                             </div>
                           </div>
 
-                          {/* White digital pill timer with bold black font (matching zq.png 09:31) */}
+                          {/* White digital pill timer with bold black font */}
                           <button
                             type="button"
                             onClick={() => {
-                              // Fast-forward to 3 seconds for test convenience
                               const activeSessionId = session.id;
                               const now = Date.now();
                               localStorage.setItem(`finanzas_voting_end_time_${activeSessionId}`, String(now + 3 * 1000));
@@ -6439,35 +6427,35 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               }
                             }}
                             title="Cuenta atrás de 10 minutos (Clic para acelerar a 3s)"
-                            className="bg-white hover:bg-slate-100 text-slate-950 font-mono text-xl sm:text-2xl font-black px-4 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl shadow-md tracking-wider border-0 cursor-pointer select-none transition active:scale-95"
+                            className="custom-bg bg-white hover:bg-[#fff8fa] text-[#1a1416] font-sans text-xl sm:text-2xl font-black px-5 sm:px-6 py-1 rounded-xl sm:rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.08)] tracking-wider border border-[#ede2e4] cursor-pointer select-none transition active:scale-95"
                           >
                             {displayVotingTimer}
                           </button>
 
                           <div className="text-right shrink-0">
-                            <span className="text-[7px] sm:text-[7.5px] text-slate-400 block font-black uppercase tracking-wider">RONDA</span>
-                            <span className="font-mono text-pink-400 font-black text-xs sm:text-sm block leading-tight">10/10</span>
-                            <span className="font-mono text-pink-400 font-bold text-[8.5px] sm:text-[9px] block leading-tight">(10m)</span>
+                            <span className="text-[7px] sm:text-[7.5px] text-[#5c4f53] block font-black uppercase tracking-wider">RONDA</span>
+                            <span className="font-sans text-[#e11d74] font-black text-xs sm:text-sm block leading-tight">10/10</span>
+                            <span className="font-sans text-[#e11d74] font-bold text-[8.5px] sm:text-[9px] block leading-tight">(10m)</span>
                           </div>
                         </div>
 
                         {/* Middle Banner: TIENEN 10 MINUTOS PARA VOTAR. */}
-                        <div className="w-full bg-[#1e2636] border border-pink-500/80 rounded-full py-1.5 px-3 text-center shadow-inner">
-                          <span className="text-white font-black text-xs sm:text-[13px] tracking-wider uppercase drop-shadow-xs">
+                        <div className="w-full bg-white border border-[#e11d74]/40 rounded-full py-1.5 px-3 text-center shadow-2xs">
+                          <span className="text-[#1a1416] font-black text-xs sm:text-[13px] tracking-wider uppercase">
                             TIENEN 10 MINUTOS PARA VOTAR.
                           </span>
                         </div>
 
-                        {/* Multi-color gradient progress bar (pink -> rose -> red) */}
-                        <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                        {/* Subtle rose gradient progress bar */}
+                        <div className="w-full bg-[#efdee2] h-1.5 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-pink-400 via-rose-500 to-[#fe2c55] rounded-full transition-all duration-1000"
+                            className="h-full bg-gradient-to-r from-[#d4a5ae] via-[#e879a0] to-[#e11d74] rounded-full transition-all duration-1000"
                             style={{ width: `${Math.min(100, Math.max(3, (currentVotingSecs / 600) * 100))}%` }}
                           />
                         </div>
                       </div>
 
-                      {/* Action Buttons: White "📁 VOTAR PROYECTOS" and White "📷 LIVE" (Strictly matching z.png) */}
+                      {/* Action Buttons: Magenta "📁 VOTAR PROYECTOS" and White "📷 LIVE" */}
                       <div className="w-full flex flex-col gap-1.5">
                         <button
                           type="button"
@@ -6495,7 +6483,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               });
                             }
                           }}
-                          className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-xs sm:text-[13px] py-2 sm:py-2.5 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border border-slate-200 flex items-center justify-center gap-2 cursor-pointer font-sans"
+                          className="custom-bg w-full bg-gradient-to-r from-[#df1773] to-[#ec167f] hover:brightness-110 text-white font-black text-xs sm:text-[13px] py-2 sm:py-2.5 px-4 rounded-full uppercase tracking-wider transition active:scale-95 shadow-sm border border-[#be185d]/20 flex items-center justify-center gap-2 cursor-pointer font-sans"
                           id={`btn-votar-proyectos-${session.id}`}
                         >
                           <span className="text-sm">📁</span>
@@ -6524,17 +6512,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               });
                             }
                           }}
-                          className="w-full font-black text-xs sm:text-[13px] py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md border flex items-center justify-center gap-2 cursor-pointer bg-white hover:bg-slate-100 text-slate-950 border-slate-200"
+                          className="custom-bg w-full font-black text-xs sm:text-[13px] py-2 sm:py-2.5 px-4 rounded-full uppercase tracking-wider transition active:scale-95 shadow-2xs border flex items-center justify-center gap-2 cursor-pointer bg-white hover:bg-[#fdf5f7] text-[#1a1416] border-[#8b4a5e]"
                           id={`btn-live-voting-${session.id}`}
                           title={showTenWindowsVotingLive ? "Cerrar las 10 ventanas en vivo" : "Abrir las 10 ventanas de los participantes online"}
                         >
-                          <Camera className="w-3.5 h-3.5 shrink-0 text-current" />
+                          <Camera className="w-3.5 h-3.5 shrink-0 text-[#1a1416]" />
                           <span>{showTenWindowsVotingLive ? 'DETENER LIVE' : 'LIVE'}</span>
                         </button>
                       </div>
                     </div>
                   ) : (
-                    /* 🔴 5-MINUTE EXPOSITION CARD (In Rosa Pink) */
+                    /* 🔴 5-MINUTE EXPOSITION CARD (Matching image.png) */
                     <div className="w-full flex flex-col items-center animate-fade-in" id={`exposition-phase-view-${session.id}`}>
                       {/* Top Badge: TURNO X DE 10 • EN EXPOSICIÓN */}
                       <button
@@ -6554,37 +6542,37 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           }
                         }}
                         title="Haz clic para avanzar al siguiente turno de exposición de la ronda"
-                        className="inline-flex items-center gap-1.5 bg-pink-500/20 hover:bg-pink-500/35 active:scale-95 border border-pink-500/70 text-pink-300 px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider mb-1.5 shadow-xs cursor-pointer transition select-none"
+                        className="custom-bg inline-flex items-center gap-1.5 bg-gradient-to-r from-[#df1773] via-[#e91e78] to-[#d81b70] hover:brightness-110 active:scale-95 border border-[#be185d]/20 text-white px-3.5 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider mb-1.5 shadow-sm cursor-pointer transition select-none"
                         id={`btn-turno-badge-${session.id}`}
                       >
-                        <span className="relative flex h-2 w-2 shrink-0">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                        <span className="inline-flex items-center gap-1 shrink-0">
+                          <span className="w-2 h-2 rounded-full bg-pink-200 animate-pulse" />
+                          <span className="w-2 h-2 rounded-full bg-[#fb7185]" />
                         </span>
-                        <span>🔴 TURNO {turnNumber} DE 10 • EN EXPOSICIÓN</span>
+                        <span>TURNO {turnNumber} DE 10 • EN EXPOSICIÓN</span>
                       </button>
 
                       {/* Presenter Profile Spotlight */}
-                      <div className="flex flex-col items-center gap-0.5 mb-0.5 xs:mb-1">
-                        <div className="relative">
+                      <div className="flex flex-col items-center gap-0.5 mb-1">
+                        <div className="relative mb-1">
                           <img
                             src={presenter.avatar}
                             alt={presenter.name}
-                            className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-pink-500 ring-2 ring-pink-400/40 shadow-md shadow-pink-500/30"
+                            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-cover border-2 border-[#cbb1b6] ring-2 ring-[#f3d9e0] shadow-sm"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-pink-600 text-white text-[6.5px] xs:text-[7px] sm:text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
+                          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#e11d74] text-white text-[6.5px] sm:text-[7.5px] font-black px-2 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
                             EN VIVO
                           </span>
                         </div>
 
-                        <h4 className="text-white font-black text-[11.5px] xs:text-xs sm:text-[13px] mt-0.5 tracking-tight leading-tight">
+                        <h4 className="font-serif font-extrabold text-[#1a1416] text-sm sm:text-base mt-0.5 tracking-tight leading-tight">
                           {presenter.name}
                         </h4>
-                        <span className="text-[8px] xs:text-[8.5px] sm:text-[9px] text-pink-400 font-bold uppercase tracking-wider">
+                        <span className="text-[8.5px] sm:text-[9.5px] text-[#e11d74] font-black uppercase tracking-wider">
                           {presenter.role || 'PATRONISTA TEXTIL'}
                         </span>
-                        <span className="text-[7px] xs:text-[7.5px] sm:text-[8px] text-slate-400 italic">
+                        <span className="text-[7.5px] sm:text-[8.5px] text-[#5e5256] italic">
                           Exposición de 5 minutos en directo
                         </span>
                         {/* Audio exposition live indicator */}
@@ -6599,70 +6587,71 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 resumeOrStartLucasSpeech();
                               }}
                               title={`Voz en directo de ${voicePresenterName} activa. Pulsa para escuchar la presentación.`}
-                              className={`flex items-center gap-1.5 mt-0.5 px-2.5 py-0.5 rounded-full border text-[7.5px] sm:text-[8px] font-bold shadow-xs transition active:scale-95 cursor-pointer select-none ${
+                              className={`custom-bg flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full border text-[8px] sm:text-[8.5px] font-bold shadow-xs transition active:scale-95 cursor-pointer select-none ${
                                 isLucasTorresSpeaking
-                                  ? 'bg-pink-950/90 border-pink-400 text-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.4)]'
-                                  : 'bg-pink-950/70 border-pink-500/50 text-pink-300 hover:bg-pink-900/80'
+                                  ? 'bg-[#e11d74] border-[#be185d]/30 text-white shadow-[0_2px_10px_rgba(225,29,116,0.35)]'
+                                  : 'bg-[#e11d74]/95 border-[#be185d]/20 text-white hover:bg-[#e11d74]'
                               }`}
                             >
-                              <span className={`w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full bg-pink-100 shrink-0 ${isLucasTorresSpeaking ? 'animate-ping' : ''}`} />
                               <span className="font-extrabold">{isLucasTorresSpeaking ? `${voicePresenterName} hablando en directo...` : 'Voz en directo conectada'}</span>
                               <span className="flex items-end gap-0.5 h-2 ml-0.5">
-                                <span className={`w-0.5 bg-pink-400 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse' : 'h-1'}`} />
-                                <span className={`w-0.5 bg-pink-400 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse delay-75' : 'h-1.5'}`} />
-                                <span className={`w-0.5 bg-pink-400 transition-all ${isLucasTorresSpeaking ? 'h-2 animate-pulse delay-150' : 'h-1'}`} />
+                                <span className={`w-0.5 bg-pink-200 transition-all ${isLucasTorresSpeaking ? 'h-2.5 animate-pulse' : 'h-1'}`} />
+                                <span className={`w-0.5 bg-pink-200 transition-all ${isLucasTorresSpeaking ? 'h-3 animate-pulse delay-75' : 'h-1.5'}`} />
+                                <span className={`w-0.5 bg-pink-200 transition-all ${isLucasTorresSpeaking ? 'h-2 animate-pulse delay-150' : 'h-1'}`} />
                               </span>
                             </button>
                           );
                         })()}
                       </div>
-{/* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: white digital pill timer) */}
-                        <div className="w-full bg-[#070b14] border border-pink-500/50 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col gap-1 shadow-inner mb-1.5">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="flex items-center gap-1 text-left">
-                              <span className="text-xs sm:text-sm">⏱️</span>
-                              <div>
-                                <span className="text-[7px] sm:text-[7.5px] text-slate-400 font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
-                                <span className="text-[9.5px] sm:text-[10.5px] text-white font-black block leading-none">5 min exposición</span>
-                              </div>
-                            </div>
 
-                            {/* White digital pill timer with bold black font (Strictly matching image.png 4:57) */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (isCurrentlyActiveRound) {
-                                  handlePresenterFinalize(session, index);
-                                } else {
-                                  scrollToRound(index);
-                                }
-                              }}
-                              title="Cuenta atrás (5 min de exposición)"
-                              className="bg-white hover:bg-slate-100 text-slate-950 font-mono text-lg sm:text-xl font-black px-3.5 sm:px-4 py-0.5 rounded-xl shadow-md border-0 cursor-pointer transition active:scale-95 select-none"
-                            >
-                              {formattedTimer}
-                            </button>
-
-                            <div className="text-right shrink-0">
-                              <span className="text-[6.5px] sm:text-[7px] text-slate-400 block font-black uppercase tracking-wider">RONDA</span>
-                              <span className="font-mono text-pink-400 font-black text-[8.5px] sm:text-[9.5px] block leading-tight">
-                                {turnNumber}/10 (50m)
-                              </span>
+                      {/* ⏱️ COUNTDOWN TIMER WIDGET (Matching image.png: soft blush box, crisp white digital pill timer) */}
+                      <div className="w-full bg-[#fdf6f7] border border-[#dfc8cc] rounded-2xl p-2 sm:p-2.5 flex flex-col gap-1.5 shadow-inner my-1.5">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 text-left">
+                            <span className="text-sm">⏱️</span>
+                            <div>
+                              <span className="text-[7px] sm:text-[7.5px] text-[#5c4f53] font-black uppercase tracking-wider block">CUENTA ATRÁS</span>
+                              <span className="text-[10px] sm:text-[11px] text-[#1a1416] font-black block leading-tight">5 min exposición</span>
                             </div>
                           </div>
 
-                          {/* Progress Bar (pink -> rose -> red) */}
-                          <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
-                            <div 
-                              className="h-full bg-gradient-to-r from-pink-400 via-rose-500 to-[#fe2c55] rounded-full transition-all duration-1000"
-                              style={{ width: `${Math.min(100, Math.max(10, (timerVal / 300) * 100))}%` }}
-                            />
+                          {/* White elevated digital pill timer with bold black font (Strictly matching image.png) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isCurrentlyActiveRound) {
+                                handlePresenterFinalize(session, index);
+                              } else {
+                                scrollToRound(index);
+                              }
+                            }}
+                            title="Cuenta atrás (5 min de exposición)"
+                            className="custom-bg bg-white hover:bg-[#fff9fa] text-[#1a1416] font-sans text-lg sm:text-xl font-black px-4 sm:px-5 py-1 rounded-xl shadow-[0_3px_10px_rgba(0,0,0,0.08)] border border-[#ede2e4] cursor-pointer transition active:scale-95 select-none"
+                          >
+                            {formattedTimer}
+                          </button>
+
+                          <div className="text-right shrink-0">
+                            <span className="text-[7px] sm:text-[7.5px] text-[#5c4f53] block font-black uppercase tracking-wider">RONDA</span>
+                            <span className="font-sans text-[#e11d74] font-black text-[9.5px] sm:text-[10.5px] block leading-tight">
+                              {turnNumber}/10 (50m)
+                            </span>
                           </div>
                         </div>
 
-                      {/* ACTION BUTTONS (Matching image.png: MICRO ON, FINALIZAR, LIVE) */}
+                        {/* Subtle Blush-Rose Progress Bar */}
+                        <div className="w-full bg-[#efdee2] h-1.5 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-[#d4a5ae] via-[#e879a0] to-[#e11d74] rounded-full transition-all duration-1000"
+                            style={{ width: `${Math.min(100, Math.max(10, (timerVal / 300) * 100))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* ACTION BUTTONS (Matching image.png: vibrant magenta MICRO ON & FINALIZAR, clean white LIVE) */}
                       <div className="w-full flex flex-col gap-1.5">
-                        <div className="grid grid-cols-2 gap-1.5">
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -6676,14 +6665,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                 stopLucasTorresSpeech();
                               }
                             }}
-                            className={`w-full py-1.5 px-2 rounded-xl font-black text-[9.5px] sm:text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
+                            className={`custom-bg w-full py-1.5 sm:py-2 px-3 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border shadow-sm ${
                               isBroadcastMicOn && !isMuted
-                                ? 'bg-gradient-to-r from-pink-600 via-pink-500 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border-pink-400 shadow-pink-500/30'
-                                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                                ? 'bg-gradient-to-r from-[#df1773] to-[#ec167f] hover:brightness-110 text-white border-[#be185d]/20'
+                                : 'bg-[#f4e9ec] hover:bg-[#ead8dd] text-[#5c4f53] border-[#d6c2c6]'
                             }`}
                             title={isBroadcastMicOn && !isMuted ? "Micrófono encendido: Lucas Torres está hablando. Pulsa para silenciar" : "Micrófono apagado. Pulsa para encender y escuchar a Lucas Torres"}
                           >
-                            <Mic className="w-3 h-3 shrink-0 text-white" />
+                            <Mic className={`w-3.5 h-3.5 shrink-0 ${isBroadcastMicOn && !isMuted ? 'text-white' : 'text-[#5c4f53]'}`} />
                             <span className="truncate">{isBroadcastMicOn && !isMuted ? 'MICRO ON' : 'MICRO OFF'}</span>
                           </button>
 
@@ -6692,7 +6681,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             onClick={() => {
                               handlePresenterFinalize(session, index);
                             }}
-                            className="w-full bg-gradient-to-r from-pink-600 via-pink-500 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-[9.5px] sm:text-[10px] py-1.5 px-2 rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border border-pink-400/80"
+                            className="custom-bg w-full bg-gradient-to-r from-[#df1773] to-[#ec167f] hover:brightness-110 text-white font-black text-[10px] sm:text-[11px] py-1.5 sm:py-2 px-3 rounded-full shadow-sm uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border border-[#be185d]/20"
                             id={`btn-finalizar-turno-${session.id}`}
                           >
                             <Square className="w-2.5 h-2.5 fill-white text-white shrink-0" />
@@ -6702,7 +6691,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
                         {/* LIVE CAMERA BUTTON */}
                         {(() => {
-                          const isLiveActive = showTenWindowsVotingLive;
+                          const isLiveActiveBtn = showTenWindowsVotingLive;
 
                           return (
                             <button
@@ -6727,22 +6716,22 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                                   });
                                 }
                               }}
-                              className={`w-full py-1.5 px-2.5 rounded-xl font-black text-[9.5px] sm:text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1 border shadow-md ${
-                                isLiveActive
-                                  ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:to-rose-400 text-white border-pink-400 shadow-[0_0_14px_rgba(255,45,133,0.5)] animate-pulse'
-                                  : 'bg-white hover:bg-slate-100 text-slate-950 border-slate-200'
+                              className={`custom-bg w-full py-1.5 sm:py-2 px-3 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border shadow-2xs ${
+                                isLiveActiveBtn
+                                  ? 'bg-gradient-to-r from-[#df1773] to-[#ec167f] text-white border-[#be185d] shadow-[0_0_14px_rgba(225,29,116,0.45)] animate-pulse'
+                                  : 'bg-white hover:bg-[#fdf5f7] text-[#1a1416] border-[#8b4a5e]'
                               }`}
                               id={`btn-live-camera-${session.id}`}
                               title={showTenWindowsVotingLive ? "Cerrar las 10 ventanas en vivo" : "Abrir las 10 ventanas de los participantes online"}
                             >
-                              {isLiveActive ? (
+                              {isLiveActiveBtn ? (
                                 <>
-                                  <Camera className="w-3 h-3 shrink-0 text-white" />
+                                  <Camera className="w-3.5 h-3.5 shrink-0 text-white" />
                                   <span>Detener Live</span>
                                 </>
                               ) : (
                                 <>
-                                  <Camera className="w-3 h-3 shrink-0 text-slate-950" />
+                                  <Camera className="w-3.5 h-3.5 shrink-0 text-[#1a1416]" />
                                   <span>Live</span>
                                 </>
                               )}
@@ -6754,26 +6743,26 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   )}
                 </div>
 
-                {/* 👥 10 PARTICIPANTES PANEL DIRECTAMENTE VISIBLE (Strictly matching zz.png) */}
+                {/* 👥 10 PARTICIPANTES PANEL DIRECTAMENTE VISIBLE (Frosted White Pearl Panel matching image.png) */}
                 <div 
-                  className="w-full bg-[#0B0F19]/95 backdrop-blur-md border border-black rounded-xl sm:rounded-3xl p-1.5 xs:p-2 shadow-[0_20px_60px_rgba(0,0,0,0.95)] flex flex-col gap-1 sm:gap-1.5 box-border mt-auto shrink-0 pb-1.5 xs:pb-2"
+                  className="w-full relative z-20 bg-white/85 backdrop-blur-md border border-[#dfccd0] rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-[0_8px_28px_rgba(135,90,105,0.12)] flex flex-col gap-1.5 box-border mt-auto shrink-0"
                   id={`finanzas-live-participants-panel-${session.id}`}
                 >
-                  {/* Header: Red pulsing dot + Round Title (left) & 10 ONLINE (right) */}
+                  {/* Header: Magenta pulsing dot + Round Title (left) & 10 ONLINE (right) */}
                   <div className="flex items-center justify-between px-1 w-full gap-2">
                     <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-                      <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse shadow-sm shadow-pink-500/50 shrink-0" />
-                      <span className="text-xs sm:text-[13px] font-black uppercase tracking-wider text-white truncate font-sans">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#e11d74] animate-pulse shadow-sm shadow-pink-500/40 shrink-0" />
+                      <span className="text-xs sm:text-[13px] font-black uppercase tracking-wider text-[#1a1416] truncate font-sans">
                         {roundTitle}
                       </span>
                     </div>
-                    <span className="bg-pink-600 text-white text-[8.5px] sm:text-[9.5px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse shrink-0">
+                    <span className="bg-[#e11d74] text-white text-[8.5px] sm:text-[9.5px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-xs shrink-0">
                       10 ONLINE
                     </span>
                   </div>
 
                   {/* 2x5 Grid of 10 participants */}
-                  <div className="grid grid-cols-5 gap-1 sm:gap-1.5 select-none w-full max-w-full mx-auto box-border" id={`finanzas-grid-2x5-${session.id}`}>
+                  <div className="grid grid-cols-5 gap-1.5 select-none w-full max-w-full mx-auto box-border" id={`finanzas-grid-2x5-${session.id}`}>
                     {participants.slice(0, 10).map((userObj, idx) => {
                       const isChosenInSpotlight = (
                         userObj.id === presenter.id ||
@@ -6816,10 +6805,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                               });
                             }
                           }}
-                          className={`aspect-square min-h-[26px] xs:min-h-[30px] sm:min-h-[44px] rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden relative border transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-start p-0.5 sm:p-1 box-border cursor-pointer ${
+                          className={`custom-bg aspect-square min-h-[26px] xs:min-h-[30px] sm:min-h-[44px] rounded-xl sm:rounded-2xl overflow-hidden relative transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm flex flex-col justify-start p-0.5 sm:p-1 box-border cursor-pointer ${
                             isChosenInSpotlight
-                              ? 'border-2 border-[#fe2c55] ring-2 ring-[#fe2c55]/90 shadow-[0_0_14px_rgba(254,44,85,0.9)] scale-[1.02]'
-                              : 'border border-slate-700/80 hover:border-white/80 bg-slate-900'
+                              ? 'border-2 border-[#e11d74] ring-2 ring-[#e11d74]/40 shadow-[0_0_12px_rgba(225,29,116,0.35)] scale-[1.02]'
+                              : 'border border-[#d6c2c6] hover:border-[#e11d74]/70 bg-slate-100'
                           }`}
                           title={`Turno ${idx + 1} de 10: ${userObj.name}`}
                         >
@@ -6829,9 +6818,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                             className="absolute inset-0 w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-black/50 shadow-sm animate-pulse z-10 bg-[#fe2c55]" />
+                          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-white/80 shadow-xs animate-pulse z-10 bg-[#e11d74]" />
 
-                          <div className="relative z-10 self-center backdrop-blur-xs text-center py-0.5 px-1.5 min-w-0 max-w-[92%] overflow-hidden rounded-md box-border shadow-md bg-black/85 mt-auto">
+                          <div className="relative z-10 self-center backdrop-blur-xs text-center py-0.5 px-1.5 min-w-0 max-w-[92%] overflow-hidden rounded-md box-border shadow-md bg-[#1a1416]/85 mt-auto">
                             <span className="text-[8px] xs:text-[9px] sm:text-[9.5px] font-black block truncate leading-tight text-white">
                               {displayName}
                             </span>
@@ -6892,6 +6881,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       }
 
                       const sessionFee = session?.entryFee || 10;
+                      const currentUserBalance = typeof userProfile?.balance === 'number' ? userProfile.balance : 0;
+                      if (currentUserBalance < sessionFee) {
+                        if (onExecutePaymentAndJoinSession) {
+                          onExecutePaymentAndJoinSession(session);
+                        }
+                        return;
+                      }
+
                       const is1000EuroRound = sessionFee === 1000 || feeInfo?.feeInWords?.includes('1.000');
 
                       if (is1000EuroRound) {
@@ -7029,12 +7026,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                         });
                       }
                     }}
-                    className={`w-full font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border shadow-md flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 cursor-pointer active:scale-95 ${
+                    className={`custom-bg w-full font-black text-[11px] sm:text-[12px] py-2 sm:py-2.5 px-3 sm:px-4 rounded-full border shadow-2xs flex items-center justify-center gap-1.5 sm:gap-2 font-sans transition shrink-0 cursor-pointer active:scale-95 ${
                       isContestPendingClose || localStorage.getItem('finanzas_contest_pending_close') === 'true' || showFinanzasResults
-                        ? 'bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-amber-500/25 text-amber-200 border-amber-400/60'
+                        ? 'bg-[#f4e4e7] text-[#5c4f53] border-[#d6c2c6]'
                         : isUserEnrolledInThisRound
-                        ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:via-rose-400 hover:to-pink-500 text-white border-pink-400 shadow-[0_0_22px_rgba(255,45,133,0.7)] ring-2 ring-pink-400/80 ring-offset-2 ring-offset-[#070b14]'
-                        : 'bg-gradient-to-r from-[#FFD1DC] via-[#FCC2D0] to-[#F8B4C4] hover:from-[#FCC2D0] hover:to-[#F5A3B7] text-[#3D1422] border-[#F4A8B9]'
+                        ? 'bg-gradient-to-r from-[#df1773] to-[#ec167f] hover:brightness-110 text-white border-[#be185d] shadow-[0_2px_14px_rgba(225,29,116,0.4)]'
+                        : 'bg-gradient-to-r from-[#ebd0d4] via-[#e4c1c7] to-[#dfb5bc] hover:brightness-97 text-[#1a1416] border-[#d2aeb4]'
                     }`}
                     id={`btn-inscribirse-ronda-${session.id}`}
                     title={
@@ -7078,7 +7075,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       if (setShowFinanzasRecount) setShowFinanzasRecount(false);
                       setShowVotingProjectsModal(true);
                     }}
-                    className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-slate-200 shadow-md flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer uppercase tracking-wider font-sans transition active:scale-95 shrink-0 mb-0.5 sm:mb-1"
+                    className="custom-bg w-full bg-white hover:bg-[#fdf5f7] text-[#1a1416] font-black text-[10.5px] xs:text-[11px] sm:text-[12px] py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-[#d6c2c6] shadow-2xs flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer uppercase tracking-wider font-sans transition active:scale-95 shrink-0 mb-0.5 sm:mb-1"
                     id={`btn-total-proyectos-ronda-${session.id}`}
                     title="Total Proyectos - Ver proyectos de los participantes"
                   >
@@ -7364,7 +7361,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     {/* Like button with count (e.g. 43.2K) - Queda marcado y lanza lluvia de corazones */}
                     <div className="flex flex-col items-center relative group/channel-heart-zone">
                       {/* Recuadro de emojis dentro del canal - Centrado y con vista cómoda SIEMPRE por delante */}
-                      <div className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] w-[272px] min-w-[272px] max-w-[272px] box-border flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] ring-1 ring-white/10 animate-fade-in select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 ${
+                      <div 
+                        onWheel={(e) => e.stopPropagation()}
+                        className={`absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 z-[400] w-[272px] min-w-[272px] max-w-[272px] box-border flex-col items-center bg-[#0a0e1a]/95 backdrop-blur-2xl border border-slate-700/80 p-2.5 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] ring-1 ring-white/10 animate-fade-in select-none after:content-[''] after:absolute after:-right-4 after:inset-y-0 after:w-6 ${
                         showEmojiPickerSessionId === session.id ? 'flex' : 'hidden group-hover/channel-heart-zone:flex'
                       }`}>
                         {/* Cabecera del recuadro */}
@@ -7389,8 +7388,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           </div>
                         </div>
 
-                        {/* Rejilla de emojis centrada y cómoda (captura image.png) */}
-                        <div className="grid grid-cols-6 gap-1 w-full justify-items-center">
+                        {/* Rejilla de emojis centrada y cómoda desplazable con ratón */}
+                        <div className="grid grid-cols-6 gap-1 w-full justify-items-center max-h-[210px] overflow-y-auto overscroll-contain pr-0.5">
                           {TIKTOK_HEART_HOVER_EMOJIS.map((emoji) => (
                             <button
                               key={emoji}
