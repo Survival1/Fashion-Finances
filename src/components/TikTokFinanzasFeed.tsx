@@ -545,11 +545,11 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         </button>
       </div>
 
-      {/* Badge 1: 🔴 TU CÁMARA RETRANSMITIENDO EN DIRECTO */}
+      {/* Badge 1: 🔴 Directo */}
       <div className="flex items-center self-start mb-2">
-        <div className="inline-flex items-center gap-2 bg-[#e60023] text-white text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase px-4 py-1.5 rounded-full shadow-lg border border-red-500/80">
+        <div className="inline-flex items-center gap-2 bg-[#e60023] text-white text-[10.5px] sm:text-[11px] font-black tracking-wider px-4 py-1.5 rounded-full shadow-lg border border-red-500/80">
           <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
-          <span>TU CÁMARA RETRANSMITIENDO EN DIRECTO</span>
+          <span>Directo</span>
         </div>
       </div>
 
@@ -1445,7 +1445,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   const [isChannelActionsHovered, setIsChannelActionsHovered] = useState<boolean>(false);
   const channelVolumeTrackRef = useRef<HTMLDivElement | null>(null);
   const [channelVideoProgress, setChannelVideoProgress] = useState<number>(0);
-  const [channelVideoLikesMap, setChannelVideoLikesMap] = useState<Record<string, { count: number; userLiked: boolean }>>({});
+  const [channelVideoLikesMap, setChannelVideoLikesMap] = useState<Record<string, { count: number; userLiked: boolean }>>(() => {
+    try {
+      const raw = localStorage.getItem('coll_casting_live_likes_map');
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return {};
+  });
   const [channelVideoCommentsOpen, setChannelVideoCommentsOpen] = useState<boolean>(false);
   const [channelVideoNewComment, setChannelVideoNewComment] = useState<string>('');
   const [channelVideoReplyingTo, setChannelVideoReplyingTo] = useState<{ id: string; user: string } | null>(null);
@@ -1780,7 +1786,17 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     const cur = channelVideoLikesMap[video.id] || { count: video.likes || 120, userLiked: Boolean(video.isLiked) };
     const nextLiked = !cur.userLiked;
     const nextCount = nextLiked ? cur.count + 1 : Math.max(0, cur.count - 1);
-    setChannelVideoLikesMap(prev => ({ ...prev, [video.id]: { count: nextCount, userLiked: nextLiked } }));
+    const updatedMap = { ...channelVideoLikesMap, [video.id]: { count: nextCount, userLiked: nextLiked } };
+
+    try {
+      localStorage.setItem('coll_casting_live_likes_map', JSON.stringify(updatedMap));
+      const prevExtra = Number(localStorage.getItem('coll_casting_live_likes_extra') || '0') || 0;
+      const nextExtra = Math.max(0, prevExtra + (nextLiked ? 1 : -1));
+      localStorage.setItem('coll_casting_live_likes_extra', String(nextExtra));
+    } catch (_) {}
+
+    setChannelVideoLikesMap(updatedMap);
+    window.dispatchEvent(new Event('ranking_likes_updated'));
 
     if (nextLiked) {
       window.dispatchEvent(new CustomEvent('trigger-hearts-shower'));
@@ -3839,6 +3855,12 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       };
     });
 
+    try {
+      const prevExtra = Number(localStorage.getItem('coll_casting_live_likes_extra') || '0') || 0;
+      localStorage.setItem('coll_casting_live_likes_extra', String(prevExtra + 1));
+      window.dispatchEvent(new Event('ranking_likes_updated'));
+    } catch (_) {}
+
     // Abre o conmuta la ventana de reacciones por delante de cualquier ventana
     setShowEmojiPickerSessionId(prev => (prev === sessionId ? null : sessionId));
 
@@ -4980,16 +5002,24 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             currentVid.isLiked = true;
-                            setChannelVideoLikesMap(prev => {
-                              const cur = prev[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
-                              return {
-                                ...prev,
-                                [currentVid.id]: {
-                                  count: cur.userLiked ? cur.count : cur.count + 1,
-                                  userLiked: true
-                                }
-                              };
-                            });
+                            const cur = channelVideoLikesMap[currentVid.id] || { count: currentVid.likes || 120, userLiked: false };
+                            const wasLiked = cur.userLiked;
+                            const updatedMap = {
+                              ...channelVideoLikesMap,
+                              [currentVid.id]: {
+                                count: wasLiked ? cur.count : cur.count + 1,
+                                userLiked: true
+                              }
+                            };
+                            try {
+                              localStorage.setItem('coll_casting_live_likes_map', JSON.stringify(updatedMap));
+                              if (!wasLiked) {
+                                const prevExtra = Number(localStorage.getItem('coll_casting_live_likes_extra') || '0') || 0;
+                                localStorage.setItem('coll_casting_live_likes_extra', String(prevExtra + 1));
+                              }
+                            } catch (_) {}
+                            setChannelVideoLikesMap(updatedMap);
+                            window.dispatchEvent(new Event('ranking_likes_updated'));
                             window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
                               detail: { emoji, icon: emoji, pureEmoji: true, x: e.clientX, y: e.clientY }
                             }));

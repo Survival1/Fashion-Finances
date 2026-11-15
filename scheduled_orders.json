@@ -35,6 +35,32 @@
     "recurrence": "weekly",
     "projectId": "proj-1",
     "projectName": "Milano Vintage Denim",
+    "status": "executed",
+    "executedAt": "2026-11-15T09:40:28.372Z"
+  },
+  {
+    "id": "sch-rec-1794735628372-743",
+    "userId": "user-buyer-1",
+    "userName": "Tú",
+    "userAvatar": "",
+    "entryFee": 1000,
+    "dateTime": "2026-11-14T12:28:02.070Z",
+    "recurrence": "weekly",
+    "projectId": "proj-1",
+    "projectName": "Milano Vintage Denim",
+    "status": "executed",
+    "executedAt": "2026-11-15T09:40:33.372Z"
+  },
+  {
+    "id": "sch-rec-1794735633372-886",
+    "userId": "user-buyer-1",
+    "userName": "Tú",
+    "userAvatar": "",
+    "entryFee": 1000,
+    "dateTime": "2026-11-21T12:28:02.070Z",
+    "recurrence": "weekly",
+    "projectId": "proj-1",
+    "projectName": "Milano Vintage Denim",
     "status": "pending"
   }
 ]

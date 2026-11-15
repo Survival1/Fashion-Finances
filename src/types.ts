@@ -7,6 +7,7 @@ export interface ModelProfile {
   id: string;
   name: string;
   username: string;
+  referenceNumber?: string; // Unique registration reference number
   alias?: string; // Custom nickname / alias
   avatar: string;
   banner?: string; // Optional custom background banner image
@@ -40,6 +41,7 @@ export interface UserSessionProfile {
   name: string;
   lastName?: string; // Last name
   username: string;
+  referenceNumber?: string; // Unique registration reference number
   role: UserRole;
   patrocinadorId: string; // Every user must be sponsored by a model
   balance: number;

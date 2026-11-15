@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ModelProfile, FinancialMovement } from '../types';
+import { computeTotalRankingAndVideoLikes } from '../utils/likesCounter';
 import { 
   Sparkles, 
   Crown, 
@@ -2529,6 +2530,25 @@ export default function VictoriaSecretRanking({
     return list.sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0));
   }, [models]);
 
+  const [likesSyncTick, setLikesSyncTick] = useState(0);
+  useEffect(() => {
+    const refreshLikes = () => setLikesSyncTick((t) => t + 1);
+    window.addEventListener('ranking_likes_updated', refreshLikes);
+    window.addEventListener('saved_videos_updated', refreshLikes);
+    window.addEventListener('coll_casting_live_videos_updated', refreshLikes);
+    window.addEventListener('storage', refreshLikes);
+    return () => {
+      window.removeEventListener('ranking_likes_updated', refreshLikes);
+      window.removeEventListener('saved_videos_updated', refreshLikes);
+      window.removeEventListener('coll_casting_live_videos_updated', refreshLikes);
+      window.removeEventListener('storage', refreshLikes);
+    };
+  }, []);
+
+  const totalRankingAndVideoLikes = React.useMemo(() => {
+    return computeTotalRankingAndVideoLikes(masterSortedRanking);
+  }, [masterSortedRanking, likesSyncTick, activeTab, isOpen]);
+
   // Set of female names for precise gender filtering
   const FEMALE_NAMES = React.useMemo(() => new Set([
     'Adriana Lima', 'Alessandra Ambrosio', 'Candice Swanepoel', 'Jasmine Tookes', 'Miranda Kerr',
@@ -3455,7 +3475,7 @@ export default function VictoriaSecretRanking({
               <div className="text-center space-y-2">
                 <div className="flex justify-center mb-1">
                   <img
-                    src="/assets/aistudio/Diamante_rosa_brillante_transparente.png"
+                    src="/assets/aistudio/Diamante_rosa_brillante_transparente.webp"
                     alt="Diamante Rosa Brillante"
                     className="w-16 h-auto max-h-14 sm:w-20 sm:max-h-16 object-contain drop-shadow-[0_4px_14px_rgba(236,72,153,0.35)] hover:scale-110 transition-transform duration-300 pointer-events-none select-none"
                   />
@@ -3467,6 +3487,61 @@ export default function VictoriaSecretRanking({
                   <span>💎</span> Recompensas de la Pasarela Elite de Alta Costura <span>💎</span>
                 </p>
                 <div className="w-16 h-0.5 mx-auto bg-pink-300 rounded-full" />
+              </div>
+
+              {/* Reglas de Likes Container */}
+              <div className="bg-white border border-pink-200/80 rounded-2xl p-5 sm:p-6 shadow-xs max-w-2xl mx-auto space-y-4 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-pink-100 pb-4">
+                  <div className="space-y-0.5">
+                    <h2 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                      <Heart className="w-4.5 h-4.5 text-pink-500 fill-pink-500 shrink-0" />
+                      <span>Reglas de Likes</span>
+                    </h2>
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      Cómputo oficial de vídeos para el ranking
+                    </p>
+                  </div>
+
+                  {/* Contador de Likes */}
+                  <div className="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200/80 rounded-xl px-4 py-2.5 flex items-center gap-3 shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-xs shrink-0">
+                      <Heart className="w-4.5 h-4.5 fill-current" />
+                    </div>
+                    <div>
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-pink-600 font-mono block leading-none mb-1">
+                        CONTADOR DE LIKES
+                      </span>
+                      <span className="text-lg sm:text-xl font-black text-slate-900 tabular-nums leading-none block">
+                        {totalRankingAndVideoLikes.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  Los vídeos que tengan el botón <strong className="text-pink-600 font-bold">Like</strong> contabilizarán para el ranking. Estos botones los podemos encontrar en los <strong className="text-slate-900 font-bold">vídeos del perfil</strong> y en los <strong className="text-slate-900 font-bold">vídeos subidos en Casting Live</strong>.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="bg-pink-50/50 border border-pink-100 rounded-xl p-3 flex items-start gap-2.5">
+                    <Video className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-xs font-extrabold text-slate-900 block">Vídeos del perfil</span>
+                      <span className="text-[11px] text-slate-600 leading-snug block">
+                        Botón Like disponible en cada vídeo publicado dentro del perfil.
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-pink-50/50 border border-pink-100 rounded-xl p-3 flex items-start gap-2.5">
+                    <Radio className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-xs font-extrabold text-slate-900 block">Vídeos subidos en Casting Live</span>
+                      <span className="text-[11px] text-slate-600 leading-snug block">
+                        Botón Like activo en los vídeos subidos en Casting Live.
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Informative introductory callout */}
@@ -4110,7 +4185,7 @@ export default function VictoriaSecretRanking({
                           className="w-14 sm:w-16 h-auto object-contain drop-shadow-[0_4px_10px_rgba(217,0,108,0.3)] filter brightness-105"
                         />
                         <img
-                          src="/assets/aistudio/Diamante_rosa_brillante_transparente.png"
+                          src="/assets/aistudio/Diamante_rosa_brillante_transparente.webp"
                           alt="Diamante Rosa"
                           className="w-6 h-6 object-contain absolute -bottom-1 -left-2 drop-shadow-md"
                         />
@@ -4139,7 +4214,7 @@ export default function VictoriaSecretRanking({
                     {/* Right side: Pink diamond and Hot Pink luxury button */}
                     <div className="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto justify-end">
                       <img
-                        src="/assets/aistudio/Diamante_rosa_brillante_transparente.png"
+                        src="/assets/aistudio/Diamante_rosa_brillante_transparente.webp"
                         alt="Diamante"
                         className="hidden md:block w-9 h-9 object-contain drop-shadow-[0_4px_10px_rgba(244,114,182,0.4)] animate-pulse"
                       />

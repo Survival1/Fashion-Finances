@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.5
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ModelProfile, UserSessionProfile, InvestmentSession, ProjectData, ChatMessage, FinancialMovement, HistoryWonRecord } from './types';
 import { seedInitialData, generateTop100Ranking, RankingModel } from './utils/seedData';
 import { compressAndResizeImage } from './utils/imageCompressor';
+import { getOrAssignReferenceNumber, generateNextReferenceNumber } from './utils/referenceNumbers';
 import ModelGrid from './components/ModelGrid';
 import DashboardStats from './components/DashboardStats';
 import SessionSimulator from './components/SessionSimulator';
@@ -290,7 +291,12 @@ export default function App() {
       const version = localStorage.getItem('db_version_v12');
       if (raw && version === 'true') {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= 100) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 100) {
+          return parsed.map((m: ModelProfile) => ({
+            ...m,
+            referenceNumber: getOrAssignReferenceNumber(m.id, m.username, m.referenceNumber),
+          }));
+        }
       }
     } catch (e) {}
     const seed = seedInitialData();
@@ -309,10 +315,15 @@ export default function App() {
           const avatarUrl = (!parsed.avatar || parsed.avatar.includes('photo-1507003211169-0a1dd7228f2d'))
             ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
             : parsed.avatar;
+          const resolvedRef =
+            parsed.role === 'visitor'
+              ? undefined
+              : getOrAssignReferenceNumber(parsed.id, parsed.username, parsed.referenceNumber);
           return {
             ...parsed,
             name: parsed.name === 'Ernesto vs' || parsed.name === 'Ernesto VS' ? 'Adriana Lima' : parsed.name,
             avatar: avatarUrl,
+            referenceNumber: resolvedRef,
             balance: typeof parsed.balance === 'number' && !isNaN(parsed.balance) ? parsed.balance : (parsed.role === 'investor' ? 100.00 : 0.00),
             totalEarnings: typeof parsed.totalEarnings === 'number' && !isNaN(parsed.totalEarnings) ? parsed.totalEarnings : 0.00,
             totalInvested: typeof parsed.totalInvested === 'number' && !isNaN(parsed.totalInvested) ? parsed.totalInvested : 0.00,
@@ -516,6 +527,7 @@ export default function App() {
 
   const womenSliderRef = useRef<HTMLDivElement>(null);
   const menSliderRef = useRef<HTMLDivElement>(null);
+  const appRootScrollRef = useRef<HTMLDivElement>(null);
 
   // --- UI/Navigation State Hooks ---
   const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin' | 'hashtag'>('profile');
@@ -523,10 +535,49 @@ export default function App() {
   const [initialSelectedStoreId, setInitialSelectedStoreId] = useState<string | null>(null);
   const [selectedLiveModelId, setSelectedLiveModelId] = useState<string | undefined>(undefined);
   const [selectedModelForView, setSelectedModelForView] = useState<ModelProfile | null>(null);
+  const [profileScrollNonce, setProfileScrollNonce] = useState<number>(0);
   const [modelViewSourceTab, setModelViewSourceTab] = useState<string | null>(null);
   const [selectedModelForExpandedView, setSelectedModelForExpandedView] = useState<ModelProfile | null>(null);
   const [rankingVideoPlayUrl, setRankingVideoPlayUrl] = useState<string | null>(null);
   const [rankingVideoModelName, setRankingVideoModelName] = useState<string | null>(null);
+
+  const scrollAppToTop = useCallback(() => {
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    } catch {
+      try {
+        window.scrollTo(0, 0);
+      } catch {}
+    }
+    try {
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+      const rootEl = document.getElementById('root');
+      if (rootEl) rootEl.scrollTop = 0;
+      if (appRootScrollRef.current) appRootScrollRef.current.scrollTop = 0;
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!selectedModelForView) return;
+    scrollAppToTop();
+    let rafId = 0;
+    let rafId2 = 0;
+    rafId = requestAnimationFrame(() => {
+      scrollAppToTop();
+      rafId2 = requestAnimationFrame(() => {
+        scrollAppToTop();
+      });
+    });
+    const timer = window.setTimeout(() => {
+      scrollAppToTop();
+    }, 60);
+    return () => {
+      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafId2);
+      clearTimeout(timer);
+    };
+  }, [selectedModelForView?.id, profileScrollNonce, scrollAppToTop]);
   const [patrocinadosList, setPatrocinadosList] = useState<Patrocinado[]>(() => {
     try {
       const raw = localStorage.getItem('coll_patrocinados');
@@ -546,10 +597,14 @@ export default function App() {
           });
         }
         return parsed.map(p => {
-          if (p.avatar && p.avatar.includes('1524504388940-b1c1722553e1')) {
-            return { ...p, avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' };
+          const withRef = {
+            ...p,
+            referenceNumber: getOrAssignReferenceNumber(p.id, p.username, p.referenceNumber),
+          };
+          if (withRef.avatar && withRef.avatar.includes('1524504388940-b1c1722553e1')) {
+            return { ...withRef, avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150' };
           }
-          return p;
+          return withRef;
         });
       }
     } catch (e) {}
@@ -558,6 +613,7 @@ export default function App() {
         id: 'pat-marcus',
         name: 'Marcus Sterling',
         username: 'marcussterling_m2',
+        referenceNumber: getOrAssignReferenceNumber('pat-marcus', 'marcussterling_m2'),
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
         role: 'model',
         registeredAt: '8 oct 2026',
@@ -568,6 +624,7 @@ export default function App() {
         id: 'pat-0',
         name: 'juan',
         username: 'pedro',
+        referenceNumber: getOrAssignReferenceNumber('pat-0', 'pedro'),
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
         role: 'model',
         registeredAt: '1 jun 2026',
@@ -578,6 +635,7 @@ export default function App() {
         id: 'pat-1',
         name: 'Sofía Martínez',
         username: 'sofia_mtz',
+        referenceNumber: getOrAssignReferenceNumber('pat-1', 'sofia_mtz'),
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
         role: 'investor',
         registeredAt: '15 de ene. 2026',
@@ -588,6 +646,7 @@ export default function App() {
         id: 'pat-2',
         name: 'Carlos Mendoza',
         username: 'carlos_mendu',
+        referenceNumber: getOrAssignReferenceNumber('pat-2', 'carlos_mendu'),
         avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150',
         role: 'investor',
         registeredAt: '2 de feb. 2026',
@@ -598,6 +657,7 @@ export default function App() {
         id: 'pat-3',
         name: 'Lucía Olivera',
         username: 'lu_olivera',
+        referenceNumber: getOrAssignReferenceNumber('pat-3', 'lu_olivera'),
         avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=150',
         role: 'model',
         registeredAt: '18 de mar. 2026',
@@ -608,6 +668,7 @@ export default function App() {
         id: 'pat-4',
         name: 'Alejandro Ortiz',
         username: 'ale_ortiz',
+        referenceNumber: getOrAssignReferenceNumber('pat-4', 'ale_ortiz'),
         avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
         role: 'investor',
         registeredAt: '30 de abr. 2026',
@@ -618,6 +679,7 @@ export default function App() {
         id: 'pat-5',
         name: 'Valeria Russo',
         username: 'val_russo',
+        referenceNumber: getOrAssignReferenceNumber('pat-5', 'val_russo'),
         avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150',
         role: 'model',
         registeredAt: '5 de jun. 2026',
@@ -1099,6 +1161,14 @@ export default function App() {
       localStorage.removeItem('open_finanzas_sessions_list_v44');
       localStorage.removeItem('finanzas_active_session_index');
     } catch (e) {}
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const sponsorParam = params.get('sponsor') || params.get('Sponsor') || params.get('ref');
+      if (sponsorParam && sponsorParam.trim() && sponsorParam.trim().toLowerCase() !== 'user') {
+        setRegSponsorId(sponsorParam.trim());
+      }
+    } catch (e) {}
   }, []);
 
   // ⏸️ Detener y pausar toda la reproducción de vídeo y audio al cambiar de página
@@ -1286,9 +1356,8 @@ export default function App() {
         setModelViewSourceTab(activeTab);
         setActiveTabTab('home');
         setShowVictoriaSecretRanking(false);
-        try {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch {}
+        setProfileScrollNonce(n => n + 1);
+        scrollAppToTop();
       }
     };
 
@@ -1296,7 +1365,7 @@ export default function App() {
     return () => {
       window.removeEventListener('open-user-profile', handleOpenUserProfileGlobal);
     };
-  }, [models, patrocinadosList, activeTab]);
+  }, [models, patrocinadosList, activeTab, scrollAppToTop]);
 
   // Determinar si actualmente se está visualizando el perfil de Adriana Lima (@adrianalima_w1)
   const isViewingAdrianaLimaProfile = useMemo(() => {
@@ -1482,6 +1551,7 @@ export default function App() {
         name: foundModel.name.split(' ')[0] || foundModel.name,
         lastName: foundModel.name.split(' ').slice(1).join(' ') || '',
         username: foundModel.username,
+        referenceNumber: getOrAssignReferenceNumber(foundModel.id, foundModel.username, foundModel.referenceNumber),
         role: 'model',
         patrocinadorId: 'model-1',
         balance: foundModel.referidosCount * 15.00,
@@ -1518,11 +1588,13 @@ export default function App() {
       setShowRecoveryEmailModal(false);
       alert(`🔑 Sesión iniciada con éxito como @${foundModel.username} tras la recuperación de datos.`);
     } else {
+      const fallbackId = generateNextUserId();
       const fallbackProfile: UserSessionProfile = {
-        id: generateNextUserId(),
+        id: fallbackId,
         name: cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1),
         lastName: '',
         username: cleanUsername,
+        referenceNumber: getOrAssignReferenceNumber(fallbackId, cleanUsername),
         role: 'investor',
         patrocinadorId: models[0]?.id || 'model-1',
         balance: 100.00,
@@ -2148,9 +2220,11 @@ export default function App() {
 
   // Manage patrocinados helpers
   const handleAddPatrocinado = (newPat: Omit<Patrocinado, 'id'>) => {
+    const newPatId = 'pat-' + Date.now();
     const freshPat: Patrocinado = {
       ...newPat,
-      id: 'pat-' + Date.now()
+      id: newPatId,
+      referenceNumber: newPat.referenceNumber || generateNextReferenceNumber(newPatId, newPat.username),
     };
     const nextPatrocinados = [freshPat, ...patrocinadosList];
     setPatrocinadosList(nextPatrocinados);
@@ -2270,6 +2344,7 @@ export default function App() {
         id: targetModel.id,
         name: targetModel.name,
         username: targetModel.username,
+        referenceNumber: getOrAssignReferenceNumber(targetModel.id, targetModel.username, targetModel.referenceNumber),
         role: 'model',
         patrocinadorId: 'topm-1', // Top male model sponsors her!
         balance: 1500.00,
@@ -2355,14 +2430,27 @@ export default function App() {
       return;
     }
 
-    const chosenSponsorId = regSponsorId || models[0]?.id || 'model-1';
+    const normSponsor = regSponsorId.trim().toLowerCase().replace(/^#/, '').replace(/^@/, '');
+    const matchedSponsor = normSponsor
+      ? models.find(
+          (m) =>
+            m.id.toLowerCase() === normSponsor ||
+            (m.referenceNumber && m.referenceNumber.toLowerCase() === normSponsor) ||
+            (m.username && m.username.toLowerCase() === normSponsor)
+        )
+      : undefined;
+    const chosenSponsorId = matchedSponsor?.id || regSponsorId || models[0]?.id || 'model-1';
 
     const newId = generateNextUserId();
+    const cleanRegUsername = regUsername.toLowerCase().replace(/[^a-z0-9_]/g, '') || regUsername.toLowerCase().replace(/[^a-z]/g, '');
+    const newReferenceNumber = generateNextReferenceNumber(newId, cleanRegUsername);
+
     const newProfile: UserSessionProfile = {
       id: newId,
       name: regName,
       lastName: regLastName,
-      username: regUsername.toLowerCase().replace(/[^a-z]/g, ''),
+      username: cleanRegUsername,
+      referenceNumber: newReferenceNumber,
       role: regRole,
       patrocinadorId: chosenSponsorId,
       balance: regRole === 'investor' ? 100.00 : 0.00, // Seed 100€ key to allow instant investment joins!
@@ -2390,6 +2478,13 @@ export default function App() {
       gender: regRole === 'model' ? regGender : undefined
     };
 
+    try {
+      const existingRegRaw = localStorage.getItem('coll_registered_users');
+      const existingReg = existingRegRaw ? JSON.parse(existingRegRaw) : [];
+      const updatedReg = Array.isArray(existingReg) ? [newProfile, ...existingReg.filter((u: any) => u.username !== newProfile.username)] : [newProfile];
+      localStorage.setItem('coll_registered_users', JSON.stringify(updatedReg));
+    } catch {}
+
     // If new model is created, append them to models array to let them compete!
     let nextModels = models;
     let nextRankings = { ...top100Rankings };
@@ -2398,7 +2493,8 @@ export default function App() {
       const freshModel: ModelProfile = {
         id: newId,
         name: `${regName} ${regLastName}`,
-        username: regUsername.toLowerCase(),
+        username: cleanRegUsername,
+        referenceNumber: newReferenceNumber,
         avatar: regGender === 'male' 
           ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600'
           : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
@@ -2470,7 +2566,7 @@ export default function App() {
     setShowRegisterModal(false);
     setShowWelcomeEmailModal(true);
     
-    alert(`📥 ¡Enhorabuena! Tu cuenta ha sido gestionada. Acabas de recibir tu correo electrónico de bienvenida en la plataforma con el enlace de acceso logueado.`);
+    alert(`📥 ¡Enhorabuena! Tu cuenta ha sido gestionada con tu Nº de Referencia único #${newReferenceNumber}. Acabas de recibir tu correo electrónico de bienvenida en la plataforma con el enlace de acceso.`);
   };
 
   // Login handler submitting username search or simulation login profile builder
@@ -2478,7 +2574,46 @@ export default function App() {
     e.preventDefault();
     resetFinanzasExpositionsOnLogin();
     if (!loginUsername) return;
-    const cleanUsername = loginUsername.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanUsername = loginUsername.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+    // Check previously registered users in localStorage first
+    try {
+      const existingRegRaw = localStorage.getItem('coll_registered_users');
+      if (existingRegRaw) {
+        const existingReg = JSON.parse(existingRegRaw);
+        if (Array.isArray(existingReg)) {
+          const matchedRegUser = existingReg.find(
+            (u: UserSessionProfile) => u.username?.toLowerCase() === cleanUsername
+          );
+          if (matchedRegUser) {
+            const hydratedUser: UserSessionProfile = {
+              ...matchedRegUser,
+              referenceNumber: getOrAssignReferenceNumber(
+                matchedRegUser.id,
+                matchedRegUser.username,
+                matchedRegUser.referenceNumber
+              ),
+            };
+            setUserProfile(hydratedUser);
+            setEditAvatar(hydratedUser.avatar || '');
+            setEditBio(hydratedUser.bio || '');
+            setEditDireccion(hydratedUser.direccion || '');
+            setEditTelefono(hydratedUser.telefono || '');
+            setEditEmail(hydratedUser.email || '');
+            setEditShareDireccion(hydratedUser.shareDireccion !== false);
+            setEditShareTelefono(hydratedUser.shareTelefono !== false);
+            setEditShareEmail(hydratedUser.shareEmail !== false);
+            saveStateToLocalStorage(models, hydratedUser, projects, sessions, messages, movements);
+            setActiveTabTab('profile');
+            setShowLoginModal(false);
+            setLoginUsername('');
+            setLoginPassword('');
+            alert(`🔑 Sesión iniciada con éxito como @${hydratedUser.username} (Ref: #${hydratedUser.referenceNumber})`);
+            return;
+          }
+        }
+      }
+    } catch {}
 
     // Check admin credentials
     if (cleanUsername === 'admin' || cleanUsername === 'administrador') {
@@ -2486,6 +2621,7 @@ export default function App() {
         id: 'usr-admin-001',
         name: 'Super Admin',
         username: 'admin',
+        referenceNumber: getOrAssignReferenceNumber('usr-admin-001', 'admin'),
         role: 'admin',
         patrocinadorId: 'model-1',
         balance: 50000.00,
@@ -2524,6 +2660,7 @@ export default function App() {
         id: foundModel.id,
         name: foundModel.name,
         username: foundModel.username,
+        referenceNumber: getOrAssignReferenceNumber(foundModel.id, foundModel.username, foundModel.referenceNumber),
         role: 'model',
         patrocinadorId: 'model-2',
         balance: 1500.00,
@@ -2559,10 +2696,12 @@ export default function App() {
     }
 
     // Otherwise create/simulate a customized Investor profile with this custom username
+    const fallbackLoginId = generateNextUserId();
     const fallbackProfile: UserSessionProfile = {
-      id: generateNextUserId(),
+      id: fallbackLoginId,
       name: cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1),
       username: cleanUsername,
+      referenceNumber: getOrAssignReferenceNumber(fallbackLoginId, cleanUsername),
       role: 'investor',
       patrocinadorId: models[0]?.id || 'model-1',
       balance: 100.00,
@@ -2593,7 +2732,7 @@ export default function App() {
     setShowLoginModal(false);
     setLoginUsername('');
     setLoginPassword('');
-    alert(`🔑 Sesión iniciada con éxito como Inversor nuevo bajo el usuario @${cleanUsername}`);
+    alert(`🔑 Sesión iniciada con éxito como Inversor nuevo bajo el usuario @${cleanUsername} (Ref: #${fallbackProfile.referenceNumber})`);
   };
 
   const handleUploadPhotoModel = (e: React.FormEvent) => {
@@ -2909,6 +3048,40 @@ export default function App() {
             sliderComponent={<ExpandedModelPhotoSlider model={selectedModelForExpandedView} fullscreen />}
           />
         )}
+        {/* ✉️ Modal de Bienvenida con Nº de Referencia Único tras Registrarse */}
+        {showWelcomeEmailModal && pendingWelcomeProfile && (
+          <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4 animate-fade-in">
+            <div className="bg-white border-2 border-pink-200 rounded-3xl w-full max-w-md p-6 sm:p-8 text-slate-900 space-y-5 shadow-2xl text-center">
+              <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-200 text-[#d9006c] flex items-center justify-center mx-auto">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-serif font-black text-slate-950">¡Bienvenido/a a Fashion Finances!</h3>
+                <p className="text-xs text-slate-600">
+                  Tu cuenta <strong>@{pendingWelcomeProfile.username}</strong> ha sido creada correctamente.
+                </p>
+              </div>
+              <div className="bg-rose-50/70 border border-pink-200 rounded-2xl p-4 space-y-1.5">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-500 block">
+                  Tu Número de Referencia Personal
+                </span>
+                <p className="text-xl font-mono font-black text-rose-950">
+                  #{pendingWelcomeProfile.referenceNumber}
+                </p>
+                <p className="text-[11px] font-mono font-semibold text-rose-700 break-all">
+                  https://fashion.finances/ref?sponsor={pendingWelcomeProfile.referenceNumber}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleActivateAccountFromWelcomeEmail}
+                className="w-full py-3 bg-gradient-to-r from-[#d9006c] to-[#ec4899] hover:brightness-105 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer border-0 transition"
+              >
+                Activar Cuenta e Iniciar Sesión
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2931,7 +3104,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:overflow-hidden max-md:min-h-0' : 'overflow-y-auto'} select-none no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}>
+    <div ref={appRootScrollRef} className={`min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between max-w-full overflow-x-hidden ${activeTab === 'casting_live' ? 'max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:overflow-hidden max-md:min-h-0' : 'overflow-y-auto'} select-none no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}>
       <HeartRainOverlay />
       
       {showVictoriaSecretRanking && (
@@ -3299,6 +3472,11 @@ export default function App() {
               hideIntro={activeTab !== 'home'}
               hideRanking={true}
               isFriendSuggestions={true}
+              hideDirectoAndRegalosBanners={activeTab === 'finance' || activeTab === 'create_project' || activeTab === 'chat'}
+              hideSalonAndDirectoBanners={activeTab === 'sessions' || activeTab === 'chat'}
+              hideSalonBanner={activeTab === 'patrocinados' || activeTab === 'casting_live'}
+              hideRegalosBanner={activeTab === 'casting_live'}
+              invertDirectoAndRegalos={activeTab === 'patrocinados'}
               userProfile={selectedModelForView ? {
                 id: selectedModelForView.id,
                 name: selectedModelForView.name,
@@ -3452,18 +3630,16 @@ export default function App() {
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                       return;
                     }
                     const target = models.find(m => m.id === modelId || m.name.toLowerCase().includes(modelId.toLowerCase()));
                     if (target) {
                       setSelectedModelForView(target);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                     } else if (modelId) {
                       const fallbackModel: ModelProfile = {
                         id: modelId,
@@ -3478,9 +3654,8 @@ export default function App() {
                       };
                       setSelectedModelForView(fallbackModel);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                     }
                   }}
                   initialSocialModal={profileSocialModalState}
@@ -3519,18 +3694,16 @@ export default function App() {
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                       return;
                     }
                     const target = models.find(m => m.id === modelId || m.name.toLowerCase().includes(modelId.toLowerCase()));
                     if (target) {
                       setSelectedModelForView(target);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                     } else if (modelId) {
                       const fallbackModel: ModelProfile = {
                         id: modelId,
@@ -3545,9 +3718,8 @@ export default function App() {
                       };
                       setSelectedModelForView(fallbackModel);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                     }
                   }}
                   initialSocialModal={profileSocialModalState}
@@ -3586,9 +3758,8 @@ export default function App() {
                     if (modelObj) {
                       setSelectedModelForView(modelObj);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                       return;
                     }
                     let target = models.find(m => m.id === modelId);
@@ -3605,9 +3776,8 @@ export default function App() {
                     if (target) {
                       setSelectedModelForView(target);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                     } else if (modelId) {
                       const fallbackModel: ModelProfile = {
                         id: modelId,
@@ -3622,9 +3792,8 @@ export default function App() {
                       };
                       setSelectedModelForView(fallbackModel);
                       setActiveTabTab('home');
-                      try {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch {}
+                      setProfileScrollNonce(n => n + 1);
+                      scrollAppToTop();
                     }
                   }}
                   initialSocialModal={profileSocialModalState}
@@ -3652,6 +3821,9 @@ export default function App() {
                 onNavigateToTab={setActiveTabTab}
                 onOpenFriendsModal={() => {
                   setActiveSocialModalInvestor('friends');
+                }}
+                onOpenFollowingModal={() => {
+                  setActiveSocialModalInvestor('following');
                 }}
                 isVisitor={userProfile.role === 'visitor'}
                 onSelectModel={(model) => {
@@ -3788,12 +3960,12 @@ export default function App() {
                 }}
                 onLaunchChat={handleLaunchChatWithModel}
                 onGoToModelProfile={(modelId, modelObj) => {
+                  setModelViewSourceTab(activeTab);
                   if (modelObj) {
                     setSelectedModelForView(modelObj);
                     setActiveTabTab('home');
-                    try {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } catch {}
+                    setProfileScrollNonce(n => n + 1);
+                    scrollAppToTop();
                     return;
                   }
                   let target = models.find(m => m.id === modelId);
@@ -3810,9 +3982,8 @@ export default function App() {
                   if (target) {
                     setSelectedModelForView(target);
                     setActiveTabTab('home');
-                    try {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } catch {}
+                    setProfileScrollNonce(n => n + 1);
+                    scrollAppToTop();
                   } else if (modelId) {
                     const fallbackModel: ModelProfile = {
                       id: modelId,
@@ -3827,9 +3998,8 @@ export default function App() {
                     };
                     setSelectedModelForView(fallbackModel);
                     setActiveTabTab('home');
-                    try {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } catch {}
+                    setProfileScrollNonce(n => n + 1);
+                    scrollAppToTop();
                   }
                 }}
                 initialSocialModal={profileSocialModalState}
@@ -4419,6 +4589,7 @@ export default function App() {
                 patrocinados={patrocinadosList}
                 models={models}
                 patrocinadorId={userProfile.patrocinadorId}
+                currentUser={userProfile}
                 onAddPatrocinado={handleAddPatrocinado}
                 onDeletePatrocinado={handleDeletePatrocinado}
                 onOpenRegisterForm={() => setShowRegisterModal(true)}
@@ -4765,6 +4936,41 @@ export default function App() {
         sponsorSearchQuery={sponsorSearchQuery}
         setSponsorSearchQuery={setSponsorSearchQuery}
       />
+
+      {/* ✉️ Modal de Bienvenida con Nº de Referencia Único tras Registrarse */}
+      {showWelcomeEmailModal && pendingWelcomeProfile && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white border-2 border-pink-200 rounded-3xl w-full max-w-md p-6 sm:p-8 text-slate-900 space-y-5 shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-200 text-[#d9006c] flex items-center justify-center mx-auto">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-serif font-black text-slate-950">¡Bienvenido/a a Fashion Finances!</h3>
+              <p className="text-xs text-slate-600">
+                Tu cuenta <strong>@{pendingWelcomeProfile.username}</strong> ha sido creada correctamente.
+              </p>
+            </div>
+            <div className="bg-rose-50/70 border border-pink-200 rounded-2xl p-4 space-y-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-500 block">
+                Tu Número de Referencia Personal
+              </span>
+              <p className="text-xl font-mono font-black text-rose-950">
+                #{pendingWelcomeProfile.referenceNumber}
+              </p>
+              <p className="text-[11px] font-mono font-semibold text-rose-700 break-all">
+                https://fashion.finances/ref?sponsor={pendingWelcomeProfile.referenceNumber}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleActivateAccountFromWelcomeEmail}
+              className="w-full py-3 bg-gradient-to-r from-[#d9006c] to-[#ec4899] hover:brightness-105 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer border-0 transition"
+            >
+              Activar Cuenta e Iniciar Sesión
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 3. Friends Circle Modal */}
       {showFriendsModal && (

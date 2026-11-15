@@ -7983,8 +7983,28 @@ export default function CastingLiveSection({
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isHeroRightActionsVisible, setIsHeroRightActionsVisible] = useState<boolean>(true);
   const [isHeroFollowed, setIsHeroFollowed] = useState<boolean>(false);
-  const [heroLikesCount, setHeroLikesCount] = useState<number>(1200);
-  const [isHeroLiked, setIsHeroLiked] = useState<boolean>(false);
+  const [heroLikesCount, setHeroLikesCount] = useState<number>(() => {
+    try {
+      return localStorage.getItem('coll_hero_video_liked') === 'true' ? 1201 : 1200;
+    } catch (_) {
+      return 1200;
+    }
+  });
+  const [isHeroLiked, setIsHeroLiked] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('coll_hero_video_liked') === 'true';
+    } catch (_) {
+      return false;
+    }
+  });
+  const syncCastingLiveExtraLikeDelta = (delta: number) => {
+    try {
+      const prev = Number(localStorage.getItem('coll_casting_live_likes_extra') || '0') || 0;
+      const next = Math.max(0, prev + delta);
+      localStorage.setItem('coll_casting_live_likes_extra', String(next));
+      window.dispatchEvent(new Event('ranking_likes_updated'));
+    } catch (_) {}
+  };
   const [isHeroHeartGlossaryOpen, setIsHeroHeartGlossaryOpen] = useState<boolean>(false);
   const [isHeroEmojiEnglish, setIsHeroEmojiEnglish] = useState<boolean>(false);
   const [hoveredHeroEmojiName, setHoveredHeroEmojiName] = useState<string | null>(null);
@@ -8033,8 +8053,14 @@ export default function CastingLiveSection({
 
   // 💖 Helper para enviar reacciones del glosario de emojis
   const handleHeroEmojiReaction = (emoji: string, e?: React.MouseEvent) => {
-    setIsHeroLiked(true);
-    setHeroLikesCount(prev => (isHeroLiked ? prev : prev + 1));
+    if (!isHeroLiked) {
+      setIsHeroLiked(true);
+      setHeroLikesCount(prev => prev + 1);
+      try {
+        localStorage.setItem('coll_hero_video_liked', 'true');
+      } catch (_) {}
+      syncCastingLiveExtraLikeDelta(1);
+    }
     window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
       detail: { 
         emoji, 
@@ -12570,6 +12596,11 @@ export default function CastingLiveSection({
       detail: { x: e?.clientX, y: e?.clientY }
     }));
 
+    const targetVid = videosList.find(v => v.id === videoId);
+    if (targetVid) {
+      syncCastingLiveExtraLikeDelta(!targetVid.isLiked ? 1 : -1);
+    }
+
     setVideosList(prev => prev.map(vid => {
       if (vid.id === videoId) {
         const nextLiked = !vid.isLiked;
@@ -14008,11 +14039,11 @@ export default function CastingLiveSection({
                   </button>
                 </div>
 
-                {/* Badge 1: 🔴 TU CÁMARA RETRANSMITIENDO EN DIRECTO */}
+                {/* Badge 1: 🔴 Directo */}
                 <div className="flex items-center self-start mb-2">
-                  <div className="inline-flex items-center gap-2 bg-[#e60023] text-white text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase px-4 py-1.5 rounded-full shadow-lg border border-red-500/80">
+                  <div className="inline-flex items-center gap-2 bg-[#e60023] text-white text-[10.5px] sm:text-[11px] font-black tracking-wider px-4 py-1.5 rounded-full shadow-lg border border-red-500/80">
                     <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
-                    <span>TU CÁMARA RETRANSMITIENDO EN DIRECTO</span>
+                    <span>Directo</span>
                   </div>
                 </div>
 
@@ -14703,6 +14734,7 @@ export default function CastingLiveSection({
                     const nextLiked = !isLiveLiked;
                     setIsLiveLiked(nextLiked);
                     setLiveLikesCount(prev => nextLiked ? prev + 1 : prev - 1);
+                    syncCastingLiveExtraLikeDelta(nextLiked ? 1 : -1);
                     
                     // Trigger floating reaction hearts!
                     const fakeE = { clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 } as any;
@@ -29449,7 +29481,11 @@ try {
               {/* Row 1: "EN DIRECTO DESTACADO" badge, viewers count, pill button & Sound Toggle */}
               <div className="flex items-center justify-between gap-2 w-full">
                 <div className="flex items-center gap-2 flex-wrap pointer-events-auto">
-                  <div className={`bg-red-600 text-white font-black tracking-wider uppercase px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg border border-red-500 animate-pulse ${
+                  <div className={`bg-red-600 text-white font-black tracking-wider ${
+                    isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
+                      ? ''
+                      : 'uppercase'
+                  } px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg border border-red-500 animate-pulse ${
                     liveChannelsCategoryFilter === 'runway_model' || liveChannelsCategoryFilter === 'catalog_model' || liveChannelsCategoryFilter === 'haute_couture' || liveChannelsCategoryFilter === 'commercial_model' || liveChannelsCategoryFilter === 'plus_size_model' || liveChannelsCategoryFilter === 'petite_model' || liveChannelsCategoryFilter === 'lingerie_model' || liveChannelsCategoryFilter === 'swimsuit_model' || liveChannelsCategoryFilter === 'fitness_model' || liveChannelsCategoryFilter === 'parts_model' || liveChannelsCategoryFilter === 'mature_model' || liveChannelsCategoryFilter === 'real_people_models'
                       ? 'text-[8px] sm:text-[8.5px]'
                       : 'text-[9.5px] sm:text-[10px]'
@@ -29457,7 +29493,7 @@ try {
                     <span className="w-2 h-2 rounded-full bg-white" />
                     <span>
                       {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
-                        ? 'TU CÁMARA RETRANSMITIENDO EN DIRECTO'
+                        ? 'Directo'
                         : liveChannelsCategoryFilter === 'atelier'
                         ? 'CANAL ATELIER EN DIRECTO'
                         : liveChannelsCategoryFilter === 'todos'
@@ -29472,17 +29508,6 @@ try {
                     <span>👁️</span>
                     <span>{heroChannel.viewers.toLocaleString()} espectadores</span>
                   </div>
-                  {isUserRetransmitting && (
-                    <button
-                      type="button"
-                      onClick={() => handleStopLiveRetransmission()}
-                      className="bg-rose-600/90 hover:bg-rose-700 text-white text-[9.5px] font-bold px-2.5 py-1 rounded-full border border-rose-400/80 shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                      title="Detener retransmisión de tu cámara"
-                    >
-                      <Square className="w-2.5 h-2.5 fill-white text-white" />
-                      <span>Detener Cámara</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -29749,7 +29774,11 @@ try {
                       e.stopPropagation();
                       const nextLiked = !isHeroLiked;
                       setIsHeroLiked(nextLiked);
-                      setHeroLikesCount(prev => (nextLiked ? prev + 1 : prev - 1));
+                      setHeroLikesCount(prev => (nextLiked ? prev + 1 : Math.max(1200, prev - 1)));
+                      try {
+                        localStorage.setItem('coll_hero_video_liked', String(nextLiked));
+                      } catch (_) {}
+                      syncCastingLiveExtraLikeDelta(nextLiked ? 1 : -1);
                       if (nextLiked) {
                         window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
                           detail: { emoji: '❤️', icon: '❤️', pureEmoji: true, x: e.clientX, y: e.clientY }
@@ -30479,6 +30508,7 @@ try {
                                 ...prev,
                                 [channel.id]: (prev[channel.id] ?? channel.likes) + (isLiked ? -1 : 1)
                               }));
+                              syncCastingLiveExtraLikeDelta(isLiked ? -1 : 1);
                             }}
                             className="flex flex-col items-center gap-0.5 group/like cursor-pointer transition active:scale-90"
                           >
@@ -31814,8 +31844,10 @@ try {
                         <button
                           type="button"
                           onClick={() => {
-                            setIsLiveLiked(prev => !prev);
-                            setLiveLikesCount(prev => isLiveLiked ? prev - 1 : prev + 1);
+                            const nextLiked = !isLiveLiked;
+                            setIsLiveLiked(nextLiked);
+                            setLiveLikesCount(prev => nextLiked ? prev + 1 : prev - 1);
+                            syncCastingLiveExtraLikeDelta(nextLiked ? 1 : -1);
                             window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
                               detail: { emoji: '❤️', icon: '❤️' }
                             }));

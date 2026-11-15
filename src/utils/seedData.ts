@@ -4,6 +4,7 @@
  */
 
 import { ModelProfile, UserSessionProfile, InvestmentSession, ProjectData, ChatMessage, FinancialMovement } from '../types';
+import { getOrAssignReferenceNumber } from './referenceNumbers';
 
 // Diverse collection of high-quality modeling/headshot photos from Unsplash
 const FASHION_PHOTOS = [
@@ -187,6 +188,7 @@ export function generateTop100Ranking(): { females: RankingModel[], males: Ranki
       id: `topf-${i + 1}`,
       name,
       username,
+      referenceNumber: getOrAssignReferenceNumber(`topf-${i + 1}`, username),
       avatar: zoomUrl,
       bio: `Top ${i + 1} Modelo Femenina Global. Creadora oficial registrada, enfocada en conectar inversores con proyectos potentes.`,
       totalLikes: likes,
@@ -235,6 +237,7 @@ export function generateTop100Ranking(): { females: RankingModel[], males: Ranki
       id: `topm-${i + 1}`,
       name,
       username,
+      referenceNumber: getOrAssignReferenceNumber(`topm-${i + 1}`, username),
       avatar: zoomUrl,
       bio: `Top ${i + 1} Modelo Masculino Global. Creador oficial registrado, enfocado en optimizar ganancias de patrocinios y reinversión.`,
       totalLikes: likes,
@@ -285,6 +288,7 @@ export function seedInitialData() {
     id: 'user-investor',
     name: 'Adriana Lima',
     username: 'adrianalima',
+    referenceNumber: getOrAssignReferenceNumber('user-investor', 'adrianalima'),
     role: 'investor',
     patrocinadorId: defaultSponsor.id,
     balance: 1500.0, // Raised to 1,500€ to make testing 10€, 100€ and 1,000€ sessions possible!

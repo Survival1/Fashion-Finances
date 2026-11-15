@@ -598,7 +598,17 @@ export default function DirectMessageChat({
     onSendMessage(newMsg);
 
     if (gift.name.toLowerCase().includes('reloj') || gift.icon === '⌚' || gift.icon === '⏰') {
-      playLuxuryWatchSoundEffect(true);
+      window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+        detail: {
+          icon: gift.icon,
+          name: gift.name,
+          cost: gift.cost,
+          recipientName: activeContact?.name || 'la modelo',
+          senderName: 'Ernesto VS',
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2
+        }
+      }));
       saveLuxuryWatchGift({
         id: `watch-${Date.now()}`,
         senderId: currentUserId,

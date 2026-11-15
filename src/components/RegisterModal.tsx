@@ -83,8 +83,14 @@ export default function RegisterModal({
 }: RegisterModalProps) {
   if (!show) return null;
 
-  const matchedModel = regSponsorId 
-    ? models.find(m => m.id.toLowerCase() === regSponsorId.toLowerCase().trim())
+  const normalizedSponsorQuery = regSponsorId.toLowerCase().trim().replace(/^#/, '').replace(/^@/, '');
+  const matchedModel = regSponsorId
+    ? models.find(
+        (m) =>
+          m.id.toLowerCase() === normalizedSponsorQuery ||
+          (m.referenceNumber && m.referenceNumber.toLowerCase() === normalizedSponsorQuery) ||
+          (m.username && m.username.toLowerCase() === normalizedSponsorQuery)
+      )
     : null;
 
   return (
@@ -446,7 +452,7 @@ export default function RegisterModal({
                 <div className="relative mb-2">
                   <input
                     type="text"
-                    placeholder="🔍 Buscar por nombre o ID de modelo..."
+                    placeholder="🔍 Buscar por nombre, ID o nº de referencia..."
                     value={sponsorSearchQuery}
                     onChange={(e) => setSponsorSearchQuery(e.target.value)}
                     className="w-full bg-white border border-pink-200 rounded-xl py-2 pl-9 pr-8 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#ec4899] focus:ring-2 focus:ring-pink-200 font-sans shadow-2xs"
@@ -471,31 +477,32 @@ export default function RegisterModal({
                   <option value="">-- Elige un Patrocinador del Ranking --</option>
                   {models
                     .filter((model) => {
-                      const query = sponsorSearchQuery.trim().toLowerCase();
+                      const query = sponsorSearchQuery.trim().toLowerCase().replace(/^#/, '');
                       if (!query) return true;
                       return (
                         model.name.toLowerCase().includes(query) ||
                         model.id.toLowerCase().includes(query) ||
+                        (model.referenceNumber && model.referenceNumber.toLowerCase().includes(query)) ||
                         (model.username && model.username.toLowerCase().includes(query))
                       );
                     })
                     .map((model) => (
-                      <option key={model.id} value={model.id}>
-                        {model.name} (ID: {model.id} - {model.totalLikes} Likes)
+                      <option key={model.id} value={model.referenceNumber || model.id}>
+                        {model.name} (Ref: #{model.referenceNumber || model.id} - {model.totalLikes} Likes)
                       </option>
                     ))}
                 </select>
               </div>
 
-              {/* Opción B: ID Directo */}
+              {/* Opción B: Nº de Referencia o ID Directo */}
               <div>
                 <span className="text-[10px] text-pink-900 font-mono font-bold block mb-1">
-                  Opción B: Introduce el ID de tu Sponsor Directamente
+                  Opción B: Introduce el Nº de Referencia o ID de tu Sponsor
                 </span>
                 <input
                   type="text"
                   required
-                  placeholder="Introduce el ID de tu sponsor (ej: topf-1, model-1)"
+                  placeholder="Introduce nº de referencia o ID (ej: 100001, topf-1)"
                   value={regSponsorId}
                   onChange={(e) => setRegSponsorId(e.target.value.trim())}
                   className="w-full bg-white border border-pink-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#ec4899] focus:ring-2 focus:ring-pink-200 font-mono text-xs shadow-2xs"

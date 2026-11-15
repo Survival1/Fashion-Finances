@@ -30,9 +30,9 @@ export const DEFAULT_FOLLOWED_USERS: FollowedUser[] = [
 export const getFollowedUsersFromStorage = (): FollowedUser[] => {
   try {
     const raw = localStorage.getItem('coll_following');
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }

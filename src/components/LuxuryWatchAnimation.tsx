@@ -170,9 +170,8 @@ export function saveLuxuryWatchGift(gift: LuxuryWatchGift) {
     const updated = [gift, ...current.filter(g => g.id !== gift.id)];
     localStorage.setItem(LUXURY_WATCH_STORAGE_KEY, JSON.stringify(updated));
     
-    // Dispatch custom event for reactive real-time updates across open components
+    // Dispatch update event without hijacking the standard gift delivery animation
     window.dispatchEvent(new CustomEvent('luxury-watch-gift-updated', { detail: gift }));
-    window.dispatchEvent(new CustomEvent('trigger-luxury-watch-celebration', { detail: gift }));
   } catch (e) {
     console.error("Error saving luxury watch gift:", e);
   }

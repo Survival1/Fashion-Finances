@@ -26,13 +26,19 @@ import {
   X,
   Instagram
 } from 'lucide-react';
-import { ModelProfile } from '../types';
+import { ModelProfile, UserSessionProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  getOrAssignReferenceNumber,
+  generateNextReferenceNumber,
+  buildFashionFinancesReferralUrl,
+} from '../utils/referenceNumbers';
 
 export interface Patrocinado {
   id: string;
   name: string;
   username: string;
+  referenceNumber?: string;
   avatar: string;
   role: 'model' | 'investor';
   registeredAt: string; // "Fecha desde que es referido"
@@ -48,6 +54,7 @@ interface PatrocinadosViewProps {
   patrocinados: Patrocinado[];
   models?: ModelProfile[];
   patrocinadorId?: string;
+  currentUser?: UserSessionProfile | null;
   onAddPatrocinado: (newPat: Omit<Patrocinado, 'id'>) => void;
   onDeletePatrocinado: (id: string) => void;
   onSelectModel?: (model: ModelProfile) => void;
@@ -58,6 +65,7 @@ export default function PatrocinadosView({
   patrocinados,
   models = [],
   patrocinadorId,
+  currentUser,
   onAddPatrocinado,
   onDeletePatrocinado,
   onSelectModel,
@@ -80,6 +88,11 @@ export default function PatrocinadosView({
   };
 
   const sponsorModel = models.find(m => m.id === patrocinadorId) || models.find(m => m.id === 'topf-1' || m.id === 'model-1') || models[0];
+  const userReferenceNumber =
+    currentUser && currentUser.role !== 'visitor'
+      ? getOrAssignReferenceNumber(currentUser.id, currentUser.username, currentUser.referenceNumber)
+      : getOrAssignReferenceNumber('user-investor', 'adrianalima');
+  const referralLink = buildFashionFinancesReferralUrl(userReferenceNumber);
 
   // Simulated transaction states for top animations
   const [simulatedEarnings, setSimulatedEarnings] = useState(0);
@@ -121,9 +134,11 @@ export default function PatrocinadosView({
       year: 'numeric',
     });
 
+    const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
     onAddPatrocinado({
       name: name.trim(),
-      username: username.trim().toLowerCase().replace(/\s+/g, ''),
+      username: cleanUsername,
+      referenceNumber: generateNextReferenceNumber(cleanUsername),
       avatar: avatarPresets[avatarIndex],
       role,
       registeredAt: formattedDate,
@@ -225,10 +240,12 @@ export default function PatrocinadosView({
   const filteredList = patrocinados.filter(item => {
     // Search Query Filter
     const query = searchQuery.trim().toLowerCase();
+    const patRef = getOrAssignReferenceNumber(item.id, item.username, item.referenceNumber).toLowerCase();
     const queryMatches = !query || 
       item.name.toLowerCase().includes(query) ||
       item.username.toLowerCase().includes(query) ||
-      item.id.toLowerCase().includes(query);
+      item.id.toLowerCase().includes(query) ||
+      patRef.includes(query.replace(/^#/, ''));
       
     if (!queryMatches) return false;
     
@@ -441,9 +458,14 @@ export default function PatrocinadosView({
           <div className="lg:col-span-5 flex flex-col justify-between space-y-4 lg:border-r lg:border-pink-150/80 lg:pr-7">
             <div className="space-y-3.5">
               <div className="space-y-1">
-                <span className="text-[9.5px] font-sans font-black tracking-widest text-rose-500 uppercase block">
-                  🎁 PROGRAMA DE REGISTRO PREFERENTE
-                </span>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[9.5px] font-sans font-black tracking-widest text-rose-500 uppercase block">
+                    🎁 PROGRAMA DE REGISTRO PREFERENTE
+                  </span>
+                  <span className="text-[10px] font-mono font-black text-rose-700 bg-rose-50 border border-pink-200 px-2.5 py-0.5 rounded-full">
+                    Tu Ref: #{userReferenceNumber}
+                  </span>
+                </div>
                 <h3 className="text-xl font-serif font-black text-rose-950 flex items-center gap-2 uppercase tracking-wide">
                   <span>+ Invitar nuevo inversor</span>
                 </h3>
@@ -457,13 +479,13 @@ export default function PatrocinadosView({
                 <input
                   type="text"
                   readOnly
-                  value="https://collectives.model/ref?sponsor=user"
+                  value={referralLink}
                   className="bg-transparent text-xs font-mono font-bold text-rose-900 select-all flex-1 px-1.5 py-0.5 min-w-0"
                 />
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText("https://collectives.model/ref?sponsor=user");
+                    navigator.clipboard.writeText(referralLink);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2500);
                   }}
@@ -478,7 +500,7 @@ export default function PatrocinadosView({
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent('Sigue mi enlace de Haute Couture en Fashion Finances y gana el 10% de premios: https://collectives.model/ref?sponsor=user'))}
+                  onClick={() => window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(`Sigue mi enlace de Haute Couture en Fashion Finances y gana el 10% de premios: ${referralLink}`))}
                   className="py-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white border border-transparent rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]"
                 >
                   <span className="text-xs">💬</span>
@@ -487,7 +509,7 @@ export default function PatrocinadosView({
                 
                 <button
                   type="button"
-                  onClick={() => window.open('https://t.me/share/url?url=' + encodeURIComponent('https://collectives.model/ref?sponsor=user') + '&text=' + encodeURIComponent('Únete a mi red de patrocinados de Haute Couture en Fashion Finances.'))}
+                  onClick={() => window.open('https://t.me/share/url?url=' + encodeURIComponent(referralLink) + '&text=' + encodeURIComponent('Únete a mi red de patrocinados de Haute Couture en Fashion Finances.'))}
                   className="py-2.5 bg-[#0088cc] hover:bg-[#0077b5] text-white border border-transparent rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]"
                 >
                   <span className="text-xs">✈️</span>
@@ -577,7 +599,7 @@ export default function PatrocinadosView({
                 </div>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 relative">
                   <p className="text-xs text-slate-700 font-medium select-all leading-relaxed max-h-24 overflow-y-auto pr-1">
-                    ✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: https://collectives.model/ref?sponsor=user #FashionFinances #ModayFinanzas #HauteCouture
+                    ✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: {referralLink} #FashionFinances #ModayFinanzas #HauteCouture
                   </p>
                 </div>
               </div>
@@ -586,7 +608,7 @@ export default function PatrocinadosView({
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText("✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: https://collectives.model/ref?sponsor=user #FashionFinances #ModayFinanzas #HauteCouture");
+                navigator.clipboard.writeText(`✨ ¡Te invito a unirte a Fashion Finances! La primera plataforma que une la elegancia de la Alta Costura con inversiones inteligentes de patrocinio. 💎 Regístrate gratis con mi enlace preferente, descubre el portafolio de modelos top y gana comisiones reales: ${referralLink} #FashionFinances #ModayFinanzas #HauteCouture`);
                 setCopiedInstagramMsg(true);
                 setTimeout(() => setCopiedInstagramMsg(false), 2500);
               }}
@@ -1037,8 +1059,8 @@ export default function PatrocinadosView({
                         </span>
                       </div>
 
-                      {/* Clickable Username Button */}
-                      <div className="flex items-center gap-2 mt-0.5">
+                      {/* Clickable Username Button & Reference Number */}
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <button
                           type="button"
                           onClick={handleNavigateToProfile}
@@ -1048,6 +1070,9 @@ export default function PatrocinadosView({
                           <span>@{p.username}</span>
                           <span className="text-[9px] opacity-70 group-hover/user:opacity-100 transition-opacity">↗</span>
                         </button>
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80">
+                          Ref: #{getOrAssignReferenceNumber(p.id, p.username, p.referenceNumber)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1216,14 +1241,14 @@ export default function PatrocinadosView({
               </svg>
             </div>
             
-            <span className="text-[9.5px] text-pink-700 font-mono font-black mt-3 block">SPONSOR REF: USER-AFILIADO</span>
+            <span className="text-[9.5px] text-pink-700 font-mono font-black mt-3 block">SPONSOR REF: #{userReferenceNumber}</span>
           </div>
           
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText("https://collectives.model/ref?sponsor=user");
+                navigator.clipboard.writeText(referralLink);
                 alert("📋 ¡Enlace copiado!");
               }}
               className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs uppercase tracking-wide rounded-xl transition shadow-3xs cursor-pointer border-0"

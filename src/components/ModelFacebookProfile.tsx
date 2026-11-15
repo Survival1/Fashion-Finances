@@ -11,6 +11,7 @@ import UserUploadedVideos from './UserUploadedVideos';
 import PresentationGallery from './PresentationGallery';
 import { compressAndResizeImage } from '../utils/imageCompressor';
 import { generateInitialModels } from '../utils/seedData';
+import { getOrAssignReferenceNumber } from '../utils/referenceNumbers';
 import { 
   LuxuryWatchShowcase, 
   LuxuryWatchCelebrationModal, 
@@ -20,6 +21,7 @@ import {
 } from './LuxuryWatchAnimation';
 import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { getFriendsFromStorage, saveFriendsToStorage, FriendUser } from '../utils/friendsService';
+import { getFollowedUsersFromStorage, FollowedUser } from '../utils/followingService';
 import { 
   Heart, 
   Trash2,
@@ -325,7 +327,12 @@ export function ProfileIntroAndSponsors({
   friendsCount = 5,
   hideIntro = false,
   hideRanking = false,
-  isFriendSuggestions = false
+  isFriendSuggestions = false,
+  hideDirectoAndRegalosBanners = false,
+  hideSalonAndDirectoBanners = false,
+  hideSalonBanner = false,
+  hideRegalosBanner = false,
+  invertDirectoAndRegalos = false
 }: {
   userProfile: any;
   bioText?: string;
@@ -338,6 +345,11 @@ export function ProfileIntroAndSponsors({
   hideIntro?: boolean;
   hideRanking?: boolean;
   isFriendSuggestions?: boolean;
+  hideDirectoAndRegalosBanners?: boolean;
+  hideSalonAndDirectoBanners?: boolean;
+  hideSalonBanner?: boolean;
+  hideRegalosBanner?: boolean;
+  invertDirectoAndRegalos?: boolean;
 }) {
   const [signedAgreements] = useState<Record<string, any>>(() => {
     if (propSignedAgreements) return propSignedAgreements;
@@ -550,6 +562,10 @@ export function ProfileIntroAndSponsors({
   const tiktokHandle = userProfile?.tiktok || targetModelMatch?.socials?.tiktok || (userProfile?.username ? `@${userProfile.username}_tok` : '');
   const twitterHandle = (userProfile as any)?.twitter || targetModelMatch?.socials?.twitter || (userProfile?.username ? `@${userProfile.username}_real` : '');
 
+  const showContenedor1 = !(hideSalonAndDirectoBanners || hideSalonBanner);
+  const showContenedor2 = !(hideDirectoAndRegalosBanners || hideSalonAndDirectoBanners);
+  const showContenedor3 = !(hideDirectoAndRegalosBanners || hideRegalosBanner);
+
   return (
     <div className="space-y-4 font-sans text-left">
       {/* 🤝 SUGERENCIAS DE AMISTAD vs BLOQUE DE ANUNCIOS (En vista Tablet y Móvil, Sugerencias de Amistad aparece DEBAJO de los Anuncios) */}
@@ -712,156 +728,164 @@ export function ProfileIntroAndSponsors({
         </div>
 
         {/* 📢 BLOQUE DE ANUNCIOS: SALÓN DE LA FAMA, VÍDEOS EN DIRECTO Y REGALOS EXCLUSIVOS (En vista Tablet y Móvil aparece ARRIBA del bloque de sugerencias con order-1) */}
-        <div className="order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-y-9 sm:gap-x-6 sm:gap-y-6 lg:gap-y-9 max-w-[220px] sm:max-w-2xl lg:max-w-none mx-auto w-full pt-2 pb-2 items-stretch">
-          {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Captura App de moda_glamour en directo.png) */}
-          <div 
-            id="contenedor-anuncio-salon-de-la-fama-sidebar"
-            role="button"
-            tabIndex={0}
-            aria-label="Abrir Salón de la Fama Oficial"
-            onClick={() => {
-              if (onOpenRanking) {
-                onOpenRanking('hall_of_fame');
-              }
-              window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                if (onOpenRanking) onOpenRanking('hall_of_fame');
-                window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
-              }
-            }}
-            className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-amber-300/80 shadow-[0_6px_20px_rgba(245,158,11,0.22)] hover:shadow-[0_10px_28px_rgba(245,158,11,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fffaf0] via-[#fef3c7] to-[#fde68a] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
-          >
-            <div className="relative overflow-hidden w-full">
-              <img 
-                src="/assets/aistudio/card_salon_fama.webp" 
-                alt="Salón de la Fama Oficial - Conoce a las supermodelos consagradas y leyendas de la pasarela" 
-                className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
-              />
-              {/* Luminous subtle sheen on hover */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/0 via-white/10 to-amber-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            </div>
+        {(showContenedor1 || showContenedor2 || showContenedor3) && (
+          <div className="order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-y-9 sm:gap-x-6 sm:gap-y-6 lg:gap-y-9 max-w-[220px] sm:max-w-2xl lg:max-w-none mx-auto w-full pt-2 pb-2 items-stretch">
+            {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Captura App de moda_glamour en directo.png) */}
+            {showContenedor1 && (
+              <div 
+                id="contenedor-anuncio-salon-de-la-fama-sidebar"
+                role="button"
+                tabIndex={0}
+                aria-label="Abrir Salón de la Fama Oficial"
+                onClick={() => {
+                  if (onOpenRanking) {
+                    onOpenRanking('hall_of_fame');
+                  }
+                  window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    if (onOpenRanking) onOpenRanking('hall_of_fame');
+                    window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
+                  }
+                }}
+                className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-amber-300/80 shadow-[0_6px_20px_rgba(245,158,11,0.22)] hover:shadow-[0_10px_28px_rgba(245,158,11,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fffaf0] via-[#fef3c7] to-[#fde68a] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
+              >
+                <div className="relative overflow-hidden w-full">
+                  <img 
+                    src="/assets/aistudio/card_salon_fama.webp" 
+                    alt="Salón de la Fama Oficial - Conoce a las supermodelos consagradas y leyendas de la pasarela" 
+                    className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
+                  />
+                  {/* Luminous subtle sheen on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/0 via-white/10 to-amber-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                </div>
 
-            {/* Opulent bottom section filling the card to match container 3's height */}
-            <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-amber-50/95 via-amber-100/90 to-amber-200/95 border-t border-amber-300/70 flex-1 flex flex-col justify-between">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-300/70 text-amber-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
-                  <span>👑</span> Salón Oficial • Pasarela
+                {/* Opulent bottom section filling the card to match container 3's height */}
+                <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-amber-50/95 via-amber-100/90 to-amber-200/95 border-t border-amber-300/70 flex-1 flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-300/70 text-amber-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
+                      <span>👑</span> Salón Oficial • Pasarela
+                    </div>
+                    <p className="text-[10.5px] text-amber-950 font-bold leading-snug m-0">
+                      Conoce las trayectorias consagradas y modelos más admiradas del mundo.
+                    </p>
+                  </div>
+                  
+                  <div className="pt-1 space-y-1.5">
+                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
+                        ★ Élite Global
+                      </span>
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
+                        💎 Top 10 Diamante
+                      </span>
+                    </div>
+                    <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
+                      <span>Ver Salón Completo</span>
+                      <span>➔</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[10.5px] text-amber-950 font-bold leading-snug m-0">
-                  Conoce las trayectorias consagradas y modelos más admiradas del mundo.
-                </p>
               </div>
-              
-              <div className="pt-1 space-y-1.5">
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
-                    ★ Élite Global
-                  </span>
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
-                    💎 Top 10 Diamante
-                  </span>
-                </div>
-                <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
-                  <span>Ver Salón Completo</span>
-                  <span>➔</span>
-                </div>
-              </div>
-            </div>
+            )}
+
+            {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura z.png -> redirige a Canales en Directo de imagen.png) */}
+            {showContenedor2 && (
+                  <div 
+                    id="contenedor-anuncio-videos-directo-sidebar"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Ver Vídeos y Pasarela en Directo"
+                  onClick={() => {
+                    localStorage.setItem('casting_live_active_subtab', 'live');
+                    if (onNavigateToTab) {
+                      onNavigateToTab('casting_live');
+                    }
+                    window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
+                    window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      localStorage.setItem('casting_live_active_subtab', 'live');
+                      if (onNavigateToTab) onNavigateToTab('casting_live');
+                      window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
+                      window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
+                    }
+                  }}
+                  className={`${invertDirectoAndRegalos ? 'order-2' : ''} flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/80 shadow-[0_6px_20px_rgba(236,72,153,0.22)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] via-[#ffe4e9] to-[#fbcfe8] w-full max-w-[220px] sm:max-w-none mx-auto h-full`}
+                >
+                  <div className="relative overflow-hidden w-full">
+                    <img 
+                      src="/assets/aistudio/card_videos_directo.webp" 
+                      alt="Vídeos y Pasarela en Directo - Sigue las emisiones en tiempo real y participa en los chats" 
+                      className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
+                    />
+                    {/* Luminous subtle sheen on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-white/10 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  </div>
+
+                  {/* Opulent bottom section filling the card to match container 3's height */}
+                  <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-rose-50/95 via-pink-100/90 to-pink-200/95 border-t border-pink-300/70 flex-1 flex flex-col justify-between">
+                    <div className="space-y-1">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-200/80 text-rose-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
+                        <span>🔴</span> Emisiones en Vivo
+                      </div>
+                      <p className="text-[10.5px] text-rose-950 font-bold leading-snug m-0">
+                        Transmisiones en tiempo real, salas interactivas y regalos exclusivos.
+                      </p>
+                    </div>
+                    
+                    <div className="pt-1 space-y-1.5">
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
+                          ⚡ 68 FPS HD
+                        </span>
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
+                          🎁 Regalos VIP
+                        </span>
+                      </div>
+                      <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
+                        <span>Sintonizar en Directo</span>
+                        <span>➔</span>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+                )}
+
+                {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS CON GLAMOUR Y DIAMANTES */}
+                {showContenedor3 && (
+                  <div 
+                    id="contenedor-anuncio-regalos-exclusivos-sidebar"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Descubre Todos Nuestros Regalos Exclusivos con Glamour y Diamantes"
+                    onClick={() => {
+                      if (onOpenRanking) {
+                        onOpenRanking('regalos');
+                      }
+                      window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        if (onOpenRanking) onOpenRanking('regalos');
+                        window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+                      }
+                    }}
+                    className={`${invertDirectoAndRegalos ? 'order-1' : ''} flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/70 shadow-[0_6px_20px_rgba(236,72,153,0.20)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.30)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9] w-full max-w-[220px] sm:max-w-none mx-auto h-full`}
+                  >
+                    <img 
+                      src="/assets/aistudio/card_regalos_exclusivos.webp" 
+                      alt="Regalos Exclusivos en Nuestra APP - Fashion Finances: Diamantes, Moda de Lujo, Perfumes Exclusivos" 
+                      className="w-full h-full object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[16px] sm:rounded-[20px]"
+                    />
+                    {/* Luminous subtle sheen on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/0 via-white/10 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[16px] sm:rounded-[20px]" />
+                  </div>
+                )}
           </div>
-
-          {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura z.png -> redirige a Canales en Directo de imagen.png) */}
-          <div 
-            id="contenedor-anuncio-videos-directo-sidebar"
-            role="button"
-            tabIndex={0}
-            aria-label="Ver Vídeos y Pasarela en Directo"
-            onClick={() => {
-              localStorage.setItem('casting_live_active_subtab', 'live');
-              if (onNavigateToTab) {
-                onNavigateToTab('casting_live');
-              }
-              window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
-              window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                localStorage.setItem('casting_live_active_subtab', 'live');
-                if (onNavigateToTab) onNavigateToTab('casting_live');
-                window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
-                window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
-              }
-            }}
-            className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/80 shadow-[0_6px_20px_rgba(236,72,153,0.22)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] via-[#ffe4e9] to-[#fbcfe8] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
-          >
-            <div className="relative overflow-hidden w-full">
-              <img 
-                src="/assets/aistudio/card_videos_directo.webp" 
-                alt="Vídeos y Pasarela en Directo - Sigue las emisiones en tiempo real y participa en los chats" 
-                className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
-              />
-              {/* Luminous subtle sheen on hover */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-white/10 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            </div>
-
-            {/* Opulent bottom section filling the card to match container 3's height */}
-            <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-rose-50/95 via-pink-100/90 to-pink-200/95 border-t border-pink-300/70 flex-1 flex flex-col justify-between">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-200/80 text-rose-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
-                  <span>🔴</span> Emisiones en Vivo
-                </div>
-                <p className="text-[10.5px] text-rose-950 font-bold leading-snug m-0">
-                  Transmisiones en tiempo real, salas interactivas y regalos exclusivos.
-                </p>
-              </div>
-              
-              <div className="pt-1 space-y-1.5">
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
-                    ⚡ 68 FPS HD
-                  </span>
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
-                    🎁 Regalos VIP
-                  </span>
-                </div>
-                <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
-                  <span>Sintonizar en Directo</span>
-                  <span>➔</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS CON GLAMOUR Y DIAMANTES */}
-          <div 
-            id="contenedor-anuncio-regalos-exclusivos-sidebar"
-            role="button"
-            tabIndex={0}
-            aria-label="Descubre Todos Nuestros Regalos Exclusivos con Glamour y Diamantes"
-            onClick={() => {
-              if (onOpenRanking) {
-                onOpenRanking('regalos');
-              }
-              window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                if (onOpenRanking) onOpenRanking('regalos');
-                window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
-              }
-            }}
-            className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/70 shadow-[0_6px_20px_rgba(236,72,153,0.20)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.30)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
-          >
-            <img 
-              src="/assets/aistudio/card_regalos_exclusivos.webp" 
-              alt="Regalos Exclusivos en Nuestra APP - Fashion Finances: Diamantes, Moda de Lujo, Perfumes Exclusivos" 
-              className="w-full h-full object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[16px] sm:rounded-[20px]"
-            />
-            {/* Luminous subtle sheen on hover */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/0 via-white/10 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[16px] sm:rounded-[20px]" />
-          </div>
-        </div>
+        )}
       </div>
       ) : null}
 
@@ -1046,8 +1070,11 @@ export default function ModelFacebookProfile({
       setIsFollowingProfileUser(localStorage.getItem(`following_user_${userProfile.id}`) === 'true');
       const savedFriend = localStorage.getItem(`friend_status_${userProfile.id}`);
       setFriendshipStatus((savedFriend === 'pending' || savedFriend === 'friends') ? savedFriend : 'none');
+      if (userProfile.role !== 'visitor') {
+        getOrAssignReferenceNumber(userProfile.id, userProfile.username, userProfile.referenceNumber);
+      }
     } catch {}
-  }, [userProfile.id]);
+  }, [userProfile.id, userProfile.username, userProfile.referenceNumber, userProfile.role]);
   
   // Find current model's profile info
   const currentModel = models.find(m => m.id === userProfile.id);
@@ -1117,7 +1144,75 @@ export default function ModelFacebookProfile({
   // Subpestañas para "Mis Amigos": 'friends' (amigos actuales) | 'pending' (pendientes de aceptar) | 'sent' (solicitudes enviadas)
   const [friendsSubTab, setFriendsSubTab] = useState<'friends' | 'pending' | 'sent'>('friends');
   const [socialSearchQuery, setSocialSearchQuery] = useState<string>('');
+  const [userDirectorySearchQuery, setUserDirectorySearchQuery] = useState<string>('');
   const [socialToastMessage, setSocialToastMessage] = useState<string | null>(null);
+
+  const searchableDirectoryUsers = useMemo(() => {
+    const map = new Map<string, {
+      id: string;
+      name: string;
+      username: string;
+      avatar: string;
+      roleLabel: string;
+      isVerified?: boolean;
+      isOnline?: boolean;
+      rawModel?: ModelProfile;
+    }>();
+
+    const baseModels = (models && models.length > 0) ? models : generateInitialModels();
+    for (const m of baseModels) {
+      const uname = (m.username || m.name.toLowerCase().replace(/[^a-z0-9]/g, '_')).toLowerCase().replace(/^@/, '');
+      if (!uname || map.has(uname)) continue;
+      map.set(uname, {
+        id: m.id,
+        name: m.name,
+        username: m.username || uname,
+        avatar: m.avatar || m.photos?.[0] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=260',
+        roleLabel: m.role === 'investor' ? 'Inversor' : ((m as any).specialty || (m as any).category || 'Modelo'),
+        isVerified: Boolean(m.verified || (m.totalLikes || 0) > 50000),
+        isOnline: m.isOnline !== false,
+        rawModel: m
+      });
+    }
+
+    for (const sug of DEFAULT_FRIEND_SUGGESTIONS) {
+      const uname = (sug.username || '').toLowerCase().replace(/^@/, '');
+      if (!uname || map.has(uname)) continue;
+      map.set(uname, {
+        id: sug.id,
+        name: sug.name,
+        username: sug.username,
+        avatar: sug.avatar,
+        roleLabel: sug.category || 'Creador',
+        isVerified: Boolean(sug.isVerified),
+        isOnline: true
+      });
+    }
+
+    try {
+      const rawPat = localStorage.getItem('coll_patrocinados');
+      if (rawPat) {
+        const parsedPat = JSON.parse(rawPat);
+        if (Array.isArray(parsedPat)) {
+          for (const pat of parsedPat) {
+            const uname = (pat.username || '').toLowerCase().replace(/^@/, '');
+            if (!uname || map.has(uname)) continue;
+            map.set(uname, {
+              id: pat.id || `pat-${uname}`,
+              name: pat.name || uname,
+              username: pat.username || uname,
+              avatar: pat.avatar || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=260',
+              roleLabel: pat.role === 'investor' ? 'Inversor' : 'Modelo',
+              isVerified: true,
+              isOnline: pat.status === 'active'
+            });
+          }
+        }
+      }
+    } catch {}
+
+    return Array.from(map.values());
+  }, [models]);
 
   const showSocialToast = (msg: string) => {
     setSocialToastMessage(msg);
@@ -1359,29 +1454,44 @@ export default function ModelFacebookProfile({
     return list.slice(0, 8);
   }, [models, isSelfContact]);
 
-  const socialFollowingList = useMemo(() => {
-    const candidateFollowing = [
-      { id: 'fol-sophia-2', name: 'Sophia Loren', username: 'sophialoren_w3', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', bio: 'Promotora oficial de marcas sustentables y nuevos talentos colectivos' },
-      ...models.map((m) => ({
-        id: m.id,
-        name: m.name,
-        username: m.username,
-        avatar: m.avatar,
-        bio: m.bio || 'Explorando nuevas pasarelas en la alta costura'
-      }))
-    ];
+  const [syncedFollowingList, setSyncedFollowingList] = useState<FollowedUser[]>(() => {
+    return getFollowedUsersFromStorage();
+  });
 
+  useEffect(() => {
+    const handleSyncFollowing = (e: any) => {
+      const detail = e?.detail;
+      if (Array.isArray(detail)) {
+        setSyncedFollowingList(detail);
+      } else {
+        setSyncedFollowingList(getFollowedUsersFromStorage());
+      }
+    };
+    const handleStorageFollowing = (e: StorageEvent) => {
+      if (e.key === 'coll_following') {
+        setSyncedFollowingList(getFollowedUsersFromStorage());
+      }
+    };
+    window.addEventListener('sync-following-list', handleSyncFollowing);
+    window.addEventListener('storage', handleStorageFollowing);
+    return () => {
+      window.removeEventListener('sync-following-list', handleSyncFollowing);
+      window.removeEventListener('storage', handleStorageFollowing);
+    };
+  }, []);
+
+  const socialFollowingList = useMemo(() => {
     const seen = new Set<string>();
     const list: any[] = [];
-    for (const item of candidateFollowing) {
-      if (isSelfContact(item)) continue;
-      const key = (item.username || item.id).toLowerCase();
-      if (seen.has(key)) continue;
+    for (const item of syncedFollowingList) {
+      if (!item || isSelfContact(item)) continue;
+      const key = (item.username || item.id || '').toLowerCase();
+      if (!key || seen.has(key)) continue;
       seen.add(key);
       list.push(item);
     }
-    return list.slice(0, 14);
-  }, [models, isSelfContact]);
+    return list;
+  }, [syncedFollowingList, isSelfContact]);
 
   // States
   const [activeProfileOrWallTab, setActiveProfileOrWallTab] = useState<'perfil' | 'muro'>('perfil');
@@ -2779,6 +2889,7 @@ export default function ModelFacebookProfile({
     });
     setSavedVideos(next);
     localStorage.setItem(`saved_videos_${userProfile.id}`, JSON.stringify(next));
+    window.dispatchEvent(new Event('ranking_likes_updated'));
   };
 
   const handleToggleFavoriteSavedVideo = (videoId: string, e?: React.MouseEvent) => {
@@ -4080,8 +4191,6 @@ export default function ModelFacebookProfile({
       };
       try {
         saveLuxuryWatchGift(watchGiftRecord);
-        setSelectedLuxuryWatchCelebration(watchGiftRecord);
-        playLuxuryWatchSoundEffect(true);
       } catch (err) {
         console.error(err);
       }
@@ -4156,8 +4265,8 @@ export default function ModelFacebookProfile({
     setActiveEmojiPicker(null);
   };
 
-  // Compact Stickers popup rendered inside the uploaded image container (full-image size or centered)
-  const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = true, matchImageSize = false) => {
+  // Compact Stickers popup rendered right above the action icons bar (or centered fallback)
+  const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = false, matchImageSize = false) => {
     const filteredStickers = selectedStickerCategory === 'todos'
       ? STICKER_PACK
       : STICKER_PACK.filter(s => s.category === selectedStickerCategory);
@@ -4172,15 +4281,15 @@ export default function ModelFacebookProfile({
         }}
         className={
           matchImageSize
-            ? "absolute inset-0 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-t-2xl p-2.5 sm:p-3 z-[250] w-full h-full flex flex-col text-left animate-fade-in select-none"
+            ? "absolute inset-0 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-t-2xl p-2 z-[250] w-full h-full flex flex-col text-left animate-fade-in select-none"
             : isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3 z-[250] w-[94%] max-w-[330px] sm:max-w-[350px] max-h-[92%] flex flex-col text-left animate-fade-in select-none"
-            : "absolute bottom-full left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[340px] max-h-[90vh] flex flex-col text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-xl p-2 sm:p-2.5 z-[250] w-[244px] sm:w-[266px] max-w-[92%] max-h-[90%] flex flex-col text-left animate-fade-in select-none"
+            : "absolute bottom-full left-1 sm:left-2 mb-11 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-[0_14px_34px_-8px_rgba(0,0,0,0.55)] rounded-xl p-2 sm:p-2.5 z-[300] w-[244px] sm:w-[266px] max-w-[calc(100vw-2rem)] flex flex-col text-left animate-fade-in select-none after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12"
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80 mb-2 shrink-0">
-          <span className="text-[10px] sm:text-[11px] text-pink-400 font-extrabold uppercase tracking-wide font-sans flex items-center gap-1.5 select-none">
+        <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/80 mb-1.5 shrink-0">
+          <span className="text-[9.5px] sm:text-[10px] text-pink-400 font-extrabold uppercase tracking-wide font-sans flex items-center gap-1 select-none">
             💝 STICKERS & REACCIONES
           </span>
           <button
@@ -4191,7 +4300,7 @@ export default function ModelFacebookProfile({
               pinnedStickersIdRef.current = null;
               setHoveredStickersPostId(null);
             }}
-            className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[10px] font-bold border border-zinc-800 cursor-pointer transition"
+            className="w-4.5 h-4.5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[9px] font-bold border border-zinc-800 cursor-pointer transition"
             title="Cerrar"
           >
             ✕
@@ -4199,7 +4308,7 @@ export default function ModelFacebookProfile({
         </div>
         
         {/* Categories selector pills: Todos, Amor, Glamour, Saludos */}
-        <div className="flex items-center gap-1 mb-2 pb-1.5 border-b border-zinc-800/60 overflow-x-auto no-scrollbar shrink-0">
+        <div className="flex items-center gap-1 mb-1.5 pb-1 border-b border-zinc-800/60 overflow-x-auto no-scrollbar shrink-0">
           {[
             { id: 'todos', label: '🌟 Todos', count: STICKER_PACK.length },
             { id: 'amor', label: '💖 Amor', count: STICKER_PACK.filter(s => s.category === 'amor').length },
@@ -4213,7 +4322,7 @@ export default function ModelFacebookProfile({
                 e.stopPropagation();
                 setSelectedStickerCategory(cat.id as any);
               }}
-              className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-tight transition whitespace-nowrap cursor-pointer ${
+              className={`px-1.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-tight transition whitespace-nowrap cursor-pointer ${
                 selectedStickerCategory === cat.id
                   ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-2xs'
                   : 'bg-zinc-850 text-zinc-400 hover:text-white hover:bg-zinc-800'
@@ -4224,8 +4333,8 @@ export default function ModelFacebookProfile({
           ))}
         </div>
         
-        {/* Compact Grid of cute stickers with all 4 columns fully visible & smooth scroll */}
-        <div className={matchImageSize ? "grid grid-cols-4 gap-1.5 sm:gap-2 flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start" : "grid grid-cols-4 gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[260px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850"}>
+        {/* Compact Grid of comfortable, nicely proportioned stickers */}
+        <div className={matchImageSize ? "grid grid-cols-4 gap-1 sm:gap-1.5 flex-1 min-h-0 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start" : "grid grid-cols-4 gap-1 sm:gap-1.5 max-h-[148px] sm:max-h-[164px] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start"}>
           {filteredStickers.map((sticker, sIdx) => {
             const fullEmojiStr = sticker.emojis.join('');
             return (
@@ -4235,7 +4344,7 @@ export default function ModelFacebookProfile({
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  const isPhotoTarget = isPhoto || targetId.startsWith('http') || targetId.startsWith('/') || targetId.includes('.');
+                  const isPhotoTarget = isPhoto || targetId.startsWith('http') || targetId.startsWith('/') || targetId.includes('.') || targetId.startsWith('data:');
                   if (isPhotoTarget) {
                     handleStickerReactToPhoto(targetId, fullEmojiStr, e);
                   } else {
@@ -4244,25 +4353,25 @@ export default function ModelFacebookProfile({
                   pinnedStickersIdRef.current = null;
                   setHoveredStickersPostId(null);
                 }}
-                className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl bg-white hover:bg-rose-50 hover:border-pink-300 active:scale-95 transition border border-zinc-200/90 cursor-pointer w-full aspect-square shadow-2xs group min-w-0"
+                className="flex flex-col items-center justify-center px-1 py-1.5 h-[44px] sm:h-[48px] rounded-lg bg-white hover:bg-rose-50 hover:border-pink-400 hover:-translate-y-0.5 active:scale-95 transition-all border border-zinc-200/90 cursor-pointer w-full shadow-2xs group min-w-0"
               >
-                <div className="relative flex flex-col items-center justify-center h-5 sm:h-6 w-full">
+                <div className="relative flex items-center justify-center h-4 sm:h-4.5 w-full">
                   {sticker.emojis.length > 1 ? (
-                    <div className="relative h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center">
-                      <span className="text-xs sm:text-sm absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform">
+                    <div className="relative h-4 w-5 sm:h-4.5 sm:w-5.5 flex items-center justify-center">
+                      <span className="text-[12px] sm:text-[13px] absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform">
                         {sticker.emojis[0]}
                       </span>
-                      <span className="text-xs sm:text-sm absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform">
+                      <span className="text-[12px] sm:text-[13px] absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform">
                         {sticker.emojis[1]}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-sm sm:text-base select-none leading-none group-hover:scale-110 transition-transform">
+                    <span className="text-[15px] sm:text-[17px] select-none leading-none group-hover:scale-110 transition-transform">
                       {sticker.emojis[0]}
                     </span>
                   )}
                 </div>
-                <span className="text-[6.5px] sm:text-[7.5px] font-extrabold text-zinc-700 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase block w-full px-0.5">
+                <span className="text-[6.5px] sm:text-[7px] font-extrabold text-zinc-700 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase block w-full">
                   {sticker.label}
                 </span>
               </button>
@@ -4273,8 +4382,8 @@ export default function ModelFacebookProfile({
     );
   };
 
-  // Compact Extra Gifts popup rendered inside the uploaded image container centered
-  const renderCompactGiftsPopup = (targetId: string, isPhoto = false, isCentered = true) => {
+  // Compact Extra Gifts popup positioned identically to Stickers & Reacciones
+  const renderCompactGiftsPopup = (targetId: string, _isPhoto = false, isCentered = false) => {
     return (
       <div 
         onMouseEnter={() => {
@@ -4285,17 +4394,17 @@ export default function ModelFacebookProfile({
         }}
         className={
           isCentered
-            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-2.5 sm:p-3 z-[250] w-[92%] max-w-[300px] sm:max-w-[320px] max-h-[92%] flex flex-col text-left animate-fade-in select-none"
-            : "absolute bottom-full left-[-30px] sm:left-0 mb-2.5 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-2xl p-3 sm:p-3.5 z-[300] w-[310px] sm:w-[330px] text-left animate-fade-in select-none"
+            ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-xl p-2 sm:p-2.5 z-[250] w-[244px] sm:w-[266px] max-w-[92%] max-h-[90%] flex flex-col text-left animate-fade-in select-none"
+            : "absolute bottom-full left-1 sm:left-2 mb-11 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-[0_14px_34px_-8px_rgba(0,0,0,0.55)] rounded-xl p-2 sm:p-2.5 z-[300] w-[244px] sm:w-[266px] max-w-[calc(100vw-2rem)] flex flex-col text-left animate-fade-in select-none after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12"
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-zinc-800/80 shrink-0">
-          <span className="text-yellow-400 font-extrabold text-[10px] sm:text-[11px] tracking-wide uppercase flex items-center gap-1.5 select-none font-sans">
+        <div className="flex items-center justify-between mb-1.5 pb-1.5 border-b border-zinc-800/80 shrink-0">
+          <span className="text-yellow-400 font-extrabold text-[9.5px] sm:text-[10px] tracking-wide uppercase flex items-center gap-1 select-none font-sans">
             🎁 REGALOS EXTRA
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] bg-zinc-800 text-yellow-350 font-black px-1.5 py-0.5 rounded font-mono">
+            <span className="text-[8.5px] bg-zinc-800 text-yellow-350 font-black px-1.5 py-0.5 rounded font-mono">
               🪙 {liveUserCoins}
             </span>
             <button
@@ -4307,7 +4416,7 @@ export default function ModelFacebookProfile({
                 setHoveredHeartAndGiftPhotoUrl(null);
                 setActiveGiftingPhotoUrl(null);
               }}
-              className="w-5 h-5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[10px] font-bold border border-zinc-800 cursor-pointer transition"
+              className="w-4.5 h-4.5 rounded-full bg-zinc-850 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center text-[9px] font-bold border border-zinc-800 cursor-pointer transition"
               title="Cerrar"
             >
               ✕
@@ -4315,8 +4424,8 @@ export default function ModelFacebookProfile({
           </div>
         </div>
 
-        {/* Compact Grid with hidden scrollbar and larger tiles */}
-        <div className="grid grid-cols-3 gap-1.5 flex-1 min-h-0 max-h-[175px] sm:max-h-[205px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {/* Compact Grid matching Stickers proportions */}
+        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 flex-1 min-h-0 max-h-[148px] sm:max-h-[164px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {EXTRA_GIFTS.map((gift, gIdx) => (
             <button
               key={gIdx}
@@ -4329,16 +4438,16 @@ export default function ModelFacebookProfile({
                 setHoveredHeartAndGiftPhotoUrl(null);
                 setActiveGiftingPhotoUrl(null);
               }}
-              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-1.5 sm:p-2 rounded-xl aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
+              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-1 sm:p-1.5 rounded-lg aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
             >
-              <span className="text-xl sm:text-2xl filter drop-shadow hover:scale-110 transition transform duration-150">
+              <span className="text-lg sm:text-xl filter drop-shadow hover:scale-110 transition transform duration-150 leading-none">
                 {gift.icon}
               </span>
-              <span className="text-[8px] sm:text-[8.5px] font-black text-slate-800 mt-1 truncate w-full px-0.5 leading-tight select-none uppercase">
+              <span className="text-[7px] sm:text-[7.5px] font-black text-slate-800 mt-1 truncate w-full px-0.5 leading-tight select-none uppercase">
                 {gift.name.length > 11 ? `${gift.name.substring(0, 10).toUpperCase()}..` : gift.name.toUpperCase()}
               </span>
               <div className="flex items-center gap-0.5 mt-0.5 select-none shrink-0 leading-none">
-                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-amber-600 font-mono">
+                <span className="text-[7.5px] sm:text-[8px] font-extrabold text-amber-600 font-mono">
                   🪙 {gift.cost}
                 </span>
               </div>
@@ -4346,7 +4455,7 @@ export default function ModelFacebookProfile({
           ))}
         </div>
         
-        <div className="text-[7.5px] sm:text-[8px] text-zinc-400 text-center mt-1.5 pt-1.5 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider shrink-0">
+        <div className="text-[7px] sm:text-[7.5px] text-zinc-400 text-center mt-1.5 pt-1 border-t border-zinc-800/80 italic leading-tight select-none uppercase font-mono tracking-wider shrink-0">
           Presiona para enviar · 🪙 {liveUserCoins}
         </div>
       </div>
@@ -4370,8 +4479,28 @@ export default function ModelFacebookProfile({
     onBookmarkClick: (e: React.MouseEvent) => void,
     hoverKey?: string
   ) => {
+    const effectiveStickerTarget = (hoverKey && hoverKey !== 'none') ? hoverKey : id;
+    const isStickersPopupVisible = !selectedPhotoForLightbox && (
+      hoveredStickersPostId === id ||
+      (!!hoverKey && hoverKey !== 'none' && hoveredStickersPostId === hoverKey)
+    );
+    const isGiftsPopupVisible = !selectedPhotoForLightbox && (
+      hoveredHeartAndGiftPhotoUrl === id ||
+      (!!hoverKey && hoverKey !== 'none' && hoveredHeartAndGiftPhotoUrl === hoverKey)
+    );
+
     return (
-      <div className="relative py-2.5 px-3 flex items-center justify-between bg-white select-none border-t border-slate-100 rounded-b-2xl shadow-xs shrink-0">
+      <div className="relative py-2.5 px-3 flex items-center justify-between bg-white select-none border-t border-slate-100 rounded-b-2xl shadow-xs shrink-0 overflow-visible">
+        {/* STICKERS HOVER/CLICK POPUP RIGHT ABOVE THE ACTION ICONS ROW */}
+        {isStickersPopupVisible &&
+          renderCompactStickersPopup(effectiveStickerTarget, effectiveStickerTarget === hoverKey && id === hoverKey, false, false)
+        }
+
+        {/* GIFTS HOVER/CLICK POPUP IN THE EXACT SAME POSITION AS STICKERS */}
+        {isGiftsPopupVisible &&
+          renderCompactGiftsPopup(effectiveStickerTarget, effectiveStickerTarget === hoverKey && id === hoverKey, false)
+        }
+
         <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
           
           {/* Cash reaction + gift area */}
@@ -4383,8 +4512,8 @@ export default function ModelFacebookProfile({
                   onLikeClick(e);
                 }}
                 onMouseEnter={() => {
-                  if (id && hoverKey && hoverKey !== 'none') {
-                    handleStickersMouseEnter(hoverKey);
+                  if (effectiveStickerTarget) {
+                    handleStickersMouseEnter(effectiveStickerTarget);
                   }
                 }}
                 onMouseLeave={() => {
@@ -4398,11 +4527,6 @@ export default function ModelFacebookProfile({
                 <span className="text-xs select-none">💵</span>
                 <span className="text-[12px] font-extrabold text-slate-800 leading-none">{likesCount}</span>
               </div>
-
-              {/* STICKERS HOVER POPUP RIGHT NEXT TO 💵 REACTION ICON (Only fallback if post has no image) */}
-              {!hoverKey && (hoveredStickersPostId === id) && 
-                renderCompactStickersPopup(id, false, false)
-              }
             </div>
 
             <div className="relative">
@@ -4423,11 +4547,6 @@ export default function ModelFacebookProfile({
               >
                 <Gift className="w-5 h-5 text-pink-500 stroke-[1.8]" />
               </button>
-
-              {/* GIFTS HOVER POPUP RIGHT NEXT TO GIFT ICON (Only fallback if post has no image) */}
-              {!hoverKey && (hoveredHeartAndGiftPhotoUrl === id) && 
-                renderCompactGiftsPopup(id, false, false)
-              }
             </div>
           </div>
 
@@ -4513,7 +4632,7 @@ export default function ModelFacebookProfile({
 
   // Renderer helper for stickers popover
   const renderStickersPopover = (id: string, contextUrl: string, isLightbox = false) => {
-    return renderCompactStickersPopup(id, isLightbox);
+    return renderCompactStickersPopup(id, isLightbox, false, false);
   };
 
   // Renderer helper for beautiful full-size share overlay matching the size of the background image card container
@@ -4628,7 +4747,7 @@ export default function ModelFacebookProfile({
 
   // Renderer helper for gifts popover
   const renderGiftsPopover = (photoUrl: string, isLightbox = false) => {
-    return renderCompactGiftsPopup(photoUrl, isLightbox);
+    return renderCompactGiftsPopup(photoUrl, isLightbox, false);
   };
 
   // Renderer helper for beautiful interactive gifts modal centered in the screen mimicking image.png perfectly
@@ -5662,7 +5781,17 @@ export default function ModelFacebookProfile({
         {/* DYNAMIC TIMELINE FEED OF INDIVIDUAL POSTS */}
         <div className="space-y-4 font-sans">
           {posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 shadow-xs text-left">
+            <div
+              key={post.id}
+              className={`bg-white rounded-2xl border border-slate-200 p-4 space-y-4 shadow-xs text-left relative ${
+                hoveredStickersPostId === post.id ||
+                (post.image && hoveredStickersPostId === post.image) ||
+                hoveredHeartAndGiftPhotoUrl === post.id ||
+                (post.image && hoveredHeartAndGiftPhotoUrl === post.image)
+                  ? 'z-40'
+                  : ''
+              }`}
+            >
               
               {/* Post Header with small avatar and verify icons */}
               <div className="flex justify-between items-start">
@@ -5797,16 +5926,6 @@ export default function ModelFacebookProfile({
                       }}
                     />
                   </div>
-
-                  {/* 💝 STICKERS POPUP SIZED EXACTLY TO THE UPLOADED IMAGE */}
-                  {!selectedPhotoForLightbox && (hoveredStickersPostId === post.id || hoveredStickersPostId === post.image) && (
-                    renderCompactStickersPopup(post.image || post.id, false, true, true)
-                  )}
-
-                  {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                  {!selectedPhotoForLightbox && (hoveredHeartAndGiftPhotoUrl === post.id || hoveredHeartAndGiftPhotoUrl === post.image) && (
-                    renderCompactGiftsPopup(post.image || post.id, false, true)
-                  )}
 
                   {!selectedPhotoForLightbox && giftConfirmPhotoUrl === post.image && renderConfirmGiftOverlay(post.image)}
 
@@ -6314,7 +6433,9 @@ export default function ModelFacebookProfile({
                       : 'Visitante Autorizado'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 font-mono">@{userProfile.username}</p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <p className="text-xs text-slate-500 font-mono">@{userProfile.username}</p>
+                </div>
                 {/* 📝 Biografía del Perfil sincronizada con la página de la captura z.png */}
                 {bioText && (
                   <div className="space-y-0.5 text-xs sm:text-[13px] text-slate-700 font-medium leading-relaxed max-w-2xl mt-1.5 text-center sm:text-left select-text">
@@ -6605,24 +6726,24 @@ export default function ModelFacebookProfile({
                 <div className="relative z-10 space-y-2 sm:space-y-2.5 max-w-xl text-left drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
                   {/* 1. Espacio de Trabajo: España / Remoto */}
                   <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <Globe className="w-4.5 h-4.5 text-[#0284c7] shrink-0" />
-                    <span className="text-slate-600 font-medium">Espacio de Trabajo:</span>
-                    <strong className="text-slate-800 font-extrabold tracking-tight">España / Remoto</strong>
+                    <Globe className="w-4.5 h-4.5 text-sky-400 shrink-0" />
+                    <span className="text-slate-500 font-medium">Espacio de Trabajo:</span>
+                    <strong className="text-sky-500/75 font-semibold tracking-tight">España / Remoto</strong>
                   </div>
 
                   {/* 2. Sígueme en Instagram: @adrianalima */}
                   <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <svg className="w-4.5 h-4.5 text-[#ff2d85] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <svg className="w-4.5 h-4.5 text-pink-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                       <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                     </svg>
-                    <span className="text-slate-600 font-medium">Sígueme en Instagram:</span>
+                    <span className="text-slate-500 font-medium">Sígueme en Instagram:</span>
                     <a 
                       href={`https://instagram.com/${userProfile?.username || 'adrianalima'}`}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-[#ff2d85] font-extrabold hover:underline tracking-tight"
+                      className="text-pink-500/75 font-semibold hover:underline tracking-tight"
                     >
                       @{userProfile?.username || 'adrianalima'}
                     </a>
@@ -6630,15 +6751,15 @@ export default function ModelFacebookProfile({
 
                   {/* 3. Sígueme en TikTok: @adrianalima */}
                   <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <svg className="w-4.5 h-4.5 text-[#5850ec] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-4.5 h-4.5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.87-4.47V8.71a8.16 8.16 0 0 0 4.9 1.62v-3.64z"/>
                     </svg>
-                    <span className="text-slate-600 font-medium">Sígueme en TikTok:</span>
+                    <span className="text-slate-500 font-medium">Sígueme en TikTok:</span>
                     <a 
                       href={`https://tiktok.com/@${userProfile?.username || 'adrianalima'}`}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-slate-800 font-extrabold hover:underline tracking-tight"
+                      className="text-slate-600/85 font-semibold hover:underline tracking-tight"
                     >
                       @{userProfile?.username || 'adrianalima'}
                     </a>
@@ -6646,15 +6767,15 @@ export default function ModelFacebookProfile({
 
                   {/* 4. Sígueme en X / Twitter: @adrianalima */}
                   <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <svg className="w-4 h-4 text-slate-700 shrink-0 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-4 h-4 text-slate-500 shrink-0 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
-                    <span className="text-slate-600 font-medium">Sígueme en X / Twitter:</span>
+                    <span className="text-slate-500 font-medium">Sígueme en X / Twitter:</span>
                     <a 
                       href={`https://x.com/${userProfile?.username || 'adrianalima'}`}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-slate-800 font-extrabold hover:underline tracking-tight"
+                      className="text-slate-600/85 font-semibold hover:underline tracking-tight"
                     >
                       @{userProfile?.username || 'adrianalima'}
                     </a>
@@ -6662,9 +6783,9 @@ export default function ModelFacebookProfile({
 
                   {/* 5. Sponsoring: Comisión 10% activa */}
                   <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <Award className="w-4.5 h-4.5 text-[#d97706] shrink-0" />
-                    <span className="text-slate-600 font-medium">Sponsoring:</span>
-                    <strong className="text-[#059669] font-extrabold tracking-tight">Comisión 10% activa</strong>
+                    <Award className="w-4.5 h-4.5 text-amber-500/80 shrink-0" />
+                    <span className="text-slate-500 font-medium">Sponsoring:</span>
+                    <strong className="text-emerald-600/75 font-semibold tracking-tight">Comisión 10% activa</strong>
                   </div>
                 </div>
               </div>
@@ -8685,6 +8806,156 @@ export default function ModelFacebookProfile({
             </>
           )}
 
+          {/* 🔍 BUSCADOR DE USUARIOS (Contenedor rosa pink encima de Mis Fotos Publicadas) */}
+          <div
+            id="contenedor-buscador-usuarios-perfil"
+            className="bg-pink-100 rounded-2xl border-2 border-pink-300 p-4 sm:p-5 space-y-3 shadow-xs text-left"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-pink-500 text-white flex items-center justify-center shadow-2xs shrink-0">
+                  <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+                </div>
+                <h3 className="text-xs font-black text-pink-950 uppercase tracking-widest m-0">
+                  Buscador de usuarios
+                </h3>
+              </div>
+              <span className="text-[10px] font-bold text-pink-800 bg-white/80 border border-pink-200 px-2.5 py-0.5 rounded-full font-mono">
+                {searchableDirectoryUsers.length} usuarios
+              </span>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 text-pink-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="input-buscador-usuarios-perfil"
+                type="text"
+                value={userDirectorySearchQuery}
+                onChange={(e) => setUserDirectorySearchQuery(e.target.value)}
+                placeholder="Buscar usuario por nombre, @usuario o categoría..."
+                className="w-full bg-white border border-pink-300 rounded-xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-slate-800 placeholder-pink-400 font-medium focus:outline-none focus:ring-2 focus:ring-pink-400/30 focus:border-pink-500 transition shadow-2xs"
+              />
+              {userDirectorySearchQuery.trim() !== '' && (
+                <button
+                  type="button"
+                  onClick={() => setUserDirectorySearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-pink-500 hover:text-pink-700 hover:bg-pink-50 transition cursor-pointer"
+                  aria-label="Limpiar búsqueda de usuarios"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {userDirectorySearchQuery.trim() !== '' && (() => {
+              const q = userDirectorySearchQuery.toLowerCase().trim().replace(/^@/, '');
+              const filteredUsers = searchableDirectoryUsers.filter((u) =>
+                u.name.toLowerCase().includes(q) ||
+                u.username.toLowerCase().includes(q) ||
+                u.roleLabel.toLowerCase().includes(q)
+              ).slice(0, 12);
+
+              return (
+                <div className="bg-white/95 border border-pink-200 rounded-xl divide-y divide-pink-100 overflow-hidden shadow-2xs max-h-72 overflow-y-auto">
+                  <div className="bg-pink-50/90 px-3.5 py-1.5 text-[10px] uppercase font-bold text-pink-700 flex items-center justify-between">
+                    <span>Resultados ({filteredUsers.length})</span>
+                    <span>Haz clic para abrir el perfil</span>
+                  </div>
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-pink-800/80 font-medium">
+                      No se encontraron usuarios que coincidan con "{userDirectorySearchQuery}".
+                    </div>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <div
+                        key={`${u.id}-${u.username}`}
+                        onClick={() => {
+                          if (document.activeElement instanceof HTMLElement) {
+                            document.activeElement.blur();
+                          }
+                          setActiveProfileOrWallTab('perfil');
+                          if (u.rawModel && onGoToModelProfile) {
+                            onGoToModelProfile(u.rawModel.id, u.rawModel, 'profile');
+                          } else {
+                            window.dispatchEvent(new CustomEvent('open-user-profile', {
+                              detail: { username: u.username, name: u.name, model: u.rawModel }
+                            }));
+                          }
+                          setUserDirectorySearchQuery('');
+                        }}
+                        className="flex items-center justify-between gap-3 p-2.5 sm:p-3 hover:bg-pink-50/80 cursor-pointer transition group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="relative shrink-0">
+                            <img
+                              src={u.avatar}
+                              alt={u.name}
+                              className="w-9 h-9 rounded-full object-cover border border-pink-200 group-hover:scale-105 transition"
+                              referrerPolicy="no-referrer"
+                            />
+                            {u.isOnline && (
+                              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="text-xs font-bold text-slate-900 truncate group-hover:text-pink-700 transition">
+                                {u.name}
+                              </span>
+                              {u.isVerified && (
+                                <span className="text-[10px] text-sky-500 font-extrabold shrink-0" title="Verificado">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 truncate">
+                              <span className="font-mono text-pink-600">@{u.username}</span>
+                              <span>•</span>
+                              <span className="truncate">{u.roleLabel}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {onLaunchChat && !isSelfContact(u) && (
+                            <button
+                              type="button"
+                              onClick={() => onLaunchChat(u.id)}
+                              className="p-1.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 transition cursor-pointer"
+                              title={`Enviar mensaje a ${u.name}`}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                              }
+                              setActiveProfileOrWallTab('perfil');
+                              if (u.rawModel && onGoToModelProfile) {
+                                onGoToModelProfile(u.rawModel.id, u.rawModel, 'profile');
+                              } else {
+                                window.dispatchEvent(new CustomEvent('open-user-profile', {
+                                  detail: { username: u.username, name: u.name, model: u.rawModel }
+                                }));
+                              }
+                              setUserDirectorySearchQuery('');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-[10px] font-bold transition cursor-pointer shadow-2xs"
+                          >
+                            Ver perfil
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Model Gallery Component (My Photos showcase) */}
           <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs">
             <div className="flex justify-between items-center">
@@ -9162,19 +9433,18 @@ export default function ModelFacebookProfile({
                           {/* Category Selector Bar matching exact requested categories */}
                           <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-3 flex flex-wrap items-center justify-center gap-1.5 shadow-2xs">
                             {[
-                              { id: 'Todos', label: 'Todos 🪐', color: 'bg-slate-100 hover:bg-slate-200 text-slate-800' },
-                              { id: 'Reels', label: 'Reels 🎥', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                              { id: 'Fashion', label: 'Fashion ✨', color: 'bg-pink-50 hover:bg-pink-100 text-pink-700' },
-                              { id: 'Finanzas', label: 'Finanzas 📈', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
-                              { id: 'Modelos', label: 'Runway 👑', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
-                              { id: 'BackStage', label: 'BackStage 🎬', color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700' },
-                              { id: 'Investors', label: 'Jewellery 💎', color: 'bg-purple-50 hover:bg-purple-100 text-purple-700' },
-                              { id: 'Casting', label: 'Casting 👠', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
-                              { id: 'Fitnes', label: 'Fitnes 💪', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' },
-                              { id: 'Beauty', label: 'Beauty 💄', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                              { id: 'Influencer', label: 'Influencer 📱', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
-                              { id: 'Luxury', label: 'Luxury 🍸', color: 'bg-orange-50 hover:bg-orange-100 text-orange-700' },
-                              { id: 'Interview', label: 'Interview 🎙️', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800' }
+                              { id: 'Todos', label: 'Todos 🪐' },
+                              { id: 'Fashion', label: 'Fashion ✨' },
+                              { id: 'Finanzas', label: 'Finanzas 📈' },
+                              { id: 'Modelos', label: 'Runway 👑' },
+                              { id: 'BackStage', label: 'BackStage 🎬' },
+                              { id: 'Investors', label: 'Jewellery 💎' },
+                              { id: 'Casting', label: 'Casting 👠' },
+                              { id: 'Fitnes', label: 'Fitnes 💪' },
+                              { id: 'Beauty', label: 'Beauty 💄' },
+                              { id: 'Influencer', label: 'Influencer 📱' },
+                              { id: 'Luxury', label: 'Luxury 🍸' },
+                              { id: 'Interview', label: 'Interview 🎙️' }
                             ].map(cat => {
                               const isActive = savedVideoCategoryFilter === cat.id;
                               return (
@@ -9182,10 +9452,10 @@ export default function ModelFacebookProfile({
                                   key={cat.id}
                                   type="button"
                                   onClick={() => setSavedVideoCategoryFilter(cat.id as any)}
-                                  className={`px-3 py-1.5 rounded-xl text-[11px] font-black tracking-wide border cursor-pointer transition-all duration-200 active:scale-95 ${
+                                  className={`custom-bg px-3 py-1.5 rounded-xl text-[11px] font-black tracking-wide uppercase border cursor-pointer transition-all duration-200 active:scale-95 ${
                                     isActive 
-                                      ? 'bg-slate-900 border-slate-900 text-white shadow-sm scale-105' 
-                                      : `${cat.color} border-transparent`
+                                      ? 'bg-[#ff2d85] border-[#ff2d85] text-white shadow-sm scale-105' 
+                                      : 'bg-white border-slate-200 text-slate-900 hover:bg-pink-50/50 hover:border-pink-200 shadow-2xs'
                                   }`}
                                 >
                                   {cat.label}
@@ -9921,19 +10191,18 @@ export default function ModelFacebookProfile({
                         {activeGalleryTab === 'saved' && (
                           <div className="bg-white border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-center gap-1.5 shadow-2xs w-full">
                             {[
-                              { id: 'Todos', label: 'TODOS 💅', color: 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200' },
-                              { id: 'Reels', label: 'REELS 🎬', color: 'bg-rose-50/70 hover:bg-rose-100 text-rose-700 border-rose-200/60' },
-                              { id: 'Fashion', label: 'FASHION ✈️', color: 'bg-pink-50/70 hover:bg-pink-100 text-pink-700 border-pink-200/60' },
-                              { id: 'Finanzas', label: 'FINANZAS 📉', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 border-emerald-200/60' },
-                              { id: 'Modelos', label: 'RUNWAY 👑', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' },
-                              { id: 'BackStage', label: 'BACKSTAGE 🎬', color: 'bg-cyan-50/70 hover:bg-cyan-100 text-cyan-800 border-cyan-200/60' },
-                              { id: 'Investors', label: 'JEWELLERY 💎', color: 'bg-purple-50/70 hover:bg-purple-100 text-purple-800 border-purple-200/60' },
-                              { id: 'Casting', label: 'CASTING 👠', color: 'bg-violet-50/70 hover:bg-violet-100 text-violet-800 border-violet-200/60' },
-                              { id: 'Fitnes', label: 'FITNES 💪', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 border-emerald-200/60' },
-                              { id: 'Beauty', label: 'BEAUTY 💄', color: 'bg-rose-50/70 hover:bg-rose-100 text-rose-800 border-rose-200/60' },
-                              { id: 'Influencer', label: 'INFLUENCER 🏢', color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-800 border-amber-200/60' },
-                              { id: 'Luxury', label: 'LUXURY 🍸', color: 'bg-orange-50/70 hover:bg-orange-100 text-orange-800 border-orange-200/60' },
-                              { id: 'Interview', label: 'INTERVIEW 🎙️', color: 'bg-emerald-50/70 hover:bg-emerald-100 text-emerald-900 border-emerald-200/60' }
+                              { id: 'Todos', label: 'TODOS 💅' },
+                              { id: 'Fashion', label: 'FASHION ✈️' },
+                              { id: 'Finanzas', label: 'FINANZAS 📉' },
+                              { id: 'Modelos', label: 'RUNWAY 👑' },
+                              { id: 'BackStage', label: 'BACKSTAGE 🎬' },
+                              { id: 'Investors', label: 'JEWELLERY 💎' },
+                              { id: 'Casting', label: 'CASTING 👠' },
+                              { id: 'Fitnes', label: 'FITNES 💪' },
+                              { id: 'Beauty', label: 'BEAUTY 💄' },
+                              { id: 'Influencer', label: 'INFLUENCER 🏢' },
+                              { id: 'Luxury', label: 'LUXURY 🍸' },
+                              { id: 'Interview', label: 'INTERVIEW 🎙️' }
                             ].map(cat => {
                               const isActive = savedCategoryFilter === cat.id;
                               return (
@@ -9941,10 +10210,10 @@ export default function ModelFacebookProfile({
                                   key={cat.id}
                                   type="button"
                                   onClick={() => setSavedCategoryFilter(cat.id as any)}
-                                  className={`px-3 py-1.5 rounded-xl text-[11px] font-black tracking-wide border cursor-pointer transition-all duration-200 active:scale-95 uppercase ${
+                                  className={`custom-bg px-3 py-1.5 rounded-xl text-[11px] font-black tracking-wide border cursor-pointer transition-all duration-200 active:scale-95 uppercase ${
                                     isActive 
-                                      ? 'bg-slate-900 border-slate-900 text-white shadow-sm scale-105' 
-                                      : `${cat.color}`
+                                      ? 'bg-[#ff2d85] border-[#ff2d85] text-white shadow-sm scale-105' 
+                                      : 'bg-white border-slate-200 text-slate-900 hover:bg-pink-50/50 hover:border-pink-200 shadow-2xs'
                                   }`}
                                 >
                                   {cat.label}
@@ -10108,16 +10377,6 @@ export default function ModelFacebookProfile({
                                 >
                                   <X className="w-4.5 h-4.5 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
                                 </button>
-
-                                {/* 💝 STICKERS & EMOJIS OVERLAY: Exact same size as the image */}
-                                {!selectedPhotoForLightbox && hoveredStickersPostId === ph && (
-                                  renderCompactStickersPopup(ph, true, true, true)
-                                )}
-
-                                {/* 🎁 REGALOS EXTRA POPUP: Centered inside the image */}
-                                {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === ph && (
-                                  renderCompactGiftsPopup(ph, true, true)
-                                )}
 
                                 {/* 📤 SHARE OVERLAY: Covering the image */}
                                 {!selectedPhotoForLightbox && activeShareMenuPostId === ph && renderShareOverlay(ph, ph)}
@@ -10833,16 +11092,6 @@ export default function ModelFacebookProfile({
                     }}
                   />
 
-                  {/* 💝 STICKERS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                  {hoveredStickersPostId === selectedPhotoForLightbox && (
-                    renderCompactStickersPopup(selectedPhotoForLightbox, true, true)
-                  )}
-
-                  {/* 🎁 EXTRA GIFTS POPUP CENTERED INSIDE THE UPLOADED IMAGE */}
-                  {hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
-                    renderCompactGiftsPopup(selectedPhotoForLightbox, true, true)
-                  )}
-
                   {giftConfirmPhotoUrl === selectedPhotoForLightbox && renderConfirmGiftOverlay(selectedPhotoForLightbox, true)}
                 </div>
 
@@ -11047,6 +11296,12 @@ export default function ModelFacebookProfile({
 
                 {/* Interactive Actions bar with dynamic gifts modal support */}
                 <div className="px-4 py-2.5 border-t border-slate-150 bg-white flex items-center justify-between text-xs shrink-0 relative overflow-visible">
+                  {selectedPhotoForLightbox && hoveredStickersPostId === selectedPhotoForLightbox && (
+                    renderCompactStickersPopup(selectedPhotoForLightbox, true, false, false)
+                  )}
+                  {selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === selectedPhotoForLightbox && (
+                    renderCompactGiftsPopup(selectedPhotoForLightbox, true, false)
+                  )}
                   <div 
                     className="relative flex items-center"
                     id="gifts-hover-target-lightbox"
@@ -14541,7 +14796,9 @@ function ModelStoryLightbox({
         name: gift.name,
         cost: euroCost,
         recipientName: userProfile?.name || 'Adriana Lima',
-        senderName: senderProfile.name || 'Ernesto VS'
+        senderName: senderProfile.name || 'Ernesto VS',
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2
       }
     }));
 
@@ -14619,7 +14876,6 @@ function ModelStoryLightbox({
       };
       try {
         saveLuxuryWatchGift(watchGiftRecord);
-        playLuxuryWatchSoundEffect(true);
       } catch (err) {
         console.error(err);
       }

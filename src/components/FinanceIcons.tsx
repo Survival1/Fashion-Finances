@@ -544,3 +544,114 @@ export const GoldenArmillaryNetworkGraphic: React.FC<{ className?: string }> = (
   </svg>
 );
 
+// 11. Haute Couture Faceted Pink Crystal Heart with 24k Gold Trim (Card 10: Contador de Likes)
+export const GoldenLuxuryHeartGraphic: React.FC<{ className?: string }> = ({ className = "w-16 h-16" }) => (
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <defs>
+      <linearGradient id="heartGold" x1="18" y1="18" x2="82" y2="82" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#fef08a" />
+        <stop offset="28%" stopColor="#eab308" />
+        <stop offset="65%" stopColor="#ca8a04" />
+        <stop offset="100%" stopColor="#854d0e" />
+      </linearGradient>
+      <linearGradient id="heartPinkGem" x1="25" y1="22" x2="75" y2="80" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#ff7ab8" />
+        <stop offset="45%" stopColor="#ff2d85" />
+        <stop offset="100%" stopColor="#be185d" />
+      </linearGradient>
+      <filter id="heartShadow" x="12" y="14" width="76" height="76" filterUnits="userSpaceOnUse">
+        <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#be185d" floodOpacity="0.25" />
+      </filter>
+    </defs>
+    <g filter="url(#heartShadow)">
+      {/* Outer golden laurel/ring halo */}
+      <circle cx="50" cy="50" r="33" stroke="url(#heartGold)" strokeWidth="1.6" strokeOpacity="0.65" strokeDasharray="3 2" />
+      {/* Golden framed crystal heart */}
+      <path
+        d="M50 76 C50 76 22 57.5 22 39.5 C22 30.5 29.2 24 37.5 24 C43 24 47.6 27 50 31.2 C52.4 27 57 24 62.5 24 C70.8 24 78 30.5 78 39.5 C78 57.5 50 76 50 76 Z"
+        fill="url(#heartPinkGem)"
+        stroke="url(#heartGold)"
+        strokeWidth="2.8"
+        strokeLinejoin="round"
+      />
+      {/* Facet & specular highlight */}
+      <path d="M50 32 L38 45 L50 71 L62 45 Z" fill="#ffffff" fillOpacity="0.14" />
+      <ellipse cx="35" cy="36" rx="5.5" ry="3.2" transform="rotate(-30 35 36)" fill="#ffffff" fillOpacity="0.65" />
+      <circle cx="67" cy="27" r="2.2" fill="#fef08a" />
+      <circle cx="72" cy="32" r="1.3" fill="#fef08a" />
+    </g>
+  </svg>
+);
+
+// 12. Haute Couture Golden Runway Portfolio & Gemstone Badges (Card 11: Proyectos Participados)
+export const GoldenRunwayProjectsGraphic: React.FC<{ className?: string }> = ({ className = "w-16 h-16" }) => (
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <defs>
+      <linearGradient id="projGold" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#fef08a" />
+        <stop offset="30%" stopColor="#eab308" />
+        <stop offset="70%" stopColor="#ca8a04" />
+        <stop offset="100%" stopColor="#854d0e" />
+      </linearGradient>
+      <linearGradient id="projCard" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="55%" stopColor="#fdf2f8" />
+        <stop offset="100%" stopColor="#fbcfe8" />
+      </linearGradient>
+      <filter id="projShadow" x="14" y="14" width="74" height="74" filterUnits="userSpaceOnUse">
+        <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#be185d" floodOpacity="0.2" />
+      </filter>
+    </defs>
+    <g filter="url(#projShadow)">
+      {/* Stacked luxury portfolio cards */}
+      <rect x="26" y="20" width="52" height="58" rx="8" fill="#fdf2f8" stroke="url(#projGold)" strokeWidth="1.6" transform="rotate(6 52 49)" />
+      <rect x="20" y="24" width="52" height="58" rx="8" fill="url(#projCard)" stroke="url(#projGold)" strokeWidth="2.2" />
+      {/* Gold clasp bar at top */}
+      <rect x="34" y="20" width="24" height="7" rx="3.5" fill="url(#projGold)" />
+      {/* Mini stylized runway bars */}
+      <rect x="29" y="37" width="34" height="5" rx="2.5" fill="#f472b6" />
+      <rect x="29" y="47" width="26" height="5" rx="2.5" fill="#fb7185" />
+      <rect x="29" y="57" width="20" height="5" rx="2.5" fill="#f59e0b" />
+      <rect x="29" y="67" width="14" height="5" rx="2.5" fill="#0ea5e9" />
+      {/* Corner crown diamond seal */}
+      <circle cx="67" cy="69" r="9" fill="#ff2d85" stroke="url(#projGold)" strokeWidth="2" />
+      <path d="M67 64 L71 69 L67 74 L63 69 Z" fill="#ffffff" />
+    </g>
+  </svg>
+);
+
+// 13. Golden Vault & Emerald Withdrawal Emblem (Card 12: Total del Saldo Sacado)
+export const GoldenVaultWithdrawalGraphic: React.FC<{ className?: string }> = ({ className = "w-16 h-16" }) => (
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <defs>
+      <linearGradient id="vaultGold" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#fef08a" />
+        <stop offset="30%" stopColor="#eab308" />
+        <stop offset="70%" stopColor="#ca8a04" />
+        <stop offset="100%" stopColor="#854d0e" />
+      </linearGradient>
+      <linearGradient id="emeraldArrow" x1="30" y1="20" x2="75" y2="70" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="50%" stopColor="#10b981" />
+        <stop offset="100%" stopColor="#047857" />
+      </linearGradient>
+      <filter id="vaultShadow" x="14" y="14" width="74" height="74" filterUnits="userSpaceOnUse">
+        <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#047857" floodOpacity="0.22" />
+      </filter>
+    </defs>
+    <g filter="url(#vaultShadow)">
+      {/* Stacked golden coins */}
+      <ellipse cx="42" cy="70" rx="19" ry="6.5" fill="url(#vaultGold)" />
+      <ellipse cx="42" cy="63" rx="19" ry="6.5" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.2" />
+      <ellipse cx="42" cy="56" rx="19" ry="6.5" fill="url(#vaultGold)" />
+      <ellipse cx="42" cy="49" rx="19" ry="6.5" fill="#fef9c3" stroke="#ca8a04" strokeWidth="1.2" />
+      {/* Luxury emerald payout badge with up-right withdrawal arrow */}
+      <circle cx="64" cy="42" r="18" fill="url(#emeraldArrow)" stroke="url(#vaultGold)" strokeWidth="2.5" />
+      <path d="M57 49 L71 35 M71 35 H61 M71 35 V45" stroke="#ffffff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Sparkle */}
+      <circle cx="26" cy="34" r="2.2" fill="#eab308" />
+      <circle cx="78" cy="68" r="1.8" fill="#10b981" />
+    </g>
+  </svg>
+);
+
