@@ -1,5 +1,5 @@
 import React from 'react';
-import femaleCrownImg from '../assets/images/female_crown_tiara.png';
+import femaleCrownImg from '../assets/images/female_crown_tiara.webp';
 
 interface RoyalFemaleCrownProps {
   className?: string;

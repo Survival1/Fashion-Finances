@@ -2943,6 +2943,7 @@ export default function App() {
             setRankingInitialTab('ranking');
           }}
           models={models}
+          movements={movements}
           onSelectModel={(model) => {
             setSelectedModelForView(model);
             setModelViewSourceTab('ranking');

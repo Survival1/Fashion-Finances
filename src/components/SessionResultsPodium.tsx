@@ -1061,7 +1061,12 @@ export default function SessionResultsPodium({
   const [selectedFullProject, setSelectedFullProject] = useState<any | null>(null);
   const [activeModalTab, setActiveModalTab] = useState<'info' | 'financial' | 'team'>('info');
   const [sponsorSliderIndex, setSponsorSliderIndex] = useState(0);
+  const [winnerSponsorSlideIndex, setWinnerSponsorSlideIndex] = useState(0);
   const [selectedPodiumSponsorDetail, setSelectedPodiumSponsorDetail] = useState<any | null>(null);
+
+  useEffect(() => {
+    setWinnerSponsorSlideIndex(activeWinnerIndex);
+  }, [activeWinnerIndex, isSimulatedFiveWinners]);
   const [modelBrandOverrides, setModelBrandOverrides] = useState<Record<string, string>>({});
   const [showBrandAssigner, setShowBrandAssigner] = useState(false);
   const [userTop1BoutiqueId, setUserTop1BoutiqueId] = useState<string>(() => {
@@ -2228,14 +2233,167 @@ export default function SessionResultsPodium({
             );
           })()}
 
-          {/* COMPONENT: BENEFICIO DE PATROCINADOR - Banner de Alta Costura Alexander Vance (captura Beneficio del patrocinador Alexander Vance.png) */}
+          {/* COMPONENT: BENEFICIO DE PATROCINADOR - Slider dinámico de patrocinadores de cada ganador */}
           {(() => {
-            let sponsorModel = models.find(m => m.id === 'topm-1' || m.name.toLowerCase().includes('alexander') || m.username.includes('alexander')) ||
-              (userProfile?.patrocinadorId && models.find(m => m.id === userProfile.patrocinadorId)) ||
-              models[1] ||
-              models[0];
-            const sponsorName = 'Alexander Vance';
-            const sponsorAvatar = '/assets/aistudio/marcus_vance_executive.png';
+            const winnersSource = (activeWinnersList && activeWinnersList.length > 0)
+              ? activeWinnersList
+              : (firstPlace ? [firstPlace] : []);
+
+            const curatedSponsorPool = [
+              {
+                name: 'Alexander Vance',
+                avatar: '/assets/aistudio/marcus_vance_executive.png',
+                username: 'alexandervance_exec',
+                id: 'topm-1'
+              },
+              {
+                name: 'Adriana Lima',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+                username: 'adrianalima_w1',
+                id: 'topf-1'
+              },
+              {
+                name: 'Marcus Sterling',
+                avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
+                username: 'marcussterling_m2',
+                id: 'topm-2'
+              },
+              {
+                name: 'Gisele Bündchen',
+                avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400',
+                username: 'giselebundchen_w6',
+                id: 'topf-6'
+              },
+              {
+                name: 'Jasmine Tookes',
+                avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
+                username: 'jasminetookes_w4',
+                id: 'topf-4'
+              },
+              {
+                name: 'Lucas Alvarez',
+                avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
+                username: 'lucasalvarez_m3',
+                id: 'topm-3'
+              },
+              {
+                name: 'Miranda Kerr',
+                avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400',
+                username: 'mirandakerr_w5',
+                id: 'topf-5'
+              }
+            ];
+
+            const usedSponsorNames = new Set<string>();
+            const cleanUserName = (userProfile?.name || '').replace(' (Tú)', '').trim().toLowerCase();
+
+            const resolveModelProfile = (name: string, idHint?: string, fallbackAvatar?: string, fallbackUsername?: string) => {
+              const lowerName = name.toLowerCase().trim();
+              const matched = models.find(m =>
+                (idHint && m.id === idHint) ||
+                m.name.toLowerCase().trim() === lowerName ||
+                m.name.toLowerCase().includes(lowerName.split(' ')[0])
+              );
+              if (matched) return matched;
+              return {
+                id: idHint || `sponsor-${lowerName.replace(/\s+/g, '-')}`,
+                name,
+                username: fallbackUsername || lowerName.replace(/[^a-z0-9]/g, '_'),
+                avatar: fallbackAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'
+              } as ModelProfile;
+            };
+
+            const winnerSponsorsList = winnersSource.map((winner, idx) => {
+              const cleanWinnerName = (winner.name || '').replace(' (Tú)', '').trim().toLowerCase();
+              const isWinnerSelf = Boolean(
+                winner.userId === userProfile?.id ||
+                winner.userId === 'user-adriana' ||
+                (winner as any).isSelf ||
+                (cleanUserName && cleanWinnerName === cleanUserName)
+              );
+
+              let chosenModel: ModelProfile | null = null;
+
+              if (isWinnerSelf && userProfile?.patrocinadorId) {
+                const selfSponsor = models.find(m => m.id === userProfile.patrocinadorId);
+                if (selfSponsor && selfSponsor.name.toLowerCase().trim() !== cleanWinnerName) {
+                  chosenModel = selfSponsor;
+                }
+              }
+
+              if (!chosenModel) {
+                const matchedWinnerModel = models.find(m =>
+                  m.id === winner.userId || m.name.toLowerCase().trim() === cleanWinnerName
+                );
+                if (matchedWinnerModel?.patrocinadorId) {
+                  const explicitSponsor = models.find(m => m.id === matchedWinnerModel.patrocinadorId);
+                  if (explicitSponsor && explicitSponsor.name.toLowerCase().trim() !== cleanWinnerName && !usedSponsorNames.has(explicitSponsor.name.toLowerCase())) {
+                    chosenModel = explicitSponsor;
+                  }
+                }
+              }
+
+              if (!chosenModel) {
+                const fallbackCandidate = curatedSponsorPool.find(c =>
+                  c.name.toLowerCase().trim() !== cleanWinnerName &&
+                  !usedSponsorNames.has(c.name.toLowerCase())
+                ) || curatedSponsorPool[idx % curatedSponsorPool.length];
+
+                const resolved = resolveModelProfile(
+                  fallbackCandidate.name,
+                  fallbackCandidate.id,
+                  fallbackCandidate.avatar,
+                  fallbackCandidate.username
+                );
+                chosenModel = {
+                  ...resolved,
+                  avatar: fallbackCandidate.name === 'Alexander Vance'
+                    ? '/assets/aistudio/marcus_vance_executive.png'
+                    : (resolved.avatar || fallbackCandidate.avatar)
+                };
+              }
+
+              const finalName = chosenModel?.name || 'Alexander Vance';
+              usedSponsorNames.add(finalName.toLowerCase());
+              const finalAvatar = finalName.toLowerCase().includes('alexander vance')
+                ? '/assets/aistudio/marcus_vance_executive.png'
+                : (chosenModel?.avatar || '/assets/aistudio/marcus_vance_executive.png');
+
+              return {
+                winner,
+                winnerName: (winner.name || '').replace(' (Tú)', '').trim(),
+                sponsorModel: chosenModel,
+                sponsorName: finalName,
+                sponsorAvatar: finalAvatar
+              };
+            });
+
+            const safeSlides = winnerSponsorsList.length > 0
+              ? winnerSponsorsList
+              : [{
+                  winner: firstPlace,
+                  winnerName: firstPlace?.name || 'Ganador',
+                  sponsorModel: resolveModelProfile('Alexander Vance', 'topm-1', '/assets/aistudio/marcus_vance_executive.png', 'alexandervance_exec'),
+                  sponsorName: 'Alexander Vance',
+                  sponsorAvatar: '/assets/aistudio/marcus_vance_executive.png'
+                }];
+
+            const activeIdx = Math.min(winnerSponsorSlideIndex, safeSlides.length - 1);
+            const currentSlide = safeSlides[activeIdx];
+            const hasMultipleSponsors = safeSlides.length > 1;
+            const sponsorTotal10 = pool > 0 ? (pool * 0.10) : 100;
+            const commissionPerSponsor = sponsorTotal10 / Math.max(1, safeSlides.length);
+            const formattedCommission = commissionPerSponsor.toFixed(2);
+
+            const handlePrevSponsorSlide = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              setWinnerSponsorSlideIndex(prev => (prev <= 0 ? safeSlides.length - 1 : prev - 1));
+            };
+
+            const handleNextSponsorSlide = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              setWinnerSponsorSlideIndex(prev => (prev >= safeSlides.length - 1 ? 0 : prev + 1));
+            };
 
             return (
               <div 
@@ -2251,73 +2409,114 @@ export default function SessionResultsPodium({
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/70 via-transparent to-pink-200/20 pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-2.5 sm:space-y-3 w-full max-w-xs mx-auto">
-                  {/* Top: Alexander Vance in Golden Ring + Medallion + Diamonds */}
-                  <div className="relative shrink-0 flex items-center justify-center my-1">
-                    {/* Golden Ring Medallion (Compact & Centered) */}
-                    <div 
-                      onClick={() => {
-                        if (sponsorModel && onSelectModel) {
-                          onSelectModel(sponsorModel);
-                        }
-                      }}
-                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 sm:p-1.5 bg-gradient-to-tr from-[#996515] via-[#f7d070] to-[#b8860b] shadow-[0_6px_18px_rgba(184,134,11,0.38)] cursor-pointer hover:scale-[1.03] transition-transform duration-200 relative group"
-                      title={`Ver perfil de ${sponsorName} (Patrocinador)`}
-                    >
-                      <div className="w-full h-full rounded-full overflow-hidden border-2 border-[#fff9e6] shadow-inner bg-slate-900">
-                        <img
-                          src={sponsorAvatar}
-                          alt={sponsorName}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
+                  {/* Top indicator pill when multiple winners have sponsors */}
+                  {hasMultipleSponsors && (
+                    <div className="w-full flex items-center justify-center">
+                      <span className="inline-flex items-center gap-1.5 bg-white/85 backdrop-blur-xs border border-[#d4af37]/60 text-slate-900 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs max-w-full truncate">
+                        <span>👑</span>
+                        <span className="truncate">Patrocinador de {currentSlide.winnerName}</span>
+                        <span className="text-[#be185d] font-mono shrink-0">({activeIdx + 1}/{safeSlides.length})</span>
+                      </span>
                     </div>
+                  )}
 
-                    {/* Gold Seal / Medal with 10% and Ribbon Tails (Compact) */}
-                    <div className="absolute -bottom-1.5 -right-1.5 z-20 flex flex-col items-center">
-                      {/* Round Golden Medal */}
-                      <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#fff3b0] shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center border border-amber-200 relative z-20">
-                        <div className="w-full h-full rounded-full bg-gradient-to-b from-[#ffd54f] via-[#ffca28] to-[#ffb300] border border-[#ffecb3] flex flex-col items-center justify-center p-0.5 text-center shadow-inner relative overflow-hidden">
-                          {/* Crown on top of medal */}
-                          <div className="text-[7.5px] sm:text-[8.5px] text-amber-900 leading-none mb-0.5">
-                            👑
-                          </div>
-                          {/* 10% in crimson serif */}
-                          <span className="text-[#9f1239] font-black font-serif text-[11px] sm:text-xs leading-none tracking-tight">
-                            10%
-                          </span>
-                          {/* Laurel leaf stars */}
-                          <span className="text-[6.5px] sm:text-[7.5px] text-amber-900/80 font-serif leading-none mt-0.5">
-                            ★★★
-                          </span>
+                  {/* Slider Row: Left Arrow + Sponsor Medallion + Right Arrow */}
+                  <div className="relative w-full flex items-center justify-center my-1">
+                    {hasMultipleSponsors && (
+                      <button
+                        type="button"
+                        onClick={handlePrevSponsorSlide}
+                        className="custom-bg absolute left-0 sm:-left-1 z-30 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-slate-800 hover:text-[#be185d] border border-[#d4af37]/70 shadow-md flex items-center justify-center cursor-pointer transition active:scale-90"
+                        title="Patrocinador anterior"
+                        aria-label="Patrocinador anterior"
+                        id="btn-prev-winner-sponsor"
+                      >
+                        <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    )}
+
+                    {/* Top: Active Sponsor in Golden Ring + Medallion + Diamonds */}
+                    <div className="relative shrink-0 flex items-center justify-center" key={`${currentSlide.sponsorName}-${activeIdx}`}>
+                      {/* Golden Ring Medallion (Compact & Centered) */}
+                      <div 
+                        onClick={() => {
+                          if (currentSlide.sponsorModel && onSelectModel) {
+                            onSelectModel(currentSlide.sponsorModel);
+                          }
+                        }}
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 sm:p-1.5 bg-gradient-to-tr from-[#996515] via-[#f7d070] to-[#b8860b] shadow-[0_6px_18px_rgba(184,134,11,0.38)] cursor-pointer hover:scale-[1.03] transition-transform duration-200 relative group"
+                        title={`Ver perfil de ${currentSlide.sponsorName} (Patrocinador)`}
+                      >
+                        <div className="w-full h-full rounded-full overflow-hidden border-2 border-[#fff9e6] shadow-inner bg-slate-900">
+                          <img
+                            src={currentSlide.sponsorAvatar}
+                            alt={currentSlide.sponsorName}
+                            onError={(e) => handleAvatarError(e, currentSlide.sponsorName)}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                         </div>
                       </div>
 
-                      {/* Notched Ribbon Tails */}
-                      <div className="flex items-center justify-center -mt-1 gap-0.5 z-10">
-                        <div 
-                          className="w-2.5 sm:w-3 h-4 sm:h-5 bg-gradient-to-b from-[#db2777] to-[#9f1239] shadow-sm origin-top -rotate-12"
-                          style={{
-                            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'
-                          }}
+                      {/* Gold Seal / Medal with 10% and Ribbon Tails (Compact) */}
+                      <div className="absolute -bottom-1.5 -right-1.5 z-20 flex flex-col items-center">
+                        {/* Round Golden Medal */}
+                        <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#fff3b0] shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center border border-amber-200 relative z-20">
+                          <div className="w-full h-full rounded-full bg-gradient-to-b from-[#ffd54f] via-[#ffca28] to-[#ffb300] border border-[#ffecb3] flex flex-col items-center justify-center p-0.5 text-center shadow-inner relative overflow-hidden">
+                            {/* Crown on top of medal */}
+                            <div className="text-[7.5px] sm:text-[8.5px] text-amber-900 leading-none mb-0.5">
+                              👑
+                            </div>
+                            {/* 10% in crimson serif */}
+                            <span className="text-[#9f1239] font-black font-serif text-[11px] sm:text-xs leading-none tracking-tight">
+                              10%
+                            </span>
+                            {/* Laurel leaf stars */}
+                            <span className="text-[6.5px] sm:text-[7.5px] text-amber-900/80 font-serif leading-none mt-0.5">
+                              ★★★
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Notched Ribbon Tails */}
+                        <div className="flex items-center justify-center -mt-1 gap-0.5 z-10">
+                          <div 
+                            className="w-2.5 sm:w-3 h-4 sm:h-5 bg-gradient-to-b from-[#db2777] to-[#9f1239] shadow-sm origin-top -rotate-12"
+                            style={{
+                              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'
+                            }}
+                          />
+                          <div 
+                            className="w-2.5 sm:w-3 h-4 sm:h-5 bg-gradient-to-b from-[#db2777] to-[#9f1239] shadow-md origin-top rotate-12"
+                            style={{
+                              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Sparkling Pink Diamonds at bottom-left */}
+                      <div className="absolute -bottom-2 -left-2 z-20 flex items-end pointer-events-none">
+                        <img
+                          src="/assets/aistudio/pink_diamond_brilliant.png"
+                          alt="Pink Diamond"
+                          className="w-8 h-6 sm:w-10 sm:h-7 drop-shadow-[0_2px_6px_rgba(219,39,119,0.35)] filter brightness-110"
                         />
-                        <div 
-                          className="w-2.5 sm:w-3 h-4 sm:h-5 bg-gradient-to-b from-[#db2777] to-[#9f1239] shadow-md origin-top rotate-12"
-                          style={{
-                            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'
-                          }}
-                        />
+                        <span className="text-pink-400 text-[10px] animate-pulse -ml-1.5 -mb-0.5">✦</span>
                       </div>
                     </div>
 
-                    {/* Sparkling Pink Diamonds at bottom-left */}
-                    <div className="absolute -bottom-2 -left-2 z-20 flex items-end pointer-events-none">
-                      <img
-                        src="/assets/aistudio/pink_diamond_brilliant.png"
-                        alt="Pink Diamond"
-                        className="w-8 h-6 sm:w-10 sm:h-7 drop-shadow-[0_2px_6px_rgba(219,39,119,0.35)] filter brightness-110"
-                      />
-                      <span className="text-pink-400 text-[10px] animate-pulse -ml-1.5 -mb-0.5">✦</span>
-                    </div>
+                    {hasMultipleSponsors && (
+                      <button
+                        type="button"
+                        onClick={handleNextSponsorSlide}
+                        className="custom-bg absolute right-0 sm:-right-1 z-30 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-slate-800 hover:text-[#be185d] border border-[#d4af37]/70 shadow-md flex items-center justify-center cursor-pointer transition active:scale-90"
+                        title="Siguiente patrocinador"
+                        aria-label="Siguiente patrocinador"
+                        id="btn-next-winner-sponsor"
+                      >
+                        <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    )}
                   </div>
 
                   {/* Royal Golden Crown */}
@@ -2351,18 +2550,18 @@ export default function SessionResultsPodium({
                     BENEFICIO DEL PATROCINADOR
                   </h3>
 
-                  {/* Glossy Ruby-Rose Pill Banner: Alexander Vance */}
+                  {/* Glossy Ruby-Rose Pill Banner: Active Sponsor Name */}
                   <div 
                     onClick={() => {
-                      if (sponsorModel && onSelectModel) {
-                        onSelectModel(sponsorModel);
+                      if (currentSlide.sponsorModel && onSelectModel) {
+                        onSelectModel(currentSlide.sponsorModel);
                       }
                     }}
                     className="px-6 sm:px-8 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#c2185b] via-[#e91e63] to-[#c2185b] border border-amber-300 shadow-[0_4px_14px_rgba(233,30,99,0.38),inset_0_1.5px_3px_rgba(255,255,255,0.45)] cursor-pointer hover:scale-[1.02] transition-transform duration-200 inline-block max-w-[90%]"
-                    title="Ver perfil de Alexander Vance"
+                    title={`Ver perfil de ${currentSlide.sponsorName}`}
                   >
                     <span className="font-serif font-bold text-sm sm:text-base md:text-lg text-white tracking-wide drop-shadow-xs block truncate">
-                      {sponsorName}
+                      {currentSlide.sponsorName}
                     </span>
                   </div>
 
@@ -2375,9 +2574,63 @@ export default function SessionResultsPodium({
                       del patrocinio equivalente a
                     </p>
                     <p className="text-xs sm:text-sm font-black m-0 pt-0.5">
-                      <span className="text-[#e11d48] font-black text-sm sm:text-base tracking-tight">+100.00€</span> de comisión.
+                      <span className="text-[#e11d48] font-black text-sm sm:text-base tracking-tight">+{formattedCommission}€</span> de comisión.
                     </p>
                   </div>
+
+                  {/* Slider pagination dots & quick selector thumbnails for all winners' sponsors */}
+                  {hasMultipleSponsors && (
+                    <div className="w-full pt-2.5 border-t border-rose-200/80 space-y-2">
+                      {/* Dots */}
+                      <div className="flex items-center justify-center gap-1.5">
+                        {safeSlides.map((item, sIdx) => (
+                          <button
+                            key={`${item.sponsorName}-${sIdx}`}
+                            type="button"
+                            onClick={() => setWinnerSponsorSlideIndex(sIdx)}
+                            className={`custom-bg h-1.5 rounded-full transition-all duration-200 cursor-pointer border-0 p-0 ${
+                              sIdx === activeIdx
+                                ? 'w-5 bg-[#e11d48]'
+                                : 'w-1.5 bg-rose-300 hover:bg-rose-400'
+                            }`}
+                            title={`${item.sponsorName} (Patrocinador de ${item.winnerName})`}
+                            aria-label={`Ver patrocinador ${sIdx + 1}: ${item.sponsorName}`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Mini sponsor avatar strip so all 5 sponsors are visible and clickable at a glance */}
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        {safeSlides.map((item, sIdx) => {
+                          const isSelected = sIdx === activeIdx;
+                          return (
+                            <button
+                              key={`thumb-${item.sponsorName}-${sIdx}`}
+                              type="button"
+                              onClick={() => setWinnerSponsorSlideIndex(sIdx)}
+                              className={`custom-bg inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9.5px] font-bold transition-all cursor-pointer border ${
+                                isSelected
+                                  ? 'bg-[#c2185b] text-white border-amber-300 shadow-sm scale-105'
+                                  : 'bg-white/85 hover:bg-white text-slate-800 border-rose-200/90'
+                              }`}
+                              title={`Patrocinador de ${item.winnerName}: ${item.sponsorName}`}
+                              id={`btn-winner-sponsor-slide-${sIdx}`}
+                            >
+                              <img
+                                src={item.sponsorAvatar}
+                                alt={item.sponsorName}
+                                onError={(e) => handleAvatarError(e, item.sponsorName)}
+                                className="w-4 h-4 rounded-full object-cover border border-amber-300/80 shrink-0"
+                              />
+                              <span className="truncate max-w-[68px]">
+                                {item.sponsorName.split(' ')[0]}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

@@ -22,7 +22,7 @@ import { ModelProfile } from '../types';
 import FashionRankingSlider from './FashionRankingSlider';
 import HeroPresentationVideo from './HeroPresentationVideo';
 import LanguageTranslatorDropdown from './LanguageTranslatorDropdown';
-import heroGlamourWhiteEn from '../assets/images/hero_glamour_white_en_1794573754880.jpg';
+import heroGlamourWhiteEn from '../assets/images/hero_glamour_white_en_1794573754880.webp';
 import ctaCrownOrnament from '../assets/images/cta_crown_isolated_1794577537132.jpg';
 import ctaDiamondOrnament from '../assets/images/cta_diamond_isolated_1794577536243.jpg';
 import {

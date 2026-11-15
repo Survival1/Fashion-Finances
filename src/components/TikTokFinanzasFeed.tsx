@@ -281,6 +281,7 @@ interface TikTokFinanzasFeedProps {
   onShare?: () => void;
   activePresenterUser?: any;
   onCategoryFilterChange?: (cat: any) => void;
+  onSelectLiveChannel?: (liveChannelId: string, channelLabel?: string) => void;
   selectedCategoryFilter?: string;
   isBroadcastCamOn?: boolean;
   toggleBroadcastCam?: () => void;
@@ -303,6 +304,7 @@ interface TikTokFinanzasFeedProps {
   onOpenRanking?: () => void;
   onOpenGifts?: () => void;
   onOpenStreamOptions?: () => void;
+  onOpenCreationModal?: () => void;
   showStreamOptionsModal?: boolean;
   setShowStreamOptionsModal?: (show: boolean) => void;
   renderStreamOptionsContent?: () => React.ReactNode;
@@ -380,6 +382,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   onOpenRanking,
   onOpenGifts,
   onOpenStreamOptions,
+  onOpenCreationModal,
   handleFinishRetransmissionAndPassToNextParticipant,
   isBroadcastMicOn,
   isMuted,
@@ -425,6 +428,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   onShare,
   activePresenterUser,
   onCategoryFilterChange,
+  onSelectLiveChannel,
   selectedCategoryFilter = 'Finanzas',
   isBroadcastCamOn = true,
   toggleBroadcastCam,
@@ -486,13 +490,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   }, [setShowFinanzasResults]);
 
   useEffect(() => {
+    if (showFinanzasRecount) {
+      setIsContestPendingClose(false);
+      try {
+        localStorage.removeItem('finanzas_contest_pending_close');
+      } catch (e) {}
+      return;
+    }
     if (showFinanzasResults) {
       setIsContestPendingClose(true);
       try {
         localStorage.setItem('finanzas_contest_pending_close', 'true');
       } catch (e) {}
     }
-  }, [showFinanzasResults]);
+  }, [showFinanzasRecount, showFinanzasResults]);
 
   // 📺 Canal seleccionado internamente para conmutar al instante dentro de esta misma pantalla
   const [currentChannel, setCurrentChannel] = useState<string>(() => {
@@ -1184,9 +1195,195 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       isUserUploaded: true
     }));
 
-    const presets = DEFAULT_FASHION_PRESETS.map(p => ({
+    const CHANNEL_SPECIFIC_PRESETS: Record<string, ChannelUploadedVideoItem[]> = {
+      BackStage: [
+        {
+          id: 'bs-preset-1',
+          username: 'elena_rostova_live',
+          name: 'Elena Rostova',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-dancing-under-studio-light-40157-large.mp4',
+          likes: 18420,
+          comments: [
+            { id: 'c-bs-p1', user: 'camerino_pro', text: '¡La energía en backstage antes del desfile es increíble! 🎬✨', date: 'Hace 12m', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 740,
+          favorites: 2150,
+          description: 'Detrás de cámaras en el backstage de Madrid Fashion Week. Preparativos finales de pasarela y estilismo. 🎬✨ #backstage #fashionweek #camerino',
+          music: 'Backstage Vibe - Chill Beat LoFi',
+          videoCategory: 'BackStage'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ],
+      Modelos: [
+        {
+          id: 'rw-preset-1',
+          username: 'candiceswanepoel_vip',
+          name: 'Candice Swanepoel',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-model-walking-on-a-runway-41715-large.mp4',
+          likes: 31200,
+          comments: [
+            { id: 'c-rw-p1', user: 'vogue_paris', text: '¡Paso firme y elegante en la pasarela de París! 👑👠', date: 'Hace 8m', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 1620,
+          favorites: 4210,
+          description: 'Desfile Runway oficial París Haute Couture 2026 👑👠 Siluetas de temporada en vivo. #runway #catwalk #parisfashion',
+          music: 'Runway Paris Beats - Couture Club',
+          videoCategory: 'Modelos'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(0, 3)
+      ],
+      Investors: [
+        {
+          id: 'jw-preset-1',
+          username: 'victoria_swarovski_vip',
+          name: 'Victoria Swarovski',
+          avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-with-luxury-jewelry-posing-in-a-studio-41718-large.mp4',
+          likes: 26800,
+          comments: [
+            { id: 'c-jw-p1', user: 'cartier_vendome', text: '¡Colección de alta joyería y diamantes espectaculares! 💎✨', date: 'Hace 15m', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 1190,
+          favorites: 3890,
+          description: 'Exhibición privada de Alta Joyería y Diamantes VIP 💎✨ Piezas únicas de colección y patrocinio. #jewellery #diamonds #luxury',
+          music: 'Diamond Glow Symphony - VIP Lounge',
+          videoCategory: 'Investors'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ],
+      Casting: [
+        {
+          id: 'cs-preset-1',
+          username: 'naomi_campbell_mentor',
+          name: 'Naomi Campbell',
+          avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-photo-shoot-41724-large.mp4',
+          likes: 22400,
+          comments: [
+            { id: 'c-cs-p1', user: 'elite_casting', text: '¡Excelente proyección y presencia frente a cámara! 👠📸', date: 'Hace 10m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 940,
+          favorites: 2780,
+          description: 'Audiciones y Casting Oficial para agencias internacionales de pasarela 👠🌟 #casting #models #audition',
+          music: 'Studio Casting Groove - Runway Sessions',
+          videoCategory: 'Casting'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ],
+      Fitnes: [
+        {
+          id: 'ft-preset-1',
+          username: 'carlos_fit_coach',
+          name: 'Taylor Wellness',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-warm-up-exercises-in-a-gym-42999-large.mp4',
+          likes: 19600,
+          comments: [
+            { id: 'c-ft-p1', user: 'wellness_pro', text: '¡Rutina perfecta antes de salir a pasarela! 💪🔥', date: 'Hace 20m', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 810,
+          favorites: 2430,
+          description: 'Rutina de tonificación, postura y preparación física de modelos antes del desfile 💪✨ #fitnes #wellness #training',
+          music: 'Cardio Runway Pulse - Gym Mix',
+          videoCategory: 'Fitnes'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ],
+      Beauty: [
+        {
+          id: 'bt-preset-1',
+          username: 'chloe_makeup_artist',
+          name: 'Miranda Glow',
+          avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-applying-lip-gloss-with-glitter-makeup-40480-large.mp4',
+          likes: 28900,
+          comments: [
+            { id: 'c-bt-p1', user: 'glam_studio', text: '¡Ese acabado satinado con brillo es pura perfección! 💄🌸', date: 'Hace 7m', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 1320,
+          favorites: 4100,
+          description: 'Tutorial de maquillaje editorial, brillo labial y skincare luminoso pre-show 💄✨ #beauty #makeup #skincare',
+          music: 'Glow & Velvet Dreams - Beauty Lounge',
+          videoCategory: 'Beauty'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(0, 3)
+      ],
+      Influencer: [
+        {
+          id: 'in-preset-1',
+          username: 'leo_viral_creator',
+          name: 'Leo Viral',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stylish-young-man-walking-in-a-urban-setting-41712-large.mp4',
+          likes: 21500,
+          comments: [
+            { id: 'c-in-p1', user: 'trend_hub', text: '¡Tendencia total esta temporada! 📱⚡', date: 'Hace 14m', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 1050,
+          favorites: 2940,
+          description: 'Tendencias digitales, colaboraciones con firmas de moda y vlogs en vivo 📱✨ #influencer #lifestyle #trends',
+          music: 'Viral Lifestyle Mix - Digital Beats',
+          videoCategory: 'Influencer'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ],
+      Luxury: [
+        {
+          id: 'lx-preset-1',
+          username: 'helena_high_society',
+          name: 'Helena Rothschild',
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-posing-with-red-dress-41719-large.mp4',
+          likes: 34500,
+          comments: [
+            { id: 'c-lx-p1', user: 'monaco_vip', text: '¡Lujo absoluto y alta costura impecable! 🍸👑', date: 'Hace 9m', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 1780,
+          favorites: 5120,
+          description: 'Gala Privada VIP & Alta Costura en Mónaco 🍸✨ Experiencias de lujo y moda exclusiva. #luxury #vipgala #hautecouture',
+          music: 'Monaco Gala Gold - Luxury Lounge',
+          videoCategory: 'Luxury'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ],
+      Interview: [
+        {
+          id: 'iv-preset-1',
+          username: 'alexa_chung_interviews',
+          name: 'Alexa Chung',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650',
+          videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-talking-in-a-studio-interview-41720-large.mp4',
+          likes: 17900,
+          comments: [
+            { id: 'c-iv-p1', user: 'derek_fashion', text: '¡Excelente entrevista con las protagonistas de la semana de la moda! 🎙️✨', date: 'Hace 11m', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' }
+          ],
+          shares: 680,
+          favorites: 2100,
+          description: 'Entrevista exclusiva en estudio sobre diseño sostenible, patrocinio y pasarelas globales 🎙️✨ #interview #fashiontalk #backstage',
+          music: 'Studio Talk Sessions - Interview Beats',
+          videoCategory: 'Interview'
+        },
+        ...DEFAULT_FASHION_PRESETS.slice(1)
+      ]
+    };
+
+    const channelPresetsBase =
+      CHANNEL_SPECIFIC_PRESETS[channelName] ||
+      (chanLower === 'todos'
+        ? [
+            DEFAULT_FASHION_PRESETS[0],
+            CHANNEL_SPECIFIC_PRESETS.Modelos[0],
+            CHANNEL_SPECIFIC_PRESETS.Luxury[0],
+            CHANNEL_SPECIFIC_PRESETS.Beauty[0],
+            CHANNEL_SPECIFIC_PRESETS.Interview[0]
+          ]
+        : DEFAULT_FASHION_PRESETS);
+
+    const presets = channelPresetsBase.map(p => ({
       ...p,
-      videoCategory: channelName
+      videoCategory: p.videoCategory || channelName
     }));
 
     // Priorizar vídeos subidos por el usuario estrictamente en su categoría o en 'Todos'
@@ -4152,10 +4349,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         id={`embedded-channels-menu-overlay-${sId}`}
       >
         {/* Subtle top indicator bar */}
-        <div className="w-16 h-1 bg-white/40 rounded-full mx-auto mb-1.5 opacity-80" />
+        <div className="w-14 h-1 bg-[#dfb8c8] rounded-full mx-auto mb-1.5 opacity-90" />
 
         <div 
-          className="w-full bg-[#0B0F19]/98 backdrop-blur-xl text-white p-3 sm:p-3.5 rounded-3xl border border-slate-700/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-2.5 select-none"
+          className="w-full bg-[#fdf8fa]/98 backdrop-blur-xl text-[#1a1216] p-3.5 sm:p-4 rounded-[28px] border-[1.5px] border-[#e6c3d0] shadow-[0_20px_55px_rgba(190,115,148,0.28)] flex flex-col gap-3 select-none"
           onMouseEnter={() => handleMouseEnterRonda(session?.id || 'fashion-overlay')}
           onMouseLeave={handleMouseLeaveRonda}
         >
@@ -4170,33 +4367,33 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 }
                 window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'menu' }));
               }}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#181d2a] hover:bg-[#22293b] text-white text-[11px] font-black rounded-full transition cursor-pointer border border-slate-700/60 active:scale-95 shadow-md shrink-0"
+              className="custom-bg flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-b from-[#f4e1e9] to-[#e9ced9] hover:brightness-105 text-[#b80c57] text-xs font-extrabold rounded-full transition cursor-pointer border border-[#c9a3b2] active:scale-95 shadow-2xs shrink-0"
               title="Volver"
               id="btn-channels-menu-volver"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#fe2c55] stroke-[3]" />
-              <span className="font-black">Volver</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-[#c8105f] stroke-[2.75]" />
+              <span className="font-extrabold">Volver</span>
             </button>
 
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[10px] font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span className="text-slate-400 font-medium">Canal:</span>
-              <span className="text-rose-400 font-black">{getChannelCleanName(currentChannel)}</span>
+            <div className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#fcf7f9] border border-[#d6b7c3] text-[11px] font-bold shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-[#e91e78] animate-pulse" />
+              <span className="text-[#1a1216] font-semibold">Canal:</span>
+              <span className="text-[#d81b60] font-extrabold">{getChannelCleanName(currentChannel)}</span>
             </div>
 
             <button
               type="button"
               onClick={() => setActiveChannelsMenuSessionId(null)}
-              className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700 active:scale-95 shrink-0"
+              className="custom-bg w-8 h-8 rounded-full bg-[#fcf7f9] hover:bg-[#f6e8ee] text-[#3a2831] flex items-center justify-center transition cursor-pointer border border-[#c9aeb8] active:scale-95 shrink-0 shadow-2xs"
               title="Cerrar menú"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5 stroke-[2.25]" />
             </button>
           </div>
 
           {/* Controls Row: Regalos (Izquierda), + En Grande (Centro), Ranking (Derecha) */}
-          <div className="flex items-center justify-between gap-3 sm:gap-4 pt-1.5 pb-1 text-center w-full max-w-md mx-auto min-w-0">
-            {/* Botón Izquierda: Regalos (Redirige al Centro de Regalos y Bóveda Oficial) */}
+          <div className="flex items-center justify-between gap-3 sm:gap-4 pt-1 pb-0.5 text-center w-full max-w-md mx-auto min-w-0">
+            {/* Botón Izquierda: Regalos */}
             <button
               type="button"
               onClick={() => {
@@ -4205,30 +4402,32 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   (onOpenRanking as any)('regalos');
                 }
               }}
-              className="flex-1 py-2 sm:py-2.5 px-2 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 hover:border-pink-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[56px] sm:h-[62px] active:scale-95 shadow-md group"
+              className="custom-bg flex-1 py-2.5 px-2 bg-[#fcf7f9] hover:bg-[#f7eaf0] text-[#1a1216] border-[1.2px] border-[#cbb0ba] hover:border-[#e91e78]/60 rounded-[22px] flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[62px] sm:h-[68px] active:scale-95 shadow-2xs group"
               title="Centro de Regalos · Fashion Finances"
               id="btn-live-regalos-feed"
             >
-              <Gift className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-pink-400 group-hover:scale-110 transition-transform shrink-0" />
-              <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight text-pink-100">Regalos</span>
+              <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-[#e91e78] group-hover:scale-110 transition-transform shrink-0" />
+              <span className="truncate w-full text-[11px] sm:text-xs font-extrabold tracking-tight text-[#1a1216]">Regalos</span>
             </button>
 
-            {/* Botón Centro: + En Grande (Fondo Rosa Perla y Símbolo + Blanco - Redirige a Opciones de Retransmisión - Captura z.png) */}
+            {/* Botón Centro: + En Grande */}
             <button
               type="button"
               onClick={() => {
                 setActiveChannelsMenuSessionId(null);
-                if (onOpenStreamOptions) {
+                if (onOpenCreationModal) {
+                  onOpenCreationModal();
+                } else if (onOpenStreamOptions) {
                   onOpenStreamOptions();
                 } else {
-                  window.dispatchEvent(new CustomEvent('open-stream-options-modal'));
+                  window.dispatchEvent(new CustomEvent('open-creation-type-modal'));
                 }
               }}
-              className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl sm:rounded-3xl !bg-[#FADADD] hover:!bg-[#F8C6D8] text-white flex items-center justify-center shadow-lg shadow-pink-300/35 active:scale-95 border-2 border-white/90 hover:border-white hover:scale-105 transition-all shrink-0 cursor-pointer group"
-              title="Opciones de Stream para Retransmitir en Directo (+)"
+              className="custom-bg w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-gradient-to-br from-[#ff3b93] via-[#e91e78] to-[#d01368] hover:brightness-110 text-white flex items-center justify-center shadow-[0_8px_24px_rgba(233,30,120,0.42)] active:scale-95 border-2 border-white/95 hover:scale-105 transition-all shrink-0 cursor-pointer group"
+              title="Nuevo contenido: Historia, Reel o Directo (+)"
               id="btn-live-center-plus-feed"
             >
-              <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[3.5] drop-shadow-[0_1px_2px_rgba(180,80,120,0.35)] group-hover:rotate-90 transition-transform duration-300" />
+              <Plus className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[3] group-hover:rotate-90 transition-transform duration-300" />
             </button>
 
             {/* Botón Derecha: Ranking */}
@@ -4241,35 +4440,35 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   onNavigateToTab('home');
                 }
               }}
-              className="flex-1 py-2 sm:py-2.5 px-2 bg-[#181d2a] hover:bg-[#22293b] text-slate-200 border border-slate-700/70 hover:border-amber-500/50 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[56px] sm:h-[62px] active:scale-95 shadow-md group"
+              className="custom-bg flex-1 py-2.5 px-2 bg-[#fcf7f9] hover:bg-[#f7eaf0] text-[#1a1216] border-[1.2px] border-[#cbb0ba] hover:border-[#eab308]/70 rounded-[22px] flex flex-col items-center justify-center gap-1 transition cursor-pointer font-bold min-w-0 h-[62px] sm:h-[68px] active:scale-95 shadow-2xs group"
               title="Ranking"
               id="btn-live-ranking-feed"
             >
-              <Trophy className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-              <span className="truncate w-full text-[10px] sm:text-[11px] font-black tracking-tight text-amber-100">Ranking</span>
+              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#eab308] group-hover:scale-110 transition-transform shrink-0" />
+              <span className="truncate w-full text-[11px] sm:text-xs font-extrabold tracking-tight text-[#1a1216]">Ranking</span>
             </button>
           </div>
 
-          {/* Bottom Row: 10 Live Channels */}
-          <div className="pt-2 border-t border-slate-800/80 w-full">
-            <div className="flex items-center justify-between px-1 mb-2">
-              <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+          {/* Bottom Row: Live Channels */}
+          <div className="pt-2.5 border-t border-[#e8ced9] w-full">
+            <div className="flex items-center justify-between px-1 mb-2.5">
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#1a1216] flex items-center gap-1.5">
                 <span>📺</span> CANALES EN DIRECTO
               </span>
-              <span className="text-[9px] sm:text-[9.5px] text-[#fe2c55] font-black bg-[#fe2c55]/10 px-2.5 py-0.5 rounded-full border border-[#fe2c55]/60">
+              <span className="text-[10px] sm:text-[11px] bg-[#e91e78] text-white font-bold px-3.5 py-0.5 rounded-full shadow-xs">
                 {getChannelCleanName(currentChannel)}
               </span>
             </div>
 
             {/* Slider horizontal de canales en directo con flechas */}
-            <div className="flex items-center gap-1.5 w-full pb-2 mb-1.5 select-none">
+            <div className="flex items-center gap-1.5 w-full pb-2.5 mb-1.5 select-none">
               <button
                 type="button"
                 onClick={() => {
                   liveChannelsSliderRef.current?.scrollBy({ left: -220, behavior: 'smooth' });
                 }}
                 aria-label="Desplazar canales a la izquierda"
-                className="custom-bg shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-[#e11470] border border-rose-300/90 shadow-md flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                className="custom-bg shrink-0 w-8 h-8 rounded-full bg-[#fcf8fa] hover:bg-[#f5e6ed] text-[#d81b60] border border-[#d6b7c3] shadow-xs flex items-center justify-center transition-all active:scale-95 cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4 stroke-[2.75]" />
               </button>
@@ -4279,21 +4478,21 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 className="flex-1 min-w-0 overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-2 px-0.5 py-0.5"
               >
                 {[
-                  { id: 'Atelier', label: 'Atelier' },
-                  { id: 'Haute Couture', label: 'Haute Couture' },
-                  { id: 'Streetwear & Urban', label: 'Streetwear & Urban' },
-                  { id: 'Fashion Model', label: 'Fashion Model' },
-                  { id: 'Runway Model', label: 'Runway Model' },
-                  { id: 'Catalog Model', label: 'Catalog Model' },
-                  { id: 'Commercial Model', label: 'Commercial Model' },
-                  { id: 'Plus Size Model', label: 'Plus Size Model' },
-                  { id: 'Petite Model', label: 'Petite Model' },
-                  { id: 'Lingerie Model', label: 'Lingerie Model' },
-                  { id: 'Swimsuit Model', label: 'Swimsuit Model' },
-                  { id: 'Fitness Model', label: 'Fitness Model' },
-                  { id: 'Parts Model', label: 'Parts Model' },
-                  { id: 'Mature Model', label: 'Mature Model' },
-                  { id: 'Real People Model', label: 'Real People Model' }
+                  { id: 'Atelier', label: 'Atelier', liveId: 'atelier' },
+                  { id: 'Haute Couture', label: 'Haute Couture', liveId: 'haute_couture' },
+                  { id: 'Streetwear & Urban', label: 'Streetwear & Urban', liveId: 'streetwear' },
+                  { id: 'Fashion Model', label: 'Fashion Model', liveId: 'fashion_model' },
+                  { id: 'Runway Model', label: 'Runway Model', liveId: 'runway_model' },
+                  { id: 'Catalog Model', label: 'Catalog Model', liveId: 'catalog_model' },
+                  { id: 'Commercial Model', label: 'Commercial Model', liveId: 'commercial_model' },
+                  { id: 'Plus Size Model', label: 'Plus Size Model', liveId: 'plus_size_model' },
+                  { id: 'Petite Model', label: 'Petite Model', liveId: 'petite_model' },
+                  { id: 'Lingerie Model', label: 'Lingerie Model', liveId: 'lingerie_model' },
+                  { id: 'Swimsuit Model', label: 'Swimsuit Model', liveId: 'swimsuit_model' },
+                  { id: 'Fitness Model', label: 'Fitness Model', liveId: 'fitness_model' },
+                  { id: 'Parts Model', label: 'Parts Model', liveId: 'parts_model' },
+                  { id: 'Mature Model', label: 'Mature Model', liveId: 'mature_model' },
+                  { id: 'Real People Model', label: 'Real People Model', liveId: 'real_people_models' }
                 ].map(cat => {
                   const isActive = (currentChannel || 'Finanzas') === cat.id;
                   return (
@@ -4301,18 +4500,22 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                       key={`pill-cat-${cat.id}`}
                       type="button"
                       onClick={() => {
+                        setActiveChannelsMenuSessionId(null);
+                        if (onSelectLiveChannel) {
+                          onSelectLiveChannel(cat.liveId, cat.label);
+                          return;
+                        }
                         setCurrentChannel(cat.id);
                         setSessionSelectedPresenterMap({});
                         setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
-                        setActiveChannelsMenuSessionId(null);
                         if (onCategoryFilterChange) {
                           onCategoryFilterChange(cat.id);
                         }
                       }}
-                      className={`custom-bg shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap transition-all cursor-pointer border active:scale-95 ${
+                      className={`custom-bg shrink-0 px-4 py-1.5 rounded-full text-[11.5px] sm:text-xs font-extrabold tracking-tight whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
                         isActive
-                          ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-rose-950 border-rose-400 ring-2 ring-rose-400/50 scale-105 shadow-md'
-                          : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] text-slate-800 border-rose-200/80 hover:border-rose-300 shadow-sm'
+                          ? 'bg-[#ecd0dc] text-[#6b143b] border-[2px] border-[#e91e78] shadow-xs'
+                          : 'bg-[#f7eef2] hover:bg-[#f2e2ea] text-[#1a1216] border border-[#cbb0ba] shadow-2xs'
                       }`}
                     >
                       {cat.label}
@@ -4327,13 +4530,13 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   liveChannelsSliderRef.current?.scrollBy({ left: 220, behavior: 'smooth' });
                 }}
                 aria-label="Desplazar canales a la derecha"
-                className="custom-bg shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-[#e11470] border border-rose-300/90 shadow-md flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                className="custom-bg shrink-0 w-8 h-8 rounded-full bg-[#fcf8fa] hover:bg-[#f5e6ed] text-[#d81b60] border border-[#d6b7c3] shadow-xs flex items-center justify-center transition-all active:scale-95 cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4 stroke-[2.75]" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5 w-full max-h-[40vh] overflow-y-auto p-1 rounded-2xl bg-[#090D15]/90 border border-slate-800 shadow-inner scrollbar-none">
+            <div className="grid grid-cols-2 gap-2 w-full max-h-[40vh] overflow-y-auto p-2.5 rounded-[24px] bg-[#fbf7f9] border border-[#dfc3ce] shadow-2xs scrollbar-none">
               {CHANNELS_LIST.map(cat => {
                 const isActive = (currentChannel || 'Finanzas') === cat.id;
                 return (
@@ -4341,18 +4544,30 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     key={cat.id}
                     type="button"
                     onClick={() => {
+                      try {
+                        localStorage.setItem('last_selected_multimedia_channel', cat.id);
+                      } catch (_) {}
                       setCurrentChannel(cat.id);
+                      setActiveChannelVideoIdx(0);
                       setSessionSelectedPresenterMap({});
                       setSessionExpositionTimerMap(prev => ({ ...prev, [session?.id || 'default']: 300 }));
                       setActiveChannelsMenuSessionId(null);
+                      if (feedContainerRef.current) {
+                        feedContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
                       if (onCategoryFilterChange) {
                         onCategoryFilterChange(cat.id);
                       }
+                      if (cat.id !== 'Finanzas') {
+                        window.dispatchEvent(new CustomEvent('change_multimedia_channel', {
+                          detail: { channel: cat.id, autoPlay: true }
+                        }));
+                      }
                     }}
-                    className={`py-2 sm:py-2.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-black transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm ${
+                    className={`custom-bg py-2.5 px-3 rounded-full text-[11.5px] sm:text-xs transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                       isActive 
-                        ? 'bg-gradient-to-br from-white via-[#FFF0F5] to-[#FCE7F3] text-rose-950 font-black shadow-lg shadow-rose-300/40 border-2 border-rose-400 ring-2 ring-rose-400/40' 
-                        : 'bg-gradient-to-br from-white via-[#FFF8FA] to-[#FCE7F3] hover:from-white hover:to-[#FBCFE8] text-slate-900 border border-rose-200/90 hover:border-rose-300'
+                        ? 'bg-gradient-to-r from-[#edd0dc] to-[#e4bccd] text-[#6b143b] font-black border-[2px] border-[#e91e78] shadow-[0_2px_10px_rgba(233,30,120,0.2)]' 
+                        : 'bg-[#fdfafd] hover:bg-[#f7eaf0] text-[#1a1216] font-extrabold border border-[#cbb0ba] shadow-2xs'
                     }`}
                     id={`finanzas-feed-channel-btn-${cat.id}`}
                   >
@@ -5272,7 +5487,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       >
         {currentChannel !== 'Finanzas' || activeSubTab === 'amigos' ? (
           renderMultimediaChannelVideoFeed()
-        ) : (isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') || showFinanzasResults) ? (
+        ) : (!showFinanzasRecount && (isContestPendingClose || (typeof window !== 'undefined' && localStorage.getItem('finanzas_contest_pending_close') === 'true') || showFinanzasResults)) ? (
           /* 🏆 ESTADO: PENDIENTE DE CERRAR CONCURSO -> MOSTRAR PÁGINA IMAGE.PNG BLOQUEADA HASTA PULSAR CERRAR CONCURSO */
           <div 
             className="w-full max-w-[480px] h-[calc(100dvh-50px)] min-h-[580px] bg-[#fff0f3] rounded-none sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col z-[300] pointer-events-auto border border-pink-200"

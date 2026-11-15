@@ -1,22 +1,24 @@
 /**
- * Utility to compress and resize images to prevent localStorage QuotaExceededErrors.
- * Resizes the image so that neither width nor height exceeds the specified maximum.
- * Compresses the image using JPEG format and the specified quality (0.0 to 1.0).
+ * Utility to compress, resize, and automatically convert images to WebP format
+ * to optimize quality/transparency and prevent localStorage QuotaExceededErrors.
  */
 export function compressAndResizeImage(
   file: File,
-  maxWidth = 800,
-  maxHeight = 800,
-  quality = 0.7
+  maxWidth = 1200,
+  maxHeight = 1200,
+  quality = 0.85
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
-      
-      // If it's not an image (e.g. svg or other types that might not draw on canvas nicely),
-      // or if canvas drawing is not supported/needed, return the original dataurl.
-      if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+      const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
+      const isRasterImage =
+        file.type.startsWith('image/') ||
+        /\.(png|jpe?g|webp|gif|bmp|avif|tiff?)$/i.test(file.name || '');
+
+      // Keep SVGs or non-image files untouched
+      if (!isRasterImage || isSvg) {
         resolve(dataUrl);
         return;
       }
@@ -45,18 +47,22 @@ export function compressAndResizeImage(
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            const resizedDataUrl = canvas.toDataURL('image/jpeg', quality);
-            resolve(resizedDataUrl);
+            const webpDataUrl = canvas.toDataURL('image/webp', quality);
+            if (webpDataUrl.startsWith('data:image/webp')) {
+              resolve(webpDataUrl);
+            } else {
+              resolve(canvas.toDataURL('image/jpeg', quality));
+            }
           } else {
             resolve(dataUrl);
           }
         } catch (error) {
-          console.error('Error during image canvas compression:', error);
-          resolve(dataUrl); // Fallback to uncompressed
+          console.error('Error during image WebP conversion:', error);
+          resolve(dataUrl);
         }
       };
       img.onerror = () => {
-        resolve(dataUrl); // Fallback to uncompressed
+        resolve(dataUrl);
       };
       img.src = dataUrl;
     };

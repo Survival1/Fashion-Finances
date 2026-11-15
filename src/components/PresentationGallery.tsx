@@ -2,14 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Camera, 
   Upload, 
-  Plus, 
   Trash2, 
   Eye, 
   X, 
   ChevronLeft, 
   ChevronRight, 
   Download, 
-  Link as LinkIcon, 
   Sparkles,
   Maximize2,
   CheckCircle2,
@@ -68,8 +66,6 @@ export default function PresentationGallery({
   const [activeViewerIndex, setActiveViewerIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'warning' | 'error' } | null>(null);
-  const [showUrlDialog, setShowUrlDialog] = useState(false);
-  const [urlInput, setUrlInput] = useState('');
   const [isDragging, setIsDragging] = useState(false);
 
   // Sync to localStorage
@@ -169,24 +165,6 @@ export default function PresentationGallery({
     }
   };
 
-  // Add image by URL
-  const handleAddUrl = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanUrl = urlInput.trim();
-    if (!cleanUrl) return;
-
-    if (images.length >= 10) {
-      showToast('Ya has alcanzado el límite máximo de 10 imágenes.', 'warning');
-      return;
-    }
-
-    const nextImages = [...images, cleanUrl].slice(0, 10);
-    saveImages(nextImages);
-    setUrlInput('');
-    setShowUrlDialog(false);
-    showToast('Imagen añadida a la galería con éxito.', 'success');
-  };
-
   // Delete image
   const handleDeleteImage = (indexToRemove: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -251,17 +229,6 @@ export default function PresentationGallery({
                 <Upload className="w-3.5 h-3.5" />
                 <span>{isProcessing ? 'Subiendo...' : 'Subir Fotos'}</span>
               </button>
-
-              {/* URL button */}
-              <button
-                type="button"
-                onClick={() => setShowUrlDialog(true)}
-                className="p-1 sm:px-2 sm:py-1 rounded-xl text-[11px] sm:text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-100 border border-stone-200 transition cursor-pointer"
-                title="Añadir imagen por enlace web"
-              >
-                <LinkIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline ml-1">URL</span>
-              </button>
             </>
           )}
 
@@ -280,38 +247,6 @@ export default function PresentationGallery({
           />
         </div>
       </div>
-
-      {/* URL Input Modal/Popover */}
-      {showUrlDialog && (
-        <form onSubmit={handleAddUrl} className="bg-white border border-rose-200 rounded-2xl p-3 shadow-md space-y-2 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-stone-800">Añadir imagen por enlace directo:</span>
-            <button
-              type="button"
-              onClick={() => setShowUrlDialog(false)}
-              className="text-stone-400 hover:text-stone-700 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              required
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="https://ejemplo.com/foto-alta-resolucion.jpg"
-              className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-400"
-            />
-            <button
-              type="submit"
-              className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition cursor-pointer"
-            >
-              Añadir
-            </button>
-          </div>
-        </form>
-      )}
 
       {/* Drag & Drop Zone or Photos Grid */}
       <div 
@@ -378,25 +313,6 @@ export default function PresentationGallery({
             </div>
           ))}
 
-          {/* Inline Upload Tile when under 10 images */}
-          {images.length < 10 && (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-              className="aspect-[4/5] rounded-xl border-2 border-dashed border-stone-300 hover:border-rose-400 bg-stone-50 hover:bg-rose-50/50 flex flex-col items-center justify-center p-3 text-center transition-all duration-200 cursor-pointer group"
-            >
-              <div className="w-8 h-8 rounded-full bg-stone-200 group-hover:bg-rose-100 flex items-center justify-center text-stone-600 group-hover:text-rose-600 transition-colors mb-1.5">
-                <Plus className="w-4 h-4" />
-              </div>
-              <span className="text-[11px] font-bold text-stone-700 group-hover:text-rose-600 transition-colors">
-                Añadir Foto
-              </span>
-              <span className="text-[9px] text-stone-400 font-medium mt-0.5">
-                {10 - images.length} restante{10 - images.length > 1 ? 's' : ''}
-              </span>
-            </button>
-          )}
         </div>
 
         {/* Empty state if user deleted all photos */}

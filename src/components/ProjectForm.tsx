@@ -36,7 +36,7 @@ interface ProjectFormProps {
 // Realistic brilliant diamond image from z.png (clean transparent cutout, no background layer)
 const DiamondIcon = ({ className = "w-5 h-5", alt = "Diamante" }: { className?: string; alt?: string }) => (
   <img 
-    src="/assets/aistudio/diamond_transparent.png" 
+    src="/assets/aistudio/diamond_transparent.webp" 
     alt={alt} 
     className={`${className} object-contain inline-block shrink-0 drop-shadow-xs select-none`} 
     draggable={false}

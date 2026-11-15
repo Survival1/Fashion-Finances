@@ -1637,18 +1637,36 @@ export default function ModelFacebookProfile({
   const [editingAvatar, setEditingAvatar] = useState(userProfile.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150');
   const [fashionAgency, setFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
   const [editingFashionAgency, setEditingFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
+  const targetModelId = currentModel?.id || userProfile?.id || 'topf-1';
+  const targetModelUsername = (currentModel?.username || userProfile?.username || 'adrianalima').toLowerCase();
+
   const [editingInstagram, setEditingInstagram] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved =
+        localStorage.getItem(`custom_instagram_${targetModelId}`) ||
+        localStorage.getItem(`custom_instagram_${targetModelUsername}`);
+      if (saved) return saved;
+    }
     return userProfile.instagram || currentModel?.socials?.instagram || `@${userProfile.username || 'usuario'}`;
   });
   const [editingTikTok, setEditingTikTok] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved =
+        localStorage.getItem(`custom_tiktok_${targetModelId}`) ||
+        localStorage.getItem(`custom_tiktok_${targetModelUsername}`);
+      if (saved) return saved;
+    }
     return userProfile.tiktok || currentModel?.socials?.tiktok || (userProfile.username ? `@${userProfile.username}_tok` : '');
   });
   const [editingTwitter, setEditingTwitter] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved =
+        localStorage.getItem(`custom_twitter_${targetModelId}`) ||
+        localStorage.getItem(`custom_twitter_${targetModelUsername}`);
+      if (saved) return saved;
+    }
     return (userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : '');
   });
-
-  const targetModelId = currentModel?.id || userProfile?.id || 'topf-1';
-  const targetModelUsername = (currentModel?.username || userProfile?.username || 'adrianalima').toLowerCase();
 
   const [editingWelcomeMessage, setEditingWelcomeMessage] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -1799,14 +1817,19 @@ export default function ModelFacebookProfile({
       localStorage.setItem(`custom_instagram_${targetModelUsername}`, editingInstagram);
       localStorage.setItem(`custom_tiktok_${targetModelId}`, editingTikTok);
       localStorage.setItem(`custom_tiktok_${targetModelUsername}`, editingTikTok);
+      localStorage.setItem(`custom_twitter_${targetModelId}`, editingTwitter);
+      localStorage.setItem(`custom_twitter_${targetModelUsername}`, editingTwitter);
       if (targetModelUsername.includes('adriana') || targetModelId === 'topf-1') {
         localStorage.setItem('custom_instagram_adrianalima', editingInstagram);
         localStorage.setItem('custom_instagram_adrianalima_w1', editingInstagram);
         localStorage.setItem('custom_tiktok_adrianalima', editingTikTok);
         localStorage.setItem('custom_tiktok_adrianalima_w1', editingTikTok);
+        localStorage.setItem('custom_twitter_adrianalima', editingTwitter);
+        localStorage.setItem('custom_twitter_adrianalima_w1', editingTwitter);
       }
       localStorage.setItem('custom_model_instagram', editingInstagram);
       localStorage.setItem('custom_model_tiktok', editingTikTok);
+      localStorage.setItem('custom_model_twitter', editingTwitter);
       window.dispatchEvent(new CustomEvent('custom_socials_updated'));
     } catch (e) {}
     onUpdateProfile(nextProfile);
@@ -1838,6 +1861,142 @@ export default function ModelFacebookProfile({
     localStorage.setItem(`hide_social_cards_${userProfile.id}`, String(nextVal));
   };
 
+  const defaultMessageSettings = {
+    activeStatusEnabled: true,
+    showActiveTogether: true,
+    whoCanMessage: 'followers' as 'everyone' | 'followers' | 'sponsors' | 'none',
+    storyReplies: 'followers' as 'everyone' | 'followers' | 'off',
+    readReceipts: true,
+    antiSpamFilter: true,
+    autoReplyEnabled: true,
+    autoReplyText: '¡Hola! Gracias por escribirme. Reviso todas las propuestas de colaboración y patrocinio a diario.'
+  };
+
+  const [messageSettings, setMessageSettings] = useState<typeof defaultMessageSettings>(() => {
+    try {
+      const saved = localStorage.getItem(`message_settings_${userProfile.id}`);
+      if (saved) return { ...defaultMessageSettings, ...JSON.parse(saved) };
+    } catch (_) {}
+    return defaultMessageSettings;
+  });
+
+  const defaultTagSettings = {
+    activeStatusEnabled: true,
+    whoCanTag: 'following' as 'everyone' | 'following' | 'none',
+    manualTagApproval: true,
+    showTaggedOnProfile: true,
+    whoCanMention: 'everyone' as 'everyone' | 'following' | 'none',
+    notifyOnTag: true,
+    hideSpamTags: true
+  };
+
+  const [tagSettings, setTagSettings] = useState<typeof defaultTagSettings>(() => {
+    try {
+      const saved = localStorage.getItem(`tag_settings_${userProfile.id}`);
+      if (saved) return { ...defaultTagSettings, ...JSON.parse(saved) };
+    } catch (_) {}
+    return defaultTagSettings;
+  });
+
+  const defaultInteractionExtraSettings = {
+    commentsFrom: 'everyone' as 'everyone' | 'followers' | 'off',
+    allowStoryReshare: true,
+    allowProfilePostShare: true,
+    allowExternalEmbedShare: true,
+    allowSponsorDownloads: false,
+    allowRemixReels: 'followers' as 'everyone' | 'followers' | 'vip' | 'off',
+    autoWatermarkCredit: true,
+    allowQuickLinkCopy: true,
+    hideRestrictedCommentsFromOthers: true,
+    moveRestrictedDmsToRequests: true,
+    hideActiveStatusFromRestricted: true,
+    muteRestrictedNotifications: true,
+    filteredWordsRaw: 'spam, estafa, enlace externo'
+  };
+
+  const [interactionExtraSettings, setInteractionExtraSettings] = useState<typeof defaultInteractionExtraSettings>(() => {
+    try {
+      const saved = localStorage.getItem(`interaction_extra_settings_${userProfile.id}`);
+      if (saved) return { ...defaultInteractionExtraSettings, ...JSON.parse(saved) };
+    } catch (_) {}
+    return defaultInteractionExtraSettings;
+  });
+
+  const [restrictedUserIds, setRestrictedUserIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`restricted_users_${userProfile.id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+  const [restrictedSearchQuery, setRestrictedSearchQuery] = useState('');
+
+  const handleRestrictUser = (id: string, name?: string) => {
+    setRestrictedUserIds(prev => {
+      if (prev.includes(id)) return prev;
+      const next = [...prev, id];
+      try {
+        localStorage.setItem(`restricted_users_${userProfile.id}`, JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+    if (name) triggerSettingsToast(`${name} ha sido añadido a tus cuentas restringidas.`);
+  };
+
+  const handleUnrestrictUser = (id: string, name?: string) => {
+    setRestrictedUserIds(prev => {
+      const next = prev.filter(item => item !== id);
+      try {
+        localStorage.setItem(`restricted_users_${userProfile.id}`, JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+    if (name) triggerSettingsToast(`${name} ha sido eliminado de cuentas restringidas.`);
+  };
+
+  const [settingsSavedToast, setSettingsSavedToast] = useState<string | null>(null);
+
+  const triggerSettingsToast = (msg: string) => {
+    setSettingsSavedToast(msg);
+    setTimeout(() => {
+      setSettingsSavedToast(prev => (prev === msg ? null : prev));
+    }, 3200);
+  };
+
+  const updateMessageSettings = (patch: Partial<typeof defaultMessageSettings>, toastMsg?: string) => {
+    setMessageSettings(prev => {
+      const next = { ...prev, ...patch };
+      try {
+        localStorage.setItem(`message_settings_${userProfile.id}`, JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+    if (toastMsg) triggerSettingsToast(toastMsg);
+  };
+
+  const updateTagSettings = (patch: Partial<typeof defaultTagSettings>, toastMsg?: string) => {
+    setTagSettings(prev => {
+      const next = { ...prev, ...patch };
+      try {
+        localStorage.setItem(`tag_settings_${userProfile.id}`, JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+    if (toastMsg) triggerSettingsToast(toastMsg);
+  };
+
+  const updateInteractionExtraSettings = (patch: Partial<typeof defaultInteractionExtraSettings>, toastMsg?: string) => {
+    setInteractionExtraSettings(prev => {
+      const next = { ...prev, ...patch };
+      try {
+        localStorage.setItem(`interaction_extra_settings_${userProfile.id}`, JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+    if (toastMsg) triggerSettingsToast(toastMsg);
+  };
+
   const handleSettingsTabClick = (tabKey: string) => {
     setActiveSettingsTab(tabKey);
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -1853,6 +2012,30 @@ export default function ModelFacebookProfile({
   useEffect(() => {
     setHideProfileMetrics(localStorage.getItem(`hide_profile_metrics_${userProfile.id}`) === 'true');
     setHideSocialCards(localStorage.getItem(`hide_social_cards_${userProfile.id}`) === 'true');
+    try {
+      const savedMsg = localStorage.getItem(`message_settings_${userProfile.id}`);
+      setMessageSettings(savedMsg ? { ...defaultMessageSettings, ...JSON.parse(savedMsg) } : defaultMessageSettings);
+    } catch (_) {
+      setMessageSettings(defaultMessageSettings);
+    }
+    try {
+      const savedTags = localStorage.getItem(`tag_settings_${userProfile.id}`);
+      setTagSettings(savedTags ? { ...defaultTagSettings, ...JSON.parse(savedTags) } : defaultTagSettings);
+    } catch (_) {
+      setTagSettings(defaultTagSettings);
+    }
+    try {
+      const savedExtra = localStorage.getItem(`interaction_extra_settings_${userProfile.id}`);
+      setInteractionExtraSettings(savedExtra ? { ...defaultInteractionExtraSettings, ...JSON.parse(savedExtra) } : defaultInteractionExtraSettings);
+    } catch (_) {
+      setInteractionExtraSettings(defaultInteractionExtraSettings);
+    }
+    try {
+      const savedRestricted = localStorage.getItem(`restricted_users_${userProfile.id}`);
+      setRestrictedUserIds(savedRestricted ? JSON.parse(savedRestricted) : []);
+    } catch (_) {
+      setRestrictedUserIds([]);
+    }
   }, [userProfile.id]);
 
   const [activeGalleryTab, setActiveGalleryTab] = useState<'grid' | 'saved' | 'reposts' | 'tagged' | 'saved_videos' | 'shared' | 'watched_videos'>('grid');
@@ -5368,12 +5551,13 @@ export default function ModelFacebookProfile({
                           const file = e.target.files?.[0];
                           if (file) {
                             try {
-                              const compressed = await compressAndResizeImage(file);
-                              setNewPostImage(compressed);
+                              const webpDataUrl = await compressAndResizeImage(file);
+                              setNewPostImage(webpDataUrl);
                             } catch (err) {
-                              console.error('Error compressing post image:', err);
+                              console.error('Error converting post image to WebP:', err);
                             }
                           }
+                          e.target.value = '';
                         }}
                         className="hidden"
                         id="post-image-upload-desktop"
@@ -5969,23 +6153,6 @@ export default function ModelFacebookProfile({
 
   return (
     <div ref={profileContainerRef} className="space-y-6 max-w-full overflow-x-hidden" id="facebook-profile-view">
-      {/* 📘 FACEBOOK BLUE BRAND BAR INFO BOX */}
-      <div className="bg-indigo-620/10 text-indigo-700 p-4 rounded-2xl flex items-center gap-3 border border-indigo-200">
-        <Sparkles className="w-5 h-5 text-indigo-600 shrink-0" />
-        <div className="text-xs">
-          <h4 className="font-bold">
-            {userProfile.role === 'model' 
-              ? "Muro de Trabajo y Atracción del Modelo" 
-              : "Muro Social y Actividad de la Red"}
-          </h4>
-          <p className="text-slate-600 mt-0.5">
-            {userProfile.role === 'model'
-              ? "Aquí tienes tu página de perfil con formato Facebook Social Feed para subir tus fotos, captar mecenas a través de enlaces directos, comentarios de pasarela, y construir tu comunidad, junto con el listado oficial de nuestros modelos patrocinadores."
-              : "Inspírate y conéctate con la industria de la moda. Sube tus ideas de inversión, añade fotos, publica en tu muro, y supervisa tus estadísticas dinámicas de mecenazgo y patrocinio."}
-          </p>
-        </div>
-      </div>
-
       {/* 🚀 FACEBOOK PROFILE HEADER CARD */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         {/* Cover Photo */}
@@ -8533,14 +8700,15 @@ export default function ModelFacebookProfile({
             <div className="space-y-1.5">
               <input
                 type="file"
-                accept=".jpg,.jpeg,.png"
+                accept=".jpg,.jpeg,.png,.webp,image/*"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
                     const fileName = file.name || '';
                     const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
-                    if (fileExt !== 'jpg' && fileExt !== 'jpeg' && fileExt !== 'png') {
-                      alert(`⚠️ Tipo de archivo no permitido.\n\nHas intentado subir un archivo con extensión .${fileExt.toUpperCase() || 'desconocida'}.\nPor favor, selecciona una imagen con extensión JPG o PNG.`);
+                    const isImageMime = file.type.startsWith('image/');
+                    if (!isImageMime && fileExt !== 'jpg' && fileExt !== 'jpeg' && fileExt !== 'png' && fileExt !== 'webp') {
+                      alert(`⚠️ Tipo de archivo no permitido.\n\nHas intentado subir un archivo con extensión .${fileExt.toUpperCase() || 'desconocida'}.\nPor favor, selecciona una imagen válida (JPG, PNG, WebP, etc.).`);
                       e.target.value = '';
                       return;
                     }
@@ -11687,27 +11855,43 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => handleSettingsTabClick('messages')}
-                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
+                      className={`settings-menu-btn w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'messages'
                           ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      <Send className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate sm:whitespace-normal">Mensajes e Historias</span>
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <Send className="w-4 h-4 text-pink-600 shrink-0" />
+                        <span className="truncate sm:whitespace-normal">Mensajes e Historias</span>
+                      </span>
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          messageSettings.activeStatusEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`}
+                        title={messageSettings.activeStatusEnabled ? 'Estado activo habilitado' : 'Estado activo pausado'}
+                      />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSettingsTabClick('tags')}
-                      className={`settings-menu-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
+                      className={`settings-menu-btn w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-left text-xs font-bold uppercase tracking-wide transition-all cursor-pointer !border-0 !shadow-none ${
                         activeSettingsTab === 'tags'
                           ? 'active-tab bg-slate-100 text-slate-900 ring-1 ring-slate-200'
                           : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      <Type className="w-4 h-4 text-slate-700 shrink-0" />
-                      <span className="truncate sm:whitespace-normal">Etiquetas y Menciones</span>
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <Type className="w-4 h-4 text-pink-600 shrink-0" />
+                        <span className="truncate sm:whitespace-normal">Etiquetas y Menciones</span>
+                      </span>
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          tagSettings.activeStatusEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`}
+                        title={tagSettings.activeStatusEnabled ? 'Estado activo habilitado' : 'Estado activo pausado'}
+                      />
                     </button>
 
                     <button
@@ -11927,10 +12111,13 @@ export default function ModelFacebookProfile({
 
                       {/* 💎 PANEL GLAMUROSO DE REDES SOCIALES CON DIAMANTES (EXACTO A LA CAPTURA) */}
                       <div className="my-5 w-full">
-                        <div className="relative w-full aspect-[1750/899] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl border-2 border-pink-200/90 select-none bg-gradient-to-br from-[#ffd6e7] via-[#ffb6d5] to-[#ffaecf]">
+                        <div
+                          style={{ containerType: 'inline-size' }}
+                          className="relative w-full aspect-[1750/899] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl border-2 border-pink-200/90 select-none bg-gradient-to-br from-[#ffd6e7] via-[#ffb6d5] to-[#ffaecf]"
+                        >
                           {/* 1. Fondo de Arte Oficial de Alta Resolución */}
                           <img 
-                            src="/assets/aistudio/Panel_glamuroso_de_redes_sociales_con_diamantes_aea3b3d1.png"
+                            src="/assets/aistudio/Panel_glamuroso_de_redes_sociales_con_diamantes_aea3b3d1.webp"
                             alt="Panel Glamuroso de Redes Sociales con Diamantes"
                             className="w-full h-full object-cover block pointer-events-none"
                             referrerPolicy="no-referrer"
@@ -11946,7 +12133,7 @@ export default function ModelFacebookProfile({
                             >
                               <div className="flex items-center gap-2 sm:gap-3">
                                 <div className="w-1 h-4 sm:h-5 bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 rounded-full" />
-                                <span className="text-[clamp(10px,1.4vw,17px)] font-serif font-black tracking-wide">
+                                <span className="text-[clamp(11px,1.5vw,18px)] font-serif font-black tracking-wide">
                                   <span className="text-slate-800">REDES SOCIALES </span>
                                   <span className="text-[#ff2d85]">OFICIALES </span>
                                   <span className="text-slate-800">DEL MODELO:</span>
@@ -11960,98 +12147,95 @@ export default function ModelFacebookProfile({
                               </div>
                             </div>
 
-                            {/* --- CONTENEDOR 2: FILA 1 (INSTAGRAM) CON FONDO BLANCO (SIN BOTÓN SEGUIR) --- */}
-                            <div 
-                              style={{ top: '21.5%', left: '16.8%', width: '35%', height: '13%' }}
-                              className="absolute bg-white rounded-xl px-2.5 flex flex-col justify-center text-left shadow-xs border border-pink-100/60 z-10"
+                            {/* --- FILA 1: INSTAGRAM EDITABLE --- */}
+                            <label
+                              htmlFor="social-panel-instagram"
+                              style={{ top: '22.8%', left: '16.8%', width: '36%', height: '15.2%' }}
+                              className="group absolute flex flex-col justify-center gap-[0.25cqw] px-1 cursor-text z-10"
                             >
-                              <span className="text-[clamp(10px,1.2vw,14px)] font-black tracking-widest text-slate-800 font-sans uppercase leading-tight select-none">
-                                INSTAGRAM
+                              <span
+                                style={{ fontSize: 'clamp(11px, 2.85cqw, 20px)', lineHeight: 1.05 }}
+                                className="flex items-center gap-1.5 font-sans font-black tracking-wide text-slate-900 uppercase"
+                              >
+                                <span>INSTAGRAM</span>
+                                <Edit className="w-[2.1cqw] h-[2.1cqw] min-w-[11px] min-h-[11px] max-w-[15px] max-h-[15px] text-pink-500 opacity-75 group-hover:opacity-100 transition" />
                               </span>
                               <input
+                                id="social-panel-instagram"
                                 type="text"
                                 value={editingInstagram}
-                                onChange={(e) => {
-                                  let val = e.target.value.trim();
-                                  if (!val) {
-                                    setEditingInstagram('');
-                                  } else {
-                                    val = val.startsWith('@') ? val : `@${val}`;
-                                    setEditingInstagram(val);
+                                onChange={(e) => setEditingInstagram(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleSaveSocialsOnly();
                                   }
                                 }}
-                                placeholder="@adrianalima"
-                                className="w-full bg-transparent text-[#ff2d85] font-sans font-extrabold text-[clamp(10px,1.35vw,16px)] leading-tight outline-none focus:text-[#e11470] placeholder:text-rose-300 py-0.5"
-                                title="Editar usuario de Instagram"
+                                placeholder="@tu_instagram"
+                                style={{ fontSize: 'clamp(12px, 3.2cqw, 23px)', lineHeight: 1.15 }}
+                                className="w-full bg-transparent hover:bg-white/45 focus:bg-white/85 rounded-lg px-1 -mx-1 py-0.5 font-sans font-extrabold text-[#ff1b7c] placeholder:text-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-400/70 transition"
                               />
-                            </div>
-                            {/* Eliminación de botón Seguir: fondo blanco continuo en extremo derecho */}
-                            <div 
-                              style={{ top: '21.5%', left: '73.5%', width: '15.5%', height: '13%' }}
-                              className="absolute bg-white rounded-r-2xl pointer-events-none z-10"
-                            />
+                            </label>
 
-                            {/* --- CONTENEDOR 3: FILA 2 (TIKTOK) CON FONDO BLANCO (SIN BOTÓN SEGUIR) --- */}
-                            <div 
-                              style={{ top: '42.5%', left: '16.8%', width: '35%', height: '13%' }}
-                              className="absolute bg-white rounded-xl px-2.5 flex flex-col justify-center text-left shadow-xs border border-pink-100/60 z-10"
+                            {/* --- FILA 2: TIKTOK EDITABLE --- */}
+                            <label
+                              htmlFor="social-panel-tiktok"
+                              style={{ top: '42.6%', left: '16.8%', width: '36%', height: '15.2%' }}
+                              className="group absolute flex flex-col justify-center gap-[0.25cqw] px-1 cursor-text z-10"
                             >
-                              <span className="text-[clamp(10px,1.2vw,14px)] font-black tracking-widest text-slate-800 font-sans uppercase leading-tight select-none">
-                                TIKTOK
+                              <span
+                                style={{ fontSize: 'clamp(11px, 2.85cqw, 20px)', lineHeight: 1.05 }}
+                                className="flex items-center gap-1.5 font-sans font-black tracking-wide text-slate-900 uppercase"
+                              >
+                                <span>TIKTOK</span>
+                                <Edit className="w-[2.1cqw] h-[2.1cqw] min-w-[11px] min-h-[11px] max-w-[15px] max-h-[15px] text-pink-500 opacity-75 group-hover:opacity-100 transition" />
                               </span>
                               <input
+                                id="social-panel-tiktok"
                                 type="text"
                                 value={editingTikTok}
-                                onChange={(e) => {
-                                  let val = e.target.value.trim();
-                                  if (!val) {
-                                    setEditingTikTok('');
-                                  } else {
-                                    val = val.startsWith('@') ? val : `@${val}`;
-                                    setEditingTikTok(val);
+                                onChange={(e) => setEditingTikTok(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleSaveSocialsOnly();
                                   }
                                 }}
-                                placeholder="@adrianalima_tok"
-                                className="w-full bg-transparent text-[#ff2d85] font-sans font-extrabold text-[clamp(10px,1.35vw,16px)] leading-tight outline-none focus:text-[#e11470] placeholder:text-rose-300 py-0.5"
-                                title="Editar usuario de TikTok"
+                                placeholder="@tu_tiktok"
+                                style={{ fontSize: 'clamp(12px, 3.2cqw, 23px)', lineHeight: 1.15 }}
+                                className="w-full bg-transparent hover:bg-white/45 focus:bg-white/85 rounded-lg px-1 -mx-1 py-0.5 font-sans font-extrabold text-[#ff1b7c] placeholder:text-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-400/70 transition"
                               />
-                            </div>
-                            {/* Eliminación de botón Seguir: fondo blanco continuo en extremo derecho */}
-                            <div 
-                              style={{ top: '42.5%', left: '73.5%', width: '15.5%', height: '13%' }}
-                              className="absolute bg-white rounded-r-2xl pointer-events-none z-10"
-                            />
+                            </label>
 
-                            {/* --- CONTENEDOR 4: FILA 3 (X / TWITTER) CON FONDO BLANCO (SIN BOTÓN SEGUIR) --- */}
-                            <div 
-                              style={{ top: '60.5%', left: '16.8%', width: '35%', height: '13%' }}
-                              className="absolute bg-white rounded-xl px-2.5 flex flex-col justify-center text-left shadow-xs border border-pink-100/60 z-10"
+                            {/* --- FILA 3: X (TWITTER) EDITABLE --- */}
+                            <label
+                              htmlFor="social-panel-twitter"
+                              style={{ top: '62.0%', left: '16.8%', width: '36%', height: '15.2%' }}
+                              className="group absolute flex flex-col justify-center gap-[0.25cqw] px-1 cursor-text z-10"
                             >
-                              <span className="text-[clamp(10px,1.2vw,14px)] font-black tracking-widest text-slate-800 font-sans uppercase leading-tight select-none">
-                                X (TWITTER)
+                              <span
+                                style={{ fontSize: 'clamp(11px, 2.85cqw, 20px)', lineHeight: 1.05 }}
+                                className="flex items-center gap-1.5 font-sans font-black tracking-wide text-slate-900 uppercase"
+                              >
+                                <span>X (TWITTER)</span>
+                                <Edit className="w-[2.1cqw] h-[2.1cqw] min-w-[11px] min-h-[11px] max-w-[15px] max-h-[15px] text-pink-500 opacity-75 group-hover:opacity-100 transition" />
                               </span>
                               <input
+                                id="social-panel-twitter"
                                 type="text"
                                 value={editingTwitter}
-                                onChange={(e) => {
-                                  let val = e.target.value.trim();
-                                  if (!val) {
-                                    setEditingTwitter('');
-                                  } else {
-                                    val = val.startsWith('@') ? val : `@${val}`;
-                                    setEditingTwitter(val);
+                                onChange={(e) => setEditingTwitter(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleSaveSocialsOnly();
                                   }
                                 }}
-                                placeholder="@adrianalima_real"
-                                className="w-full bg-transparent text-[#ff2d85] font-sans font-extrabold text-[clamp(10px,1.35vw,16px)] leading-tight outline-none focus:text-[#e11470] placeholder:text-stone-400 py-0.5"
-                                title="Editar usuario de X (Twitter)"
+                                placeholder="@tu_usuario_x"
+                                style={{ fontSize: 'clamp(12px, 3.2cqw, 23px)', lineHeight: 1.15 }}
+                                className="w-full bg-transparent hover:bg-white/45 focus:bg-white/85 rounded-lg px-1 -mx-1 py-0.5 font-sans font-extrabold text-[#ff1b7c] placeholder:text-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-400/70 transition"
                               />
-                            </div>
-                            {/* Eliminación de botón Seguir: fondo blanco continuo en extremo derecho */}
-                            <div 
-                              style={{ top: '60.5%', left: '73.5%', width: '15.5%', height: '13%' }}
-                              className="absolute bg-white rounded-r-2xl pointer-events-none z-10"
-                            />
+                            </label>
 
                             {/* --- BOTÓN PRINCIPAL DE GUARDAR: GUARDAR REDES SOCIALES --- */}
                             <button
@@ -12112,17 +12296,17 @@ export default function ModelFacebookProfile({
                             }
                             showSocialToast("✅ ¡Cambios guardados con éxito!");
                           }}
-                          style={{ backgroundColor: '#ff2d75', color: '#ffffff' }}
-                          className="px-8 py-3 bg-[#ff2d75] hover:bg-[#e62066] active:bg-[#d61858] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all cursor-pointer shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40 active:scale-95 flex items-center justify-center gap-2.5 select-none border-0"
+                          style={{ backgroundColor: '#ffffff', color: '#ff2d85' }}
+                          className="custom-bg px-8 py-3 bg-white hover:bg-pink-50/70 active:bg-pink-100/60 text-[#ff2d85] font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all cursor-pointer shadow-sm hover:shadow-md border border-pink-200 hover:border-pink-400 active:scale-95 flex items-center justify-center gap-2.5 select-none"
                         >
-                          <Check className="w-5 h-5 stroke-[3] text-white" />
-                          <span className="text-white">Guardar cambios</span>
+                          <Check className="w-5 h-5 stroke-[3] text-[#ff2d85]" style={{ color: '#ff2d85' }} />
+                          <span className="text-[#ff2d85]" style={{ color: '#ff2d85' }}>Guardar cambios</span>
                         </button>
                       </div>
 
-                      {/* Más espacio en blanco y frase centrada con mayor tamaño de letra */}
-                      <div className="pt-10 pb-6 my-4 text-center flex items-center justify-center w-full">
-                        <span className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight block font-sans">
+                      {/* Frase centrada con tamaño de letra más chico */}
+                      <div className="pt-6 pb-3 my-2 text-center flex items-center justify-center w-full">
+                        <span className="text-sm sm:text-base font-black text-slate-900 tracking-tight block font-sans">
                           Sección Landing Page.
                         </span>
                       </div>
@@ -13035,25 +13219,865 @@ export default function ModelFacebookProfile({
                   </div>
                 )}
 
-                {/* Simulated fallback view for other tabs and integrations */}
-                {!['profile', 'notifications', 'privacy', 'friends', 'blocked', 'history'].includes(activeSettingsTab) && (
-                  <div className="space-y-4 animate-fade-in text-xs">
-                    <div className="border-b border-slate-100 pb-3">
-                      <h4 className="text-sm font-black text-slate-850 uppercase">Configuración de {activeSettingsTab}</h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Controla cómo interactúas con los demás en el portal.</p>
-                    </div>
-                    <div className="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center space-y-2">
-                      <Sparkles className="w-8 h-8 text-indigo-500 mx-auto animate-pulse" />
-                      <p className="font-bold text-slate-700">Ajuste de {activeSettingsTab} habilitado</p>
-                      <p className="text-slate-500 max-w-sm mx-auto text-[11px]">
-                        Esta opción de interacción cumple con la captura <strong>yz.png</strong> y está pre-configurada de forma segura para evitar spammers.
-                      </p>
-                      <button 
-                        onClick={() => alert(`⚙️ Configuración ${activeSettingsTab} aplicada de forma corporativa.`)}
-                        className="mt-2 text-[10px] font-bold px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl cursor-pointer"
+                {settingsSavedToast && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between gap-2 animate-fade-in">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{settingsSavedToast}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSettingsSavedToast(null)}
+                      className="custom-bg text-emerald-700 hover:text-emerald-900 p-0.5 cursor-pointer"
+                      aria-label="Cerrar aviso"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'messages' && (
+                  <div className="space-y-5 animate-fade-in text-xs text-slate-700">
+                    <div className="border-b border-slate-100 pb-3 flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Configuración de Mensajes e Historias</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Controla quién puede enviarte mensajes directos, responder a tus historias y ver tu estado activo.
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                          messageSettings.activeStatusEnabled
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
                       >
-                        Validar Estado Activo
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            messageSettings.activeStatusEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                          }`}
+                        />
+                        {messageSettings.activeStatusEnabled ? 'Estado Activo Habilitado' : 'Estado Activo Desactivado'}
+                      </span>
+                    </div>
+
+                    {/* Estado Activo (Mostrar cuándo estás en línea) */}
+                    <div className="p-4 rounded-2xl border border-pink-100 bg-pink-50/40 space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-slate-900 text-xs">Mostrar estado activo (En línea)</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-pink-200 text-pink-600">
+                              {messageSettings.activeStatusEnabled ? 'Activo' : 'Oculto'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-relaxed">
+                            Permite que las cuentas que sigues y las personas con las que chateas vean cuándo estás activa o cuándo te conectaste por última vez.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={messageSettings.activeStatusEnabled}
+                          onClick={() =>
+                            updateMessageSettings(
+                              { activeStatusEnabled: !messageSettings.activeStatusEnabled },
+                              !messageSettings.activeStatusEnabled
+                                ? 'Estado activo habilitado en Mensajes.'
+                                : 'Estado activo ocultado en Mensajes.'
+                            )
+                          }
+                          className={`custom-bg relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+                            messageSettings.activeStatusEnabled ? 'bg-pink-600' : 'bg-slate-300'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                              messageSettings.activeStatusEnabled ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      <div className="pt-2.5 border-t border-pink-100/80 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Mostrar cuándo estáis activos juntos</span>
+                          <span className="text-[10px] text-slate-500">Indica en tiempo real cuando ambos habéis abierto la misma conversación.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={messageSettings.showActiveTogether}
+                          disabled={!messageSettings.activeStatusEnabled}
+                          onChange={(e) => updateMessageSettings({ showActiveTogether: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer disabled:opacity-40"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quién puede enviarte mensajes */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
+                      <div>
+                        <h5 className="font-black text-slate-900 text-xs">Quién puede enviarte mensajes</h5>
+                        <p className="text-[10px] text-slate-500">Filtra quién llega directamente a tu bandeja principal y evita spammers.</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { id: 'everyone', label: 'Todos los usuarios', desc: 'Cualquier persona registrada puede iniciar chat' },
+                          { id: 'followers', label: 'Seguidores y verificados', desc: 'Solo cuentas que sigues o verificadas' },
+                          { id: 'sponsors', label: 'Solo Patrocinadores VIP', desc: 'Prioridad exclusiva para patrocinadores' },
+                          { id: 'none', label: 'No recibir solicitudes', desc: 'Solo responder a conversaciones abiertas' }
+                        ].map((opt) => {
+                          const selected = messageSettings.whoCanMessage === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateMessageSettings({ whoCanMessage: opt.id as any })}
+                              className={`custom-bg text-left p-3 rounded-xl border transition cursor-pointer ${
+                                selected
+                                  ? 'border-pink-500 bg-pink-50/70 ring-1 ring-pink-200'
+                                  : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`font-bold text-xs ${selected ? 'text-pink-700' : 'text-slate-800'}`}>
+                                  {opt.label}
+                                </span>
+                                <span
+                                  className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                                    selected ? 'border-pink-600 bg-pink-600' : 'border-slate-300 bg-white'
+                                  }`}
+                                >
+                                  {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                </span>
+                              </div>
+                              <span className="block text-[10px] text-slate-500 mt-1">{opt.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Respuestas a historias y seguridad del chat */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3 divide-y divide-slate-200/70">
+                      <div className="pb-2">
+                        <span className="font-black text-slate-900 block mb-2">Respuestas a tus historias</span>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: 'everyone', label: 'Todos' },
+                            { id: 'followers', label: 'Solo seguidores' },
+                            { id: 'off', label: 'Desactivadas' }
+                          ].map((opt) => {
+                            const active = messageSettings.storyReplies === opt.id;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => updateMessageSettings({ storyReplies: opt.id as any })}
+                                className={`custom-bg px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
+                                  active
+                                    ? 'bg-pink-600 text-white border-pink-600 shadow-xs'
+                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Confirmaciones de lectura (Visto)</span>
+                          <span className="text-[10px] text-slate-500">Muestra a tus contactos cuando has leído sus mensajes.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={messageSettings.readReceipts}
+                          onChange={(e) => updateMessageSettings({ readReceipts: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Filtro inteligente anti-spam en solicitudes</span>
+                          <span className="text-[10px] text-slate-500">Envía mensajes repetitivos o con enlaces sospechosos a la carpeta oculta.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={messageSettings.antiSpamFilter}
+                          onChange={(e) => updateMessageSettings({ antiSpamFilter: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="pt-3 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <span className="font-bold text-slate-800 block">Respuesta automática de bienvenida</span>
+                            <span className="text-[10px] text-slate-500">Se envía cuando un patrocinador o contacto nuevo te escribe por primera vez.</span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={messageSettings.autoReplyEnabled}
+                            onChange={(e) => updateMessageSettings({ autoReplyEnabled: e.target.checked })}
+                            className="w-4 h-4 accent-pink-600 cursor-pointer"
+                          />
+                        </div>
+                        {messageSettings.autoReplyEnabled && (
+                          <textarea
+                            rows={2}
+                            value={messageSettings.autoReplyText}
+                            onChange={(e) => updateMessageSettings({ autoReplyText: e.target.value })}
+                            placeholder="Escribe tu mensaje automático de bienvenida..."
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-pink-500"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateMessageSettings(
+                            { activeStatusEnabled: true },
+                            'Ajustes de Mensajes y Estado Activo guardados correctamente.'
+                          )
+                        }
+                        className="custom-bg px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer shadow-xs transition flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Guardar ajustes de mensajes</span>
                       </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'tags' && (
+                  <div className="space-y-5 animate-fade-in text-xs text-slate-700">
+                    <div className="border-b border-slate-100 pb-3 flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Configuración de Etiquetas y Menciones</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Controla quién puede etiquetar o mencionar a @{userProfile.username} en publicaciones, fotos e historias.
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                          tagSettings.activeStatusEnabled
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            tagSettings.activeStatusEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                          }`}
+                        />
+                        {tagSettings.activeStatusEnabled ? 'Estado Activo Habilitado' : 'Etiquetas Pausadas'}
+                      </span>
+                    </div>
+
+                    {/* Estado Activo de Etiquetas y Menciones */}
+                    <div className="p-4 rounded-2xl border border-pink-100 bg-pink-50/40 flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-slate-900 text-xs">Estado activo de etiquetas y menciones</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-pink-200 text-pink-600">
+                            {tagSettings.activeStatusEnabled ? 'Activo' : 'Pausado'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Mantén habilitado este ajuste para recibir menciones (@{userProfile.username}) y etiquetas en colaboraciones de pasarela y contenido público.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={tagSettings.activeStatusEnabled}
+                        onClick={() =>
+                          updateTagSettings(
+                            { activeStatusEnabled: !tagSettings.activeStatusEnabled },
+                            !tagSettings.activeStatusEnabled
+                              ? 'Estado activo habilitado para Etiquetas y Menciones.'
+                              : 'Recepción de etiquetas y menciones pausada.'
+                          )
+                        }
+                        className={`custom-bg relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+                          tagSettings.activeStatusEnabled ? 'bg-pink-600' : 'bg-slate-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                            tagSettings.activeStatusEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Quién puede etiquetarte */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
+                      <div>
+                        <h5 className="font-black text-slate-900 text-xs">Quién puede etiquetarte en fotos y reels</h5>
+                        <p className="text-[10px] text-slate-500">Define qué cuentas tienen permiso para vincular tu perfil en sus publicaciones.</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'everyone', label: 'Todos', desc: 'Cualquier usuario del portal' },
+                          { id: 'following', label: 'Personas que sigues', desc: 'Solo cuentas seguidas y verificadas' },
+                          { id: 'none', label: 'Nadie', desc: 'No permitir nuevas etiquetas' }
+                        ].map((opt) => {
+                          const selected = tagSettings.whoCanTag === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateTagSettings({ whoCanTag: opt.id as any })}
+                              className={`custom-bg text-left p-3 rounded-xl border transition cursor-pointer ${
+                                selected
+                                  ? 'border-pink-500 bg-pink-50/70 ring-1 ring-pink-200'
+                                  : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`font-bold text-xs ${selected ? 'text-pink-700' : 'text-slate-800'}`}>
+                                  {opt.label}
+                                </span>
+                                <span
+                                  className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                                    selected ? 'border-pink-600 bg-pink-600' : 'border-slate-300 bg-white'
+                                  }`}
+                                >
+                                  {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                </span>
+                              </div>
+                              <span className="block text-[10px] text-slate-500 mt-1">{opt.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Aprobación manual, menciones y protección anti-spam */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3 divide-y divide-slate-200/70">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Aprobar etiquetas manualmente</span>
+                          <span className="text-[10px] text-slate-500">Revisa y aprueba las publicaciones donde te etiqueten antes de mostrarlas en tu perfil.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={tagSettings.manualTagApproval}
+                          onChange={(e) => updateTagSettings({ manualTagApproval: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Mostrar pestaña de fotos etiquetadas</span>
+                          <span className="text-[10px] text-slate-500">Permite ver tu colección de etiquetas aprobadas en la galería del perfil.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={tagSettings.showTaggedOnProfile}
+                          onChange={(e) => updateTagSettings({ showTaggedOnProfile: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="pt-3">
+                        <span className="font-black text-slate-900 block mb-2">Quién puede mencionarte con @{userProfile.username}</span>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: 'everyone', label: 'Todos' },
+                            { id: 'following', label: 'Solo cuentas que sigues' },
+                            { id: 'none', label: 'Nadie' }
+                          ].map((opt) => {
+                            const active = tagSettings.whoCanMention === opt.id;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => updateTagSettings({ whoCanMention: opt.id as any })}
+                                className={`custom-bg px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
+                                  active
+                                    ? 'bg-pink-600 text-white border-pink-600 shadow-xs'
+                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Notificarme cuando me etiqueten o mencionen</span>
+                          <span className="text-[10px] text-slate-500">Recibe un aviso inmediato para revisar nuevas menciones.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={tagSettings.notifyOnTag}
+                          onChange={(e) => updateTagSettings({ notifyOnTag: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Bloqueo automático de etiquetas spam</span>
+                          <span className="text-[10px] text-slate-500">Rechaza etiquetas masivas y menciones comerciales no verificadas.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={tagSettings.hideSpamTags}
+                          onChange={(e) => updateTagSettings({ hideSpamTags: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateTagSettings(
+                            { activeStatusEnabled: true },
+                            'Ajustes de Etiquetas, Menciones y Estado Activo guardados correctamente.'
+                          )
+                        }
+                        className="custom-bg px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer shadow-xs transition flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Guardar ajustes de etiquetas</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'comments' && (
+                  <div className="space-y-4 animate-fade-in text-xs text-slate-700">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h4 className="text-sm font-black text-slate-900 uppercase">Comentarios</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Define quién puede comentar en tus publicaciones y reels.</p>
+                    </div>
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                      <label className="font-bold text-slate-800 block">Permitir comentarios de:</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { id: 'everyone', label: 'Todos los usuarios' },
+                          { id: 'followers', label: 'Solo seguidores' },
+                          { id: 'off', label: 'Desactivar comentarios' }
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => updateInteractionExtraSettings({ commentsFrom: opt.id as any }, 'Preferencia de comentarios guardada.')}
+                            className={`custom-bg px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
+                              interactionExtraSettings.commentsFrom === opt.id
+                                ? 'bg-pink-600 text-white border-pink-600'
+                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'sharing' && (
+                  <div className="space-y-5 animate-fade-in text-xs text-slate-700">
+                    <div className="border-b border-slate-100 pb-3 flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Compartiendo</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Controla dónde y cómo los demás pueden compartir tus historias, reels, lookbooks y publicaciones.
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
+                        <Share2 className="w-3 h-3" />
+                        <span>Atribución @{userProfile.username}</span>
+                      </span>
+                    </div>
+
+                    {/* Historias y Publicaciones */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 divide-y divide-slate-100">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-900 block">Permitir compartir tus publicaciones en historias</span>
+                          <span className="text-[10px] text-slate-500">Los usuarios pueden difundir tus looks manteniendo el crédito a tu perfil.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.allowProfilePostShare}
+                          onChange={(e) => updateInteractionExtraSettings({ allowProfilePostShare: e.target.checked }, 'Ajuste de difusión en historias actualizado.')}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-900 block">Permitir reenviar historias por mensaje</span>
+                          <span className="text-[10px] text-slate-500">Autoriza a tus seguidores a enviar enlaces de tus historias por chat privado.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.allowStoryReshare}
+                          onChange={(e) => updateInteractionExtraSettings({ allowStoryReshare: e.target.checked }, 'Ajuste de reenvío de historias actualizado.')}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-900 block">Permitir compartir en redes y feeds externos</span>
+                          <span className="text-[10px] text-slate-500">Habilita enlaces compartibles fuera del portal con tarjeta de vista previa oficial.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.allowExternalEmbedShare}
+                          onChange={(e) => updateInteractionExtraSettings({ allowExternalEmbedShare: e.target.checked }, 'Preferencia de enlaces externos actualizada.')}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-900 block">Descarga en alta calidad para patrocinadores verificados</span>
+                          <span className="text-[10px] text-slate-500">Permite a agencias y sponsors autorizados descargar material de campaña desde tu portafolio.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.allowSponsorDownloads}
+                          onChange={(e) => updateInteractionExtraSettings({ allowSponsorDownloads: e.target.checked }, 'Permiso de descarga comercial actualizado.')}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Remixes y Reutilización */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                      <div>
+                        <h5 className="font-black text-slate-900 text-xs">Remixes y reutilización de pasarelas / reels</h5>
+                        <p className="text-[10px] text-slate-500">Elige quién puede usar fragmentos de tus vídeos o sesiones en formato dúo o remix.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { id: 'everyone', label: 'Todos' },
+                          { id: 'followers', label: 'Solo seguidores' },
+                          { id: 'vip', label: 'Patrocinadores VIP' },
+                          { id: 'off', label: 'Desactivado' }
+                        ].map((opt) => {
+                          const active = interactionExtraSettings.allowRemixReels === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateInteractionExtraSettings({ allowRemixReels: opt.id as any })}
+                              className={`custom-bg px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
+                                active
+                                  ? 'bg-pink-600 text-white border-pink-600 shadow-xs'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Marca de agua y Copia de enlace */}
+                    <div className="p-4 rounded-2xl border border-pink-100 bg-pink-50/40 space-y-3 divide-y divide-pink-100/80">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-900 block">Incluir marca de agua y crédito @{userProfile.username}</span>
+                          <span className="text-[10px] text-slate-600">Añade tu firma verificada automáticamente al compartir o exportar imágenes de tus looks.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.autoWatermarkCredit}
+                          onChange={(e) => updateInteractionExtraSettings({ autoWatermarkCredit: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-900 block">Mostrar botón de copiar enlace en publicaciones</span>
+                          <span className="text-[10px] text-slate-600">Facilita compartir el link directo de tu galería o portafolio público.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.allowQuickLinkCopy}
+                          onChange={(e) => updateInteractionExtraSettings({ allowQuickLinkCopy: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono text-slate-500 truncate">
+                          Enlace oficial: fashionfinances.app/@{userProfile.username}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                              navigator.clipboard.writeText(`${window.location.origin}/?model=${userProfile.username}`).catch(() => {});
+                            }
+                            triggerSettingsToast('Enlace del perfil copiado al portapapeles.');
+                          }}
+                          className="custom-bg px-3 py-1.5 rounded-xl bg-white hover:bg-pink-50 text-pink-600 border border-pink-200 text-[11px] font-bold cursor-pointer transition flex items-center gap-1.5"
+                        >
+                          <Link className="w-3 h-3" />
+                          <span>Copiar enlace</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => triggerSettingsToast('Ajustes de compartición guardados correctamente.')}
+                        className="custom-bg px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer shadow-xs transition flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Guardar ajustes de compartición</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'restricted' && (
+                  <div className="space-y-5 animate-fade-in text-xs text-slate-700">
+                    <div className="border-b border-slate-100 pb-3 flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Cuentas Restringidas</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Limita interacciones no deseadas de forma discreta sin bloquear ni notificar al otro usuario.
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
+                        <ShieldAlert className="w-3 h-3" />
+                        <span>{restrictedUserIds.length} restringidas</span>
+                      </span>
+                    </div>
+
+                    {/* Buscador para añadir cuentas restringidas */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-2.5">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                        Buscar usuario para restringir:
+                      </label>
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-2.5" />
+                        <input
+                          type="text"
+                          placeholder="Escribe el nombre o @usuario para restringir..."
+                          value={restrictedSearchQuery}
+                          onChange={(e) => setRestrictedSearchQuery(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-pink-500 font-medium text-slate-800"
+                        />
+                      </div>
+
+                      {restrictedSearchQuery.trim() !== '' && (() => {
+                        const filtered = models.filter(m =>
+                          m.id !== userProfile.id &&
+                          !restrictedUserIds.includes(m.id) &&
+                          (m.name.toLowerCase().includes(restrictedSearchQuery.toLowerCase()) ||
+                           m.username.toLowerCase().includes(restrictedSearchQuery.toLowerCase()))
+                        ).slice(0, 5);
+
+                        return (
+                          <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden shadow-2xs max-h-56 overflow-y-auto">
+                            <div className="bg-slate-50 px-3 py-1.5 text-[9px] uppercase font-bold text-slate-400">
+                              Resultados ({filtered.length})
+                            </div>
+                            {filtered.length === 0 ? (
+                              <div className="p-3 text-center text-slate-400 italic">
+                                No se encontraron cuentas disponibles para restringir.
+                              </div>
+                            ) : (
+                              filtered.map(m => (
+                                <div key={m.id} className="flex justify-between items-center p-2.5 hover:bg-slate-50 transition">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <img src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-slate-100 shrink-0" />
+                                    <div className="text-left min-w-0">
+                                      <span className="font-bold text-slate-800 block leading-tight truncate">{m.name}</span>
+                                      <span className="text-[9px] font-mono text-slate-400">@{m.username}</span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleRestrictUser(m.id, m.name);
+                                      setRestrictedSearchQuery('');
+                                    }}
+                                    className="custom-bg text-[10px] px-2.5 py-1.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-lg flex items-center gap-1 cursor-pointer transition shrink-0"
+                                  >
+                                    <ShieldAlert className="w-3 h-3" />
+                                    <span>Restringir</span>
+                                  </button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Lista de Cuentas Restringidas */}
+                    <div className="space-y-2">
+                      <span className="block text-[10px] font-bold text-slate-500 uppercase">
+                        Cuentas actualmente restringidas:
+                      </span>
+                      {restrictedUserIds.length === 0 ? (
+                        <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-200 text-slate-500 space-y-1">
+                          <p className="font-bold text-slate-700">No tienes cuentas restringidas</p>
+                          <p className="text-[10px] text-slate-400">
+                            Usa el buscador superior para limitar comentarios y mensajes de cualquier usuario sin que reciba notificación.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {restrictedUserIds.map(id => {
+                            const m = models.find(item => item.id === id);
+                            if (!m) return null;
+                            return (
+                              <div key={id} className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-200 transition">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <img src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-slate-100 shrink-0" />
+                                  <div className="text-left min-w-0">
+                                    <span className="font-bold text-slate-800 block leading-tight truncate">{m.name}</span>
+                                    <span className="text-[9px] font-mono text-slate-400">@{m.username} · Restringida</span>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUnrestrictUser(id, m.name)}
+                                  className="custom-bg text-[10px] px-2.5 py-1.5 bg-white hover:bg-pink-50 text-pink-700 font-bold rounded-lg border border-pink-200 cursor-pointer transition shrink-0"
+                                >
+                                  Quitar restricción
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Cómo funciona la protección de cuentas restringidas */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3 divide-y divide-slate-200/70">
+                      <div>
+                        <h5 className="font-black text-slate-900 text-xs">Comportamiento de cuentas restringidas</h5>
+                        <p className="text-[10px] text-slate-500">Estas reglas protegen tu muro y mensajería automáticamente:</p>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Ocultar sus comentarios al público</span>
+                          <span className="text-[10px] text-slate-500">Los comentarios de cuentas restringidas solo son visibles para ellas salvo que los apruebes.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.hideRestrictedCommentsFromOthers}
+                          onChange={(e) => updateInteractionExtraSettings({ hideRestrictedCommentsFromOthers: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Mover sus mensajes a Solicitudes</span>
+                          <span className="text-[10px] text-slate-500">Sus mensajes se archivan en solicitudes ocultas y no reciben confirmación de lectura.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.moveRestrictedDmsToRequests}
+                          onChange={(e) => updateInteractionExtraSettings({ moveRestrictedDmsToRequests: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Ocultar mi estado activo ("En línea")</span>
+                          <span className="text-[10px] text-slate-500">Las cuentas restringidas nunca verán cuándo estás conectada ni tu última hora activa.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.hideActiveStatusFromRestricted}
+                          onChange={(e) => updateInteractionExtraSettings({ hideActiveStatusFromRestricted: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-bold text-slate-800 block">Silenciar alertas y notificaciones</span>
+                          <span className="text-[10px] text-slate-500">Evita avisos de etiquetas, menciones o likes de estas cuentas.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={interactionExtraSettings.muteRestrictedNotifications}
+                          onChange={(e) => updateInteractionExtraSettings({ muteRestrictedNotifications: e.target.checked })}
+                          className="w-4 h-4 accent-pink-600 cursor-pointer shrink-0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex flex-wrap items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSettingsTabClick('blocked')}
+                        className="custom-bg px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold cursor-pointer shadow-xs transition flex items-center gap-1.5"
+                      >
+                        <Ban className="w-3.5 h-3.5" />
+                        <span>Gestionar cuentas bloqueadas ({blockedUserIds.length})</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => triggerSettingsToast('Reglas de cuentas restringidas guardadas correctamente.')}
+                        className="custom-bg px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer shadow-xs transition flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Guardar cambios</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'filters' && (
+                  <div className="space-y-4 animate-fade-in text-xs text-slate-700">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h4 className="text-sm font-black text-slate-900 uppercase">Palabras Filtradas</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Oculta comentarios y solicitudes que contengan términos personalizados separados por coma.</p>
+                    </div>
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                      <textarea
+                        rows={3}
+                        value={interactionExtraSettings.filteredWordsRaw}
+                        onChange={(e) => updateInteractionExtraSettings({ filteredWordsRaw: e.target.value })}
+                        placeholder="Escribe palabras o frases separadas por comas..."
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-pink-500"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => triggerSettingsToast('Lista de palabras filtradas guardada correctamente.')}
+                          className="custom-bg px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer transition"
+                        >
+                          Guardar palabras filtradas
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

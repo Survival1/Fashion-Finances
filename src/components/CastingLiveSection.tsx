@@ -159,6 +159,8 @@ interface CastingLiveVideo {
   pinnedProduct?: any;
   trimStart?: number;
   trimEnd?: number;
+  privacyMode?: 'public';
+  isPublic?: boolean;
 }
 
 interface CastingLiveSectionProps {
@@ -2974,7 +2976,9 @@ export default function CastingLiveSection({
     const initialCatMap = new Map(initialVideos.map(v => [v.id, v.videoCategory]));
     const initialVideosMapped = initialVideos.map(v => ({
       ...v,
-      videoCategory: parseCategory(v.videoCategory)
+      videoCategory: parseCategory(v.videoCategory),
+      privacyMode: 'public' as const,
+      isPublic: true
     }));
 
     if (cached) {
@@ -2983,7 +2987,9 @@ export default function CastingLiveSection({
         if (Array.isArray(parsed) && parsed.length > 0) {
           const parsedMapped = parsed.map(v => ({
             ...v,
-            videoCategory: initialCatMap.get(v.id) || parseCategory(v.videoCategory)
+            videoCategory: initialCatMap.get(v.id) || parseCategory(v.videoCategory),
+            privacyMode: 'public' as const,
+            isPublic: true
           }));
           
           // Merge keeping cached ones (uploaded ones) at the top, appending initial ones
@@ -3048,7 +3054,9 @@ export default function CastingLiveSection({
     const initialCatMap = new Map(initialVideos.map(v => [v.id, v.videoCategory]));
     const initialVideosMapped = initialVideos.map(v => ({
       ...v,
-      videoCategory: parseCategory(v.videoCategory)
+      videoCategory: parseCategory(v.videoCategory),
+      privacyMode: 'public' as const,
+      isPublic: true
     }));
 
     if (cached) {
@@ -3057,7 +3065,9 @@ export default function CastingLiveSection({
         if (Array.isArray(parsed) && parsed.length > 0) {
           const parsedMapped = parsed.map(v => ({
             ...v,
-            videoCategory: initialCatMap.get(v.id) || parseCategory(v.videoCategory)
+            videoCategory: initialCatMap.get(v.id) || parseCategory(v.videoCategory),
+            privacyMode: 'public' as const,
+            isPublic: true
           }));
           
           const merged = [...parsedMapped];
@@ -3315,8 +3325,15 @@ export default function CastingLiveSection({
       setLiveChannelsCategoryFilter('todos');
       setShowStreamOptionsModal(true);
     };
+    const handleOpenCreationTypeModal = () => {
+      setShowCreationTypeModal(true);
+    };
     window.addEventListener('open-stream-options-modal', handleOpenStreamOptions);
-    return () => window.removeEventListener('open-stream-options-modal', handleOpenStreamOptions);
+    window.addEventListener('open-creation-type-modal', handleOpenCreationTypeModal);
+    return () => {
+      window.removeEventListener('open-stream-options-modal', handleOpenStreamOptions);
+      window.removeEventListener('open-creation-type-modal', handleOpenCreationTypeModal);
+    };
   }, []);
   const [broadcastBottomCommentText, setBroadcastBottomCommentText] = useState('');
   const [showBroadcastEmojiPopover, setShowBroadcastEmojiPopover] = useState(false);
@@ -3560,45 +3577,44 @@ export default function CastingLiveSection({
 
   // Auto-redirect from vote count/scrutiny page (zxcv.png) to final results page (zas.png) when countdown hits 0 / last vote in
   useEffect(() => {
-    if (showFinanzasRecount && selectedCategoryFilter === 'Finanzas') {
-      const initialCount = scrutinyVotesCount > 1 ? scrutinyVotesCount : 9;
-      setScrutinyVotesCount(initialCount);
-      setScrutinySeconds(initialCount >= 10 ? 0 : Math.round(3000 * ((10 - initialCount) / 9)));
+    if (!showFinanzasRecount || selectedCategoryFilter !== 'Finanzas') return;
 
-      const interval = setInterval(() => {
-        setScrutinyVotesCount((prevVotes) => {
-          const nextVotes = prevVotes + 1;
-          
-          if (nextVotes >= 10) {
-            clearInterval(interval);
-            setScrutinySeconds(0); // 00:00
-            if (!completedSessionToDisplay) {
-              const sessionData = buildFinanzasCompletedSession(finanzasVotes);
-              setCompletedSessionToDisplay(sessionData);
-            }
-            setTimeout(() => {
-              setShowFinanzasRecount(false);
-              setShowFinanzasResults(true); // Final results page (zas.png)
-              try {
-                localStorage.setItem('finanzas_contest_pending_close', 'true');
-              } catch (e) {}
-              setIsContestPendingClose(true);
-              // 🛑 La página de Resultados Finales permanece fija hasta que el usuario pulse 'Cerrar Concurso'
-            }, 1200);
-            return 10;
-          }
+    let currentCount = scrutinyVotesCount > 1 && scrutinyVotesCount < 10 ? scrutinyVotesCount : 7;
+    setScrutinyVotesCount(currentCount);
+    setScrutinySeconds(Math.round(3000 * ((10 - currentCount) / 9)));
 
-          // Scale remaining seconds proportionally down from 3000s (50:00) to 0s (00:00) as votes progress to 10
-          const remainingFraction = (10 - nextVotes) / 9;
-          const newSeconds = Math.max(0, Math.round(3000 * remainingFraction));
-          setScrutinySeconds(newSeconds);
+    let transitionTimer: ReturnType<typeof setTimeout> | null = null;
+    const interval = setInterval(() => {
+      currentCount += 1;
 
-          return nextVotes;
-        });
-      }, 1200);
+      if (currentCount >= 10) {
+        clearInterval(interval);
+        setScrutinyVotesCount(10);
+        setScrutinySeconds(0); // 00:00
+        setCompletedSessionToDisplay((prev: any) => prev || buildFinanzasCompletedSession(finanzasVotes));
+        transitionTimer = setTimeout(() => {
+          setShowFinanzasRecount(false);
+          setShowFinanzasResults(true); // Final results page (zas.png)
+          try {
+            localStorage.setItem('finanzas_contest_pending_close', 'true');
+          } catch (e) {}
+          setIsContestPendingClose(true);
+          // 🛑 La página de Resultados Finales permanece fija hasta que el usuario pulse 'Cerrar Concurso'
+        }, 1200);
+        return;
+      }
 
-      return () => clearInterval(interval);
-    }
+      setScrutinyVotesCount(currentCount);
+      // Scale remaining seconds proportionally down from 3000s (50:00) to 0s (00:00) as votes progress to 10
+      const remainingFraction = (10 - currentCount) / 9;
+      const newSeconds = Math.max(0, Math.round(3000 * remainingFraction));
+      setScrutinySeconds(newSeconds);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      if (transitionTimer) clearTimeout(transitionTimer);
+    };
   }, [showFinanzasRecount, selectedCategoryFilter]);
 
   // States for individual 5-minute (300 seconds) countdown timers for the 10 Finanzas presenters
@@ -7021,11 +7037,15 @@ export default function CastingLiveSection({
     const sessionData = buildFinanzasCompletedSession(finanzasVotes);
     setCompletedSessionToDisplay(sessionData);
 
+    try {
+      localStorage.removeItem('finanzas_contest_pending_close');
+    } catch (e) {}
+    setIsContestPendingClose(false);
     setScrutinyVotesCount(9);
     setScrutinySeconds(10);
     setSelectedCategoryFilter('Finanzas');
-    setShowFinanzasRecount(true);
     setShowFinanzasResults(false);
+    setShowFinanzasRecount(true);
 
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -7293,59 +7313,44 @@ export default function CastingLiveSection({
     setFinanzasVotes(updatedVotes);
     localStorage.setItem('finanzas_project_votes', JSON.stringify(updatedVotes));
 
-    // Update voters tracking list
-    const currentVoters = Array.isArray(finanzasVotedVoterIds) ? finanzasVotedVoterIds : [];
+    // Complete voters tracking list up to 10/10 so the round proceeds immediately to scrutiny & final results
     const all10ParticipantIds = ['user', 'f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9'];
-    let updatedVoters = [...currentVoters];
-
-    const nextPendingVoterId = all10ParticipantIds.find(id => !updatedVoters.includes(id));
-    if (nextPendingVoterId) {
-      updatedVoters.push(nextPendingVoterId);
-    } else if (updatedVoters.length < 10) {
-      updatedVoters.push(`voter-${updatedVoters.length + 1}`);
-    }
+    const currentVoters = Array.isArray(finanzasVotedVoterIds) ? finanzasVotedVoterIds : [];
+    const updatedVoters = Array.from(new Set([...currentVoters, ...all10ParticipantIds]));
     setFinanzasVotedVoterIds(updatedVoters);
     localStorage.setItem('finanzas_voted_voter_ids_v2', JSON.stringify(updatedVoters));
-
-    const totalVotersCount = updatedVoters.length;
 
     setActiveFinanzasPopupUser(null);
     setFullscreenFinanzasUser(null);
     setDetailProjectUser(null);
+    setShowProjectDetailsInPopup(false);
     setShowVotingProjectsModal(false);
+    setShowFinanzasInscriptionInChannel(false);
 
-    if (totalVotersCount < 10) {
-      // ONLY WHEN ALL 10 VOTE CAN THE SESSION TERMINATE!
-      // Speech synthesis removed per user request
+    // Clear any stale pending-close lock so the recount & scrutiny page renders before final results
+    try {
+      localStorage.removeItem('finanzas_contest_pending_close');
+    } catch (e) {}
+    setIsContestPendingClose(false);
 
-      setSystemVoiceNotification({
-        show: true,
-        message: `🗳️ ¡Voto por ${user.name} registrado! (${totalVotersCount}/10 votos emitidos). Solo cuando voten los 10 se podrá terminar la sesión.`
-      });
+    const sessionData = buildFinanzasCompletedSession(updatedVotes);
+    setCompletedSessionToDisplay(sessionData);
 
-      setTimeout(() => {
-        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-      }, 5000);
-    } else {
-      // 10/10 PARTICIPANTS HAVE VOTED -> CONCLUDE SESSION & OPEN RECOUNT / RESULTS
-      const sessionData = buildFinanzasCompletedSession(updatedVotes);
-      setCompletedSessionToDisplay(sessionData);
+    // Redirect immediately to the Recount & Scrutiny page, which automatically transitions to Final Results
+    setScrutinyVotesCount(7);
+    setScrutinySeconds(Math.round(3000 * ((10 - 7) / 9)));
+    setSelectedCategoryFilter('Finanzas');
+    setShowFinanzasResults(false);
+    setShowFinanzasRecount(true);
 
-      setSelectedCategoryFilter('Finanzas');
-      setShowFinanzasRecount(true);
-      setShowFinanzasResults(false);
+    setSystemVoiceNotification({
+      show: true,
+      message: `🗳️ ¡Voto por ${user.name} registrado! Redirigiendo al recuento y escrutinio...`
+    });
 
-      // Speech synthesis removed per user request
-
-      setSystemVoiceNotification({
-        show: true,
-        message: `🏆 ¡10 de 10 votos registrados! Concluyendo sesión y abriendo Resultados Finales...`
-      });
-
-      setTimeout(() => {
-        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-      }, 4000);
-    }
+    setTimeout(() => {
+      setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+    }, 4000);
   };
 
   const handleFinishRetransmissionAndPassToNextParticipant = () => {
@@ -8307,7 +8312,8 @@ export default function CastingLiveSection({
   const [profileVideoLikes, setProfileVideoLikes] = useState<Record<string, number>>({});
   const [profileVideoComments, setProfileVideoComments] = useState<Record<string, any[]>>({});
   const [profileVideoNewCommentInput, setProfileVideoNewCommentInput] = useState<string>('');
-  const [profileActiveTab, setProfileActiveTab] = useState<'videos' | 'likes'>('videos');
+  const [profileActiveTab, setProfileActiveTab] = useState<'videos' | 'channels' | 'likes'>('videos');
+  const [profileSelectedChannel, setProfileSelectedChannel] = useState<string>('Todos');
   const [filterOption, setFilterOption] = useState<'recientes' | 'populares' | 'antiguos'>('recientes');
   const [translatedVideoIds, setTranslatedVideoIds] = useState<Record<string, boolean>>({});
   const [showShareProfileModal, setShowShareProfileModal] = useState<boolean>(false);
@@ -8321,7 +8327,6 @@ export default function CastingLiveSection({
   const [profileToastMessage, setProfileToastMessage] = useState<string | null>(null);
   const [profileReportSubmitted, setProfileReportSubmitted] = useState<boolean>(false);
   const [copiedLinkSuccess, setCopiedLinkSuccess] = useState<boolean>(false);
-  const [unlockedLikedVideosDemo, setUnlockedLikedVideosDemo] = useState<boolean>(false);
 
   const [webRTCPodiumData, setWebRTCPodiumData] = useState<any>(() => {
     const cached = localStorage.getItem('liveSharePodiumData');
@@ -12122,6 +12127,7 @@ export default function CastingLiveSection({
 
     if (followedAccount) {
       setProfileActiveTab('videos');
+      setProfileSelectedChannel('Todos');
       setFilterOption('recientes');
       setViewingTikTokProfileUsername(followedAccount.username);
       return;
@@ -12135,6 +12141,7 @@ export default function CastingLiveSection({
       fullName.toLowerCase().includes("victoria")
     ) {
       setProfileActiveTab('videos');
+      setProfileSelectedChannel('Todos');
       setFilterOption('recientes');
       setViewingTikTokProfileUsername(formattedUsername);
       return;
@@ -12158,6 +12165,7 @@ export default function CastingLiveSection({
     const foundInList = accountsQueSigues.some(a => a.username === formattedUsername);
     if (foundInList) {
       setProfileActiveTab('videos');
+      setProfileSelectedChannel('Todos');
       setFilterOption('recientes');
       setViewingTikTokProfileUsername(formattedUsername);
       return;
@@ -12227,10 +12235,71 @@ export default function CastingLiveSection({
     }
   };
 
+  const LIVE_CATEGORY_REDIRECT_MAP: Record<string, string> = {
+    atelier: 'atelier',
+    'Atelier': 'atelier',
+    haute_couture: 'haute_couture',
+    'Haute Couture': 'haute_couture',
+    streetwear: 'streetwear',
+    'Streetwear & Urban': 'streetwear',
+    fashion_model: 'fashion_model',
+    'Fashion Model': 'fashion_model',
+    runway_model: 'runway_model',
+    'Runway Model': 'runway_model',
+    catalog_model: 'catalog_model',
+    'Catalog Model': 'catalog_model',
+    commercial_model: 'commercial_model',
+    'Commercial Model': 'commercial_model',
+    plus_size_model: 'plus_size_model',
+    'Plus Size Model': 'plus_size_model',
+    petite_model: 'petite_model',
+    'Petite Model': 'petite_model',
+    lingerie_model: 'lingerie_model',
+    'Lingerie Model': 'lingerie_model',
+    swimsuit_model: 'swimsuit_model',
+    'Swimsuit Model': 'swimsuit_model',
+    fitness_model: 'fitness_model',
+    'Fitness Model': 'fitness_model',
+    parts_model: 'parts_model',
+    'Parts Model': 'parts_model',
+    mature_model: 'mature_model',
+    'Mature Model': 'mature_model',
+    real_people_models: 'real_people_models',
+    'Real People Model': 'real_people_models'
+  };
+
+  const openLiveChannelById = (liveChannelId: string) => {
+    setIsTopControlsMenuHovered(false);
+    setMobileChannelControlsVisible(false);
+    setShowTikTokShop(false);
+    setSelectedInvestorStore(null);
+    setLiveChannelsCategoryFilter(liveChannelId);
+    if (liveChannelId === 'atelier' && !isUserRetransmitting && !isUserRetransmittingToAtelier) {
+      setSelectedHeroChannelId('live-isabella-atelier');
+    } else {
+      setSelectedHeroChannelId(null);
+    }
+    setIsHeroTopChannelsDropdownOpen(false);
+    setIsHeroRightActionsVisible(true);
+    setActiveSubTab('live');
+    setTimeout(() => {
+      const heroEl = document.getElementById('live-hero-stage-card') || document.getElementById('live-videos-screen-root');
+      if (heroEl) {
+        heroEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+  };
+
   const handleCategoryFilterChange = (
-    cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview',
+    cat: 'Todos' | 'Reels' | 'Fashion' | 'Finanzas' | 'Modelos' | 'BackStage' | 'Investors' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' | string,
     stayOnCurrentTab = false
   ) => {
+    const mappedLiveId = LIVE_CATEGORY_REDIRECT_MAP[String(cat)];
+    if (mappedLiveId) {
+      openLiveChannelById(mappedLiveId);
+      return;
+    }
+
     try {
       sessionStorage.setItem('explicit_category_set_by_user', cat);
     } catch (e) {}
@@ -12845,7 +12914,9 @@ export default function CastingLiveSection({
       videoCategory: finalCategory,
       uploaderId: userProfile?.id || 'anonymous',
       trimStart: trimStart,
-      trimEnd: trimEnd
+      trimEnd: trimEnd,
+      privacyMode: 'public',
+      isPublic: true
     };
 
     let currentStoredVideos: any[] = [];
@@ -12953,7 +13024,9 @@ export default function CastingLiveSection({
       views: '1.2K',
       avatar: selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
       name: finalUsername,
-      videoCategory: finalCategory
+      videoCategory: finalCategory,
+      privacyMode: 'public',
+      isPublic: true
     };
 
     // Save in global coll_published_videos
@@ -16393,6 +16466,10 @@ export default function CastingLiveSection({
               setSelectedCategoryFilter('Finanzas');
               setShowFinanzasRecount(false);
               setShowFinanzasResults(true);
+              try {
+                localStorage.setItem('finanzas_contest_pending_close', 'true');
+              } catch (e) {}
+              setIsContestPendingClose(true);
             }}
             className="bg-[#0A0D14] hover:bg-black text-white px-4 sm:px-5 py-2 rounded-full font-black text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer transition shadow-sm active:scale-95 shrink-0 border-0"
           >
@@ -16474,6 +16551,10 @@ export default function CastingLiveSection({
               setSelectedCategoryFilter('Finanzas');
               setShowFinanzasRecount(false);
               setShowFinanzasResults(true);
+              try {
+                localStorage.setItem('finanzas_contest_pending_close', 'true');
+              } catch (e) {}
+              setIsContestPendingClose(true);
             }}
             className="w-full py-3.5 px-5 bg-gradient-to-r from-[#FF0055] via-[#E60050] to-[#C90045] hover:opacity-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition shadow-lg shadow-pink-500/30 cursor-pointer active:scale-95 flex items-center justify-center gap-2 border-0 mt-2"
           >
@@ -18045,16 +18126,18 @@ export default function CastingLiveSection({
 
                 {/* Who can view */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-black text-slate-800">Quién puede ver esta publicación</label>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="block text-xs font-black text-slate-800">Quién puede ver esta publicación</label>
+                    <span className="text-[11px] font-extrabold text-emerald-700">🌍 Vista pública obligatoria para todos los vídeos</span>
+                  </div>
                   <select
                     value={uploadCategory}
                     onChange={(e) => setUploadCategory(e.target.value as any)}
                     className="w-full sm:max-w-xs bg-white border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#fe2c55] font-semibold text-slate-800"
                   >
-                    <option value="para-ti">Todo el mundo (Para ti)</option>
-                    <option value="explorar">Sección Explorar</option>
-                    <option value="siguiendo">Solo mis seguidores (Siguiendo)</option>
-                    <option value="amigos">Solo Amigos</option>
+                    <option value="para-ti">🌍 Todo el mundo — Vista Pública (Para ti)</option>
+                    <option value="explorar">🌍 Vista Pública (Sección Explorar)</option>
+                    <option value="siguiendo">🌍 Vista Pública (Feed Siguiendo)</option>
                   </select>
                 </div>
 
@@ -19670,7 +19753,6 @@ export default function CastingLiveSection({
                         <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                           {userVideos.map((vid) => {
                             const viewsCount = getStableViews(vid);
-                            const pMode = (vid as any).privacyMode || 'public';
                             return (
                               <tr key={vid.id} className="hover:bg-slate-50/50 transition">
                                 <td className="py-3 px-4 flex items-center gap-3">
@@ -19687,45 +19769,13 @@ export default function CastingLiveSection({
                                 </td>
                                 
                                 <td className="py-3 px-4 whitespace-nowrap text-left">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const updated = videosList.map(v => {
-                                        if (v.id === vid.id) {
-                                          const next = pMode === 'public' ? 'friends' : pMode === 'friends' ? 'private' : 'public';
-                                          return { ...v, privacyMode: next };
-                                        }
-                                        return v;
-                                      });
-                                      setVideosList(updated);
-try {
-  localStorage.setItem('coll_casting_live_videos', JSON.stringify(updated));
-} catch (e) {
-  console.warn(e);
-}
-                                    }}
-                                    className="cursor-pointer border-0 p-0 bg-transparent outline-none transform active:scale-95 transition-transform inline-block"
-                                    title="Click para cambiar política de privacidad"
+                                  <span
+                                    className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 border border-emerald-250 text-emerald-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider whitespace-nowrap select-none align-middle"
+                                    title="Todos los vídeos son de vista pública"
                                   >
-                                    {pMode === 'public' && (
-                                      <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 border border-emerald-250 text-emerald-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider whitespace-nowrap select-none align-middle">
-                                        <span className="text-xs">🌍</span>
-                                        <span>Público</span>
-                                      </span>
-                                    )}
-                                    {pMode === 'friends' && (
-                                      <span className="inline-flex items-center gap-1 text-[10px] bg-indigo-50 border border-indigo-250 text-indigo-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider whitespace-nowrap select-none align-middle">
-                                        <span className="text-xs">👥</span>
-                                        <span>Amigos VIP</span>
-                                      </span>
-                                    )}
-                                    {pMode === 'private' && (
-                                      <span className="inline-flex items-center gap-1 text-[10px] bg-amber-50 border border-amber-250 text-amber-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider whitespace-nowrap select-none align-middle">
-                                        <span className="text-xs">🔒</span>
-                                        <span>Solo yo</span>
-                                      </span>
-                                    )}
-                                  </button>
+                                    <span className="text-xs">🌍</span>
+                                    <span>Público</span>
+                                  </span>
                                 </td>
 
                                 <td className="py-3 px-4 font-mono font-bold text-slate-800 text-left">
@@ -26420,12 +26470,134 @@ try {
       }
     }
 
-    // Sort videos according to filterOption
-    const sortedVideos = [...(profile.videos || [])].sort((a: any, b: any) => {
+    // Available upload channels (matching z.png, strictly excluding Finanzas)
+    const PUBLIC_UPLOAD_CHANNELS = [
+      { id: 'Todos', label: 'Todos 🌍' },
+      { id: 'Fashion', label: 'Fashion ✨' },
+      { id: 'Runway', label: 'Runway 👑' },
+      { id: 'BackStage', label: 'BackStage 🎬' },
+      { id: 'Jewellery', label: 'Jewellery 💎' },
+      { id: 'Casting', label: 'Casting 👠' },
+      { id: 'Fitnes', label: 'Fitnes 💪' },
+      { id: 'Beauty', label: 'Beauty 💄' },
+      { id: 'Influencer', label: 'Influencer 📱' },
+      { id: 'Luxury', label: 'Luxury 🍸' },
+      { id: 'Interview', label: 'Interview 🎙️' },
+    ];
+    const NON_FINANCE_CHANNEL_IDS = [
+      'Fashion', 'Runway', 'BackStage', 'Jewellery', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'
+    ];
+    const normalizeChannelName = (rawCat?: string): string => {
+      if (!rawCat) return 'Fashion';
+      const lower = rawCat.toLowerCase().trim();
+      const map: Record<string, string> = {
+        todos: 'Todos',
+        fashion: 'Fashion',
+        'para-ti': 'Fashion',
+        explorar: 'Fashion',
+        siguiendo: 'Fashion',
+        finanzas: 'Finanzas',
+        runway: 'Runway',
+        modelos: 'Runway',
+        models: 'Runway',
+        backstage: 'BackStage',
+        jewellery: 'Jewellery',
+        investors: 'Jewellery',
+        casting: 'Casting',
+        catwalk: 'Casting',
+        fitnes: 'Fitnes',
+        fitness: 'Fitnes',
+        beauty: 'Beauty',
+        influencer: 'Influencer',
+        luxury: 'Luxury',
+        interview: 'Interview',
+      };
+      return map[lower] || rawCat;
+    };
+
+    const pCleanUser = profile.username.toLowerCase().replace(/^@/, '').replace(/_w\d+|_m\d+$/, '');
+    const pLowerName = profile.name.toLowerCase();
+
+    // Uploaded videos from global videosList belonging to this creator (all public view, excluding Finanzas)
+    const uploadedFeedVideosForUser = videosList
+      .filter((v) => {
+        const vUser = (v.username || '').toLowerCase().replace(/^@/, '').replace(/_w\d+|_m\d+$/, '');
+        const vName = (v.name || '').toLowerCase();
+        const matchesUser =
+          vUser === pCleanUser ||
+          v.username?.toLowerCase() === profile.username.toLowerCase() ||
+          vName === pLowerName ||
+          (pCleanUser && vUser.includes(pCleanUser)) ||
+          (v.uploaderId && v.uploaderId.toLowerCase() === profile.username.toLowerCase());
+        const ch = normalizeChannelName(v.videoCategory || v.category);
+        return matchesUser && ch !== 'Finanzas';
+      })
+      .map((v, idx) => {
+        const ch = normalizeChannelName(v.videoCategory || v.category);
+        const safeCh = ch === 'Todos' ? NON_FINANCE_CHANNEL_IDS[idx % NON_FINANCE_CHANNEL_IDS.length] : ch;
+        return {
+          id: v.id,
+          title: v.description || `Vídeo en ${safeCh}`,
+          views: `${Math.max(120, (v.likes || 40) * 14)}`,
+          img: v.coverUrl || v.poster || v.thumbnailUrl || profile.avatar,
+          videoUrl: v.videoUrl,
+          isPinned: idx === 0,
+          normalizedChannel: safeCh,
+          isPublic: true,
+        };
+      });
+
+    // Combine with creator's profile videos, each assigned a non-Finanzas channel and marked public view
+    const profileMappedVideos = (profile.videos || [])
+      .filter((v: any) => normalizeChannelName(v.videoCategory || v.channel) !== 'Finanzas')
+      .map((v: any, idx: number) => {
+        const rawCat = normalizeChannelName(v.videoCategory || v.channel);
+        const safeCh = rawCat && rawCat !== 'Todos' && NON_FINANCE_CHANNEL_IDS.includes(rawCat)
+          ? rawCat
+          : NON_FINANCE_CHANNEL_IDS[idx % NON_FINANCE_CHANNEL_IDS.length];
+        return {
+          ...v,
+          normalizedChannel: safeCh,
+          isPublic: true,
+        };
+      });
+
+    const sortVideoCollection = (list: any[]) =>
+      [...list].sort((a: any, b: any) => {
+        if (filterOption === 'populares') {
+          const parseV = (v: string) => {
+            if (!v) return 0;
+            const clean = String(v).toLowerCase().replace(/\s+/g, '');
+            if (clean.includes('m') || clean.includes('mill')) return (parseFloat(clean) || 0) * 1000000;
+            if (clean.includes('mil') || clean.includes('k')) return (parseFloat(clean) || 0) * 1000;
+            return parseFloat(clean) || 0;
+          };
+          return parseV(b.views) - parseV(a.views);
+        }
+        if (filterOption === 'antiguos') {
+          return -1;
+        }
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return 0;
+      });
+
+    // Deduplicate combined non-Finance videos for this user
+    const seenVideoIds = new Set<string>();
+    const combinedUserVideos: any[] = [];
+    for (const item of [...uploadedFeedVideosForUser, ...profileMappedVideos]) {
+      if (!item || !item.id || seenVideoIds.has(item.id)) continue;
+      if (item.normalizedChannel === 'Finanzas') continue;
+      seenVideoIds.add(item.id);
+      combinedUserVideos.push(item);
+    }
+
+    // Sort videos according to filterOption (preserving oldest reverse order for profile videos)
+    const sortedVideos = [...combinedUserVideos].sort((a: any, b: any) => {
       if (filterOption === 'populares') {
         const parseV = (v: string) => {
           if (!v) return 0;
-          const clean = v.toLowerCase().replace(/\s+/g, '');
+          const clean = String(v).toLowerCase().replace(/\s+/g, '');
           if (clean.includes('m') || clean.includes('mill')) return (parseFloat(clean) || 0) * 1000000;
           if (clean.includes('mil') || clean.includes('k')) return (parseFloat(clean) || 0) * 1000;
           return parseFloat(clean) || 0;
@@ -26433,15 +26605,20 @@ try {
         return parseV(b.views) - parseV(a.views);
       }
       if (filterOption === 'antiguos') {
-        const idxA = profile.videos.indexOf(a);
-        const idxB = profile.videos.indexOf(b);
+        const idxA = combinedUserVideos.indexOf(a);
+        const idxB = combinedUserVideos.indexOf(b);
         return idxB - idxA;
       }
-      // 'recientes': pinned first, then original order
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
       return 0;
     });
+
+    const userChannelVideos = sortVideoCollection(combinedUserVideos);
+    const filteredUserChannelVideos =
+      profileSelectedChannel === 'Todos'
+        ? userChannelVideos
+        : userChannelVideos.filter((v) => v.normalizedChannel === profileSelectedChannel);
 
     const handleCopyLink = () => {
       const url = `https://castinglive.app/@${profile.username}`;
@@ -26640,31 +26817,48 @@ try {
           </div>
         </div>
 
-        {/* 8. TABS ROW: VÍDEOS / ME GUSTA & FILTERS: MÁS RECIENTES | MÁS POPULARES | MÁS ANTIGUOS */}
+        {/* 8. TABS ROW: VÍDEOS / SUBIDOS EN CANALES / ME GUSTA & FILTERS: MÁS RECIENTES | MÁS POPULARES | MÁS ANTIGUOS */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 select-none mt-4 pb-0.5 font-sans max-w-full overflow-x-hidden">
           {/* Main Category Tabs */}
-          <div className="flex items-center gap-8 text-sm pt-1.5">
+          <div className="flex flex-wrap items-center gap-5 sm:gap-7 text-sm pt-1.5">
             <button 
               onClick={() => setProfileActiveTab('videos')}
-              className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent ${
+              className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent whitespace-nowrap shrink-0 ${
                 profileActiveTab === 'videos' ? 'text-slate-950 font-black' : 'text-slate-400 font-semibold hover:text-slate-600'
               }`}
               id="tab-videos-btn"
             >
+              <Globe className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
               <span>Vídeos</span>
               {profileActiveTab === 'videos' && (
                 <div className="absolute bottom-0 inset-x-0 h-[2px] bg-slate-900 rounded-full" />
               )}
             </button>
+
+            <button 
+              onClick={() => setProfileActiveTab('channels')}
+              className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent whitespace-nowrap shrink-0 ${
+                profileActiveTab === 'channels' ? 'text-[#fe2c55] font-black' : 'text-slate-500 font-semibold hover:text-[#fe2c55]'
+              }`}
+              id="tab-channels-btn"
+              title="Ver vídeos subidos por este usuario en los canales disponibles (excepto Finanzas)"
+            >
+              <Tv className="w-3.5 h-3.5 text-[#fe2c55] shrink-0" />
+              <span>Subidos en Canales</span>
+              <span className="text-[10px] font-black text-rose-600">({userChannelVideos.length})</span>
+              {profileActiveTab === 'channels' && (
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#fe2c55] rounded-full" />
+              )}
+            </button>
             
             <button 
               onClick={() => setProfileActiveTab('likes')}
-              className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent ${
+              className={`pb-3 font-extrabold flex items-center gap-1.5 transition text-xs sm:text-sm uppercase tracking-wider relative cursor-pointer border-0 bg-transparent whitespace-nowrap shrink-0 ${
                 profileActiveTab === 'likes' ? 'text-slate-950 font-black' : 'text-slate-400 font-semibold hover:text-slate-600'
               }`}
               id="tab-likes-btn"
             >
-              <Lock className="w-3 h-3 text-slate-400" />
+              <Globe className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
               <span>Me gusta</span>
               {profileActiveTab === 'likes' && (
                 <div className="absolute bottom-0 inset-x-0 h-[2px] bg-slate-900 rounded-full" />
@@ -26721,51 +26915,168 @@ try {
           </div>
         </div>
 
-        {/* 9. MAIN CONTENT: VIDEOS GRID OR LIKES PANEL */}
-        {profileActiveTab === 'likes' ? (
-          <div className="py-20 text-center space-y-4 text-slate-400 animate-fade-in">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-3xl text-slate-500 shadow-inner">
-              🔒
-            </div>
-            <div className="space-y-1 max-w-sm mx-auto">
-              <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider">
-                Los videos con "Me gusta" de este usuario están ocultos
-              </h4>
-              <p className="text-xs text-slate-400">
-                Las configuraciones de privacidad de @{profile.username} ocultan su historial de likes al público.
-              </p>
-            </div>
-
-            {/* Toggle demo button for previewing creator likes */}
-            <div className="pt-2">
-              <button
-                onClick={() => setUnlockedLikedVideosDemo(prev => !prev)}
-                className="text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-full border border-rose-200 transition active:scale-95 cursor-pointer"
-              >
-                {unlockedLikedVideosDemo ? 'Ocultar vídeos de prueba' : '👁️ Ver vista previa de vídeos que le gustan (VIP)'}
-              </button>
+        {/* 9. MAIN CONTENT: VIDEOS GRID, CHANNELS VIEW (NO FINANZAS), OR PUBLIC LIKES PANEL */}
+        {profileActiveTab === 'channels' ? (
+          <div className="pt-5 space-y-5 animate-fade-in">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-pink-100">
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-black text-slate-900">
+                  Canales disponibles de @{profile.username}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Vídeos públicos subidos por este usuario en todos los canales (excepto Finanzas) · 🌍 Vista Pública
+                </p>
+              </div>
+              <span className="text-xs font-bold text-rose-600 tabular-nums">
+                {filteredUserChannelVideos.length} {filteredUserChannelVideos.length === 1 ? 'vídeo público' : 'vídeos públicos'}
+              </span>
             </div>
 
-            {unlockedLikedVideosDemo && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-6 max-w-4xl mx-auto text-left">
-                {profile.videos.slice(0, 3).map((vid: any) => (
-                  <div
-                    key={`liked-${vid.id}`}
-                    onClick={() => setSelectedProfileVideo({ ...vid, uploader: profile })}
-                    className="group relative aspect-[3/4.5] bg-black rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-all cursor-pointer border border-slate-100"
+            {/* 2-Column Channel Buttons Grid matching z.png (excluding Finanzas) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+              {PUBLIC_UPLOAD_CHANNELS.map((ch) => {
+                const count =
+                  ch.id === 'Todos'
+                    ? userChannelVideos.length
+                    : userChannelVideos.filter((v) => v.normalizedChannel === ch.id).length;
+                const isActive = profileSelectedChannel === ch.id;
+                return (
+                  <button
+                    key={ch.id}
+                    type="button"
+                    onClick={() => setProfileSelectedChannel(ch.id)}
+                    className={`px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-between gap-2 shadow-xs border whitespace-nowrap ${
+                      isActive
+                        ? 'custom-bg bg-[#ff2d85] text-white border-[#ff2d85] shadow-md scale-[1.01]'
+                        : 'custom-bg bg-pink-50/70 hover:bg-pink-100/80 text-slate-800 border-pink-200/80'
+                    }`}
+                    id={`profile-channel-btn-${ch.id.toLowerCase()}`}
                   >
-                    <img src={vid.img} alt={vid.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute top-2 right-2 bg-rose-600 text-white rounded-full p-1 shadow-sm">
-                      <Heart className="w-3 h-3 fill-white" />
+                    <span className="truncate">{ch.label}</span>
+                    <span className={`text-[10px] font-black tabular-nums ${isActive ? 'text-white/90' : 'text-rose-600'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Filtered Public Channel Videos Grid */}
+            {filteredUserChannelVideos.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-2 animate-fade-in">
+                {filteredUserChannelVideos.map((vid: any) => {
+                  const chMeta = PUBLIC_UPLOAD_CHANNELS.find((c) => c.id === vid.normalizedChannel);
+                  return (
+                    <div
+                      key={`ch-${vid.id}`}
+                      onClick={() => setSelectedProfileVideo({ ...vid, uploader: profile })}
+                      className="group relative aspect-[3/4.5] bg-black rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-all duration-200 cursor-pointer border border-pink-100"
+                      id={`channel-video-card-${vid.id}`}
+                      title="Clic para reproducir vídeo público"
+                    >
+                      {vid.videoUrl && !vid.img ? (
+                        <video
+                          src={vid.videoUrl}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 pointer-events-none"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={vid.img || profile.avatar}
+                          alt={vid.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300 pointer-events-none"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
+
+                      <div className="absolute top-2 left-2 bg-[#ff2d85] text-white font-black text-[9px] px-2 py-0.5 rounded shadow-xs tracking-wide">
+                        {chMeta ? chMeta.label : vid.normalizedChannel}
+                      </div>
+
+                      <div className="absolute top-2 right-2 bg-emerald-600/90 text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow-xs">
+                        🌍 Público
+                      </div>
+
+                      <div className="absolute bottom-10 left-2.5 flex items-center gap-1 text-[10px] text-white font-black font-mono">
+                        <span className="text-xs">▷</span>
+                        <span>{vid.views}</span>
+                      </div>
+
+                      <div className="absolute inset-x-2 bottom-3.5 text-center pointer-events-none select-none">
+                        <span className="block text-white font-bold leading-tight font-sans text-[11px] sm:text-xs uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] whitespace-normal tracking-wide line-clamp-2">
+                          {vid.title}
+                        </span>
+                      </div>
                     </div>
-                    <div className="absolute bottom-2 inset-x-2 text-white text-[11px] font-bold truncate">
-                      {vid.title}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-12 text-center bg-pink-50/40 rounded-2xl border border-pink-100 space-y-2">
+                <p className="text-sm font-bold text-slate-700">
+                  No hay vídeos publicados aún en {PUBLIC_UPLOAD_CHANNELS.find((c) => c.id === profileSelectedChannel)?.label || profileSelectedChannel}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setProfileSelectedChannel('Todos')}
+                  className="custom-bg bg-[#ff2d85] text-white text-xs font-extrabold px-4 py-2 rounded-xl cursor-pointer border-0"
+                >
+                  Ver todos los canales de @{profile.username}
+                </button>
               </div>
             )}
+          </div>
+        ) : profileActiveTab === 'likes' ? (
+          <div className="pt-5 space-y-4 animate-fade-in">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                <span className="text-emerald-600 font-extrabold">🌍 Vista Pública</span>
+                <span aria-hidden="true">·</span>
+                <span>Vídeos con "Me gusta" de @{profile.username} visibles para todos</span>
+              </div>
+              <span className="text-xs font-bold text-rose-600 tabular-nums">
+                {sortedVideos.length} vídeos públicos
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 text-left">
+              {sortedVideos.map((vid: any) => (
+                <div
+                  key={`liked-${vid.id}`}
+                  onClick={() => setSelectedProfileVideo({ ...vid, uploader: profile })}
+                  className="group relative aspect-[3/4.5] bg-black rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-all cursor-pointer border border-slate-100"
+                  title="Clic para reproducir vídeo público"
+                >
+                  {vid.videoUrl && !vid.img ? (
+                    <video
+                      src={vid.videoUrl}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 pointer-events-none"
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img src={vid.img || profile.avatar} alt={vid.title} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300" referrerPolicy="no-referrer" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                  <div className="absolute top-2 left-2 bg-emerald-600/90 text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow-xs">
+                    🌍 Público
+                  </div>
+                  <div className="absolute top-2 right-2 bg-rose-600 text-white rounded-full p-1 shadow-sm">
+                    <Heart className="w-3 h-3 fill-white" />
+                  </div>
+                  <div className="absolute bottom-9 left-2.5 flex items-center gap-1 text-[10px] text-white font-black font-mono">
+                    <span className="text-xs">▷</span>
+                    <span>{vid.views}</span>
+                  </div>
+                  <div className="absolute bottom-3 inset-x-2 text-white text-[11px] font-bold truncate">
+                    {vid.title}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-6 animate-fade-in">
@@ -26776,14 +27087,23 @@ try {
                   onClick={() => setSelectedProfileVideo({ ...vid, uploader: profile })}
                   className="group relative aspect-[3/4.5] bg-black rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-all duration-200 cursor-pointer border border-slate-100"
                   id={`video-card-${vid.id}`}
-                  title="Clic para reproducir vídeo"
+                  title="Clic para reproducir vídeo público"
                 >
-                  <img 
-                    src={vid.img} 
-                    alt={vid.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300 pointer-events-none"
-                    referrerPolicy="no-referrer"
-                  />
+                  {vid.videoUrl && !vid.img ? (
+                    <video
+                      src={vid.videoUrl}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 pointer-events-none"
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img 
+                      src={vid.img || profile.avatar} 
+                      alt={vid.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300 pointer-events-none"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   
                   {/* Bottom dark gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
@@ -26795,6 +27115,11 @@ try {
                     </div>
                   )}
 
+                  {/* Public View badge */}
+                  <div className="absolute top-2 right-2 bg-emerald-600/90 text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow-xs">
+                    🌍 Público
+                  </div>
+
                   {/* Play count at bottom left corner */}
                   <div className="absolute bottom-10 left-2.5 flex items-center gap-1 text-[10px] text-white font-black font-mono">
                     <span className="text-xs">▷</span>
@@ -26803,7 +27128,7 @@ try {
 
                   {/* Highlight text subtitles */}
                   <div className="absolute inset-x-2 bottom-3.5 text-center pointer-events-none select-none">
-                    <span className="block text-white font-bold leading-tight font-sans text-[11px] sm:text-xs uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] whitespace-normal tracking-wide">
+                    <span className="block text-white font-bold leading-tight font-sans text-[11px] sm:text-xs uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] whitespace-normal tracking-wide line-clamp-2">
                       {vid.title}
                     </span>
                   </div>
@@ -27047,11 +27372,11 @@ try {
       setProfileVideoNewCommentInput('');
     };
 
-    // Selecting a mock looping video clip
-    let loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-42289-large.mp4';
-    if (vid.id === 'v1') loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-man-working-on-his-laptop-computer-389-large.mp4';
-    if (vid.id === 'v4' || vid.id === 'v7') loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-42289-large.mp4';
-    if (vid.id === 'v5' || vid.id === 'v6') loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-man-typing-on-a-computer-keyboard-40333-large.mp4';
+    // Selecting video clip (prioritize uploaded videoUrl when present)
+    let loopVideo = vid.videoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-42289-large.mp4';
+    if (!vid.videoUrl && vid.id === 'v1') loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-man-working-on-his-laptop-computer-389-large.mp4';
+    if (!vid.videoUrl && (vid.id === 'v4' || vid.id === 'v7')) loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-42289-large.mp4';
+    if (!vid.videoUrl && (vid.id === 'v5' || vid.id === 'v6')) loopVideo = 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-man-typing-on-a-computer-keyboard-40333-large.mp4';
 
     return (
       <div className="fixed inset-0 bg-black/90 z-[4000] flex items-center justify-center p-2 sm:p-4 animate-fade-in font-sans" id="profile-video-lightbox">
@@ -27102,9 +27427,10 @@ try {
             />
             
             {/* Play overlay buttons */}
-            <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-black/40 px-3 py-1.5 rounded-full border border-white/5 text-white text-[11px] select-none font-bold uppercase tracking-wider backdrop-blur-xs">
-              <span className="w-2.5 h-2.5 bg-red-550 rounded-full animate-pulse" />
-              <span>Reproducción de simulación {vid.views} vistas</span>
+            <div className="absolute bottom-6 left-6 flex items-center gap-2.5 bg-black/50 px-3 py-1.5 rounded-full border border-white/10 text-white text-[11px] select-none font-bold uppercase tracking-wider backdrop-blur-xs">
+              <span className="text-emerald-400">🌍 Vista Pública</span>
+              <span>·</span>
+              <span>{vid.views} vistas</span>
             </div>
 
             {/* Mute controller */}
@@ -28280,11 +28606,14 @@ try {
           </div>
         </div>
         {/* HERO LIVE STREAM: Destacado Principal en Directo (En retransmisión se ve en pantalla completa dentro del canal y la imagen en vertical) */}
-        <div className={`relative w-full rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl group transition-all duration-300 ${
-          isRetransmissionActive
-            ? 'ring-2 ring-rose-500/40 shadow-[0_20px_50px_rgba(244,63,94,0.3)]'
-            : ''
-        }`}>
+        <div
+          id="live-hero-stage-card"
+          className={`relative w-full rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl group transition-all duration-300 ${
+            isRetransmissionActive
+              ? 'ring-2 ring-rose-500/40 shadow-[0_20px_50px_rgba(244,63,94,0.3)]'
+              : ''
+          }`}
+        >
           {/* Canal de vídeo: En retransmisión ocupa pantalla completa dentro del canal con imagen vertical */}
           <div 
             className={`relative w-full bg-black flex items-center justify-center overflow-hidden transition-all duration-300 ${
@@ -31244,17 +31573,11 @@ try {
                     if (onOpenRanking) onOpenRanking('regalos');
                     window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
                   }}
+                  onOpenCreationModal={() => {
+                    setShowCreationTypeModal(true);
+                  }}
                   onOpenStreamOptions={() => {
-                    const targetCat = {
-                      id: 'todos',
-                      label: 'Todos en Directo',
-                      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
-                      count: '16 Canales'
-                    };
-                    setStreamOptionsTargetChannel(targetCat);
-                    setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${targetCat.label}`);
-                    setLiveChannelsCategoryFilter('todos');
-                    setShowStreamOptionsModal(true);
+                    setShowCreationTypeModal(true);
                   }}
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
@@ -31320,6 +31643,7 @@ try {
                   onShare={() => handleShareChannel()}
                   activePresenterUser={sessionCurrentActiveUser}
                   onCategoryFilterChange={handleCategoryFilterChange}
+                  onSelectLiveChannel={openLiveChannelById}
                   selectedCategoryFilter={selectedCategoryFilter}
                   isBroadcastCamOn={isBroadcastCamOn}
                   toggleBroadcastCam={() => setIsBroadcastCamOn(!isBroadcastCamOn)}
@@ -31714,23 +32038,14 @@ try {
                         <span className="truncate w-full text-[10px] sm:text-[11.5px] font-black tracking-tight text-pink-100">Regalos</span>
                       </button>
 
-                      {/* Botón Centro: + En Grande (Fondo Rosa Perla y Símbolo + Blanco - Redirige a Retransmitir) */}
+                      {/* Botón Centro: + En Grande (Fondo Rosa Perla y Símbolo + Blanco - Redirige a Nuevo Contenido) */}
                       <button
                         type="button"
                         onClick={() => {
-                          const targetCat = {
-                            id: 'todos',
-                            label: 'Todos en Directo',
-                            image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=300',
-                            count: '16 Canales'
-                          };
-                          setStreamOptionsTargetChannel(targetCat);
-                          setStreamTitleInput(`🔴 En Directo: Retransmisión Especial en Canal ${targetCat.label}`);
-                          setLiveChannelsCategoryFilter('todos');
-                          setShowStreamOptionsModal(true);
+                          setShowCreationTypeModal(true);
                         }}
                         className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl !bg-[#FADADD] hover:!bg-[#F8C6D8] text-white flex items-center justify-center shadow-lg shadow-pink-300/35 active:scale-95 border-2 border-white/90 hover:border-white hover:scale-105 transition-all shrink-0 cursor-pointer group"
-                        title="Retransmitir en directo (+)"
+                        title="Nuevo contenido: Historia, Reel o Directo (+)"
                         id="btn-live-center-plus-loc2"
                       >
                         <Plus className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[3.5] drop-shadow-[0_1px_2px_rgba(180,80,120,0.35)] group-hover:rotate-90 transition-transform duration-300" />

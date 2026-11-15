@@ -22,6 +22,19 @@
     "recurrence": "weekly",
     "projectId": "proj-1",
     "projectName": "Milano Vintage Denim",
+    "status": "executed",
+    "executedAt": "2026-11-14T17:57:35.380Z"
+  },
+  {
+    "id": "sch-rec-1794679055381-560",
+    "userId": "user-buyer-1",
+    "userName": "Tú",
+    "userAvatar": "",
+    "entryFee": 1000,
+    "dateTime": "2026-11-07T12:28:02.070Z",
+    "recurrence": "weekly",
+    "projectId": "proj-1",
+    "projectName": "Milano Vintage Denim",
     "status": "pending"
   }
 ]

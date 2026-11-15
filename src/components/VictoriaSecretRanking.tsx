@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ModelProfile } from '../types';
+import { ModelProfile, FinancialMovement } from '../types';
 import { 
   Sparkles, 
   Crown, 
@@ -1576,6 +1576,7 @@ interface VictoriaSecretRankingProps {
   isOpen: boolean;
   onClose: () => void;
   models: ModelProfile[];
+  movements?: FinancialMovement[];
   onSelectModel?: (model: ModelProfile) => void;
   onNavigateToStore?: (storeId: string) => void;
   onNavigateToTab?: (tab: string) => void;
@@ -1586,12 +1587,35 @@ export default function VictoriaSecretRanking({
   isOpen,
   onClose,
   models,
+  movements,
   onSelectModel,
   onNavigateToStore,
   onNavigateToTab,
   initialTab = 'ranking'
 }: VictoriaSecretRankingProps) {
   const [activeTab, setActiveTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>(initialTab);
+
+  const vaultUserGiftsValue = useMemo(() => {
+    let effectiveMovements = movements;
+    if (!effectiveMovements) {
+      try {
+        const raw = localStorage.getItem('coll_movements');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) effectiveMovements = parsed;
+        }
+      } catch {}
+    }
+    const userGiftsBase = 180.00;
+    const userGiftsFromMovements = (effectiveMovements || [])
+      .filter((m) => {
+        const desc = (m.description || '').toLowerCase();
+        return desc.includes('regalo') || desc.includes('rosa') || desc.includes('perfume') || desc.includes('helado');
+      })
+      .reduce((sum, m) => sum + Math.abs(m.amount), 0);
+    const total = userGiftsBase + userGiftsFromMovements;
+    return total > 0 ? total : 180.00;
+  }, [movements]);
 
   useEffect(() => {
     if (initialTab) {
@@ -1659,10 +1683,16 @@ export default function VictoriaSecretRanking({
   const [showVaultInspector, setShowVaultInspector] = useState<boolean>(false);
   const [vaultSortOrder, setVaultSortOrder] = useState<'recent' | 'value_desc' | 'value_asc' | 'donor'>('recent');
 
-  // Slider controls & ref
+  // Slider controls & ref (Vault Received Gifts)
   const giftSliderRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
   const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
+
+  // Slider controls & ref (Sent Gifts)
+  const sentSliderRef = useRef<HTMLDivElement | null>(null);
+  const [canSentScrollLeft, setCanSentScrollLeft] = useState<boolean>(false);
+  const [canSentScrollRight, setCanSentScrollRight] = useState<boolean>(true);
+  const [selectedSentGiftId, setSelectedSentGiftId] = useState<string | null>(null);
 
   // Mouse drag support for slider
   const isDraggingRef = useRef(false);
@@ -1691,7 +1721,7 @@ export default function VictoriaSecretRanking({
 
   const scrollGiftSlider = (direction: 'left' | 'right') => {
     if (giftSliderRef.current) {
-      const scrollOffset = giftSliderRef.current.clientWidth * 0.75;
+      const scrollOffset = giftSliderRef.current.clientWidth;
       giftSliderRef.current.scrollBy({
         left: direction === 'left' ? -scrollOffset : scrollOffset,
         behavior: 'smooth'
@@ -1707,6 +1737,24 @@ export default function VictoriaSecretRanking({
     }
   };
 
+  const scrollSentSlider = (direction: 'left' | 'right') => {
+    if (sentSliderRef.current) {
+      const scrollOffset = sentSliderRef.current.clientWidth;
+      sentSliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollOffset : scrollOffset,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleSentSliderScroll = () => {
+    if (sentSliderRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = sentSliderRef.current;
+      setCanSentScrollLeft(scrollLeft > 10);
+      setCanSentScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
   // Time filter: all (Bóveda completa), Actuales (≤ 7 days), Recientes (8 to 30 days), Antiguos (> 30 days)
   const [giftTimeFilter, setGiftTimeFilter] = useState<'all' | 'actuales' | 'recientes' | 'antiguos'>('all');
 
@@ -1718,6 +1766,14 @@ export default function VictoriaSecretRanking({
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
     }
   }, [vaultViewMode, giftTimeFilter, receivedCategoryFilter, receivedSearchQuery, vaultSortOrder, receivedGifts.length]);
+
+  useEffect(() => {
+    if (giftsSubTab === 'sent' && sentSliderRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = sentSliderRef.current;
+      setCanSentScrollLeft(scrollLeft > 10);
+      setCanSentScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  }, [giftsSubTab, giftTimeFilter, sentCategoryFilter, sentSearchQuery, sentGifts.length]);
 
   const isGiftInTimePeriod = (timestamp: number, filter: 'all' | 'actuales' | 'recientes' | 'antiguos') => {
     if (filter === 'all') return true;
@@ -1846,6 +1902,7 @@ export default function VictoriaSecretRanking({
   const [thankYouToast, setThankYouToast] = useState<{ senderName: string; giftName: string } | null>(null);
   const [showLuxuryWatchModal, setShowLuxuryWatchModal] = useState<boolean>(false);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
+  const certificateViewerRef = useRef<HTMLDivElement | null>(null);
   const [showGenericGiftModal, setShowGenericGiftModal] = useState<boolean>(false);
   const [selectedGenericModalGift, setSelectedGenericModalGift] = useState<any>(null);
   const [selectedShowcaseGiftId, setSelectedShowcaseGiftId] = useState<string>('g-1');
@@ -1853,11 +1910,20 @@ export default function VictoriaSecretRanking({
   const [watchTickAngle, setWatchTickAngle] = useState<number>(0);
   const [selectedDistinctionModal, setSelectedDistinctionModal] = useState<SpecialDistinctionItem | null>(null);
 
-  // Modal for composing a personalized gift dedication
+  useEffect(() => {
+    if (showCertificateModal) {
+      setTimeout(() => {
+        certificateViewerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 60);
+    }
+  }, [showCertificateModal]);
+
+  // Modal for composing a personalized gift & choosing any recipient
   const [selectedGiftToDedicate, setSelectedGiftToDedicate] = useState<ChannelGiftItem | null>(null);
   const [customDedicationMsg, setCustomDedicationMsg] = useState<string>('');
   const [recipientModelId, setRecipientModelId] = useState<string>('topf-1');
   const [recipientSearchQuery, setRecipientSearchQuery] = useState<string>('');
+  const [customRecipientOverride, setCustomRecipientOverride] = useState<{ id: string; name: string; username: string; avatar: string } | null>(null);
   const [showRecipientDropdown, setShowRecipientDropdown] = useState<boolean>(false);
   const recipientDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -2038,13 +2104,17 @@ export default function VictoriaSecretRanking({
     };
   })();
 
-  const handleSendGift = (gift: ChannelGiftItem, customMessage?: string, targetModel?: ModelProfile) => {
+  const handleSendGift = (
+    gift: ChannelGiftItem,
+    customMessage?: string,
+    targetModel?: { id: string; name: string; username?: string; avatar: string } | ModelProfile
+  ) => {
     if (userGiftBalance < gift.price) {
       alert(`⚠️ Saldo insuficiente (${userGiftBalance} monedas). Necesitas ${gift.price} monedas para enviar "${gift.name}". Puedes recargar monedas abajo.`);
       return;
     }
 
-    const recipient = targetModel || models.find(m => m.id === recipientModelId) || models[0] || {
+    const recipient = targetModel || customRecipientOverride || models.find(m => m.id === recipientModelId) || models[0] || {
       id: 'topf-1',
       name: 'Adriana Lima',
       username: 'adrianalima_w1',
@@ -2224,7 +2294,8 @@ export default function VictoriaSecretRanking({
   };
 
   const handleViewCertificateLarge = () => {
-    // 1. Abrir el modal en grande del certificado
+    // 1. Abrir el certificado integrado dentro de la página en la Bóveda
+    setGiftsSubTab('received');
     setShowCertificateModal(true);
 
     // 2. Establecer el filtro de período en "Actuales" para que quede seleccionado
@@ -2550,7 +2621,7 @@ export default function VictoriaSecretRanking({
               <div className="w-full max-w-5xl mx-auto mb-3 sm:mb-5 select-none">
                 <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.2)] border border-pink-200/90 bg-gradient-to-r from-[#ffe4e6] via-[#fbcfe8] to-[#f472b6]">
                   <img
-                    src="/assets/aistudio/Moda__belleza_y_oportunidades_de_lujo_87a0501b.png"
+                    src="/assets/aistudio/Moda__belleza_y_oportunidades_de_lujo_87a0501b.webp"
                     alt="FASHIONS FINANCE - Moda, belleza y oportunidades de lujo - Beauty Creates Opportunities"
                     className="w-full h-auto object-cover select-none pointer-events-none block aspect-[1600/508]"
                     loading="eager"
@@ -3805,7 +3876,7 @@ export default function VictoriaSecretRanking({
               {/* Centro de Regalos y Finanzas Banner (Luxury Gold Silk & Diamonds Theme) */}
               <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300/70 shadow-2xl shadow-amber-950/15 group">
                 <img 
-                  src="/assets/aistudio/Centro_de_Regalos_y_Finanzas_de_Moda_52047950.png" 
+                  src="/assets/aistudio/Centro_de_Regalos_y_Finanzas_de_Moda_52047950.webp" 
                   alt="Centro de Regalos · Fashion Finances" 
                   className="w-full h-auto object-cover rounded-3xl block" 
                 />
@@ -4119,7 +4190,7 @@ export default function VictoriaSecretRanking({
                     
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
                       {/* Left side: Emblem, Title, Badges, Description */}
-                      <div className="flex items-start gap-3.5 max-w-xl">
+                      <div className="flex items-start gap-3.5 w-full">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-100 via-rose-50 to-amber-100 border-2 border-pink-300/80 flex items-center justify-center text-2xl shadow-xs shrink-0">
                           🏛️
                         </div>
@@ -4140,93 +4211,6 @@ export default function VictoriaSecretRanking({
                           <p className="text-xs text-slate-600 font-mono mt-1 leading-relaxed">
                             Caja fuerte oficial donde se custodian todos los regalos, certificados y distinciones recibidos de múltiples usuarios y mecenas.
                           </p>
-                        </div>
-                      </div>
-
-                      {/* Right side: Vault Action Buttons */}
-                      {/* "+ Recibir Regalo" a la izquierda, y a su derecha los botones en columna vertical con el mismo tamaño y fondo blanco rosado perla */}
-                      <div className="flex items-stretch gap-2.5 shrink-0 self-start lg:self-center">
-                        {/* Botón Principal: + Recibir Regalo */}
-                        <button
-                          type="button"
-                          onClick={handleSimulateIncomingGift}
-                          className="w-32 sm:w-36 min-h-[142px] bg-gradient-to-br from-pink-600 via-rose-600 to-pink-700 hover:from-pink-500 hover:to-rose-500 text-white rounded-2xl p-3 font-serif font-black flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md transition cursor-pointer transform hover:scale-[1.02] active:scale-[0.98] shrink-0 text-center border border-pink-400/40"
-                          title="Simular recepción de un nuevo regalo de otra modelo o patrocinador"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
-                            <Plus className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm font-black block leading-tight">
-                              + Recibir<br />Regalo
-                            </span>
-                            <span className="text-[9px] font-mono opacity-85 mt-1 block">
-                              Simular donante
-                            </span>
-                          </div>
-                        </button>
-
-                        {/* Columna vertical de botones a la derecha de Recibir Regalo (todos con el mismo tamaño exacto y fondo blanco rosado perla) */}
-                        <div className="flex flex-col gap-1.5 shrink-0 justify-between">
-                          {/* Botón 1: Previsualizar / Ocultar Vitrina */}
-                          <button
-                            type="button"
-                            onClick={() => setShowVaultInspector(!showVaultInspector)}
-                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
-                              showVaultInspector
-                                ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 border-amber-500 font-black shadow-xs'
-                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
-                            }`}
-                            title={showVaultInspector ? "Ocultar vitrina de inspección" : "Abrir vitrina de inspección de regalos"}
-                          >
-                            <Eye className="w-3.5 h-3.5 text-pink-600" />
-                            <span>{showVaultInspector ? 'Ocultar Vitrina' : 'Previsualizar'}</span>
-                          </button>
-
-                          {/* Botón 2: Vista Slider */}
-                          <button
-                            type="button"
-                            onClick={() => setVaultViewMode('slider')}
-                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
-                              vaultViewMode === 'slider'
-                                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white border-pink-600 font-black shadow-xs'
-                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
-                            }`}
-                            title="Ver regalos en slider deslizante continuo"
-                          >
-                            <span>🎠</span>
-                            <span>Vista Slider</span>
-                          </button>
-
-                          {/* Botón 3: Vista Cuadrícula */}
-                          <button
-                            type="button"
-                            onClick={() => setVaultViewMode('grid')}
-                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
-                              vaultViewMode === 'grid'
-                                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white border-pink-600 font-black shadow-xs'
-                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
-                            }`}
-                            title="Ver regalos en cuadrícula completa"
-                          >
-                            <Grid className="w-3.5 h-3.5 text-pink-600" />
-                            <span>Vista Cuadrícula</span>
-                          </button>
-
-                          {/* Botón 4: Vista Lista */}
-                          <button
-                            type="button"
-                            onClick={() => setVaultViewMode('dense')}
-                            className={`w-44 sm:w-48 h-[32px] rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs ${
-                              vaultViewMode === 'dense'
-                                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 text-white border-pink-600 font-black shadow-xs'
-                                : 'bg-[#fff8fa] hover:bg-pink-100/60 text-slate-800 hover:text-pink-700 border-pink-200/90'
-                            }`}
-                            title="Ver libro de registro y custodia"
-                          >
-                            <List className="w-3.5 h-3.5 text-pink-600" />
-                            <span>Vista Lista</span>
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -4258,10 +4242,10 @@ export default function VictoriaSecretRanking({
                           🪙 Valor en Bóveda
                         </span>
                         <span className="text-xl sm:text-2xl font-black font-mono text-amber-600 block mt-0.5">
-                          🪙 {receivedGifts.reduce((acc, g) => acc + g.price, 0).toLocaleString()}
+                          🪙 {vaultUserGiftsValue.toFixed(2)}
                         </span>
                         <span className="text-[10px] text-emerald-600 font-bold font-mono">
-                          ≈ {receivedGifts.reduce((acc, g) => acc + g.euroCost, 0).toLocaleString()}€
+                          ≈ {vaultUserGiftsValue.toFixed(2)}€
                         </span>
                       </div>
 
@@ -4307,7 +4291,7 @@ export default function VictoriaSecretRanking({
                               <span className="text-[9px] font-mono font-bold uppercase text-pink-700 tracking-wider">
                                 🔍 INSPECCIONANDO:
                               </span>
-                              <span className="px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 text-[9px] font-black font-mono">
+                              <span className="px-1.5 py-0.2 rounded bg-[#ff2d85] text-white text-[9px] font-black font-mono">
                                 {currentFeaturedGift.badgeText}
                               </span>
                             </div>
@@ -4316,7 +4300,7 @@ export default function VictoriaSecretRanking({
                             </h4>
                             <div className="flex items-center gap-2 text-xs font-mono">
                               <span className="text-pink-700">De: <strong>{currentFeaturedGift.senderName}</strong> (@{currentFeaturedGift.senderUsername})</span>
-                              <span className="text-amber-700 font-bold">🪙 {currentFeaturedGift.price.toLocaleString()} ({currentFeaturedGift.euroCost}€)</span>
+                              <span className="text-[#be185d] font-bold">💎 {currentFeaturedGift.price.toLocaleString()} ({currentFeaturedGift.euroCost}€)</span>
                             </div>
                           </div>
                         </div>
@@ -4332,9 +4316,9 @@ export default function VictoriaSecretRanking({
                             <button
                               type="button"
                               onClick={handleViewCertificateLarge}
-                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                              className="custom-bg px-3 py-1.5 bg-gradient-to-r from-[#ff2d85] to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
                             >
-                              <Sparkles className="w-3 h-3 text-slate-950" />
+                              <Sparkles className="w-3 h-3 text-white" />
                               <span>Ver Diploma</span>
                             </button>
                           ) : currentFeaturedGift.isWatch ? (
@@ -4344,9 +4328,9 @@ export default function VictoriaSecretRanking({
                                 setActiveModalGift(receivedGifts.find(g => g.giftName.toLowerCase().includes('reloj')) || null);
                                 setShowLuxuryWatchModal(true);
                               }}
-                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                              className="custom-bg px-3 py-1.5 bg-gradient-to-r from-[#ff2d85] to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
                             >
-                              <Sparkles className="w-3 h-3 text-slate-950" />
+                              <Sparkles className="w-3 h-3 text-white" />
                               <span>Ver Reloj 3D</span>
                             </button>
                           ) : (
@@ -4356,9 +4340,9 @@ export default function VictoriaSecretRanking({
                                 setSelectedGenericModalGift(currentFeaturedGift);
                                 setShowGenericGiftModal(true);
                               }}
-                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
+                              className="custom-bg px-3 py-1.5 bg-gradient-to-r from-[#ff2d85] to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1 font-mono uppercase"
                             >
-                              <Sparkles className="w-3 h-3 text-slate-950" />
+                              <Sparkles className="w-3 h-3 text-white" />
                               <span>Ver en Grande</span>
                             </button>
                           )}
@@ -4387,6 +4371,151 @@ export default function VictoriaSecretRanking({
                             title="Ocultar vitrina"
                           >
                             <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 📜 CERTIFICADO PROFESIONAL INTEGRADO DENTRO DE LA PÁGINA (ROSA PINK) */}
+                  {showCertificateModal && (
+                    <div
+                      ref={certificateViewerRef}
+                      id="inline-certificate-viewer"
+                      className="w-full max-w-3xl mx-auto my-3 animate-fade-in relative"
+                    >
+                      {/* Outer Rosa Pink Framed Certificate Card */}
+                      <div className="bg-gradient-to-b from-[#fffafc] via-[#fff2f8] to-[#ffe4f0] rounded-3xl p-5 sm:p-8 border-4 border-[#ff2d85] shadow-[0_12px_40px_rgba(255,45,133,0.22)] text-slate-900 relative overflow-hidden">
+
+                        {/* Close Button cleanly positioned inside card */}
+                        <button
+                          type="button"
+                          onClick={() => setShowCertificateModal(false)}
+                          className="custom-bg absolute top-3.5 right-3.5 z-30 bg-[#ff2d85] text-white hover:bg-pink-700 w-8 h-8 rounded-full border-2 border-pink-200 shadow-md flex items-center justify-center transition cursor-pointer font-bold"
+                          title="Cerrar certificado"
+                        >
+                          ✕
+                        </button>
+
+                        {/* Classical Ornate Double Border */}
+                        <div className="absolute inset-3 sm:inset-4 border-2 border-[#ff2d85]/35 rounded-2xl pointer-events-none" />
+                        <div className="absolute inset-4 sm:inset-5 border border-dashed border-pink-400/40 rounded-xl pointer-events-none" />
+
+                        {/* Corner Flourishes (Rosa Pink) */}
+                        <span className="absolute top-5 left-5 text-[#ff2d85] text-base font-bold pointer-events-none select-none">✦</span>
+                        <span className="absolute top-5 right-5 text-[#ff2d85] text-base font-bold pointer-events-none select-none">✦</span>
+                        <span className="absolute bottom-5 left-5 text-[#ff2d85] text-base font-bold pointer-events-none select-none">✦</span>
+                        <span className="absolute bottom-5 right-5 text-[#ff2d85] text-base font-bold pointer-events-none select-none">✦</span>
+
+                        {/* Watermark */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none">
+                          <div className="text-center font-serif text-7xl sm:text-8xl font-black tracking-widest text-[#ff2d85]">
+                            VS RUNWAY
+                          </div>
+                        </div>
+
+                        {/* Top Crest */}
+                        <div className="text-center space-y-1 relative z-10">
+                          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-[#ff2d85] via-pink-500 to-rose-500 text-white shadow-md border-2 border-pink-200 mb-1">
+                            <Crown className="w-7 h-7 text-white" />
+                          </div>
+                          <p className="text-[10px] sm:text-xs font-mono font-black tracking-[0.25em] text-[#be185d] uppercase">
+                            VICTORIA'S SECRET • FASHION FINANCES RUNWAY
+                          </p>
+                          <p className="text-[9px] font-mono text-pink-700/80 uppercase tracking-wider">
+                            CONSEJO INTERNACIONAL DE ALTA COSTURA & CASTING LIVE
+                          </p>
+                          <div className="h-0.5 w-32 bg-gradient-to-r from-transparent via-[#ff2d85] to-transparent mx-auto my-2" />
+                        </div>
+
+                        {/* Big Title */}
+                        <div className="text-center my-4 relative z-10">
+                          <span className="px-3 py-1 bg-pink-100/90 border border-[#ff2d85]/40 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase text-[#9d174d] inline-block">
+                            ★ DIPLOMA DE EXCELENCIA & HOMOLOGACIÓN ★
+                          </span>
+                          <h2 className="text-2xl sm:text-4xl font-serif font-black text-[#831843] tracking-wide mt-2">
+                            CERTIFICADO PROFESIONAL
+                          </h2>
+                          <p className="text-xs sm:text-sm font-serif italic text-[#be185d] mt-1">
+                            Especialidad en Pasarela de Moda, Presencia Escénica y Estilismo VIP
+                          </p>
+                        </div>
+
+                        {/* Certificate Text & Recipient */}
+                        <div className="text-center space-y-3 relative z-10 px-2 sm:px-6">
+                          <p className="text-xs sm:text-sm text-slate-700 font-serif">
+                            Por la presente se certifica con plena validez oficial que:
+                          </p>
+
+                          <div className="py-2.5 px-6 bg-gradient-to-r from-pink-100 via-[#ffd6e8] to-pink-100 border-2 border-[#ff2d85]/60 rounded-2xl shadow-inner inline-block max-w-full">
+                            <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-950 uppercase tracking-wider">
+                              Ernesto vs
+                            </h3>
+                            <span className="text-[10px] font-mono text-[#be185d] font-bold block">
+                              Titular Registrado & Mecenas Oficial Runway #VS-0884
+                            </span>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-slate-700 font-serif leading-relaxed max-w-lg mx-auto">
+                            Ha completado y superado las evaluaciones oficiales del certamen de alta costura <strong>Fashion Finances París 2026</strong>, acreditando su excelencia profesional con condecoración de honor.
+                          </p>
+                        </div>
+
+                        {/* Valuation, Seal & Signatures Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center mt-5 pt-5 border-t border-[#ff2d85]/20 relative z-10 text-center sm:text-left">
+
+                          {/* Signatures */}
+                          <div className="space-y-1">
+                            <div className="border-b border-[#ff2d85]/40 pb-1 text-center">
+                              <span className="font-serif italic text-base text-[#831843] font-bold">Adriana Lima</span>
+                            </div>
+                            <span className="text-[9px] font-mono text-slate-600 block text-center uppercase">
+                              Directora de Pasarela
+                            </span>
+                          </div>
+
+                          {/* Wax Seal */}
+                          <div className="flex flex-col items-center justify-center">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff2d85] via-pink-600 to-rose-700 border-2 border-pink-200 shadow-lg flex flex-col items-center justify-center text-white relative transform hover:scale-105 transition">
+                              <Crown className="w-5 h-5 text-white" />
+                              <span className="text-[6px] font-mono font-black uppercase tracking-tighter mt-0.5">OFICIAL</span>
+                              <div className="absolute inset-1 rounded-full border border-dashed border-pink-100/50 pointer-events-none" />
+                            </div>
+                            <span className="text-[8px] font-mono font-extrabold text-[#9d174d] mt-1 uppercase">
+                              SELLO AUTÉNTICO 2026
+                            </span>
+                          </div>
+
+                          {/* Valuation & Registration */}
+                          <div className="space-y-1 text-center sm:text-right font-mono">
+                            <span className="text-[10px] text-[#be185d] font-bold block">
+                              REG-ID: #VS-CERT-2026-0884
+                            </span>
+                            <span className="text-xs font-black text-[#831843] bg-pink-100/90 px-2.5 py-0.5 rounded border border-[#ff2d85]/50 inline-flex items-center gap-1">
+                              <Gem className="w-3 h-3 text-[#ff2d85] shrink-0" />
+                              <span>500 Monedas (500.00€)</span>
+                            </span>
+                            <span className="text-[9px] text-slate-500 block">
+                              Emisión: 16 Ago 2026
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Centered Rosa Pink Download Button (without Enviar a Adriana Lima) */}
+                        <div className="mt-5 pt-4 border-t border-[#ff2d85]/20 flex items-center justify-center relative z-10">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                detail: { icon: '📜' }
+                              }));
+                              alert('📜 ¡Certificado Oficial descargado con éxito en formato de alta resolución!');
+                            }}
+                            className="custom-bg w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#ff2d85] via-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-mono font-bold text-xs rounded-xl shadow-md shadow-pink-500/25 transition cursor-pointer flex items-center justify-center gap-2"
+                          >
+                            <Download className="w-3.5 h-3.5 text-white" />
+                            <span>Descargar Diploma Oficial (PDF)</span>
                           </button>
                         </div>
 
@@ -4505,7 +4634,7 @@ export default function VictoriaSecretRanking({
                       );
                     }
 
-                    {/* VISTA 1: 🎠 SLIDER DE REGALOS (CARRUSEL DESLIZANTE CON NAVEGACIÓN) */}
+                    {/* VISTA 1: 🎠 SLIDER DE REGALOS (UNO EN UNO DE TAMAÑO MAYOR) */}
                     if (vaultViewMode === 'slider') {
                       return (
                         <div className="space-y-3 relative group/slider">
@@ -4518,12 +4647,12 @@ export default function VictoriaSecretRanking({
                               type="button"
                               onClick={() => scrollGiftSlider('left')}
                               disabled={!canScrollLeft}
-                              className={`absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/90 text-amber-300 hover:bg-amber-500 hover:text-slate-950 border-2 border-amber-400/80 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
+                              className={`custom-bg absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-950/90 text-pink-300 hover:bg-[#ff2d85] hover:text-white border-2 border-[#ff2d85]/80 shadow-[0_4px_20px_rgba(255,45,133,0.35)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
                                 !canScrollLeft ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'
                               }`}
-                              title="Deslizar regalos a la izquierda"
+                              title="Regalo anterior"
                             >
-                              <ChevronLeft className="w-5 h-5" />
+                              <ChevronLeft className="w-6 h-6" />
                             </button>
 
                             {/* Right Chevron Button */}
@@ -4531,15 +4660,15 @@ export default function VictoriaSecretRanking({
                               type="button"
                               onClick={() => scrollGiftSlider('right')}
                               disabled={!canScrollRight}
-                              className={`absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/90 text-amber-300 hover:bg-amber-500 hover:text-slate-950 border-2 border-amber-400/80 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
+                              className={`custom-bg absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-950/90 text-pink-300 hover:bg-[#ff2d85] hover:text-white border-2 border-[#ff2d85]/80 shadow-[0_4px_20px_rgba(255,45,133,0.35)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
                                 !canScrollRight ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'
                               }`}
-                              title="Deslizar regalos a la derecha"
+                              title="Siguiente regalo"
                             >
-                              <ChevronRight className="w-5 h-5" />
+                              <ChevronRight className="w-6 h-6" />
                             </button>
 
-                            {/* Horizontal Slider Scroll Rail with Touch & Mouse Drag */}
+                            {/* Horizontal Slider Scroll Rail (1-by-1 Large Gift Cards) */}
                             <div
                               ref={giftSliderRef}
                               onScroll={handleSliderScroll}
@@ -4547,10 +4676,10 @@ export default function VictoriaSecretRanking({
                               onMouseLeave={handleSliderMouseUpOrLeave}
                               onMouseUp={handleSliderMouseUpOrLeave}
                               onMouseMove={handleSliderMouseMove}
-                              className="flex gap-2.5 sm:gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 px-1 scrollbar-none cursor-grab active:cursor-grabbing select-none"
+                              className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 scrollbar-none cursor-grab active:cursor-grabbing select-none"
                               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                             >
-                              {filteredReceived.map((gift) => {
+                              {filteredReceived.map((gift, index) => {
                                 const isCert = gift.giftName.toLowerCase().includes('certificado');
                                 const isWatch = gift.giftName.toLowerCase().includes('reloj');
                                 const isSelected = selectedShowcaseGiftId === gift.id;
@@ -4558,125 +4687,135 @@ export default function VictoriaSecretRanking({
                                 return (
                                   <div
                                     key={gift.id}
-                                    onClick={() => setSelectedShowcaseGiftId(gift.id)}
-                                    className={`w-[210px] sm:w-[230px] md:w-[245px] shrink-0 snap-start rounded-xl border p-2 sm:p-2.5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-1.5 relative group cursor-pointer text-left ${
-                                      isSelected 
-                                        ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/70 shadow-xs' 
-                                        : 'bg-white border-slate-200/90 hover:border-pink-300 hover:bg-pink-50/20'
-                                    }`}
+                                    className="min-w-full w-full shrink-0 snap-center px-4 sm:px-10 py-2"
                                   >
-                                    {/* Active Indicator Dot */}
-                                    {isSelected && (
-                                      <span className="absolute -top-1.5 right-1.5 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[7.5px] rounded-full uppercase tracking-wider font-mono shadow-xs">
-                                        ★ ACTIVO
-                                      </span>
-                                    )}
+                                    <div
+                                      onClick={() => setSelectedShowcaseGiftId(gift.id)}
+                                      className={`w-full max-w-md mx-auto rounded-[24px] border-[3.5px] border-[#00f0ff] p-3.5 sm:p-4.5 shadow-[0_0_24px_rgba(0,240,255,0.45),0_0_45px_rgba(56,189,248,0.28)] hover:shadow-[0_0_32px_rgba(0,240,255,0.7),0_0_60px_rgba(56,189,248,0.42)] transition-all flex flex-col justify-between space-y-2.5 relative group cursor-pointer text-left ${
+                                        isSelected 
+                                          ? 'bg-cyan-50/40 ring-2 ring-[#00f0ff]/60' 
+                                          : 'bg-white hover:bg-cyan-50/15'
+                                      }`}
+                                    >
+                                      {/* Top Slide Counter & Active Indicator */}
+                                      <div className="absolute top-2.5 right-3.5 flex items-center gap-1.5">
+                                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-bold text-[10px] tabular-nums">
+                                          {index + 1} / {filteredReceived.length}
+                                        </span>
+                                        {isSelected && (
+                                          <span className="px-2 py-0.5 bg-[#00b4d8] text-white font-black text-[9px] rounded-full uppercase tracking-wider font-mono shadow-xs">
+                                            ★ ACTIVO
+                                          </span>
+                                        )}
+                                      </div>
 
-                                    {/* Card Header: Sender Mini-Avatar & Info + Price */}
-                                    <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                                      <div className="flex items-center gap-1.5 min-w-0">
-                                        <img
-                                          src={gift.senderAvatar}
-                                          alt={gift.senderName}
-                                          className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-pink-400/60 ring-1 ring-pink-500/20 shrink-0"
-                                        />
-                                        <div className="min-w-0">
-                                          <h5 className="text-[10px] font-bold text-slate-900 truncate font-serif leading-tight">
-                                            {gift.senderName}
-                                          </h5>
-                                          <span className="text-[8px] text-pink-600 font-mono truncate block leading-none">
-                                            @{gift.senderUsername}
+                                      {/* Card Header: Compact Sender Avatar & Info + Price */}
+                                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 pt-1">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                          <img
+                                            src={gift.senderAvatar}
+                                            alt={gift.senderName}
+                                            className="w-10 h-10 rounded-full object-cover border-2 border-[#00f0ff]/80 shrink-0 shadow-xs"
+                                            referrerPolicy="no-referrer"
+                                          />
+                                          <div className="min-w-0">
+                                            <h5 className="text-sm font-bold text-slate-900 truncate font-serif leading-tight">
+                                              {gift.senderName}
+                                            </h5>
+                                            <span className="text-[11px] text-pink-600 font-mono truncate block">
+                                              @{gift.senderUsername}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        <div className="text-right shrink-0 sm:pr-16">
+                                          <span className="text-sm sm:text-base font-black font-mono text-amber-600 block leading-tight">
+                                            🪙 {gift.price.toLocaleString()}
+                                          </span>
+                                          <span className="text-[11px] text-emerald-600 font-mono font-bold block">
+                                            ({gift.euroCost.toLocaleString()}€)
                                           </span>
                                         </div>
                                       </div>
 
-                                      <div className="text-right shrink-0">
-                                        <span className="text-[10px] font-black font-mono text-amber-600 block leading-tight">
-                                          🪙 {gift.price >= 1000 ? `${(gift.price / 1000).toFixed(gift.price % 1000 === 0 ? 0 : 1)}k` : gift.price}
-                                        </span>
-                                        <span className="text-[8px] text-emerald-600 font-mono font-bold leading-none block">
-                                          ({gift.euroCost}€)
-                                        </span>
+                                      {/* Card Body: Compact Icon & Gift Title */}
+                                      <div className="flex items-center gap-3 py-0.5">
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-pink-50 border border-cyan-200 flex items-center justify-center text-2xl sm:text-3xl shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                                          {gift.giftIcon}
+                                        </div>
+                                        <div className="min-w-0 flex-1 space-y-1">
+                                          <h4 className="text-base sm:text-lg font-black text-slate-900 font-serif leading-tight truncate">
+                                            {gift.giftName}
+                                          </h4>
+                                          <span className="text-[10px] font-mono uppercase font-bold text-pink-800 bg-pink-100/80 border border-pink-200 px-2 py-0.5 rounded-lg inline-block">
+                                            {gift.category === 'lujo' ? '👑 Lujo Exclusivo' : gift.category === 'intermedio' ? '💎 Joya VIP' : '⭐ Esencial'}
+                                          </span>
+                                        </div>
                                       </div>
-                                    </div>
 
-                                    {/* Card Body: Icon & Compact Title */}
-                                    <div className="flex items-center gap-1.5">
-                                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-50 to-pink-50 border border-amber-200/60 flex items-center justify-center text-base sm:text-lg shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
-                                        {gift.giftIcon}
+                                      {/* Compact Readable Message Quotation */}
+                                      <div className="text-xs italic text-slate-600 font-serif bg-slate-50/90 px-3 py-2 rounded-xl border border-slate-100 leading-relaxed line-clamp-2">
+                                        "{gift.message}"
                                       </div>
-                                      <div className="min-w-0 flex-1">
-                                        <h4 className="text-[11px] font-black text-slate-900 truncate font-serif leading-tight">
-                                          {gift.giftName}
-                                        </h4>
-                                        <span className="text-[7px] font-mono uppercase font-bold text-amber-800 bg-amber-100/70 px-1 py-0.2 rounded inline-block leading-none mt-0.5">
-                                          {gift.category === 'lujo' ? '👑 Lujo' : gift.category === 'intermedio' ? '💎 Joya' : '⭐ Esencial'}
-                                        </span>
+
+                                      {/* Card Footer: Date & Compact Action Buttons */}
+                                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-500">
+                                        <span>📅 {gift.dateFormatted}</span>
+
+                                        <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedShowcaseGiftId(gift.id);
+                                              if (isCert) {
+                                                setShowCertificateModal(true);
+                                              } else if (isWatch) {
+                                                setActiveModalGift(gift);
+                                                setShowLuxuryWatchModal(true);
+                                              } else {
+                                                setSelectedGenericModalGift({
+                                                  name: gift.giftName,
+                                                  icon: gift.giftIcon,
+                                                  price: gift.price,
+                                                  euroCost: gift.euroCost,
+                                                  senderName: gift.senderName,
+                                                  senderUsername: gift.senderUsername,
+                                                  senderAvatar: gift.senderAvatar,
+                                                  message: gift.message,
+                                                  dateFormatted: gift.dateFormatted,
+                                                  badgeText: `${gift.euroCost}€ OFICIAL VIP`
+                                                });
+                                                setShowGenericGiftModal(true);
+                                              }
+                                            }}
+                                            className="custom-bg px-3 py-1.5 bg-[#ff2d85] hover:bg-pink-600 text-white font-bold rounded-xl text-[11px] uppercase transition cursor-pointer flex items-center gap-1 shadow-sm whitespace-nowrap"
+                                            title="Inspeccionar en grande"
+                                          >
+                                            <Sparkles className="w-3 h-3" />
+                                            <span>{isCert ? '📜 Ver Diploma' : 'Ver en Grande'}</span>
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleThankSender(gift)}
+                                            className="p-1.5 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded-xl transition cursor-pointer"
+                                            title={`Agradecer a ${gift.senderName}`}
+                                          >
+                                            <Heart className="w-3.5 h-3.5" />
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteReceivedGift(gift.id)}
+                                            className="p-1.5 bg-rose-50 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-200 rounded-xl transition cursor-pointer"
+                                            title={`Eliminar "${gift.giftName}"`}
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
                                       </div>
+
                                     </div>
-
-                                    {/* Compact 1-line quotation */}
-                                    <div className="text-[8.5px] italic text-slate-500 truncate font-serif bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title={gift.message}>
-                                      "{gift.message}"
-                                    </div>
-
-                                    {/* Card Footer: Date & Quick Action Buttons */}
-                                    <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[8px] font-mono text-slate-400">
-                                      <span className="truncate max-w-[65px]">{gift.dateFormatted.split('•')[0]}</span>
-
-                                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setSelectedShowcaseGiftId(gift.id);
-                                            if (isCert) {
-                                              setShowCertificateModal(true);
-                                            } else if (isWatch) {
-                                              setActiveModalGift(gift);
-                                              setShowLuxuryWatchModal(true);
-                                            } else {
-                                              setSelectedGenericModalGift({
-                                                name: gift.giftName,
-                                                icon: gift.giftIcon,
-                                                price: gift.price,
-                                                euroCost: gift.euroCost,
-                                                senderName: gift.senderName,
-                                                senderUsername: gift.senderUsername,
-                                                senderAvatar: gift.senderAvatar,
-                                                message: gift.message,
-                                                dateFormatted: gift.dateFormatted,
-                                                badgeText: `${gift.euroCost}€ OFICIAL VIP`
-                                              });
-                                              setShowGenericGiftModal(true);
-                                            }
-                                          }}
-                                          className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
-                                          title="Inspeccionar en grande"
-                                        >
-                                          <Sparkles className="w-2 h-2" />
-                                          <span>{isCert ? '📜 Ver' : 'Ver'}</span>
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => handleThankSender(gift)}
-                                          className="p-1 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded transition cursor-pointer"
-                                          title={`Agradecer a ${gift.senderName}`}
-                                        >
-                                          <Heart className="w-2.5 h-2.5" />
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteReceivedGift(gift.id)}
-                                          className="p-1 bg-rose-50 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-200 rounded transition cursor-pointer"
-                                          title={`Eliminar "${gift.giftName}"`}
-                                        >
-                                          <Trash2 className="w-2.5 h-2.5" />
-                                        </button>
-                                      </div>
-                                    </div>
-
                                   </div>
                                 );
                               })}
@@ -4703,14 +4842,14 @@ export default function VictoriaSecretRanking({
                                 }}
                                 className={`rounded-2xl border p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-2 relative group cursor-pointer text-left ${
                                   isSelected 
-                                    ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/70 shadow-xs' 
+                                    ? 'bg-pink-50/90 border-[#ff2d85] ring-2 ring-pink-400/70 shadow-xs' 
                                     : 'bg-white border-slate-200/90 hover:border-pink-300 hover:bg-pink-50/20'
                                 }`}
                               >
                                 {/* Active Indicator Dot & Delete Selected Button */}
                                 {isSelected && (
                                   <div className="absolute -top-2.5 right-2 flex items-center gap-1 z-10">
-                                    <span className="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-[8px] rounded-full uppercase tracking-wider font-mono shadow-xs">
+                                    <span className="px-2 py-0.5 bg-[#ff2d85] text-white font-black text-[8px] rounded-full uppercase tracking-wider font-mono shadow-xs">
                                       ★ ACTIVO
                                     </span>
                                     <button
@@ -4806,7 +4945,7 @@ export default function VictoriaSecretRanking({
                                           setShowGenericGiftModal(true);
                                         }
                                       }}
-                                      className="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8.5px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
+                                      className="custom-bg px-2 py-0.5 bg-[#ff2d85] hover:bg-pink-600 text-white font-bold rounded text-[8.5px] uppercase transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
                                       title="Inspeccionar en grande"
                                     >
                                       <Sparkles className="w-2 h-2" />
@@ -4920,7 +5059,7 @@ export default function VictoriaSecretRanking({
                                               setShowGenericGiftModal(true);
                                             }
                                           }}
-                                          className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded text-[9px] font-bold uppercase transition"
+                                          className="custom-bg px-2 py-1 bg-[#ff2d85] hover:bg-pink-600 text-white rounded text-[9px] font-bold uppercase transition"
                                         >
                                           {isCert ? '📜 Ver' : 'Ver'}
                                         </button>
@@ -4961,39 +5100,32 @@ export default function VictoriaSecretRanking({
               {giftsSubTab === 'sent' && (
                 <div className="space-y-6 animate-fade-in">
                   
-                  {/* Summary Metric Stats Banner for Sent Gifts */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-gradient-to-br from-pink-50 to-rose-50/60 p-4 rounded-2xl border border-pink-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-pink-600 block tracking-wider">Regalos Enviados</span>
-                      <span className="text-2xl font-black font-serif text-slate-900 mt-1 block">{sentGifts.length}</span>
-                      <span className="text-[11px] text-slate-500 font-medium">Entregados con éxito en directo</span>
+                  {/* Summary Metric Stats Banner for Sent Gifts (Compact numbers, icons & name fitting cleanly inside) */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+                    <div className="bg-gradient-to-br from-pink-50 to-rose-50/70 p-4 sm:p-5 rounded-3xl border border-pink-200/80 shadow-xs flex flex-col justify-between min-h-[120px] sm:min-h-[132px] overflow-hidden">
+                      <span className="text-[11px] font-mono font-black uppercase text-pink-600 block tracking-wider">Regalos Enviados</span>
+                      <span className="text-xl sm:text-2xl font-black font-serif text-slate-900 my-1.5 block tabular-nums">{sentGifts.length}</span>
+                      <span className="text-xs text-slate-600 font-medium">Entregados con éxito en directo</span>
                     </div>
 
-                    <div className="bg-gradient-to-br from-amber-50 to-yellow-50/60 p-4 rounded-2xl border border-amber-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-amber-700 block tracking-wider">Monedas Invertidas</span>
-                      <span className="text-2xl font-black font-mono text-amber-600 mt-1 block">
-                        🪙 {sentGifts.reduce((acc, g) => acc + g.price, 0).toLocaleString()}
+                    <div className="bg-gradient-to-br from-amber-50 to-yellow-50/70 p-4 sm:p-5 rounded-3xl border border-amber-200/80 shadow-xs flex flex-col justify-between min-h-[120px] sm:min-h-[132px] overflow-hidden">
+                      <span className="text-[11px] font-mono font-black uppercase text-amber-700 block tracking-wider">Monedas Invertidas</span>
+                      <span className="text-lg sm:text-xl font-black font-mono text-amber-600 my-1.5 flex items-center gap-1.5 tabular-nums truncate">
+                        <span className="text-base shrink-0">🪙</span>
+                        <span className="truncate">{sentGifts.reduce((acc, g) => acc + g.price, 0).toLocaleString()}</span>
                       </span>
-                      <span className="text-[11px] text-emerald-600 font-bold font-mono">
+                      <span className="text-xs text-emerald-600 font-bold font-mono">
                         ≈ {sentGifts.reduce((acc, g) => acc + g.euroCost, 0).toLocaleString()}€ patrocinados
                       </span>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50/60 p-4 rounded-2xl border border-purple-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-purple-700 block tracking-wider">Modelo Favorita</span>
-                      <span className="text-base font-extrabold font-serif text-slate-900 mt-1 truncate block flex items-center gap-1">
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50/70 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-xs flex flex-col justify-between min-h-[120px] sm:min-h-[132px] overflow-hidden">
+                      <span className="text-[11px] font-mono font-black uppercase text-purple-700 block tracking-wider">Modelo Favorita</span>
+                      <span className="text-base sm:text-lg font-extrabold font-serif text-slate-900 my-1.5 flex items-center gap-1.5 truncate">
                         <Heart className="w-4 h-4 text-pink-500 fill-pink-500 shrink-0" />
-                        Adriana Lima
+                        <span className="truncate">Adriana Lima</span>
                       </span>
-                      <span className="text-[11px] text-purple-600 font-semibold font-mono">Destinataria Principal</span>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-4 rounded-2xl border border-emerald-200/70 shadow-2xs">
-                      <span className="text-[10px] font-mono font-black uppercase text-emerald-700 block tracking-wider">Puntos de Mecenas</span>
-                      <span className="text-2xl font-black font-mono text-emerald-600 mt-1 block">
-                        +{sentGifts.reduce((acc, g) => acc + Math.floor(g.price / 10), 0)} pts
-                      </span>
-                      <span className="text-[11px] text-slate-500 font-medium">Nivel Mecenas Platino VIP</span>
+                      <span className="text-xs text-purple-600 font-semibold font-mono">Destinataria Principal</span>
                     </div>
                   </div>
 
@@ -5044,126 +5176,203 @@ export default function VictoriaSecretRanking({
                     </div>
                   </div>
 
-                  {/* Sent Gifts Grid - Tamaño más chico y compacto */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                    {(() => {
-                      const filteredSent = sentGifts.filter(g => {
-                        if (!isGiftInTimePeriod(g.timestamp, giftTimeFilter)) return false;
-                        if (sentCategoryFilter !== 'all' && g.category !== sentCategoryFilter) return false;
-                        if (sentSearchQuery) {
-                          const q = sentSearchQuery.toLowerCase();
-                          return (
-                            g.giftName.toLowerCase().includes(q) ||
-                            g.receiverName.toLowerCase().includes(q) ||
-                            g.receiverUsername.toLowerCase().includes(q) ||
-                            g.message.toLowerCase().includes(q)
-                          );
-                        }
-                        return true;
-                      });
-
-                      if (filteredSent.length === 0) {
+                  {/* Sent Gifts 1-by-1 Slider matching image.png (Electric Blue Frame & Compact Card) */}
+                  {(() => {
+                    const filteredSent = sentGifts.filter(g => {
+                      if (!isGiftInTimePeriod(g.timestamp, giftTimeFilter)) return false;
+                      if (sentCategoryFilter !== 'all' && g.category !== sentCategoryFilter) return false;
+                      if (sentSearchQuery) {
+                        const q = sentSearchQuery.toLowerCase();
                         return (
-                          <div className="col-span-full bg-white rounded-2xl border border-dashed border-pink-200 p-6 text-center space-y-2">
-                            <Clock className="w-7 h-7 text-pink-400 mx-auto" />
-                            <h4 className="font-serif font-bold text-slate-800 text-xs sm:text-sm">
-                              No hay regalos enviados en el período: {giftTimeFilter === 'actuales' ? 'Actuales (Última semana)' : giftTimeFilter === 'recientes' ? 'Recientes (Último mes)' : 'Antiguos (> 1 mes)'}
-                            </h4>
-                            <p className="text-[11px] text-slate-400 font-mono">
-                              Selecciona otro período en los botones superiores para explorar más envíos o envía un nuevo regalo desde el catálogo.
-                            </p>
-                          </div>
+                          g.giftName.toLowerCase().includes(q) ||
+                          g.receiverName.toLowerCase().includes(q) ||
+                          g.receiverUsername.toLowerCase().includes(q) ||
+                          g.message.toLowerCase().includes(q)
                         );
                       }
+                      return true;
+                    });
 
-                      return filteredSent.map((gift) => (
-                        <div
-                          key={gift.id}
-                          className="bg-white rounded-xl border border-pink-100 p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-2 relative group text-left"
-                        >
-                          {/* Top row: Recipient Avatar & Details + Price */}
-                          <div className="flex items-start justify-between gap-2 pb-1.5 border-b border-slate-100">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <img
-                                src={gift.receiverAvatar}
-                                alt={gift.receiverName}
-                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-amber-400/60 shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <span className="text-[7.5px] uppercase font-mono font-bold text-amber-600 block tracking-wider leading-none">
-                                  ENVIADO PARA:
-                                </span>
-                                <h4 className="text-[11px] font-bold text-slate-900 truncate font-serif flex items-center gap-1 leading-tight mt-0.5">
-                                  {gift.receiverName}
-                                </h4>
-                                <span className="text-[9px] text-slate-400 font-mono truncate block leading-none">@{gift.receiverUsername}</span>
-                              </div>
-                            </div>
+                    if (filteredSent.length === 0) {
+                      return (
+                        <div className="bg-white rounded-2xl border border-dashed border-pink-200 p-6 text-center space-y-2">
+                          <Clock className="w-7 h-7 text-pink-400 mx-auto" />
+                          <h4 className="font-serif font-bold text-slate-800 text-xs sm:text-sm">
+                            No hay regalos enviados en el período: {giftTimeFilter === 'actuales' ? 'Actuales (Última semana)' : giftTimeFilter === 'recientes' ? 'Recientes (Último mes)' : 'Antiguos (> 1 mes)'}
+                          </h4>
+                          <p className="text-[11px] text-slate-400 font-mono">
+                            Selecciona otro período en los botones superiores para explorar más envíos o envía un nuevo regalo desde el catálogo.
+                          </p>
+                        </div>
+                      );
+                    }
 
-                            <div className="text-right shrink-0">
-                              <span className="text-[11px] font-black font-mono text-amber-600 block leading-tight">🪙 {gift.price.toLocaleString()}</span>
-                              <span className="text-[9px] text-emerald-600 font-mono font-bold leading-tight">({gift.euroCost}€)</span>
-                            </div>
-                          </div>
+                    return (
+                      <div className="space-y-3 relative group/sent-slider">
+                        <div className="relative">
+                          {/* Left Chevron Button */}
+                          <button
+                            type="button"
+                            onClick={() => scrollSentSlider('left')}
+                            disabled={!canSentScrollLeft}
+                            className={`custom-bg absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-950/90 text-pink-300 hover:bg-[#ff2d85] hover:text-white border-2 border-[#ff2d85]/80 shadow-[0_4px_20px_rgba(255,45,133,0.35)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
+                              !canSentScrollLeft ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'
+                            }`}
+                            title="Envío anterior"
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </button>
 
-                          {/* Gift Badge & Name */}
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-sm shrink-0">
-                              {gift.giftIcon}
-                            </div>
-                            <div className="min-w-0">
-                              <span className="text-[11px] font-extrabold text-slate-800 block truncate font-serif leading-tight">
-                                {gift.giftName}
-                              </span>
-                              <span className="text-[7.5px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-amber-50 text-amber-800 inline-block leading-tight">
-                                {gift.isExclusive ? '👑 Lujo VIP' : '✨ Detalle Especial'}
-                              </span>
-                            </div>
-                          </div>
+                          {/* Right Chevron Button */}
+                          <button
+                            type="button"
+                            onClick={() => scrollSentSlider('right')}
+                            disabled={!canSentScrollRight}
+                            className={`custom-bg absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-950/90 text-pink-300 hover:bg-[#ff2d85] hover:text-white border-2 border-[#ff2d85]/80 shadow-[0_4px_20px_rgba(255,45,133,0.35)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${
+                              !canSentScrollRight ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:scale-110 active:scale-95'
+                            }`}
+                            title="Siguiente envío"
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </button>
 
-                          {/* Dedication Message */}
-                          <div className="bg-amber-50/40 rounded-lg p-1.5 sm:p-2 border border-amber-100/60 text-[10px] italic text-slate-700 font-serif leading-snug line-clamp-2">
-                            "{gift.message}"
-                          </div>
+                          {/* Horizontal 1-by-1 Slider Rail */}
+                          <div
+                            ref={sentSliderRef}
+                            onScroll={handleSentSliderScroll}
+                            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 scrollbar-none select-none"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                          >
+                            {filteredSent.map((gift, index) => {
+                              const isSelected = selectedSentGiftId === gift.id;
+                              const isWatch = gift.giftName.toLowerCase().includes('reloj');
 
-                          {/* Bottom Row Actions */}
-                          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-slate-500">
-                            <span className="flex items-center gap-1 text-emerald-600 font-bold text-[8.5px]">
-                              <Check className="w-2.5 h-2.5" />
-                              <span className="truncate max-w-[80px] sm:max-w-none">{gift.dateFormatted}</span>
-                            </span>
-
-                            <div className="flex items-center gap-1">
-                              {gift.isExclusive && (
-                                <button
-                                  onClick={() => {
-                                    setActiveModalGift(gift);
-                                    setShowLuxuryWatchModal(true);
-                                  }}
-                                  className="px-1.5 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[8px] uppercase transition cursor-pointer flex items-center gap-0.5"
-                                  title="Ver Animación de Lujo"
+                              return (
+                                <div
+                                  key={gift.id}
+                                  className="min-w-full w-full shrink-0 snap-center px-4 sm:px-10 py-2"
                                 >
-                                  <Sparkles className="w-2 h-2" />
-                                  <span>3D</span>
-                                </button>
-                              )}
+                                  <div
+                                    onClick={() => setSelectedSentGiftId(gift.id)}
+                                    className={`w-full max-w-md mx-auto rounded-[24px] border-[3.5px] border-[#00f0ff] p-3.5 sm:p-4.5 shadow-[0_0_24px_rgba(0,240,255,0.45),0_0_45px_rgba(56,189,248,0.28)] hover:shadow-[0_0_32px_rgba(0,240,255,0.7),0_0_60px_rgba(56,189,248,0.42)] transition-all flex flex-col justify-between space-y-2.5 relative group cursor-pointer text-left ${
+                                      isSelected
+                                        ? 'bg-cyan-50/40 ring-2 ring-[#00f0ff]/60'
+                                        : 'bg-white hover:bg-cyan-50/15'
+                                    }`}
+                                  >
+                                    {/* Top Slide Counter */}
+                                    <div className="absolute top-2.5 right-3.5 flex items-center gap-1.5">
+                                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-bold text-[10px] tabular-nums">
+                                        {index + 1} / {filteredSent.length}
+                                      </span>
+                                    </div>
 
-                              <button
-                                onClick={() => {
-                                  setRecipientModelId(models.find(m => m.name === gift.receiverName)?.id || 'topf-1');
-                                  setGiftsSubTab('catalog');
-                                }}
-                                className="px-2 py-0.5 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded font-bold text-[8.5px] transition cursor-pointer flex items-center gap-0.5"
-                              >
-                                <Send className="w-2.5 h-2.5" />
-                                <span>Enviar otro</span>
-                              </button>
-                            </div>
+                                    {/* Card Header: Recipient Avatar & Username + Price */}
+                                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 pt-1">
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <img
+                                          src={gift.receiverAvatar}
+                                          alt={gift.receiverName}
+                                          className="w-10 h-10 rounded-full object-cover border-2 border-[#00f0ff]/80 shrink-0 shadow-xs"
+                                          referrerPolicy="no-referrer"
+                                        />
+                                        <div className="min-w-0">
+                                          <h5 className="text-sm font-bold text-slate-900 truncate font-serif leading-tight">
+                                            {gift.receiverName}
+                                          </h5>
+                                          <span className="text-[11px] text-pink-600 font-mono truncate block">
+                                            @{gift.receiverUsername}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="text-right shrink-0 sm:pr-16">
+                                        <span className="text-sm sm:text-base font-black font-mono text-amber-600 block leading-tight">
+                                          🪙 {gift.price.toLocaleString()}
+                                        </span>
+                                        <span className="text-[11px] text-emerald-600 font-mono font-bold block">
+                                          ({gift.euroCost.toLocaleString()}€)
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Card Body: Icon & Gift Title + Badge */}
+                                    <div className="flex items-center gap-3 py-0.5">
+                                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-pink-50 border border-cyan-200 flex items-center justify-center text-2xl sm:text-3xl shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                                        {gift.giftIcon}
+                                      </div>
+                                      <div className="min-w-0 flex-1 space-y-1">
+                                        <h4 className="text-base sm:text-lg font-black text-slate-900 font-serif leading-tight truncate">
+                                          {gift.giftName}
+                                        </h4>
+                                        <span className="text-[10px] font-mono uppercase font-bold text-pink-800 bg-pink-100/80 border border-pink-200 px-2 py-0.5 rounded-lg inline-block">
+                                          {gift.category === 'lujo' || gift.isExclusive ? '👑 Lujo Exclusivo' : gift.category === 'intermedio' ? '💎 Joya VIP' : '✨ Detalle Especial'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Dedication Message Quotation */}
+                                    <div className="text-xs italic text-slate-600 font-serif bg-slate-50/90 px-3 py-2 rounded-xl border border-slate-100 leading-relaxed line-clamp-2">
+                                      "{gift.message}"
+                                    </div>
+
+                                    {/* Card Footer: Date & Action Buttons matching image.png */}
+                                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-500">
+                                      <span>📅 {gift.dateFormatted}</span>
+
+                                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedSentGiftId(gift.id);
+                                            if (isWatch || gift.isExclusive) {
+                                              setActiveModalGift(gift);
+                                              setShowLuxuryWatchModal(true);
+                                            } else {
+                                              setSelectedGenericModalGift({
+                                                name: gift.giftName,
+                                                icon: gift.giftIcon,
+                                                price: gift.price,
+                                                euroCost: gift.euroCost,
+                                                senderName: gift.receiverName,
+                                                senderUsername: gift.receiverUsername,
+                                                senderAvatar: gift.receiverAvatar,
+                                                message: gift.message,
+                                                dateFormatted: gift.dateFormatted,
+                                                badgeText: `${gift.euroCost}€ ENVIADO VIP`
+                                              });
+                                              setShowGenericGiftModal(true);
+                                            }
+                                          }}
+                                          className="custom-bg px-3 py-1.5 bg-[#ff2d85] hover:bg-pink-600 text-white font-bold rounded-xl text-[11px] uppercase transition cursor-pointer flex items-center gap-1 shadow-sm whitespace-nowrap"
+                                          title="Ver en grande"
+                                        >
+                                          <Sparkles className="w-3 h-3" />
+                                          <span>Ver en Grande</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setRecipientModelId(models.find(m => m.name === gift.receiverName)?.id || 'topf-1');
+                                            setGiftsSubTab('catalog');
+                                          }}
+                                          className="p-1.5 bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 rounded-xl transition cursor-pointer"
+                                          title={`Enviar otro regalo a ${gift.receiverName}`}
+                                        >
+                                          <Send className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      ));
-                    })()}
-                  </div>
+                      </div>
+                    );
+                  })()}
 
                 </div>
               )}
@@ -5205,9 +5414,14 @@ export default function VictoriaSecretRanking({
                         <button
                           key={gift.id}
                           type="button"
-                          onClick={() => handleSendGift(gift)}
+                          onClick={() => {
+                            setSelectedGiftToDedicate(gift);
+                            setRecipientSearchQuery('');
+                            setCustomDedicationMsg('');
+                            setCustomRecipientOverride(null);
+                          }}
                           className="group relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/80 border border-slate-200 hover:border-pink-400 p-2.5 sm:p-3 rounded-2xl aspect-square w-full transition-all duration-150 text-center cursor-pointer select-none shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-95"
-                          title={`Enviar ${gift.name} por 🪙 ${gift.price.toLocaleString()}`}
+                          title={`Elegir destinatario para enviar ${gift.name} (🪙 ${gift.price.toLocaleString()})`}
                         >
                           <span className="text-3xl sm:text-4xl filter drop-shadow group-hover:scale-110 transition transform duration-150">
                             {gift.icon}
@@ -5226,13 +5440,210 @@ export default function VictoriaSecretRanking({
 
                     {/* Footer matching z.png */}
                     <div className="text-[10px] sm:text-xs text-zinc-400 text-center pt-3 border-t border-zinc-800/80 italic uppercase font-mono tracking-wider flex items-center justify-center gap-2">
-                      <span>PRESIONA PARA ENVIAR</span>
+                      <span>HAZ CLIC EN UN REGALO PARA ELEGIR A QUIÉN ENVIARLO</span>
                       <span>·</span>
                       <span className="text-yellow-400 font-bold">🪙 {userGiftBalance.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Modal para elegir a cualquier persona al hacer clic en un regalo */}
+              {selectedGiftToDedicate && (() => {
+                const knownRecipients = models.length > 0 ? models : [
+                  {
+                    id: 'topf-1',
+                    name: 'Adriana Lima',
+                    username: 'adrianalima_w1',
+                    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
+                  }
+                ];
+                const q = recipientSearchQuery.trim().toLowerCase();
+                const filteredPeople = knownRecipients.filter((m: any) =>
+                  !q ||
+                  m.name?.toLowerCase().includes(q) ||
+                  m.username?.toLowerCase().includes(q)
+                );
+                const selectedPerson: any =
+                  customRecipientOverride ||
+                  knownRecipients.find((m: any) => m.id === recipientModelId) ||
+                  knownRecipients[0];
+
+                return (
+                  <div
+                    className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    onClick={() => setSelectedGiftToDedicate(null)}
+                  >
+                    <div
+                      className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-[#ff2d85] text-left relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-[#ff2d85] to-rose-600 px-5 py-4 text-white flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shrink-0">
+                            {selectedGiftToDedicate.icon}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-pink-100 block">
+                              Enviar regalo
+                            </span>
+                            <h3 className="text-base font-black truncate">
+                              {selectedGiftToDedicate.name} · 🪙 {selectedGiftToDedicate.price.toLocaleString()}
+                            </h3>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedGiftToDedicate(null)}
+                          className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center cursor-pointer border-0 shrink-0 font-bold"
+                          title="Cerrar"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Body: Choose ANY recipient + optional dedication */}
+                      <div className="p-5 space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs font-black text-slate-800 uppercase tracking-wider font-mono">
+                              ¿A quién quieres enviárselo?
+                            </label>
+                            <span className="text-[11px] font-mono text-slate-500">
+                              Saldo: <strong className="text-pink-600">🪙 {userGiftBalance.toLocaleString()}</strong>
+                            </span>
+                          </div>
+
+                          {/* Search or write custom person name */}
+                          <div className="relative">
+                            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                              type="text"
+                              value={recipientSearchQuery}
+                              onChange={(e) => setRecipientSearchQuery(e.target.value)}
+                              placeholder="Busca una persona o escribe cualquier nombre..."
+                              className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#ff2d85] focus:bg-white rounded-xl text-xs text-slate-900 font-medium focus:outline-none transition"
+                            />
+                          </div>
+
+                          {/* Custom person quick option whenever user types a name */}
+                          {recipientSearchQuery.trim().length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const typed = recipientSearchQuery.trim();
+                                setCustomRecipientOverride({
+                                  id: `custom-${Date.now()}`,
+                                  name: typed,
+                                  username: typed.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'invitado_vip',
+                                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+                                });
+                              }}
+                              className={`w-full px-3 py-2 rounded-xl border text-left text-xs font-bold flex items-center justify-between gap-2 cursor-pointer transition ${
+                                customRecipientOverride?.name === recipientSearchQuery.trim()
+                                  ? 'bg-pink-50 border-[#ff2d85] text-pink-700'
+                                  : 'bg-slate-50 hover:bg-pink-50/60 border-slate-200 text-slate-700'
+                              }`}
+                            >
+                              <span className="truncate">✨ Elegir persona escrita: «{recipientSearchQuery.trim()}»</span>
+                              <Check className="w-3.5 h-3.5 shrink-0 text-[#ff2d85]" />
+                            </button>
+                          )}
+
+                          {/* Scrollable Roster List */}
+                          <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 border border-slate-100 rounded-2xl p-2 bg-slate-50/60">
+                            {filteredPeople.map((person: any) => {
+                              const isActive = !customRecipientOverride && selectedPerson?.id === person.id;
+                              return (
+                                <button
+                                  key={person.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setCustomRecipientOverride(null);
+                                    setRecipientModelId(person.id);
+                                  }}
+                                  className={`w-full flex items-center justify-between gap-2.5 p-2 rounded-xl border text-left transition cursor-pointer ${
+                                    isActive
+                                      ? 'bg-pink-50 border-[#ff2d85] shadow-xs'
+                                      : 'bg-white hover:bg-pink-50/40 border-slate-100'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <img
+                                      src={person.avatar}
+                                      alt={person.name}
+                                      className="w-9 h-9 rounded-full object-cover border border-pink-200 shrink-0"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-slate-900 truncate">{person.name}</p>
+                                      <p className="text-[10px] font-mono text-pink-600 truncate">
+                                        @{person.username || person.name.toLowerCase().replace(/[^a-z0-9]/g, '')}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {isActive && (
+                                    <span className="px-2 py-0.5 rounded-full bg-[#ff2d85] text-white text-[10px] font-black shrink-0">
+                                      Elegida
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                            {filteredPeople.length === 0 && (
+                              <p className="text-[11px] text-slate-500 text-center py-3">
+                                Pulsa arriba en «Elegir persona escrita» para enviárselo directamente.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Optional dedication */}
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Mensaje de dedicatoria (opcional)
+                          </label>
+                          <input
+                            type="text"
+                            value={customDedicationMsg}
+                            onChange={(e) => setCustomDedicationMsg(e.target.value)}
+                            placeholder={`¡Para ${selectedPerson?.name || 'ti'}! Disfruta de este detalle especial ✨`}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#ff2d85] focus:bg-white rounded-xl text-xs text-slate-800 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Confirm Actions */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedGiftToDedicate(null)}
+                            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer border-0"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const giftToSend = selectedGiftToDedicate;
+                              const target = selectedPerson;
+                              const msg = customDedicationMsg.trim() || undefined;
+                              setSelectedGiftToDedicate(null);
+                              handleSendGift(giftToSend, msg, target);
+                            }}
+                            className="custom-bg flex-1 px-4 py-2.5 rounded-xl bg-[#ff2d85] hover:bg-pink-600 text-white font-black text-xs cursor-pointer border-0 flex items-center justify-center gap-1.5 shadow-md"
+                          >
+                            <Send className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">
+                              Enviar a {selectedPerson?.name || 'destinatario'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Luxury Fullscreen Animation Modal for "Reloj de Oro" / Exclusive Gifts */}
               {showLuxuryWatchModal && (
@@ -5313,177 +5724,23 @@ export default function VictoriaSecretRanking({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        handleSendGift(CHANNEL_EXTRA_GIFTS.find(g => g.name === 'Reloj de oro') || CHANNEL_EXTRA_GIFTS[4]);
-                        setShowLuxuryWatchModal(false);
-                      }}
-                      className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-sm py-3.5 rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <Gift className="w-4 h-4" />
-                      <span>Enviar "Reloj de oro" a Adriana Lima</span>
-                    </button>
+                    {giftsSubTab !== 'received' && (
+                      <button
+                        onClick={() => {
+                          handleSendGift(CHANNEL_EXTRA_GIFTS.find(g => g.name === 'Reloj de oro') || CHANNEL_EXTRA_GIFTS[4]);
+                          setShowLuxuryWatchModal(false);
+                        }}
+                        className="custom-bg w-full bg-gradient-to-r from-[#ff2d85] to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-sm py-3.5 rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Gift className="w-4 h-4" />
+                        <span>Enviar "Reloj de oro" a Adriana Lima</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* 📜 CERTIFICADO PROFESIONAL FULLSCREEN MODAL (High-Resolution Official Diploma) */}
-              {showCertificateModal && (
-                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in overflow-y-auto">
-                  <div className="relative max-w-2xl w-full my-auto">
-                    
-                    {/* Close Button */}
-                    <button
-                      onClick={() => setShowCertificateModal(false)}
-                      className="absolute -top-3 -right-3 z-30 bg-slate-900 text-white hover:bg-pink-600 w-9 h-9 rounded-full border-2 border-amber-400 shadow-xl flex items-center justify-center transition cursor-pointer font-bold"
-                    >
-                      ✕
-                    </button>
-
-                    {/* Outer Gold Framed Certificate Card */}
-                    <div className="bg-gradient-to-b from-[#fdfbf7] via-[#f7f2e5] to-[#ece1c5] rounded-3xl p-6 sm:p-10 border-4 border-amber-600 shadow-[0_0_60px_rgba(245,158,11,0.6)] text-slate-900 relative overflow-hidden">
-                      
-                      {/* Classical Ornate Double Border */}
-                      <div className="absolute inset-3 sm:inset-4 border-2 border-amber-700/40 rounded-2xl pointer-events-none" />
-                      <div className="absolute inset-4 sm:inset-5 border border-dashed border-amber-600/30 rounded-xl pointer-events-none" />
-                      
-                      {/* Corner Flourishes */}
-                      <span className="absolute top-5 left-5 text-amber-800 text-base pointer-events-none select-none">⚜️</span>
-                      <span className="absolute top-5 right-5 text-amber-800 text-base pointer-events-none select-none">⚜️</span>
-                      <span className="absolute bottom-5 left-5 text-amber-800 text-base pointer-events-none select-none">⚜️</span>
-                      <span className="absolute bottom-5 right-5 text-amber-800 text-base pointer-events-none select-none">⚜️</span>
-
-                      {/* Watermark */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none">
-                        <div className="text-center font-serif text-8xl font-black tracking-widest text-amber-950">
-                          VS RUNWAY
-                        </div>
-                      </div>
-
-                      {/* Top Crest */}
-                      <div className="text-center space-y-1 relative z-10">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 text-white shadow-md border-2 border-amber-200 mb-1">
-                          <span className="text-2xl">👑</span>
-                        </div>
-                        <p className="text-[10px] sm:text-xs font-mono font-black tracking-[0.25em] text-amber-900 uppercase">
-                          VICTORIA'S SECRET • FASHION FINANCES RUNWAY
-                        </p>
-                        <p className="text-[9px] font-mono text-amber-800/80 uppercase tracking-wider">
-                          CONSEJO INTERNACIONAL DE ALTA COSTURA & CASTING LIVE
-                        </p>
-                        <div className="h-0.5 w-32 bg-gradient-to-r from-transparent via-amber-700 to-transparent mx-auto my-2" />
-                      </div>
-
-                      {/* Big Title */}
-                      <div className="text-center my-4 sm:my-5 relative z-10">
-                        <span className="px-3 py-1 bg-amber-200/80 border border-amber-500/40 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase text-amber-950">
-                          ★ DIPLOMA DE EXCELENCIA & HOMOLOGACIÓN ★
-                        </span>
-                        <h2 className="text-2xl sm:text-4xl font-serif font-black text-amber-950 tracking-wide mt-2">
-                          CERTIFICADO PROFESIONAL
-                        </h2>
-                        <p className="text-xs sm:text-sm font-serif italic text-amber-900/90 mt-1">
-                          Especialidad en Pasarela de Moda, Presencia Escénica y Estilismo VIP
-                        </p>
-                      </div>
-
-                      {/* Certificate Text & Recipient */}
-                      <div className="text-center space-y-3 relative z-10 px-2 sm:px-6">
-                        <p className="text-xs sm:text-sm text-slate-700 font-serif">
-                          Por la presente se certifica con plena validez oficial que:
-                        </p>
-                        
-                        <div className="py-2.5 px-6 bg-gradient-to-r from-amber-100 via-amber-200 to-amber-100 border-2 border-amber-500/60 rounded-2xl shadow-inner inline-block max-w-full">
-                          <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-950 uppercase tracking-wider">
-                            Ernesto vs
-                          </h3>
-                          <span className="text-[10px] font-mono text-amber-900 font-bold block">
-                            Titular Registrado & Mecenas Oficial Runway #VS-0884
-                          </span>
-                        </div>
-
-                        <p className="text-xs sm:text-sm text-slate-700 font-serif leading-relaxed max-w-lg mx-auto">
-                          Ha completado y superado las evaluaciones oficiales del certamen de alta costura <strong>Fashion Finances París 2026</strong>, acreditando su excelencia profesional con condecoración de honor.
-                        </p>
-                      </div>
-
-                      {/* Valuation, Seal & Signatures Row */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center mt-6 pt-5 border-t border-amber-700/20 relative z-10 text-center sm:text-left">
-                        
-                        {/* Signatures */}
-                        <div className="space-y-1">
-                          <div className="border-b border-amber-900/40 pb-1 text-center">
-                            <span className="font-serif italic text-base text-amber-950 font-bold">Adriana Lima</span>
-                          </div>
-                          <span className="text-[9px] font-mono text-slate-600 block text-center uppercase">
-                            Directora de Pasarela
-                          </span>
-                        </div>
-
-                        {/* Wax Seal */}
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-800 via-red-600 to-red-900 border-2 border-amber-300 shadow-xl flex flex-col items-center justify-center text-amber-200 relative transform hover:scale-105 transition">
-                            <span className="text-lg leading-none">👑</span>
-                            <span className="text-[6px] font-mono font-black uppercase tracking-tighter mt-0.5">OFICIAL</span>
-                            <div className="absolute inset-1 rounded-full border border-dashed border-amber-200/40 pointer-events-none" />
-                          </div>
-                          <span className="text-[8px] font-mono font-extrabold text-amber-950 mt-1 uppercase">
-                            SELLO AUTÉNTICO 2026
-                          </span>
-                        </div>
-
-                        {/* Valuation & Registration */}
-                        <div className="space-y-1 text-center sm:text-right font-mono">
-                          <span className="text-[10px] text-amber-900 font-bold block">
-                            REG-ID: #VS-CERT-2026-0884
-                          </span>
-                          <span className="text-xs font-black text-slate-900 bg-amber-200/80 px-2 py-0.5 rounded border border-amber-400 inline-block">
-                            🪙 500 Monedas (500.00€)
-                          </span>
-                          <span className="text-[9px] text-slate-500 block">
-                            Emisión: 16 Ago 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Modal Action Buttons */}
-                      <div className="mt-6 pt-4 border-t border-amber-700/20 flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10">
-                        <button
-                          onClick={() => {
-                            window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                              detail: { icon: '📜' }
-                            }));
-                            alert('📜 ¡Certificado Oficial descargado con éxito en formato de alta resolución!');
-                          }}
-                          className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-300 font-mono font-bold text-xs rounded-xl shadow transition cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Descargar Diploma Oficial (PDF)</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const certGift = CHANNEL_EXTRA_GIFTS.find(g => g.name.toLowerCase().includes('certificado')) || {
-                              id: 'g-1',
-                              name: 'Certificado prof.',
-                              price: 500,
-                              icon: '📜',
-                              category: 'basico'
-                            };
-                            handleSendGift(certGift as any);
-                            setShowCertificateModal(false);
-                          }}
-                          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Enviar a {models.find(m => m.id === recipientModelId)?.name || 'Adriana Lima'} (🪙 500)</span>
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* El Certificado Profesional se renderiza integrado dentro de #boveda-regalos-container */}
 
               {/* 🎁 GENERIC GIFT FULLSCREEN INSPECTION MODAL */}
               {showGenericGiftModal && selectedGenericModalGift && (

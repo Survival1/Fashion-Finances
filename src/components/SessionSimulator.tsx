@@ -4171,15 +4171,7 @@ export default function SessionSimulator({
               : 'exclusividad, inversores de élite, lujo y alta costura.';
 
             if (isStreetwear) {
-              return (
-                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
-                  <img
-                    src="/assets/aistudio/Moda__finanzas_y_oportunidades_urbanas_62beb248.png"
-                    alt="Moda, finanzas y oportunidades urbanas - Round STREETWEAR & URBAN"
-                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
-                  />
-                </div>
-              );
+              return null;
             }
 
             if (isCasual) {
