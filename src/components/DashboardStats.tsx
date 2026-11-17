@@ -21,6 +21,7 @@ import {
   GoldenVaultWithdrawalGraphic
 } from './FinanceIcons';
 import { computeTotalRankingAndVideoLikes } from '../utils/likesCounter';
+import { useSyncedParticipatedProjects } from '../utils/participatedProjects';
 
 interface DashboardStatsProps {
   movements: FinancialMovement[];
@@ -81,10 +82,16 @@ export default function DashboardStats({
     return computeTotalRankingAndVideoLikes(models);
   }, [models, likesSyncTick]);
 
+  const {
+    effectiveTotalInvested: syncedTotalInvested,
+    participatedProjects,
+    participatedProjectsTotal
+  } = useSyncedParticipatedProjects(rawTotalInvested, isVisitor);
+
   const movements = isVisitor ? [] : initialMovements;
   const balance = isVisitor ? 0 : rawBalance;
   const totalEarnings = isVisitor ? 0 : rawTotalEarnings;
-  const totalInvested = isVisitor ? 0 : rawTotalInvested;
+  const totalInvested = isVisitor ? 0 : syncedTotalInvested;
   const totalCommissions = isVisitor ? 0 : rawTotalCommissions;
   const friendsCount = isVisitor ? 0 : (rawFriendsCount > 0 ? rawFriendsCount : 11);
   const followersCount = isVisitor ? 0 : (rawFollowersCount > 0 ? rawFollowersCount : 8);
@@ -105,22 +112,6 @@ export default function DashboardStats({
     .filter(m => m.description.toLowerCase().includes('regalo') || m.description.toLowerCase().includes('rosa') || m.description.toLowerCase().includes('perfume') || m.description.toLowerCase().includes('helado'))
     .reduce((sum, m) => sum + Math.abs(m.amount), 0);
   const totalUserGifts = userGiftsBase + userGiftsFromMovements;
-
-  // Datos sincronizados con "Proyectos en los que Participé" y "Total del Saldo Sacado"
-  const participatedProjects = React.useMemo(
-    () => [
-      { name: 'Eco-Fashion Runway', amount: totalInvested > 0 ? totalInvested : 120, pct: 55, color: 'bg-pink-600' },
-      { name: 'Elite Jewelry Drop', amount: 80, pct: 25, color: 'bg-rose-500' },
-      { name: 'Retro Resort Denim', amount: 45, pct: 15, color: 'bg-amber-500' },
-      { name: 'Sunset Breeze Swim', amount: 15, pct: 5, color: 'bg-sky-500' }
-    ],
-    [totalInvested]
-  );
-
-  const participatedProjectsTotal = React.useMemo(
-    () => participatedProjects.reduce((sum, p) => sum + p.amount, 0),
-    [participatedProjects]
-  );
 
   const midSaldoSacado = React.useMemo(
     () => (isVisitor ? 0 : Math.max(15, withdrawalTotal / 2)),

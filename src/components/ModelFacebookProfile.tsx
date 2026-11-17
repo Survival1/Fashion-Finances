@@ -21,7 +21,15 @@ import {
 } from './LuxuryWatchAnimation';
 import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { getFriendsFromStorage, saveFriendsToStorage, FriendUser } from '../utils/friendsService';
-import { getFollowedUsersFromStorage, FollowedUser } from '../utils/followingService';
+import { getFollowedUsersFromStorage, toggleFollowUserInStorage, FollowedUser } from '../utils/followingService';
+import CorporateHiringPortalModal from './CorporateHiringPortalModal';
+import {
+  doesOfferTargetUser,
+  getHiringOffersFromStorage,
+  HIRING_OFFERS_EVENT,
+  HiringOffer,
+  isAdrianaLimaIdentity,
+} from '../utils/hiringOffersService';
 import { 
   Heart, 
   Trash2,
@@ -104,6 +112,7 @@ import {
   getSynchronizedBioAndWebsite, 
   saveSynchronizedBioAndWebsite 
 } from '../utils/creatorSync';
+import { SoundTrackSheetModal, SoundVideoReference } from './SoundTrackSheetModal';
 
 interface FBComment {
   id: string;
@@ -139,6 +148,43 @@ interface PhotoInteraction {
 interface PhotoInteractionsMap {
   [photoUrl: string]: PhotoInteraction;
 }
+
+const DEFAULT_STORY_HIGHLIGHTS: { id: string; title: string; image: string }[] = [
+  { id: 'h1', title: 'lovelehee', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
+  { id: 'h2', title: 'marii2121', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=300' },
+  { id: 'h3', title: 'ann_______', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
+  { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
+  { id: 'h5', title: 'plievazz', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h6', title: 'laviniader', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h7', title: 'milano.fw', image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=300' },
+  { id: 'h8', title: 'editorial', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300' },
+  { id: 'h9', title: 'paris.haute', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h10', title: 'valeria.m', image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h11', title: 'voguestyle', image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h12', title: 'atelier.lux', image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h13', title: 'camille_off', image: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h14', title: 'runway.nyc', image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h15', title: 'bianca.couture', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h16', title: 'marco_shoot', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h17', title: 'sofiastyling', image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400' },
+  { id: 'h18', title: 'london.catwalk', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=400' }
+];
+
+const getMergedDefaultHighlights = (userId?: string): { id: string; title: string; image: string }[] => {
+  if (!userId) return DEFAULT_STORY_HIGHLIGHTS;
+  try {
+    const saved = localStorage.getItem(`highlights_${userId}`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const existingIds = new Set(parsed.map((item: any) => item.id));
+        const missingDefaults = DEFAULT_STORY_HIGHLIGHTS.filter((def) => !existingIds.has(def.id));
+        return missingDefaults.length > 0 ? [...parsed, ...missingDefaults] : parsed;
+      }
+    }
+  } catch (e) {}
+  return DEFAULT_STORY_HIGHLIGHTS;
+};
 
 const DEFAULT_PHOTO_COMMENTS = [
   "¡Espectacular toma! 😍 El ángulo y la iluminación son perfectos.",
@@ -584,9 +630,6 @@ export function ProfileIntroAndSponsors({
                 Sugerencias de amistad
               </span>
             </div>
-            <span className="text-[9.5px] font-mono text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-              {visibleFriendSuggestions.length} de {allFriendSuggestions.length}
-            </span>
           </div>
 
           {feedbackToast && (
@@ -729,10 +772,10 @@ export function ProfileIntroAndSponsors({
 
         {/* 📢 BLOQUE DE ANUNCIOS: SALÓN DE LA FAMA, VÍDEOS EN DIRECTO Y REGALOS EXCLUSIVOS (En vista Tablet y Móvil aparece ARRIBA del bloque de sugerencias con order-1) */}
         {(showContenedor1 || showContenedor2 || showContenedor3) && (
-          <div className="order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-y-9 sm:gap-x-6 sm:gap-y-6 lg:gap-y-9 max-w-[220px] sm:max-w-2xl lg:max-w-none mx-auto w-full pt-2 pb-2 items-stretch">
-            {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Captura App de moda_glamour en directo.png) */}
+          <div className="order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-y-9 sm:gap-x-6 sm:gap-y-6 lg:gap-y-9 max-w-[235px] sm:max-w-2xl lg:max-w-none mx-auto w-full pt-2 pb-2 items-stretch">
+            {/* 🏆 CONTENEDOR 1: ANUNCIO SALÓN DE LA FAMA (Imagen limpia sin texto + capa externa traducible) */}
             {showContenedor1 && (
-              <div 
+              <div
                 id="contenedor-anuncio-salon-de-la-fama-sidebar"
                 role="button"
                 tabIndex={0}
@@ -749,141 +792,239 @@ export function ProfileIntroAndSponsors({
                     window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'hall_of_fame' } }));
                   }
                 }}
-                className="flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-amber-300/80 shadow-[0_6px_20px_rgba(245,158,11,0.22)] hover:shadow-[0_10px_28px_rgba(245,158,11,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fffaf0] via-[#fef3c7] to-[#fde68a] w-full max-w-[220px] sm:max-w-none mx-auto h-full"
+                className="flex flex-col overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-amber-300/85 shadow-[0_6px_20px_rgba(245,158,11,0.22)] hover:shadow-[0_10px_28px_rgba(245,158,11,0.32)] transition-shadow duration-300 cursor-pointer group active:scale-[0.985] bg-[#fffaf0] w-full max-w-[235px] sm:max-w-none mx-auto h-full"
               >
-                <div className="relative overflow-hidden w-full">
-                  <img 
-                    src="/assets/aistudio/card_salon_fama.webp" 
-                    alt="Salón de la Fama Oficial - Conoce a las supermodelos consagradas y leyendas de la pasarela" 
-                    className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
+                {/* Contenedor puro de imagen (sin texto incrustado ni encima) */}
+                <div className="w-full h-32 sm:h-36 overflow-hidden bg-amber-100 shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=650"
+                    alt="Salón de la Fama Oficial"
+                    className="w-full h-full object-cover object-top block transition-transform duration-500 group-hover:scale-[1.03]"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero_model_clean.png';
+                    }}
                   />
-                  {/* Luminous subtle sheen on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/0 via-white/10 to-amber-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 </div>
 
-                {/* Opulent bottom section filling the card to match container 3's height */}
-                <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-amber-50/95 via-amber-100/90 to-amber-200/95 border-t border-amber-300/70 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-300/70 text-amber-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
-                      <span>👑</span> Salón Oficial • Pasarela
+                {/* Capa externa dedicada exclusivamente al texto */}
+                <div
+                  translate="yes"
+                  className="p-3.5 space-y-2.5 text-center bg-gradient-to-b from-[#fffaf0] via-[#fef3c7]/80 to-[#fde68a]/90 border-t border-amber-300/70 flex-1 flex flex-col justify-between select-text"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-300/75 text-amber-950 font-black text-[9px] uppercase tracking-wider">
+                        <span translate="no" aria-hidden="true">👑</span>
+                        <span>Salón de la Fama</span>
+                      </span>
+                      <span className="text-[10px] font-extrabold text-rose-700">
+                        Abrir ➔
+                      </span>
                     </div>
-                    <p className="text-[10.5px] text-amber-950 font-bold leading-snug m-0">
-                      Conoce las trayectorias consagradas y modelos más admiradas del mundo.
+
+                    <h4 className="text-[13px] font-black text-slate-900 leading-tight">
+                      <span translate="no" aria-hidden="true">🏆 </span>
+                      <span>Salón de la Fama Oficial</span>
+                    </h4>
+
+                    <p className="text-[10.5px] text-amber-950 font-medium leading-snug m-0">
+                      Conoce a las supermodelos consagradas, hitos históricos y leyendas eternas de la pasarela.
                     </p>
                   </div>
-                  
-                  <div className="pt-1 space-y-1.5">
+
+                  <div className="pt-1 space-y-2">
                     <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80">
+                        +50 Leyendas
+                      </span>
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80">
                         ★ Élite Global
                       </span>
-                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80 shadow-3xs">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-amber-900 border border-amber-300/80">
                         💎 Top 10 Diamante
                       </span>
                     </div>
-                    <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
-                      <span>Ver Salón Completo</span>
-                      <span>➔</span>
+
+                    <div className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow-xs flex items-center justify-center gap-1">
+                      <span>Ver Salón de la Fama</span>
+                      <span translate="no" aria-hidden="true">➔</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Captura z.png -> redirige a Canales en Directo de imagen.png) */}
+            {/* 🔴 CONTENEDOR 2: ANUNCIO VÍDEOS EN DIRECTO (Imagen limpia sin texto + capa externa traducible) */}
             {showContenedor2 && (
-                  <div 
-                    id="contenedor-anuncio-videos-directo-sidebar"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Ver Vídeos y Pasarela en Directo"
-                  onClick={() => {
+              <div
+                id="contenedor-anuncio-videos-directo-sidebar"
+                role="button"
+                tabIndex={0}
+                aria-label="Ver Vídeos y Pasarela en Directo"
+                onClick={() => {
+                  localStorage.setItem('casting_live_active_subtab', 'live');
+                  if (onNavigateToTab) {
+                    onNavigateToTab('casting_live');
+                  }
+                  window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
+                  window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
                     localStorage.setItem('casting_live_active_subtab', 'live');
-                    if (onNavigateToTab) {
-                      onNavigateToTab('casting_live');
-                    }
+                    if (onNavigateToTab) onNavigateToTab('casting_live');
                     window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
                     window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      localStorage.setItem('casting_live_active_subtab', 'live');
-                      if (onNavigateToTab) onNavigateToTab('casting_live');
-                      window.dispatchEvent(new CustomEvent('nav_to_casting_live', { detail: { subTab: 'live' } }));
-                      window.dispatchEvent(new CustomEvent('open_casting_live_subtab', { detail: { subTab: 'live' } }));
-                    }
-                  }}
-                  className={`${invertDirectoAndRegalos ? 'order-2' : ''} flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/80 shadow-[0_6px_20px_rgba(236,72,153,0.22)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.32)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] via-[#ffe4e9] to-[#fbcfe8] w-full max-w-[220px] sm:max-w-none mx-auto h-full`}
+                  }
+                }}
+                className={`${invertDirectoAndRegalos ? 'order-2' : ''} flex flex-col overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/80 shadow-[0_6px_20px_rgba(236,72,153,0.22)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.32)] transition-shadow duration-300 cursor-pointer group active:scale-[0.985] bg-[#fff5f8] w-full max-w-[235px] sm:max-w-none mx-auto h-full`}
+              >
+                {/* Contenedor puro de imagen (sin texto incrustado ni encima) */}
+                <div className="w-full h-32 sm:h-36 overflow-hidden bg-pink-100 shrink-0">
+                  <img
+                    src="/assets/aistudio/hero_model_clean.png"
+                    alt="Vídeos y Pasarela en Directo"
+                    className="w-full h-full object-cover object-top block transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </div>
+
+                {/* Capa externa dedicada exclusivamente al texto */}
+                <div
+                  translate="yes"
+                  className="p-3.5 space-y-2.5 text-center bg-gradient-to-b from-[#fff5f8] via-[#ffe4ee] to-[#fbcfe8]/90 border-t border-pink-300/70 flex-1 flex flex-col justify-between select-text"
                 >
-                  <div className="relative overflow-hidden w-full">
-                    <img 
-                      src="/assets/aistudio/card_videos_directo.webp" 
-                      alt="Vídeos y Pasarela en Directo - Sigue las emisiones en tiempo real y participa en los chats" 
-                      className="w-full h-auto object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-t-[16px] sm:rounded-t-[20px]"
-                    />
-                    {/* Luminous subtle sheen on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/0 via-white/10 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-200/85 text-rose-950 font-black text-[9px] uppercase tracking-wider">
+                        <span translate="no" aria-hidden="true">🔴</span>
+                        <span>En Directo Ahora</span>
+                      </span>
+                      <span className="text-[10px] font-extrabold text-rose-700">
+                        Sintonizar ➔
+                      </span>
+                    </div>
+
+                    <h4 className="text-[13px] font-black text-slate-900 leading-tight">
+                      <span translate="no" aria-hidden="true">🎥 </span>
+                      <span>Vídeos y Pasarela en Directo</span>
+                    </h4>
+
+                    <p className="text-[10.5px] text-rose-950 font-medium leading-snug m-0">
+                      Sigue las emisiones en tiempo real, participa en los chats en vivo y envía regalos VIP exclusivos.
+                    </p>
                   </div>
 
-                  {/* Opulent bottom section filling the card to match container 3's height */}
-                  <div className="p-3 sm:p-3.5 space-y-2 text-center bg-gradient-to-b from-rose-50/95 via-pink-100/90 to-pink-200/95 border-t border-pink-300/70 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-200/80 text-rose-950 font-black text-[9.5px] uppercase tracking-wider shadow-3xs">
-                        <span>🔴</span> Emisiones en Vivo
-                      </div>
-                      <p className="text-[10.5px] text-rose-950 font-bold leading-snug m-0">
-                        Transmisiones en tiempo real, salas interactivas y regalos exclusivos.
-                      </p>
+                  <div className="pt-1 space-y-2">
+                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80">
+                        +14 Salas Live
+                      </span>
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80">
+                        ⚡ 68 FPS HD
+                      </span>
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80">
+                        🎁 Regalos VIP
+                      </span>
                     </div>
-                    
-                    <div className="pt-1 space-y-1.5">
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
-                          ⚡ 68 FPS HD
-                        </span>
-                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-white text-rose-900 border border-pink-300/80 shadow-3xs">
-                          🎁 Regalos VIP
-                        </span>
-                      </div>
-                      <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white font-black text-[10px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
-                        <span>Sintonizar en Directo</span>
-                        <span>➔</span>
-                      </div>
-                    </div>
-                  </div>
-                  </div>
-                )}
 
-                {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS CON GLAMOUR Y DIAMANTES */}
-                {showContenedor3 && (
-                  <div 
-                    id="contenedor-anuncio-regalos-exclusivos-sidebar"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Descubre Todos Nuestros Regalos Exclusivos con Glamour y Diamantes"
-                    onClick={() => {
-                      if (onOpenRanking) {
-                        onOpenRanking('regalos');
-                      }
-                      window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        if (onOpenRanking) onOpenRanking('regalos');
-                        window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
-                      }
-                    }}
-                    className={`${invertDirectoAndRegalos ? 'order-1' : ''} flex flex-col justify-between relative overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/70 shadow-[0_6px_20px_rgba(236,72,153,0.20)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.30)] transition-all duration-300 cursor-pointer group select-none active:scale-[0.985] bg-gradient-to-b from-[#fff0f5] to-[#ffe4e9] w-full max-w-[220px] sm:max-w-none mx-auto h-full`}
-                  >
-                    <img 
-                      src="/assets/aistudio/card_regalos_exclusivos.webp" 
-                      alt="Regalos Exclusivos en Nuestra APP - Fashion Finances: Diamantes, Moda de Lujo, Perfumes Exclusivos" 
-                      className="w-full h-full object-cover block group-hover:scale-[1.015] transition-transform duration-500 rounded-[16px] sm:rounded-[20px]"
-                    />
-                    {/* Luminous subtle sheen on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/0 via-white/10 to-rose-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[16px] sm:rounded-[20px]" />
+                    <div className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white font-black text-[10px] uppercase tracking-wider shadow-xs flex items-center justify-center gap-1">
+                      <span>Ver Vídeos en Directo</span>
+                      <span translate="no" aria-hidden="true">➔</span>
+                    </div>
                   </div>
-                )}
+                </div>
+              </div>
+            )}
+
+            {/* 🎁 CONTENEDOR 3: ANUNCIO REGALOS EXCLUSIVOS (Imagen limpia sin texto + capa externa traducible) */}
+            {showContenedor3 && (
+              <div
+                id="contenedor-anuncio-regalos-exclusivos-sidebar"
+                role="button"
+                tabIndex={0}
+                aria-label="Descubre Todos Nuestros Regalos Exclusivos"
+                onClick={() => {
+                  if (onOpenRanking) {
+                    onOpenRanking('regalos');
+                  }
+                  window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    if (onOpenRanking) onOpenRanking('regalos');
+                    window.dispatchEvent(new CustomEvent('open-ranking-tab', { detail: { tab: 'regalos' } }));
+                  }
+                }}
+                className={`${invertDirectoAndRegalos ? 'order-1' : ''} flex flex-col overflow-hidden rounded-[18px] sm:rounded-2xl border-2 border-pink-400/75 shadow-[0_6px_20px_rgba(236,72,153,0.20)] hover:shadow-[0_10px_28px_rgba(236,72,153,0.30)] transition-shadow duration-300 cursor-pointer group active:scale-[0.985] bg-[#fff5f9] w-full max-w-[235px] sm:max-w-none mx-auto h-full`}
+              >
+                {/* Contenedor puro de imagen (sin texto incrustado ni encima) */}
+                <div className="w-full h-32 sm:h-36 overflow-hidden bg-pink-100 shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=650"
+                    alt="Regalos Exclusivos Fashion Finances"
+                    className="w-full h-full object-cover object-top block transition-transform duration-500 group-hover:scale-[1.03]"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/runway_model_clean.webp';
+                    }}
+                  />
+                </div>
+
+                {/* Capa externa dedicada exclusivamente al texto */}
+                <div
+                  translate="yes"
+                  className="p-3.5 space-y-2.5 text-center bg-gradient-to-b from-[#fff7fa] via-[#fde8f0] to-[#fad4e4] border-t border-pink-300/70 flex-1 flex flex-col justify-between select-text"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <img
+                        src="/assets/aistudio/pink_diamond_brilliant.png"
+                        alt=""
+                        className="w-4 h-3.5 object-contain shrink-0"
+                      />
+                      <span className="text-[9.5px] font-serif font-black tracking-wider text-rose-900 uppercase">
+                        Fashion Finances
+                      </span>
+                    </div>
+
+                    <h4 className="text-[13px] font-black text-rose-950 leading-tight">
+                      Regalos Exclusivos en Nuestra App
+                    </h4>
+
+                    <p className="text-[10.5px] text-rose-900 font-medium leading-snug m-0">
+                      Apoya a tus modelos favoritas y envía obsequios únicos.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/90 border border-pink-200/80 text-[10px]">
+                      <span translate="no" aria-hidden="true">💎</span>
+                      <span className="font-bold text-slate-900">Diamantes</span>
+                      <span className="text-slate-500 ml-auto text-[9px]">Brilla con estilo</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/90 border border-pink-200/80 text-[10px]">
+                      <span translate="no" aria-hidden="true">👜</span>
+                      <span className="font-bold text-slate-900">Moda de Lujo</span>
+                      <span className="text-slate-500 ml-auto text-[9px]">Los mejores diseños</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/90 border border-pink-200/80 text-[10px]">
+                      <span translate="no" aria-hidden="true">🧴</span>
+                      <span className="font-bold text-slate-900">Perfumes Exclusivos</span>
+                      <span className="text-slate-500 ml-auto text-[9px]">Elegancia</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <div className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#e11d48] via-[#d81b60] to-[#be185d] text-white font-black text-[11px] tracking-wider shadow-xs flex items-center justify-center gap-2">
+                      <span translate="no" aria-hidden="true" className="text-[17px] leading-none">🎁</span>
+                      <span translate="no" className="normal-case">GIFs</span>
+                      <span translate="no" aria-hidden="true">➔</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1546,7 +1687,46 @@ export default function ModelFacebookProfile({
   });
   const [isEditingCommercial, setIsEditingCommercial] = useState(false);
   const [showContractsModal, setShowContractsModal] = useState(false);
-  const [contractSearchQuery, setContractSearchQuery] = useState('');
+  const [contractsPortalTab, setContractsPortalTab] = useState<'catalog' | 'send' | 'inbox'>('catalog');
+  const [hiringOffersList, setHiringOffersList] = useState<HiringOffer[]>(() => getHiringOffersFromStorage());
+
+  useEffect(() => {
+    const syncOffers = (e?: any) => {
+      if (Array.isArray(e?.detail)) {
+        setHiringOffersList(e.detail);
+      } else {
+        setHiringOffersList(getHiringOffersFromStorage());
+      }
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'ff_hiring_offers') {
+        setHiringOffersList(getHiringOffersFromStorage());
+      }
+    };
+    window.addEventListener(HIRING_OFFERS_EVENT, syncOffers);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(HIRING_OFFERS_EVENT, syncOffers);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
+  const profileReceivedOffers = useMemo(() => {
+    return hiringOffersList.filter((o) => doesOfferTargetUser(o, userProfile));
+  }, [hiringOffersList, userProfile]);
+
+  const profilePendingOffersCount = useMemo(
+    () => profileReceivedOffers.filter((o) => o.status === 'pendiente').length,
+    [profileReceivedOffers]
+  );
+
+  const canViewAndRespondHiringOffers = useMemo(() => {
+    return (
+      isAdrianaLimaIdentity(realLoggedInUser) &&
+      (isOwnProfile || isAdrianaLimaIdentity(userProfile))
+    );
+  }, [realLoggedInUser, isOwnProfile, userProfile]);
+
   const [tempProfEmail, setTempProfEmail] = useState(profEmail);
   const [tempProfCity, setTempProfCity] = useState(profCity);
 
@@ -1705,21 +1885,7 @@ export default function ModelFacebookProfile({
   }, [userProfile.id]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`highlights_${userProfile.id}`);
-    if (saved) {
-      setHighlights(JSON.parse(saved));
-    } else {
-      setHighlights([
-        { id: 'h1', title: 'lovelehee', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
-        { id: 'h2', title: 'marii2121', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=300' },
-        { id: 'h3', title: 'ann_______', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
-        { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
-        { id: 'h5', title: 'plievazz', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400' },
-        { id: 'h6', title: 'laviniader', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
-        { id: 'h7', title: 'milano.fw', image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=300' },
-        { id: 'h8', title: 'editorial', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300' }
-      ]);
-    }
+    setHighlights(getMergedDefaultHighlights(userProfile.id));
   }, [userProfile.id]);
   
   // Post Creator States
@@ -2416,20 +2582,10 @@ export default function ModelFacebookProfile({
 
   // Custom stories/highlights state
   const [highlights, setHighlights] = useState<{ id: string; title: string; image: string }[]>(() => {
-    const saved = localStorage.getItem(`highlights_${userProfile.id}`);
-    if (saved) return JSON.parse(saved);
-    return [
-      { id: 'h1', title: 'lovelehee', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
-      { id: 'h2', title: 'marii2121', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=300' },
-      { id: 'h3', title: 'ann_______', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
-      { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
-      { id: 'h5', title: 'plievazz', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400' },
-      { id: 'h6', title: 'laviniader', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
-      { id: 'h7', title: 'milano.fw', image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=300' },
-      { id: 'h8', title: 'editorial', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300' }
-    ];
+    return getMergedDefaultHighlights(userProfile.id);
   });
   const [selectedStoryForPreview, setSelectedStoryForPreview] = useState<{ id: string; title: string; image: string; isVideo?: boolean } | null>(null);
+  const [soundSheetVideo, setSoundSheetVideo] = useState<SoundVideoReference | null>(null);
   const [profileStorySubIndex, setProfileStorySubIndex] = useState<number>(0);
   const [profileStoryMuted, setProfileStoryMuted] = useState<boolean>(() => {
     return localStorage.getItem('profile_story_muted') === 'true';
@@ -6684,22 +6840,22 @@ export default function ModelFacebookProfile({
 
                   <button
                     onClick={() => handleSetSocialModal('following')}
-                    className="flex items-center justify-between px-3.5 py-3 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
+                    className="flex items-center justify-between gap-2 px-3 py-3 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
                     id="btn-social-following-counter"
-                    title="Ver todos los perfiles seguidos"
+                    title="Ver todos los usuarios que sigo"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <UserCheck className="w-5 h-5 text-slate-700 shrink-0 stroke-[2.2]" />
                       <div className="min-w-0">
-                        <span className="text-[10px] uppercase font-black text-[#ff2d85] tracking-widest font-mono block leading-tight truncate">
-                          SEGUIDOS
+                        <span className="text-[10px] uppercase font-black text-[#ff2d85] tracking-wider font-mono block leading-tight whitespace-nowrap">
+                          Siguiendo
                         </span>
                         <span className="text-xl font-black text-slate-800 font-mono leading-none block mt-0.5">
                           {socialFollowingList.length}
                         </span>
                       </div>
                     </div>
-                    <span className="text-xs font-black text-[#ff2d85] flex items-center gap-1 shrink-0 uppercase tracking-wider font-sans hover:underline">
+                    <span className="text-[11px] font-black text-[#ff2d85] flex items-center gap-1 shrink-0 uppercase tracking-wide font-sans hover:underline whitespace-nowrap">
                       VER TODOS →
                     </span>
                   </button>
@@ -7063,48 +7219,41 @@ export default function ModelFacebookProfile({
                   </button>
                 </div>
 
-                {/* 🏆 PORTAL DE RANKING & PODIO ELITE (Victoria's Secret Angel Wings Runway Background) */}
-                <div className="relative overflow-hidden select-none rounded-[32px] sm:rounded-3xl border-2 border-pink-400/60 p-6 sm:p-9 text-white shadow-[0_12px_45px_rgba(236,72,153,0.35)] min-h-[310px] sm:min-h-[330px] md:min-h-[350px] bg-[#c2185b] flex flex-col justify-center">
-                  {/* 🪽 Background Runway Image with Angel Wings (Clean background without black letters) */}
-                  <img 
-                    src="/assets/aistudio/runway_model_clean.webp" 
-                    alt="Victoria's Secret Angel Wings Runway" 
-                    className="absolute inset-0 w-full h-full object-cover object-[80%_18%] sm:object-[78%_16%] md:object-[76%_14%] pointer-events-none transition-transform duration-700 hover:scale-[1.02]"
-                  />
-
-                  {/* Left gradient overlay covering only the left text area, keeping the angel on the right completely bright and clear */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 via-50% to-transparent sm:bg-gradient-to-r sm:from-black/90 sm:via-black/60 sm:via-46% sm:to-transparent sm:to-62% pointer-events-none" />
-
-                  {/* Subtle ambient lighting */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-pink-400/20 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-8 -left-8 w-44 h-44 bg-pink-500/20 rounded-full blur-2xl pointer-events-none" />
-
-                  {/* Left Area Content: Titles, description, and action buttons cleanly clustered on the left so the angel with wings on the right is 100% visible */}
-                  <div className="relative z-10 max-w-lg sm:max-w-xl text-left space-y-4">
+                {/* 🏆 PORTAL DE RANKING & PODIO ELITE (Capa externa de texto separada de la imagen para traducción automática limpia) */}
+                <div className="overflow-hidden rounded-[32px] sm:rounded-3xl border-2 border-pink-400/60 text-white shadow-[0_12px_45px_rgba(236,72,153,0.35)] bg-[#261428] flex flex-col md:flex-row items-stretch min-h-[310px] sm:min-h-[330px] md:min-h-[350px]">
+                  {/* Capa externa dedicada exclusivamente al texto (sin imagen debajo ni filtros que generen doble capa al traducir) */}
+                  <div
+                    translate="yes"
+                    className="w-full md:w-[54%] bg-gradient-to-b md:bg-gradient-to-r from-[#261428] via-[#3A1B35] to-[#4B2043] p-6 sm:p-9 flex flex-col justify-center text-left space-y-4 shrink-0"
+                  >
                     {/* Pills */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 bg-white/95 text-slate-900 border border-white/60 text-[9.5px] font-mono font-black uppercase tracking-[0.16em] px-3.5 py-1.5 rounded-full shadow-md backdrop-blur-sm">
-                        🏆 SALA DE LA FAMA
+                      <span className="inline-flex items-center gap-1.5 bg-white text-slate-900 border border-white/60 text-[9.5px] font-mono font-black uppercase tracking-[0.16em] px-3.5 py-1.5 rounded-full shadow-md">
+                        <span translate="no" aria-hidden="true">🏆</span>
+                        <span>SALA DE LA FAMA</span>
                       </span>
-                      <span className="inline-flex items-center gap-1.5 bg-pink-500/90 text-white border border-pink-300/50 text-[9.5px] font-mono font-black uppercase tracking-[0.16em] px-3.5 py-1.5 rounded-full shadow-md backdrop-blur-sm">
-                        GLOBAL ELITE
+                      <span className="inline-flex items-center gap-1.5 bg-pink-500 text-white border border-pink-300/50 text-[9.5px] font-mono font-black uppercase tracking-[0.16em] px-3.5 py-1.5 rounded-full shadow-md">
+                        <span>GLOBAL ELITE</span>
                       </span>
                     </div>
 
                     {/* Title & Description */}
                     <div className="space-y-2">
-                      <h3 className="text-2xl sm:text-3xl font-serif font-black text-white tracking-wide leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                        Podio de Modelos <span className="text-pink-300 antialiased font-mono font-black uppercase text-2.5xl sm:text-3xl tracking-normal ml-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">TOP 100</span>
+                      <h3 className="text-2xl sm:text-3xl font-serif font-black text-white tracking-wide leading-tight">
+                        <span>Podio de Modelos </span>
+                        <span className="text-pink-300 antialiased font-mono font-black uppercase text-2.5xl sm:text-3xl tracking-normal ml-1">
+                          TOP 100
+                        </span>
                       </h3>
-                      <p className="text-xs sm:text-[12.5px] text-white/95 font-medium leading-relaxed max-w-md sm:max-w-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">
+                      <p className="text-xs sm:text-[12.5px] text-white/95 font-medium leading-relaxed max-w-md sm:max-w-lg">
                         Visualiza la élite internacional de creadores registrados en Fashion Finances. Desliza horizontalmente para explorar el ranking de 50 mujeres y 50 hombres que lideran las tendencias mundiales.
                       </p>
                     </div>
 
-                    {/* Badges and action row grouped together on the left */}
+                    {/* Action Button */}
                     <div className="flex flex-wrap items-center gap-3 pt-2">
-                      {/* Golden crown button */}
                       <button
+                        type="button"
                         onClick={() => {
                           if (onOpenRanking) {
                             onOpenRanking();
@@ -7113,10 +7262,9 @@ export default function ModelFacebookProfile({
                             if (btn) btn.click();
                           }
                         }}
-                        className="bg-gradient-to-r from-[#FDFBF7] to-[#FFF8E7] hover:from-white hover:to-[#FFF3D6] text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_20px_rgba(211,180,112,0.4)] hover:shadow-[0_8px_25px_rgba(211,180,112,0.6)] transition-all duration-300 flex items-center justify-center py-2.5 px-6 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] select-none h-fit"
+                        className="custom-bg bg-gradient-to-r from-[#FDFBF7] to-[#FFF8E7] hover:from-white hover:to-[#FFF3D6] text-slate-950 rounded-2xl border-2 border-[#D3B470] shadow-[0_4px_20px_rgba(211,180,112,0.4)] hover:shadow-[0_8px_25px_rgba(211,180,112,0.6)] transition-all duration-300 flex items-center justify-center py-2.5 px-6 gap-0 shrink-0 cursor-pointer group active:scale-[0.98] h-fit"
                         title="Explorar el Podio de Modelos TOP 100"
                       >
-                        {/* Corona según género del modelo */}
                         <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
                           {userProfile?.gender === 'male' ? (
                             <RoyalMaleCrown imgClassName="w-8 h-6.5 object-contain" />
@@ -7125,17 +7273,34 @@ export default function ModelFacebookProfile({
                           )}
                         </div>
                         <div className="h-5 w-[1px] bg-[#D3B470]/60 mx-3" />
-                        <span className="font-serif text-xs font-black text-[#967838] tracking-[0.18em] select-none">
+                        <span className="font-serif text-xs font-black text-[#967838] tracking-[0.18em]">
                           RANKING
                         </span>
                       </button>
                     </div>
                   </div>
+
+                  {/* Contenedor puro exclusivo de la imagen (sin texto encima) */}
+                  <div className="relative w-full md:w-[46%] min-h-[220px] md:min-h-full overflow-hidden bg-[#ff2ea6]">
+                    <img
+                      src="/assets/aistudio/runway_model_clean.webp"
+                      alt="Victoria's Secret Angel Wings Runway"
+                      className="w-full h-full object-cover object-[76%_16%] block transition-transform duration-700 hover:scale-[1.02]"
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#4B2043] to-transparent hidden md:block pointer-events-none"
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-[#4B2043] to-transparent md:hidden pointer-events-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* 💼 SECCIÓN DE CONTRATACIÓN (Solo visible para perfiles de MODELOS) */}
-              {userProfile.role === 'model' && (
+              {/* 💼 SECCIÓN DE CONTRATACIÓN (Visible para perfiles de usuarios y modelos) */}
+              {userProfile.role !== 'visitor' && (
                 <div className="bg-gradient-to-b from-[#FFF5F8] via-[#FFF9FA] to-white border border-[#FBCFE8] text-[#171717] rounded-3xl p-5 sm:p-7 space-y-5 shadow-[0_4px_24px_rgba(244,114,182,0.10)] relative overflow-hidden select-none">
               
               <div className="flex items-center justify-between border-b border-[#FCE7F3] pb-3.5">
@@ -7147,6 +7312,21 @@ export default function ModelFacebookProfile({
                     Contratación de modelo y partnerships
                   </h3>
                 </div>
+                {canViewAndRespondHiringOffers && profileReceivedOffers.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContractsPortalTab('inbox');
+                      setShowContractsModal(true);
+                    }}
+                    className="custom-bg inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider cursor-pointer hover:bg-rose-500 transition shadow-2xs"
+                  >
+                    <span>Ofertas</span>
+                    <span className="bg-white text-rose-600 px-1.5 py-0.2 rounded-full font-mono text-[9.5px]">
+                      {profilePendingOffersCount > 0 ? `${profilePendingOffersCount} nuevas` : profileReceivedOffers.length}
+                    </span>
+                  </button>
+                )}
               </div>
 
               {isEditingCommercial ? (
@@ -7197,292 +7377,69 @@ export default function ModelFacebookProfile({
                           Catálogo de Modalidades de Contratación
                         </h4>
                         <p className="text-xs text-[#9d174d]/85 max-w-md mx-auto leading-relaxed font-medium">
-                          Consulta y selecciona entre 15 tipos de servicios profesionales, contratos de imagen y representación con pasarela y catálogo.
+                          Cualquier usuario puede consultar los 15 servicios y enviar una oferta directa para contratarte o responder a las propuestas recibidas.
                         </p>
                       </div>
 
-                      <div className="relative z-10 flex justify-center">
+                      <div className="relative z-10 flex flex-wrap justify-center gap-2.5">
                         <button
                           type="button"
-                          onClick={() => setShowContractsModal(true)}
-                          className="px-5 py-2.5 bg-white hover:bg-gradient-to-r hover:from-[#EC4899] hover:to-[#F43F5E] hover:text-white text-[#9d174d] font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer border border-[#F9A8D4] hover:border-transparent shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2.5 active:scale-[0.99] group"
+                          onClick={() => {
+                            setContractsPortalTab('catalog');
+                            setShowContractsModal(true);
+                          }}
+                          className="custom-bg px-5 py-2.5 bg-white hover:bg-gradient-to-r hover:from-[#EC4899] hover:to-[#F43F5E] hover:text-white text-[#9d174d] font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer border border-[#F9A8D4] hover:border-transparent shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2.5 active:scale-[0.99] group"
                         >
                           <FileText className="w-4 h-4 text-[#EC4899] group-hover:text-white transition-colors" />
                           <span className="font-bold tracking-wide text-xs">Ver opciones de contratación</span>
                         </button>
+
+                        {canViewAndRespondHiringOffers ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setContractsPortalTab('inbox');
+                              setShowContractsModal(true);
+                            }}
+                            className="custom-bg px-5 py-2.5 bg-gradient-to-r from-[#ff2d85] to-rose-500 hover:brightness-105 text-white font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2 active:scale-[0.99]"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span className="font-bold tracking-wide text-xs">
+                              Ver y responder ofertas ({profileReceivedOffers.length})
+                            </span>
+                          </button>
+                        ) : !isOwnProfile ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setContractsPortalTab('send');
+                              setShowContractsModal(true);
+                            }}
+                            className="custom-bg px-5 py-2.5 bg-gradient-to-r from-[#ff2d85] to-rose-500 hover:brightness-105 text-white font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2 active:scale-[0.99]"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span className="font-bold tracking-wide text-xs">Enviar oferta</span>
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </div>
 
-                {/* 📋 LUXURIOUS PORTAL DE OPCIONES DE CONTRATACIÓN OVERLAY PAGE */}
-                {showContractsModal && (() => {
-                  const contractServicesList = [
-                    { 
-                      label: 'Sesión de fotos', 
-                      badge: '📸 Fotografía Editorial',
-                      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de prestación de servicios + cesión/licencia de imagen profesional.', 
-                      counterparty: 'Marca / Fotógrafo ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Publicidad', 
-                      badge: '📺 Campaña Comercial',
-                      image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de modelo y actor publicitario para difusión en medios masivos.', 
-                      counterparty: 'Marca / Agencia publicitaria ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Desfile de moda', 
-                      badge: '👗 Pasarela & Fashion Week',
-                      image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de participación en desfile de alta costura y pasarela en vivo.', 
-                      counterparty: 'Diseñador / Organizador ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Redes sociales', 
-                      badge: '📱 Creador de Contenido',
-                      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de influencer, publicaciones patrocinadas y branding digital.', 
-                      counterparty: 'Marca ↔ Creador / Modelo' 
-                    },
-                    { 
-                      label: 'Vídeo / Reel / TikTok', 
-                      badge: '🎬 Producción Audiovisual 4K',
-                      image: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de creación y actuación en formato vídeo vertical de alto impacto.', 
-                      counterparty: 'Marca ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Embajador de marca', 
-                      badge: '👑 Brand Ambassador VIP',
-                      image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de embajador exclusivo de marca y representación institucional.', 
-                      counterparty: 'Marca ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Evento & Gala', 
-                      badge: '🎤 Aparición Presencial VIP',
-                      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de actuación, alfombra roja y presencia en eventos corporativos.', 
-                      counterparty: 'Organizador / Empresa ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Videoclip musical', 
-                      badge: '🎥 Rodaje Artístico',
-                      image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de protagonismo o participación artística en videoclip musical.', 
-                      counterparty: 'Productora musical ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Cine & Televisión', 
-                      badge: '🎬 Ficción & Serie TV',
-                      image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato artístico de interpretación para largometraje, corto o televisión.', 
-                      counterparty: 'Productora cinematográfica ↔ Modelo' 
-                    },
-                    { 
-                      label: 'E-commerce & Tienda', 
-                      badge: '🛍️ Catálogo Digital',
-                      image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de modelo para sesión de tienda online, lookbook y ficha de producto.', 
-                      counterparty: 'Marca / Tienda Online ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Catálogo & Lookbook', 
-                      badge: '📸 Editorial Impreso & Web',
-                      image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de sesión fotográfica de colección completa y derechos de catálogo.', 
-                      counterparty: 'Marca de moda ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Campaña internacional', 
-                      badge: '🌍 Campaña Global',
-                      image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de campaña publicitaria con derechos de uso y difusión internacional.', 
-                      counterparty: 'Marca multinacional ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Exclusividad de imagen', 
-                      badge: '🤝 Acuerdo Exclusivo',
-                      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de exclusividad sectorial y fidelidad de marca por periodo pactado.', 
-                      counterparty: 'Marca / Holding ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Representación de agencia', 
-                      badge: '🏢 Management Oficial',
-                      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Contrato de representación profesional, gestión de bookings y management.', 
-                      counterparty: 'Agencia de modelos ↔ Modelo' 
-                    },
-                    { 
-                      label: 'Casting & Audición', 
-                      badge: '🔎 Selección & Prueba',
-                      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400',
-                      contract: 'Acuerdo de participación en casting selectivo y prueba de cámara para proyecto.', 
-                      counterparty: 'Directora de casting / Agencia ↔ Modelo' 
-                    }
-                  ];
-
-                  const filteredContracts = contractServicesList.filter(item => {
-                    const query = contractSearchQuery.toLowerCase();
-                    return item.label.toLowerCase().includes(query) || 
-                           item.contract.toLowerCase().includes(query) || 
-                           item.counterparty.toLowerCase().includes(query) ||
-                           item.badge.toLowerCase().includes(query);
-                  });
-
-                  return (
-                    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-[1px] animate-fade-in text-slate-900 select-none">
-                      <div 
-                        className="rounded-2xl sm:rounded-3xl w-full max-w-[calc(100vw-2px)] h-[calc(100dvh-2px)] max-h-[calc(100dvh-2px)] p-4 sm:p-7 space-y-4 sm:space-y-6 shadow-2xl relative flex flex-col my-auto border-[1px] border-slate-950 text-slate-800 overflow-hidden"
-                        style={{
-                          background: 'linear-gradient(135deg, #FDE8EF 0%, #FFFFFF 48%, #E0F2FE 100%)'
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        
-                        {/* Close Button top-right */}
-                        <button 
-                          onClick={() => {
-                            setShowContractsModal(false);
-                            setContractSearchQuery('');
-                          }}
-                          className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center text-slate-400 hover:text-pink-600 bg-white/90 hover:bg-pink-50 rounded-full transition-all cursor-pointer border-[1px] border-[#F4A7C3] shadow-xs z-10 active:scale-95"
-                          title="Cerrar modal"
-                        >
-                          <X className="w-4.5 h-4.5" />
-                        </button>
-
-                        {/* Title and Header Banner */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-[1px] border-[#F4A7C3] pb-4.5 shrink-0">
-                          <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F472B6] via-[#FB7185] to-[#38BDF8] flex items-center justify-center text-white shadow-md shadow-pink-500/20 shrink-0 border-[1px] border-white/80">
-                              <Briefcase className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-left">
-                              <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight uppercase font-display tracking-wide">
-                                Opciones de Contratación Corporativa
-                              </h3>
-                              <p className="text-[10px] sm:text-[10.5px] font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1.5 mt-1 text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full border-[1px] border-[#F4A7C3]">
-                                <span>💼</span>
-                                <span>PORTAL DE ACUERDOS REGULADOS & SESIÓN B2B</span>
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {/* Search Input inside Header */}
-                          <div className="relative w-full sm:w-64">
-                            <input
-                              type="text"
-                              value={contractSearchQuery}
-                              onChange={(e) => setContractSearchQuery(e.target.value)}
-                              placeholder="Buscar servicio o contrato..."
-                              className="w-full bg-white/95 border-[1px] border-[#F4A7C3] focus:border-[#F472B6] focus:ring-1 focus:ring-[#F4A7C3] rounded-xl py-2 pl-3.5 pr-9 text-xs focus:outline-none transition-all font-medium text-slate-800 placeholder:text-slate-400 shadow-2xs"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F472B6] text-xs pointer-events-none">
-                              🔍
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Table / Grid Body */}
-                        <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-200">
-                          <div className="overflow-x-auto rounded-2xl border-[1px] border-[#F4A7C3] bg-white/90 backdrop-blur-xs shadow-xs">
-                            <table className="w-full text-left border-collapse min-w-full sm:min-w-[680px]">
-                              <thead>
-                                <tr className="bg-gradient-to-r from-[#FDE8EF]/90 via-white to-[#E0F2FE]/90 border-b-[1px] border-[#F4A7C3] text-slate-700 font-mono text-[10px] sm:text-[11px] uppercase font-black tracking-wider">
-                                  <th className="py-3.5 px-4 sm:px-5 w-[46%]">Servicio</th>
-                                  <th className="py-3.5 px-3 sm:px-4 w-[36%]">Contrato habitual</th>
-                                  <th className="py-3.5 px-4 sm:px-6 w-[18%] min-w-[130px] text-center">Acción</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y-[1px] divide-[#F4A7C3]/60 text-slate-800">
-                                {filteredContracts.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={3} className="py-10 text-center text-slate-400 font-medium font-mono text-sm">
-                                      Ningún servicio coincide con "{contractSearchQuery}"
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  filteredContracts.map((item, index) => (
-                                    <tr 
-                                      key={index} 
-                                      className="hover:bg-gradient-to-r hover:from-pink-50/70 hover:via-white hover:to-sky-50/60 transition duration-150 group/row"
-                                    >
-                                      {/* Servicio Column with large image and clear title */}
-                                      <td className="py-3.5 px-4 sm:px-5">
-                                        <div className="flex items-center gap-3.5 sm:gap-4.5">
-                                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-2xl overflow-hidden shrink-0 border-[1.5px] border-[#F4A7C3] shadow-md bg-pink-100/40 group-hover/row:scale-105 group-hover/row:shadow-lg transition-transform duration-200">
-                                            <img
-                                              src={item.image}
-                                              alt={item.label}
-                                              className="w-full h-full object-cover"
-                                              referrerPolicy="no-referrer"
-                                              onError={(e) => {
-                                                (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300';
-                                              }}
-                                            />
-                                          </div>
-                                          <div className="min-w-0">
-                                            <h4 className="text-sm sm:text-base md:text-[17px] font-black text-slate-900 group-hover/row:text-pink-600 transition-colors leading-tight">
-                                              {item.label}
-                                            </h4>
-                                            <span className="inline-block mt-1 text-[9.5px] sm:text-[10.5px] font-bold text-pink-700 bg-pink-50/90 px-2 py-0.5 rounded-md border border-[#F4A7C3]">
-                                              {item.badge}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      
-                                      {/* Contrato habitual Column */}
-                                      <td className="py-3.5 px-3 sm:px-4 font-semibold text-slate-700 text-xs sm:text-sm leading-relaxed">
-                                        {item.contract}
-                                      </td>
-
-                                      {/* Acción Column with ample padding and centered full button */}
-                                      <td className="py-3.5 px-4 sm:px-6 text-center min-w-[130px] whitespace-nowrap">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setSelectedService(item.label);
-                                            setShowContractsModal(false);
-                                            setHiringSuccessMessage(null);
-                                          }}
-                                          className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 via-rose-500 to-sky-500 hover:from-pink-600 hover:via-rose-600 hover:to-sky-600 text-white px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-xs sm:text-xs font-black uppercase tracking-wider transition cursor-pointer border-[1px] border-[#F4A7C3] shadow-xs hover:shadow-md hover:scale-[1.03] active:scale-95 whitespace-nowrap"
-                                        >
-                                          Contratar
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-
-                        {/* Modal Footer with disclaimer */}
-                        <div className="border-t-[1px] border-[#F4A7C3] pt-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-left text-[10px] sm:text-[11px] text-slate-600 font-medium">
-                          <span className="flex items-center gap-2 bg-white/70 px-3 py-1.5 rounded-xl border-[1px] border-[#F4A7C3] text-slate-600 font-medium shadow-2xs">
-                            <span className="text-sky-600">🔒</span> Los flujos financieros y depósito de garantía (escrow) se procesan con saldo seguro de Backoffice.
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowContractsModal(false);
-                              setContractSearchQuery('');
-                            }}
-                            className="px-5 py-2 bg-gradient-to-r from-sky-500 to-pink-500 hover:from-sky-600 hover:to-pink-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer border-[1px] border-[#F4A7C3] active:scale-95 shadow-xs hover:shadow-md w-full sm:w-auto text-center"
-                          >
-                            Cerrar Catálogo
-                          </button>
-                        </div>
-
-                      </div>
-                    </div>
-                  );
-                })()}
+                  {/* 📋 LUXURIOUS PORTAL DE OPCIONES DE CONTRATACIÓN OVERLAY PAGE */}
+                  <CorporateHiringPortalModal
+                    isOpen={showContractsModal}
+                    onClose={() => setShowContractsModal(false)}
+                    initialTab={contractsPortalTab}
+                    targetUser={{
+                      id: userProfile.id,
+                      name: userProfile.name,
+                      username: userProfile.username,
+                      avatar: userProfile.avatar,
+                    }}
+                    currentUser={realLoggedInUser}
+                    isOwnProfile={isOwnProfile}
+                    canManageOffers={canViewAndRespondHiringOffers}
+                  />
                 </>
               )}
             </div>
@@ -9177,6 +9134,16 @@ export default function ModelFacebookProfile({
                                 if (username.includes('plievazz')) mockTime = '9h';
                                 if (username.includes('laviniader')) mockTime = '10 h';
                                 if (username.includes('milano')) mockTime = '18h';
+                                if (username.includes('paris.haute')) mockTime = '2h';
+                                if (username.includes('valeria.m')) mockTime = '3h';
+                                if (username.includes('voguestyle')) mockTime = '5h';
+                                if (username.includes('atelier.lux')) mockTime = '7h';
+                                if (username.includes('camille_off')) mockTime = '9h';
+                                if (username.includes('runway.nyc')) mockTime = '11h';
+                                if (username.includes('bianca.couture')) mockTime = '12h';
+                                if (username.includes('marco_shoot')) mockTime = '14h';
+                                if (username.includes('sofiastyling')) mockTime = '16h';
+                                if (username.includes('london.catwalk')) mockTime = '19h';
                               }
                               setSelectedStoryForPreview({
                                 id: hi.id,
@@ -9650,9 +9617,29 @@ export default function ModelFacebookProfile({
                                     </div>
                                     <h4 className="text-xs font-black leading-snug line-clamp-1">{vid.title}</h4>
                                     <p className="text-[9.5px] text-slate-300 leading-normal line-clamp-2">{vid.description}</p>
-                                    <div className="text-[9px] font-bold text-slate-350 flex items-center gap-1 pt-0.5">
-                                      <span>🎵 {vid.music}</span>
-                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSoundSheetVideo({
+                                          id: vid.id,
+                                          username: (vid.username || vid.name || 'creator').toLowerCase().replace(/\s+/g, ''),
+                                          name: vid.name || 'Creador',
+                                          avatar: vid.avatar,
+                                          videoUrl: vid.videoUrl,
+                                          likes: vid.likes,
+                                          description: vid.description || vid.title,
+                                          music: vid.music || `Música Original - @${(vid.username || vid.name || 'studio').toLowerCase().replace(/\s+/g, '')}`,
+                                          videoCategory: vid.category || vid.videoCategory || 'Fashion',
+                                          musicRights: vid.musicRights,
+                                          allowAudioReuse: vid.allowAudioReuse,
+                                        });
+                                      }}
+                                      className="custom-bg text-[9px] font-bold text-slate-300 hover:text-white flex items-center gap-1 pt-0.5 bg-transparent border-0 p-0 cursor-pointer pointer-events-auto text-left hover:underline"
+                                      title="Ver ficha del sonido y vídeos con esta música"
+                                    >
+                                      <span>🎵 {vid.music || 'Música Original - Fashion Finances Studio'}</span>
+                                    </button>
 
 
                                   </div>
@@ -9759,20 +9746,32 @@ export default function ModelFacebookProfile({
                                   </span>
                                 </div>
 
-                                {/* 6. Spinning Music Disc (toggles sound) */}
+                                {/* 6. Spinning Music Disc -> Ficha del Sonido */}
                                 <div className="flex flex-col items-center shrink-0 mt-0.5">
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      const nextMute = !isProfileVideoMuted;
-                                      setIsProfileVideoMuted(nextMute);
-                                      localStorage.setItem('profile_video_muted', String(nextMute));
+                                      setSoundSheetVideo({
+                                        id: vid.id,
+                                        username: (vid.username || vid.name || 'creator').toLowerCase().replace(/\s+/g, ''),
+                                        name: vid.name || 'Creador',
+                                        avatar: vid.avatar,
+                                        videoUrl: vid.videoUrl,
+                                        likes: vid.likes,
+                                        description: vid.description || vid.title,
+                                        music: vid.music || `Música Original - @${(vid.username || vid.name || 'studio').toLowerCase().replace(/\s+/g, '')}`,
+                                        videoCategory: vid.category || vid.videoCategory || 'Fashion',
+                                        musicRights: vid.musicRights,
+                                        allowAudioReuse: vid.allowAudioReuse,
+                                      });
                                     }}
-                                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/85 border-2 border-slate-700/80 p-1 flex items-center justify-center shadow-xl cursor-pointer hover:scale-105 active:scale-95 transition-transform backdrop-blur-md ${
-                                      !isProfileVideoMuted ? 'animate-spin duration-[4000ms]' : 'opacity-80'
+                                    className={`custom-bg w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/85 hover:bg-black border-2 border-slate-700/80 hover:border-[#ff2d85] p-1 flex items-center justify-center shadow-xl cursor-pointer hover:scale-110 active:scale-95 transition backdrop-blur-md ${
+                                      !isProfileVideoMuted ? 'animate-spin duration-[4000ms]' : ''
                                     }`}
-                                    title={isProfileVideoMuted ? "Activar sonido" : "Silenciar sonido"}
+                                    title="Ver ficha del sonido, vídeos con esta música y usar audio"
+                                    aria-label="Ver ficha del sonido"
+                                    id={`btn-profile-sound-sheet-${vid.id}`}
                                   >
                                     <Music className="w-4.5 h-4.5 text-[#ff2d85]" />
                                   </button>
@@ -11479,7 +11478,7 @@ export default function ModelFacebookProfile({
               <h3 className="text-sm sm:text-base font-black text-slate-950 font-display flex items-center gap-1.5 justify-center">
                 {activeSocialModal === 'friends' ? 'Mis amigos' :
                  activeSocialModal === 'followers' ? `Mis Seguidores (${socialFollowersList.length})` : 
-                 `Mis Perfiles Seguidos (${socialFollowingList.length})`}
+                 `Usuarios que sigo (${socialFollowingList.length})`}
               </h3>
             </div>
 
@@ -11702,18 +11701,27 @@ export default function ModelFacebookProfile({
                               </span>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
-                                }}
-                                className="font-mono text-pink-600 hover:text-pink-800 hover:underline cursor-pointer inline-flex items-center gap-0.5"
-                                title={`Ver perfil de @${item.username}`}
-                              >
-                                <span>@{item.username}</span>
-                                <span className="text-[9px]">↗</span>
-                              </button>
+                              {(item.username || '').toLowerCase().replace(/^@/, '') === 'alessandraambrosio_w2' ? (
+                                <span
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="font-mono text-slate-500 inline-flex items-center"
+                                >
+                                  @{item.username}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
+                                  }}
+                                  className="font-mono text-pink-600 hover:text-pink-800 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                                  title={`Ver perfil de @${item.username}`}
+                                >
+                                  <span>@{item.username}</span>
+                                  <span className="text-[9px]">↗</span>
+                                </button>
+                              )}
                               <span>•</span>
                               <span>👥 {item.mutualFriends || 3} amigos en común</span>
                               <span>•</span>
@@ -11802,18 +11810,27 @@ export default function ModelFacebookProfile({
                               </span>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-semibold">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
-                                }}
-                                className="font-mono text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer inline-flex items-center gap-0.5"
-                                title={`Ver perfil de @${item.username}`}
-                              >
-                                <span>@{item.username}</span>
-                                <span className="text-[9px]">↗</span>
-                              </button>
+                              {(item.username || '').toLowerCase().replace(/^@/, '') === 'alessandraambrosio_w2' ? (
+                                <span
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="font-mono text-slate-500 inline-flex items-center"
+                                >
+                                  @{item.username}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
+                                  }}
+                                  className="font-mono text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                                  title={`Ver perfil de @${item.username}`}
+                                >
+                                  <span>@{item.username}</span>
+                                  <span className="text-[9px]">↗</span>
+                                </button>
+                              )}
                               <span>•</span>
                               <span>👥 {item.mutualFriends || 4} amigos en común</span>
                               <span>•</span>
@@ -11916,53 +11933,84 @@ export default function ModelFacebookProfile({
                                 </span>
                               ) : null}
                             </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
-                              }}
-                              className="text-[11px] text-slate-500 hover:text-pink-600 hover:underline font-semibold font-mono cursor-pointer inline-flex items-center gap-0.5"
-                              title={`Ver perfil de @${item.username}`}
-                            >
-                              <span>@{item.username}</span>
-                              <span className="text-[9px]">↗</span>
-                            </button>
+                            {(item.username || '').toLowerCase().replace(/^@/, '') === 'alessandraambrosio_w2' ? (
+                              <span
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[11px] text-slate-500 font-semibold font-mono inline-flex items-center select-text"
+                              >
+                                @{item.username}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: item.username, model: item } }));
+                                }}
+                                className="text-[11px] text-slate-500 hover:text-pink-600 hover:underline font-semibold font-mono cursor-pointer inline-flex items-center gap-0.5"
+                                title={`Ver perfil de @${item.username}`}
+                              >
+                                <span>@{item.username}</span>
+                                <span className="text-[9px]">↗</span>
+                              </button>
+                            )}
                             <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2 pr-4">{item.bio}</p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const isModel = models.some(m => m.id === item.id);
-                              if (isModel && onLaunchChat) {
-                                onLaunchChat(item.id);
-                              } else if (onSendMessage) {
-                                onSendMessage({
-                                  id: `msg-${Date.now()}`,
-                                  senderId: userProfile.id,
-                                  receiverId: item.id,
-                                  text: `¡Hola, ${item.name}! Vi tu perfil en mis conexiones social.`,
-                                  timestamp: new Date().toISOString()
+                          {activeSocialModal === 'following' ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const res = toggleFollowUserInStorage({
+                                  id: item.id,
+                                  name: item.name,
+                                  username: item.username,
+                                  avatar: item.avatar,
+                                  bio: item.bio,
+                                  role: item.role,
                                 });
-                                if (onNavigateToTab) onNavigateToTab('chat');
-                              } else {
-                                alert(`Iniciaste contacto con @${item.username}. Un asesor agilizará el chat pronto.`);
-                              }
-                            }}
-                            className="px-4 py-2 border border-pink-200 text-[#ff2d85] bg-white hover:bg-pink-50 rounded-xl text-xs font-bold transition cursor-pointer text-center"
-                          >
-                            Mensaje
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleViewFriendProfile(item)}
-                            className="px-4 py-2 border border-slate-200 text-slate-900 bg-white hover:bg-slate-50 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer text-center"
-                          >
-                            VER PERFIL
-                          </button>
+                                setSyncedFollowingList(res.nextList);
+                              }}
+                              className="custom-bg px-4 py-2 border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl text-xs font-bold transition cursor-pointer text-center"
+                            >
+                              Dejar de seguir
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const isModel = models.some(m => m.id === item.id);
+                                  if (isModel && onLaunchChat) {
+                                    onLaunchChat(item.id);
+                                  } else if (onSendMessage) {
+                                    onSendMessage({
+                                      id: `msg-${Date.now()}`,
+                                      senderId: userProfile.id,
+                                      receiverId: item.id,
+                                      text: `¡Hola, ${item.name}! Vi tu perfil en mis conexiones social.`,
+                                      timestamp: new Date().toISOString()
+                                    });
+                                    if (onNavigateToTab) onNavigateToTab('chat');
+                                  } else {
+                                    alert(`Iniciaste contacto con @${item.username}. Un asesor agilizará el chat pronto.`);
+                                  }
+                                }}
+                                className="px-4 py-2 border border-pink-200 text-[#ff2d85] bg-white hover:bg-pink-50 rounded-xl text-xs font-bold transition cursor-pointer text-center"
+                              >
+                                Mensaje
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleViewFriendProfile(item)}
+                                className="px-4 py-2 border border-slate-200 text-slate-900 bg-white hover:bg-slate-50 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer text-center"
+                              >
+                                VER PERFIL
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     );
@@ -14450,6 +14498,69 @@ export default function ModelFacebookProfile({
           </div>
         </div>
       )}
+      {/* 🎵 FICHA DEL SONIDO MODAL */}
+      <SoundTrackSheetModal
+        isOpen={Boolean(soundSheetVideo)}
+        sourceVideo={soundSheetVideo}
+        allVideos={(() => {
+          let storedVideos: SoundVideoReference[] = [];
+          try {
+            const raw = localStorage.getItem('coll_casting_live_videos');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) storedVideos = parsed;
+            }
+          } catch (_) {}
+          const mappedSaved: SoundVideoReference[] = (savedVideos || []).map((sv: any) => ({
+            id: sv.id,
+            username: (sv.username || sv.name || 'creator').toLowerCase().replace(/\s+/g, ''),
+            name: sv.name || 'Creador',
+            avatar: sv.avatar,
+            videoUrl: sv.videoUrl,
+            likes: sv.likes,
+            description: sv.description || sv.title,
+            music: sv.music || `Música Original - @${(sv.username || sv.name || 'studio').toLowerCase().replace(/\s+/g, '')}`,
+            videoCategory: sv.category || sv.videoCategory || 'Fashion',
+            musicRights: sv.musicRights,
+            allowAudioReuse: sv.allowAudioReuse,
+          }));
+          const mappedWatched: SoundVideoReference[] = (watchedVideosList || []).map((wv: any) => ({
+            id: wv.id,
+            username: (wv.username || wv.name || 'creator').toLowerCase().replace(/\s+/g, ''),
+            name: wv.name || 'Creador',
+            avatar: wv.avatar,
+            videoUrl: wv.videoUrl,
+            likes: wv.likes,
+            description: wv.description || wv.title,
+            music: wv.music || 'Música Original - Fashion Finances Studio',
+            videoCategory: wv.category || 'Fashion',
+          }));
+          return [...mappedSaved, ...mappedWatched, ...storedVideos];
+        })()}
+        onClose={() => setSoundSheetVideo(null)}
+        onSelectVideo={(selectedVid) => {
+          if (selectedVid?.videoUrl) {
+            setPlayingSavedVideoUrl(selectedVid.videoUrl);
+          }
+        }}
+        onUseAudioForNewVideo={(trackFullTitle, audioUrl) => {
+          setSoundSheetVideo(null);
+          if (onNavigateToTab) {
+            onNavigateToTab('casting_live');
+          }
+          setTimeout(() => {
+            window.dispatchEvent(
+              new CustomEvent('open-casting-upload-modal', {
+                detail: {
+                  category: 'Fashion',
+                  music: trackFullTitle,
+                  audioUrl,
+                },
+              })
+            );
+          }, 50);
+        }}
+      />
     </div>
   );
 }
@@ -14500,7 +14611,8 @@ function ModelStoryLightbox({
   // Check if user is Online
   const isOnlineUser = (username: string) => {
     const onlineUsernames = [
-      'valentinarossi_w1', 'isabelladubois_w2', 'sophialoren_w3', 'miakincaid_w4', 'laviniader', 'lovelehee', 'marii2121', 'plievazz', 'ann_______', 'salamakss', 'milano'
+      'valentinarossi_w1', 'isabelladubois_w2', 'sophialoren_w3', 'miakincaid_w4', 'laviniader', 'lovelehee', 'marii2121', 'plievazz', 'ann_______', 'salamakss', 'milano',
+      'paris.haute', 'valeria.m', 'voguestyle', 'atelier.lux', 'camille_off', 'runway.nyc', 'bianca.couture', 'marco_shoot', 'sofiastyling', 'london.catwalk'
     ];
     return onlineUsernames.some(u => username && username.toLowerCase().includes(u.toLowerCase())) || username === userProfile?.username;
   };
@@ -14542,6 +14654,16 @@ function ModelStoryLightbox({
       if (username.includes('plievazz')) time = '9h';
       if (username.includes('laviniader')) time = '10 h';
       if (username.includes('milano')) time = '18h';
+      if (username.includes('paris.haute')) time = '2h';
+      if (username.includes('valeria.m')) time = '3h';
+      if (username.includes('voguestyle')) time = '5h';
+      if (username.includes('atelier.lux')) time = '7h';
+      if (username.includes('camille_off')) time = '9h';
+      if (username.includes('runway.nyc')) time = '11h';
+      if (username.includes('bianca.couture')) time = '12h';
+      if (username.includes('marco_shoot')) time = '14h';
+      if (username.includes('sofiastyling')) time = '16h';
+      if (username.includes('london.catwalk')) time = '19h';
     }
 
     return {
@@ -14589,8 +14711,80 @@ function ModelStoryLightbox({
   const safeSubIndex = Math.min(Math.max(0, profileStorySubIndex), pubStories.length - 1);
   const currentActiveSubStory = pubStories[safeSubIndex];
 
-  // Custom timer for story progression
+  const [replyText, setReplyText] = React.useState('');
+  const [isReplyFocused, setIsReplyFocused] = React.useState(false);
+  const [sentFeedbackToast, setSentFeedbackToast] = React.useState<string | null>(null);
+  const [storyCommentsMap, setStoryCommentsMap] = React.useState<Record<string, Array<{ id: string; user: string; avatar: string; text: string; time: string }>>>(() => {
+    try {
+      const saved = localStorage.getItem('ff_story_comments_v1');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const desktopReplyInputRef = React.useRef<HTMLInputElement>(null);
+  const mobileReplyInputRef = React.useRef<HTMLInputElement>(null);
+  const QUICK_STORY_REACTIONS = ['😂', '😮', '😍', '😢', '👏', '🔥', '🎉', '💯'];
+
+  const activeStoryKey = String(currentActiveSubStory?.id || selectedStoryForPreview?.id || 'story-default');
+  const activeStoryComments = storyCommentsMap[activeStoryKey] || [];
+  const replyRecipientUsername = currentActiveSubStory?.username || currentActiveSubStory?.name || currentActiveSubStory?.title || (isOwnActiveViewing || isArchivedViewing ? userProfile.username : 'usuario');
+
+  const showStoryFeedback = (msg: string) => {
+    setSentFeedbackToast(msg);
+    setTimeout(() => {
+      setSentFeedbackToast((prev) => (prev === msg ? null : prev));
+    }, 2400);
+  };
+
+  const handleQuickReactionClick = (emoji: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+      detail: { icon: emoji }
+    }));
+    spawnEmojiParticles(emoji);
+    showStoryFeedback(`Reacción ${emoji} enviada a @${replyRecipientUsername}`);
+  };
+
+  const handleSendStoryComment = (e?: React.FormEvent, focusFallback?: 'desktop' | 'mobile') => {
+    if (e) e.preventDefault();
+    const trimmed = replyText.trim();
+    if (!trimmed) {
+      if (focusFallback === 'mobile') {
+        mobileReplyInputRef.current?.focus();
+      } else {
+        desktopReplyInputRef.current?.focus();
+      }
+      return;
+    }
+    const sender = realLoggedInUser || userProfile;
+    const newEntry = {
+      id: `sc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      user: sender?.username || sender?.name || 'tú',
+      avatar: sender?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      text: trimmed,
+      time: 'Ahora'
+    };
+    setStoryCommentsMap((prev) => {
+      const updated = {
+        ...prev,
+        [activeStoryKey]: [...(prev[activeStoryKey] || []), newEntry]
+      };
+      try {
+        localStorage.setItem('ff_story_comments_v1', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    setReplyText('');
+    spawnEmojiParticles('💬');
+    showStoryFeedback(`Comentario enviado a @${replyRecipientUsername} ✓`);
+  };
+
+  // Custom timer for story progression (pauses while typing or viewing gifts)
   React.useEffect(() => {
+    if (isReplyFocused || replyText.trim().length > 0) {
+      return;
+    }
     const isVid = currentActiveSubStory?.isVideo || (currentActiveSubStory?.image && (currentActiveSubStory.image.endsWith('.mp4') || currentActiveSubStory.image.includes('mixkit.co')));
     // Duración en tiempo: Vídeos hasta 60s continuos, Fotos fijas 5-7s (6s predeterminado)
     const duration = isVid 
@@ -14605,7 +14799,7 @@ function ModelStoryLightbox({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [selectedStoryForPreview, safeSubIndex, pubStories.length]);
+  }, [selectedStoryForPreview, safeSubIndex, pubStories.length, isReplyFocused, replyText]);
 
   const handleNextItem = () => {
     const currentIdx = combinedList.findIndex(s => s.id === selectedStoryForPreview.id);
@@ -15101,6 +15295,226 @@ function ModelStoryLightbox({
       };
     }
 
+    if (lower.includes('paris.haute')) {
+      return {
+        id: 'model-parishaute-stories',
+        name: 'Paris Haute Couture',
+        username: 'paris.haute',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Pasarela parisina, vestidos de gala y momentos exclusivos en Place Vendôme.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 284000,
+        totalLikes: 64500,
+        referidosCount: 92,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Chambre Syndicale Paris',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('valeria.m')) {
+      return {
+        id: 'model-valeriam-stories',
+        name: 'Valeria Mendoza',
+        username: 'valeria.m',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Modelo internacional y embajadora de colecciones cápsula de lujo.',
+        role: 'model' as const,
+        rating: 4.9,
+        followersCount: 148000,
+        totalLikes: 31200,
+        referidosCount: 41,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'The Lions Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('voguestyle')) {
+      return {
+        id: 'model-voguestyle-stories',
+        name: 'Vogue Style Studio',
+        username: 'voguestyle',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Tendencias de temporada, street style en pasarela y editoriales internacionales.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 390000,
+        totalLikes: 112000,
+        referidosCount: 140,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Condé Nast Talent',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('atelier.lux')) {
+      return {
+        id: 'model-atelierlux-stories',
+        name: 'Atelier Lux',
+        username: 'atelier.lux',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Casa creativa de alta costura, sastrería artesanal y pruebas de vestuario.',
+        role: 'model' as const,
+        rating: 4.9,
+        followersCount: 172000,
+        totalLikes: 38900,
+        referidosCount: 53,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Maison Atelier',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('camille_off')) {
+      return {
+        id: 'model-camilleoff-stories',
+        name: 'Camille Laurent',
+        username: 'camille_off',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Backstage en París y campañas de belleza natural.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 164000,
+        totalLikes: 33400,
+        referidosCount: 44,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Viva Model Management',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('runway.nyc')) {
+      return {
+        id: 'model-runwaynyc-stories',
+        name: 'Runway NYC',
+        username: 'runway.nyc',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Cobertura en vivo de desfiles y castings en Nueva York.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 256000,
+        totalLikes: 71000,
+        referidosCount: 95,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'IMG Models NY',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('bianca.couture')) {
+      return {
+        id: 'model-biancacouture-stories',
+        name: 'Bianca Rossi Couture',
+        username: 'bianca.couture',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Diseñadora y modelo de pasarela de alta costura italiana.',
+        role: 'model' as const,
+        rating: 4.9,
+        followersCount: 193000,
+        totalLikes: 42100,
+        referidosCount: 61,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Next Management Milano',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('marco_shoot')) {
+      return {
+        id: 'model-marcoshoot-stories',
+        name: 'Marco Bellini',
+        username: 'marco_shoot',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Modelo editorial masculino y campañas de sastrería de lujo en Milán.',
+        role: 'model' as const,
+        rating: 4.9,
+        followersCount: 158000,
+        totalLikes: 34800,
+        referidosCount: 47,
+        verified: true,
+        gender: 'male' as const,
+        fashionAgency: 'Success Models',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('sofiastyling')) {
+      return {
+        id: 'model-sofiastyling-stories',
+        name: 'Sofia Styling',
+        username: 'sofiastyling',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Estilista creativa, curación de looks VIP y moda sostenible.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 185000,
+        totalLikes: 39700,
+        referidosCount: 58,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Creative Artists Studio',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
+    if (lower.includes('london.catwalk')) {
+      return {
+        id: 'model-londoncatwalk-stories',
+        name: 'London Catwalk',
+        username: 'london.catwalk',
+        avatar: storyItem.avatar || storyItem.image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=400',
+        banner: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1200',
+        bio: 'Pasarelas vanguardistas, talento emergente y editoriales desde Londres.',
+        role: 'model' as const,
+        rating: 5.0,
+        followersCount: 242000,
+        totalLikes: 61500,
+        referidosCount: 84,
+        verified: true,
+        gender: 'female' as const,
+        fashionAgency: 'Storm Management London',
+        photos: [
+          storyItem.image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=650'
+        ]
+      };
+    }
+
     // 4. Default / any other story:
     const cleanUsername = targetUsername.toLowerCase().replace(/[^a-z0-9_.]/g, '');
     const cleanName = storyItem.name || (targetUsername ? targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1) : 'Modelo');
@@ -15299,7 +15713,7 @@ function ModelStoryLightbox({
           )}
 
           {/* ACTIVE CENTER CARD */}
-          <div className="relative w-[340px] sm:w-[360px] md:w-[370px] lg:w-[380px] h-[min(650px,84vh)] max-h-[85vh] bg-[#1a1a1c] rounded-[24px] overflow-hidden shadow-2xl flex flex-col border border-zinc-800 shrink-0 select-none my-auto">
+          <div className="relative w-[340px] sm:w-[360px] md:w-[370px] lg:w-[380px] h-[min(650px,84vh)] max-h-[85vh] bg-white rounded-[24px] overflow-hidden shadow-2xl flex flex-col border border-slate-200 shrink-0 select-none my-auto">
             
             {/* Top progress indicator bar inside card */}
             <div className="absolute top-3 inset-x-3.5 z-30 flex gap-1 select-none">
@@ -15447,6 +15861,70 @@ function ModelStoryLightbox({
                 ))}
               </div>
 
+              {/* Sent comments + Quick Reactions Overlay (shown only when reply input is focused) */}
+              {!showGiftsPopup && (isReplyFocused || Boolean(sentFeedbackToast) || activeStoryComments.length > 0) && (
+                <div
+                  className="absolute inset-x-0 bottom-0 z-30 pt-10 pb-3 px-4 bg-gradient-to-t from-black/80 via-black/45 to-transparent flex flex-col items-center pointer-events-none"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {sentFeedbackToast && (
+                    <div className="mb-2 px-3 py-1 rounded-full bg-emerald-500/95 text-white text-[11px] font-bold shadow-lg animate-fade-in">
+                      {sentFeedbackToast}
+                    </div>
+                  )}
+
+                  {activeStoryComments.length > 0 && (
+                    <div className="w-full max-h-24 overflow-y-auto space-y-1.5 mb-2.5 pointer-events-auto scrollbar-none">
+                      {activeStoryComments.slice(-3).map((cmt) => (
+                        <div
+                          key={cmt.id}
+                          className="flex items-start gap-2 bg-black/55 backdrop-blur-sm border border-white/15 rounded-2xl px-2.5 py-1.5 text-left shadow-sm"
+                        >
+                          <img
+                            src={cmt.avatar}
+                            alt={cmt.user}
+                            className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/40 mt-0.5"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 leading-none">
+                              <span className="text-[10px] font-extrabold text-pink-300 truncate">@{cmt.user}</span>
+                              <span className="text-[9px] text-white/60">{cmt.time}</span>
+                            </div>
+                            <p className="text-[11px] text-white font-medium leading-snug break-words mt-0.5">{cmt.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {isReplyFocused && (
+                    <div
+                      className="flex flex-col items-center pointer-events-auto animate-fade-in"
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      <span className="text-white text-[15px] font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] mb-2.5 select-none">
+                        Reacciones rápidas
+                      </span>
+                      <div className="grid grid-cols-4 gap-x-5 gap-y-2">
+                        {QUICK_STORY_REACTIONS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={(e) => handleQuickReactionClick(emoji, e)}
+                            className="custom-bg text-[26px] leading-none p-1 bg-transparent border-0 cursor-pointer hover:scale-125 active:scale-95 transition-transform duration-150 select-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)]"
+                            title={`Reaccionar con ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Extra Gifts Popover matching zx.png exactly, centered on the image */}
               {showGiftsPopup && (
                 <div 
@@ -15508,20 +15986,22 @@ function ModelStoryLightbox({
               )}
             </div>
 
-            {/* Bottom reply & reaction bar inside card matching imagen.PNG */}
-            <div className="p-3.5 pt-1 pb-4 flex items-center justify-between gap-3 shrink-0">
-              <div className="flex-1 bg-transparent border border-white/20 rounded-full py-1.5 px-3.5 flex items-center">
+            {/* Bottom reply & reaction bar inside card */}
+            <form
+              onSubmit={(e) => handleSendStoryComment(e, 'desktop')}
+              onClick={(e) => e.stopPropagation()}
+              className="p-3.5 pt-2.5 pb-4 flex items-center justify-between gap-3 shrink-0 bg-white border-t border-slate-200/80"
+            >
+              <div className="flex-1 bg-slate-100 border border-slate-200 focus-within:border-[#ff2d85] focus-within:bg-white rounded-full py-1.5 px-3.5 flex items-center transition-colors">
                 <input 
+                  ref={desktopReplyInputRef}
                   type="text" 
-                  placeholder={`Responder a ${currentActiveSubStory.username || currentActiveSubStory.name || currentActiveSubStory.title || (isOwnActiveViewing || isArchivedViewing ? userProfile.username : 'usuario')}...`}
-                  className="bg-transparent text-white placeholder-white/50 text-[11.5px] focus:outline-none flex-1 border-none font-medium h-4 leading-none" 
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const textInput = e.target as HTMLInputElement;
-                      alert(`💬 Mensaje enviado con éxito: "${textInput.value}"`);
-                      textInput.value = '';
-                    }
-                  }}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onFocus={() => setIsReplyFocused(true)}
+                  onBlur={() => setIsReplyFocused(false)}
+                  placeholder={`Responder a ${replyRecipientUsername}...`}
+                  className="bg-transparent text-slate-800 placeholder-slate-400 text-[11.5px] focus:outline-none flex-1 border-none font-medium h-4 leading-none" 
                 />
               </div>
 
@@ -15533,25 +16013,27 @@ function ModelStoryLightbox({
                       detail: { icon: '❤️' }
                     }));
                     spawnEmojiParticles('❤️');
+                    showStoryFeedback(`❤️ Enviado a @${replyRecipientUsername}`);
                   }}
-                  className="text-white hover:text-rose-500 active:scale-90 transition p-1 cursor-pointer bg-white/5 rounded-full hover:bg-white/10"
-                  title="Reaccionar"
+                  className="custom-bg text-rose-500 hover:text-rose-600 active:scale-90 transition p-1.5 cursor-pointer bg-slate-100 rounded-full hover:bg-rose-50 border border-slate-200/70"
+                  title="Me gusta"
                 >
-                  <Heart className="w-4.5 h-4.5 fill-current text-white hover:text-rose-500" />
+                  <Heart className="w-4.5 h-4.5 fill-current text-rose-500" />
                 </button>
 
                 <button
-                  type="button"
-                  onClick={() => {
-                    alert('💬 ¡Mensaje enviado con éxito!');
-                  }}
-                  className="text-white hover:text-indigo-400 active:scale-90 transition p-1 cursor-pointer bg-white/5 rounded-full hover:bg-white/10"
-                  title="Compartir"
+                  type="submit"
+                  className={`custom-bg active:scale-90 transition p-1.5 cursor-pointer rounded-full border ${
+                    replyText.trim()
+                      ? 'bg-[#ff2d85] text-white border-[#ff2d85] hover:bg-rose-600 shadow-sm'
+                      : 'bg-slate-100 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 border-slate-200/70'
+                  }`}
+                  title={replyText.trim() ? 'Enviar comentario' : 'Escribe un comentario para enviar'}
                 >
-                  <Send className="w-4 h-4 text-white transform rotate-45 -translate-y-0.5" />
+                  <Send className="w-4 h-4 transform rotate-45 -translate-y-0.5" />
                 </button>
               </div>
-            </div>
+            </form>
 
           </div>
 
@@ -15874,25 +16356,90 @@ function ModelStoryLightbox({
               </div>
             </div>
           )}
+          {/* Sent comments + Quick Reactions Overlay on mobile (shown only when reply input is focused) */}
+          {!showGiftsPopup && (isReplyFocused || Boolean(sentFeedbackToast) || activeStoryComments.length > 0) && (
+            <div
+              className="absolute inset-x-0 bottom-0 z-30 pt-10 pb-3 px-4 bg-gradient-to-t from-black/80 via-black/45 to-transparent flex flex-col items-center pointer-events-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {sentFeedbackToast && (
+                <div className="mb-2 px-3 py-1 rounded-full bg-emerald-500/95 text-white text-[11px] font-bold shadow-lg animate-fade-in">
+                  {sentFeedbackToast}
+                </div>
+              )}
+
+              {activeStoryComments.length > 0 && (
+                <div className="w-full max-h-24 overflow-y-auto space-y-1.5 mb-2.5 pointer-events-auto scrollbar-none">
+                  {activeStoryComments.slice(-3).map((cmt) => (
+                    <div
+                      key={cmt.id}
+                      className="flex items-start gap-2 bg-black/55 backdrop-blur-sm border border-white/15 rounded-2xl px-2.5 py-1.5 text-left shadow-sm"
+                    >
+                      <img
+                        src={cmt.avatar}
+                        alt={cmt.user}
+                        className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/40 mt-0.5"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 leading-none">
+                          <span className="text-[10px] font-extrabold text-pink-300 truncate">@{cmt.user}</span>
+                          <span className="text-[9px] text-white/60">{cmt.time}</span>
+                        </div>
+                        <p className="text-[11px] text-white font-medium leading-snug break-words mt-0.5">{cmt.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {isReplyFocused && (
+                <div
+                  className="flex flex-col items-center pointer-events-auto animate-fade-in"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <span className="text-white text-[15px] font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] mb-2.5 select-none">
+                    Reacciones rápidas
+                  </span>
+                  <div className="grid grid-cols-4 gap-x-6 gap-y-2">
+                    {QUICK_STORY_REACTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => handleQuickReactionClick(emoji, e)}
+                        className="custom-bg text-[26px] leading-none p-1 bg-transparent border-0 cursor-pointer hover:scale-125 active:scale-95 transition-transform duration-150 select-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)]"
+                        title={`Reaccionar con ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mobile footer with heart/comment icons and home bar mockup */}
         <div className="px-4 pb-5 pt-2 flex flex-col gap-2.5 z-40 bg-white border-t border-slate-100">
-          <div className="flex items-center justify-between gap-4">
+          <form
+            onSubmit={(e) => handleSendStoryComment(e, 'mobile')}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center justify-between gap-4"
+          >
             
             {/* Input responder box */}
-            <div className="flex-1 bg-slate-100 border border-slate-200 rounded-full py-2 px-4 flex items-center">
+            <div className="flex-1 bg-slate-100 border border-slate-200 focus-within:border-[#ff2d85] focus-within:bg-white rounded-full py-2 px-4 flex items-center transition-colors">
               <input 
+                ref={mobileReplyInputRef}
                 type="text" 
-                placeholder={`Responder a ${currentActiveSubStory.username || userProfile.username}...`}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onFocus={() => setIsReplyFocused(true)}
+                onBlur={() => setIsReplyFocused(false)}
+                placeholder={`Responder a ${replyRecipientUsername}...`}
                 className="bg-transparent text-slate-800 placeholder-slate-400 text-[11.5px] focus:outline-none flex-1 border-none font-medium h-4 leading-none" 
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const textInput = e.target as HTMLInputElement;
-                    alert(`💬 Mensaje enviado con éxito: "${textInput.value}"`);
-                    textInput.value = '';
-                  }
-                }}
               />
             </div>
 
@@ -15905,24 +16452,28 @@ function ModelStoryLightbox({
                     detail: { icon: '❤️' }
                   }));
                   spawnEmojiParticles('❤️');
+                  showStoryFeedback(`❤️ Enviado a @${replyRecipientUsername}`);
                 }}
-                className="text-slate-700 hover:text-rose-500 active:scale-90 transition p-1 cursor-pointer"
+                className="custom-bg text-rose-500 hover:text-rose-600 active:scale-90 transition p-1.5 cursor-pointer bg-slate-100 rounded-full hover:bg-rose-50"
+                title="Me gusta"
               >
-                <Heart className="w-5.5 h-5.5 text-slate-700 hover:text-rose-500" />
+                <Heart className="w-5.5 h-5.5 fill-current text-rose-500" />
               </button>
 
               <button
-                type="button"
-                onClick={() => {
-                  alert('💬 ¡Mensaje enviado con éxito!');
-                }}
-                className="text-slate-700 hover:text-indigo-600 active:scale-90 transition p-1 cursor-pointer"
+                type="submit"
+                className={`custom-bg active:scale-90 transition p-1.5 cursor-pointer rounded-full ${
+                  replyText.trim()
+                    ? 'bg-[#ff2d85] text-white hover:bg-rose-600 shadow-sm'
+                    : 'bg-slate-100 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50'
+                }`}
+                title={replyText.trim() ? 'Enviar comentario' : 'Escribe un comentario para enviar'}
               >
-                <Send className="w-5.5 h-5.5 text-slate-700 hover:text-indigo-600 transform rotate-45 -translate-y-0.5" />
+                <Send className="w-5.5 h-5.5 transform rotate-45 -translate-y-0.5" />
               </button>
             </div>
 
-          </div>
+          </form>
 
           {/* iOS home gesture line indicator pill */}
           <div className="w-28 h-[3.5px] bg-slate-300 mx-auto rounded-full mt-2" />

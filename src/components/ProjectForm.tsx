@@ -317,9 +317,9 @@ export default function ProjectForm({
             <button
               type="button"
               onClick={() => onNavigateToTab('saved_projects')}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-xs sm:text-sm font-bold shadow-lg shadow-pink-600/30 transition-all hover:scale-105 active:scale-95 bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] border border-pink-300/40 cursor-pointer"
+              className="custom-bg flex items-center gap-2 px-6 py-2.5 rounded-full bg-white hover:bg-slate-50 text-[#000000] text-xs sm:text-sm font-bold shadow-md shadow-pink-950/10 transition-all hover:scale-105 active:scale-95 border border-slate-200 cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 text-[#000000]" />
               <span>Volver</span>
             </button>
           )}
@@ -361,14 +361,48 @@ export default function ProjectForm({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start relative z-10">
 
-          {/* LEFT LUXURY COLUMN: CREATIVIDAD QUE GENERA VALOR */}
+          {/* LEFT LUXURY COLUMN: CREATIVIDAD QUE GENERA VALOR (Imagen WebP limpia + capa de texto aparte traducible) */}
           <div className="hidden lg:block lg:col-span-3 xl:col-span-3 shrink-0">
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-pink-300/60 sticky top-6 transition-all duration-300 hover:shadow-pink-900/15">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-pink-300/60 sticky top-6 transition-all duration-300 hover:shadow-pink-900/15">
               <img 
-                src="/assets/aistudio/luxury_left_column_clean.png" 
-                alt="Creatividad que genera valor - Moda, Finanzas, Oportunidades Globales" 
-                className="w-full h-auto object-cover block"
+                src="/assets/aistudio/luxury_left_column_clean.webp" 
+                alt="Moda, Finanzas y Oportunidades Globales" 
+                className="w-full h-auto object-cover block select-none"
               />
+
+              {/* Capa de texto aparte (sin texto en la imagen WebP) para traducción automática limpia */}
+              <div
+                translate="yes"
+                className="absolute inset-0 pointer-events-none select-text"
+              >
+                {/* Título principal debajo del diamante */}
+                <div className="absolute inset-x-[9%] top-[19.3%] flex items-center justify-center text-center">
+                  <p className="m-0 font-serif font-medium uppercase tracking-[0.04em] text-[#F9F2EC] leading-[1.28] text-[clamp(13px,1.22vw,18px)] drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]">
+                    Creatividad que genera valor
+                  </p>
+                </div>
+
+                {/* Etiqueta 1: MODA */}
+                <div className="absolute left-[40%] right-[6%] top-[36.2%] flex items-center justify-center text-center">
+                  <span className="font-sans font-semibold uppercase tracking-[0.14em] text-[#F7ECE6] text-[clamp(10px,0.82vw,12px)] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
+                    Moda
+                  </span>
+                </div>
+
+                {/* Etiqueta 2: FINANZAS */}
+                <div className="absolute left-[39%] right-[5%] top-[44.1%] flex items-center justify-center text-center">
+                  <span className="font-sans font-semibold uppercase tracking-[0.13em] text-[#F7ECE6] text-[clamp(10px,0.82vw,12px)] leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
+                    Finanzas
+                  </span>
+                </div>
+
+                {/* Etiqueta 3: OPORTUNIDADES GLOBALES */}
+                <div className="absolute left-[36%] right-[4%] top-[51.6%] flex items-center justify-center text-center">
+                  <span className="font-sans font-semibold uppercase tracking-[0.09em] text-[#F7ECE6] text-[clamp(9px,0.78vw,11.5px)] leading-[1.3] drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
+                    Oportunidades globales
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -390,7 +424,7 @@ export default function ProjectForm({
                 >
                   <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center p-2 transition-all duration-300 ${
                     activeStep === 'basic'
-                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-xl shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      ? 'bg-gradient-to-tr from-[#fdf2f8] via-[#fce7f3] to-[#fbcfe8] border-2 border-[#f9a8d4] text-[#be185d] shadow-xl shadow-pink-300/45 scale-105 ring-4 ring-[#fdf2f8]'
                       : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500 shadow-sm hover:scale-105'
                   }`}>
                     <DiamondIcon className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
@@ -411,7 +445,7 @@ export default function ProjectForm({
                 >
                   <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center p-2 transition-all duration-300 ${
                     activeStep === 'finance'
-                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-xl shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      ? 'bg-gradient-to-tr from-[#fdf2f8] via-[#fce7f3] to-[#fbcfe8] border-2 border-[#f9a8d4] text-[#be185d] shadow-xl shadow-pink-300/45 scale-105 ring-4 ring-[#fdf2f8]'
                       : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500 shadow-sm hover:scale-105'
                   }`}>
                     <DiamondIcon className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md transition-transform duration-300 group-hover:scale-110" />
@@ -432,7 +466,7 @@ export default function ProjectForm({
                 >
                   <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center p-2 transition-all duration-300 ${
                     activeStep === 'team'
-                      ? 'bg-gradient-to-tr from-[#db2777] to-[#e11d48] text-white shadow-xl shadow-pink-500/40 scale-105 ring-4 ring-pink-100'
+                      ? 'bg-gradient-to-tr from-[#fdf2f8] via-[#fce7f3] to-[#fbcfe8] border-2 border-[#f9a8d4] text-[#be185d] shadow-xl shadow-pink-300/45 scale-105 ring-4 ring-[#fdf2f8]'
                       : 'bg-white border-2 border-pink-300 text-pink-600 hover:border-pink-500 shadow-sm hover:scale-105'
                   }`}>
                     <DiamondIcon className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md transition-transform duration-300 group-hover:scale-110" />

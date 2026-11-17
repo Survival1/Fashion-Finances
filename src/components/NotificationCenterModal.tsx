@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bell,
   X,
@@ -16,7 +17,9 @@ import {
   Clock,
   Filter,
   Users,
-  UserPlus
+  UserPlus,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export type NotificationCategory =
@@ -42,6 +45,21 @@ export interface AppNotification {
   targetTab?: string;
   actionRanking?: boolean;
   avatar?: string;
+  senderId?: string;
+  senderName?: string;
+  senderUsername?: string;
+  recipientId?: string;
+  recipientName?: string;
+  recipientUsername?: string;
+  data?: {
+    senderId?: string;
+    senderName?: string;
+    senderUsername?: string;
+    recipientId?: string;
+    recipientName?: string;
+    recipientUsername?: string;
+    [key: string]: unknown;
+  };
   friendRequestId?: string;
   friendRequestType?: 'received' | 'accepted';
   friendData?: {
@@ -56,7 +74,267 @@ export interface AppNotification {
   };
 }
 
+export interface NotificationUserIdentity {
+  id?: string;
+  name?: string;
+  username?: string;
+}
+
+const normalizeIdentityText = (value?: string | null): string =>
+  (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^@+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+export function isSelfSenderNotification(
+  notification: Partial<AppNotification> | null | undefined,
+  currentUser?: NotificationUserIdentity | null
+): boolean {
+  if (!notification || !currentUser) return false;
+
+  const userNameNorm = normalizeIdentityText(currentUser.name);
+  const userUsernameNorm = normalizeIdentityText(currentUser.username);
+  const userIdNorm = (currentUser.id || '').trim();
+
+  const explicitIds = [notification.senderId, notification.data?.senderId, notification.friendData?.id]
+    .map(v => (typeof v === 'string' ? v.trim() : ''))
+    .filter(Boolean);
+  if (userIdNorm && explicitIds.some(id => id === userIdNorm)) {
+    return true;
+  }
+
+  const explicitNames = [
+    notification.senderName,
+    notification.data?.senderName,
+    notification.friendData?.name
+  ]
+    .map(v => normalizeIdentityText(typeof v === 'string' ? v : ''))
+    .filter(Boolean);
+
+  const explicitUsernames = [
+    notification.senderUsername,
+    notification.data?.senderUsername,
+    notification.friendData?.username
+  ]
+    .map(v => normalizeIdentityText(typeof v === 'string' ? v : ''))
+    .filter(Boolean);
+
+  if (userNameNorm && explicitNames.some(n => n === userNameNorm)) {
+    return true;
+  }
+  if (userUsernameNorm && explicitUsernames.some(u => u === userUsernameNorm)) {
+    return true;
+  }
+
+  const titleNorm = normalizeIdentityText(notification.title);
+  const messageNorm = normalizeIdentityText(notification.message);
+  const combinedNorm = `${titleNorm} ${messageNorm}`;
+
+  const identitiesToCheck = [userNameNorm, userUsernameNorm].filter(v => v.length >= 3);
+  for (const ident of identitiesToCheck) {
+    if (
+      titleNorm.includes(` de ${ident}`) ||
+      titleNorm.endsWith(` de ${ident}!`) ||
+      titleNorm.includes(`¡${ident} `) ||
+      titleNorm.startsWith(`${ident} `)
+    ) {
+      return true;
+    }
+
+    if (
+      messageNorm.includes(`${ident} te ha `) ||
+      messageNorm.includes(`@${ident} te ha `) ||
+      messageNorm.includes(`${ident} ha aceptado`) ||
+      messageNorm.includes(`@${ident} ha comentado`) ||
+      messageNorm.includes(`${ident} ha comentado`) ||
+      messageNorm.startsWith(`${ident}:`) ||
+      messageNorm.startsWith(`${ident} (@`) ||
+      combinedNorm.includes(`recibido un regalo de ${ident}`) ||
+      combinedNorm.includes(`recibido una donacion de ${ident}`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const normalizeUsernameBase = (value?: string | null): string =>
+  normalizeIdentityText(value).replace(/_[wm]\d+$/i, '');
+
+const doUserIdentitiesMatch = (
+  a?: NotificationUserIdentity | null,
+  b?: NotificationUserIdentity | null
+): boolean => {
+  if (!a || !b) return false;
+  const aId = (a.id || '').trim();
+  const bId = (b.id || '').trim();
+  if (aId && bId && aId === bId) return true;
+
+  const aName = normalizeIdentityText(a.name);
+  const bName = normalizeIdentityText(b.name);
+  if (aName && bName && aName === bName) return true;
+
+  const aUser = normalizeIdentityText(a.username);
+  const bUser = normalizeIdentityText(b.username);
+  if (aUser && bUser) {
+    if (aUser === bUser) return true;
+    const aBase = normalizeUsernameBase(aUser);
+    const bBase = normalizeUsernameBase(bUser);
+    if (aBase.length >= 5 && bBase.length >= 5 && aBase === bBase) return true;
+  }
+
+  return false;
+};
+
+export function isNotificationForDifferentRecipient(
+  notification: Partial<AppNotification> | null | undefined,
+  currentUser?: NotificationUserIdentity | null
+): boolean {
+  if (!notification) return false;
+
+  const recipientId = (
+    notification.recipientId ||
+    (typeof notification.data?.recipientId === 'string' ? notification.data.recipientId : '')
+  ).trim();
+  const recipientName = (
+    notification.recipientName ||
+    (typeof notification.data?.recipientName === 'string' ? notification.data.recipientName : '')
+  ).trim();
+  const recipientUsername = (
+    notification.recipientUsername ||
+    (typeof notification.data?.recipientUsername === 'string' ? notification.data.recipientUsername : '')
+  ).trim();
+
+  if (!recipientId && !recipientName && !recipientUsername) {
+    return false;
+  }
+
+  if (!currentUser) return true;
+
+  return !doUserIdentitiesMatch(
+    { id: recipientId, name: recipientName, username: recipientUsername },
+    currentUser
+  );
+}
+
+export function isSameSenderAndRecipient(
+  notification: Partial<AppNotification> | null | undefined
+): boolean {
+  if (!notification) return false;
+
+  const recipientId = (
+    notification.recipientId ||
+    (typeof notification.data?.recipientId === 'string' ? notification.data.recipientId : '')
+  ).trim();
+  const recipientName = (
+    notification.recipientName ||
+    (typeof notification.data?.recipientName === 'string' ? notification.data.recipientName : '')
+  ).trim();
+  const recipientUsername = (
+    notification.recipientUsername ||
+    (typeof notification.data?.recipientUsername === 'string' ? notification.data.recipientUsername : '')
+  ).trim();
+
+  if (!recipientId && !recipientName && !recipientUsername) {
+    return false;
+  }
+
+  const senderIdentity: NotificationUserIdentity = {
+    id: notification.senderId || (typeof notification.data?.senderId === 'string' ? notification.data.senderId : ''),
+    name: notification.senderName || (typeof notification.data?.senderName === 'string' ? notification.data.senderName : ''),
+    username: notification.senderUsername || (typeof notification.data?.senderUsername === 'string' ? notification.data.senderUsername : '')
+  };
+
+  if (!senderIdentity.id && !senderIdentity.name && !senderIdentity.username) {
+    return false;
+  }
+
+  return doUserIdentitiesMatch(senderIdentity, {
+    id: recipientId,
+    name: recipientName,
+    username: recipientUsername
+  });
+}
+
+export function isDisallowedBrandCommissionNotification(
+  notification: Partial<AppNotification> | null | undefined
+): boolean {
+  if (!notification) return false;
+  if (notification.id === 'notif-comis-1') return true;
+  const titleNorm = normalizeIdentityText(notification.title);
+  const msgNorm = normalizeIdentityText(notification.message);
+  if (
+    msgNorm.includes('patrocinio oficial de balenciaga') ||
+    msgNorm.includes('patrocinar a marcas') ||
+    (notification.category === 'comisiones' && msgNorm.includes('balenciaga'))
+  ) {
+    return true;
+  }
+  if (titleNorm.includes('comision acreditada: 75.00') && msgNorm.includes('patrocinio oficial')) {
+    return true;
+  }
+  return false;
+}
+
 const STORAGE_KEY = 'coll_notifications';
+
+export function pushAppNotification(notification: AppNotification): void {
+  try {
+    if (
+      isDisallowedBrandCommissionNotification(notification) ||
+      isSameSenderAndRecipient(notification)
+    ) {
+      return;
+    }
+
+    const hasExplicitRecipient = Boolean(
+      notification.recipientId ||
+      notification.recipientName ||
+      notification.recipientUsername ||
+      notification.data?.recipientId ||
+      notification.data?.recipientName ||
+      notification.data?.recipientUsername
+    );
+
+    if (!hasExplicitRecipient) {
+      const rawUser = localStorage.getItem('coll_userProfile');
+      const currentUser = rawUser ? JSON.parse(rawUser) : null;
+      if (isSelfSenderNotification(notification, currentUser)) {
+        return;
+      }
+    }
+
+    const raw = localStorage.getItem(STORAGE_KEY);
+    let existing: AppNotification[] = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        existing = parsed;
+      }
+    } else {
+      existing = INITIAL_NOTIFICATIONS;
+    }
+
+    if (existing.some(n => n.id === notification.id)) {
+      return;
+    }
+
+    const nextNotif: AppNotification = {
+      ...notification,
+      id: notification.id || `notif-${Date.now()}`,
+      timestamp: notification.timestamp || Date.now(),
+      read: Boolean(notification.read)
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([nextNotif, ...existing]));
+    window.dispatchEvent(new CustomEvent('add-app-notification', { detail: nextNotif }));
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 export const INITIAL_NOTIFICATIONS: AppNotification[] = [
   {
@@ -162,18 +440,6 @@ export const INITIAL_NOTIFICATIONS: AppNotification[] = [
     actionLabel: 'Ver en Amigos'
   },
   {
-    id: 'notif-comis-1',
-    category: 'comisiones',
-    title: '💶 Comisión Acreditada: 75.00€',
-    message: 'Has recibido una comisión directa por el patrocinio oficial de Balenciaga en la pasarela de Casting Live.',
-    timestamp: Date.now() - 1000 * 60 * 120, // 2 hours ago
-    read: true,
-    icon: '💶',
-    amount: 75.0,
-    actionLabel: 'Ver Finanzas',
-    targetTab: 'finance'
-  },
-  {
     id: 'notif-regalo-1',
     category: 'regalos',
     title: '🎁 ¡Has recibido un Reloj Tourbillon Suizo!',
@@ -221,27 +487,51 @@ export const INITIAL_NOTIFICATIONS: AppNotification[] = [
 interface NotificationCenterModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userProfile?: NotificationUserIdentity | null;
   onNavigateToTab?: (tab: string) => void;
   onOpenRanking?: () => void;
   onOpenFriendsTab?: (subTab: 'friends' | 'pending' | 'sent') => void;
   onUnreadCountChange?: (count: number) => void;
 }
 
+const readStoredUserProfile = (): NotificationUserIdentity | null => {
+  try {
+    const raw = localStorage.getItem('coll_userProfile');
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch {}
+  return null;
+};
+
 export default function NotificationCenterModal({
   isOpen,
   onClose,
+  userProfile,
   onNavigateToTab,
   onOpenRanking,
   onOpenFriendsTab,
   onUnreadCountChange
 }: NotificationCenterModalProps) {
+  const [activeUser, setActiveUser] = useState<NotificationUserIdentity | null>(
+    () => userProfile || readStoredUserProfile()
+  );
+
+  useEffect(() => {
+    if (userProfile) {
+      setActiveUser(userProfile);
+    } else {
+      setActiveUser(readStoredUserProfile());
+    }
+  }, [userProfile, isOpen]);
+
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.filter((n: AppNotification) => !isDisallowedBrandCommissionNotification(n));
         }
       }
     } catch (e) {
@@ -252,39 +542,92 @@ export default function NotificationCenterModal({
 
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const categoriesScrollRef = useRef<HTMLDivElement>(null);
+
+  const visibleNotifications = useMemo(() => {
+    return notifications.filter(
+      n =>
+        !isSelfSenderNotification(n, activeUser) &&
+        !isNotificationForDifferentRecipient(n, activeUser) &&
+        !isDisallowedBrandCommissionNotification(n)
+    );
+  }, [notifications, activeUser]);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (!categoriesScrollRef.current) return;
+    categoriesScrollRef.current.scrollBy({
+      left: direction === 'left' ? -220 : 220,
+      behavior: 'smooth'
+    });
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Sync to local storage
+  // Sync to local storage and propagate filtered unread count
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
     } catch (e) {
       console.error(e);
     }
-    const unread = notifications.filter(n => !n.read).length;
+    const unread = visibleNotifications.filter(n => !n.read).length;
     if (onUnreadCountChange) {
       onUnreadCountChange(unread);
     }
-  }, [notifications, onUnreadCountChange]);
+  }, [notifications, visibleNotifications, onUnreadCountChange]);
 
-  // Listen for storage, custom notifications, or friend request synchronization events
+  // Listen for storage, custom notifications, user profile changes, or friend request synchronization events
   useEffect(() => {
     const handleAddNotification = (event: Event) => {
       const customEvent = event as CustomEvent<AppNotification>;
       if (customEvent.detail) {
-        setNotifications(prev => [
-          {
-            ...customEvent.detail,
-            id: customEvent.detail.id || `notif-${Date.now()}`,
-            timestamp: customEvent.detail.timestamp || Date.now(),
-            read: false
-          },
-          ...prev
-        ]);
+        if (
+          isDisallowedBrandCommissionNotification(customEvent.detail) ||
+          isSameSenderAndRecipient(customEvent.detail)
+        ) {
+          return;
+        }
+        const hasExplicitRecipient = Boolean(
+          customEvent.detail.recipientId ||
+          customEvent.detail.recipientName ||
+          customEvent.detail.recipientUsername ||
+          customEvent.detail.data?.recipientId ||
+          customEvent.detail.data?.recipientName ||
+          customEvent.detail.data?.recipientUsername
+        );
+        if (!hasExplicitRecipient) {
+          const currentIdentity = userProfile || readStoredUserProfile();
+          if (isSelfSenderNotification(customEvent.detail, currentIdentity)) {
+            return;
+          }
+        }
+        const nextId = customEvent.detail.id || `notif-${Date.now()}`;
+        setNotifications(prev => {
+          if (prev.some(n => n.id === nextId)) {
+            return prev;
+          }
+          return [
+            {
+              ...customEvent.detail,
+              id: nextId,
+              timestamp: customEvent.detail.timestamp || Date.now(),
+              read: Boolean(customEvent.detail.read)
+            },
+            ...prev
+          ];
+        });
+      }
+    };
+
+    const handleUserProfileUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<NotificationUserIdentity>;
+      if (customEvent.detail) {
+        setActiveUser(customEvent.detail);
+      } else {
+        setActiveUser(readStoredUserProfile());
       }
     };
 
@@ -317,11 +660,17 @@ export default function NotificationCenterModal({
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
+      if (e.key === STORAGE_KEY || !e.key) {
         try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setNotifications(parsed);
+          const raw = e.newValue ?? localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) setNotifications(parsed);
+          }
         } catch {}
+      }
+      if (e.key === 'coll_userProfile' || !e.key) {
+        setActiveUser(readStoredUserProfile());
       }
       if (e.key === 'ff_pending_received_requests') {
         handleSyncFriends();
@@ -329,23 +678,25 @@ export default function NotificationCenterModal({
     };
 
     window.addEventListener('add-app-notification', handleAddNotification);
+    window.addEventListener('user-profile-updated', handleUserProfileUpdated);
     window.addEventListener('sync-friend-requests', handleSyncFriends);
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('add-app-notification', handleAddNotification);
+      window.removeEventListener('user-profile-updated', handleUserProfileUpdated);
       window.removeEventListener('sync-friend-requests', handleSyncFriends);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [userProfile]);
 
   const unreadCount = useMemo(() => {
-    return notifications.filter(n => !n.read).length;
-  }, [notifications]);
+    return visibleNotifications.filter(n => !n.read).length;
+  }, [visibleNotifications]);
 
   const filteredNotifications = useMemo(() => {
-    if (activeCategory === 'all') return notifications;
-    return notifications.filter(n => n.category === activeCategory);
-  }, [notifications, activeCategory]);
+    if (activeCategory === 'all') return visibleNotifications;
+    return visibleNotifications.filter(n => n.category === activeCategory);
+  }, [visibleNotifications, activeCategory]);
 
   const handleMarkAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
@@ -508,14 +859,14 @@ export default function NotificationCenterModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[150] flex items-start justify-end p-2 sm:p-4 bg-slate-950/40 backdrop-blur-xs animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/45 backdrop-blur-xs animate-fade-in">
       {/* Backdrop overlay dismiss */}
       <div className="fixed inset-0 -z-10" onClick={onClose} />
 
-      {/* Main Container */}
+      {/* Main Container Centered */}
       <div
-        className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[92vh] sm:mt-16 animate-scale-up"
+        className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#f9a8d4]/80 overflow-hidden flex flex-col max-h-[88vh] animate-scale-up my-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Floating Toast inside modal */}
@@ -526,24 +877,24 @@ export default function NotificationCenterModal({
           </div>
         )}
 
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-slate-900 to-rose-950 text-white flex items-center justify-between">
+        {/* Header — Rosa Perla */}
+        <div className="p-4 sm:p-5 border-b border-[#f9a8d4]/80 bg-gradient-to-tr from-[#fdf2f8] via-[#fce7f3] to-[#fbcfe8] text-[#831843] flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-rose-300 shadow-inner">
+            <div className="w-10 h-10 rounded-2xl bg-white/85 border border-[#f9a8d4] flex items-center justify-center text-[#be185d] shadow-xs shrink-0">
               <Bell className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-serif font-black text-base sm:text-lg tracking-wide text-white">
+                <h3 className="font-serif font-black text-base sm:text-lg tracking-wide text-[#831843]">
                   Notificaciones
                 </h3>
                 {unreadCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#fe2c55] text-white animate-pulse">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#fe2c55] text-white animate-pulse shadow-2xs">
                     {unreadCount} nuevas
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 font-sans">
+              <p className="text-[11px] text-[#9d174d]/85 font-sans font-semibold">
                 Amigos, Rondas, Comisiones, Regalos, Admins, Redes y Mensajes
               </p>
             </div>
@@ -554,10 +905,10 @@ export default function NotificationCenterModal({
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                className="custom-bg px-2.5 py-1.5 rounded-xl bg-white/85 hover:bg-white border border-[#f9a8d4] text-[#831843] text-[11px] font-bold flex items-center gap-1 transition cursor-pointer shadow-2xs"
                 title="Marcar todas como leídas"
               >
-                <CheckCheck className="w-3.5 h-3.5 text-emerald-300" />
+                <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
                 <span className="hidden sm:inline">Leer todas</span>
               </button>
             )}
@@ -565,7 +916,7 @@ export default function NotificationCenterModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
+              className="custom-bg w-8 h-8 rounded-full bg-white/85 hover:bg-white border border-[#f9a8d4] text-[#831843] flex items-center justify-center transition cursor-pointer shadow-2xs"
               title="Cerrar notificaciones"
             >
               <X className="w-4 h-4" />
@@ -573,117 +924,142 @@ export default function NotificationCenterModal({
           </div>
         </div>
 
-        {/* Categories Bar */}
-        <div className="bg-slate-50 border-b border-slate-200/80 p-2 sm:p-2.5 overflow-x-auto scrollbar-none flex items-center gap-1.5">
+        {/* Categories Slider Bar with Left / Right Arrows */}
+        <div className="bg-gradient-to-r from-[#fff8fb] via-slate-50 to-[#fff8fb] border-b border-[#f9a8d4]/50 px-2.5 sm:px-3.5 py-3 flex items-center gap-2">
+          {/* Left Arrow Button */}
           <button
             type="button"
-            onClick={() => setActiveCategory('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-              activeCategory === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
+            onClick={() => scrollCategories('left')}
+            aria-label="Desplazar categorías a la izquierda"
+            className="custom-bg w-9 h-9 rounded-full bg-white hover:bg-[#fdf2f8] border border-[#f9a8d4] text-[#831843] flex items-center justify-center shadow-xs cursor-pointer transition hover:scale-105 active:scale-95 shrink-0"
           >
-            Todas ({notifications.length})
+            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
 
-          {/* 👥 Nueva categoría Amigos sincronizada */}
-          <button
-            type="button"
-            onClick={() => setActiveCategory('amigos')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'amigos'
-                ? 'bg-[#fe2c55] text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
+          {/* Scrollable Filter Buttons Container */}
+          <div
+            ref={categoriesScrollRef}
+            className="flex-1 overflow-x-auto no-scrollbar scrollbar-none scroll-smooth flex items-center gap-2.5 py-0.5 px-1"
           >
-            <span>👥</span>
-            <span>Amigos</span>
-            {notifications.filter(n => n.category === 'amigos' && !n.read).length > 0 && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
-                activeCategory === 'amigos' ? 'bg-white text-[#fe2c55]' : 'bg-[#fe2c55] text-white'
-              }`}>
-                {notifications.filter(n => n.category === 'amigos' && !n.read).length}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('all')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap cursor-pointer shrink-0 ${
+                activeCategory === 'all'
+                  ? 'bg-slate-900 text-white shadow-sm border border-slate-900'
+                  : 'bg-white text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              Todas ({visibleNotifications.length})
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveCategory('rondas')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'rondas'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <span>🏆</span>
-            <span>Rondas</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('amigos')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'amigos'
+                  ? 'bg-[#fe2c55] text-white shadow-sm border border-[#fe2c55]'
+                  : 'bg-white text-slate-800 hover:bg-rose-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">👥</span>
+              <span>Amigos</span>
+              {visibleNotifications.filter(n => n.category === 'amigos' && !n.read).length > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                  activeCategory === 'amigos' ? 'bg-white text-[#fe2c55]' : 'bg-[#fe2c55] text-white'
+                }`}>
+                  {visibleNotifications.filter(n => n.category === 'amigos' && !n.read).length}
+                </span>
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveCategory('comisiones')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'comisiones'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <span>💶</span>
-            <span>Comisiones</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('rondas')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'rondas'
+                  ? 'bg-amber-600 text-white shadow-sm border border-amber-600'
+                  : 'bg-white text-slate-800 hover:bg-amber-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">🏆</span>
+              <span>Rondas</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveCategory('regalos')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'regalos'
-                ? 'bg-[#e11d48] text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <span>🎁</span>
-            <span>Regalos</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('comisiones')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'comisiones'
+                  ? 'bg-emerald-600 text-white shadow-sm border border-emerald-600'
+                  : 'bg-white text-slate-800 hover:bg-emerald-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">💶</span>
+              <span>Comisiones</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveCategory('administradores')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'administradores'
-                ? 'bg-purple-700 text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <span>🛡️</span>
-            <span>Admins</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('regalos')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'regalos'
+                  ? 'bg-[#e11d48] text-white shadow-sm border border-[#e11d48]'
+                  : 'bg-white text-slate-800 hover:bg-rose-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">🎁</span>
+              <span>Regalos</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveCategory('comentarios')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'comentarios'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <span>💬</span>
-            <span>Redes</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('administradores')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'administradores'
+                  ? 'bg-purple-700 text-white shadow-sm border border-purple-700'
+                  : 'bg-white text-slate-800 hover:bg-purple-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">🛡️</span>
+              <span>Admins</span>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => setActiveCategory('comentarios')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'comentarios'
+                  ? 'bg-sky-600 text-white shadow-sm border border-sky-600'
+                  : 'bg-white text-slate-800 hover:bg-sky-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">💬</span>
+              <span>Redes</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveCategory('mensajes')}
+              className={`custom-bg px-4 py-2.5 rounded-2xl text-[13px] sm:text-sm font-extrabold transition whitespace-nowrap flex items-center gap-2 cursor-pointer shrink-0 ${
+                activeCategory === 'mensajes'
+                  ? 'bg-indigo-600 text-white shadow-sm border border-indigo-600'
+                  : 'bg-white text-slate-800 hover:bg-indigo-50/70 border border-slate-200 shadow-2xs'
+              }`}
+            >
+              <span className="text-base leading-none">✉️</span>
+              <span>Mensajes</span>
+            </button>
+          </div>
+
+          {/* Right Arrow Button */}
           <button
             type="button"
-            onClick={() => setActiveCategory('mensajes')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeCategory === 'mensajes'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200'
-            }`}
+            onClick={() => scrollCategories('right')}
+            aria-label="Desplazar categorías a la derecha"
+            className="custom-bg w-9 h-9 rounded-full bg-white hover:bg-[#fdf2f8] border border-[#f9a8d4] text-[#831843] flex items-center justify-center shadow-xs cursor-pointer transition hover:scale-105 active:scale-95 shrink-0"
           >
-            <span>✉️</span>
-            <span>Mensajes</span>
+            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
@@ -870,9 +1246,9 @@ export default function NotificationCenterModal({
         </div>
 
         {/* Footer */}
-        {notifications.length > 0 && (
+        {visibleNotifications.length > 0 && (
           <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-mono">
-            <span>{notifications.length} notificaciones registradas</span>
+            <span>{visibleNotifications.length} notificaciones registradas</span>
             <button
               type="button"
               onClick={handleClearAll}
@@ -884,6 +1260,7 @@ export default function NotificationCenterModal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

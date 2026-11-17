@@ -53,7 +53,9 @@ import {
   Users
 } from 'lucide-react';
 import { generateProjectPDF } from '../utils/pdfGenerator';
-import glamourHeroBackdrop from '../assets/images/glamour_history_hero_backdrop_1794565838319.jpg';
+import { GoldenRunwayProjectsGraphic } from './FinanceIcons';
+import { useSyncedParticipatedProjects } from '../utils/participatedProjects';
+import glamourHeroBackdrop from '../assets/images/glamour_history_hero_backdrop_1794565838319.webp';
 import goldCoinsStackImg from '../assets/images/gold_coins_stack_icon_1794565838068.jpg';
 
 interface SavedProjectsProps {
@@ -84,6 +86,15 @@ export default function SavedProjectsManager({
   );
   const [projectToDelete, setProjectToDelete] = useState<ProjectData | null>(null);
   const [hoveredMedia, setHoveredMedia] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
+  const [showParticipatedBreakdown, setShowParticipatedBreakdown] = useState<boolean>(false);
+
+  const {
+    participatedProjects,
+    participatedProjectsTotal
+  } = useSyncedParticipatedProjects(
+    userProfile?.totalInvested,
+    userProfile?.role === 'visitor'
+  );
   
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const scrollLeft = () => {
@@ -649,10 +660,13 @@ export default function SavedProjectsManager({
         return { success: false, error: `Proyecto con ID ${pid} no encontrado.` };
       }
 
-      // Check if already fully funded
+      // Check if already fully funded (goal reached -> locked)
       const fundingWon = getProjectFundingWon(proj.id, proj.title);
-      if (fundingWon >= proj.budget) {
-        return { success: false, error: `El proyecto "${proj.title}" ya ha sido financiado al 100% (${fundingWon.toFixed(2)}€ / ${proj.budget}€).` };
+      if (proj.budget > 0 && fundingWon >= proj.budget) {
+        return {
+          success: false,
+          error: `🔒 El proyecto "${proj.title}" ya alcanzó su meta de financiación acumulada consensuada (${fundingWon.toFixed(2)}€ / ${proj.budget}€) y ha sido bloqueado. Elige otro proyecto o sube uno nuevo para participar.`
+        };
       }
 
       // Check if already in this session
@@ -954,6 +968,85 @@ export default function SavedProjectsManager({
         </div>
       </div>
 
+      {/* PROYECTOS PARTICIPADOS (Sincronizado en tiempo real con Mis Finanzas -> PROYECTOS PARTICIPADOS) */}
+      <div
+        id="card-proyectos-participados-saved-projects"
+        onClick={() => setShowParticipatedBreakdown((prev) => !prev)}
+        className="p-5 sm:p-6 rounded-[24px] border border-pink-200/90 hover:border-pink-300/90 hover:scale-[1.005] transition-all relative overflow-hidden flex flex-col justify-between min-h-[168px] cursor-pointer select-none"
+        title="Clic para ver el desglose sincronizado con Mis Finanzas"
+        style={{
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF5F8 35%, #FDF2F8 68%, #FCE7F3 100%)',
+          boxShadow: '0 10px 25px -5px rgba(225, 29, 72, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(244, 114, 182, 0.18)'
+        }}
+      >
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-pink-200/50 to-transparent rounded-full blur-xl pointer-events-none" />
+        <div className="flex justify-between items-start relative z-10">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FF2D85] shrink-0 shadow-[0_0_6px_#ff2d85]" />
+              <p className="text-[11px] sm:text-[11.5px] text-rose-900/75 font-bold tracking-[0.14em] uppercase font-mono">
+                Proyectos Participados
+              </p>
+            </div>
+            <div className="flex items-baseline gap-2 mt-1.5">
+              <h3 className="text-xl sm:text-2xl font-black text-rose-950 font-serif tracking-tight leading-none tabular-nums">
+                {participatedProjects.length}
+              </h3>
+              <span className="text-xs sm:text-sm font-mono font-extrabold text-pink-600">
+                ({participatedProjectsTotal.toFixed(1)}€)
+              </span>
+            </div>
+          </div>
+          <div className="shrink-0 pl-2">
+            <GoldenRunwayProjectsGraphic className="w-16 h-16 sm:w-18 sm:h-18" />
+          </div>
+        </div>
+
+        {showParticipatedBreakdown && (
+          <div className="mt-4 pt-3 border-t border-pink-200/60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 relative z-10 animate-fade-in">
+            {participatedProjects.map((proj, idx) => (
+              <div
+                key={idx}
+                className="bg-white/85 rounded-xl border border-pink-200/80 p-3 space-y-1.5 shadow-2xs"
+              >
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-rose-950 truncate">{proj.name}</span>
+                  <span className="font-mono font-extrabold text-pink-600 shrink-0">
+                    {proj.amount.toFixed(1)}€
+                  </span>
+                </div>
+                <div className="w-full bg-pink-100/70 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className={`${proj.color} h-full rounded-full transition-all duration-500`}
+                    style={{ width: `${proj.pct}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-mono font-semibold text-rose-700/70 block text-right">
+                  {proj.pct}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 pt-3 border-t border-pink-200/80 flex items-center justify-between relative z-10">
+          <span className="text-[11px] sm:text-[11.5px] text-rose-800/70 font-medium truncate">
+            En los que participé
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigateToTab('finance');
+            }}
+            className="custom-bg bg-pink-100/90 hover:bg-pink-200/90 text-[#BE185D] border border-pink-300/90 text-[10px] sm:text-[10.5px] font-black px-2.5 py-1 rounded-[5px] tracking-wider font-mono shadow-3xs shrink-0 uppercase cursor-pointer transition-colors"
+            title="Ver en Mis Finanzas"
+          >
+            PASARELAS
+          </button>
+        </div>
+      </div>
+
       <div className="w-full space-y-6">
         
         {/* SECTION A: DETAILED PROJECTS SAVED */}
@@ -1026,7 +1119,8 @@ export default function SavedProjectsManager({
                     {userProjects.map((p, idx) => {
                       const isSelected = p.id === selectedProjectId;
                       const fundingWon = getProjectFundingWon(p.id, p.title);
-                      const progressPercent = Math.min(100, (fundingWon / p.budget) * 100);
+                      const isGoalReached = p.budget > 0 && fundingWon >= p.budget;
+                      const progressPercent = p.budget > 0 ? Math.min(100, (fundingWon / p.budget) * 100) : 0;
                       return (
                         <button
                           key={p.id}
@@ -1046,11 +1140,19 @@ export default function SavedProjectsManager({
                               <Check className="w-3 h-3 stroke-[3]" />
                             </span>
                           )}
-                          <span className={`text-[9px] uppercase font-extrabold tracking-wider font-mono block mb-1.5 ${
-                            isSelected ? 'text-rose-700' : 'text-slate-500'
-                          }`}>
-                            {p.category || 'Categoría'}
-                          </span>
+                          <div className="flex items-center justify-between gap-1.5 mb-1.5 pr-6">
+                            <span className={`text-[9px] uppercase font-extrabold tracking-wider font-mono block truncate ${
+                              isSelected ? 'text-rose-700' : 'text-slate-500'
+                            }`}>
+                              {p.category || 'Categoría'}
+                            </span>
+                            {isGoalReached && (
+                              <span className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-[#fdf2f8] text-[#9d174d] border border-[#f9a8d4] px-1.5 py-0.5 rounded-full shrink-0">
+                                <Lock className="w-2.5 h-2.5" />
+                                <span>Bloqueado</span>
+                              </span>
+                            )}
+                          </div>
                           <strong className={`block text-xs sm:text-sm font-serif font-black leading-snug truncate ${
                             isSelected ? 'text-slate-900' : 'text-slate-800 group-hover:text-rose-950 transition-colors'
                           }`}>
@@ -1615,9 +1717,11 @@ export default function SavedProjectsManager({
                 ) : (
                   [activeProject].map((project) => {
                     const fundingWon = getProjectFundingWon(project.id, project.title);
-                    const isFullyFunded = fundingWon >= project.budget;
-                    const progressPercent = Math.min(100, (fundingWon / project.budget) * 100);
-                    const enteredSessionFlag = hasEnteredAnySession(project.id);
+                    const isFullyFunded = project.budget > 0 && fundingWon >= project.budget;
+                    const progressPercent = project.budget > 0 ? Math.min(100, (fundingWon / project.budget) * 100) : 0;
+                    const nextAvailableProject = userProjects.find(
+                      p => p.id !== project.id && !(p.budget > 0 && getProjectFundingWon(p.id, p.title) >= p.budget)
+                    );
                     const hasCoverImage = project.images && project.images.length > 0;
                     const coverUrl = hasCoverImage ? project.images[0] : null;
 
@@ -1953,21 +2057,90 @@ export default function SavedProjectsManager({
                             </div>
                           )}
 
+                          {/* AVISO CUANDO SE ALCANZA LA FINANCIACIÓN ACUMULADA CONSENSUADA */}
+                          {isFullyFunded && (
+                            <div className="p-4 rounded-2xl bg-gradient-to-r from-white via-[#fdf2f8] to-[#fce7f3] border-2 border-[#f9a8d4] space-y-2.5 shadow-2xs">
+                              <div className="flex items-start gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-white border border-[#f9a8d4] flex items-center justify-center shrink-0">
+                                  <Lock className="w-4 h-4 text-[#be185d]" />
+                                </div>
+                                <div className="space-y-1 text-left">
+                                  <h5 className="text-xs font-extrabold text-[#831843]">
+                                    Proyecto bloqueado: Financiación acumulada consensuada alcanzada ({fundingWon.toFixed(2)}€ / {project.budget}€)
+                                  </h5>
+                                  <p className="text-[11px] text-[#9d174d] leading-relaxed">
+                                    Este proyecto ha completado su meta de financiación. Para seguir participando en rondas, elige otro proyecto disponible o sube uno nuevo.
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 pl-10">
+                                {nextAvailableProject && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedProjectId(nextAvailableProject.id);
+                                      setIsEditing(false);
+                                      try {
+                                        localStorage.setItem('finanzas_user_project_id', nextAvailableProject.id);
+                                        localStorage.setItem('finanzas_user_project_title', nextAvailableProject.title);
+                                        window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+                                          detail: { projectId: nextAvailableProject.id, projectTitle: nextAvailableProject.title }
+                                        }));
+                                      } catch (e) {}
+                                    }}
+                                    className="custom-bg px-3 py-1.5 rounded-xl bg-white hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] text-[11px] font-bold cursor-pointer transition shadow-3xs"
+                                  >
+                                    Elegir otro ({nextAvailableProject.title})
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => onNavigateToTab('create_project')}
+                                  className="custom-bg px-3 py-1.5 rounded-xl bg-[#fce7f3] hover:bg-[#fbcfe8] text-[#831843] border border-[#f472b6] text-[11px] font-bold cursor-pointer transition shadow-3xs inline-flex items-center gap-1"
+                                >
+                                  <PlusCircle className="w-3.5 h-3.5 text-[#be185d]" />
+                                  <span>Subir Nuevo Proyecto</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
                           {/* BOTTOM INTERACTIVE COMPONENT AND EDIT OPTIONS */}
                           <div className="pt-5 border-t border-slate-100 flex flex-wrap gap-3 justify-between items-center text-xs">
                             <div className="flex flex-wrap items-center gap-2">
-                              {enteredSessionFlag ? (
-                                <div className="flex items-center gap-1.5 text-slate-450 bg-slate-50 px-3 py-2 rounded-xl border border-slate-150 font-sans">
-                                  <Lock className="w-3.5 h-3.5 text-slate-400" />
-                                  <span className="text-[10px] font-bold">Bloqueado: Ya ha participado en sesión</span>
+                              {isFullyFunded ? (
+                                <div className="flex items-center gap-1.5 text-[#831843] bg-[#fdf2f8] px-3 py-2 rounded-xl border border-[#f9a8d4] font-sans">
+                                  <Lock className="w-3.5 h-3.5 text-[#be185d]" />
+                                  <span className="text-[10px] font-bold">Bloqueado: Meta de financiación alcanzada</span>
                                 </div>
                               ) : (
-                                <button
-                                  onClick={startEditing}
-                                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-100 rounded-xl font-bold transition active:scale-95 cursor-pointer font-sans"
-                                >
-                                  <span>✏️ Modificar Proyecto</span>
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={startEditing}
+                                    className="custom-bg flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-100 rounded-xl font-bold transition active:scale-95 cursor-pointer font-sans"
+                                  >
+                                    <span>✏️ Modificar Proyecto</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      try {
+                                        localStorage.setItem('finanzas_user_project_id', project.id);
+                                        localStorage.setItem('finanzas_user_project_title', project.title);
+                                        window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+                                          detail: { projectId: project.id, projectTitle: project.title }
+                                        }));
+                                      } catch (e) {}
+                                      onNavigateToTab('sessions');
+                                    }}
+                                    className="custom-bg flex items-center gap-1.5 px-4 py-2 bg-[#fdf2f8] hover:bg-[#fce7f3] text-[#831843] border border-[#f9a8d4] rounded-xl font-bold transition active:scale-95 cursor-pointer font-sans shadow-3xs"
+                                    title="Este proyecto sigue disponible hasta alcanzar su meta de financiación acumulada consensuada"
+                                  >
+                                    <TrendingUp className="w-3.5 h-3.5 text-[#be185d]" />
+                                    <span>Participar en Rondas</span>
+                                  </button>
+                                </>
                               )}
 
                               <button
@@ -2006,8 +2179,8 @@ export default function SavedProjectsManager({
                             </div>
 
                             {isFullyFunded && (
-                              <span className="text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg inline-flex items-center gap-1 shadow-3xs font-sans">
-                                🎉 Límite Financiado
+                              <span className="text-[9px] font-extrabold uppercase bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] px-3 py-1.5 rounded-lg inline-flex items-center gap-1 shadow-3xs font-sans">
+                                🎉 Meta Completada (100%)
                               </span>
                             )}
                           </div>
@@ -2094,20 +2267,12 @@ export default function SavedProjectsManager({
           <div className="rounded-[28px] overflow-hidden border border-[#f2c1d1] shadow-[0_18px_45px_rgba(176,14,79,0.16)] bg-[#ffeef5] transition-all">
             {/* TOP HERO BANNER: Deep Burgundy-Magenta Velvet + Model Portrait + Serif Title + Pearl KPI Badges */}
             <div className="relative overflow-hidden bg-[#5e062c] min-h-[195px] sm:min-h-[215px] flex flex-col justify-center">
-              {/* Background Model & Runway Photo */}
+              {/* Background Model & Runway Photo (WebP sin opacidad ni capa superpuesta) */}
               <img
                 src={glamourHeroBackdrop}
                 alt="Pasarela Glamour de Inversión"
-                className="absolute inset-0 w-full h-full object-cover object-left select-none pointer-events-none"
+                className="absolute inset-0 w-full h-full object-cover object-[22%_center] sm:object-center opacity-100 select-none pointer-events-none"
                 referrerPolicy="no-referrer"
-              />
-              {/* Scrim for high-contrast serif legibility across center & right */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    'linear-gradient(90deg, rgba(64,4,30,0.12) 0%, rgba(88,6,40,0.72) 34%, rgba(122,10,59,0.88) 65%, rgba(145,14,72,0.84) 100%)'
-                }}
               />
 
               {/* Hero Content Grid */}
@@ -2120,7 +2285,7 @@ export default function SavedProjectsManager({
                   <div className="flex justify-center">
                     <Crown className="w-5 h-5 text-amber-300 drop-shadow-[0_2px_6px_rgba(251,191,36,0.45)]" />
                   </div>
-                  <h3 className="text-xl sm:text-2xl xl:text-[28px] font-serif font-bold text-white leading-tight tracking-tight text-balance drop-shadow-sm">
+                  <h3 className="text-xl sm:text-2xl xl:text-[28px] font-serif font-bold text-white leading-tight tracking-tight text-balance drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
                     Historial de Rondas de Inversión Ganadas
                   </h3>
                   <div className="flex items-center justify-center gap-2 py-0.5">
@@ -2128,7 +2293,7 @@ export default function SavedProjectsManager({
                     <span className="w-1.5 h-1.5 rotate-45 bg-amber-300/90" />
                     <span className="h-px w-16 bg-gradient-to-l from-transparent to-amber-300/80" />
                   </div>
-                  <p className="text-[11px] sm:text-xs text-rose-100/95 italic max-w-sm mx-auto leading-relaxed">
+                  <p className="text-[11px] sm:text-xs text-rose-100 italic max-w-sm mx-auto leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
                     Registro exclusivo de tus éxitos comerciales. No se muestran proyectos que participaron pero no ganaron.
                   </p>
                 </div>
@@ -2624,19 +2789,19 @@ export default function SavedProjectsManager({
             </div>
           </div>
 
-          {/* TOTAL DE PROYECTOS FINANCIADOS (Debajo del recuadro de historial y rondas ganadas) */}
-          <div className="bg-gradient-to-br from-white via-sky-50/30 to-sky-100/40 rounded-2xl border border-sky-200/90 p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-150 pb-4">
+          {/* TOTAL DE PROYECTOS FINANCIADOS (Debajo del recuadro de historial y rondas ganadas - Rosa Perla y Blanco) */}
+          <div className="bg-gradient-to-br from-white via-[#fdf2f8]/80 to-[#fce7f3]/80 rounded-2xl border-2 border-[#f9a8d4]/90 p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#fbcfe8] pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-sm shadow-sky-200">
-                  <Trophy className="w-5 h-5 stroke-[2.5]" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fff5f9] via-[#fce7f3] to-[#fbcfe8] border border-[#f472b6]/80 text-[#9d174d] flex items-center justify-center shadow-sm shadow-pink-100">
+                  <Trophy className="w-5 h-5 stroke-[2.5] text-[#be185d]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
                       Total de Proyectos Financiados
                     </h4>
-                    <span className="text-[11px] font-mono font-bold bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full border border-sky-200">
+                    <span className="text-[11px] font-mono font-bold bg-[#fdf2f8] text-[#9d174d] px-2.5 py-0.5 rounded-full border border-[#f9a8d4]">
                       {totalFundedProjectsCount} de {userProjects.length} {userProjects.length === 1 ? 'proyecto' : 'proyectos'}
                     </span>
                   </div>
@@ -2647,9 +2812,9 @@ export default function SavedProjectsManager({
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="bg-white border border-sky-200 rounded-xl px-4 py-2 text-right shadow-3xs">
-                  <span className="text-[9px] uppercase font-bold text-sky-700 block font-mono">Capital Total Financiado</span>
-                  <strong className="text-sm sm:text-base font-black text-emerald-600 font-mono">
+                <div className="bg-white border border-[#f9a8d4] rounded-xl px-4 py-2 text-right shadow-3xs">
+                  <span className="text-[9px] uppercase font-bold text-[#9d174d] block font-mono">Capital Total Financiado</span>
+                  <strong className="text-sm sm:text-base font-black text-[#be185d] font-mono">
                     +{totalFundingWonAll.toFixed(2)}€
                   </strong>
                 </div>
@@ -2658,17 +2823,17 @@ export default function SavedProjectsManager({
 
             {/* CONTROLES Y FILTROS DEL SLIDER */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs">
+              <div className="inline-flex rounded-xl bg-white p-1 border border-[#fbcfe8] text-xs gap-1 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => {
                     setSliderFilterMode('funded_only');
                     setSliderIndex(0);
                   }}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  className={`custom-bg px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                     sliderFilterMode === 'funded_only'
-                      ? 'bg-white text-sky-800 shadow-3xs border border-sky-200'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-gradient-to-r from-[#fff5f9] via-[#fce7f3] to-[#fbcfe8] text-[#831843] shadow-3xs border border-[#f472b6]'
+                      : 'bg-white text-slate-600 border border-transparent hover:bg-[#fdf2f8] hover:text-[#9d174d]'
                   }`}
                 >
                   Solo Financiados ({totalFundedProjectsCount})
@@ -2679,10 +2844,10 @@ export default function SavedProjectsManager({
                     setSliderFilterMode('all');
                     setSliderIndex(0);
                   }}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  className={`custom-bg px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                     sliderFilterMode === 'all'
-                      ? 'bg-white text-sky-800 shadow-3xs border border-sky-200'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-gradient-to-r from-[#fff5f9] via-[#fce7f3] to-[#fbcfe8] text-[#831843] shadow-3xs border border-[#f472b6]'
+                      : 'bg-white text-slate-600 border border-transparent hover:bg-[#fdf2f8] hover:text-[#9d174d]'
                   }`}
                 >
                   Todos en Slider ({userProjects.length})
@@ -2691,25 +2856,25 @@ export default function SavedProjectsManager({
 
               {displayFundedProjects.length > 1 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                  <span className="text-xs font-mono font-bold text-[#831843] bg-white px-2.5 py-1 rounded-lg border border-[#fbcfe8]">
                     {sliderIndex + 1} / {displayFundedProjects.length}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setSliderIndex(prev => (prev > 0 ? prev - 1 : displayFundedProjects.length - 1))}
-                      className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-3xs transition active:scale-95 cursor-pointer"
+                      className="custom-bg p-1.5 bg-white hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] rounded-lg shadow-3xs transition active:scale-95 cursor-pointer"
                       title="Proyecto anterior"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 text-[#be185d]" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setSliderIndex(prev => (prev < displayFundedProjects.length - 1 ? prev + 1 : 0))}
-                      className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-3xs transition active:scale-95 cursor-pointer"
+                      className="custom-bg p-1.5 bg-white hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] rounded-lg shadow-3xs transition active:scale-95 cursor-pointer"
                       title="Siguiente proyecto"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 text-[#be185d]" />
                     </button>
                   </div>
                 </div>
@@ -2718,7 +2883,7 @@ export default function SavedProjectsManager({
 
             {/* SLIDER DE PROYECTOS FINANCIADOS */}
             {displayFundedProjects.length === 0 ? (
-              <div className="text-center p-8 bg-white/80 rounded-2xl border border-dashed border-sky-200 text-xs text-slate-500 space-y-3">
+              <div className="text-center p-8 bg-white rounded-2xl border border-dashed border-[#f9a8d4] text-xs text-slate-500 space-y-3">
                 <p className="max-w-md mx-auto">
                   Aún no dispones de proyectos con financiación asegurada en sesiones de inversión. Compite en las sesiones para acumular el 80% de cada bote.
                 </p>
@@ -2729,9 +2894,9 @@ export default function SavedProjectsManager({
                       setSliderFilterMode('all');
                       setSliderIndex(0);
                     }}
-                    className="px-4 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl font-bold transition shadow-3xs cursor-pointer inline-flex items-center gap-1.5"
+                    className="custom-bg px-4 py-2 bg-[#fdf2f8] hover:bg-[#fce7f3] text-[#831843] border border-[#f9a8d4] rounded-xl font-bold transition shadow-3xs cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <Eye className="w-3.5 h-3.5 text-sky-600" />
+                    <Eye className="w-3.5 h-3.5 text-[#be185d]" />
                     <span>Ver tus proyectos en el slider ({userProjects.length})</span>
                   </button>
                 )}
@@ -2757,28 +2922,28 @@ export default function SavedProjectsManager({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.25 }}
-                        className="bg-white rounded-2xl border border-sky-200 overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-12 gap-0"
+                        className="bg-white rounded-2xl border-2 border-[#fbcfe8] overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-12 gap-0"
                       >
                         {/* SLIDER IMAGE SECTION */}
-                        <div className="relative md:col-span-5 h-56 md:h-auto min-h-[220px] bg-slate-900 overflow-hidden group">
+                        <div className="relative md:col-span-5 h-56 md:h-auto min-h-[220px] bg-[#fdf2f8] overflow-hidden group">
                           <img
                             src={coverImage}
                             alt={proj.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#500724]/80 via-[#831843]/25 to-transparent pointer-events-none" />
 
                           {/* Top Badges */}
                           <div className="absolute top-3 left-3 right-3 flex justify-between items-center gap-2">
-                            <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-black/40 backdrop-blur-md text-white rounded-md border border-white/10 font-mono">
+                            <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-white/95 backdrop-blur-md text-[#831843] rounded-md border border-[#fbcfe8] font-mono shadow-xs">
                               {proj.category || 'Proyecto'}
                             </span>
                             <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border shadow-sm font-mono flex items-center gap-1 ${
-                              isComplete 
-                                ? 'bg-emerald-500 text-white border-emerald-400' 
-                                : isFunded 
-                                  ? 'bg-sky-500 text-white border-sky-400'
-                                  : 'bg-slate-800/80 text-slate-300 border-white/20'
+                              isComplete
+                                ? 'bg-gradient-to-r from-[#fff1f6] via-[#fce7f3] to-[#fbcfe8] text-[#831843] border-[#f472b6]'
+                                : isFunded
+                                  ? 'bg-[#fce7f3] text-[#831843] border-[#f472b6]'
+                                  : 'bg-white/95 text-[#9d174d] border-[#fbcfe8]'
                             }`}>
                               {isComplete ? '🎉 100% Financiado' : isFunded ? `${percent.toFixed(0)}% Financiado` : 'En captación'}
                             </span>
@@ -2786,29 +2951,29 @@ export default function SavedProjectsManager({
 
                           {/* Bottom image overlay */}
                           <div className="absolute bottom-3 left-3 right-3 text-white">
-                            <div className="flex items-center gap-1.5 text-xs text-amber-300 font-bold mb-1">
-                              <Trophy className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-1.5 text-xs text-[#fce7f3] font-bold mb-1 drop-shadow-sm">
+                              <Trophy className="w-3.5 h-3.5 text-[#fbcfe8]" />
                               <span>{winsCount} {winsCount === 1 ? 'Victoria en ronda' : 'Victorias en rondas'}</span>
                             </div>
-                            <h4 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1">
+                            <h4 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1 drop-shadow-sm">
                               {proj.title}
                             </h4>
                           </div>
                         </div>
 
                         {/* SLIDER CONTENT / DETAILS SECTION */}
-                        <div className="md:col-span-7 p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                        <div className="md:col-span-7 p-5 sm:p-6 flex flex-col justify-between space-y-4 bg-white">
                           <div className="space-y-3">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <span className="text-[10px] uppercase font-bold tracking-wider text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded font-mono inline-block mb-1">
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-[#9d174d] bg-[#fdf2f8] border border-[#fbcfe8] px-2 py-0.5 rounded font-mono inline-block mb-1">
                                   {proj.category}
                                 </span>
                                 <h3 className="text-lg font-bold text-slate-900 leading-tight">
                                   {proj.title}
                                 </h3>
                               </div>
-                              <span className="text-[11px] font-mono text-slate-400 shrink-0">
+                              <span className="text-[11px] font-mono text-[#9d174d]/60 shrink-0">
                                 ID: {proj.id.slice(0, 8)}
                               </span>
                             </div>
@@ -2817,23 +2982,23 @@ export default function SavedProjectsManager({
                               {proj.descriptionShort || proj.descriptionLong || 'Propuesta de moda y financiamiento para rondas de inversión en pasarela.'}
                             </p>
 
-                            {/* FINANCIAL BREAKDOWN CARDS */}
+                            {/* FINANCIAL BREAKDOWN CARDS (Rosa Perla y Blanco) */}
                             <div className="grid grid-cols-3 gap-2 pt-1">
-                              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5">
-                                <span className="text-[9px] uppercase font-bold text-emerald-800 block font-mono">Financiado</span>
-                                <strong className="text-xs sm:text-sm font-black text-emerald-700 font-mono block truncate">
+                              <div className="bg-gradient-to-br from-white to-[#fce7f3] border border-[#f9a8d4] rounded-xl p-2.5">
+                                <span className="text-[9px] uppercase font-bold text-[#9d174d] block font-mono">Financiado</span>
+                                <strong className="text-xs sm:text-sm font-black text-[#be185d] font-mono block truncate">
                                   +{fundingWon.toFixed(2)}€
                                 </strong>
                               </div>
-                              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
-                                <span className="text-[9px] uppercase font-bold text-slate-600 block font-mono">Presupuesto</span>
+                              <div className="bg-white border border-[#fbcfe8] rounded-xl p-2.5">
+                                <span className="text-[9px] uppercase font-bold text-[#9d174d]/75 block font-mono">Presupuesto</span>
                                 <strong className="text-xs sm:text-sm font-black text-slate-800 font-mono block truncate">
                                   {proj.budget.toFixed(2)}€
                                 </strong>
                               </div>
-                              <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-2.5">
-                                <span className="text-[9px] uppercase font-bold text-sky-800 block font-mono">Restante</span>
-                                <strong className="text-xs sm:text-sm font-black text-sky-700 font-mono block truncate">
+                              <div className="bg-[#fdf2f8] border border-[#f9a8d4] rounded-xl p-2.5">
+                                <span className="text-[9px] uppercase font-bold text-[#9d174d] block font-mono">Restante</span>
+                                <strong className="text-xs sm:text-sm font-black text-[#831843] font-mono block truncate">
                                   {Math.max(0, proj.budget - fundingWon).toFixed(2)}€
                                 </strong>
                               </div>
@@ -2843,15 +3008,11 @@ export default function SavedProjectsManager({
                             <div className="space-y-1 pt-1">
                               <div className="flex justify-between items-center text-[10px] font-mono">
                                 <span className="text-slate-500 font-medium">Progreso de Financiación</span>
-                                <span className="font-extrabold text-sky-900">{percent.toFixed(1)}%</span>
+                                <span className="font-extrabold text-[#be185d]">{percent.toFixed(1)}%</span>
                               </div>
-                              <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden border border-slate-200/70">
+                              <div className="w-full h-2.5 rounded-full bg-white overflow-hidden border border-[#fbcfe8]">
                                 <div
-                                  className={`h-full rounded-full transition-all duration-500 ${
-                                    isComplete 
-                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400' 
-                                      : 'bg-gradient-to-r from-sky-500 to-indigo-500'
-                                  }`}
+                                  className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#fbcfe8] via-[#f472b6] to-[#ec4899]"
                                   style={{ width: `${percent}%` }}
                                 />
                               </div>
@@ -2859,7 +3020,7 @@ export default function SavedProjectsManager({
                           </div>
 
                           {/* SLIDER CARD ACTIONS */}
-                          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                          <div className="pt-3 border-t border-[#fce7f3] flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
@@ -2870,9 +3031,9 @@ export default function SavedProjectsManager({
                                   }
                                   window.scrollTo({ top: 400, behavior: 'smooth' });
                                 }}
-                                className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-3xs"
+                                className="custom-bg px-3.5 py-1.5 bg-white hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-3xs"
                               >
-                                <Eye className="w-3.5 h-3.5 text-sky-300" />
+                                <Eye className="w-3.5 h-3.5 text-[#be185d]" />
                                 <span>Inspeccionar</span>
                               </button>
 
@@ -2888,12 +3049,12 @@ export default function SavedProjectsManager({
                                 className="pearl-pink-btn custom-bg px-3.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-3xs"
                                 title="Descargar dossier del proyecto en PDF"
                               >
-                                <Download className="w-3.5 h-3.5 text-pink-700" />
+                                <Download className="w-3.5 h-3.5 text-[#be185d]" />
                                 <span>Descargar PDF</span>
                               </button>
                             </div>
 
-                            <span className="text-[10px] font-medium text-slate-400">
+                            <span className="text-[10px] font-medium text-[#9d174d]/60">
                               Usa las flechas o puntos
                             </span>
                           </div>
@@ -2909,18 +3070,18 @@ export default function SavedProjectsManager({
                     <button
                       type="button"
                       onClick={() => setSliderIndex(prev => (prev > 0 ? prev - 1 : displayFundedProjects.length - 1))}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-800 border border-slate-200 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer z-10"
+                      className="custom-bg absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer z-10"
                       title="Anterior"
                     >
-                      <ChevronLeft className="w-5 h-5 text-slate-700" />
+                      <ChevronLeft className="w-5 h-5 text-[#be185d]" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setSliderIndex(prev => (prev < displayFundedProjects.length - 1 ? prev + 1 : 0))}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-800 border border-slate-200 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer z-10"
+                      className="custom-bg absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer z-10"
                       title="Siguiente"
                     >
-                      <ChevronRight className="w-5 h-5 text-slate-700" />
+                      <ChevronRight className="w-5 h-5 text-[#be185d]" />
                     </button>
                   </>
                 )}
@@ -2935,10 +3096,10 @@ export default function SavedProjectsManager({
                     key={p.id + '-' + idx}
                     type="button"
                     onClick={() => setSliderIndex(idx)}
-                    className={`transition-all rounded-full cursor-pointer ${
+                    className={`custom-bg transition-all rounded-full cursor-pointer ${
                       sliderIndex === idx 
-                        ? 'w-7 h-2.5 bg-sky-600 shadow-xs' 
-                        : 'w-2.5 h-2.5 bg-sky-200 hover:bg-sky-300'
+                        ? 'w-7 h-2.5 bg-[#f472b6] shadow-xs' 
+                        : 'w-2.5 h-2.5 bg-[#fbcfe8] hover:bg-[#f9a8d4]'
                     }`}
                     title={`Ir al proyecto ${idx + 1}: ${p.title}`}
                   />
@@ -2946,13 +3107,13 @@ export default function SavedProjectsManager({
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-600 bg-white/90 p-3 rounded-xl border border-sky-150 gap-2">
+            <div className="flex flex-wrap items-center justify-between text-[11px] text-[#831843]/80 bg-white p-3 rounded-xl border border-[#f9a8d4] gap-2">
               <span className="flex items-center gap-1.5 font-medium">
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                <span>Total de proyectos financiados: <strong>{totalFundedProjectsCount} de {userProjects.length}</strong></span>
+                <Check className="w-3.5 h-3.5 text-[#be185d] stroke-[3]" />
+                <span>Total de proyectos financiados: <strong className="text-[#831843]">{totalFundedProjectsCount} de {userProjects.length}</strong></span>
               </span>
               {fullyFundedProjectsCount > 0 && (
-                <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[10px]">
+                <span className="font-semibold text-[#831843] bg-[#fdf2f8] px-2.5 py-0.5 rounded-full border border-[#f9a8d4] text-[10px]">
                   🎉 {fullyFundedProjectsCount} {fullyFundedProjectsCount === 1 ? 'proyecto con 100% de presupuesto completado' : 'proyectos con 100% de presupuesto completados'}
                 </span>
               )}

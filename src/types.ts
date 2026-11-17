@@ -32,6 +32,7 @@ export interface ModelProfile {
   videoUrl?: string;
   fashionAgency?: string; // e.g. "Ford Models", "Victoria's Secret"
   gender?: 'female' | 'male';
+  patrocinadorId?: string;
 }
 
 export type UserRole = 'model' | 'investor' | 'visitor' | 'admin';

@@ -50,6 +50,7 @@ import {
   getParticipantLiveCameraVideo
 } from './CastingLiveSection';
 import pearlHeelsBg from '../assets/images/pearl_heels_bg_1794559301641.jpg';
+import { SoundTrackSheetModal, SoundVideoReference } from './SoundTrackSheetModal';
 
 const CHANNELS_LIST = [
   { id: 'Todos', label: 'Todos 🌍' },
@@ -515,6 +516,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   });
   // 🌐 Traductor de descripciones a Inglés (solicitado sobre captura z.png)
   const [translatedVideosMap, setTranslatedVideosMap] = useState<Record<string, boolean>>({});
+  const [soundSheetVideo, setSoundSheetVideo] = useState<ChannelUploadedVideoItem | null>(null);
 
   const toggleVideoTranslation = (videoId: string) => {
     setTranslatedVideosMap(prev => ({
@@ -4702,7 +4704,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
             {showStreamOptionsModal && isCardActive && renderStreamOptionsContent && (
               <div 
-                className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-none overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
+                className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-none overflow-hidden bg-white text-slate-900 flex flex-col shadow-2xl animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
                 id={`phone-stream-options-multimedia-${currentVid.id}`}
               >
@@ -5126,10 +5128,20 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   </span>
                 </div>
 
-                {/* Spinning Music Disc */}
-                <div className="w-9 h-9 rounded-full bg-black/80 border-2 border-slate-700/80 p-1 flex items-center justify-center shadow-xl animate-spin duration-[4000ms] pointer-events-none mt-1">
+                {/* Spinning Music Disc -> Ficha del Sonido */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSoundSheetVideo(currentVid);
+                  }}
+                  className="custom-bg w-9 h-9 rounded-full bg-black/80 hover:bg-black border-2 border-slate-700/80 hover:border-[#fe2c55] p-1 flex items-center justify-center shadow-xl animate-spin duration-[4000ms] pointer-events-auto cursor-pointer transition hover:scale-110 active:scale-95 mt-1"
+                  title="Ver ficha del sonido y otros vídeos con esta música"
+                  aria-label="Ver ficha del sonido"
+                  id={`btn-sound-sheet-${currentVid.id}`}
+                >
                   <Music className="w-4 h-4 text-[#fe2c55]" />
-                </div>
+                </button>
               </div>
             </div>
 
@@ -5142,14 +5154,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20" />
                 </h4>
               </div>
-
-              {/* User upload badge if uploaded from z.png */}
-              {currentVid.isUserUploaded && (
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500/80 to-pink-500/80 text-[8.5px] font-mono font-black uppercase tracking-wider mb-1 shadow-sm">
-                  <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
-                  <span>Subido desde Casting Live</span>
-                </div>
-              )}
 
               {/* Video Caption & Hashtags */}
               <p className="text-[11px] sm:text-xs text-slate-100 font-medium leading-relaxed drop-shadow-md line-clamp-3 mb-1 text-left">
@@ -5168,7 +5172,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
               </p>
 
               {/* 🌐 Traductor a Inglés (solicitado sobre captura z.png) */}
-              <div className="flex items-center gap-2 mb-2 select-none">
+              <div className="flex items-center gap-2 mb-1 select-none">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -5186,12 +5190,6 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                   <Globe className="w-3 h-3 text-rose-400" />
                   <span>{translatedVideosMap[currentVid.id] ? 'Ver original (Español)' : 'Traducir a Inglés'}</span>
                 </button>
-              </div>
-
-              {/* Music Marquee */}
-              <div className="flex items-center gap-1.5 text-[9.5px] font-bold text-slate-300 drop-shadow-md">
-                <Music className="w-3 h-3 text-rose-400 shrink-0" />
-                <span className="truncate max-w-[200px]">{currentVid.music || 'Música Original - Fashion Finances Studio'}</span>
               </div>
             </div>
 
@@ -5741,7 +5739,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 📡 MODAL OPCIONES DE STREAM DENTRO DE LA PANTALLA DEL TELÉFONO */}
                 {showStreamOptionsModal && isCurrentlyActiveRound && renderStreamOptionsContent && (
                   <div 
-                    className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-none overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in"
+                    className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-none overflow-hidden bg-white text-slate-900 flex flex-col shadow-2xl animate-fade-in"
                     onClick={(e) => e.stopPropagation()}
                     id={`phone-stream-options-wrapper-${session.id}`}
                   >
@@ -7738,6 +7736,47 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           );
         }))}
       </div>
+
+      {/* 🎵 FICHA DEL SONIDO MODAL (Al pulsar el último icono musical de la barra lateral) */}
+      <SoundTrackSheetModal
+        isOpen={Boolean(soundSheetVideo)}
+        sourceVideo={soundSheetVideo}
+        allVideos={(() => {
+          let storedVideos: SoundVideoReference[] = [];
+          try {
+            const raw = localStorage.getItem('coll_casting_live_videos');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) storedVideos = parsed;
+            }
+          } catch (_) {}
+          return [
+            ...channelUploadedVideos,
+            ...DEFAULT_FASHION_PRESETS,
+            ...DEFAULT_FRIENDS_PRESETS,
+            ...storedVideos,
+          ];
+        })()}
+        onClose={() => setSoundSheetVideo(null)}
+        onSelectVideo={(selectedVid) => {
+          const idx = channelUploadedVideos.findIndex((v) => v.id === selectedVid.id);
+          if (idx >= 0) {
+            setActiveChannelVideoIdx(idx);
+          }
+        }}
+        onUseAudioForNewVideo={(trackFullTitle, audioUrl) => {
+          setSoundSheetVideo(null);
+          window.dispatchEvent(
+            new CustomEvent('open-casting-upload-modal', {
+              detail: {
+                category: currentChannel === 'Todos' ? 'Fashion' : currentChannel,
+                music: trackFullTitle,
+                audioUrl,
+              },
+            })
+          );
+        }}
+      />
     </div>
   );
 };

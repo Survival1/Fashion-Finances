@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ModelProfile, FinancialMovement } from '../types';
 import { computeTotalRankingAndVideoLikes } from '../utils/likesCounter';
+import { pushAppNotification } from './NotificationCenterModal';
 import { 
   Sparkles, 
   Crown, 
@@ -1578,6 +1579,8 @@ interface VictoriaSecretRankingProps {
   onClose: () => void;
   models: ModelProfile[];
   movements?: FinancialMovement[];
+  backofficeBalance?: number;
+  onSyncBackofficeBalance?: (nextBalance: number, movementDescription?: string, deltaAmount?: number) => void;
   onSelectModel?: (model: ModelProfile) => void;
   onNavigateToStore?: (storeId: string) => void;
   onNavigateToTab?: (tab: string) => void;
@@ -1589,6 +1592,8 @@ export default function VictoriaSecretRanking({
   onClose,
   models,
   movements,
+  backofficeBalance,
+  onSyncBackofficeBalance,
   onSelectModel,
   onNavigateToStore,
   onNavigateToTab,
@@ -1637,11 +1642,54 @@ export default function VictoriaSecretRanking({
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
   const [sponsorCount, setSponsorCount] = useState<1 | 2 | 3>(3);
 
-  // Gifts view state & tabs
+  const readBackofficeBalance = (): number => {
+    if (typeof backofficeBalance === 'number' && !isNaN(backofficeBalance)) {
+      return backofficeBalance;
+    }
+    try {
+      const rawUser = localStorage.getItem('coll_userProfile');
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser);
+        if (parsed && typeof parsed.balance === 'number' && !isNaN(parsed.balance)) {
+          return parsed.balance;
+        }
+      }
+    } catch {}
+    return 0;
+  };
+
+  // Gifts view state & tabs (synchronized with Backoffice balance)
   const [giftsSubTab, setGiftsSubTab] = useState<'received' | 'sent' | 'catalog'>('received');
-  const [userGiftBalance, setUserGiftBalance] = useState<number>(2473);
+  const [userGiftBalance, setUserGiftBalance] = useState<number>(() => readBackofficeBalance());
   const [giftCategoryFilter, setGiftCategoryFilter] = useState<'all' | 'basico' | 'intermedio' | 'lujo' | 'alta_costura'>('all');
   const [giftSearchQuery, setGiftSearchQuery] = useState<string>('');
+
+  useEffect(() => {
+    setUserGiftBalance(readBackofficeBalance());
+  }, [backofficeBalance, isOpen]);
+
+  useEffect(() => {
+    const syncFromBackoffice = (e?: Event) => {
+      const customEvt = e as CustomEvent | undefined;
+      if (customEvt?.detail && typeof customEvt.detail.newBalance === 'number') {
+        setUserGiftBalance(customEvt.detail.newBalance);
+        return;
+      }
+      if (customEvt?.detail && typeof customEvt.detail.balance === 'number') {
+        setUserGiftBalance(customEvt.detail.balance);
+        return;
+      }
+      setUserGiftBalance(readBackofficeBalance());
+    };
+    window.addEventListener('user-profile-updated', syncFromBackoffice);
+    window.addEventListener('wallet-updated', syncFromBackoffice);
+    window.addEventListener('storage', syncFromBackoffice);
+    return () => {
+      window.removeEventListener('user-profile-updated', syncFromBackoffice);
+      window.removeEventListener('wallet-updated', syncFromBackoffice);
+      window.removeEventListener('storage', syncFromBackoffice);
+    };
+  }, [backofficeBalance]);
   
   // Received & Sent gifts state with localStorage persistence
   const [receivedGifts, setReceivedGifts] = useState<UserGiftItem[]>(() => {
@@ -2111,7 +2159,7 @@ export default function VictoriaSecretRanking({
     targetModel?: { id: string; name: string; username?: string; avatar: string } | ModelProfile
   ) => {
     if (userGiftBalance < gift.price) {
-      alert(`⚠️ Saldo insuficiente (${userGiftBalance} monedas). Necesitas ${gift.price} monedas para enviar "${gift.name}". Puedes recargar monedas abajo.`);
+      alert(`⚠️ Saldo insuficiente en tu Backoffice (${userGiftBalance.toFixed(2)}€). Necesitas ${gift.price.toFixed(2)}€ para enviar "${gift.name}". Puedes recargar saldo haciendo clic en "Tu saldo" o en el Backoffice.`);
       return;
     }
 
@@ -2162,7 +2210,8 @@ export default function VictoriaSecretRanking({
       category: gift.category
     };
 
-    setUserGiftBalance(prev => prev - gift.price);
+    const nextSyncedBalance = Math.max(0, Number((userGiftBalance - gift.price).toFixed(2)));
+    setUserGiftBalance(nextSyncedBalance);
     setSentGifts(prev => [newSentItem, ...prev]);
     setReceivedGifts(prev => [newReceivedItem, ...prev]);
     setSentGiftToast({ name: gift.name, icon: gift.icon, price: gift.price, recipientName: recipient.name });
@@ -2172,11 +2221,14 @@ export default function VictoriaSecretRanking({
       const rawUser = localStorage.getItem('coll_userProfile');
       if (rawUser) {
         const user = JSON.parse(rawUser);
-        user.balance = Math.max(0, Number(((user.balance || 0) - gift.price).toFixed(2)));
+        user.balance = Math.max(0, Number(((user.balance ?? userGiftBalance) - gift.price).toFixed(2)));
         user.totalInvested = Number(((user.totalInvested || 0) + gift.price).toFixed(2));
         localStorage.setItem('coll_userProfile', JSON.stringify(user));
+        setUserGiftBalance(user.balance);
         window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: user }));
         window.dispatchEvent(new CustomEvent('wallet-updated', { detail: { newBalance: user.balance } }));
+      } else if (onSyncBackofficeBalance) {
+        onSyncBackofficeBalance(nextSyncedBalance);
       }
 
       const rawMovements = localStorage.getItem('coll_movements');
@@ -2215,19 +2267,60 @@ export default function VictoriaSecretRanking({
         }
       }
 
-      const rawNotifs = localStorage.getItem('coll_notifications');
-      const notifs = rawNotifs ? JSON.parse(rawNotifs) : [];
-      notifs.unshift({
-        id: `notif-${Date.now()}`,
-        type: 'gift',
-        title: `¡Has recibido un regalo de Ernesto vs!`,
-        message: `Ernesto vs te ha enviado "${gift.name}" (${gift.price}€). ${customMessage ? `Mensaje: "${customMessage}"` : ''}`,
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        timestamp: Date.now(),
-        read: false,
-        data: { gift, amount: gift.price }
-      });
-      localStorage.setItem('coll_notifications', JSON.stringify(notifs));
+      let notifSenderName = 'Ernesto vs';
+      let notifSenderUsername = 'ernestovs';
+      let notifSenderAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150';
+      let notifSenderId = '';
+      try {
+        const rawActiveUser = localStorage.getItem('coll_userProfile');
+        if (rawActiveUser) {
+          const activeProfile = JSON.parse(rawActiveUser);
+          if (activeProfile?.name) notifSenderName = activeProfile.name;
+          if (activeProfile?.username) notifSenderUsername = activeProfile.username;
+          if (activeProfile?.avatar) notifSenderAvatar = activeProfile.avatar;
+          if (activeProfile?.id) notifSenderId = activeProfile.id;
+        }
+      } catch {}
+
+      const isSelfRecipient =
+        notifSenderName.trim().toLowerCase() === recipient.name.trim().toLowerCase() ||
+        (!!recipient.username && notifSenderUsername.trim().toLowerCase() === recipient.username.trim().toLowerCase()) ||
+        (!!notifSenderId && !!recipient.id && notifSenderId === recipient.id);
+
+      if (!isSelfRecipient) {
+        pushAppNotification({
+          id: `notif-vs-${Date.now()}`,
+          category: 'regalos',
+          senderId: notifSenderId,
+          senderName: notifSenderName,
+          senderUsername: notifSenderUsername,
+          recipientId: recipient.id,
+          recipientName: recipient.name,
+          recipientUsername: recipient.username,
+          title: `${gift.icon || '🎁'} ¡Has recibido un regalo de ${notifSenderName}!`,
+          message: customMessage
+            ? `${notifSenderName} te ha enviado "${gift.name}" (${gift.price}€) con la dedicatoria: "${customMessage}". Guardado en tu bóveda.`
+            : `${notifSenderName} te ha enviado "${gift.name}" (${gift.price}€). Guardado en tu bóveda.`,
+          avatar: notifSenderAvatar,
+          timestamp: Date.now(),
+          read: false,
+          icon: gift.icon || '🎁',
+          amount: gift.price,
+          actionLabel: 'Abrir Bóveda',
+          actionRanking: true,
+          data: {
+            type: 'gift',
+            gift,
+            amount: gift.price,
+            senderId: notifSenderId,
+            senderName: notifSenderName,
+            senderUsername: notifSenderUsername,
+            recipientId: recipient.id,
+            recipientName: recipient.name,
+            recipientUsername: recipient.username
+          }
+        });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -3956,36 +4049,52 @@ export default function VictoriaSecretRanking({
                   className="w-full h-auto object-cover rounded-3xl block" 
                 />
 
-                {/* Interactive Dynamic Balance & Recharge Hotspot */}
+                {/* Interactive Dynamic Balance & Recharge Hotspot synchronized with Backoffice */}
                 <div 
-                  className="absolute left-[7.8%] top-[58.6%] w-[39.2%] h-[20%] flex items-center justify-between px-3 sm:px-6 cursor-pointer group/balance"
+                  className="absolute left-[9.8%] top-[58.1%] w-[37.2%] h-[20.2%] rounded-full cursor-pointer group/balance z-10"
                   onClick={() => {
-                    setUserGiftBalance(prev => prev + 5000);
+                    const rechargeAmount = 5000;
+                    const nextBalance = Number((userGiftBalance + rechargeAmount).toFixed(2));
+                    setUserGiftBalance(nextBalance);
+                    if (onSyncBackofficeBalance) {
+                      onSyncBackofficeBalance(
+                        nextBalance,
+                        `📥 Recarga desde Centro de Regalos (+${rechargeAmount.toFixed(2)}€)`,
+                        rechargeAmount
+                      );
+                    } else {
+                      try {
+                        const rawUser = localStorage.getItem('coll_userProfile');
+                        if (rawUser) {
+                          const user = JSON.parse(rawUser);
+                          user.balance = nextBalance;
+                          localStorage.setItem('coll_userProfile', JSON.stringify(user));
+                          window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: user }));
+                          window.dispatchEvent(new CustomEvent('wallet-updated', { detail: { newBalance: user.balance } }));
+                        }
+                      } catch {}
+                    }
                     window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
                       detail: { icon: '🪙' }
                     }));
                   }}
-                  title="Tu saldo de monedas. Haz clic para recargar 5.000 monedas"
+                  title={`Tu saldo Backoffice: ${userGiftBalance.toFixed(2)}€. Haz clic para recargar 5.000€`}
                 >
-                  {/* Subtle dynamic update pill when balance is updated */}
-                  {userGiftBalance !== 2473 && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#fefbf6] via-[#fdf6e6] to-[#faedd0] rounded-full border border-amber-300 shadow-sm flex items-center justify-between px-3 sm:px-6 z-10 pointer-events-none">
-                      <span className="font-serif text-[11px] sm:text-base lg:text-lg text-stone-900 font-bold">Tu saldo:</span>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <span className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-gradient-to-b from-amber-400 to-amber-600 text-white font-bold flex items-center justify-center text-xs sm:text-sm shadow-xs">$</span>
-                        <span className="font-serif font-black text-xs sm:text-xl lg:text-2xl text-stone-950 tracking-tight">
-                          {userGiftBalance.toLocaleString()}
-                        </span>
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-black bg-amber-400 hover:bg-amber-300 text-slate-900 px-2 py-0.5 rounded-full shadow-xs">
-                        +
-                      </span>
-                    </div>
-                  )}
+                  {/* Dynamic Backoffice balance value masking only the baked-in number slot inside the cream/gold pill */}
+                  <div
+                    className="absolute left-[61.3%] top-[10.5%] w-[35.5%] h-[80.5%] rounded-r-full flex items-center justify-start pl-1 sm:pl-2 pr-1.5 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(90deg, #fdf0e4 0%, #faebd9 50%, #f3e0d4 100%)'
+                    }}
+                  >
+                    <span className="font-sans font-black text-[10.5px] sm:text-sm md:text-base lg:text-xl text-stone-950 tracking-tight whitespace-nowrap leading-none">
+                      {userGiftBalance.toFixed(2)}€
+                    </span>
+                  </div>
 
                   {/* Hover recharge badge tooltip */}
                   <div className="hidden group-hover/balance:flex absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 text-amber-300 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-amber-400/40 pointer-events-none whitespace-nowrap z-20">
-                    🪙 Saldo: {userGiftBalance.toLocaleString()} · Clic para +5.000
+                    🪙 Backoffice: {userGiftBalance.toFixed(2)}€ · Clic para +5.000€
                   </div>
                 </div>
               </div>
@@ -5462,7 +5571,7 @@ export default function VictoriaSecretRanking({
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-pink-600 shrink-0" />
                       <p className="text-xs text-slate-600 font-medium">
-                        <strong className="text-slate-800">Catálogo de regalos</strong> · Tu saldo disponible: <span className="font-mono font-black text-pink-600 text-sm">🪙 {userGiftBalance.toLocaleString()}</span>
+                        <strong className="text-slate-800">Catálogo de regalos</strong> · Tu saldo Backoffice: <span className="font-mono font-black text-pink-600 text-sm">{userGiftBalance.toFixed(2)}€</span>
                       </p>
                     </div>
                   </div>
@@ -5478,7 +5587,7 @@ export default function VictoriaSecretRanking({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs bg-zinc-800/90 text-yellow-350 font-black px-2.5 py-1 rounded-lg font-mono flex items-center gap-1 border border-zinc-700/50">
-                          🪙 {userGiftBalance.toLocaleString()}
+                          {userGiftBalance.toFixed(2)}€
                         </span>
                       </div>
                     </div>
@@ -5517,7 +5626,7 @@ export default function VictoriaSecretRanking({
                     <div className="text-[10px] sm:text-xs text-zinc-400 text-center pt-3 border-t border-zinc-800/80 italic uppercase font-mono tracking-wider flex items-center justify-center gap-2">
                       <span>HAZ CLIC EN UN REGALO PARA ELEGIR A QUIÉN ENVIARLO</span>
                       <span>·</span>
-                      <span className="text-yellow-400 font-bold">🪙 {userGiftBalance.toLocaleString()}</span>
+                      <span className="text-yellow-400 font-bold">{userGiftBalance.toFixed(2)}€</span>
                     </div>
                   </div>
                 </div>
@@ -5586,7 +5695,7 @@ export default function VictoriaSecretRanking({
                               ¿A quién quieres enviárselo?
                             </label>
                             <span className="text-[11px] font-mono text-slate-500">
-                              Saldo: <strong className="text-pink-600">🪙 {userGiftBalance.toLocaleString()}</strong>
+                              Saldo: <strong className="text-pink-600">{userGiftBalance.toFixed(2)}€</strong>
                             </span>
                           </div>
 

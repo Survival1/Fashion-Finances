@@ -29,7 +29,11 @@ import GlobalMobileImageLightbox from './components/GlobalMobileImageLightbox';
 import MobileNavigationMenu from './components/MobileNavigationMenu';
 import { ModelFullscreenExpandedView } from './components/ModelFullscreenExpandedView';
 import AdminPortal from './components/AdminPortal';
-import NotificationCenterModal from './components/NotificationCenterModal';
+import NotificationCenterModal, {
+  isSelfSenderNotification,
+  isNotificationForDifferentRecipient,
+  isDisallowedBrandCommissionNotification
+} from './components/NotificationCenterModal';
 import RegisterModal from './components/RegisterModal';
 import LanguageTranslatorDropdown from './components/LanguageTranslatorDropdown';
 import {
@@ -312,16 +316,17 @@ export default function App() {
       if (raw && version === 'true') {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.id && parsed.role) {
-          const avatarUrl = (!parsed.avatar || parsed.avatar.includes('photo-1507003211169-0a1dd7228f2d'))
+          const isLegacySeedInvestor = parsed.id === 'user-investor';
+          const avatarUrl = (isLegacySeedInvestor && (!parsed.avatar || parsed.avatar.includes('photo-1507003211169-0a1dd7228f2d')))
             ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650'
-            : parsed.avatar;
+            : (parsed.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=650');
           const resolvedRef =
             parsed.role === 'visitor'
               ? undefined
               : getOrAssignReferenceNumber(parsed.id, parsed.username, parsed.referenceNumber);
           return {
             ...parsed,
-            name: parsed.name === 'Ernesto vs' || parsed.name === 'Ernesto VS' ? 'Adriana Lima' : parsed.name,
+            name: (isLegacySeedInvestor && (parsed.name === 'Ernesto vs' || parsed.name === 'Ernesto VS')) ? 'Adriana Lima' : parsed.name,
             avatar: avatarUrl,
             referenceNumber: resolvedRef,
             balance: typeof parsed.balance === 'number' && !isNaN(parsed.balance) ? parsed.balance : (parsed.role === 'investor' ? 100.00 : 0.00),
@@ -694,10 +699,18 @@ export default function App() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(() => {
     try {
       const raw = localStorage.getItem('coll_notifications');
+      const rawUser = localStorage.getItem('coll_userProfile');
+      const storedUser = rawUser ? JSON.parse(rawUser) : null;
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          return parsed.filter((n: any) => !n.read).length;
+          return parsed.filter(
+            (n: any) =>
+              !n.read &&
+              !isSelfSenderNotification(n, storedUser) &&
+              !isNotificationForDifferentRecipient(n, storedUser) &&
+              !isDisallowedBrandCommissionNotification(n)
+          ).length;
         }
       }
     } catch (e) {}
@@ -1289,8 +1302,13 @@ export default function App() {
         setActiveTabTab(target);
       }
     };
+    const handleOpenCastingUploadGlobal = () => {
+      setSelectedModelForView(null);
+      setActiveTabTab('casting_live');
+    };
     window.addEventListener('open-profile-shared-tab', handleOpenSharedTabGlobal);
     window.addEventListener('navigate-to-tab', handleNavigateTabGlobal);
+    window.addEventListener('open-casting-upload-modal', handleOpenCastingUploadGlobal);
 
     return () => {
       window.removeEventListener('user-profile-updated', handleProfileSync);
@@ -1299,8 +1317,86 @@ export default function App() {
       window.removeEventListener('storage', handleProfileSync);
       window.removeEventListener('open-profile-shared-tab', handleOpenSharedTabGlobal);
       window.removeEventListener('navigate-to-tab', handleNavigateTabGlobal);
+      window.removeEventListener('open-casting-upload-modal', handleOpenCastingUploadGlobal);
     };
   }, []);
+
+  // Claim any pending donations/gifts credited to the active user while another user sent them
+  useEffect(() => {
+    if (!userProfile?.id && !userProfile?.name && !userProfile?.username) return;
+
+    const norm = (v?: string) =>
+      (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^@+/, '').trim();
+    const normBase = (v?: string) => norm(v).replace(/_[wm]\d+$/i, '');
+
+    const claimCredits = () => {
+      try {
+        const rawPending = localStorage.getItem('coll_pending_recipient_credits');
+        if (!rawPending) return;
+        const pending = JSON.parse(rawPending);
+        if (!Array.isArray(pending) || pending.length === 0) return;
+
+        const curName = norm(userProfile.name);
+        const curUsername = norm(userProfile.username);
+        const curBase = normBase(userProfile.username);
+
+        const matchesMe = (c: any) => {
+          if (!c) return false;
+          if (c.recipientId && userProfile.id && c.recipientId === userProfile.id) return true;
+          if (c.recipientName && curName && norm(c.recipientName) === curName) return true;
+          if (c.recipientUsername && curUsername) {
+            const recUser = norm(c.recipientUsername);
+            if (recUser === curUsername) return true;
+            const recBase = normBase(recUser);
+            if (recBase.length >= 5 && curBase.length >= 5 && recBase === curBase) return true;
+          }
+          return false;
+        };
+
+        const mine = pending.filter(matchesMe);
+        if (mine.length === 0) return;
+
+        const remaining = pending.filter((c: any) => !matchesMe(c));
+        localStorage.setItem('coll_pending_recipient_credits', JSON.stringify(remaining));
+
+        const totalDelta = mine.reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+        if (totalDelta <= 0) return;
+
+        const rawMov = localStorage.getItem('coll_movements');
+        const curMovs = rawMov ? JSON.parse(rawMov) : [];
+        const newMovs = mine.map((c: any) => ({
+          id: c.id || `mov-credit-${Date.now()}`,
+          userId: userProfile.id,
+          type: 'commission',
+          amount: Number(c.amount) || 0,
+          date: new Date(c.timestamp || Date.now()).toISOString(),
+          description: c.description || `Donación recibida de ${c.senderName || 'Usuario'}`
+        }));
+        const nextMovs = [...newMovs, ...(Array.isArray(curMovs) ? curMovs : [])];
+        localStorage.setItem('coll_movements', JSON.stringify(nextMovs));
+        setMovements(nextMovs);
+
+        setUserProfile(prev => {
+          if (!prev) return prev;
+          const nextProfile: UserSessionProfile = {
+            ...prev,
+            balance: Number(((prev.balance || 0) + totalDelta).toFixed(2)),
+            totalEarnings: Number(((prev.totalEarnings || 0) + totalDelta).toFixed(2))
+          };
+          localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
+          return nextProfile;
+        });
+      } catch (_) {}
+    };
+
+    claimCredits();
+    window.addEventListener('storage', claimCredits);
+    window.addEventListener('ff-received-gifts-updated', claimCredits);
+    return () => {
+      window.removeEventListener('storage', claimCredits);
+      window.removeEventListener('ff-received-gifts-updated', claimCredits);
+    };
+  }, [userProfile?.id, userProfile?.name, userProfile?.username]);
 
   // Global handler for clicking any username or profile across the app to navigate to their profile
   useEffect(() => {
@@ -2249,6 +2345,7 @@ export default function App() {
       balance: userProfile.balance + parsed
     };
 
+    userProfileRef.current = nextProfile;
     setUserProfile(nextProfile);
     
     handleAddMovement({
@@ -2282,27 +2379,43 @@ export default function App() {
     setSelectedModelForExpandedView(null);
     setSelectedModelForView(null);
     if (role === 'investor') {
-      // Re-trigger standard Ernesto investor state
-      const seed = seedInitialData();
-      setUserProfile(seed.userProfile);
-      setModels(seed.models);
-      setProjects(seed.projects);
-      setSessions(seed.sessions);
-      setMessages(seed.messages);
-      setMovements(seed.movements);
-      
-      setEditAvatar(seed.userProfile.avatar || '');
-      setEditBio(seed.userProfile.bio || '');
-      setEditDireccion(seed.userProfile.direccion || '');
-      setEditTelefono(seed.userProfile.telefono || '');
-      setEditEmail(seed.userProfile.email || '');
-      setEditShareDireccion(seed.userProfile.shareDireccion !== false);
-      setEditShareTelefono(seed.userProfile.shareTelefono !== false);
-      setEditShareEmail(seed.userProfile.shareEmail !== false);
+      const ernestoProfile: UserSessionProfile = {
+        id: 'user-ernesto',
+        name: 'Ernesto vs',
+        username: 'ernestovs',
+        referenceNumber: getOrAssignReferenceNumber('user-ernesto', 'ernestovs'),
+        role: 'investor',
+        patrocinadorId: models[0]?.id || 'topf-1',
+        balance: 1500.00,
+        totalEarnings: 0,
+        totalInvested: 0,
+        totalCommissions: 0,
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
+        direccion: 'Paseo de la Castellana 120, Madrid',
+        telefono: '+34 600 123 456',
+        email: 'ernestovs@investcollect.com',
+        shareDireccion: true,
+        shareTelefono: true,
+        shareEmail: true,
+        verified: true,
+        bankInfoProvided: false,
+        registeredAt: '2026-05-31',
+        bio: 'Inversor estratégico en proyectos y talentos de alta costura.'
+      };
 
-      saveStateToLocalStorage(seed.models, seed.userProfile, seed.projects, seed.sessions, seed.messages, seed.movements);
+      setUserProfile(ernestoProfile);
+      setEditAvatar(ernestoProfile.avatar || '');
+      setEditBio(ernestoProfile.bio || '');
+      setEditDireccion(ernestoProfile.direccion || '');
+      setEditTelefono(ernestoProfile.telefono || '');
+      setEditEmail(ernestoProfile.email || '');
+      setEditShareDireccion(ernestoProfile.shareDireccion !== false);
+      setEditShareTelefono(ernestoProfile.shareTelefono !== false);
+      setEditShareEmail(ernestoProfile.shareEmail !== false);
+
+      saveStateToLocalStorage(models, ernestoProfile, projects, sessions, messages, movements);
       setActiveTabTab('profile');
-      alert('Iniciada la cuenta de Ernesto vs (Inversor). Tienes 100€ de saldo para unirte a mesas de inversión y subir proyectos.');
+      alert('Iniciada la cuenta de Ernesto vs (Inversor). Tienes 1500.00€ de saldo para unirte a mesas de inversión, apoyar al ranking y subir proyectos.');
     } else if (role === 'visitor') {
       // Create a guest / unregistered visitor profile that can browse everything without a registered account
       const visitorUser: UserSessionProfile = {
@@ -2653,8 +2766,13 @@ export default function App() {
       return;
     }
 
-    // Check models list
-    const foundModel = models.find(m => m.username.toLowerCase() === cleanUsername);
+    // Check models list (also matching base handles such as adrianalima -> adrianalima_w1)
+    const cleanBase = cleanUsername.replace(/_[wm]\d+$/i, '');
+    const foundModel = models.find(m => {
+      const mUser = (m.username || '').toLowerCase();
+      const mBase = mUser.replace(/_[wm]\d+$/i, '');
+      return mUser === cleanUsername || (cleanBase.length >= 5 && mBase === cleanBase);
+    });
     if (foundModel) {
       const modelUser: UserSessionProfile = {
         id: foundModel.id,
@@ -3111,6 +3229,28 @@ export default function App() {
         <VictoriaSecretRanking
           isOpen={showVictoriaSecretRanking}
           initialTab={rankingInitialTab}
+          backofficeBalance={userProfile.balance}
+          onSyncBackofficeBalance={(nextBalance, movementDescription, deltaAmount) => {
+            if (!userProfile) return;
+            const nextProfile = {
+              ...userProfile,
+              balance: Number(Math.max(0, nextBalance).toFixed(2))
+            };
+            userProfileRef.current = nextProfile;
+            setUserProfile(nextProfile);
+            if (movementDescription && typeof deltaAmount === 'number') {
+              handleAddMovement({
+                id: `mov-dep-${Date.now()}`,
+                userId: userProfile.id,
+                type: deltaAmount >= 0 ? 'deposit' : 'withdrawal',
+                amount: Math.abs(deltaAmount),
+                date: new Date().toISOString(),
+                description: movementDescription
+              });
+            } else {
+              saveStateToLocalStorage(modelsRef.current, nextProfile, projectsRef.current, sessionsRef.current, messages, movementsRef.current, historyWonLogRef.current);
+            }
+          }}
           onClose={() => {
             setShowVictoriaSecretRanking(false);
             setRankingInitialTab('ranking');
@@ -3142,6 +3282,7 @@ export default function App() {
       <NotificationCenterModal
         isOpen={showNotificationsModal}
         onClose={() => setShowNotificationsModal(false)}
+        userProfile={userProfile}
         onNavigateToTab={(tab) => {
           setPreviousTab(activeTab);
           setActiveTabTab(tab as any);
@@ -4489,22 +4630,22 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setActiveSocialModalInvestor('following')}
-                      className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
-                      title="Ver todos los perfiles seguidos"
+                      className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-pink-50/40 hover:border-pink-300 transition duration-150 cursor-pointer text-left select-none text-slate-800 shadow-xs"
+                      title="Ver todos los usuarios que sigo"
                       id="card-social-seguidos-z"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <UserCheck className="w-5 h-5 text-slate-900 shrink-0 stroke-[2.2]" />
                         <div className="min-w-0">
-                          <span className="text-[10px] uppercase font-black text-[#e11d48] tracking-widest font-mono block leading-tight truncate">
-                            SEGUIDOS
+                          <span className="text-[10px] uppercase font-black text-[#e11d48] tracking-wider font-mono block leading-tight whitespace-nowrap">
+                            Siguiendo
                           </span>
                           <span className="text-xl font-black text-slate-900 font-mono leading-none block mt-0.5">
                             {displayedFollowing.length}
                           </span>
                         </div>
                       </div>
-                      <span className="text-xs font-black text-[#e11d48] flex items-center gap-1 shrink-0 uppercase tracking-wider font-sans hover:underline">
+                      <span className="text-[11px] font-black text-[#e11d48] flex items-center gap-1 shrink-0 uppercase tracking-wide font-sans hover:underline whitespace-nowrap">
                         VER TODOS →
                       </span>
                     </button>
@@ -4608,6 +4749,7 @@ export default function App() {
               models={models}
               userProfile={userProfile}
               userProjects={projects}
+              historyWonLog={historyWonLog}
               sessions={sessions}
               selectedLiveModelId={selectedLiveModelId}
               initialSelectedStoreId={initialSelectedStoreId}
@@ -5294,18 +5436,28 @@ export default function App() {
                                   {followed.role || 'model'}
                                 </span>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setShowFriendsModal(false);
-                                  window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: followed.username, name: followed.name } }));
-                                }}
-                                className="text-[10px] text-slate-450 hover:text-indigo-400 hover:underline font-mono cursor-pointer inline-flex items-center gap-0.5 text-left"
-                                title={`Ver perfil de @${followed.username}`}
-                              >
-                                <span>@{followed.username}</span>
-                                <span className="text-[8px]">↗</span>
-                              </button>
+                              {(followed.username || '').toLowerCase().replace(/^@/, '') === 'alessandraambrosio_w2' ? (
+                                <span
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-[10px] text-slate-450 font-mono inline-flex items-center text-left"
+                                >
+                                  @{followed.username}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowFriendsModal(false);
+                                    window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: followed.username, name: followed.name } }));
+                                  }}
+                                  className="text-[10px] text-slate-450 hover:text-indigo-400 hover:underline font-mono cursor-pointer inline-flex items-center gap-0.5 text-left"
+                                  title={`Ver perfil de @${followed.username}`}
+                                >
+                                  <span>@{followed.username}</span>
+                                  <span className="text-[8px]">↗</span>
+                                </button>
+                              )}
                               <p className="text-[10px] text-slate-350 leading-relaxed font-sans line-clamp-2 italic">
                                 "{followed.bio}"
                               </p>
@@ -5580,7 +5732,7 @@ export default function App() {
               <h3 className="text-sm sm:text-base font-black text-slate-950 font-display flex items-center gap-1.5 justify-center">
                 {activeSocialModalInvestor === 'friends' ? 'Mis amigos' :
                  activeSocialModalInvestor === 'followers' ? `Mis Seguidores (Inversor - ${displayedFollowers.length})` : 
-                 `Perfiles que Sigo (Inversor - ${displayedFollowing.length})`}
+                 `Usuarios que sigo (Inversor - ${displayedFollowing.length})`}
               </h3>
             </div>
 

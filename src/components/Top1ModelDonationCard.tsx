@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import RoyalMaleCrown from './RoyalMaleCrown';
 import RoyalFemaleCrown from './RoyalFemaleCrown';
+import { pushAppNotification } from './NotificationCenterModal';
 import { 
   Crown, 
   Sparkles, 
@@ -373,20 +374,74 @@ export default function Top1ModelDonationCard({
         }
       }
 
-      // 6. Add notification for the model
-      const rawNotifs = localStorage.getItem('coll_notifications');
-      const notifs = rawNotifs ? JSON.parse(rawNotifs) : [];
-      notifs.unshift({
-        id: `notif-${Date.now()}`,
-        type: 'donation',
-        title: `¡Has recibido una donación de ${user?.name || 'Ernesto vs'}!`,
-        message: `${user?.name || 'Ernesto vs'} te ha donado ${amount.toFixed(2)}€.`,
-        avatar: user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        timestamp: Date.now(),
-        read: false,
-        data: { amount }
-      });
-      localStorage.setItem('coll_notifications', JSON.stringify(notifs));
+      // 6. Add notification & balance credit for the recipient model (only if sender is not the recipient themselves)
+      const senderName = user?.name || 'Ernesto vs';
+      const senderUsername = user?.username || 'ernestovs';
+      const normalizeStr = (v?: string) =>
+        (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^@+/, '').trim();
+      const senderUserBase = normalizeStr(senderUsername).replace(/_[wm]\d+$/i, '');
+      const modelUserBase = normalizeStr(top1Model?.username).replace(/_[wm]\d+$/i, '');
+      const isSelfRecipient =
+        normalizeStr(senderName) === normalizeStr(modelFullName) ||
+        (!!top1Model?.username && normalizeStr(senderUsername) === normalizeStr(top1Model.username)) ||
+        (senderUserBase.length >= 5 && senderUserBase === modelUserBase) ||
+        (!!user?.id && !!top1Model?.id && user.id === top1Model.id);
+
+      const trimmedDedication = donationMessage.trim();
+
+      if (!isSelfRecipient) {
+        const creditId = `don-${Date.now()}`;
+        pushAppNotification({
+          id: `notif-${creditId}`,
+          category: 'regalos',
+          senderId: user?.id,
+          senderName,
+          senderUsername,
+          recipientId: top1Model.id,
+          recipientName: modelFullName,
+          recipientUsername: top1Model.username,
+          title: `💶 ¡Has recibido una donación de ${senderName}!`,
+          message: trimmedDedication
+            ? `${senderName} te ha donado ${amount.toFixed(2)}€ con la dedicatoria: "${trimmedDedication}".`
+            : `${senderName} te ha donado ${amount.toFixed(2)}€ en el ranking de resultados finales.`,
+          avatar: user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+          timestamp: Date.now(),
+          read: false,
+          icon: '💶',
+          amount,
+          actionLabel: 'Abrir Bóveda',
+          actionRanking: true,
+          data: {
+            type: 'donation',
+            amount,
+            dedication: trimmedDedication,
+            senderId: user?.id,
+            senderName,
+            senderUsername,
+            recipientId: top1Model.id,
+            recipientName: modelFullName,
+            recipientUsername: top1Model.username
+          }
+        });
+
+        try {
+          const rawPendingCredits = localStorage.getItem('coll_pending_recipient_credits');
+          const pendingCredits = rawPendingCredits ? JSON.parse(rawPendingCredits) : [];
+          if (Array.isArray(pendingCredits)) {
+            pendingCredits.push({
+              id: `credit-${creditId}`,
+              recipientId: top1Model.id,
+              recipientName: modelFullName,
+              recipientUsername: top1Model.username,
+              senderName,
+              amount,
+              description: `Donación directa recibida de ${senderName} (${amount.toFixed(2)}€)${trimmedDedication ? ` · "${trimmedDedication}"` : ''}`,
+              timestamp: Date.now()
+            });
+            localStorage.setItem('coll_pending_recipient_credits', JSON.stringify(pendingCredits));
+          }
+        } catch (_) {}
+      }
     } catch (e) {
       console.error(e);
     }
@@ -547,20 +602,75 @@ export default function Top1ModelDonationCard({
         }
       }
 
-      // 6. Add notification for the recipient model
-      const rawNotifs = localStorage.getItem('coll_notifications');
-      const notifs = rawNotifs ? JSON.parse(rawNotifs) : [];
-      notifs.unshift({
-        id: `notif-${Date.now()}`,
-        type: 'gift',
-        title: `¡Has recibido un regalo de ${user?.name || 'Ernesto vs'}!`,
-        message: `${user?.name || 'Ernesto vs'} te ha enviado "${selectedGift.name}" (${cost}€). ${giftMessage ? `Mensaje: "${giftMessage}"` : ''}`,
-        avatar: user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        timestamp: Date.now(),
-        read: false,
-        data: { gift: selectedGift, amount: cost }
-      });
-      localStorage.setItem('coll_notifications', JSON.stringify(notifs));
+      // 6. Add notification & balance credit for the recipient model (only if sender is not the recipient themselves)
+      const senderName = user?.name || 'Ernesto vs';
+      const senderUsername = user?.username || 'ernestovs';
+      const normalizeStr = (v?: string) =>
+        (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^@+/, '').trim();
+      const senderUserBase = normalizeStr(senderUsername).replace(/_[wm]\d+$/i, '');
+      const modelUserBase = normalizeStr(top1Model?.username).replace(/_[wm]\d+$/i, '');
+      const isSelfRecipient =
+        normalizeStr(senderName) === normalizeStr(modelFullName) ||
+        (!!top1Model?.username && normalizeStr(senderUsername) === normalizeStr(top1Model.username)) ||
+        (senderUserBase.length >= 5 && senderUserBase === modelUserBase) ||
+        (!!user?.id && !!top1Model?.id && user.id === top1Model.id);
+
+      const trimmedGiftMsg = giftMessage.trim();
+
+      if (!isSelfRecipient) {
+        const creditId = `gift-${Date.now()}`;
+        pushAppNotification({
+          id: `notif-${creditId}`,
+          category: 'regalos',
+          senderId: user?.id,
+          senderName,
+          senderUsername,
+          recipientId: top1Model.id,
+          recipientName: modelFullName,
+          recipientUsername: top1Model.username,
+          title: `${selectedGift.icon || '🎁'} ¡Has recibido un regalo de ${senderName}!`,
+          message: trimmedGiftMsg
+            ? `${senderName} te ha enviado "${selectedGift.name}" (${cost}€) con la dedicatoria: "${trimmedGiftMsg}". Guardado en tu bóveda.`
+            : `${senderName} te ha enviado "${selectedGift.name}" (${cost}€). Guardado en tu bóveda.`,
+          avatar: user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+          timestamp: Date.now(),
+          read: false,
+          icon: selectedGift.icon || '🎁',
+          amount: cost,
+          actionLabel: 'Abrir Bóveda',
+          actionRanking: true,
+          data: {
+            type: 'gift',
+            gift: selectedGift,
+            amount: cost,
+            dedication: trimmedGiftMsg,
+            senderId: user?.id,
+            senderName,
+            senderUsername,
+            recipientId: top1Model.id,
+            recipientName: modelFullName,
+            recipientUsername: top1Model.username
+          }
+        });
+
+        try {
+          const rawPendingCredits = localStorage.getItem('coll_pending_recipient_credits');
+          const pendingCredits = rawPendingCredits ? JSON.parse(rawPendingCredits) : [];
+          if (Array.isArray(pendingCredits)) {
+            pendingCredits.push({
+              id: `credit-${creditId}`,
+              recipientId: top1Model.id,
+              recipientName: modelFullName,
+              recipientUsername: top1Model.username,
+              senderName,
+              amount: cost,
+              description: `Regalo "${selectedGift.name}" (${cost}€) recibido de ${senderName}${trimmedGiftMsg ? ` · "${trimmedGiftMsg}"` : ''}`,
+              timestamp: Date.now()
+            });
+            localStorage.setItem('coll_pending_recipient_credits', JSON.stringify(pendingCredits));
+          }
+        } catch (_) {}
+      }
     } catch (e) {
       console.error(e);
     }

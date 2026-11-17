@@ -3,10 +3,11 @@ import { InvestmentSession, ParticipantState, ModelProfile, ProjectData, UserSes
 import { seedInitialData } from '../utils/seedData';
 import { getRoundReference, resolveCategoryKey } from '../utils/roundsDatabase';
 import SessionResultsPodium from './SessionResultsPodium';
+import { pushAppNotification } from './NotificationCenterModal';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import ReglasParticipacionModal from './ReglasParticipacionModal';
 import ComisionesModal from './ComisionesModal';
-import rondasGoldCrown from '../assets/images/rondas_gold_crown_isolated_1794581342574.jpg';
+import rondasDiamondWhite from '../assets/images/rondas_diamond_white.webp';
 import { 
   TRABAJADORES_USERS, 
   FINANZAS_USERS, 
@@ -43,7 +44,8 @@ import {
   Calendar,
   RefreshCw,
   Trash2,
-  Camera
+  Camera,
+  PlusCircle
 } from 'lucide-react';
 
 interface SessionSimulatorProps {
@@ -756,6 +758,17 @@ export default function SessionSimulator({
                 ? 'High Fashion'
                 : 'High Fashion';
 
+      const orderProj = userProjects.find(p => p.id === order.projectId);
+      if (orderProj && isProjectLockedByGoal(orderProj)) {
+        const wonAmount = getProjectFundingWon(orderProj.id, orderProj.title);
+        console.warn(`[Auto-Investor] Order ${order.id} skipped because project ${order.projectName} reached its funding goal.`);
+        if (!notifiedSkippedOrders.includes(order.id)) {
+          setNotifiedSkippedOrders(prev => [...prev, order.id]);
+          setOrderNotification(`🔒 Autoinversión detenida: El proyecto "${order.projectName}" alcanzó su meta de financiación (${wonAmount.toFixed(2)}€ / ${orderProj.budget}€) y ha sido bloqueado. Elige otro proyecto o sube uno nuevo.`);
+        }
+        continue;
+      }
+
       // Check if this project is already participating in any active session (filling or voting)
       const isProjectAlreadyInActiveSession = updatedSessions.some(s => 
         (s.status === 'filling' || s.status === 'voting') && 
@@ -860,6 +873,11 @@ export default function SessionSimulator({
       alert('⚠️ Proyecto seleccionado inválido o ausente.');
       return;
     }
+    if (isProjectLockedByGoal(matchedProject)) {
+      const wonAmount = getProjectFundingWon(matchedProject.id, matchedProject.title);
+      alert(`🔒 El proyecto "${matchedProject.title}" ya alcanzó su meta de financiación acumulada consensuada (${wonAmount.toFixed(2)}€ / ${matchedProject.budget}€) y está bloqueado. Elige otro proyecto o sube uno nuevo.`);
+      return;
+    }
 
     const chosenFee = Number(schedEntryFee);
     setIsSyncingOrders(true);
@@ -938,10 +956,12 @@ export default function SessionSimulator({
   };
 
   useEffect(() => {
-    if (userProjects.length > 0 && !schedProjectId) {
-      setSchedProjectId(userProjects[0].id);
+    if (userProjects.length === 0) return;
+    const firstOpen = userProjects.find(p => !isProjectLockedByGoal(p));
+    if (!schedProjectId || !userProjects.some(p => p.id === schedProjectId && !isProjectLockedByGoal(p))) {
+      setSchedProjectId(firstOpen ? firstOpen.id : '');
     }
-  }, [userProjects, schedProjectId]);
+  }, [userProjects, schedProjectId, historyWonLog]);
 
   // Custom states for cryptographic voting progress & results podium
   const [simulationLogs, setSimulationLogs] = useState<string[]>([]);
@@ -956,8 +976,13 @@ export default function SessionSimulator({
 
   const getProjectFundingWon = (projectId: string, projectTitle: string) => {
     return historyWonLog
-      .filter(log => log.projectId === projectId || log.projectName === projectTitle || log.title === projectTitle)
+      .filter(log => log.projectId === projectId || log.projectName === projectTitle)
       .reduce((sum, log) => sum + log.prize, 0);
+  };
+
+  const isProjectLockedByGoal = (proj?: { id: string; title: string; budget?: number } | null) => {
+    if (!proj || !proj.budget || proj.budget <= 0) return false;
+    return getProjectFundingWon(proj.id, proj.title) >= proj.budget;
   };
 
   useEffect(() => {
@@ -981,35 +1006,41 @@ export default function SessionSimulator({
 
   useEffect(() => {
     if (userProjects.length === 0) return;
+    const firstUnlocked = userProjects.find(p => !isProjectLockedByGoal(p));
     let targetId = enrollProjectId;
-    if (!targetId || !userProjects.some(p => p.id === targetId)) {
+    const currentMatched = userProjects.find(p => p.id === targetId);
+    if (!targetId || !currentMatched || isProjectLockedByGoal(currentMatched)) {
       try {
         const savedId = localStorage.getItem('finanzas_user_project_id');
-        if (savedId && userProjects.some(p => p.id === savedId)) {
-          targetId = savedId;
+        const savedProj = savedId ? userProjects.find(p => p.id === savedId) : undefined;
+        if (savedProj && !isProjectLockedByGoal(savedProj)) {
+          targetId = savedProj.id;
         } else {
-          targetId = userProjects[0].id;
+          targetId = firstUnlocked ? firstUnlocked.id : '';
         }
       } catch (e) {
-        targetId = userProjects[0].id;
+        targetId = firstUnlocked ? firstUnlocked.id : '';
       }
-      setEnrollProjectId(targetId);
+      if (targetId !== enrollProjectId) {
+        setEnrollProjectId(targetId);
+      }
     }
-    const chosenProj = userProjects.find(p => p.id === targetId) || userProjects[0];
+    const chosenProj = targetId ? userProjects.find(p => p.id === targetId && !isProjectLockedByGoal(p)) : firstUnlocked;
     if (chosenProj) {
       try {
         localStorage.setItem('finanzas_user_project_id', chosenProj.id);
         localStorage.setItem('finanzas_user_project_title', chosenProj.title);
       } catch (e) {}
     }
-  }, [userProjects, enrollProjectId]);
+  }, [userProjects, enrollProjectId, historyWonLog]);
 
   useEffect(() => {
     const syncProjectFromStorage = () => {
       try {
         const savedId = localStorage.getItem('finanzas_user_project_id');
-        if (savedId && userProjects.some(p => p.id === savedId) && savedId !== enrollProjectId) {
-          setEnrollProjectId(savedId);
+        const savedProj = savedId ? userProjects.find(p => p.id === savedId) : undefined;
+        if (savedProj && !isProjectLockedByGoal(savedProj) && savedProj.id !== enrollProjectId) {
+          setEnrollProjectId(savedProj.id);
         }
         const syncedSimSessId = localStorage.getItem('finanzas_enrolled_simulator_session_id');
         if (syncedSimSessId && sessions.some(s => s.id === syncedSimSessId)) {
@@ -1247,6 +1278,12 @@ export default function SessionSimulator({
       objective: 'Proyecto de innovación y emprendimiento',
       fundUsage: 'Desarrollo y marketing'
     };
+
+    if (isProjectLockedByGoal(activeProject)) {
+      const wonAmount = getProjectFundingWon(activeProject.id, activeProject.title);
+      alert(`🔒 El proyecto "${activeProject.title}" ya alcanzó su meta de financiación acumulada consensuada (${wonAmount.toFixed(2)}€ / ${activeProject.budget}€) y ha sido bloqueado. Elige otro proyecto para participar o sube uno nuevo.`);
+      return;
+    }
 
     const updatedSessions = sessions.map((sess) => {
       if (sess.id === sessionId) {
@@ -1743,6 +1780,11 @@ export default function SessionSimulator({
     }
     const chosenProject = userProjects.find(p => p.id === enrollProjectId);
     if (!chosenProject) return;
+    if (isProjectLockedByGoal(chosenProject)) {
+      const wonAmount = getProjectFundingWon(chosenProject.id, chosenProject.title);
+      alert(`🔒 El proyecto "${chosenProject.title}" ya alcanzó su meta de financiación acumulada consensuada (${wonAmount.toFixed(2)}€ / ${chosenProject.budget}€) y ha sido bloqueado. Elige otro proyecto para participar o sube uno nuevo.`);
+      return;
+    }
 
     // Deduct balance
     const nextBalance = userProfile.balance - session.entryFee;
@@ -2241,6 +2283,24 @@ export default function SessionSimulator({
     let userWon = false;
     let infoMessage = '';
 
+    const roundInstanceKey = `${targetSession.id}_${targetSession.reference || Date.now()}`;
+    const normalizeText = (v?: string) =>
+      (v || '')
+        .replace(' (Tú)', '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    let storedPatrocinados: any[] = [];
+    try {
+      const rawPat = localStorage.getItem('coll_patrocinados');
+      if (rawPat) {
+        const parsed = JSON.parse(rawPat);
+        if (Array.isArray(parsed)) storedPatrocinados = parsed;
+      }
+    } catch {}
+
     const userWinnerInstance = winners.find(w => w.userId === userProfile.id);
     if (userWinnerInstance) {
       userWon = true;
@@ -2255,32 +2315,89 @@ export default function SessionSimulator({
         date: new Date().toISOString(),
         description: `🏆 ¡Ganador absoluto de la ${targetSession.title}! (${winners.length > 1 ? `Empate de ${winners.length}` : 'Primer Puesto'})`
       });
+
+      const isTieResult = winners.length > 1;
+      pushAppNotification({
+        id: `notif-round-win-${roundInstanceKey}`,
+        category: 'rondas',
+        title: isTieResult
+          ? `🏆 ¡Entre los ganadores de ${targetSession.title}!`
+          : `🏆 ¡Has ganado ${targetSession.title}!`,
+        message: `Obtuviste ${userWinnerInstance.votesReceived.toFixed(0)} votos y ganaste una financiación de ${prizePerWinner.toFixed(2)}€${isTieResult ? ` (empate entre ${winners.length} ganadores)` : ' (Posición #1 - Seleccionado)'}.`,
+        timestamp: Date.now(),
+        read: false,
+        icon: '🏆',
+        amount: Number(prizePerWinner.toFixed(2)),
+        actionLabel: 'Ver Sesión',
+        targetTab: 'sessions'
+      });
     }
 
     const sponsorPayouts: { [sponsorId: string]: number } = {};
+    const userNameNorm = normalizeText(userProfile.name);
+    let userSponsorCommissionTotal = 0;
+
     winners.forEach((win) => {
+      const commissionSharePerWinnerSponsor = sponsorTotal10 / winners.length;
+      const isWinnerSelf = win.userId === userProfile.id || (userNameNorm && normalizeText(win.name) === userNameNorm);
+
+      if (isWinnerSelf) {
+        const winSponsorId = userProfile.patrocinadorId || 'topm-1';
+        sponsorPayouts[winSponsorId] = (sponsorPayouts[winSponsorId] || 0) + commissionSharePerWinnerSponsor;
+        return;
+      }
+
+      const cleanWinName = normalizeText(win.name);
+      const matchedPatrocinado = storedPatrocinados.find((pat: any) => {
+        if (pat.status === 'inactive') return false;
+        if (pat.sponsorId && pat.sponsorId !== userProfile.id) return false;
+        const patName = normalizeText(pat.name);
+        return pat.id === win.userId || (patName && patName === cleanWinName);
+      });
+
       const sponsorKeys = models.map(m => m.id);
       const randSponsorId = sponsorKeys.length > 0 ? sponsorKeys[Math.floor(Math.random() * Math.min(sponsorKeys.length, 10))] : 'topf-1';
-      const winSponsorId = win.userId === userProfile.id ? userProfile.patrocinadorId : randSponsorId;
-      const commissionSharePerWinnerSponsor = sponsorTotal10 / winners.length;
+      const winSponsorId = matchedPatrocinado ? userProfile.id : randSponsorId;
       sponsorPayouts[winSponsorId] = (sponsorPayouts[winSponsorId] || 0) + commissionSharePerWinnerSponsor;
-    });
 
-    if (userProfile.role === 'model') {
-      const commissionForUserAsModel = sponsorPayouts[userProfile.id];
-      if (commissionForUserAsModel > 0) {
-        updatedBalance += commissionForUserAsModel;
-        registeredCommissions += commissionForUserAsModel;
+      const resolvedSponsorModel = models.find(m => m.id === winSponsorId);
+      const isUserSponsor = Boolean(
+        matchedPatrocinado ||
+        winSponsorId === userProfile.id ||
+        (resolvedSponsorModel && userNameNorm && normalizeText(resolvedSponsorModel.name) === userNameNorm)
+      );
 
-        onAddMovement({
-          id: `mov-comm-${Date.now()}`,
-          userId: userProfile.id,
-          type: 'commission',
-          amount: commissionForUserAsModel,
-          date: new Date().toISOString(),
-          description: `🔗 Comisión de Afiliado - Tu patrocinado ha ganado una ronda de inversión`
+      if (isUserSponsor && commissionSharePerWinnerSponsor > 0) {
+        userSponsorCommissionTotal += commissionSharePerWinnerSponsor;
+        const winnerSlug = cleanWinName.replace(/[^a-z0-9]+/g, '-') || 'winner';
+        const commRounded = Number(commissionSharePerWinnerSponsor.toFixed(2));
+        pushAppNotification({
+          id: `notif-sponsor-comm-${roundInstanceKey}-${winnerSlug}`,
+          category: 'comisiones',
+          title: `💶 ¡Comisión de Patrocinio: +${commRounded.toFixed(2)}€!`,
+          message: `Has recibido el 10% por éxito del patrocinio (+${commRounded.toFixed(2)}€) porque tu patrocinado/a ${win.name} ganó o quedó entre los ganadores en ${targetSession.title}.`,
+          timestamp: Date.now(),
+          read: false,
+          icon: '💶',
+          amount: commRounded,
+          actionLabel: 'Ver Patrocinados',
+          targetTab: 'patrocinados'
         });
       }
+    });
+
+    if (userSponsorCommissionTotal > 0) {
+      updatedBalance += userSponsorCommissionTotal;
+      registeredCommissions += userSponsorCommissionTotal;
+
+      onAddMovement({
+        id: `mov-comm-${Date.now()}`,
+        userId: userProfile.id,
+        type: 'commission',
+        amount: userSponsorCommissionTotal,
+        date: new Date().toISOString(),
+        description: `🔗 Comisión de Patrocinador (10%) - Tu patrocinado ganó en ${targetSession.title}`
+      });
     } else {
       const userSponsorP = models.find(m => m.id === userProfile.patrocinadorId);
       if (userWon && userSponsorP) {
@@ -2289,11 +2406,14 @@ export default function SessionSimulator({
       }
     }
 
-    const mockCompletedSession: InvestmentSession = {
+    const mockCompletedSession: InvestmentSession & { roundInstanceKey?: string } = {
       ...targetSession,
+      roundInstanceKey,
       status: 'completed',
       winners: winners.map(w => w.name),
-      patrocinadoresPaid: Object.keys(sponsorPayouts).map(id => models.find(mo => mo.id === id)?.name || id),
+      patrocinadoresPaid: Object.keys(sponsorPayouts).map(id =>
+        id === userProfile.id ? userProfile.name : (models.find(mo => mo.id === id)?.name || id)
+      ),
       participants: finalParticipants
     };
 
@@ -3483,15 +3603,15 @@ export default function SessionSimulator({
       <div className="w-full mb-6 sm:mb-8 bg-white py-4 sm:py-6 px-2 sm:px-6 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
         {/* Bloque de Texto Editorial Centrado */}
         <div className="flex-1 flex flex-col items-center text-center">
-          {/* Corona dorada superior con líneas doradas */}
+          {/* Diamante superior con fondo blanco (WebP) y líneas doradas */}
           <div className="w-full max-w-[380px] flex items-center justify-center gap-3 sm:gap-4 mb-2 select-none">
             <span className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#c9a468]/80 to-[#b0833d]" />
             <img
-              src={rondasGoldCrown}
-              alt=""
+              src={rondasDiamondWhite}
+              alt="Diamante"
               aria-hidden="true"
               referrerPolicy="no-referrer"
-              className="h-9 sm:h-11 w-auto object-contain mix-blend-multiply pointer-events-none shrink-0"
+              className="h-10 sm:h-12 w-auto object-contain bg-white pointer-events-none shrink-0"
               draggable={false}
             />
             <span className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#c9a468]/80 to-[#b0833d]" />
@@ -3654,21 +3774,39 @@ export default function SessionSimulator({
               {/* 2. Select Project to auto associate */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-extrabold font-mono text-slate-400 uppercase tracking-wider block">Proyecto o Sello Elegido</label>
-                {userProjects.length === 0 ? (
-                  <div className="text-[10px] text-amber-500 bg-amber-500/10 p-2.5 rounded-xl border border-amber-550/20 font-bold">
-                    ⚠️ Primero debes registrar un proyecto comercial para poder seleccionarlo en las órdenes de inversión.
-                  </div>
-                ) : (
-                  <select
-                    value={schedProjectId}
-                    onChange={(e) => setSchedProjectId(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none"
-                  >
-                    {userProjects.map((p) => (
-                      <option key={p.id} value={p.id}>💼 {p.title} (Presupuesto de Ref {p.budget}€)</option>
-                    ))}
-                  </select>
-                )}
+                {(() => {
+                  const unlockedSchedProjects = userProjects.filter(p => !isProjectLockedByGoal(p));
+                  if (userProjects.length === 0) {
+                    return (
+                      <div className="text-[10px] text-amber-500 bg-amber-500/10 p-2.5 rounded-xl border border-amber-550/20 font-bold">
+                        ⚠️ Primero debes registrar un proyecto comercial para poder seleccionarlo en las órdenes de inversión.
+                      </div>
+                    );
+                  }
+                  if (unlockedSchedProjects.length === 0) {
+                    return (
+                      <div className="text-[10px] text-pink-200 bg-pink-950/40 p-2.5 rounded-xl border border-pink-500/30 font-bold">
+                        🔒 Todos tus proyectos alcanzaron su meta de financiación. Sube un proyecto nuevo para programar nuevas órdenes.
+                      </div>
+                    );
+                  }
+                  return (
+                    <select
+                      value={schedProjectId}
+                      onChange={(e) => setSchedProjectId(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none"
+                    >
+                      {unlockedSchedProjects.map((p) => {
+                        const won = getProjectFundingWon(p.id, p.title);
+                        return (
+                          <option key={p.id} value={p.id}>
+                            💼 {p.title} ({won.toFixed(0)}€ / {p.budget}€)
+                          </option>
+                        );
+                      })}
+                    </select>
+                  );
+                })()}
               </div>
 
               {/* 3. DateTime picker */}
@@ -4303,150 +4441,194 @@ export default function SessionSimulator({
                 </div>
               </div>
 
-              {userProjects.length === 0 ? (
-                <div className="bg-white border border-amber-300/80 p-4 rounded-xl text-center space-y-2">
-                  <p className="text-xs text-amber-800 font-bold flex items-center justify-center gap-1">
-                    <span>⚠️ No tienes ningún proyecto creado todavía</span>
-                  </p>
-                  <p className="text-[10px] text-slate-450 leading-relaxed">
-                    Primero debes registrar una propuesta en tu menú para poder inscribirte en la mesa de inversión de {currentSession.entryFee}€.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
-                  <div className="p-3.5 rounded-xl bg-pink-50/70 border border-pink-200/90 shadow-2xs space-y-1.5">
-                    <label className="block text-[11px] font-black text-[#ff2d75] uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#ff2d75] animate-pulse inline-block" />
-                      <span>Selecciona Cuál de tus proyectos vas a inscribir:</span>
-                    </label>
-                    <select
-                      value={enrollProjectId}
-                      onChange={(e) => {
-                        const nextId = e.target.value;
-                        setEnrollProjectId(nextId);
-                        const chosen = userProjects.find(p => p.id === nextId);
-                        if (chosen) {
-                          try {
-                            localStorage.setItem('finanzas_user_project_id', chosen.id);
-                            localStorage.setItem('finanzas_user_project_title', chosen.title);
-                            window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
-                              detail: { projectId: chosen.id, projectTitle: chosen.title }
-                            }));
-                          } catch (err) {}
-                        }
-                      }}
-                      className="w-full bg-white border-2 border-[#ff2d75] hover:border-[#e02466] focus:border-[#ff2d75] rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-3 focus:ring-pink-200/80 font-black cursor-pointer shadow-sm transition"
-                    >
-                      <option value="" className="text-slate-500 font-normal">-- Elige un proyecto de la lista --</option>
-                      {userProjects.map((proj) => (
-                        <option key={proj.id} value={proj.id} className="text-slate-900 font-bold">
-                          {proj.title} ({proj.category})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              {(() => {
+                const unlockedUserProjects = userProjects.filter(p => !isProjectLockedByGoal(p));
 
-                  {/* PROJECT HERO BANNER AS SEEN IN IMAGE.PNG */}
-                  {(() => {
-                    const selectedEnrollProject = userProjects.find(p => p.id === enrollProjectId) || userProjects[0];
-                    if (!selectedEnrollProject) return null;
-                    const hasCoverImage = selectedEnrollProject.images && selectedEnrollProject.images.length > 0;
-                    const coverUrl = hasCoverImage 
-                      ? selectedEnrollProject.images[0] 
-                      : (selectedEnrollProject as any)?.coverImage || (selectedEnrollProject as any)?.image;
+                if (userProjects.length === 0) {
+                  return (
+                    <div className="bg-white border border-amber-300/80 p-4 rounded-xl text-center space-y-2">
+                      <p className="text-xs text-amber-800 font-bold flex items-center justify-center gap-1">
+                        <span>⚠️ No tienes ningún proyecto creado todavía</span>
+                      </p>
+                      <p className="text-[10px] text-slate-450 leading-relaxed">
+                        Primero debes registrar una propuesta en tu menú para poder inscribirte en la mesa de inversión de {currentSession.entryFee}€.
+                      </p>
+                    </div>
+                  );
+                }
 
-                    return (
-                      <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm animate-fade-in text-left block relative">
-                        {/* HERO COVER BANNER */}
-                        <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900 group">
-                          {/* BUTTON WITH CAMERA TO CHANGE COVER IMAGE */}
-                          <label
-                            htmlFor={`cover-upload-enroll-${selectedEnrollProject.id}`}
-                            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white border border-white/25 backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition-all active:scale-95"
-                            title="Cambiar imagen de portada"
-                          >
-                            <Camera className="w-4 h-4 text-sky-300" />
-                            <span className="text-[11px] font-medium tracking-wide">Cambiar Portada</span>
-                            <input
-                              id={`cover-upload-enroll-${selectedEnrollProject.id}`}
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleCoverImageUploadInSession(selectedEnrollProject.id, e)}
-                            />
-                          </label>
+                if (unlockedUserProjects.length === 0) {
+                  return (
+                    <div className="bg-white border-2 border-[#f9a8d4] p-5 rounded-xl text-center space-y-3 shadow-2xs">
+                      <div className="w-10 h-10 rounded-full bg-[#fdf2f8] border border-[#f9a8d4] text-[#be185d] flex items-center justify-center mx-auto">
+                        <Lock className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-extrabold text-[#831843]">
+                          Todos tus proyectos han alcanzado su financiación acumulada consensuada
+                        </p>
+                        <p className="text-[11px] text-[#9d174d] leading-relaxed max-w-md mx-auto">
+                          Los proyectos que completaron su meta quedan bloqueados y ya no aparecen en este menú. Sube un nuevo proyecto para participar en esta ronda.
+                        </p>
+                      </div>
+                      {onNavigateToTab && (
+                        <button
+                          type="button"
+                          onClick={() => onNavigateToTab('create_project')}
+                          className="custom-bg px-4 py-2 rounded-xl bg-[#fce7f3] hover:bg-[#fbcfe8] text-[#831843] border border-[#f472b6] text-xs font-bold cursor-pointer transition inline-flex items-center gap-1.5 shadow-3xs"
+                        >
+                          <PlusCircle className="w-4 h-4 text-[#be185d]" />
+                          <span>Subir Nuevo Proyecto</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
 
-                          {coverUrl ? (
-                            <>
-                              <img 
-                                src={coverUrl} 
-                                alt={selectedEnrollProject.title} 
-                                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" 
-                              />
-                              {/* Subtle bottom gradient only behind text to preserve total clarity across the image */}
-                              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
-                            </>
-                          ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 opacity-95">
-                              {/* Abstract visual background pattern */}
-                              <div className="absolute inset-0 opacity-15 mix-blend-overlay bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-300 via-indigo-500 to-slate-900" />
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-550/10 rounded-full filter blur-3xl pointer-events-none" />
+                const selectedEnrollProject =
+                  unlockedUserProjects.find(p => p.id === enrollProjectId) || unlockedUserProjects[0];
+
+                return (
+                  <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-3xs">
+                    <div className="p-3.5 rounded-xl bg-pink-50/70 border border-pink-200/90 shadow-2xs space-y-1.5">
+                      <label className="block text-[11px] font-black text-[#ff2d75] uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#ff2d75] animate-pulse inline-block" />
+                        <span>Selecciona Cuál de tus proyectos vas a inscribir:</span>
+                      </label>
+                      <select
+                        value={selectedEnrollProject.id}
+                        onChange={(e) => {
+                          const nextId = e.target.value;
+                          setEnrollProjectId(nextId);
+                          const chosen = unlockedUserProjects.find(p => p.id === nextId);
+                          if (chosen) {
+                            try {
+                              localStorage.setItem('finanzas_user_project_id', chosen.id);
+                              localStorage.setItem('finanzas_user_project_title', chosen.title);
+                              window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+                                detail: { projectId: chosen.id, projectTitle: chosen.title }
+                              }));
+                            } catch (err) {}
+                          }
+                        }}
+                        className="w-full bg-white border-2 border-[#ff2d75] hover:border-[#e02466] focus:border-[#ff2d75] rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-3 focus:ring-pink-200/80 font-black cursor-pointer shadow-sm transition"
+                      >
+                        <option value="" className="text-slate-500 font-normal">-- Elige un proyecto de la lista --</option>
+                        {unlockedUserProjects.map((proj) => {
+                          const won = getProjectFundingWon(proj.id, proj.title);
+                          return (
+                            <option key={proj.id} value={proj.id} className="text-slate-900 font-bold">
+                              {proj.title} ({proj.category}) · {won.toFixed(0)}€ / {proj.budget}€
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    {/* PROJECT HERO BANNER AS SEEN IN IMAGE.PNG */}
+                    {(() => {
+                      const selectedProjWon = getProjectFundingWon(selectedEnrollProject.id, selectedEnrollProject.title);
+                      const hasCoverImage = selectedEnrollProject.images && selectedEnrollProject.images.length > 0;
+                      const coverUrl = hasCoverImage 
+                        ? selectedEnrollProject.images[0] 
+                        : (selectedEnrollProject as any)?.coverImage || (selectedEnrollProject as any)?.image;
+
+                      return (
+                        <div className="space-y-3">
+                          <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm animate-fade-in text-left block relative">
+                            {/* HERO COVER BANNER */}
+                            <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900 group">
+                              {/* BUTTON WITH CAMERA TO CHANGE COVER IMAGE */}
+                              <label
+                                htmlFor={`cover-upload-enroll-${selectedEnrollProject.id}`}
+                                className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white border border-white/25 backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition-all active:scale-95"
+                                title="Cambiar imagen de portada"
+                              >
+                                <Camera className="w-4 h-4 text-sky-300" />
+                                <span className="text-[11px] font-medium tracking-wide">Cambiar Portada</span>
+                                <input
+                                  id={`cover-upload-enroll-${selectedEnrollProject.id}`}
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleCoverImageUploadInSession(selectedEnrollProject.id, e)}
+                                />
+                              </label>
+
+                              {coverUrl ? (
+                                <>
+                                  <img 
+                                    src={coverUrl} 
+                                    alt={selectedEnrollProject.title} 
+                                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" 
+                                  />
+                                  {/* Subtle bottom gradient only behind text to preserve total clarity across the image */}
+                                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+                                </>
+                              ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 opacity-95">
+                                  {/* Abstract visual background pattern */}
+                                  <div className="absolute inset-0 opacity-15 mix-blend-overlay bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-300 via-indigo-500 to-slate-900" />
+                                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-550/10 rounded-full filter blur-3xl pointer-events-none" />
+                                </div>
+                              )}
+
+                              {/* OVERLAY HEADER CONTENT */}
+                              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 flex flex-col justify-end text-white pointer-events-none">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-black/60 backdrop-blur-md text-white rounded-md border border-white/20 shadow-sm">
+                                    {selectedEnrollProject.category}
+                                  </span>
+                                  <span className="text-[9px] font-mono font-bold px-2.5 py-1 bg-white/90 text-[#831843] rounded-md border border-[#f9a8d4] shadow-sm">
+                                    Meta: {selectedProjWon.toFixed(0)}€ / {selectedEnrollProject.budget}€
+                                  </span>
+                                </div>
+                                
+                                <h4 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                                  {selectedEnrollProject.title}
+                                </h4>
+                              </div>
                             </div>
-                          )}
-
-                          {/* OVERLAY HEADER CONTENT */}
-                          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 flex flex-col justify-end text-white pointer-events-none">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 bg-black/60 backdrop-blur-md text-white rounded-md border border-white/20 shadow-sm">
-                                {selectedEnrollProject.category}
-                              </span>
-                            </div>
-                            
-                            <h4 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                              {selectedEnrollProject.title}
-                            </h4>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
-                  {enrollProjectId && userProjects.find(p => p.id === enrollProjectId) && (
                     <div className="p-3 bg-slate-50 rounded-lg border border-slate-150 text-[11px] text-slate-600 space-y-1 font-sans">
-                      <p><strong>🎯 Objetivo:</strong> {userProjects.find(p => p.id === enrollProjectId)?.objective}</p>
-                      <p><strong>📈 Plan de Gasto:</strong> {userProjects.find(p => p.id === enrollProjectId)?.fundUsage}</p>
+                      <p><strong>🎯 Objetivo:</strong> {selectedEnrollProject.objective}</p>
+                      <p><strong>📈 Plan de Gasto:</strong> {selectedEnrollProject.fundUsage}</p>
                     </div>
-                  )}
 
-                  {userProfile.balance < currentSession.entryFee && (
-                    <div className="bg-rose-50 border border-rose-200/50 p-3 rounded-xl flex items-start gap-2.5 animate-fade-in text-left">
-                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-[11px] font-bold text-rose-800">
-                          Saldo actual insuficiente para esta mesa
-                        </p>
-                        <p className="text-[10px] text-slate-500 leading-normal">
-                          Tienes {userProfile.balance.toFixed(2)}€ de saldo y necesitas {currentSession.entryFee}.00€ para participar en las Rondas Colectivas.
-                        </p>
+                    {userProfile.balance < currentSession.entryFee && (
+                      <div className="bg-rose-50 border border-rose-200/50 p-3 rounded-xl flex items-start gap-2.5 animate-fade-in text-left">
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[11px] font-bold text-rose-800">
+                            Saldo actual insuficiente para esta mesa
+                          </p>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            Tienes {userProfile.balance.toFixed(2)}€ de saldo y necesitas {currentSession.entryFee}.00€ para participar en las Rondas Colectivas.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-                    <span className="text-xs text-slate-500 font-medium">
-                      Precio de inscripción: <strong className="text-indigo-600 font-mono text-sm">{currentSession.entryFee}.00€</strong>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleJoinSession(currentSession.id)}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 bg-gradient-to-r from-[#fff5f8] via-[#fde8ee] to-[#f8d7e3] hover:from-[#fff0f4] hover:via-[#fad4e2] hover:to-[#f3c2d6] text-pink-950 border border-pink-300/80 font-sans shadow-pink-100"
-                    >
-                      <Play className="w-4 h-4 fill-pink-500 text-pink-500" />
-                      <span>Disparar Pago de {currentSession.entryFee}€ y Acceder a Votaciones</span>
-                    </button>
+                    <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+                      <span className="text-xs text-slate-500 font-medium">
+                        Precio de inscripción: <strong className="text-indigo-600 font-mono text-sm">{currentSession.entryFee}.00€</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleJoinSession(currentSession.id)}
+                        className="custom-bg w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-1.5 font-sans cursor-pointer active:scale-95 bg-gradient-to-r from-[#fff5f8] via-[#fde8ee] to-[#f8d7e3] hover:from-[#fff0f4] hover:via-[#fad4e2] hover:to-[#f3c2d6] text-pink-950 border border-pink-300/80 shadow-pink-100"
+                      >
+                        <Play className="w-4 h-4 fill-pink-500 text-pink-500" />
+                        <span>Disparar Pago de {currentSession.entryFee}€ y Acceder a Votaciones</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
 

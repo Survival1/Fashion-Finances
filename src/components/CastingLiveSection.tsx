@@ -1,9 +1,16 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import StoryCreatorModal from './StoryCreatorModal';
+import AccessRequestModal, {
+  getStoredMediaPermissions,
+  hasConfiguredMediaPermissions,
+  MediaPermissionPreferences,
+} from './AccessRequestModal';
 import SessionResultsPodium from './SessionResultsPodium';
+import { pushAppNotification } from './NotificationCenterModal';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
 import { TikTokFinanzasFeed } from './TikTokFinanzasFeed';
 import { RoundDatabaseModal } from './RoundDatabaseModal';
+import { SoundTrackSheetModal, SoundVideoReference } from './SoundTrackSheetModal';
 import { 
   getRoundReference, 
   celebrateRoundDatabase, 
@@ -116,9 +123,10 @@ import {
   Square,
   FileText,
   Reply,
-  Trophy
+  Trophy,
+  PlusCircle
 } from 'lucide-react';
-import { ModelProfile, UserSessionProfile, ProjectData, InvestmentSession } from '../types';
+import { ModelProfile, UserSessionProfile, ProjectData, InvestmentSession, HistoryWonRecord } from '../types';
 import { seedInitialData } from '../utils/seedData';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 
@@ -168,6 +176,7 @@ interface CastingLiveSectionProps {
   models: ModelProfile[];
   userProfile: UserSessionProfile | null;
   userProjects?: ProjectData[];
+  historyWonLog?: HistoryWonRecord[];
   sessions?: InvestmentSession[];
   selectedLiveModelId?: string;
   onOpenChatWithModel?: (modelId: string) => void;
@@ -1851,7 +1860,7 @@ const CHANNEL_DESCRIPTIONS: Record<string, { icon: string; title: string; desc: 
   Runway: {
     icon: '👑',
     title: 'Runway',
-    desc: 'En este canal Runway, los modelos y profesionales de pasarela publican vídeos exclusivos de desfiles, looks de pasarela, editoriales, sesiones de alta moda y momentos estelares de su carrera.',
+    desc: 'En este canal Runway, las modelos y sus desfiles de la pasarela publican vídeos exclusivos de desfiles, viajes, backstage y entrevistas, descubre en esta nueva y emocionante etapa de la moda.',
     bg: 'bg-amber-50/90',
     border: 'border-amber-200/90',
     text: 'text-amber-900'
@@ -1859,7 +1868,7 @@ const CHANNEL_DESCRIPTIONS: Record<string, { icon: string; title: string; desc: 
   Modelos: {
     icon: '👑',
     title: 'Runway',
-    desc: 'En este canal Runway, los modelos y profesionales de pasarela publican vídeos exclusivos de desfiles, looks de pasarela, editoriales, sesiones de alta moda y momentos estelares de su carrera.',
+    desc: 'En este canal Runway, las modelos y sus desfiles de la pasarela publican vídeos exclusivos de desfiles, viajes, backstage y entrevistas, descubre en esta nueva y emocionante etapa de la moda.',
     bg: 'bg-amber-50/90',
     border: 'border-amber-200/90',
     text: 'text-amber-900'
@@ -2029,6 +2038,7 @@ export default function CastingLiveSection({
   models, 
   userProfile, 
   userProjects = [],
+  historyWonLog = [],
   sessions = [],
   selectedLiveModelId,
   onOpenChatWithModel,
@@ -3528,6 +3538,30 @@ export default function CastingLiveSection({
     return [...mappedUserProjs, ...extras];
   }, [userProjects]);
 
+  const getInscriptionProjectFundingWon = (proj?: { id: string; title?: string } | null) => {
+    if (!proj) return 0;
+    const logs: HistoryWonRecord[] = historyWonLog && historyWonLog.length > 0
+      ? historyWonLog
+      : (() => {
+          try {
+            const raw = localStorage.getItem('coll_historyLog');
+            return raw ? JSON.parse(raw) : [];
+          } catch {
+            return [];
+          }
+        })();
+    return logs
+      .filter(log => log.projectId === proj.id || (log.projectName && proj.title && log.projectName.trim().toLowerCase() === proj.title.trim().toLowerCase()))
+      .reduce((sum, log) => sum + (Number(log.prize) || 0), 0);
+  };
+
+  const isInscriptionProjectLocked = (proj?: { id: string; title?: string; budget?: number } | null) => {
+    if (!proj) return false;
+    const budget = Number(proj.budget) || 0;
+    if (budget <= 0) return false;
+    return getInscriptionProjectFundingWon(proj) >= budget;
+  };
+
   const resolveEnrolledUserProject = (explicitProjId?: string) => {
     let savedProjId: string | null = null;
     let savedProjTitle: string | null = null;
@@ -3536,27 +3570,29 @@ export default function CastingLiveSection({
       savedProjTitle = localStorage.getItem('finanzas_user_project_title');
     } catch (e) {}
 
+    const firstUnlocked = mergedInscriptionProposals.find(p => !isInscriptionProjectLocked(p));
+
     const byExplicit = explicitProjId
       ? mergedInscriptionProposals.find(p => p.id === explicitProjId)
       : undefined;
     if (byExplicit) return byExplicit;
 
+    const byStateId = selectedInscriptionProjectId
+      ? mergedInscriptionProposals.find(p => p.id === selectedInscriptionProjectId)
+      : undefined;
+    if (byStateId && (!isInscriptionProjectLocked(byStateId) || !firstUnlocked)) return byStateId;
+
     const bySavedId = savedProjId
       ? mergedInscriptionProposals.find(p => p.id === savedProjId)
       : undefined;
-    if (bySavedId) return bySavedId;
+    if (bySavedId && !isInscriptionProjectLocked(bySavedId)) return bySavedId;
 
     const bySavedTitle = savedProjTitle
       ? mergedInscriptionProposals.find(p => (p.title || '').trim().toLowerCase() === savedProjTitle!.trim().toLowerCase())
       : undefined;
-    if (bySavedTitle) return bySavedTitle;
+    if (bySavedTitle && !isInscriptionProjectLocked(bySavedTitle)) return bySavedTitle;
 
-    const byStateId = selectedInscriptionProjectId
-      ? mergedInscriptionProposals.find(p => p.id === selectedInscriptionProjectId)
-      : undefined;
-    if (byStateId) return byStateId;
-
-    return mergedInscriptionProposals[0];
+    return firstUnlocked || mergedInscriptionProposals[0];
   };
 
   // Helper to format total seconds into MM:SS (e.g. 3000 -> 50:00)
@@ -4720,6 +4756,14 @@ export default function CastingLiveSection({
     const feeFormatted = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fee) + "€";
     const selectedProj = resolveEnrolledUserProject(projectId);
 
+    if (isInscriptionProjectLocked(selectedProj)) {
+      const wonAmt = getInscriptionProjectFundingWon(selectedProj);
+      const errMsg = `🔒 El proyecto "${selectedProj.title}" ya alcanzó su meta de financiación acumulada consensuada (${wonAmt.toFixed(2)}€ / ${selectedProj.budget}€) y ha sido bloqueado. Elige otro proyecto o sube uno nuevo para participar.`;
+      setInscriptionBalanceError(errMsg);
+      alert(errMsg);
+      return;
+    }
+
     const currentBalance = typeof userProfile?.balance === 'number' ? userProfile.balance : 0;
 
     // Check if user has sufficient balance to pay the fee
@@ -5418,6 +5462,10 @@ export default function CastingLiveSection({
   const [broadcastNoiseSuppression, setBroadcastNoiseSuppression] = useState<boolean>(true);
   const [isScreenSharingActive, setIsScreenSharingActive] = useState<boolean>(false);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
+  const [showAccessRequestModal, setShowAccessRequestModal] = useState<boolean>(false);
+  const [pendingPermissionAction, setPendingPermissionAction] = useState<'live-broadcast' | 'retransmission' | 'quick-webcam' | null>(null);
+  const [pendingPermissionChannel, setPendingPermissionChannel] = useState<{ id: string; label: string; image?: string } | null>(null);
+  const [mediaPermissionPrefs, setMediaPermissionPrefs] = useState<MediaPermissionPreferences>(() => getStoredMediaPermissions());
   const [guestSearchQuery, setGuestSearchQuery] = useState('');
   const [broadcastGuests, setBroadcastGuests] = useState<Array<{ id: string; name: string; username: string; avatar: string; role: string; cameraOn: boolean; micOn: boolean; isCoHost: boolean; status: 'connected' | 'pending' }>>([
     { id: 'g-1', name: 'Isabela Dubois', username: 'isabelladubois', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', role: 'Co-Presentadora VIP', cameraOn: true, micOn: true, isCoHost: true, status: 'connected' },
@@ -6178,6 +6226,91 @@ export default function CastingLiveSection({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const startLiveBroadcastWithPermissions = async (prefs: MediaPermissionPreferences) => {
+    setIsBroadcastCamOn(prefs.camera);
+    setIsBroadcastMicOn(prefs.microphone);
+
+    if (!prefs.camera && !prefs.microphone) {
+      setIsUserLiveStreamingWithCamera(true);
+      setIsLiveStreamAudioMuted(true);
+      setSystemVoiceNotification({
+        show: true,
+        message: '🔒 Modo emisión sin cámara ni micrófono activado.'
+      });
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 4000);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: prefs.camera
+          ? {
+              facingMode: liveCameraFacingMode,
+              width: { ideal: 1080 },
+              height: { ideal: 1920 }
+            }
+          : false,
+        audio: prefs.microphone
+      });
+      setUserLiveMediaStream(stream);
+      setIsUserLiveStreamingWithCamera(true);
+      setIsLiveStreamAudioMuted(!prefs.microphone);
+      setSystemVoiceNotification({
+        show: true,
+        message: prefs.camera ? '🔴 ¡Cámara conectada en directo!' : '🎙️ ¡Audio conectado en directo!'
+      });
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 4000);
+    } catch (err) {
+      console.warn('Could not start ideal constraints, trying basic constraints:', err);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: prefs.camera,
+          audio: prefs.microphone
+        });
+        setUserLiveMediaStream(stream);
+        setIsUserLiveStreamingWithCamera(true);
+        setIsLiveStreamAudioMuted(!prefs.microphone);
+        setSystemVoiceNotification({
+          show: true,
+          message: '🔴 ¡Cámara conectada en directo!'
+        });
+        setTimeout(() => {
+          setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+        }, 4000);
+      } catch (err2) {
+        try {
+          if (!prefs.camera) throw err2;
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setUserLiveMediaStream(stream);
+          setIsUserLiveStreamingWithCamera(true);
+          setIsLiveStreamAudioMuted(true);
+          setSystemVoiceNotification({
+            show: true,
+            message: '🔴 ¡Cámara conectada en directo!'
+          });
+          setTimeout(() => {
+            setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+          }, 4000);
+        } catch (err3) {
+          console.warn('Camera device access fallback to simulated live stream:', err3);
+          setIsUserLiveStreamingWithCamera(true);
+          setIsLiveStreamAudioMuted(!prefs.microphone);
+          setSystemVoiceNotification({
+            show: true,
+            message: '🔴 ¡Emisión LIVE en directo conectada!'
+          });
+          setTimeout(() => {
+            setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+          }, 4000);
+        }
+      }
+    }
+  };
+
   const handleToggleUserCameraLiveBroadcast = async () => {
     if (isUserLiveStreamingWithCamera) {
       if (userLiveMediaStream) {
@@ -6195,66 +6328,13 @@ export default function CastingLiveSection({
       return;
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: liveCameraFacingMode,
-          width: { ideal: 1080 },
-          height: { ideal: 1920 }
-        },
-        audio: true
-      });
-      setUserLiveMediaStream(stream);
-      setIsUserLiveStreamingWithCamera(true);
-      setIsLiveStreamAudioMuted(false);
-      setSystemVoiceNotification({
-        show: true,
-        message: '🔴 ¡Cámara conectada en directo!'
-      });
-      setTimeout(() => {
-        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-      }, 4000);
-    } catch (err) {
-      console.warn('Could not start ideal constraints, trying basic constraints:', err);
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        setUserLiveMediaStream(stream);
-        setIsUserLiveStreamingWithCamera(true);
-        setIsLiveStreamAudioMuted(false);
-        setSystemVoiceNotification({
-          show: true,
-          message: '🔴 ¡Cámara conectada en directo!'
-        });
-        setTimeout(() => {
-          setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-        }, 4000);
-      } catch (err2) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          setUserLiveMediaStream(stream);
-          setIsUserLiveStreamingWithCamera(true);
-          setIsLiveStreamAudioMuted(true);
-          setSystemVoiceNotification({
-            show: true,
-            message: '🔴 ¡Cámara conectada en directo!'
-          });
-          setTimeout(() => {
-            setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-          }, 4000);
-        } catch (err3) {
-          console.warn('Camera device access fallback to simulated live stream:', err3);
-          setIsUserLiveStreamingWithCamera(true);
-          setIsLiveStreamAudioMuted(false);
-          setSystemVoiceNotification({
-            show: true,
-            message: '🔴 ¡Emisión LIVE en directo conectada!'
-          });
-          setTimeout(() => {
-            setSystemVoiceNotification(prev => ({ ...prev, show: false }));
-          }, 4000);
-        }
-      }
+    if (!hasConfiguredMediaPermissions()) {
+      setPendingPermissionAction('live-broadcast');
+      setShowAccessRequestModal(true);
+      return;
     }
+
+    await startLiveBroadcastWithPermissions(mediaPermissionPrefs);
   };
 
   const handleFlipLiveCamera = async () => {
@@ -6879,15 +6959,108 @@ export default function CastingLiveSection({
 
     const enrolledProj = resolveEnrolledUserProject(userPart?.projectId);
 
-    if (userWon) {
+    const normalizeIdentity = (v?: string) =>
+      (v || '')
+        .replace(' (Tú)', '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    let storedPatrocinados: any[] = [];
+    try {
+      const rawPat = localStorage.getItem('coll_patrocinados');
+      if (rawPat) {
+        const parsed = JSON.parse(rawPat);
+        if (Array.isArray(parsed)) storedPatrocinados = parsed;
+      }
+    } catch {}
+
+    const sponsorTotal10 = poolTotal * 0.10;
+    const sponsorPerWinner = Number((sponsorTotal10 / Math.max(1, winnerParts.length)).toFixed(2));
+    let totalSponsorCommissionEarned = 0;
+    const patrocinadoresPaidNames: string[] = [];
+
+    winnerParts.forEach((w: any) => {
+      const cleanWName = normalizeIdentity(w.name);
+      const isWinnerSelf = Boolean(
+        w.isSelf ||
+        w.userId === myId ||
+        (cleanMyName && cleanWName === normalizeIdentity(cleanMyName))
+      );
+      if (isWinnerSelf) return;
+
+      const matchedPatrocinado = storedPatrocinados.find((pat: any) => {
+        if (pat.status === 'inactive') return false;
+        if (pat.sponsorId && pat.sponsorId !== myId) return false;
+        const patName = normalizeIdentity(pat.name);
+        const patUsername = normalizeIdentity(pat.username);
+        return (
+          pat.id === w.userId ||
+          (patName && patName === cleanWName) ||
+          (patUsername && cleanWName.includes(patUsername))
+        );
+      });
+
+      const matchedWinnerModel = models.find(
+        m => m.id === w.userId || normalizeIdentity(m.name) === cleanWName
+      );
+      const sponsorFromModel = matchedWinnerModel?.patrocinadorId
+        ? models.find(m => m.id === matchedWinnerModel.patrocinadorId)
+        : undefined;
+
+      const isUserSponsorOfWinner = Boolean(
+        matchedPatrocinado ||
+        matchedWinnerModel?.patrocinadorId === myId ||
+        (sponsorFromModel && normalizeIdentity(sponsorFromModel.name) === normalizeIdentity(cleanMyName)) ||
+        (normalizeIdentity(cleanMyName) === 'adriana lima' && matchedWinnerModel?.patrocinadorId === 'topf-1')
+      );
+
+      if (isUserSponsorOfWinner && sponsorPerWinner > 0) {
+        totalSponsorCommissionEarned = Number((totalSponsorCommissionEarned + sponsorPerWinner).toFixed(2));
+        if (userProfile.name && !patrocinadoresPaidNames.includes(userProfile.name)) {
+          patrocinadoresPaidNames.push(userProfile.name);
+        }
+        const winnerDisplayName = (w.name || '').replace(' (Tú)', '').trim();
+        const winnerSlug = normalizeIdentity(winnerDisplayName).replace(/[^a-z0-9]+/g, '-') || 'winner';
+        pushAppNotification({
+          id: `notif-sponsor-comm-${roundKey}-${winnerSlug}`,
+          category: 'comisiones',
+          title: `💶 ¡Comisión de Patrocinio: +${sponsorPerWinner.toFixed(2)}€!`,
+          message: `Has recibido el 10% por éxito del patrocinio (+${sponsorPerWinner.toFixed(2)}€) porque tu patrocinado/a ${winnerDisplayName} ganó o quedó entre los ganadores en ${settledSession.title}.`,
+          timestamp: Date.now(),
+          read: false,
+          icon: '💶',
+          amount: sponsorPerWinner,
+          actionLabel: 'Ver Patrocinados',
+          targetTab: 'patrocinados'
+        });
+
+        if (onAddMovement) {
+          onAddMovement({
+            id: `mov-comm-${Date.now()}-${winnerSlug}`,
+            userId: myId,
+            type: 'commission',
+            amount: sponsorPerWinner,
+            date: new Date().toISOString(),
+            description: `🔗 Comisión de Patrocinador (10%) - ${winnerDisplayName} ganó en ${settledSession.title}`
+          });
+        }
+      }
+    });
+
+    if (userWon || totalSponsorCommissionEarned > 0) {
       if (onUpdateUserProfile) {
         onUpdateUserProfile({
           ...userProfile,
-          balance: Number((userProfile.balance + prizePerWinner).toFixed(2)),
-          totalEarnings: Number(((userProfile.totalEarnings || 0) + prizePerWinner).toFixed(2))
+          balance: Number((userProfile.balance + (userWon ? prizePerWinner : 0) + totalSponsorCommissionEarned).toFixed(2)),
+          totalEarnings: Number(((userProfile.totalEarnings || 0) + (userWon ? prizePerWinner : 0)).toFixed(2)),
+          totalCommissions: Number(((userProfile.totalCommissions || 0) + totalSponsorCommissionEarned).toFixed(2))
         });
       }
+    }
 
+    if (userWon) {
       if (onAddMovement) {
         onAddMovement({
           id: `mov-prize-${Date.now()}`,
@@ -6899,6 +7072,22 @@ export default function CastingLiveSection({
           projectName: enrolledProj.title
         });
       }
+
+      const isTieResult = winnerParts.length > 1;
+      pushAppNotification({
+        id: `notif-round-win-${roundKey}`,
+        category: 'rondas',
+        title: isTieResult
+          ? `🏆 ¡Entre los ganadores de ${settledSession.title}!`
+          : `🏆 ¡Has ganado ${settledSession.title}!`,
+        message: `Tu proyecto "${enrolledProj.title}" obtuvo ${userPart?.votesReceived ?? maxVotes} votos y consiguió una financiación de ${prizePerWinner.toFixed(2)}€${isTieResult ? ` (empate entre ${winnerParts.length} ganadores)` : ' (Posición #1 - Seleccionado)'}.`,
+        timestamp: Date.now(),
+        read: false,
+        icon: '🏆',
+        amount: prizePerWinner,
+        actionLabel: 'Ver Historial',
+        targetTab: 'sessions'
+      });
     }
 
     if (onAddSystemHistory) {
@@ -6912,7 +7101,7 @@ export default function CastingLiveSection({
         timeLeft: 0,
         createdAt: new Date().toISOString(),
         winners: winnerParts.map((w: any) => w.name),
-        patrocinadoresPaid: [],
+        patrocinadoresPaid: patrocinadoresPaidNames,
         poolTotal,
         participants: participants.map((p: any) => ({
           userId: p.isSelf ? myId : p.userId,
@@ -7981,6 +8170,7 @@ export default function CastingLiveSection({
   const [liveHeroVolume, setLiveHeroVolume] = useState<number>(80);
   const [isHeroLeftVolumeVisible, setIsHeroLeftVolumeVisible] = useState<boolean>(false);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [heroSoundSheetVideo, setHeroSoundSheetVideo] = useState<SoundVideoReference | null>(null);
   const [isHeroRightActionsVisible, setIsHeroRightActionsVisible] = useState<boolean>(true);
   const [isHeroFollowed, setIsHeroFollowed] = useState<boolean>(false);
   const [heroLikesCount, setHeroLikesCount] = useState<number>(() => {
@@ -8167,35 +8357,51 @@ export default function CastingLiveSection({
     });
   };
 
-  const handleStartLiveRetransmission = async (targetChannel?: { id: string; label: string; image?: string } | null) => {
+  const handleStartLiveRetransmission = async (
+    targetChannel?: { id: string; label: string; image?: string } | null,
+    overridePrefs?: MediaPermissionPreferences
+  ) => {
     const channel = targetChannel || streamOptionsTargetChannel || { id: 'todos', label: 'Todos en Directo' };
+    if (!overridePrefs && !userLiveMediaStream && !hasConfiguredMediaPermissions()) {
+      setPendingPermissionChannel(channel);
+      setPendingPermissionAction('retransmission');
+      setShowAccessRequestModal(true);
+      return;
+    }
+
+    const prefs = overridePrefs || mediaPermissionPrefs;
     let stream = userLiveMediaStream;
-    if (!stream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+    if (!stream && (prefs.camera || prefs.microphone) && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: liveCameraFacingMode || 'user',
-            aspectRatio: { ideal: 9 / 16 },
-            width: { ideal: 720 },
-            height: { ideal: 1280 }
-          },
-          audio: true
+          video: prefs.camera
+            ? {
+                facingMode: liveCameraFacingMode || 'user',
+                aspectRatio: { ideal: 9 / 16 },
+                width: { ideal: 720 },
+                height: { ideal: 1280 }
+              }
+            : false,
+          audio: prefs.microphone
         });
       } catch (err1) {
         console.warn('Could not start camera with ideal vertical constraints, trying standard vertical:', err1);
         try {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: liveCameraFacingMode || 'user',
-              aspectRatio: 9 / 16
-            },
-            audio: true
+            video: prefs.camera
+              ? {
+                  facingMode: liveCameraFacingMode || 'user',
+                  aspectRatio: 9 / 16
+                }
+              : false,
+            audio: prefs.microphone
           });
         } catch (err2) {
           try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream = await navigator.mediaDevices.getUserMedia({ video: prefs.camera, audio: prefs.microphone });
           } catch (err3) {
             try {
+              if (!prefs.camera) throw err3;
               stream = await navigator.mediaDevices.getUserMedia({ video: true });
             } catch (err4) {
               console.warn('Camera access unavailable:', err4);
@@ -8208,6 +8414,7 @@ export default function CastingLiveSection({
     if (stream) {
       setUserLiveMediaStream(stream);
     }
+    setIsLiveStreamAudioMuted(!prefs.microphone);
     setIsUserLiveStreamingWithCamera(true);
     setIsUserRetransmitting(true);
     setUserRetransmittingChannelId(channel.id);
@@ -8370,19 +8577,19 @@ export default function CastingLiveSection({
     if (!showStreamOptionsModal || !streamOptionsTargetChannel) return null;
     return (
       <div 
-        className="bg-slate-950 text-white w-full h-full overflow-hidden flex flex-col pointer-events-auto select-none rounded-[inherit] shadow-2xl animate-fade-in"
+        className="bg-white text-slate-900 w-full h-full overflow-hidden flex flex-col pointer-events-auto select-none rounded-[inherit] shadow-2xl animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
           {/* Header */}
-          <div className="bg-slate-900/95 border-b border-slate-800 p-3.5 sm:p-4 flex items-center justify-between gap-3 shrink-0">
+          <div className="bg-white border-b border-slate-200 p-3.5 sm:p-4 flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-slate-700 shadow-md">
+              <div className="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-slate-200 shadow-sm">
                 <img 
                   src={streamOptionsTargetChannel.image || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=300'} 
                   alt={streamOptionsTargetChannel.label} 
                   className="w-full h-full object-cover"
                 />
-                <span className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-slate-950 animate-pulse" />
+                <span className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
               </div>
               <div className="text-left min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
@@ -8390,11 +8597,11 @@ export default function CastingLiveSection({
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                     LIVE STREAM
                   </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/60">
+                  <span className="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     Canal {streamOptionsTargetChannel.label}
                   </span>
                 </div>
-                <h3 className="font-black text-sm sm:text-base text-white truncate m-0">
+                <h3 className="font-black text-sm sm:text-base text-slate-900 truncate m-0">
                   Opciones de Stream para Retransmitir en Directo
                 </h3>
               </div>
@@ -8402,7 +8609,7 @@ export default function CastingLiveSection({
             <button 
               type="button"
               onClick={() => setShowStreamOptionsModal(false)}
-              className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-700/80 text-sm font-bold"
+              className="custom-bg w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer shrink-0 border border-slate-200 text-sm font-bold"
               title="Cerrar opciones"
             >
               ✕
@@ -8410,20 +8617,20 @@ export default function CastingLiveSection({
           </div>
 
           {/* Navigation Tabs Bar: 2 Filas Horizontales con botones y letras más chicos */}
-          <div className="bg-slate-900/80 border-b border-slate-800 p-2 sm:p-2.5 shrink-0 space-y-1.5 sm:space-y-2">
+          <div className="bg-slate-50 border-b border-slate-200 p-2 sm:p-2.5 shrink-0 space-y-1.5 sm:space-y-2">
             {/* Fila 1: Cámara, Micrófono, Pantalla (3 botones compactos) */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full">
               <button
                 type="button"
                 onClick={() => setStreamOptionsTab('camera')}
-                className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                className={`custom-bg w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
                   streamOptionsTab === 'camera'
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
-                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/30'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-200 hover:border-slate-300'
                 }`}
                 title="Configuración de Cámara"
               >
-                <Camera className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <Camera className={`w-3.5 h-3.5 shrink-0 ${streamOptionsTab === 'camera' ? 'text-white' : 'text-rose-500'}`} />
                 <span className="whitespace-nowrap">Cámara</span>
                 {isBroadcastCamOn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
               </button>
@@ -8431,14 +8638,14 @@ export default function CastingLiveSection({
               <button
                 type="button"
                 onClick={() => setStreamOptionsTab('mic')}
-                className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                className={`custom-bg w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
                   streamOptionsTab === 'mic'
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
-                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/30'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-200 hover:border-slate-300'
                 }`}
                 title="Configuración de Micrófono"
               >
-                <Mic className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <Mic className={`w-3.5 h-3.5 shrink-0 ${streamOptionsTab === 'mic' ? 'text-white' : 'text-rose-500'}`} />
                 <span className="whitespace-nowrap">Micrófono</span>
                 {isBroadcastMicOn && !isMuted && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
               </button>
@@ -8446,16 +8653,16 @@ export default function CastingLiveSection({
               <button
                 type="button"
                 onClick={() => setStreamOptionsTab('screen')}
-                className={`w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                className={`custom-bg w-full py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
                   streamOptionsTab === 'screen'
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/40'
-                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-1 ring-rose-500/30'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-200 hover:border-slate-300'
                 }`}
                 title="Compartir Pantalla"
               >
-                <Monitor className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+                <Monitor className={`w-3.5 h-3.5 shrink-0 ${streamOptionsTab === 'screen' ? 'text-white' : 'text-indigo-500'}`} />
                 <span className="whitespace-nowrap">Pantalla</span>
-                {isScreenSharingActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping shrink-0" />}
+                {isScreenSharingActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping shrink-0" />}
               </button>
             </div>
 
@@ -8464,38 +8671,38 @@ export default function CastingLiveSection({
               <button
                 type="button"
                 onClick={() => setStreamOptionsTab('rtmp')}
-                className={`w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                className={`custom-bg w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
                   streamOptionsTab === 'rtmp'
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/40'
-                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/30'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-200 hover:border-slate-300'
                 }`}
                 title="OBS Studio / Claves RTMP"
               >
-                <Radio className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <Radio className={`w-3.5 h-3.5 shrink-0 ${streamOptionsTab === 'rtmp' ? 'text-white' : 'text-rose-500'}`} />
                 <span className="whitespace-nowrap">OBS / Claves RTMP</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setStreamOptionsTab('multistream')}
-                className={`w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
+                className={`custom-bg w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer border text-center text-[10px] sm:text-[11px] select-none shadow-xs active:scale-98 ${
                   streamOptionsTab === 'multistream'
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/40'
-                    : 'bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-rose-400 shadow-md ring-2 ring-rose-500/30'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-200 hover:border-slate-300'
                 }`}
                 title="Multistreaming en Redes Sociales"
               >
-                <Globe className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                <Globe className={`w-3.5 h-3.5 shrink-0 ${streamOptionsTab === 'multistream' ? 'text-white' : 'text-cyan-600'}`} />
                 <span className="whitespace-nowrap">Multistreaming Redes</span>
               </button>
             </div>
           </div>
 
           {/* Modal Body */}
-          <div className="p-3 sm:p-4 space-y-3.5 text-left flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+          <div className="bg-white p-3 sm:p-4 space-y-3.5 text-left flex-1 overflow-y-auto min-h-0 custom-scrollbar">
             {/* Título de la transmisión general */}
-            <div className="bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1">
+              <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
                 Título de tu Retransmisión en Vivo
               </label>
               <input 
@@ -8503,7 +8710,7 @@ export default function CastingLiveSection({
                 value={streamTitleInput} 
                 onChange={(e) => setStreamTitleInput(e.target.value)}
                 placeholder={`Ej: Sesión en Vivo de Diseño en ${streamOptionsTargetChannel.label}`}
-                className="w-full px-3.5 py-2 bg-slate-950 rounded-xl border border-slate-700/80 text-xs font-bold text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                className="w-full px-3.5 py-2 bg-white rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
               />
             </div>
 
@@ -8513,13 +8720,13 @@ export default function CastingLiveSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Dispositivo de cámara */}
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
                       Cámara de Retransmisión
                     </label>
                     <select 
                       value={broadcastCamDevice}
                       onChange={(e) => setBroadcastCamDevice(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
                     >
                       <option value="Cámara Web HD (Logitech C920 Pro)">📷 Cámara Web HD (Logitech C920 Pro)</option>
                       <option value="Cámara Frontal Móvil (12MP 4K HDR)">📱 Cámara Frontal Móvil (12MP 4K HDR)</option>
@@ -8530,13 +8737,13 @@ export default function CastingLiveSection({
 
                   {/* Calidad de Vídeo */}
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
                       Resolución y FPS
                     </label>
                     <select 
                       value={streamResolution}
                       onChange={(e) => setStreamResolution(e.target.value as any)}
-                      className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
                     >
                       <option value="1080p">1080p Full HD • 60 FPS (Recomendado)</option>
                       <option value="720p">720p HD • 30 FPS (Bajo consumo de red)</option>
@@ -8546,16 +8753,16 @@ export default function CastingLiveSection({
                 </div>
 
                 {/* Estado de Cámara & Preview */}
-                <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBroadcastCamOn ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBroadcastCamOn ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-200 text-slate-500'}`}>
                       <Camera className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-black text-white m-0">
+                      <p className="text-xs font-black text-slate-900 m-0">
                         {isBroadcastCamOn ? 'Cámara Activada y Lista' : 'Cámara en Modo Silencioso / Pausa'}
                       </p>
-                      <p className="text-[10px] text-slate-400 m-0">
+                      <p className="text-[10px] text-slate-500 m-0">
                         {isBroadcastCamOn ? 'Transmite imagen directa al canal al emitir' : 'Haz clic para encender la vista previa'}
                       </p>
                     </div>
@@ -8569,13 +8776,28 @@ export default function CastingLiveSection({
                         message: !isBroadcastCamOn ? '🎥 Cámara encendida y configurada.' : '🚫 Cámara pausada.'
                       });
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer border ${
+                    className={`custom-bg px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer border ${
                       isBroadcastCamOn
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400'
-                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300'
                     }`}
                   >
                     {isBroadcastCamOn ? 'Encendida ✓' : 'Encender Cámara'}
+                  </button>
+                </div>
+
+                {/* Acceso rápido al panel de Solicitud de Acceso */}
+                <div className="bg-amber-50/70 p-3 rounded-2xl border border-amber-300/80 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black text-amber-900 m-0">Permisos de Cámara y Micrófono</p>
+                    <p className="text-[10px] text-slate-600 m-0">Configura el acceso a dispositivos en la aplicación</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAccessRequestModal(true)}
+                    className="custom-bg px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#E11D64] to-[#9E0840] border border-[#E5C287]/70 shadow-sm cursor-pointer transition hover:opacity-95 shrink-0"
+                  >
+                    Permisos
                   </button>
                 </div>
               </div>
@@ -8585,11 +8807,11 @@ export default function CastingLiveSection({
             {streamOptionsTab === 'mic' && (
               <div className="space-y-3.5 animate-fade-in">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                  <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
                     Dispositivo de Entrada de Audio
                   </label>
                   <select 
-                    className="w-full px-3 py-2 bg-slate-900 rounded-xl border border-slate-800 text-xs font-semibold text-white focus:outline-none focus:border-rose-500"
+                    className="w-full px-3 py-2 bg-white rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
                   >
                     <option>🎙️ Micrófono Predeterminado del Sistema</option>
                     <option>🎙️ Micrófono de Solapa Inalámbrico (Røde Wireless GO II)</option>
@@ -8599,22 +8821,22 @@ export default function CastingLiveSection({
                 </div>
 
                 {/* VU Meter animado */}
-                <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 space-y-2">
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-300">Medidor de Nivel de Voz</span>
-                    <span className={`text-[10px] font-mono font-bold ${!isMuted ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <span className="font-bold text-slate-700">Medidor de Nivel de Voz</span>
+                    <span className={`text-[10px] font-mono font-bold ${!isMuted ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {!isMuted ? '-6 dB (Óptimo)' : 'Mute'}
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                  <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden flex gap-0.5 p-0.5">
                     <div className={`h-full rounded-full transition-all duration-300 ${!isMuted ? 'w-3/4 bg-gradient-to-r from-emerald-500 via-yellow-400 to-rose-500 animate-pulse' : 'w-0'}`} />
                   </div>
                 </div>
 
                 {/* Filtros de audio */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <label className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer">
-                    <span className="text-xs font-bold text-slate-200">Supresión de Ruido IA</span>
+                  <label className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer">
+                    <span className="text-xs font-bold text-slate-800">Supresión de Ruido IA</span>
                     <input 
                       type="checkbox" 
                       checked={streamNoiseSuppression}
@@ -8622,10 +8844,24 @@ export default function CastingLiveSection({
                       className="accent-rose-500 rounded" 
                     />
                   </label>
-                  <label className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer">
-                    <span className="text-xs font-bold text-slate-200">Cancelación de Eco Acústico</span>
+                  <label className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer">
+                    <span className="text-xs font-bold text-slate-800">Cancelación de Eco Acústico</span>
                     <input type="checkbox" defaultChecked className="accent-rose-500 rounded" />
                   </label>
+                </div>
+
+                <div className="bg-amber-50/70 p-3 rounded-2xl border border-amber-300/80 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black text-amber-900 m-0">Permisos de Micrófono y Cámara</p>
+                    <p className="text-[10px] text-slate-600 m-0">Gestiona el acceso de entrada de audio y vídeo</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAccessRequestModal(true)}
+                    className="custom-bg px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#E11D64] to-[#9E0840] border border-[#E5C287]/70 shadow-sm cursor-pointer transition hover:opacity-95 shrink-0"
+                  >
+                    Permisos
+                  </button>
                 </div>
               </div>
             )}
@@ -8633,22 +8869,22 @@ export default function CastingLiveSection({
             {/* TAB 3: PANTALLA */}
             {streamOptionsTab === 'screen' && (
               <div className="space-y-3.5 animate-fade-in">
-                <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-200">
                       <Monitor className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black text-white m-0">Compartición de Pantalla en Directo</h4>
-                      <p className="text-[10px] text-slate-400 m-0">Transmite bocetos de diseño, pasarelas 3D o tu escritorio al canal</p>
+                      <h4 className="text-xs font-black text-slate-900 m-0">Compartición de Pantalla en Directo</h4>
+                      <p className="text-[10px] text-slate-600 m-0">Transmite bocetos de diseño, pasarelas 3D o tu escritorio al canal</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+                  <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
                     <button
                       type="button"
                       onClick={handleToggleScreenShare}
-                      className={`w-full py-2.5 px-4 rounded-xl font-black text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
+                      className={`custom-bg w-full py-2.5 px-4 rounded-xl font-black text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
                         isScreenSharingActive
                           ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-400 animate-pulse'
                           : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400'
@@ -8665,25 +8901,25 @@ export default function CastingLiveSection({
             {/* TAB 4: RTMP / OBS */}
             {streamOptionsTab === 'rtmp' && (
               <div className="space-y-3.5 animate-fade-in">
-                <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+                    <span className="text-[10px] font-black uppercase text-rose-600 tracking-wider">
                       Codificador Externo (OBS / Streamlabs / vMix)
                     </span>
-                    <span className="text-[9px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800">
+                    <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
                       Servidor Online
                     </span>
                   </div>
 
                   {/* Server URL */}
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 block">URL del Servidor RTMP</label>
+                    <label className="text-[10px] font-bold text-slate-600 block">URL del Servidor RTMP</label>
                     <div className="flex gap-2">
                       <input 
                         type="text" 
                         readOnly 
                         value={`rtmp://live.castinglive.com/app/${streamOptionsTargetChannel.id}`} 
-                        className="flex-1 px-3 py-1.5 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 focus:outline-none"
+                        className="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none"
                       />
                       <button 
                         type="button"
@@ -8691,7 +8927,7 @@ export default function CastingLiveSection({
                           title: 'URL Copiada',
                           message: `📋 URL copiada: rtmp://live.castinglive.com/app/${streamOptionsTargetChannel.id}`
                         })}
-                        className="px-3 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border border-slate-700"
+                        className="custom-bg px-3 bg-slate-200 hover:bg-slate-300 text-slate-900 text-[10px] font-black uppercase rounded-xl transition cursor-pointer border border-slate-300"
                       >
                         Copiar
                       </button>
@@ -8700,18 +8936,18 @@ export default function CastingLiveSection({
 
                   {/* Stream Key */}
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 block">Clave de Retransmisión (Stream Key)</label>
+                    <label className="text-[10px] font-bold text-slate-600 block">Clave de Retransmisión (Stream Key)</label>
                     <div className="flex gap-2">
                       <input 
                         type={showRtmpKeySecret ? 'text' : 'password'} 
                         readOnly 
                         value={`live_${streamOptionsTargetChannel.id}_secret_8492049`} 
-                        className="flex-1 px-3 py-1.5 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 focus:outline-none"
+                        className="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none"
                       />
                       <button 
                         type="button"
                         onClick={() => setShowRtmpKeySecret(!showRtmpKeySecret)}
-                        className="px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-xl transition cursor-pointer border border-slate-700"
+                        className="custom-bg px-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold rounded-xl transition cursor-pointer border border-slate-300"
                       >
                         {showRtmpKeySecret ? 'Ocultar' : 'Ver'}
                       </button>
@@ -8721,7 +8957,7 @@ export default function CastingLiveSection({
                           title: 'Clave Copiada',
                           message: '📋 Clave de emisión copiada. Pégala en Ajustes > Emisión en OBS.'
                         })}
-                        className="px-3 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border-0"
+                        className="custom-bg px-3 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase rounded-xl transition cursor-pointer border-0"
                       >
                         Copiar
                       </button>
@@ -8734,7 +8970,7 @@ export default function CastingLiveSection({
             {/* TAB 5: MULTISTREAMING */}
             {streamOptionsTab === 'multistream' && (
               <div className="space-y-3 animate-fade-in">
-                <p className="text-[11px] text-slate-400 m-0">
+                <p className="text-[11px] text-slate-600 m-0">
                   Emite simultáneamente en tus redes sociales vinculadas mientras transmites en el canal {streamOptionsTargetChannel.label}:
                 </p>
 
@@ -8753,15 +8989,15 @@ export default function CastingLiveSection({
                         onClick={() => setStreamMultistreamPlatforms(prev => ({ ...prev, [platform.key]: !prev[platform.key] }))}
                         className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between select-none ${
                           isActive
-                            ? 'bg-slate-900 border-rose-500 ring-1 ring-rose-500/40'
-                            : 'bg-slate-950/70 border-slate-800 hover:border-slate-700 opacity-70'
+                            ? 'bg-rose-50/70 border-rose-400 ring-1 ring-rose-400/30'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300 opacity-85'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-slate-600'}`} />
-                          <span className="text-xs font-black text-white">{platform.name}</span>
+                          <div className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-emerald-500 shadow-sm shadow-emerald-400/50' : 'bg-slate-400'}`} />
+                          <span className="text-xs font-black text-slate-900">{platform.name}</span>
                         </div>
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-800 text-slate-400'}`}>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}`}>
                           {isActive ? 'Conectado' : 'Desactivado'}
                         </span>
                       </div>
@@ -8776,7 +9012,7 @@ export default function CastingLiveSection({
               <button 
                 type="button"
                 onClick={() => setShowStreamOptionsModal(false)}
-                className="px-5 sm:px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 shrink-0"
+                className="custom-bg px-5 sm:px-6 py-2.5 bg-gradient-to-r from-[#fdf2f8] via-[#fce7f3] to-[#fbcfe8] hover:from-[#fce7f3] hover:via-[#fbcfe8] hover:to-[#f9a8d4] !text-[#000000] border border-[#f472b6] text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 shrink-0"
               >
                 CERRAR
               </button>
@@ -8788,7 +9024,7 @@ export default function CastingLiveSection({
                     onClick={() => {
                       handleStopLiveRetransmission();
                     }}
-                    className="px-3.5 py-2.5 bg-slate-800 hover:bg-red-950/80 text-rose-400 border border-rose-800/60 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95 shrink-0"
+                    className="custom-bg px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95 shrink-0"
                   >
                     Detener Emisión
                   </button>
@@ -8799,7 +9035,7 @@ export default function CastingLiveSection({
                   onClick={() => {
                     handleStartLiveRetransmission(streamOptionsTargetChannel);
                   }}
-                  className="px-4 sm:px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2 border border-slate-200"
+                  className="custom-bg px-4 sm:px-6 py-2.5 bg-gradient-to-r from-[#fdf2f8] via-[#fce7f3] to-[#fbcfe8] hover:from-[#fce7f3] hover:via-[#fbcfe8] hover:to-[#f9a8d4] !text-[#000000] border border-[#f472b6] text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="truncate">Iniciar directo</span>
                 </button>
@@ -8814,7 +9050,7 @@ export default function CastingLiveSection({
     if (!showStreamOptionsModal || !streamOptionsTargetChannel) return null;
     return (
       <div 
-        className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-[inherit] overflow-hidden bg-slate-950 text-white flex flex-col shadow-2xl animate-fade-in select-none"
+        className="absolute inset-0 z-[250] w-full h-full pointer-events-auto rounded-[inherit] overflow-hidden bg-white text-slate-900 flex flex-col shadow-2xl animate-fade-in select-none"
         onClick={(e) => e.stopPropagation()}
         id="phone-screen-stream-options-wrapper"
       >
@@ -9211,6 +9447,11 @@ export default function CastingLiveSection({
 
   const handleCaptureImage = async () => {
     if (!isRealWebcamActive) {
+      if (!hasConfiguredMediaPermissions()) {
+        setPendingPermissionAction('quick-webcam');
+        setShowAccessRequestModal(true);
+        return;
+      }
       // Si la cámara no está activa, el primer clic en el botón blanco la activa usando el gesto directo del usuario
       await startWebcam();
       return;
@@ -9331,7 +9572,21 @@ export default function CastingLiveSection({
           { id: 'h1', title: 'lovelehee', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
           { id: 'h2', title: 'marii2121', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=300' },
           { id: 'h3', title: 'ann_______', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
-          { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' }
+          { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
+          { id: 'h5', title: 'plievazz', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h6', title: 'laviniader', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h7', title: 'milano.fw', image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=300' },
+          { id: 'h8', title: 'editorial', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300' },
+          { id: 'h9', title: 'paris.haute', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h10', title: 'valeria.m', image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h11', title: 'voguestyle', image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h12', title: 'atelier.lux', image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h13', title: 'camille_off', image: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h14', title: 'runway.nyc', image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h15', title: 'bianca.couture', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h16', title: 'marco_shoot', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h17', title: 'sofiastyling', image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400' },
+          { id: 'h18', title: 'london.catwalk', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=400' }
         ];
       }
       const newHi = {
@@ -9477,7 +9732,21 @@ export default function CastingLiveSection({
         { id: 'h1', title: 'lovelehee', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300' },
         { id: 'h2', title: 'marii2121', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=300' },
         { id: 'h3', title: 'ann_______', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300' },
-        { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' }
+        { id: 'h4', title: 'salamakss', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=300' },
+        { id: 'h5', title: 'plievazz', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h6', title: 'laviniader', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h7', title: 'milano.fw', image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&q=80&w=300' },
+        { id: 'h8', title: 'editorial', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300' },
+        { id: 'h9', title: 'paris.haute', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h10', title: 'valeria.m', image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h11', title: 'voguestyle', image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h12', title: 'atelier.lux', image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h13', title: 'camille_off', image: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h14', title: 'runway.nyc', image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h15', title: 'bianca.couture', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h16', title: 'marco_shoot', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h17', title: 'sofiastyling', image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400' },
+        { id: 'h18', title: 'london.catwalk', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=400' }
       ];
     }
     const newHi = {
@@ -11567,6 +11836,9 @@ export default function CastingLiveSection({
   const [uploadCategory, setUploadCategory] = useState<'para-ti' | 'explorar' | 'siguiendo' | 'amigos'>('para-ti');
   const [uploadVideoCategory, setUploadVideoCategory] = useState<'Todos' | 'Reels' | 'Finanzas' | 'Fashion' | 'Modelos' | 'Runway' | 'BackStage' | 'Backstage' | 'Investors' | 'Jewellery' | 'Tiendas' | 'Catwalk' | 'Casting' | 'Fitnes' | 'Beauty' | 'Influencer' | 'Luxury' | 'Interview' | ''>('Runway');
   const [showAllChannelGuide, setShowAllChannelGuide] = useState(false);
+  const [channelSubscribedMap, setChannelSubscribedMap] = useState<Record<string, boolean>>({});
+  const [previewLatestChannelKey, setPreviewLatestChannelKey] = useState<string | null>(null);
+  const [showAllLocations, setShowAllLocations] = useState(false);
   const [uploadModelId, setUploadModelId] = useState('');
   const [uploadModalStage, setUploadModalStage] = useState<'review' | 'details'>('review');
   const [simplifiedReview, setSimplifiedReview] = useState(true);
@@ -11575,7 +11847,7 @@ export default function CastingLiveSection({
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
 
-  // 📹 Listener to open the upload modal (z.png) from anywhere in the app (e.g. Canal Fashion in image.png)
+  // 📹 Listener to open the upload modal (z.png) from anywhere in the app (e.g. Canal Fashion in image.png o Ficha del Sonido)
   useEffect(() => {
     const handleOpenUploadModal = (e: any) => {
       setShowUploadModal(true);
@@ -11584,6 +11856,11 @@ export default function CastingLiveSection({
       if (cat) {
         setUploadVideoCategory(cat as any);
         setSelectedLiveCategory(cat as any);
+      }
+      if (e?.detail?.music) {
+        setUploadMusic(e.detail.music);
+        setUploadModalStage('details');
+        setShowAdvancedSettings(true);
       }
     };
     window.addEventListener('open-casting-upload-modal', handleOpenUploadModal);
@@ -11939,18 +12216,57 @@ export default function CastingLiveSection({
       }
     }
     
-    // Stage 2: filter by search term
+    // Stage 2: filter by search term (nombre, nombre de usuario con o sin @, alias, descripción y audio)
     if (searchTerm.trim() !== '') {
-      const q = searchTerm.toLowerCase();
-      const uName = (vid.username || '').toLowerCase();
-      const fName = (vid.name || '').toLowerCase();
-      const desc = (vid.description || '').toLowerCase();
-      const mus = (vid.music || '').toLowerCase();
+      const normalizeSearchStr = (s?: string | null) =>
+        (s || '')
+          .toString()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .trim();
+
+      const rawQuery = normalizeSearchStr(searchTerm);
+      const cleanQuery = rawQuery.replace(/^@+/, '');
+      const tokens = cleanQuery.split(/\s+/).filter(Boolean);
+
+      const uName = normalizeSearchStr(vid.username).replace(/^@+/, '');
+      const fName = normalizeSearchStr(vid.name);
+      const desc = normalizeSearchStr(vid.description);
+      const mus = normalizeSearchStr(vid.music);
+
+      // Cross-reference linked model / account profile to match updated display names, aliases or usernames
+      const linkedModel = models?.find(
+        (m) =>
+          (vid.modelId && m.id === vid.modelId) ||
+          (vid.uploaderId && m.id === vid.uploaderId) ||
+          (uName && normalizeSearchStr(m.username).replace(/^@+/, '') === uName)
+      );
+      const linkedAccount = accountsQueSigues.find(
+        (a) => uName && normalizeSearchStr(a.username).replace(/^@+/, '') === uName
+      );
+
+      const resolvedName = normalizeSearchStr(linkedModel?.name || linkedAccount?.name);
+      const resolvedAlias = normalizeSearchStr(linkedModel?.alias);
+      const resolvedHandle = normalizeSearchStr(linkedModel?.username || linkedAccount?.username).replace(/^@+/, '');
+      const combinedIdentity = `${fName} ${uName} ${resolvedName} ${resolvedAlias} ${resolvedHandle}`.trim();
+
+      const matchesIdentityTokens =
+        tokens.length > 0 && tokens.every((t) => combinedIdentity.includes(t.replace(/^@+/, '')));
+
       return (
-        uName.includes(q) ||
-        fName.includes(q) ||
-        desc.includes(q) ||
-        mus.includes(q)
+        (cleanQuery !== '' && (
+          uName.includes(cleanQuery) ||
+          fName.includes(cleanQuery) ||
+          resolvedName.includes(cleanQuery) ||
+          resolvedAlias.includes(cleanQuery) ||
+          resolvedHandle.includes(cleanQuery)
+        )) ||
+        matchesIdentityTokens ||
+        desc.includes(rawQuery) ||
+        (cleanQuery !== '' && desc.includes(cleanQuery)) ||
+        mus.includes(rawQuery) ||
+        (cleanQuery !== '' && mus.includes(cleanQuery))
       );
     }
     return true;
@@ -11959,8 +12275,8 @@ export default function CastingLiveSection({
   // Interleave Modelos videos round-robin by creator so contiguous videos belong to different users
   const filteredVideos = React.useMemo(() => {
     let list = rawFilteredVideos;
-    // Strict channel isolation guarantee: NEVER fall back to other categories (e.g. Fashion)
-    if (list.length === 0 && selectedCategoryFilter !== 'Todos') {
+    // Strict channel isolation guarantee: NEVER fall back to other categories (e.g. Fashion), and respect active search queries
+    if (list.length === 0 && selectedCategoryFilter !== 'Todos' && searchTerm.trim() === '') {
       const targetCat = selectedCategoryFilter.toLowerCase();
       list = videosList.filter(v => {
         const c = (v.videoCategory || v.category || '').toLowerCase();
@@ -12003,7 +12319,7 @@ export default function CastingLiveSection({
       idx++;
     }
     return result;
-  }, [rawFilteredVideos, selectedCategoryFilter, videosList]);
+  }, [rawFilteredVideos, selectedCategoryFilter, videosList, searchTerm]);
 
   // ⏸️ Detener y pausar la reproducción de todos los vídeos al hacer clic en Cargar Vídeo o abrir modales
   const handlePauseAllVideos = () => {
@@ -16728,6 +17044,8 @@ export default function CastingLiveSection({
             userProfile={{
               id: userProfile?.id || 'user',
               name: userProfile?.name || 'TÚ (Inversor)',
+              username: userProfile?.username,
+              avatar: userProfile?.avatar,
               balance: userProfile?.balance || 150000,
               patrocinadorId: userProfile?.patrocinadorId
             }}
@@ -17350,8 +17668,8 @@ export default function CastingLiveSection({
 
     // Render Stage 2: Captura yy.png (TikTok Studio Full Upload & Control Suite Workspace)
     return (
-      <div className="fixed inset-0 bg-white z-[2000] overflow-y-auto overscroll-contain no-scrollbar scrollbar-none border-x border-slate-200" id="tiktok-studio-upload-manager">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-6 text-slate-800 font-sans min-h-full relative animate-fade-in pb-28 sm:pb-36 no-scrollbar scrollbar-none">
+      <div className="fixed inset-0 bg-white z-[99995] overflow-y-auto overscroll-contain no-scrollbar scrollbar-none border-x border-slate-200" id="tiktok-studio-upload-manager">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-6 text-slate-800 font-sans min-h-full relative animate-fade-in pb-28 sm:pb-36 no-scrollbar scrollbar-none">
           
           {/* Main Top Header: Close Option */}
           <button
@@ -17555,36 +17873,57 @@ export default function CastingLiveSection({
                       )}
                     </div>
 
-                {/* Categorías de vídeo (zx.png inspired selector) */}
+                {/* Categorías de vídeo — Luxury Pearl Pink & Gold Design */}
                 <div 
                   id="category-selector-container" 
-                  className={`p-4 border-2 rounded-3xl flex flex-col gap-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 ${
-                    (!uploadVideoCategory || uploadVideoCategory === 'Todos')
-                      ? 'bg-rose-50/40 border-dashed border-rose-300 animate-pulse'
-                      : 'bg-gradient-to-br from-[#fffdfd] to-white border-rose-100/80 shadow-[0_4px_20px_rgba(236,72,153,0.03)]'
-                  }`}
+                  className="relative overflow-hidden p-4 sm:p-5 rounded-3xl flex flex-col gap-3.5 border border-[#f5c6da]/90 bg-gradient-to-br from-[#fff9fb] via-[#ffebf3] to-[#ffd8e8] shadow-[0_12px_36px_rgba(226,4,107,0.09)] transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between px-1 select-none">
-                    <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest flex items-center gap-1.5 font-mono">
-                      <span>🏷️</span> Categoría del vídeo
-                    </span>
-                    {(!uploadVideoCategory || uploadVideoCategory === 'Todos') ? (
-                      <span className="text-[9px] text-[#fe2c55] font-black uppercase tracking-wider bg-rose-100/80 border border-rose-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#fe2c55] animate-ping" />
-                        ⚠️ Elige una categoría
-                      </span>
-                    ) : (
-                      <span className="text-[9px] text-emerald-600 font-black uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                        <span>✓</span> Categoría seleccionada
-                      </span>
-                    )}
+                  {/* Soft satin silk radial highlights */}
+                  <div className="pointer-events-none absolute -top-12 -left-10 w-52 h-52 rounded-full bg-white/65 blur-2xl" />
+                  <div className="pointer-events-none absolute -bottom-16 -right-12 w-64 h-64 rounded-full bg-[#ff85b7]/25 blur-2xl" />
+
+                  {/* Top Header Row: Faceted Pink Diamond + Serif Title + CATEGORÍAS DESTACADAS Pill */}
+                  <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-0.5">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src="/assets/aistudio/Diamante_rosa_brillante_transparente.webp"
+                        alt="Diamante rosa"
+                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0 drop-shadow-[0_4px_10px_rgba(236,0,117,0.22)] select-none"
+                      />
+                      <div className="h-7 w-[1.5px] bg-gradient-to-b from-[#e8c67c] via-[#b8842a] to-[#e8c67c] shrink-0" />
+                      <h3 className="m-0 font-serif text-base sm:text-xl font-medium tracking-wider uppercase leading-tight flex flex-wrap items-center gap-x-1.5">
+                        <span className="text-[#141414]">CATEGORÍA</span>
+                        <span className="text-[#ec0075]">DE VÍDEO</span>
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-auto">
+                      {(!uploadVideoCategory || uploadVideoCategory === 'Todos') && (
+                        <span className="text-[9px] text-[#e2046b] font-black uppercase tracking-wider bg-white/90 border border-[#f5a8ca] px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#e2046b] animate-ping" />
+                          Elige una categoría
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowAllChannelGuide(!showAllChannelGuide)}
+                        className="custom-bg px-3.5 sm:px-4 py-1.5 rounded-full bg-gradient-to-b from-[#ffffff] to-[#fff6f9] border-[1.5px] border-[#c89d54] hover:border-[#b08335] shadow-[0_3px_12px_rgba(184,134,45,0.18)] flex items-center gap-2 cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                      >
+                        <Play className="w-3 h-3 fill-[#b4742a] text-[#b4742a] shrink-0" />
+                        <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-[#141414]">
+                          {showAllChannelGuide ? 'OCULTAR DESTACADAS' : 'CATEGORÍAS DESTACADAS'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 bg-white/60 p-2 rounded-2xl border border-slate-100">
+                  {/* Carousel Row: Gold-Rimmed Pearl Arrows & Luxury Capsule Pills */}
+                  <div className="relative z-10 flex items-center justify-between gap-2.5 sm:gap-3">
                     {/* Left scroll/prev button */}
                     <button
                       type="button"
-                      className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
+                      aria-label="Categoría anterior"
+                      className="custom-bg w-9 h-9 rounded-full bg-gradient-to-b from-white to-[#fff5f8] border-[1.5px] border-[#c89d54] hover:border-[#b08335] flex items-center justify-center text-[#9c6419] cursor-pointer transition shrink-0 hover:scale-105 active:scale-90 shadow-[0_3px_10px_rgba(184,134,45,0.18)]"
                       onClick={() => {
                         const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'] as const;
                         const currentIdx = order.indexOf(
@@ -17593,7 +17932,7 @@ export default function CastingLiveSection({
                         const nextIdx = currentIdx === -1 ? 0 : (currentIdx - 1 + order.length) % order.length;
                         const nextCat = order[nextIdx];
                         setUploadVideoCategory(nextCat);
-                        
+
                         if (categoryUploadScrollRef.current) {
                           const activeEl = categoryUploadScrollRef.current.children[nextIdx] as HTMLElement;
                           if (activeEl) {
@@ -17605,28 +17944,26 @@ export default function CastingLiveSection({
                         }
                       }}
                     >
-                      <svg className="w-4 h-4 stroke-current" fill="none" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                      </svg>
+                      <ChevronLeft className="w-4 h-4 stroke-[2.75]" />
                     </button>
 
-                    {/* Categories Row */}
+                    {/* Categories Capsule Pills Row */}
                     <div 
                       ref={categoryUploadScrollRef}
-                      className="flex-1 overflow-x-auto no-scrollbar scroll-smooth flex justify-start items-center gap-2.5 px-1 py-1"
+                      className="flex-1 overflow-x-auto no-scrollbar scroll-smooth flex justify-start items-center gap-2.5 px-1 py-1.5"
                     >
                       {[
-                        { id: 'Fashion', label: 'Fashion ✨', bg: 'bg-[#fff0f3] text-[#be185d] border-[#fbcfe8]/40', activeBg: 'bg-gradient-to-r from-pink-500 to-rose-600 text-white border-rose-600 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
-                        { id: 'Finanzas', label: 'Finanzas 📈', bg: 'bg-[#ecfdf5] text-[#047857] border-[#d1fae5]/50', activeBg: 'bg-emerald-500 text-white border-emerald-500 shadow-[0_4px_12px_rgba(16,185,129,0.35)]' },
-                        { id: 'Runway', label: 'Runway 👑', bg: 'bg-[#fffbeb] text-[#b45309] border-[#fef3c7]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
-                        { id: 'Backstage', label: 'Backstage 🎬', bg: 'bg-[#ecfeff] text-[#0891b2] border-[#cffafe]/50', activeBg: 'bg-[#06b6d4] text-white border-[#06b6d4] shadow-[0_4px_12px_rgba(6,182,212,0.35)]' },
-                        { id: 'Jewellery', label: 'Jewellery 💎', bg: 'bg-[#fdf4ff] text-[#a21caf] border-[#f3e8ff]/50', activeBg: 'bg-purple-500 text-white border-purple-500 shadow-[0_4px_12px_rgba(168,85,247,0.35)]' },
-                        { id: 'Casting', label: 'Casting 👠', bg: 'bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]/50', activeBg: 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-[0_4px_12px_rgba(124,58,237,0.35)]' },
-                        { id: 'Fitnes', label: 'Fitnes 💪', bg: 'bg-[#ecfdf5] text-[#059669] border-[#a7f3d0]/50', activeBg: 'bg-emerald-600 text-white border-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.35)]' },
-                        { id: 'Beauty', label: 'Beauty 💄', bg: 'bg-[#fff1f2] text-[#e11d48] border-[#fecdd3]/50', activeBg: 'bg-rose-500 text-white border-rose-500 shadow-[0_4px_12px_rgba(244,63,94,0.35)]' },
-                        { id: 'Influencer', label: 'Influencer 📱', bg: 'bg-[#fefce8] text-[#ca8a04] border-[#fef08a]/50', activeBg: 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.35)]' },
-                        { id: 'Luxury', label: 'Luxury 🍸', bg: 'bg-[#fff7ed] text-[#c2410c] border-[#ffedd5]/50', activeBg: 'bg-gradient-to-r from-amber-600 to-orange-600 text-white border-orange-500 shadow-[0_4px_12px_rgba(234,88,12,0.35)]' },
-                        { id: 'Interview', label: 'Interview 🎙️', bg: 'bg-[#f0fdf4] text-[#15803d] border-[#dcfce7]/50', activeBg: 'bg-emerald-700 text-white border-emerald-600 shadow-[0_4px_12px_rgba(21,128,61,0.35)]' }
+                        { id: 'Fashion', label: 'Fashion', icon: '👗', softTint: 'from-[#fff7fa] via-[#ffe6f0] to-[#ffd2e4] text-[#b80d57] border-[#eab2c9]' },
+                        { id: 'Finanzas', label: 'Finanzas', icon: '🪙', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Runway', label: 'Runway', icon: '🎥', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Backstage', label: 'Backstage', icon: '🎬', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Jewellery', label: 'Jewellery', icon: '💎', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Casting', label: 'Casting', icon: '👠', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Fitnes', label: 'Fitnes', icon: '💪', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Beauty', label: 'Beauty', icon: '💄', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Influencer', label: 'Influencer', icon: '📱', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Luxury', label: 'Luxury', icon: '🍸', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' },
+                        { id: 'Interview', label: 'Interview', icon: '🎙️', softTint: 'from-[#ffffff] via-[#faf8f9] to-[#f4eff2] text-[#171717] border-[#ded5da]' }
                       ].map((cat, idx) => {
                         const isNormalizedActive = uploadVideoCategory === cat.id ||
                           (cat.id === 'Runway' && uploadVideoCategory === 'Modelos') ||
@@ -17648,13 +17985,19 @@ export default function CastingLiveSection({
                                 }
                               }
                             }}
-                            className={`px-4.5 py-2 border rounded-full text-[11px] font-black tracking-wide transition-all duration-300 cursor-pointer text-center flex items-center gap-1 shrink-0 transform ${
-                              isNormalizedActive 
-                                ? cat.activeBg + " scale-105" 
-                                : cat.bg + " hover:scale-[1.03] hover:border-rose-200/50 hover:bg-rose-50/20 opacity-90 hover:opacity-100"
+                            className={`custom-bg px-4 py-2 rounded-full text-[12.5px] font-bold tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 shrink-0 border-[1.5px] ${
+                              isNormalizedActive
+                                ? 'bg-gradient-to-b from-[#ff2c90] via-[#e2046b] to-[#ab004c] text-white border-[#d4af37] shadow-[0_6px_16px_rgba(226,4,107,0.34),inset_0_1px_1px_rgba(255,255,255,0.55)] scale-[1.03]'
+                                : `bg-gradient-to-b ${cat.softTint} shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-[#c89d54] hover:scale-[1.02]`
                             }`}
                           >
-                            {cat.label}
+                            {cat.id === 'Runway' ? (
+                              <Video className={`w-4 h-4 shrink-0 ${isNormalizedActive ? 'text-white fill-white' : 'text-[#c20e5c]'}`} />
+                            ) : (
+                              <span className="text-sm leading-none shrink-0">{cat.icon}</span>
+                            )}
+                            <span>{cat.label}</span>
+                            <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isNormalizedActive ? 'text-white stroke-[2.5]' : 'text-[#a86a1f] stroke-[2.5]'}`} />
                           </button>
                         );
                       })}
@@ -17663,7 +18006,8 @@ export default function CastingLiveSection({
                     {/* Right scroll/next button */}
                     <button
                       type="button"
-                      className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 flex items-center justify-center text-[#be185d] border-0 outline-none cursor-pointer transition shrink-0 active:scale-90 shadow-sm"
+                      aria-label="Siguiente categoría"
+                      className="custom-bg w-9 h-9 rounded-full bg-gradient-to-b from-white to-[#fff5f8] border-[1.5px] border-[#c89d54] hover:border-[#b08335] flex items-center justify-center text-[#9c6419] cursor-pointer transition shrink-0 hover:scale-105 active:scale-90 shadow-[0_3px_10px_rgba(184,134,45,0.18)]"
                       onClick={() => {
                         const order = ['Fashion', 'Finanzas', 'Runway', 'Backstage', 'Jewellery', 'Casting', 'Fitnes', 'Beauty', 'Influencer', 'Luxury', 'Interview'] as const;
                         const currentIdx = order.indexOf(
@@ -17672,7 +18016,7 @@ export default function CastingLiveSection({
                         const nextIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % order.length;
                         const nextCat = order[nextIdx];
                         setUploadVideoCategory(nextCat);
-                        
+
                         if (categoryUploadScrollRef.current) {
                           const activeEl = categoryUploadScrollRef.current.children[nextIdx] as HTMLElement;
                           if (activeEl) {
@@ -17684,56 +18028,151 @@ export default function CastingLiveSection({
                         }
                       }}
                     >
-                      <svg className="w-4 h-4 stroke-current" fill="none" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
+                      <ChevronRight className="w-4 h-4 stroke-[2.75]" />
                     </button>
                   </div>
 
-                  {/* Active Channel Description Card */}
+                  {/* Active Channel Gold-Framed Card */}
                   {(() => {
                     const rawKey = uploadVideoCategory && uploadVideoCategory !== 'Todos' ? uploadVideoCategory : 'Runway';
                     const activeKey = rawKey === 'Modelos' ? 'Runway' : rawKey === 'BackStage' ? 'Backstage' : rawKey === 'Investors' ? 'Jewellery' : rawKey;
                     const activeInfo = CHANNEL_DESCRIPTIONS[activeKey] || CHANNEL_DESCRIPTIONS['Runway'];
-                    
+                    const isSubscribed = channelSubscribedMap[activeKey] !== false;
+
+                    const channelThumbMap: Record<string, string> = {
+                      Runway: '/assets/aistudio/runway_couture_thumbnail.webp',
+                      Fashion: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=640&q=80',
+                      Finanzas: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=640&q=80',
+                      Backstage: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=640&q=80',
+                      Jewellery: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=640&q=80',
+                      Casting: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=640&q=80',
+                      Fitnes: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=640&q=80',
+                      Beauty: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=640&q=80',
+                      Influencer: 'https://images.unsplash.com/photo-1483985988635-f6777144b041?auto=format&fit=crop&w=640&q=80',
+                      Luxury: 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=640&q=80',
+                      Interview: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=640&q=80'
+                    };
+                    const activeThumb = channelThumbMap[activeKey] || '/assets/aistudio/runway_couture_thumbnail.webp';
+
                     return (
-                      <div className="space-y-2 mt-1">
-                        {/* Active channel info banner */}
-                        <div className={`p-3.5 rounded-2xl border transition-all duration-300 text-left ${activeInfo.bg} ${activeInfo.border} shadow-2xs space-y-1.5`}>
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-base sm:text-lg">{activeInfo.icon}</span>
-                              <span className={`text-xs font-black uppercase tracking-wider ${activeInfo.text}`}>
-                                Canal {activeInfo.title}
+                      <div className="relative z-10 space-y-2.5">
+                        <div className="relative overflow-hidden rounded-2xl border-[1.5px] border-[#c89d54] bg-gradient-to-b from-[#fffdfd] via-[#fff8fb] to-[#fff1f6] p-4 sm:p-5 shadow-[0_8px_24px_rgba(184,134,45,0.12)] text-left">
+                          {/* Inner Card Top Header */}
+                          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-[#efe0e6]">
+                            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                              {/* Gold 3D Crown Icon */}
+                              <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 drop-shadow-[0_2px_4px_rgba(184,134,45,0.35)]" viewBox="0 0 36 28" fill="none">
+                                <defs>
+                                  <linearGradient id="runwayGoldCrown" x1="0" y1="0" x2="36" y2="28" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stopColor="#fff0b3" />
+                                    <stop offset="45%" stopColor="#d4a045" />
+                                    <stop offset="100%" stopColor="#8d5c16" />
+                                  </linearGradient>
+                                </defs>
+                                <path d="M4 22L2 8L11 15L18 4L25 15L34 8L32 22H4Z" fill="url(#runwayGoldCrown)" stroke="#7a4c10" strokeWidth="1.2" strokeLinejoin="round" />
+                                <rect x="4" y="23" width="28" height="3" rx="1.5" fill="url(#runwayGoldCrown)" stroke="#7a4c10" strokeWidth="1" />
+                                <circle cx="2" cy="7" r="1.8" fill="#ffe794" stroke="#8d5c16" strokeWidth="0.9" />
+                                <circle cx="18" cy="3" r="2" fill="#ffe794" stroke="#8d5c16" strokeWidth="0.9" />
+                                <circle cx="34" cy="7" r="1.8" fill="#ffe794" stroke="#8d5c16" strokeWidth="0.9" />
+                              </svg>
+
+                              <div className="h-5 w-[1.5px] bg-gradient-to-b from-[#e8c67c] via-[#b8842a] to-[#e8c67c] shrink-0" />
+
+                              <span className="font-serif text-sm sm:text-base font-medium uppercase tracking-wider text-[#171717]">
+                                CANAL {activeInfo.title}
                               </span>
-                              <span className="text-[9.5px] bg-white/90 border border-slate-200/80 px-2 py-0.5 rounded-full text-slate-700 font-bold shadow-2xs">
-                                Descripción de contenido
-                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => setChannelSubscribedMap(prev => ({ ...prev, [activeKey]: !isSubscribed }))}
+                                className={`custom-bg px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all duration-200 border shadow-2xs active:scale-95 ${
+                                  isSubscribed
+                                    ? 'bg-[#ffd6e7] border-[#f4a6c8] text-[#1a1a1a] hover:bg-[#ffc6de]'
+                                    : 'bg-white border-[#dcb5c6] text-[#7c234d] hover:bg-[#fff4f8]'
+                                }`}
+                              >
+                                <Check className={`w-3.5 h-3.5 shrink-0 stroke-[3] ${isSubscribed ? 'text-[#520a2c]' : 'text-[#b80d57]'}`} />
+                                <span>{isSubscribed ? 'suscripción a este canal' : 'suscribirme a este canal'}</span>
+                              </button>
                             </div>
+
                             <button
                               type="button"
-                              onClick={() => setShowAllChannelGuide(!showAllChannelGuide)}
-                              className="text-[10px] text-rose-600 hover:text-rose-800 font-extrabold underline bg-transparent border-0 cursor-pointer flex items-center gap-1 shrink-0"
+                              onClick={() => setPreviewLatestChannelKey(activeKey)}
+                              className="custom-bg bg-transparent border-0 p-0 cursor-pointer flex items-center gap-1.5 text-[12px] sm:text-[13px] font-medium text-[#e2046b] hover:text-[#b00050] border-b border-[#e2046b] pb-0.5 transition ml-auto shrink-0"
                             >
-                              <span>{showAllChannelGuide ? 'Ocultar guía' : 'Ver todos los canales 📋'}</span>
+                              <span>Ver último vídeo</span>
+                              <Play className="w-3 h-3 fill-[#e2046b] text-[#e2046b]" />
                             </button>
                           </div>
-                          <p className="text-[11.5px] text-slate-700 leading-relaxed font-semibold m-0">
-                            {activeInfo.desc}
-                          </p>
+
+                          {/* Inner Card Body: Gold-Framed 16:9 Thumbnail + Editorial Description */}
+                          <div className="relative z-10 grid grid-cols-1 md:grid-cols-[230px_1fr] lg:grid-cols-[255px_1fr] gap-4 sm:gap-5 items-center pt-3.5 pb-3">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewLatestChannelKey(activeKey)}
+                              aria-label={`Reproducir último vídeo de Canal ${activeInfo.title}`}
+                              className="custom-bg relative aspect-video w-full rounded-xl overflow-hidden border-[1.5px] border-[#c89d54] shadow-[0_6px_18px_rgba(0,0,0,0.16)] group cursor-pointer p-0 bg-black shrink-0"
+                            >
+                              <img
+                                src={activeThumb}
+                                alt={`Canal ${activeInfo.title}`}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/assets/aistudio/runway_couture_thumbnail.webp';
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                                <span className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-xs border-2 border-white/95 flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
+                                  <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+                                </span>
+                              </div>
+                            </button>
+
+                            <p className="text-[12.5px] sm:text-[13.5px] text-[#1f1f1f] leading-relaxed font-normal m-0 pb-6 md:pb-8 pr-1 sm:pr-12">
+                              {activeInfo.desc}
+                            </p>
+                          </div>
+
+                          {/* Decorative Bottom-Right Pink Satin Ribbon & Pink Diamond */}
+                          <div className="pointer-events-none select-none absolute bottom-0 right-0 w-72 sm:w-80 h-16 overflow-hidden">
+                            <svg className="w-full h-full" viewBox="0 0 320 64" preserveAspectRatio="none">
+                              <defs>
+                                <linearGradient id="pinkSilkWaveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor="#ff94c2" />
+                                  <stop offset="50%" stopColor="#f759a0" />
+                                  <stop offset="100%" stopColor="#e21e78" />
+                                </linearGradient>
+                                <linearGradient id="goldSilkTrim" x1="0%" y1="0%" x2="100%" y2="0%">
+                                  <stop offset="0%" stopColor="#b8842a" />
+                                  <stop offset="50%" stopColor="#ffe794" />
+                                  <stop offset="100%" stopColor="#c89d54" />
+                                </linearGradient>
+                              </defs>
+                              <path d="M18,64 C72,42 126,38 188,52 C238,63 272,22 320,6 L320,64 Z" fill="url(#pinkSilkWaveGrad)" opacity="0.92" />
+                              <path d="M18,64 C72,42 126,38 188,52 C238,63 272,22 320,6" fill="none" stroke="url(#goldSilkTrim)" strokeWidth="2.2" />
+                              <path d="M96,64 C150,48 212,48 264,58 C290,62 306,46 320,38 L320,64 Z" fill="#d91670" opacity="0.5" />
+                            </svg>
+                            <img
+                              src="/assets/aistudio/Diamante_rosa_brillante_transparente.webp"
+                              alt=""
+                              aria-hidden="true"
+                              className="absolute bottom-1 right-4 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-[0_4px_10px_rgba(226,4,107,0.32)]"
+                            />
+                          </div>
                         </div>
 
-                        {/* Expandable guide showing all 10 non-repeated channel descriptions */}
+                        {/* Expandable guide showing all non-repeated channel descriptions */}
                         {showAllChannelGuide && (
-                          <div className="bg-white border border-rose-200/90 rounded-2xl p-3.5 space-y-3 animate-fade-in text-left shadow-md">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                              <span className="text-[10.5px] font-black uppercase text-rose-600 tracking-wider font-mono flex items-center gap-1.5">
-                                <span>📋</span> Guía completa de publicación por canal ({CANONICAL_CHANNELS.length} canales)
+                          <div className="bg-white/95 border border-[#e6b8cc] rounded-2xl p-3.5 space-y-3 animate-fade-in text-left shadow-md">
+                            <div className="flex items-center justify-between border-b border-rose-100 pb-2">
+                              <span className="text-[10.5px] font-black uppercase text-[#c20e5c] tracking-wider font-serif flex items-center gap-1.5">
+                                <span>💎</span> Guía completa de categorías destacadas ({CANONICAL_CHANNELS.length} canales)
                               </span>
                               <button
                                 type="button"
                                 onClick={() => setShowAllChannelGuide(false)}
-                                className="text-[10px] text-slate-400 hover:text-slate-600 font-bold bg-transparent border-0 cursor-pointer"
+                                className="custom-bg text-[11px] text-slate-500 hover:text-slate-800 font-bold bg-transparent border-0 cursor-pointer"
                               >
                                 ✕
                               </button>
@@ -17750,8 +18189,8 @@ export default function CastingLiveSection({
                                     onClick={() => setUploadVideoCategory(chKey as any)}
                                     className={`p-3 rounded-xl border transition cursor-pointer flex flex-col gap-1 text-left ${
                                       isCurrent
-                                        ? `${info.bg} ${info.border} ring-2 ring-rose-400/50 shadow-2xs`
-                                        : 'bg-slate-50/70 border-slate-200/80 hover:bg-slate-100/90'
+                                        ? 'bg-gradient-to-r from-[#fff0f6] to-[#ffe4ef] border-[#c89d54] ring-1 ring-[#e2046b]/30 shadow-2xs'
+                                        : 'bg-slate-50/70 border-slate-200/80 hover:bg-rose-50/40'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between">
@@ -17760,7 +18199,7 @@ export default function CastingLiveSection({
                                         <span>Canal {info.title}</span>
                                       </span>
                                       {isCurrent && (
-                                        <span className="text-[9px] bg-[#fe2c55] text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        <span className="text-[9px] bg-[#e2046b] text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                                           Seleccionado
                                         </span>
                                       )}
@@ -17778,536 +18217,744 @@ export default function CastingLiveSection({
                     );
                   })()}
                 </div>
+                </div>
 
-                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Detalles</h4>
-                
-                {/* Description Field */}
-                <div className="space-y-1.5 relative">
-                  <div className="flex justify-between items-center">
-                    <label className="block text-xs font-black text-slate-800">Descripción</label>
-                    <span className="text-[10px] text-slate-400 font-bold font-mono">{uploadDescription.length}/4000</span>
+                {/* === DETALLES DE PUBLICACIÓN — LUXURY FASHION FINANCES EDITION === */}
+                <div className="relative overflow-hidden rounded-3xl border border-[#eed6e0] bg-gradient-to-b from-[#fffcfd] via-[#fff8fb] to-[#fff4f9] p-4 sm:p-6 shadow-[0_12px_38px_rgba(219,39,119,0.08)] space-y-5 text-left">
+                  {/* Top Decorative Pink Silk Wave & Gold Curve + Clapperboard */}
+                  <div className="pointer-events-none select-none absolute top-0 left-0 right-0 h-24 overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 900 100" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="topSilkRibbonFF" x1="0%" y1="0%" x2="100%" y2="20%">
+                          <stop offset="0%" stopColor="#fff8fb" stopOpacity="0.2" />
+                          <stop offset="55%" stopColor="#ffd8ea" stopOpacity="0.6" />
+                          <stop offset="100%" stopColor="#f99ec6" stopOpacity="0.82" />
+                        </linearGradient>
+                        <linearGradient id="topGoldLineFF" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#e8c882" stopOpacity="0.15" />
+                          <stop offset="50%" stopColor="#c89d54" stopOpacity="0.85" />
+                          <stop offset="100%" stopColor="#a06f24" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M260,0 C420,14 540,68 720,44 C800,32 855,10 900,0 L900,82 C760,92 610,60 440,36 C360,24 300,12 220,0 Z" fill="url(#topSilkRibbonFF)" />
+                      <path d="M295,6 C470,42 640,95 900,72" fill="none" stroke="url(#topGoldLineFF)" strokeWidth="1.6" />
+                    </svg>
+                    {/* Gold 3D Clapperboard Decoration Top Right */}
+                    <svg className="hidden sm:block absolute top-2 right-5 w-16 h-14 drop-shadow-[0_6px_12px_rgba(141,92,22,0.28)]" viewBox="0 0 80 68" fill="none">
+                      <defs>
+                        <linearGradient id="goldClapperFace" x1="0" y1="0" x2="80" y2="68" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="#fff4ce" />
+                          <stop offset="45%" stopColor="#d9aa56" />
+                          <stop offset="100%" stopColor="#94621a" />
+                        </linearGradient>
+                      </defs>
+                      <g transform="rotate(-11 40 34)">
+                        <rect x="10" y="20" width="58" height="40" rx="5" fill="url(#goldClapperFace)" stroke="#7a4c10" strokeWidth="1.4" />
+                        <path d="M10 18L66 10L68 20H10V18Z" fill="url(#goldClapperFace)" stroke="#7a4c10" strokeWidth="1.3" />
+                        <path d="M18 11L24 20M31 10L37 20M44 9L50 20M57 8L63 20" stroke="#7a4c10" strokeWidth="1.8" />
+                        <rect x="16" y="26" width="46" height="28" rx="3" fill="#fffaf0" fillOpacity="0.65" />
+                        <polygon points="34,32 34,48 48,40" fill="#9a6820" />
+                      </g>
+                    </svg>
                   </div>
-                  <div className="border border-slate-250 hover:border-slate-305 focus-within:border-[#fe2c55] rounded-xl p-3 bg-white transition space-y-2">
-                    <textarea
-                      required
-                      rows={3}
-                      maxLength={4000}
-                      placeholder="Escribe la descripción de tu video o añade hashtags importantes..."
-                      value={uploadDescription}
-                      onChange={(e) => setUploadDescription(e.target.value)}
-                      className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none resize-none leading-relaxed font-semibold"
-                    />
-                    
-                    {/* Action tools */}
-                    <div className="flex items-center gap-3 pt-2 border-t border-slate-100 text-[11px] font-bold text-slate-500">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowHashtagPicker(prev => !prev);
-                          setShowMentionPicker(false);
-                        }}
-                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer font-black border text-xs flex items-center gap-1 ${
-                          showHashtagPicker
-                            ? 'bg-[#fe2c55] text-white border-[#fe2c55] shadow-xs'
-                            : 'bg-rose-50/80 text-[#fe2c55] hover:bg-rose-100 border-rose-200/80'
-                        }`}
-                      >
-                        <span># HASHTAGS</span>
-                        <span className="text-[9px] opacity-80">{showHashtagPicker ? '▲' : '▼'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowMentionPicker(prev => !prev);
-                          setShowHashtagPicker(false);
-                        }}
-                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer font-black border text-xs flex items-center gap-1 ${
-                          showMentionPicker
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                            : 'bg-indigo-50/80 text-indigo-600 hover:bg-indigo-100 border-indigo-200/80'
-                        }`}
-                      >
-                        <span>@ MENCIONAR</span>
-                        <span className="text-[9px] opacity-80">{showMentionPicker ? '▲' : '▼'}</span>
-                      </button>
+
+                  {/* Brand Mark: FASHION FINANCES */}
+                  <div className="relative z-10 flex items-center gap-3 pt-1">
+                    <div className="h-9 w-[1.5px] bg-gradient-to-b from-[#e8c67c] via-[#b8842a] to-[#e8c67c] shrink-0" />
+                    <div className="flex flex-col leading-none">
+                      <div className="font-serif text-lg sm:text-xl font-medium tracking-wider uppercase flex items-center gap-1.5">
+                        <span className="text-[#171717]">FASHION</span>
+                        <span className="text-[#ec0075]">FINANCES</span>
+                      </div>
+                      <span className="text-[9px] font-semibold tracking-[0.26em] uppercase text-[#5c4a52] mt-1">
+                        DIGITAL • FASHION • FINANCE
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Main Page Title Row */}
+                  <div className="relative z-10 flex items-center gap-3.5 pb-3 border-b border-[#d4af37]/50">
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-b from-white to-[#fff5f8] border-[1.5px] border-[#c89d54] shadow-[0_3px_12px_rgba(184,134,45,0.2)] flex items-center justify-center shrink-0">
+                      <Play className="w-4 h-4 fill-[#9e6820] text-[#9e6820] ml-0.5" />
+                    </div>
+                    <h4 className="font-serif text-xl sm:text-2xl font-medium text-[#141414] tracking-wide m-0">
+                      Detalles de Publicación
+                    </h4>
+                  </div>
+
+                  {/* CARD 1: Descripción */}
+                  <div className="relative z-10 rounded-2xl border border-[#ebd2dc] bg-gradient-to-b from-[#fffdfd] via-[#fff9fb] to-[#fff4f8] shadow-[0_6px_20px_rgba(219,39,119,0.05)] overflow-hidden">
+                    {/* Pill Tab Header */}
+                    <div className="flex items-center justify-between pr-4">
+                      <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#fff3f8] to-[#ffe6f0] border-b border-r border-[#f2c8d8] rounded-br-3xl px-4 py-2 shadow-2xs">
+                        <span className="w-6 h-6 rounded-md bg-gradient-to-b from-[#ff2c8d] to-[#c9005c] text-white flex items-center justify-center shadow-xs shrink-0">
+                          <FileText className="w-3.5 h-3.5" />
+                        </span>
+                        <label className="font-serif text-sm sm:text-base font-medium text-[#171717] m-0">
+                          Descripción
+                        </label>
+                      </div>
+                      <span className="text-xs text-[#2d2529] font-medium font-sans">
+                        {uploadDescription.length} / 4000
+                      </span>
                     </div>
 
-                    {/* Hashtags Picker Panel */}
-                    {showHashtagPicker && (
-                      <div className="bg-rose-50/90 border border-rose-200 p-3 rounded-xl space-y-2 animate-fade-in text-left mt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider font-mono">
-                            # Hashtags Populares de Moda y Tendencia
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setShowHashtagPicker(false)}
-                            className="text-[10px] text-slate-400 hover:text-slate-600 font-bold bg-transparent border-0 cursor-pointer"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-1.5">
-                          {[
-                            'fashion', 'models', 'castinglive', 'fashionfinances', 'catwalk',
-                            'reels', 'investors', 'runway', 'backstage', 'streetwear',
-                            'couture', 'viral', 'topmodel', 'style', 'kyliejenner'
-                          ].map((tag) => {
-                            const fullTag = `#${tag}`;
-                            const isSelected = uploadDescription.toLowerCase().includes(fullTag.toLowerCase());
-                            return (
-                              <button
-                                key={tag}
-                                type="button"
-                                onClick={() => {
-                                  if (isSelected) {
-                                    const reg = new RegExp(`\\s*#${tag}\\b`, 'gi');
-                                    setUploadDescription(prev => prev.replace(reg, '').trim());
-                                  } else {
-                                    setUploadDescription(prev => {
-                                      const trimmed = prev.trim();
-                                      return trimmed ? `${trimmed} ${fullTag}` : fullTag;
-                                    });
-                                  }
-                                }}
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-black transition cursor-pointer border ${
-                                  isSelected
-                                    ? 'bg-[#fe2c55] text-white border-[#fe2c55] shadow-xs'
-                                    : 'bg-white text-rose-600 hover:bg-rose-100 border-rose-200'
-                                }`}
-                              >
-                                {isSelected ? `✓ ${fullTag}` : `+ ${fullTag}`}
-                              </button>
-                            );
-                          })}
-                        </div>
+                    <div className="p-4 pt-3 space-y-3">
+                      <div className="border border-[#e3cad4] hover:border-[#d49db4] focus-within:border-[#d90466] rounded-xl p-3 bg-white transition shadow-2xs">
+                        <textarea
+                          required
+                          rows={3}
+                          maxLength={4000}
+                          placeholder="Escribe la descripción de tu video o añade hashtags importantes..."
+                          value={uploadDescription}
+                          onChange={(e) => setUploadDescription(e.target.value)}
+                          className="w-full bg-transparent text-xs sm:text-[13px] text-[#1f1f1f] placeholder-slate-400 focus:outline-none resize-none leading-relaxed font-medium"
+                        />
+                      </div>
 
-                        <div className="flex gap-2 pt-1">
-                          <input
-                            type="text"
-                            placeholder="Añadir hashtag personalizado (ej. #tendencia)..."
-                            value={customHashtagInput}
-                            onChange={(e) => setCustomHashtagInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
+                      {/* Action Pills: # HASHTAGS & @ MENCIONAR */}
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowHashtagPicker(prev => !prev);
+                            setShowMentionPicker(false);
+                          }}
+                          className={`custom-bg px-4 py-1.5 rounded-full transition cursor-pointer font-black border text-[11px] tracking-wide flex items-center gap-1.5 shadow-xs ${
+                            showHashtagPicker
+                              ? 'bg-gradient-to-b from-[#ff2c8d] to-[#d90466] text-white border-[#c80058]'
+                              : 'bg-gradient-to-b from-[#fff4f8] to-[#ffdde9] text-[#d90466] hover:from-[#ffe9f2] hover:to-[#ffd0e2] border-[#f2aec8]'
+                          }`}
+                        >
+                          <span># HASHTAGS</span>
+                          <span className="text-[9px] opacity-85">{showHashtagPicker ? '▲' : '▼'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowMentionPicker(prev => !prev);
+                            setShowHashtagPicker(false);
+                          }}
+                          className={`custom-bg px-4 py-1.5 rounded-full transition cursor-pointer font-black border text-[11px] tracking-wide flex items-center gap-1.5 shadow-xs ${
+                            showMentionPicker
+                              ? 'bg-gradient-to-b from-[#3b2f4a] to-[#1a1423] text-white border-[#1a1423]'
+                              : 'bg-gradient-to-b from-white to-[#f6f1f4] text-[#171717] hover:bg-[#fdf7f9] border-[#dcccd3]'
+                          }`}
+                        >
+                          <span>@ MENCIONAR</span>
+                          <span className="text-[9px] opacity-85">{showMentionPicker ? '▲' : '▼'}</span>
+                        </button>
+                      </div>
+
+                      {/* Hashtags Picker Panel */}
+                      {showHashtagPicker && (
+                        <div className="bg-rose-50/90 border border-rose-200 p-3 rounded-xl space-y-2 animate-fade-in text-left mt-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider font-mono">
+                              # Hashtags Populares de Moda y Tendencia
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShowHashtagPicker(false)}
+                              className="custom-bg text-[10px] text-slate-500 hover:text-slate-700 font-bold bg-transparent border-0 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              'fashion', 'models', 'castinglive', 'fashionfinances', 'catwalk',
+                              'reels', 'investors', 'runway', 'backstage', 'streetwear',
+                              'couture', 'viral', 'topmodel', 'style', 'kyliejenner'
+                            ].map((tag) => {
+                              const fullTag = `#${tag}`;
+                              const isSelected = uploadDescription.toLowerCase().includes(fullTag.toLowerCase());
+                              return (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      const reg = new RegExp(`\\s*#${tag}\\b`, 'gi');
+                                      setUploadDescription(prev => prev.replace(reg, '').trim());
+                                    } else {
+                                      setUploadDescription(prev => {
+                                        const trimmed = prev.trim();
+                                        return trimmed ? `${trimmed} ${fullTag}` : fullTag;
+                                      });
+                                    }
+                                  }}
+                                  className={`custom-bg px-2.5 py-1 rounded-full text-[10px] font-black transition cursor-pointer border ${
+                                    isSelected
+                                      ? 'bg-[#d90466] text-white border-[#d90466] shadow-xs'
+                                      : 'bg-white text-[#c20e5c] hover:bg-rose-100 border-rose-200'
+                                  }`}
+                                >
+                                  {isSelected ? `✓ ${fullTag}` : `+ ${fullTag}`}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="flex gap-2 pt-1">
+                            <input
+                              type="text"
+                              placeholder="Añadir hashtag personalizado (ej. #tendencia)..."
+                              value={customHashtagInput}
+                              onChange={(e) => setCustomHashtagInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  let tag = customHashtagInput.trim();
+                                  if (tag) {
+                                    if (!tag.startsWith('#')) tag = `#${tag}`;
+                                    setUploadDescription(prev => prev.trim() ? `${prev.trim()} ${tag}` : tag);
+                                    setCustomHashtagInput('');
+                                  }
+                                }
+                              }}
+                              className="flex-1 bg-white border border-slate-250 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
                                 let tag = customHashtagInput.trim();
                                 if (tag) {
                                   if (!tag.startsWith('#')) tag = `#${tag}`;
                                   setUploadDescription(prev => prev.trim() ? `${prev.trim()} ${tag}` : tag);
                                   setCustomHashtagInput('');
                                 }
-                              }
-                            }}
-                            className="flex-1 bg-white border border-slate-250 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-500"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              let tag = customHashtagInput.trim();
-                              if (tag) {
-                                if (!tag.startsWith('#')) tag = `#${tag}`;
-                                setUploadDescription(prev => prev.trim() ? `${prev.trim()} ${tag}` : tag);
-                                setCustomHashtagInput('');
-                              }
-                            }}
-                            className="px-3 py-1.5 bg-[#fe2c55] text-white font-black text-xs rounded-lg hover:bg-rose-600 transition cursor-pointer border-0"
-                          >
-                            Insertar #
-                          </button>
+                              }}
+                              className="custom-bg px-3 py-1.5 bg-[#d90466] text-white font-black text-xs rounded-lg hover:bg-rose-700 transition cursor-pointer border-0"
+                            >
+                              Insertar #
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Mention Picker Panel */}
-                    {showMentionPicker && (
-                      <div className="bg-indigo-50/90 border border-indigo-200 p-3 rounded-xl space-y-2 animate-fade-in text-left mt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-indigo-800 tracking-wider font-mono">
-                            @ Mencionar Creadores y Modelos
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setShowMentionPicker(false)}
-                            className="text-[10px] text-slate-400 hover:text-slate-600 font-bold bg-transparent border-0 cursor-pointer"
-                          >
-                            ✕
-                          </button>
-                        </div>
+                      {/* Mention Picker Panel */}
+                      {showMentionPicker && (
+                        <div className="bg-indigo-50/90 border border-indigo-200 p-3 rounded-xl space-y-2 animate-fade-in text-left mt-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-indigo-800 tracking-wider font-mono">
+                              @ Mencionar Creadores y Modelos
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShowMentionPicker(false)}
+                              className="custom-bg text-[10px] text-slate-500 hover:text-slate-700 font-bold bg-transparent border-0 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
 
-                        <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
-                          {[
-                            'kyliejenner', 'fashionfinances', 'adrianalima', 'candiceswanepoel',
-                            'victorgraciaweb', 'alessandraambrosio', 'shambali', 'gigihadid', 'bellahadid',
-                            ...models.filter(m => m.username).map(m => m.username as string)
-                          ].filter((v, idx, self) => self.indexOf(v) === idx).map((username) => {
-                            const fullMention = `@${username}`;
-                            const isSelected = uploadDescription.toLowerCase().includes(fullMention.toLowerCase());
-                            return (
-                              <button
-                                key={username}
-                                type="button"
-                                onClick={() => {
-                                  if (isSelected) {
-                                    const reg = new RegExp(`\\s*@${username}\\b`, 'gi');
-                                    setUploadDescription(prev => prev.replace(reg, '').trim());
-                                  } else {
-                                    setUploadDescription(prev => {
-                                      const trimmed = prev.trim();
-                                      return trimmed ? `${trimmed} ${fullMention}` : fullMention;
-                                    });
+                          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                            {[
+                              'kyliejenner', 'fashionfinances', 'adrianalima', 'candiceswanepoel',
+                              'victorgraciaweb', 'alessandraambrosio', 'shambali', 'gigihadid', 'bellahadid',
+                              ...models.filter(m => m.username).map(m => m.username as string)
+                            ].filter((v, idx, self) => self.indexOf(v) === idx).map((username) => {
+                              const fullMention = `@${username}`;
+                              const isSelected = uploadDescription.toLowerCase().includes(fullMention.toLowerCase());
+                              return (
+                                <button
+                                  key={username}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      const reg = new RegExp(`\\s*@${username}\\b`, 'gi');
+                                      setUploadDescription(prev => prev.replace(reg, '').trim());
+                                    } else {
+                                      setUploadDescription(prev => {
+                                        const trimmed = prev.trim();
+                                        return trimmed ? `${trimmed} ${fullMention}` : fullMention;
+                                      });
+                                    }
+                                  }}
+                                  className={`custom-bg px-2.5 py-1 rounded-full text-[10px] font-black transition cursor-pointer border ${
+                                    isSelected
+                                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                      : 'bg-white text-indigo-700 hover:bg-indigo-100 border-indigo-200'
+                                  }`}
+                                >
+                                  {isSelected ? `✓ ${fullMention}` : `+ ${fullMention}`}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="flex gap-2 pt-1">
+                            <input
+                              type="text"
+                              placeholder="Mencionar usuario (ej. @nombre_usuario)..."
+                              value={customMentionInput}
+                              onChange={(e) => setCustomMentionInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  let handle = customMentionInput.trim();
+                                  if (handle) {
+                                    if (!handle.startsWith('@')) handle = `@${handle}`;
+                                    setUploadDescription(prev => prev.trim() ? `${prev.trim()} ${handle}` : handle);
+                                    setCustomMentionInput('');
                                   }
-                                }}
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-black transition cursor-pointer border ${
-                                  isSelected
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                                    : 'bg-white text-indigo-700 hover:bg-indigo-100 border-indigo-200'
-                                }`}
-                              >
-                                {isSelected ? `✓ ${fullMention}` : `+ ${fullMention}`}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        <div className="flex gap-2 pt-1">
-                          <input
-                            type="text"
-                            placeholder="Mencionar usuario (ej. @nombre_usuario)..."
-                            value={customMentionInput}
-                            onChange={(e) => setCustomMentionInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
+                                }
+                              }}
+                              className="flex-1 bg-white border border-slate-250 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
                                 let handle = customMentionInput.trim();
                                 if (handle) {
                                   if (!handle.startsWith('@')) handle = `@${handle}`;
                                   setUploadDescription(prev => prev.trim() ? `${prev.trim()} ${handle}` : handle);
                                   setCustomMentionInput('');
                                 }
-                              }
-                            }}
-                            className="flex-1 bg-white border border-slate-250 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              let handle = customMentionInput.trim();
-                              if (handle) {
-                                if (!handle.startsWith('@')) handle = `@${handle}`;
-                                setUploadDescription(prev => prev.trim() ? `${prev.trim()} ${handle}` : handle);
-                                setCustomMentionInput('');
-                              }
-                            }}
-                            className="px-3 py-1.5 bg-indigo-600 text-white font-black text-xs rounded-lg hover:bg-indigo-700 transition cursor-pointer border-0"
-                          >
-                            Mencionar @
-                          </button>
+                              }}
+                              className="custom-bg px-3 py-1.5 bg-indigo-600 text-white font-black text-xs rounded-lg hover:bg-indigo-700 transition cursor-pointer border-0"
+                            >
+                              Mencionar @
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Ubicación Tag Selection Widget */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <label className="block text-xs font-black text-slate-800">Ubicación</label>
-                      <span className="text-slate-400 text-xs cursor-default">ⓘ</span>
+                      )}
                     </div>
-                    {uploadLocation && (
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          setUploadLocation('');
-                          setLocationSearchQuery('');
-                        }}
-                        className="text-[10px] text-rose-500 font-bold bg-transparent border-0 cursor-pointer"
-                      >
-                        Limpiar ubicación
-                      </button>
-                    )}
                   </div>
 
-                  {/* Location search box representation with custom global autocomplete capability */}
-                  <div className="relative z-30">
-                    <input
-                      type="text"
-                      placeholder="Busca y elige cualquier ciudad del mundo (ej. Sevilla, Paris, New York, Tokyo...)"
-                      value={locationSearchQuery === '' && uploadLocation !== '' ? uploadLocation : locationSearchQuery}
-                      onChange={(e) => {
-                        setLocationSearchQuery(e.target.value);
-                        setUploadLocation(e.target.value);
-                      }}
-                      className="w-full bg-slate-50 border border-slate-200 focus:border-[#fe2c55] focus:bg-white transition-all rounded-xl p-2.5 pl-9 text-xs focus:outline-none font-semibold text-slate-800"
-                    />
-                    <div className="absolute left-3 top-2.5 text-slate-400 select-none">
-                      {/* Search icon */}
-                      <svg className="w-4 h-4 text-slate-450" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  {/* CARD 2: Ubicación */}
+                  <div className="relative z-20 rounded-2xl border border-[#ebd2dc] bg-gradient-to-b from-[#fffdfd] via-[#fff9fb] to-[#fff4f8] shadow-[0_6px_20px_rgba(219,39,119,0.05)] overflow-visible">
+                    {/* Decorative Soft Pink Architectural Cityscape Top-Right */}
+                    <div className="pointer-events-none select-none absolute top-0 right-0 w-72 h-20 overflow-hidden rounded-tr-2xl opacity-55">
+                      <svg className="w-full h-full" viewBox="0 0 320 90" fill="none">
+                        <path d="M20,90 L20,58 L35,58 L35,44 L44,32 L52,44 L52,58 L66,58 L66,48 L92,48 L92,90 Z" fill="#f7c4d8" />
+                        <path d="M105,90 L105,40 L122,40 L122,22 L129,12 L136,22 L136,40 L152,40 L152,52 L175,52 L175,90 Z" fill="#f5b6cf" />
+                        <path d="M185,90 L185,34 L200,34 L200,18 L208,8 L216,18 L216,34 L238,34 L238,46 L262,46 L262,28 L278,28 L284,18 L290,28 L308,28 L308,90 Z" fill="#f8cade" />
                       </svg>
                     </div>
 
-                    {loadingLocations && (
-                      <div className="absolute right-3 top-3">
-                        <div className="w-3.5 h-3.5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                    {/* Pill Tab Header */}
+                    <div className="relative z-10 flex items-center justify-between pr-4">
+                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#fff3f8] to-[#ffe6f0] border-b border-r border-[#f2c8d8] rounded-br-3xl px-4 py-2 shadow-2xs">
+                        <MapPin className="w-4 h-4 text-[#d90466] fill-[#ffd2e4] shrink-0" />
+                        <label className="font-serif text-sm sm:text-base font-medium text-[#171717] m-0">Ubicación</label>
+                        <span className="w-4 h-4 rounded-full border border-[#d90466]/60 text-[#d90466] text-[10px] font-bold flex items-center justify-center leading-none" title="Añade la ciudad o lugar del rodaje">
+                          i
+                        </span>
                       </div>
-                    )}
+                      {uploadLocation && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadLocation('');
+                            setLocationSearchQuery('');
+                          }}
+                          className="custom-bg text-[11px] text-[#d90466] hover:text-[#a6004c] font-bold bg-white/90 px-2.5 py-1 rounded-full border border-[#f2c8d8] cursor-pointer shadow-2xs"
+                        >
+                          Limpiar ubicación
+                        </button>
+                      )}
+                    </div>
 
-                    {/* Dynamic Suggestions Dropdown */}
-                    {locationSuggestions.length > 0 && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-150 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100">
-                        {locationSuggestions.map((suggestion, index) => (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => {
-                              setUploadLocation(suggestion);
-                              setLocationSearchQuery(suggestion);
-                              setLocationSuggestions([]);
-                            }}
-                            className="w-full px-3 py-2 text-left text-xs text-slate-705 hover:bg-rose-50 hover:text-[#fe2c55] font-semibold cursor-pointer transition flex items-center gap-1.5"
-                          >
-                            <span>📍</span>
-                            <span>{suggestion}</span>
-                          </button>
-                        ))}
+                    <div className="relative z-20 p-4 pt-3 space-y-3">
+                      {/* Search input */}
+                      <div className="relative z-30">
+                        <input
+                          type="text"
+                          placeholder="Busca y elige cualquier ciudad del mundo (ej. Sevilla, Paris, New York, Tokyo...)"
+                          value={locationSearchQuery === '' && uploadLocation !== '' ? uploadLocation : locationSearchQuery}
+                          onChange={(e) => {
+                            setLocationSearchQuery(e.target.value);
+                            setUploadLocation(e.target.value);
+                          }}
+                          className="w-full bg-white border border-[#e3cad4] focus:border-[#d90466] transition-all rounded-full py-2.5 pl-10 pr-9 text-xs focus:outline-none font-medium text-[#1f1f1f] shadow-2xs"
+                        />
+                        <div className="absolute left-3.5 top-2.5 text-[#3a3034] select-none pointer-events-none">
+                          <Search className="w-4 h-4" />
+                        </div>
+
+                        {loadingLocations && (
+                          <div className="absolute right-3.5 top-3">
+                            <div className="w-3.5 h-3.5 border-2 border-[#d90466] border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+
+                        {locationSuggestions.length > 0 && (
+                          <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#ebd2dc] rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-rose-50">
+                            {locationSuggestions.map((suggestion, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => {
+                                  setUploadLocation(suggestion);
+                                  setLocationSearchQuery(suggestion);
+                                  setLocationSuggestions([]);
+                                }}
+                                className="custom-bg w-full px-3.5 py-2 text-left text-xs text-slate-700 hover:bg-rose-50 hover:text-[#d90466] font-semibold cursor-pointer transition flex items-center gap-2 border-0 bg-white"
+                              >
+                                <MapPin className="w-3.5 h-3.5 text-[#d90466] shrink-0" />
+                                <span>{suggestion}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* City Pills Bar + Más */}
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+                        {(showAllLocations ? LOCATION_SUGGESTIONS : LOCATION_SUGGESTIONS.slice(0, 5)).map((loc, index) => {
+                          const isSelected = uploadLocation === loc;
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => {
+                                setUploadLocation(loc);
+                                setLocationSearchQuery(loc);
+                                setLocationSuggestions([]);
+                              }}
+                              className={`custom-bg px-3 py-1 rounded-full border transition cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                                isSelected
+                                  ? 'bg-[#ffd8ea] border-[#d90466] text-[#9f0249] font-bold'
+                                  : 'bg-white hover:bg-[#fff4f8] border-[#e6ced8] text-[#2a2226]'
+                              }`}
+                            >
+                              <MapPin className="w-3 h-3 text-[#d90466] fill-[#d90466]/20 shrink-0" />
+                              <span>{loc}</span>
+                            </button>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setShowAllLocations(prev => !prev)}
+                          className="custom-bg px-3.5 py-1 rounded-full border border-[#e6ced8] bg-white hover:bg-[#fff4f8] hover:border-[#d90466] text-[#d90466] font-bold transition cursor-pointer shadow-2xs"
+                        >
+                          {showAllLocations ? 'Menos' : '+ Más'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Sevilla, Sevilla, Madrid, etc horizontally scrollable badgets bar */}
-                  <div className="relative">
-                    <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar text-[10px] font-bold text-slate-700">
-                      {LOCATION_SUGGESTIONS.map((loc, index) => {
-                        const isSelected = uploadLocation === loc;
-                        return (
+                  {/* CARD 3: Ajustes */}
+                  <div className="relative z-10 rounded-2xl border border-[#ebd2dc] bg-gradient-to-b from-[#fffdfd] via-[#fff9fb] to-[#fff4f8] shadow-[0_6px_20px_rgba(219,39,119,0.05)] overflow-hidden">
+                    {/* Pill Tab Header */}
+                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#fff3f8] to-[#ffe6f0] border-b border-r border-[#f2c8d8] rounded-br-3xl px-4 py-2 shadow-2xs">
+                      <Sliders className="w-4 h-4 text-[#d90466] shrink-0" />
+                      <h5 className="font-serif text-sm sm:text-base font-medium text-[#171717] m-0">Ajustes</h5>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-[84px_1fr] gap-4 items-center p-4 pt-3">
+                      {/* Left Decorative Gold/Rose Cinema Film Reel Panel */}
+                      <div className="hidden md:flex items-center justify-center h-full min-h-[168px] rounded-xl bg-gradient-to-b from-[#fff2f7] via-[#ffe2ee] to-[#ffd2e4] border border-[#f4c6d8] relative overflow-hidden">
+                        <svg className="w-20 h-28 -ml-6 drop-shadow-[2px_4px_8px_rgba(140,88,24,0.28)]" viewBox="0 0 90 110" fill="none">
+                          <defs>
+                            <linearGradient id="filmReelBronze" x1="0" y1="0" x2="90" y2="110" gradientUnits="userSpaceOnUse">
+                              <stop offset="0%" stopColor="#fff1cc" />
+                              <stop offset="50%" stopColor="#d19d4b" />
+                              <stop offset="100%" stopColor="#7a4c12" />
+                            </linearGradient>
+                          </defs>
+                          <circle cx="38" cy="54" r="38" fill="url(#filmReelBronze)" stroke="#704410" strokeWidth="1.5" />
+                          <circle cx="38" cy="54" r="30" fill="#2c1d13" fillOpacity="0.82" />
+                          <circle cx="38" cy="24" r="7" fill="#fff5e6" stroke="#c89542" strokeWidth="1.2" />
+                          <circle cx="38" cy="84" r="7" fill="#fff5e6" stroke="#c89542" strokeWidth="1.2" />
+                          <circle cx="14" cy="40" r="7" fill="#fff5e6" stroke="#c89542" strokeWidth="1.2" />
+                          <circle cx="62" cy="40" r="7" fill="#fff5e6" stroke="#c89542" strokeWidth="1.2" />
+                          <circle cx="14" cy="68" r="7" fill="#fff5e6" stroke="#c89542" strokeWidth="1.2" />
+                          <circle cx="62" cy="68" r="7" fill="#fff5e6" stroke="#c89542" strokeWidth="1.2" />
+                          <circle cx="38" cy="54" r="9" fill="url(#filmReelBronze)" stroke="#5c360b" strokeWidth="1.5" />
+                          <circle cx="38" cy="54" r="3.5" fill="#442506" />
+                        </svg>
+                      </div>
+
+                      {/* Controls Stack */}
+                      <div className="space-y-4">
+                        {/* Row A: Cuando publicar + Vista pública obligatoria */}
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1.5">
+                              <Globe className="w-4 h-4 text-[#2e2529]" />
+                              <span className="text-xs sm:text-[13px] font-bold text-[#171717]">Cuando publicar</span>
+                              <span className="w-3.5 h-3.5 rounded-full border border-slate-400 text-slate-500 text-[9px] font-bold flex items-center justify-center leading-none">i</span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-5 pl-5 select-none">
+                              <label className="flex items-center gap-2 text-xs font-semibold text-[#221c1f] cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="schedule"
+                                  checked={!schedulePublish}
+                                  onChange={() => setSchedulePublish(false)}
+                                  className="accent-[#e2046b] w-4 h-4 cursor-pointer"
+                                />
+                                <span>Ahora</span>
+                              </label>
+
+                              <label className="flex items-center gap-2 text-xs font-semibold text-[#221c1f] cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="schedule"
+                                  checked={schedulePublish}
+                                  onChange={() => setSchedulePublish(true)}
+                                  className="accent-[#e2046b] w-4 h-4 cursor-pointer"
+                                />
+                                <span className="flex items-center gap-1.5">
+                                  <span>Programación</span>
+                                  <svg className="w-3.5 h-3.5 text-[#d90466]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                    <circle cx="12" cy="13" r="8" />
+                                    <path strokeLinecap="round" d="M12 9v4l2.5 1.5M9 3h6" />
+                                  </svg>
+                                </span>
+                              </label>
+                            </div>
+
+                            {schedulePublish && (
+                              <div className="ml-5 p-3 bg-rose-50/60 border border-[#f2c8d8] rounded-xl space-y-1.5 animate-slide-down">
+                                <span className="text-[10px] font-extrabold text-[#d90466] uppercase tracking-wider block">Establecer fecha y hora</span>
+                                <input
+                                  type="datetime-local"
+                                  value={scheduleDateTime}
+                                  onChange={(e) => setScheduleDateTime(e.target.value)}
+                                  className="bg-white border border-[#e3cad4] rounded-lg p-1.5 text-xs focus:outline-none focus:border-[#d90466] text-slate-800 font-mono"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="inline-flex items-center gap-1.5 bg-[#effaf2] border border-[#b7e4c7] text-[#14532d] px-3 py-1.5 rounded-full text-[11px] font-semibold shadow-2xs shrink-0">
+                            <Globe className="w-3.5 h-3.5 text-[#15803d] shrink-0" />
+                            <span>Vista pública obligatoria para todos los vídeos</span>
+                            <Check className="w-3.5 h-3.5 text-[#15803d] stroke-[2.8] shrink-0" />
+                          </div>
+                        </div>
+
+                        {/* Row B: Quién puede ver esta publicación + HD Bronze Badge */}
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="space-y-2 flex-1 min-w-[230px]">
+                            <div className="flex items-center gap-1.5">
+                              <Globe className="w-4 h-4 text-[#2e2529]" />
+                              <label className="text-xs sm:text-[13px] font-bold text-[#171717] m-0">
+                                Quién puede ver esta publicación
+                              </label>
+                            </div>
+                            <div className="pl-5">
+                              <select
+                                value={uploadCategory}
+                                onChange={(e) => setUploadCategory(e.target.value as any)}
+                                className="w-full sm:max-w-xs bg-white border border-[#e3cad4] rounded-full px-4 py-2 text-xs focus:outline-none focus:border-[#d90466] font-semibold text-[#1f1f1f] shadow-2xs"
+                              >
+                                <option value="para-ti">🌍 Todo el mundo — Vista Pública (For you)</option>
+                                <option value="explorar">🌍 Vista Pública (Sección Explorar)</option>
+                                <option value="siguiendo">🌍 Vista Pública (Feed Siguiendo)</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* 3D Bronze HD Badge */}
+                          <div className="hidden sm:flex items-center justify-center px-2 select-none" aria-hidden="true">
+                            <span
+                              className="font-serif font-black text-2xl italic tracking-tight bg-gradient-to-b from-[#e8c67c] via-[#b8842a] to-[#6e460f] bg-clip-text text-transparent drop-shadow-[0_2px_2px_rgba(120,76,16,0.28)]"
+                            >
+                              HD
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Row C: Cargas en alta calidad */}
+                        <div className="flex items-center justify-between gap-3 pt-2 border-t border-[#f3e3ea] select-none">
+                          <div className="space-y-0.5 pr-2">
+                            <div className="flex items-center gap-1.5">
+                              <svg className="w-4 h-4 text-[#2e2529] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v5c0 4.5-3 8.3-7 9.9C8 19.3 5 15.5 5 11V6l7-3z" />
+                                <text x="7.5" y="14.5" fontSize="6.5" fontWeight="bold" fill="currentColor" stroke="none">HD</text>
+                              </svg>
+                              <span className="text-xs sm:text-[13px] font-bold text-[#171717]">Cargas en alta calidad</span>
+                              <span className="w-3.5 h-3.5 rounded-full border border-slate-400 text-slate-500 text-[9px] font-bold flex items-center justify-center leading-none">i</span>
+                            </div>
+                            <p className="text-[11px] text-[#4a3e44] leading-relaxed font-medium pl-5 m-0">
+                              Calidad HD predeterminada al publicar desde la versión web de Casting Live Studio
+                            </p>
+                          </div>
+
                           <button
-                            key={index}
                             type="button"
-                            onClick={() => {
-                              setUploadLocation(loc);
-                              setLocationSearchQuery(loc);
-                              setLocationSuggestions([]);
-                            }}
-                            className={`px-3 py-1.5 rounded-full border transition shrink-0 cursor-pointer ${
-                              isSelected 
-                                ? 'bg-rose-50 border-[#fe2c55] text-[#fe2c55] font-black' 
-                                : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
+                            onClick={() => setHighQualityEnabled(!highQualityEnabled)}
+                            aria-label="Alternar cargas en alta calidad"
+                            className={`custom-bg relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-200 ease-in-out focus:outline-none shadow-inner ${
+                              highQualityEnabled
+                                ? 'bg-gradient-to-r from-[#ff2e8d] to-[#d90466] shadow-[0_2px_8px_rgba(217,4,102,0.3)]'
+                                : 'bg-slate-300'
                             }`}
                           >
-                            📍 {loc}
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                highQualityEnabled ? 'translate-x-6' : 'translate-x-0'
+                              }`}
+                            />
                           </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* === AJUSTES === */}
-              <div className="space-y-4 border-t border-slate-100 pt-5 text-left">
-                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Ajustes</h4>
-
-                {/* Cuando publicar */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-black text-slate-800">Cuando publicar</span>
-                    <span className="text-slate-400 text-xs cursor-default">ⓘ</span>
-                  </div>
-                  
-                  <div className="flex gap-4 select-none">
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="schedule" 
-                        checked={!schedulePublish} 
-                        onChange={() => setSchedulePublish(false)}
-                        className="text-[#fe2c55] focus:ring-[#fe2c55]"
-                      />
-                      <span>Ahora</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="schedule" 
-                        checked={schedulePublish} 
-                        onChange={() => setSchedulePublish(true)}
-                        className="text-[#fe2c55] focus:ring-[#fe2c55]"
-                      />
-                      <span>Programación ⏱</span>
-                    </label>
-                  </div>
-
-                  {schedulePublish && (
-                    <div className="p-3 bg-rose-50/45 border border-rose-100/50 rounded-xl space-y-1.5 animate-slide-down">
-                      <span className="text-[10px] font-extrabold text-[#fe2c55] uppercase tracking-wider block">Establecer fecha y hora</span>
-                      <input
-                        type="datetime-local"
-                        value={scheduleDateTime}
-                        onChange={(e) => setScheduleDateTime(e.target.value)}
-                        className="bg-white border border-slate-300 rounded-lg p-1.5 text-xs focus:outline-none focus:border-[#fe2c55] text-slate-800 font-mono"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Who can view */}
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <label className="block text-xs font-black text-slate-800">Quién puede ver esta publicación</label>
-                    <span className="text-[11px] font-extrabold text-emerald-700">🌍 Vista pública obligatoria para todos los vídeos</span>
-                  </div>
-                  <select
-                    value={uploadCategory}
-                    onChange={(e) => setUploadCategory(e.target.value as any)}
-                    className="w-full sm:max-w-xs bg-white border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#fe2c55] font-semibold text-slate-800"
-                  >
-                    <option value="para-ti">🌍 Todo el mundo — Vista Pública (Para ti)</option>
-                    <option value="explorar">🌍 Vista Pública (Sección Explorar)</option>
-                    <option value="siguiendo">🌍 Vista Pública (Feed Siguiendo)</option>
-                  </select>
-                </div>
-
-                {/* Toggle Cargas Alta Calidad */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl select-none">
-                  <div className="space-y-0.5 pr-2">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-black text-slate-850">Cargas en alta calidad</span>
-                      <span className="text-slate-400 text-xs cursor-default">ⓘ</span>
-                    </div>
-                    <p className="text-[10px] sm:text-[11px] text-slate-450 leading-relaxed font-semibold">
-                      Calidad HD predeterminada al publicar desde la versión web de Casting Live Studio
-                    </p>
-                  </div>
-                  
-                  {/* Neon active/inactive toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setHighQualityEnabled(!highQualityEnabled)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      highQualityEnabled ? 'bg-[#fe2c55]' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                        highQualityEnabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Permitir que los usuarios interactúen (Comentarios, Dúo, Pegar - Captura image.png) */}
-                <div className="space-y-3 p-4 bg-white border border-slate-200/90 rounded-2xl shadow-xs select-none text-left">
-                  <p className="text-[11px] font-black text-slate-900 uppercase tracking-wider font-sans">PERMITIR QUE LOS USUARIOS:</p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Comentarios */}
-                    <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200">
-                      <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">💬 Comentarios</span>
-                      <button
-                        type="button"
-                        onClick={() => setAllowComments(!allowComments)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          allowComments ? 'bg-[#fe2c55]' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                            allowComments ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                    </div>
-
-                    {/* Dúo (Live Shopping: Vendedor + Influencer/Modelo) */}
-                    <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200">
-                      <div className="flex flex-col min-w-0 pr-1">
-                        <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">👯 Dúo</span>
-                        <span className="text-[8.5px] font-bold text-rose-600 truncate">Vendedor + Influencer/Modelo</span>
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextVal = !allowDuet;
-                          setAllowDuet(nextVal);
-                          alert(nextVal ? '👯 Dúo para Live Shopping ACTIVADO (Vendedor + Influencer/Modelo presentando producto en directo).' : '🚫 Dúo desactivado.');
-                        }}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          allowDuet ? 'bg-[#fe2c55]' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                            allowDuet ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                    </div>
-
-                    {/* Pegar */}
-                    <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200">
-                      <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">✂️ Pegar</span>
-                      <button
-                        type="button"
-                        onClick={() => setAllowStitch(!allowStitch)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          allowStitch ? 'bg-[#fe2c55]' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                            allowStitch ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
                     </div>
                   </div>
-                </div>
 
-                {/* Toggle Comprobación de Derechos de Autor */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl select-none">
-                  <div className="space-y-0.5 pr-2 text-left">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-black text-slate-850">Comprobación de derechos de autor</span>
-                      <span className="text-slate-400 text-xs cursor-default">ⓘ</span>
+                  {/* CARD 4: Permitir que los usuarios */}
+                  <div className="relative z-10 rounded-2xl border border-[#ebd2dc] bg-gradient-to-r from-[#fff5f9] via-[#fffafd] to-[#fff4f8] p-4 sm:p-5 shadow-[0_6px_20px_rgba(219,39,119,0.05)] flex flex-col sm:flex-row sm:items-center gap-4 select-none">
+                    {/* Decorative Pink People Icon */}
+                    <div className="hidden sm:flex items-center justify-center w-12 h-12 shrink-0">
+                      <svg className="w-11 h-11 drop-shadow-[0_3px_6px_rgba(217,4,102,0.22)]" viewBox="0 0 48 48" fill="none">
+                        <defs>
+                          <linearGradient id="pinkUsersGradFF" x1="0" y1="0" x2="48" y2="48">
+                            <stop offset="0%" stopColor="#ff7bb8" />
+                            <stop offset="100%" stopColor="#c9005c" />
+                          </linearGradient>
+                        </defs>
+                        <circle cx="19" cy="17" r="6" fill="url(#pinkUsersGradFF)" />
+                        <path d="M8 37c0-5.5 4.9-10 11-10s11 4.5 11 10H8z" fill="url(#pinkUsersGradFF)" />
+                        <circle cx="32" cy="19" r="4.8" fill="#f472b6" />
+                        <path d="M26 37c0-4.2 3.3-7.6 7.5-7.6 4.1 0 7.5 3.4 7.5 7.6H26z" fill="#f472b6" />
+                      </svg>
                     </div>
-                    <p className="text-[10px] sm:text-[11px] text-slate-450 leading-relaxed font-semibold">
-                      Comprobaremos automáticamente si tu video infringe los derechos de autor para proteger tu cuenta de reclamaciones.
-                    </p>
+
+                    <div className="flex-1 space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-gradient-to-b from-[#ff2e8d] to-[#d90466] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </span>
+                        <p className="text-xs sm:text-[13px] font-bold text-[#171717] m-0">
+                          Permitir que los usuarios:
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {/* Comentarios */}
+                        <div className="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-[#ebd2dc] shadow-2xs">
+                          <span className="text-xs font-bold text-[#171717] flex items-center gap-2">
+                            <MessageCircle className="w-4 h-4 text-[#73646b]" />
+                            <span>Comentarios</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAllowComments(!allowComments)}
+                            aria-label="Permitir comentarios"
+                            className={`custom-bg relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              allowComments ? 'bg-gradient-to-r from-[#ff2e8d] to-[#d90466]' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                allowComments ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Dúo */}
+                        <div className="flex items-center justify-between bg-white px-3.5 py-2 rounded-xl border border-[#ebd2dc] shadow-2xs">
+                          <div className="flex items-center gap-2 min-w-0 pr-1">
+                            <Users className="w-4 h-4 text-[#d90466]/80 shrink-0" />
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-bold text-[#171717] leading-tight">Dúo</span>
+                              <span className="text-[9px] font-semibold text-[#d90466] truncate">
+                                Vendedor + Influencer/...
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setAllowDuet(!allowDuet)}
+                            aria-label="Permitir dúo"
+                            className={`custom-bg relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              allowDuet ? 'bg-gradient-to-r from-[#ff2e8d] to-[#d90466]' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                allowDuet ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Pegar */}
+                        <div className="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-[#ebd2dc] shadow-2xs">
+                          <span className="text-xs font-bold text-[#171717] flex items-center gap-2">
+                            <svg className="w-4 h-4 text-[#d90466]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+                              <circle cx="6" cy="6" r="3" />
+                              <circle cx="6" cy="18" r="3" />
+                              <path strokeLinecap="round" d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12" />
+                            </svg>
+                            <span>Pegar</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAllowStitch(!allowStitch)}
+                            aria-label="Permitir pegar"
+                            className={`custom-bg relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              allowStitch ? 'bg-gradient-to-r from-[#ff2e8d] to-[#d90466]' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                allowStitch ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  {/* Toggle Switch */}
-                  <button
-                    type="button"
-                    onClick={() => setCopyrightCheck(!copyrightCheck)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      copyrightCheck ? 'bg-[#fe2c55]' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                        copyrightCheck ? 'translate-x-5' : 'translate-x-0'
+
+                  {/* CARD 5: Comprobación de derechos de autor */}
+                  <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-5 bg-gradient-to-r from-white via-[#fff9fb] to-[#fff5f9] border border-[#ebd2dc] rounded-2xl shadow-[0_6px_20px_rgba(219,39,119,0.05)] select-none">
+                    <div className="flex items-start gap-3.5 pr-2 text-left">
+                      {/* Pink Copyright Shield Icon */}
+                      <div className="w-9 h-9 rounded-xl bg-rose-50 border border-[#f2c8d8] flex items-center justify-center shrink-0 mt-0.5">
+                        <svg className="w-5 h-5 text-[#d90466]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v5c0 4.5-3 8.3-7 9.9C8 19.3 5 15.5 5 11V6l7-3z" />
+                          <circle cx="12" cy="11.5" r="3.6" strokeWidth="1.6" />
+                          <path strokeLinecap="round" d="M13.3 10.4a1.6 1.6 0 100 2.2" strokeWidth="1.5" />
+                        </svg>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs sm:text-[13px] font-bold text-[#171717]">Comprobación de derechos de autor</span>
+                          <span className="w-3.5 h-3.5 rounded-full border border-slate-400 text-slate-500 text-[9px] font-bold flex items-center justify-center leading-none">i</span>
+                        </div>
+                        <p className="text-[11px] text-[#4a3e44] leading-relaxed font-medium m-0">
+                          Comprobaremos automáticamente si tu vídeo infringe los derechos de autor para proteger tu cuenta de reclamaciones.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setCopyrightCheck(!copyrightCheck)}
+                      aria-label="Comprobación de derechos de autor"
+                      className={`custom-bg relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        copyrightCheck ? 'bg-gradient-to-r from-[#ff2e8d] to-[#d90466]' : 'bg-slate-300'
                       }`}
-                    />
-                  </button>
-                </div>
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          copyrightCheck ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
 
-                {/* Show advanced options toggler */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                    className="text-xs font-black text-[#fe2c55] hover:text-rose-600 transition flex items-center gap-1 cursor-pointer bg-transparent border-0"
-                  >
-                    <span>{showAdvancedSettings ? 'Ocultar ajustes avanzados ∧' : 'Mostrar más ∨'}</span>
-                  </button>
+                  {/* Advanced Options Toggler */}
+                  <div className="relative z-10 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                      className="custom-bg text-xs font-black text-[#d90466] hover:text-[#a6004c] transition flex items-center gap-1 cursor-pointer bg-transparent border-0"
+                    >
+                      <span>{showAdvancedSettings ? 'Ocultar ajustes avanzados ∧' : 'Mostrar más ∨'}</span>
+                    </button>
 
-                  {showAdvancedSettings && (
+                    {showAdvancedSettings && (
                     <div className="mt-3 p-4 bg-slate-50 border border-slate-150 rounded-xl space-y-4 animate-slide-down">
                       
                       {/* Connection with official model */}
@@ -18354,9 +19001,24 @@ export default function CastingLiveSection({
 
                     </div>
                   )}
-                </div>
+                  </div>
 
-              </div>
+                  {/* Bottom Subtle Pink Silk Wave & Gold Line Accent */}
+                  <div className="pointer-events-none select-none -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-2 h-10 overflow-hidden opacity-85">
+                    <svg className="w-full h-full" viewBox="0 0 900 44" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="bottomSilkRibbonFF" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#ffd8ea" stopOpacity="0.85" />
+                          <stop offset="45%" stopColor="#fff8fb" stopOpacity="0.2" />
+                          <stop offset="100%" stopColor="#f99ec6" stopOpacity="0.8" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,10 C180,38 380,6 560,24 C710,38 820,16 900,4 L900,44 L0,44 Z" fill="url(#bottomSilkRibbonFF)" />
+                      <path d="M0,12 C180,38 380,6 560,24 C710,38 820,16 900,6" fill="none" stroke="#c89d54" strokeWidth="1.2" strokeOpacity="0.65" />
+                    </svg>
+                  </div>
+
+                </div>
 
               {/* === COMPROBACIONES === */}
               <div className="space-y-3.5 border-t border-slate-100 pt-5 text-left">
@@ -18394,10 +19056,10 @@ export default function CastingLiveSection({
 
             </form>
 
-            {/* RIGHT COLUMN: Mobile Smartphone Preview (takes 5 cols) */}
-            <div className="lg:col-span-5 flex flex-col items-center space-y-4">
+            {/* RIGHT COLUMN: Enlarged Interactive Mobile Smartphone Preview (takes 5 cols) */}
+            <div className="lg:col-span-5 lg:sticky lg:top-6 self-start flex flex-col items-center space-y-4">
               
-              {/* Top Action Buttons matching capture-z.png and capture-image.png */}
+              {/* Top Action Buttons */}
               <div className="flex flex-wrap items-center gap-2.5 justify-center w-full">
                 <button
                   type="button"
@@ -18419,15 +19081,24 @@ export default function CastingLiveSection({
                 <button
                   type="button"
                   onClick={handleCreateVideo}
-                  className="px-6 py-2 border border-slate-200 hover:border-slate-300 text-slate-850 text-[11px] font-extrabold rounded-2xl uppercase tracking-wider transition cursor-pointer bg-white shadow-2xs hover:bg-slate-50"
+                  className="custom-bg px-6 py-2 border border-[#d90466] hover:bg-[#b80255] text-white text-[11px] font-extrabold rounded-2xl uppercase tracking-wider transition cursor-pointer bg-gradient-to-r from-[#ff2c8d] to-[#d90466] shadow-sm"
                 >
                   PUBLICAR
                 </button>
               </div>
 
-              {/* iPhone / Android Mock Frame with video content from image.png */}
+              {/* Large Interactive Desktop Smartphone Frame */}
               <div 
-                className="w-full max-w-[250px] sm:max-w-[270px] aspect-[9/16] bg-[#070709] rounded-[32px] border border-slate-900 shadow-2xl relative overflow-hidden flex flex-col group select-none"
+                onClick={() => {
+                  if (!tiktokSubTool && activePreviewTab === 'feed' && previewVideoRef.current) {
+                    if (previewVideoRef.current.paused) {
+                      previewVideoRef.current.play().catch(() => {});
+                    } else {
+                      previewVideoRef.current.pause();
+                    }
+                  }
+                }}
+                className="w-full max-w-[300px] sm:max-w-[340px] lg:max-w-[385px] xl:max-w-[420px] aspect-[9/16] bg-[#070709] rounded-[38px] border-[3px] border-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.28)] relative overflow-hidden flex flex-col group select-none cursor-pointer"
                 id="preview-phone-mockup"
               >
                 {/* 1. Video Editorial Content matching capture image.png: "45 SECONDS with DICE SWANEF" + credits */}
@@ -18482,69 +19153,79 @@ export default function CastingLiveSection({
                   <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none p-3.5 text-white bg-gradient-to-t from-black/50 via-transparent to-black/15">
                     
                     {/* Feed Top Navigation */}
-                    <div className="flex justify-center items-center pt-2 text-[11px] font-black">
+                    <div className="flex justify-center items-center pt-3 text-xs lg:text-sm font-black">
                       {/* Segments */}
-                      <div className="flex items-center gap-2">
-                        <span className="opacity-60 text-[9.5px]">Siguiendo</span>
-                        <span className="border-b-2 border-white pb-0.5 text-[9.5px]">Para ti</span>
+                      <div className="flex items-center gap-3">
+                        <span className="opacity-65 text-[11px] lg:text-xs">Siguiendo</span>
+                        <span className="border-b-2 border-white pb-0.5 text-[11px] lg:text-xs">Para ti</span>
                       </div>
                     </div>
 
-                    {/* Right Hand Sidebar with active overlay metrics buttons matching capture image.png */}
-                    <div className="absolute right-2 top-[20%] flex flex-col items-center gap-2.5 select-none z-30">
+                    {/* Right Hand Sidebar with larger interactive buttons */}
+                    <div
+                      className="absolute right-3 top-[22%] flex flex-col items-center gap-3.5 select-none z-30"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       
                       {/* Avatar matching Ernesto */}
                       <div className="relative mb-1 shrink-0">
                         <img 
                           src={selectedModel?.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'} 
                           alt="Model Avatar" 
-                          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md"
+                          className="w-11 h-11 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow-md"
                           referrerPolicy="no-referrer"
                         />
                       </div>
 
                       {/* Heart Like (red filled) */}
                       <div className="flex flex-col items-center shrink-0">
-                        <div className="bg-black/35 p-2 rounded-full backdrop-blur-3xs hover:bg-black/45 transition cursor-pointer pointer-events-auto">
-                          <Heart className="w-5.5 h-5.5 text-[#fe2c55] fill-[#fe2c55]" />
+                        <div className="bg-black/40 p-2.5 rounded-full backdrop-blur-3xs hover:bg-black/60 hover:scale-105 transition cursor-pointer pointer-events-auto">
+                          <Heart className="w-6 h-6 lg:w-7 lg:h-7 text-[#fe2c55] fill-[#fe2c55]" />
                         </div>
-                        <span className="text-[10px] font-black mt-0.5 shadow-xs text-white">3.1K</span>
+                        <span className="text-[11px] lg:text-xs font-black mt-0.5 shadow-xs text-white">3.1K</span>
                       </div>
 
                       {/* Comments count */}
                       <div className="flex flex-col items-center shrink-0">
-                        <div className="bg-black/35 p-2 rounded-full backdrop-blur-3xs hover:bg-black/45 transition cursor-pointer pointer-events-auto">
-                          <svg className="w-5.5 h-5.5 text-white fill-current" viewBox="0 0 24 24">
+                        <div className="bg-black/40 p-2.5 rounded-full backdrop-blur-3xs hover:bg-black/60 hover:scale-105 transition cursor-pointer pointer-events-auto">
+                          <svg className="w-6 h-6 lg:w-7 lg:h-7 text-white fill-current" viewBox="0 0 24 24">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                           </svg>
                         </div>
-                        <span className="text-[10px] font-black mt-0.5 shadow-xs text-white">18</span>
+                        <span className="text-[11px] lg:text-xs font-black mt-0.5 shadow-xs text-white">18</span>
                       </div>
 
                       {/* Share Arrow */}
                       <div className="flex flex-col items-center shrink-0">
-                        <div className="bg-black/35 p-2 rounded-full backdrop-blur-3xs hover:bg-black/45 transition cursor-pointer pointer-events-auto">
-                          <svg className="w-5.5 h-5.5 text-white fill-current" viewBox="0 0 24 24">
+                        <div className="bg-black/40 p-2.5 rounded-full backdrop-blur-3xs hover:bg-black/60 hover:scale-105 transition cursor-pointer pointer-events-auto">
+                          <svg className="w-6 h-6 lg:w-7 lg:h-7 text-white fill-current" viewBox="0 0 24 24">
                             <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" />
                           </svg>
                         </div>
                       </div>
 
                       {/* Vinyl turntable spinning */}
-                      <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-slate-700 p-1 animate-spin mt-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setTiktokSubTool('sounds')}
+                        title="Abrir Sonidos"
+                        className="custom-bg w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-slate-900 border-2 border-slate-700 p-1 animate-spin mt-1 shrink-0 pointer-events-auto cursor-pointer"
+                      >
                         <div className="w-full h-full bg-slate-800 rounded-full border border-slate-600 flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 bg-[#fe2c55] rounded-full shadow-[0_0_6px_#fe2c55]" />
+                          <div className="w-2 h-2 bg-[#fe2c55] rounded-full shadow-[0_0_6px_#fe2c55]" />
                         </div>
-                      </div>
+                      </button>
 
                     </div>
 
-                    {/* Lower Description Text Layer matching capture image.png */}
-                    <div className="space-y-1 text-left mt-auto pb-3 pr-10">
-                      <span className="font-black text-[12px] block text-white">@{selectedModel?.username || userProfile?.username || 'ernestovs'}</span>
-                      <p className="text-[10px] font-semibold text-slate-100 leading-snug drop-shadow-md">
-                        Fashion Sponsors Network styl -<br />
-                        Google Chrome 2025-04-15 09-22-25
+                    {/* Lower Description Text Layer */}
+                    <div
+                      className="space-y-1.5 text-left mt-auto pb-4 pr-14"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="font-black text-xs lg:text-sm block text-white">@{selectedModel?.username || userProfile?.username || 'ernestovs'}</span>
+                      <p className="text-[11px] lg:text-xs font-semibold text-slate-100 leading-snug drop-shadow-md">
+                        {uploadDescription || 'Fashion Sponsors Network styl - Google Chrome 2025-04-15 09-22-25'}
                       </p>
                       <button
                         type="button"
@@ -18553,19 +19234,23 @@ export default function CastingLiveSection({
                           if (onOpenHashtag) onOpenHashtag('fashion');
                           else window.dispatchEvent(new CustomEvent('open_hashtag', { detail: { tag: 'fashion' } }));
                         }}
-                        className="text-[10.5px] font-bold text-[#fe2c55] hover:text-rose-300 block cursor-pointer hover:underline text-left bg-transparent border-0 p-0"
+                        className="text-[11.5px] lg:text-xs font-bold text-[#fe2c55] hover:text-rose-300 block cursor-pointer hover:underline text-left bg-transparent border-0 p-0 pointer-events-auto"
                         title="Explorar tema #fashion"
                       >
                         #fashion
                       </button>
 
                       {/* Sound info with musical note */}
-                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 pt-0.5">
-                        <Music className="w-3 h-3 text-[#fe2c55] shrink-0" />
-                        <span className="truncate w-36">
+                      <button
+                        type="button"
+                        onClick={() => setTiktokSubTool('sounds')}
+                        className="custom-bg flex items-center gap-1.5 text-[10.5px] lg:text-[11.5px] font-bold text-slate-200 hover:text-white pt-0.5 bg-transparent border-0 p-0 cursor-pointer pointer-events-auto text-left"
+                      >
+                        <Music className="w-3.5 h-3.5 text-[#fe2c55] shrink-0" />
+                        <span className="truncate max-w-[200px] lg:max-w-[240px]">
                           {uploadMusic.trim() || `Sonido original - @${selectedModel?.username || userProfile?.username || 'ernestovs'}`}
                         </span>
-                      </div>
+                      </button>
                     </div>
 
                   </div>
@@ -18650,31 +19335,34 @@ export default function CastingLiveSection({
 
                 {/* TikTok Slide-up/Overlay Tools implementation */}
                 {tiktokSubTool === 'editor' && (
-                  <div className="absolute inset-0 z-45 bg-white text-slate-800 flex flex-col justify-between p-3 select-none pointer-events-auto border-t border-slate-100">
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute inset-0 z-45 bg-white text-slate-800 flex flex-col justify-between p-4 lg:p-5 select-none pointer-events-auto border-t border-slate-100"
+                  >
                     {/* Header */}
-                    <div className="flex justify-between items-center pt-5 pb-1 border-b border-slate-100">
+                    <div className="flex justify-between items-center pt-3 pb-2 border-b border-slate-100">
                       <button 
                         type="button" 
                         onClick={() => setTiktokSubTool(null)}
-                        className="text-slate-800 hover:text-slate-600 text-xs font-black flex items-center gap-0.5 cursor-pointer bg-transparent border-0"
+                        className="text-slate-800 hover:text-slate-600 text-xs lg:text-sm font-black flex items-center gap-1 cursor-pointer bg-transparent border-0"
                       >
-                        <ChevronLeft className="w-3 h-3" /> Volver
+                        <ChevronLeft className="w-4 h-4" /> Volver
                       </button>
-                      <span className="text-[10px] font-black tracking-wider uppercase text-[#fe2c55]">Editor TikTok</span>
+                      <span className="text-[11px] lg:text-xs font-black tracking-wider uppercase text-[#fe2c55]">Editor TikTok</span>
                       <button 
                         type="button" 
                         onClick={() => setTiktokSubTool(null)}
-                        className="text-[#fe2c55] hover:text-red-600 text-xs font-extrabold cursor-pointer bg-transparent border-0"
+                        className="text-[#fe2c55] hover:text-red-600 text-xs lg:text-sm font-extrabold cursor-pointer bg-transparent border-0"
                       >
                         Listo
                       </button>
                     </div>
 
                     {/* Filter / Speed Controls */}
-                    <div className="flex-1 overflow-y-auto py-2 space-y-3.5 scrollbar-none text-[9px]">
+                    <div className="flex-1 overflow-y-auto py-3 space-y-4 scrollbar-none text-[10px] lg:text-xs">
                       {/* Filter selection */}
                       <div className="space-y-2 text-left">
-                        <span className="font-extrabold text-slate-700 block uppercase tracking-wide text-[9px]">✨ Filtros Creativos</span>
+                        <span className="font-extrabold text-slate-700 block uppercase tracking-wide text-[10px] lg:text-[11px]">✨ Filtros Creativos</span>
                         <div className="grid grid-cols-3 gap-1.5">
                           {[
                             { id: 'normal', name: 'Original' },
@@ -18791,41 +19479,44 @@ export default function CastingLiveSection({
                 )}
 
                 {tiktokSubTool === 'sounds' && (
-                  <div className="absolute inset-0 z-45 bg-white text-slate-800 flex flex-col justify-between p-3 select-none pointer-events-auto border-t border-slate-100">
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute inset-0 z-45 bg-white text-slate-800 flex flex-col justify-between p-4 lg:p-5 select-none pointer-events-auto border-t border-slate-100"
+                  >
                     {/* Header */}
-                    <div className="flex justify-between items-center pt-5 pb-1.5 border-b border-slate-100">
+                    <div className="flex justify-between items-center pt-3 pb-2 border-b border-slate-100">
                       <button 
                         type="button" 
                         onClick={() => {
                           setSoundPlayingPreviewId(null);
                           setTiktokSubTool(null);
                         }}
-                        className="text-slate-800 hover:text-slate-600 text-xs font-black flex items-center gap-0.5 cursor-pointer bg-transparent border-0"
+                        className="text-slate-800 hover:text-slate-600 text-xs lg:text-sm font-black flex items-center gap-1 cursor-pointer bg-transparent border-0"
                       >
-                        <ChevronLeft className="w-3 h-3" /> Volver
+                        <ChevronLeft className="w-4 h-4" /> Volver
                       </button>
-                      <span className="text-[10px] font-black tracking-wider uppercase text-[#fe2c55]">Sonidos</span>
+                      <span className="text-[11px] lg:text-xs font-black tracking-wider uppercase text-[#fe2c55]">Sonidos</span>
                       <button 
                         type="button" 
                         onClick={() => {
                           setSoundPlayingPreviewId(null);
                           setTiktokSubTool(null);
                         }}
-                        className="text-[#fe2c55] hover:text-red-600 text-xs font-black cursor-pointer bg-transparent border-0 font-extrabold"
+                        className="text-[#fe2c55] hover:text-red-600 text-xs lg:text-sm font-black cursor-pointer bg-transparent border-0 font-extrabold"
                       >
                         Hecho
                       </button>
                     </div>
 
                     {/* Sounds body */}
-                    <div className="flex-1 overflow-y-auto py-2 space-y-3.5 scrollbar-none text-[9px] text-left">
+                    <div className="flex-1 overflow-y-auto py-3 space-y-4 scrollbar-none text-[10px] lg:text-xs text-left">
                       {/* Search Bar */}
                       <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <input
                           type="text"
                           placeholder="Buscar sonidos, artistas..."
-                          className="w-full bg-slate-100 border border-slate-200/60 rounded-full py-1 pl-7 pr-3 text-[8px] text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#fe2c55] focus:border-transparent transition-all"
+                          className="w-full bg-slate-100 border border-slate-200/60 rounded-full py-1.5 pl-8 pr-3 text-[10px] lg:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#fe2c55] focus:border-transparent transition-all"
                         />
                       </div>
 
@@ -19012,16 +19703,19 @@ export default function CastingLiveSection({
                 )}
 
                 {tiktokSubTool === 'text' && (
-                  <div className="absolute inset-0 z-45 bg-white text-slate-800 flex flex-col justify-between p-3 select-none pointer-events-auto border-t border-slate-100">
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute inset-0 z-45 bg-white text-slate-800 flex flex-col justify-between p-4 lg:p-5 select-none pointer-events-auto border-t border-slate-100"
+                  >
                     {/* Header */}
-                    <div className="flex justify-between items-center pt-5 pb-1">
+                    <div className="flex justify-between items-center pt-3 pb-2">
                       <button 
                         type="button" 
                         onClick={() => {
                           setTempTextValue('');
                           setTiktokSubTool(null);
                         }}
-                        className="text-slate-500 hover:text-slate-800 text-[10px] font-black bg-transparent border-0 cursor-pointer"
+                        className="text-slate-500 hover:text-slate-800 text-xs lg:text-sm font-black bg-transparent border-0 cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -19230,19 +19924,18 @@ export default function CastingLiveSection({
 
               </div>
 
-              {/* Three Phone-associated buttons matching capture image.png: ✏️ Editar, 🎵 Sonidos, Aa Texto */}
-              <div className="flex items-center gap-2 select-none pt-1">
+              {/* Three Phone-associated buttons: ✏️ Editar, 🎵 Sonidos, Aa Texto */}
+              <div className="flex items-center gap-2.5 select-none pt-1">
                 <button
                   type="button"
                   onClick={() => setTiktokSubTool(tiktokSubTool === 'editor' ? null : 'editor')}
-                  className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
+                  className={`custom-bg px-5 py-2.5 rounded-xl font-black text-xs sm:text-[13px] flex items-center gap-2 cursor-pointer transition shadow-2xs ${
                     tiktokSubTool === 'editor' 
                       ? 'bg-[#fe2c55] text-white border-transparent shadow-md' 
                       : 'bg-[#eaedf2] hover:bg-slate-200 text-[#1e293b] border-0'
                   }`}
                 >
-                  {/* Pencil / edit icon matching image.png */}
-                  <svg className={`w-3.5 h-3.5 ${tiktokSubTool === 'editor' ? 'text-white' : 'text-[#1e293b]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className={`w-4 h-4 ${tiktokSubTool === 'editor' ? 'text-white' : 'text-[#1e293b]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                   </svg>
                   <span>Editar</span>
@@ -19250,14 +19943,13 @@ export default function CastingLiveSection({
                 <button
                   type="button"
                   onClick={() => setTiktokSubTool(tiktokSubTool === 'sounds' ? null : 'sounds')}
-                  className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
+                  className={`custom-bg px-5 py-2.5 rounded-xl font-black text-xs sm:text-[13px] flex items-center gap-2 cursor-pointer transition shadow-2xs ${
                     tiktokSubTool === 'sounds' 
                       ? 'bg-[#fe2c55] text-white border-transparent shadow-md' 
                       : 'bg-[#eaedf2] hover:bg-slate-200 text-[#1e293b] border-0'
                   }`}
                 >
-                  {/* Double note icon matching image.png */}
-                  <svg className={`w-3.5 h-3.5 ${tiktokSubTool === 'sounds' ? 'text-white' : 'text-[#1e293b]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className={`w-4 h-4 ${tiktokSubTool === 'sounds' ? 'text-white' : 'text-[#1e293b]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18V5l12-2v13" />
                     <circle cx="6" cy="18" r="3" />
                     <circle cx="18" cy="16" r="3" />
@@ -19267,13 +19959,13 @@ export default function CastingLiveSection({
                 <button
                   type="button"
                   onClick={() => setTiktokSubTool(tiktokSubTool === 'text' ? null : 'text')}
-                  className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
+                  className={`custom-bg px-5 py-2.5 rounded-xl font-black text-xs sm:text-[13px] flex items-center gap-2 cursor-pointer transition shadow-2xs ${
                     tiktokSubTool === 'text' 
                       ? 'bg-[#fe2c55] text-white border-transparent shadow-md' 
                       : 'bg-[#eaedf2] hover:bg-slate-200 text-[#1e293b] border-0'
                   }`}
                 >
-                  <span className={`font-black text-xs ${tiktokSubTool === 'text' ? 'text-white' : 'text-[#1e293b]'}`}>Aa</span>
+                  <span className={`font-black text-xs sm:text-[13px] ${tiktokSubTool === 'text' ? 'text-white' : 'text-[#1e293b]'}`}>Aa</span>
                   <span>Texto</span>
                 </button>
               </div>
@@ -19470,6 +20162,69 @@ export default function CastingLiveSection({
               </div>
             </div>
           )}
+
+          {/* Latest Channel Video Preview Modal */}
+          {previewLatestChannelKey && (() => {
+            const pInfo = CHANNEL_DESCRIPTIONS[previewLatestChannelKey] || CHANNEL_DESCRIPTIONS['Runway'];
+            const matchedVid = videosList.find(v => {
+              const vc = (v.category || '').toLowerCase();
+              const pk = previewLatestChannelKey.toLowerCase();
+              return vc === pk || (pk === 'runway' && vc === 'modelos') || (pk === 'backstage' && vc === 'backstage') || (pk === 'jewellery' && vc === 'investors');
+            });
+            const fallbackVideoMap: Record<string, string> = {
+              Runway: 'https://assets.mixkit.co/videos/preview/mixkit-model-walking-on-a-runway-41715-large.mp4',
+              Fashion: 'https://assets.mixkit.co/videos/preview/mixkit-woman-in-a-gold-dress-posing-40485-large.mp4',
+              Finanzas: 'https://assets.mixkit.co/videos/preview/mixkit-business-people-having-a-meeting-in-a-modern-office-4867-large.mp4',
+              Backstage: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-studio-with-colored-lights-40488-large.mp4',
+              Jewellery: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40483-large.mp4'
+            };
+            const srcUrl = matchedVid?.videoUrl || fallbackVideoMap[previewLatestChannelKey] || fallbackVideoMap['Runway'];
+            return (
+              <div
+                className="fixed inset-0 z-[100001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                onClick={() => setPreviewLatestChannelKey(null)}
+              >
+                <div
+                  className="bg-gradient-to-b from-[#fff9fb] to-white border-2 border-[#c89d54] rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl text-left"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-5 py-3.5 border-b border-rose-100 flex items-center justify-between bg-gradient-to-r from-[#fff5f9] to-white">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">{pInfo.icon}</span>
+                      <div>
+                        <h4 className="font-serif text-sm font-semibold uppercase tracking-wider text-[#171717] m-0">
+                          Último vídeo · Canal {pInfo.title}
+                        </h4>
+                        {matchedVid && (
+                          <p className="text-[11px] font-bold text-[#e2046b] m-0">@{matchedVid.username}</p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewLatestChannelKey(null)}
+                      className="custom-bg w-8 h-8 rounded-full bg-white border border-[#c89d54]/70 hover:bg-rose-50 text-slate-700 flex items-center justify-center cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="bg-black aspect-video w-full flex items-center justify-center">
+                    <video
+                      src={srcUrl}
+                      controls
+                      autoPlay
+                      playsInline
+                      loop
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="px-5 py-3.5 text-xs text-slate-700 leading-relaxed">
+                    {matchedVid?.description || pInfo.desc}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
         </div>
       </div>
@@ -28552,7 +29307,8 @@ try {
 
     const filteredLiveChannels = liveStreamChannels.filter(c => {
       const matchesCat = liveChannelsCategoryFilter === 'todos' || c.category === liveChannelsCategoryFilter || (c.isUserStream && isUserRetransmitting && userRetransmittingChannelId === liveChannelsCategoryFilter);
-      const matchesSearch = !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+      const q = searchTerm.toLowerCase().trim().replace(/^@+/, '');
+      const matchesSearch = !q || c.name.toLowerCase().includes(q) || (c.username || '').toLowerCase().replace(/^@+/, '').includes(q) || c.title.toLowerCase().includes(q) || c.tags.some(t => t.toLowerCase().includes(q));
       return matchesCat && matchesSearch;
     });
 
@@ -28637,26 +29393,18 @@ try {
             </div>
           </div>
         </div>
-        {/* HERO LIVE STREAM: Destacado Principal en Directo (En retransmisión se ve en pantalla completa dentro del canal y la imagen en vertical) */}
+        {/* HERO LIVE STREAM: Mismas medidas exactas que la pantalla móvil de z.png (max-w-[460px] x h-[calc(680px+4cm)]) */}
         <div
           id="live-hero-stage-card"
-          className={`relative w-full rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl group transition-all duration-300 ${
+          className={`relative w-full max-w-[440px] sm:max-w-[450px] md:max-w-[460px] h-[calc(660px+4cm)] sm:h-[calc(680px+4cm)] max-h-[calc(680px+4cm)] mx-auto rounded-none overflow-hidden bg-[#070b14] text-white border-0 shadow-xl group transition-all duration-300 flex flex-col justify-between box-border select-none ${
             isRetransmissionActive
               ? 'ring-2 ring-rose-500/40 shadow-[0_20px_50px_rgba(244,63,94,0.3)]'
               : ''
           }`}
         >
-          {/* Canal de vídeo: En retransmisión ocupa pantalla completa dentro del canal con imagen vertical */}
+          {/* Canal de vídeo ocupando la pantalla móvil vertical completa */}
           <div 
-            className={`relative w-full bg-black flex items-center justify-center overflow-hidden transition-all duration-300 ${
-              isRetransmissionActive
-                ? 'w-full h-full min-h-[750px] sm:min-h-[850px] lg:min-h-[920px] h-[88vh] max-h-[980px]'
-                : 'min-h-[570px] sm:min-h-[670px] lg:min-h-[705px]'
-            }`}
-            style={{ 
-              minHeight: isRetransmissionActive ? 'min(90vh, 960px)' : 'calc(440px + 7cm)',
-              height: isRetransmissionActive ? 'min(90vh, 960px)' : undefined
-            }}
+            className="relative w-full h-full flex-1 bg-black flex items-center justify-center overflow-hidden transition-all duration-300"
           >
             {isRetransmissionActive ? (
               <div className="relative w-full h-full min-h-full bg-black flex items-center justify-center overflow-hidden">
@@ -28958,26 +29706,25 @@ try {
                                       heroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                     }
                                   }}
-                                  className={`w-full sm:w-auto max-w-full px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-normal sm:tracking-wider transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border truncate ${
+                                  className={`w-full sm:w-auto max-w-full py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase transition-all duration-200 cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 border ${
                                     isRetransmittingThis
-                                      ? 'bg-rose-100 text-rose-800 border-rose-400 ring-2 ring-rose-500/30 font-bold hover:bg-rose-200'
-                                      : 'bg-white hover:bg-rose-50 text-slate-700 border border-rose-200 shadow-sm font-bold'
+                                      ? 'px-3 sm:px-3.5 tracking-tight whitespace-nowrap bg-rose-100 text-rose-800 border-rose-400 ring-2 ring-rose-500/30 hover:bg-rose-200'
+                                      : 'px-3.5 sm:px-4 tracking-normal sm:tracking-wider truncate bg-white hover:bg-rose-50 text-slate-700 border-rose-200 shadow-sm'
                                   }`}
                                   title={
                                     isRetransmittingThis
-                                      ? 'Detener retransmisión de tu cámara'
+                                      ? 'Detener retransmisión'
                                       : `Activar cámara y retransmitir en vivo en el canal ${currentCat.label}`
                                   }
                                 >
-                                  {isRetransmittingThis && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-pink-600 animate-ping shrink-0" />
+                                  {isRetransmittingThis ? (
+                                    <span>Detener retransmisión</span>
+                                  ) : (
+                                    <>
+                                      <span className="truncate">Retransmitir</span>
+                                      <Radio className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+                                    </>
                                   )}
-                                  <span className="truncate">
-                                    {isRetransmittingThis 
-                                      ? 'Retransmitiendo' 
-                                      : 'Retransmitir'}
-                                  </span>
-                                  <Radio className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
                                 </button>
                               );
                             })()}
@@ -29513,81 +30260,100 @@ try {
             </div>
 
             {/* 🎯 SENSOR DEL MARGEN IZQUIERDO DEL CANAL (z.png): Al pasar el puntero por el lado izquierdo del canal aparece la barra de volumen de la captura image.png */}
+            {/* 🎯 SENSOR DEL MARGEN IZQUIERDO DEL CANAL: Al pasar el puntero aparece la barra de volumen estilizada de z.png */}
             <div
-              className="absolute top-20 bottom-8 left-0 w-28 sm:w-40 z-30 pointer-events-auto flex items-center justify-start pl-2 sm:pl-3 group/left-channel-sensor cursor-pointer"
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[380px] sm:h-[460px] w-28 sm:w-36 z-30 flex items-center pl-2 sm:pl-3 group/left-channel-sensor pointer-events-auto select-none cursor-pointer"
               onMouseEnter={() => setIsHeroLeftVolumeVisible(true)}
               onMouseLeave={() => setIsHeroLeftVolumeVisible(false)}
+              onWheel={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const delta = e.deltaY < 0 ? 5 : -5;
+                const current = liveHeroMuted ? 0 : liveHeroVolume;
+                const next = Math.max(0, Math.min(100, current + delta));
+                setLiveHeroVolume(next);
+                if (next === 0) {
+                  setLiveHeroMuted(true);
+                  if (heroVideoRef.current) {
+                    heroVideoRef.current.muted = true;
+                    heroVideoRef.current.volume = 0;
+                  }
+                } else {
+                  if (liveHeroMuted) setLiveHeroMuted(false);
+                  if (heroVideoRef.current) {
+                    heroVideoRef.current.muted = false;
+                    heroVideoRef.current.volume = next / 100;
+                  }
+                }
+              }}
             >
-              {/* CÁPSULA VERTICAL DE VOLUMEN DE LA CAPTURA image.png */}
-              <div
-                className={`w-[52px] sm:w-[58px] bg-[#0d111a]/95 hover:bg-[#0d111a] backdrop-blur-md py-3.5 px-1 rounded-2xl border border-slate-700/60 flex flex-col items-center justify-center gap-2 select-none shadow-[0_8px_32px_rgba(0,0,0,0.8)] transition-all duration-300 ease-out cursor-default ${
-                  isHeroLeftVolumeVisible
-                    ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
-                    : 'opacity-0 -translate-x-8 scale-90 pointer-events-none group-hover/left-channel-sensor:opacity-100 group-hover/left-channel-sensor:translate-x-0 group-hover/left-channel-sensor:scale-100 group-hover/left-channel-sensor:pointer-events-auto'
-                }`}
-                onMouseEnter={() => setIsHeroLeftVolumeVisible(true)}
-                onMouseLeave={() => setIsHeroLeftVolumeVisible(false)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* 1. Botón superior Mute/Unmute */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const nextMuted = !liveHeroMuted;
-                    setLiveHeroMuted(nextMuted);
+              {(() => {
+                const currentVolVal = liveHeroMuted ? 0 : liveHeroVolume;
+                const handleHeroVolumeDrag = (newPct: number) => {
+                  const clamped = Math.max(0, Math.min(100, Math.round(newPct)));
+                  setLiveHeroVolume(clamped);
+                  if (clamped === 0) {
+                    setLiveHeroMuted(true);
                     if (heroVideoRef.current) {
-                      heroVideoRef.current.muted = nextMuted;
-                      if (!nextMuted && liveHeroVolume === 0) {
-                        setLiveHeroVolume(80);
-                        heroVideoRef.current.volume = 0.8;
-                      }
+                      heroVideoRef.current.muted = true;
+                      heroVideoRef.current.volume = 0;
                     }
-                    setToastNotification({
-                      message: nextMuted ? '🔇 Audio del canal silenciado' : `🔊 Volumen: ${liveHeroVolume === 0 ? 80 : liveHeroVolume}%`,
-                      title: 'Audio del canal'
-                    });
-                  }}
-                  className="w-8 h-8 rounded-full bg-[#1b1926] hover:bg-[#251e33] text-white flex items-center justify-center transition border border-[#fe2c55]/70 hover:border-[#fe2c55] hover:scale-105 active:scale-95 cursor-pointer shadow-md"
-                  title={liveHeroMuted ? 'Activar sonido' : 'Silenciar'}
-                >
-                  {liveHeroMuted ? (
-                    <VolumeX className="w-4 h-4 text-rose-400 stroke-[2.5]" />
-                  ) : (
-                    <Volume2 className="w-4 h-4 text-white stroke-[2.5]" />
-                  )}
-                </button>
-
-                {/* 2. Etiqueta VOL */}
-                <span className="text-[8.5px] font-black text-[#fe2c55] uppercase tracking-wider font-sans drop-shadow-sm">
-                  VOL
-                </span>
-
-                {/* 3. Cápsula y barra deslizadora vertical idéntica a image.png */}
-                {(() => {
-                  const currentVolVal = liveHeroMuted ? 0 : liveHeroVolume;
-                  const handleHeroVolumeDrag = (newPct: number) => {
-                    const clamped = Math.max(0, Math.min(100, Math.round(newPct)));
-                    setLiveHeroVolume(clamped);
-                    if (clamped === 0) {
-                      setLiveHeroMuted(true);
-                      if (heroVideoRef.current) {
-                        heroVideoRef.current.muted = true;
-                        heroVideoRef.current.volume = 0;
-                      }
-                    } else {
-                      if (liveHeroMuted) setLiveHeroMuted(false);
-                      if (heroVideoRef.current) {
-                        heroVideoRef.current.muted = false;
-                        heroVideoRef.current.volume = clamped / 100;
-                      }
+                  } else {
+                    if (liveHeroMuted) setLiveHeroMuted(false);
+                    if (heroVideoRef.current) {
+                      heroVideoRef.current.muted = false;
+                      heroVideoRef.current.volume = clamped / 100;
                     }
-                  };
+                  }
+                };
 
-                  return (
-                    <div 
-                      className="relative h-36 sm:h-44 w-4 sm:w-4.5 flex items-center justify-center bg-[#181d28]/95 hover:bg-[#181d28] rounded-full py-2 border border-slate-600/50 shadow-inner cursor-pointer group/slider-container"
+                return (
+                  <div
+                    className={`flex flex-col items-center bg-[#070b14]/95 backdrop-blur-2xl border-[1.5px] border-[#00f2fe]/80 rounded-full py-2.5 px-1 sm:px-1.5 shadow-[0_0_20px_rgba(0,242,254,0.4),0_15px_40px_rgba(0,0,0,0.92)] hover:border-[#00f2fe] hover:shadow-[0_0_25px_rgba(0,242,254,0.65)] transition-all duration-300 transform select-none cursor-pointer ${
+                      isHeroLeftVolumeVisible
+                        ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto ring-1 ring-[#00f2fe]/40'
+                        : 'opacity-0 -translate-x-3 scale-95 pointer-events-none group-hover/left-channel-sensor:opacity-100 group-hover/left-channel-sensor:translate-x-0 group-hover/left-channel-sensor:scale-100 group-hover/left-channel-sensor:pointer-events-auto'
+                    }`}
+                    onMouseEnter={() => setIsHeroLeftVolumeVisible(true)}
+                    onMouseLeave={() => setIsHeroLeftVolumeVisible(false)}
+                    onClick={(e) => e.stopPropagation()}
+                    title={`Volumen: ${currentVolVal}% (Arrastra o usa la rueda del ratón)`}
+                  >
+                    {/* Altavoz Cian / Mute */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const nextMuted = !liveHeroMuted;
+                        setLiveHeroMuted(nextMuted);
+                        if (heroVideoRef.current) {
+                          heroVideoRef.current.muted = nextMuted;
+                          if (!nextMuted && liveHeroVolume === 0) {
+                            setLiveHeroVolume(80);
+                            heroVideoRef.current.volume = 0.8;
+                          }
+                        }
+                        setToastNotification({
+                          message: nextMuted ? '🔇 Audio del canal silenciado' : `🔊 Volumen: ${liveHeroVolume === 0 ? 80 : liveHeroVolume}%`,
+                          title: 'Audio del canal'
+                        });
+                      }}
+                      className="custom-bg bg-transparent border-0 p-0.5 text-[#00f2fe] hover:scale-110 active:scale-90 transition cursor-pointer"
+                      title={liveHeroMuted || liveHeroVolume === 0 ? 'Activar audio' : 'Silenciar audio'}
+                    >
+                      {liveHeroMuted || liveHeroVolume === 0 ? (
+                        <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.7)]" />
+                      ) : (
+                        <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00f2fe] drop-shadow-[0_0_6px_rgba(0,242,254,0.8)]" />
+                      )}
+                    </button>
+
+                    {/* Barra vertical de volumen (Track) idéntica a z.png */}
+                    <div
+                      className="relative w-1.5 sm:w-2 h-36 sm:h-44 bg-[#0a1526]/95 border border-slate-700/80 rounded-full cursor-pointer overflow-hidden my-1.5 flex flex-col justify-end shadow-inner touch-none select-none"
+                      title={`Volumen: ${currentVolVal}%`}
                       onPointerDown={(e) => {
+                        e.stopPropagation();
                         const rect = e.currentTarget.getBoundingClientRect();
                         const updateFromPointer = (clientY: number) => {
                           const offsetY = clientY - rect.top;
@@ -29606,26 +30372,15 @@ try {
                         window.addEventListener('pointerup', onUp);
                       }}
                     >
-                      {/* Pista vertical interior blanca */}
-                      <div className="absolute inset-y-2.5 w-1 rounded-full bg-white overflow-hidden flex flex-col justify-end pointer-events-none">
-                        {/* Relleno rojo desde abajo hacia arriba hasta el porcentaje actual */}
-                        <div 
-                          className="w-full bg-[#fe2c55] rounded-full transition-all duration-75"
-                          style={{ height: `${currentVolVal}%` }}
-                        />
-                      </div>
-
-                      {/* Pomo circular rojo como en image.png */}
-                      <div 
-                        className="absolute w-3.5 h-3.5 rounded-full bg-[#fe2c55] border border-white/20 shadow-md pointer-events-none transition-all duration-75 -translate-y-1/2"
-                        style={{ 
-                          bottom: `calc(${currentVolVal}% * 0.82 + 5px)`,
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                        }}
+                      {/* Relleno cian/turquesa brillante desde abajo */}
+                      <div
+                        className={`w-full rounded-full transition-all duration-75 ${
+                          liveHeroMuted || liveHeroVolume === 0
+                            ? 'bg-rose-500/40'
+                            : 'bg-gradient-to-t from-emerald-400 via-teal-300 to-[#00f2fe] shadow-[0_0_12px_rgba(0,242,254,0.9)]'
+                        }`}
+                        style={{ height: `${currentVolVal}%` }}
                       />
-
-                      {/* Input range nativo accesible */}
                       <input
                         type="range"
                         min="0"
@@ -29636,14 +30391,14 @@ try {
                         title={`Volumen del canal: ${currentVolVal}%`}
                       />
                     </div>
-                  );
-                })()}
 
-                {/* 4. Porcentaje numérico */}
-                <span className="text-[9px] font-sans font-black text-white drop-shadow-md">
-                  {liveHeroMuted ? 0 : liveHeroVolume}%
-                </span>
-              </div>
+                    {/* Porcentaje en texto */}
+                    <span className="text-[7.5px] sm:text-[8px] font-mono font-black text-white tracking-tighter drop-shadow-md select-none mt-0.5">
+                      {currentVolVal}%
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* 🎯 SENSOR DEL MARGEN DERECHO DEL CANAL: Al pasar el puntero por la derecha del canal aparecen los botones de la captura image.png */}
@@ -29844,28 +30599,35 @@ try {
                 </div>
 
 
-                {/* 6. Disco de Sonido / Audio con icono estilizado rojo */}
+                {/* 6. Disco de Sonido -> Ficha del Sonido, vídeos con esa música y usar audio */}
                 <div className="flex flex-col items-center mt-0.5">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const nextMuted = !liveHeroMuted;
-                      setLiveHeroMuted(nextMuted);
-                      if (heroVideoRef.current) {
-                        heroVideoRef.current.muted = nextMuted;
-                        if (!nextMuted && liveHeroVolume === 0) {
-                          setLiveHeroVolume(80);
-                          heroVideoRef.current.volume = 0.8;
-                        }
-                      }
-                      setToastNotification({
-                        message: nextMuted ? '🔇 Audio silenciado' : '🔊 Audio activado',
-                        title: 'Música & Audio'
+                      const trackLabel =
+                        liveChannelsCategoryFilter === 'atelier'
+                          ? 'Acoustic Lo-Fi Atelier Beats - LoFi Collective'
+                          : 'Aesthetic Synthwave - LoFi Collective';
+                      setHeroSoundSheetVideo({
+                        id: heroChannel.id,
+                        username: liveChannelsCategoryFilter === 'todos' ? 'adrianalima' : heroChannel.username,
+                        name: heroChannel.name,
+                        avatar:
+                          liveChannelsCategoryFilter === 'todos'
+                            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'
+                            : heroChannel.avatar,
+                        videoUrl: heroChannel.videoUrl,
+                        likes: heroChannel.likes || heroLikesCount,
+                        description: heroChannel.title,
+                        music: trackLabel,
+                        videoCategory: heroChannel.categoryLabel || heroChannel.category,
                       });
                     }}
-                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#0a0f1d]/90 hover:bg-black backdrop-blur-md border border-slate-700/80 hover:border-rose-500/60 flex items-center justify-center shadow-xl transition-all duration-200 hover:scale-105 active:scale-90 cursor-pointer relative group/disc"
-                    title={liveHeroMuted ? "Activar audio" : "Silenciar audio"}
+                    className="custom-bg w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#0a0f1d]/90 hover:bg-black backdrop-blur-md border-2 border-slate-700/80 hover:border-[#ff2454] flex items-center justify-center shadow-xl transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer relative group/disc"
+                    title="Ver ficha del sonido y vídeos con esta música"
+                    aria-label="Ver ficha del sonido"
+                    id="btn-hero-sound-sheet"
                   >
                     {/* Icono de audio en rojo idéntico a la captura image.png */}
                     <div className="relative flex items-center justify-center">
@@ -30125,13 +30887,9 @@ try {
 
 
 
-          {/* CONTENIDO DE LA CAPTURA z.png (Oculto cuando la ventana de mensajes/comentarios está abierta) */}
+          {/* CONTENIDO DE LA CAPTURA z.png (Anclado en la base dentro de la pantalla móvil, oculto cuando la ventana de mensajes/comentarios está abierta) */}
           {!isHeroCommentsOpen && (
-            <div className={`w-full text-white space-y-2.5 transition-all duration-300 ${
-              isRetransmissionActive
-                ? 'absolute bottom-0 inset-x-0 z-20 p-4 sm:p-5 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-auto'
-                : 'bg-[#0e1320] border-t border-slate-800/80 p-4 sm:p-5'
-            }`}>
+            <div className="absolute bottom-0 inset-x-0 z-20 w-full text-white space-y-2.5 p-4 sm:p-5 pr-16 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-auto transition-all duration-300">
               {/* Usuario, Check de verificación y tag dinámico (Contenedor "Tu cámara en vivo" eliminado) */}
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
@@ -30222,15 +30980,37 @@ try {
                 </button>
               </div>
 
-              {/* Ticker musical adaptado */}
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-300 pt-1">
+              {/* Ticker musical adaptado (pulsa para abrir ficha del sonido) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const trackLabel =
+                    liveChannelsCategoryFilter === 'atelier'
+                      ? 'Acoustic Lo-Fi Atelier Beats - LoFi Collective'
+                      : 'Aesthetic Synthwave - LoFi Collective';
+                  setHeroSoundSheetVideo({
+                    id: heroChannel.id,
+                    username: liveChannelsCategoryFilter === 'todos' ? 'adrianalima' : heroChannel.username,
+                    name: heroChannel.name,
+                    avatar: heroChannel.avatar,
+                    videoUrl: heroChannel.videoUrl,
+                    likes: heroChannel.likes || heroLikesCount,
+                    description: heroChannel.title,
+                    music: trackLabel,
+                    videoCategory: heroChannel.categoryLabel || heroChannel.category,
+                  });
+                }}
+                className="custom-bg flex items-center gap-2 text-xs font-medium text-slate-300 hover:text-white hover:underline pt-1 bg-transparent border-0 p-0 cursor-pointer text-left"
+                title="Abrir ficha del sonido"
+              >
                 <Music className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                 <span>
                   {liveChannelsCategoryFilter === 'atelier'
                     ? 'Acoustic Lo-Fi Atelier Beats - LoFi Collective'
                     : 'Aesthetic Synthwave - LoFi Collective'}
                 </span>
-              </div>
+              </button>
             </div>
           )}
         </div>
@@ -30588,13 +31368,6 @@ try {
                             </span>
                           </div>
 
-                          <div>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
-                              <Sparkles className="w-3 h-3 text-yellow-300" />
-                              <span>SUBIDO DESDE CASTING LIVE</span>
-                            </span>
-                          </div>
-
                           <p className="text-xs text-slate-100 font-medium leading-snug drop-shadow line-clamp-2">
                             {channel.title}{' '}
                             {channel.tags.map(t => (
@@ -30613,11 +31386,6 @@ try {
                               </button>
                             ))}
                           </p>
-
-                          <div className="flex items-center gap-2 text-xs font-medium text-slate-300 pt-0.5">
-                            <Music className="w-3.5 h-3.5 text-rose-400 shrink-0 animate-spin" style={{ animationDuration: '4s' }} />
-                            <span className="truncate">Vogue Runway Paris Beats • Haute Couture Live</span>
-                          </div>
                         </div>
 
                         {/* Drawer de Comentarios interactivo */}
@@ -30789,6 +31557,141 @@ try {
   };
 
   const renderExploreGrid = () => {
+    const normalizeText = (s?: string | null) =>
+      (s || '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+    const trimmedQuery = searchTerm.trim();
+    const cleanQuery = normalizeText(trimmedQuery).replace(/^@+/, '');
+    const queryTokens = cleanQuery.split(/\s+/).filter(Boolean);
+
+    const matchedExploreAccounts = (() => {
+      if (!cleanQuery) return [];
+
+      type ExploreAccountItem = {
+        key: string;
+        name: string;
+        username: string;
+        alias?: string;
+        avatar: string;
+        bio?: string;
+        isVerified?: boolean;
+        videoCount: number;
+      };
+
+      const accountMap = new Map<string, ExploreAccountItem>();
+
+      const addAccount = (item: {
+        name?: string;
+        username?: string;
+        alias?: string;
+        avatar?: string;
+        bio?: string;
+        isVerified?: boolean;
+      }) => {
+        const cleanHandle = (item.username || '').replace(/^@+/, '').trim();
+        const displayName = (item.name || cleanHandle).trim();
+        if (!cleanHandle && !displayName) return;
+        const canonicalKey = normalizeText(cleanHandle || displayName);
+        if (!canonicalKey) return;
+
+        const existing = accountMap.get(canonicalKey);
+        const videoCount = videosList.filter(
+          (v) =>
+            normalizeText(v.username).replace(/^@+/, '') === canonicalKey ||
+            (displayName && normalizeText(v.name) === normalizeText(displayName))
+        ).length;
+
+        if (!existing) {
+          accountMap.set(canonicalKey, {
+            key: canonicalKey,
+            name: displayName || cleanHandle,
+            username: cleanHandle || normalizeText(displayName).replace(/\s+/g, '_'),
+            alias: item.alias,
+            avatar:
+              item.avatar ||
+              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+            bio: item.bio,
+            isVerified: item.isVerified,
+            videoCount,
+          });
+        } else {
+          if (!existing.alias && item.alias) existing.alias = item.alias;
+          if (!existing.bio && item.bio) existing.bio = item.bio;
+          if (!existing.isVerified && item.isVerified) existing.isVerified = item.isVerified;
+          if (videoCount > existing.videoCount) existing.videoCount = videoCount;
+        }
+      };
+
+      if (userProfile) {
+        addAccount({
+          name: userProfile.name,
+          username: userProfile.username,
+          avatar: userProfile.avatar,
+          bio: userProfile.bio,
+          isVerified: true,
+        });
+      }
+
+      accountsQueSigues.forEach((acc) => {
+        addAccount({
+          name: acc.name,
+          username: acc.username,
+          avatar: acc.avatar,
+          bio: acc.bio,
+          isVerified: Boolean((acc as any).isVerified),
+        });
+      });
+
+      (models || []).forEach((m) => {
+        addAccount({
+          name: m.name,
+          username: m.username,
+          alias: m.alias,
+          avatar: m.avatar,
+          bio: m.bio,
+          isVerified: Boolean(m.verified),
+        });
+      });
+
+      videosList.forEach((vid) => {
+        addAccount({
+          name: vid.name,
+          username: vid.username,
+          avatar: vid.avatar,
+        });
+      });
+
+      return Array.from(accountMap.values())
+        .filter((acc) => {
+          const nName = normalizeText(acc.name);
+          const nUser = normalizeText(acc.username).replace(/^@+/, '');
+          const nAlias = normalizeText(acc.alias);
+          const combined = `${nName} ${nUser} ${nAlias}`.trim();
+          const tokenMatch =
+            queryTokens.length > 0 &&
+            queryTokens.every((t) => combined.includes(t.replace(/^@+/, '')));
+          return (
+            nName.includes(cleanQuery) ||
+            nUser.includes(cleanQuery) ||
+            (nAlias !== '' && nAlias.includes(cleanQuery)) ||
+            tokenMatch
+          );
+        })
+        .sort((a, b) => {
+          const aExact =
+            normalizeText(a.name) === cleanQuery || normalizeText(a.username) === cleanQuery ? 1 : 0;
+          const bExact =
+            normalizeText(b.name) === cleanQuery || normalizeText(b.username) === cleanQuery ? 1 : 0;
+          if (aExact !== bExact) return bExact - aExact;
+          return b.videoCount - a.videoCount;
+        });
+    })();
+
     return (
       <div className="w-full bg-white text-slate-900 select-none animate-fade-in font-sans p-4 sm:p-6 min-h-[750px] pb-36 overflow-y-auto scrollbar-thin scrollbar-thumb-rose-200/50 scrollbar-track-transparent rounded-2xl flex flex-col" id="explore-grid-container">
         
@@ -30798,7 +31701,7 @@ try {
             onClick={() => {
               setActiveSubTab('para-ti');
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-[#fe2c55] text-white text-xs font-black uppercase rounded-full transition-all duration-150 cursor-pointer border-0 shadow-sm hover:scale-105 active:scale-95"
+            className="custom-bg flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-[#fe2c55] text-white text-xs font-black uppercase rounded-full transition-all duration-150 cursor-pointer border-0 shadow-sm hover:scale-105 active:scale-95"
             id="explore-back-button"
           >
             <span>←</span> Volver al Feed
@@ -30815,7 +31718,7 @@ try {
             <Search className="w-4 h-4 text-slate-400 absolute left-4.5 top-1/2 -translate-y-1/2" />
             <input 
               type="text"
-              placeholder="Busca"
+              placeholder="Busca por nombre o @usuario..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -30826,9 +31729,11 @@ try {
             />
             {searchTerm && (
               <button 
+                type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-black cursor-pointer bg-transparent border-0"
+                className="custom-bg absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-black cursor-pointer bg-transparent border-0"
                 id="explore-search-clear"
+                aria-label="Limpiar búsqueda"
               >
                 ✕
               </button>
@@ -30846,7 +31751,7 @@ try {
             {selectedCategoryFilter !== 'Todos' && (
               <button
                 onClick={() => handleCategoryFilterChange('Todos', true)}
-                className="text-[10px] text-rose-550 font-black uppercase hover:underline cursor-pointer border-0 bg-transparent"
+                className="custom-bg text-[10px] text-rose-550 font-black uppercase hover:underline cursor-pointer border-0 bg-transparent"
               >
                 Limpiar Filtros
               </button>
@@ -30861,7 +31766,7 @@ try {
                 <button
                   key={cat}
                   onClick={() => handleCategoryFilterChange(cat as any, true)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer border-0 shadow-xs ${
+                  className={`custom-bg px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer border-0 shadow-xs ${
                     isSelected 
                       ? 'bg-[#fe2c55] text-white' 
                       : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900'
@@ -30874,26 +31779,101 @@ try {
           </div>
         </div>
 
+        {/* Matched Users / Accounts by Nombre or @Nombre de usuario */}
+        {trimmedQuery !== '' && matchedExploreAccounts.length > 0 && (
+          <div className="mb-8 space-y-3" id="explore-matched-accounts-section">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <span>👤 Usuarios y cuentas encontradas</span>
+                <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-extrabold">
+                  {matchedExploreAccounts.length}
+                </span>
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {matchedExploreAccounts.slice(0, 12).map((acc) => (
+                <button
+                  key={acc.key}
+                  type="button"
+                  onClick={() => handleOpenUserChannel(acc.username, acc.name)}
+                  className="custom-bg flex items-center gap-3 p-3 rounded-2xl bg-slate-50/90 hover:bg-rose-50/60 border border-slate-200/80 hover:border-rose-200 text-left transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-sm group"
+                >
+                  <img
+                    src={acc.avatar}
+                    alt={acc.name}
+                    className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-xs shrink-0 group-hover:scale-105 transition-transform"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+                    }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-extrabold text-slate-900 truncate">
+                        {acc.name}
+                      </span>
+                      {acc.isVerified && (
+                        <span className="text-sky-500 text-xs shrink-0" title="Verificado">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-bold text-rose-600 truncate">
+                      @{acc.username}
+                    </p>
+                    {acc.videoCount > 0 && (
+                      <p className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                        {acc.videoCount} {acc.videoCount === 1 ? 'vídeo' : 'vídeos'}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-rose-600 shrink-0">
+                    Ver →
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Video Grid */}
         {filteredVideos.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 space-y-4" id="explore-empty-state">
-            <span className="text-6xl animate-bounce">🌌</span>
-            <div className="space-y-1">
-              <h3 className="text-base font-black text-slate-800">No se encontraron vídeos</h3>
-              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
-                Prueba buscando otro término (ej: "neón", "pasarela") o cambia la categoría para ver más contenidos.
-              </p>
+          matchedExploreAccounts.length > 0 ? (
+            selectedCategoryFilter !== 'Todos' ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 bg-slate-50/70 rounded-2xl border border-slate-100">
+                <p className="text-xs text-slate-500 font-semibold">
+                  No hay vídeos de esta búsqueda dentro de la categoría <span className="font-bold text-slate-800">{selectedCategoryFilter}</span>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleCategoryFilterChange('Todos', true)}
+                  className="custom-bg bg-[#fe2c55] hover:bg-rose-600 text-white font-black text-xs py-2 px-5 rounded-full shadow-sm transition cursor-pointer border-0"
+                >
+                  Buscar en todas las categorías
+                </button>
+              </div>
+            ) : null
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 space-y-4" id="explore-empty-state">
+              <span className="text-6xl animate-bounce">🌌</span>
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-slate-800">No se encontraron resultados</h3>
+                <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                  Prueba buscando por nombre, @nombredeusuario (ej: "Adriana", "@elena_r") o cambia la categoría para ver más contenidos.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  handleCategoryFilterChange('Todos', true);
+                }}
+                className="custom-bg bg-[#fe2c55] hover:bg-red-650 text-white font-black text-xs py-2 px-5 rounded-full shadow-md transition transform hover:scale-105 active:scale-95 cursor-pointer border-0"
+              >
+                Restablecer exploración
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                handleCategoryFilterChange('Todos', true);
-              }}
-              className="bg-[#fe2c55] hover:bg-red-650 text-white font-black text-xs py-2 px-5 rounded-full shadow-md transition transform hover:scale-105 active:scale-95 cursor-pointer border-0"
-            >
-              Restablecer exploración
-            </button>
-          </div>
+          )
         ) : (
           <div className="space-y-8 w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 w-full" id="explore-videos-grid">
@@ -30930,7 +31910,7 @@ try {
 
                     {/* High fidelity overlay on bottom */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-3 transition-opacity duration-300">
-                      <div className="flex items-center gap-1.5 mb-1">
+                      <div className="flex items-center gap-2 mb-1.5">
                         <img 
                           src={
                             (userProfile && (
@@ -30944,13 +31924,22 @@ try {
                               : (vid.avatar || userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200')
                           } 
                           alt={vid.name} 
-                          className="w-5.5 h-5.5 rounded-full border border-white/80 shrink-0 shadow-xs object-cover" 
+                          className="w-6 h-6 rounded-full border border-white/80 shrink-0 shadow-xs object-cover" 
                           referrerPolicy="no-referrer"
                           onError={(e) => {
                             e.currentTarget.src = userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
                           }}
                         />
-                        <span className="text-[10px] font-black text-white truncate drop-shadow-xs">@{vid.username}</span>
+                        <div className="min-w-0 flex-1">
+                          {vid.name && (
+                            <span className="text-[11px] font-black text-white truncate block leading-tight drop-shadow-xs">
+                              {vid.name}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-bold text-white/80 truncate block leading-tight drop-shadow-xs">
+                            @{vid.username}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-[10.5px] text-white/95 line-clamp-2 leading-tight font-semibold tracking-tight">{vid.description}</p>
                     </div>
@@ -30963,7 +31952,7 @@ try {
               <div className="flex justify-center pt-4 pb-8" id="cargar-mas-wrapper">
                 <button
                   onClick={() => setVisibleExploreCount((prev) => prev + 6)}
-                  className="px-8 py-3 bg-gradient-to-r from-pink-500 via-rose-500 to-[#fe2c55] text-white text-xs font-black rounded-full shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer border-0 uppercase tracking-widest hover:brightness-[1.04]"
+                  className="custom-bg px-8 py-3 bg-gradient-to-r from-pink-500 via-rose-500 to-[#fe2c55] text-white text-xs font-black rounded-full shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer border-0 uppercase tracking-widest hover:brightness-[1.04]"
                   id="cargar-mas-button"
                 >
                   Cargar más vídeos
@@ -31249,7 +32238,7 @@ try {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input 
                 type="text"
-                placeholder="Buscar"
+                placeholder="Buscar por nombre o @usuario"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -34626,80 +35615,111 @@ try {
                               </div>
 
                               {/* Form: Select user proposal */}
-                              <div className="space-y-2 pt-0.5 text-left">
-                                <div className="flex items-center justify-between gap-1">
-                                  <label className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-800 tracking-wider block">
-                                    📁 SELECCIONA CUÁL DE TUS PROYECTOS VAS A INSCRIBIR:
-                                  </label>
-                                  <span className="text-[9px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
-                                    {mergedInscriptionProposals.length} Proyectos
-                                  </span>
-                                </div>
+                              {(() => {
+                                const availableInscriptionProposals = mergedInscriptionProposals.filter(p => !isInscriptionProjectLocked(p));
+                                return (
+                                  <div className="space-y-2 pt-0.5 text-left">
+                                    <div className="flex items-center justify-between gap-1">
+                                      <label className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-800 tracking-wider block">
+                                        📁 SELECCIONA CUÁL DE TUS PROYECTOS VAS A INSCRIBIR:
+                                      </label>
+                                      <span className="text-[9px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
+                                        {availableInscriptionProposals.length} {availableInscriptionProposals.length === 1 ? 'Proyecto' : 'Proyectos'}
+                                      </span>
+                                    </div>
 
-                                {/* Interactive Project Selection Cards */}
-                                <div className="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-0.5">
-                                  {mergedInscriptionProposals.map(proj => {
-                                    const isSelected = selectedProj.id === proj.id;
-                                    return (
-                                      <button
-                                        type="button"
-                                        key={proj.id}
-                                        onClick={() => {
-                                          setSelectedInscriptionProjectId(proj.id);
-                                          try {
-                                            localStorage.setItem('finanzas_user_project_id', proj.id);
-                                            localStorage.setItem('finanzas_user_project_title', proj.title);
-                                            window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
-                                              detail: { projectId: proj.id, projectTitle: proj.title }
-                                            }));
-                                          } catch (e) {}
-                                        }}
-                                        className={`w-full p-2.5 rounded-xl border-2 transition text-left cursor-pointer flex flex-col gap-1 ${
-                                          isSelected
-                                            ? 'border-pink-500 bg-pink-50/80 shadow-xs ring-1 ring-pink-400'
-                                            : 'border-slate-200 bg-white hover:border-pink-200 hover:bg-slate-50'
-                                        }`}
-                                      >
-                                        <div className="flex items-center justify-between gap-1 w-full">
-                                          <div className="flex items-center gap-1.5 min-w-0">
-                                            <span className="text-xs">💼</span>
-                                            <span className="font-extrabold text-[11px] sm:text-xs text-slate-900 truncate">
-                                              {proj.title}
-                                            </span>
-                                          </div>
-                                          <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
-                                            isSelected 
-                                              ? 'bg-pink-600 text-white' 
-                                              : 'bg-slate-100 text-slate-600'
-                                          }`}>
-                                            {isSelected ? '✓ Seleccionado' : 'Elegir'}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-[9.5px] text-slate-500 font-medium">
-                                          <span>{proj.category}</span>
-                                        </div>
-                                        <p className="text-[9.5px] text-slate-600 m-0 line-clamp-1">
-                                          🎯 {proj.objective}
+                                    {availableInscriptionProposals.length === 0 ? (
+                                      <div className="p-3 rounded-xl bg-gradient-to-r from-white via-[#fdf2f8] to-[#fce7f3] border border-[#f9a8d4] space-y-2 text-left">
+                                        <p className="text-[10.5px] font-bold text-[#831843] m-0 leading-snug">
+                                          🔒 Todos tus proyectos han alcanzado su financiación acumulada consensuada y ya no aparecen en este menú. Sube un nuevo proyecto para participar en esta ronda.
                                         </p>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
+                                        {onNavigateToTab && (
+                                          <button
+                                            type="button"
+                                            onClick={() => onNavigateToTab('create_project')}
+                                            className="custom-bg px-3 py-1.5 rounded-lg bg-white hover:bg-[#fdf2f8] text-[#831843] border border-[#f9a8d4] text-[10px] font-bold cursor-pointer inline-flex items-center gap-1"
+                                          >
+                                            <PlusCircle className="w-3.5 h-3.5 text-[#be185d]" />
+                                            <span>Subir Nuevo Proyecto</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <>
+                                        {/* Interactive Project Selection Cards */}
+                                        <div className="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-0.5">
+                                          {availableInscriptionProposals.map(proj => {
+                                            const isSelected = selectedProj.id === proj.id;
+                                            const projWon = getInscriptionProjectFundingWon(proj);
+                                            return (
+                                              <button
+                                                type="button"
+                                                key={proj.id}
+                                                onClick={() => {
+                                                  setSelectedInscriptionProjectId(proj.id);
+                                                  try {
+                                                    localStorage.setItem('finanzas_user_project_id', proj.id);
+                                                    localStorage.setItem('finanzas_user_project_title', proj.title);
+                                                    window.dispatchEvent(new CustomEvent('finanzas-project-selection-changed', {
+                                                      detail: { projectId: proj.id, projectTitle: proj.title }
+                                                    }));
+                                                  } catch (e) {}
+                                                }}
+                                                className={`custom-bg w-full p-2.5 rounded-xl border-2 transition text-left flex flex-col gap-1 cursor-pointer ${
+                                                  isSelected
+                                                    ? 'border-pink-500 bg-pink-50/80 shadow-xs ring-1 ring-pink-400'
+                                                    : 'border-slate-200 bg-white hover:border-pink-200 hover:bg-slate-50'
+                                                }`}
+                                              >
+                                                <div className="flex items-center justify-between gap-1 w-full">
+                                                  <div className="flex items-center gap-1.5 min-w-0">
+                                                    <span className="text-xs">💼</span>
+                                                    <span className="font-extrabold text-[11px] sm:text-xs text-slate-900 truncate">
+                                                      {proj.title}
+                                                    </span>
+                                                  </div>
+                                                  <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
+                                                    isSelected 
+                                                      ? 'bg-pink-600 text-white' 
+                                                      : 'bg-slate-100 text-slate-600'
+                                                  }`}>
+                                                    {isSelected ? '✓ Seleccionado' : 'Elegir'}
+                                                  </span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[9.5px] text-slate-500 font-medium">
+                                                  <span>{proj.category}</span>
+                                                  {proj.budget ? (
+                                                    <span className="font-mono font-bold text-[#9d174d]">
+                                                      {projWon.toFixed(0)}€ / {proj.budget}€
+                                                    </span>
+                                                  ) : null}
+                                                </div>
+                                                <p className="text-[9.5px] text-slate-600 m-0 line-clamp-1">
+                                                  🎯 {proj.objective}
+                                                </p>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
 
-                                {/* Project details summary card */}
-                                <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200 text-[10px] sm:text-[10.5px] text-slate-700 space-y-1 leading-relaxed font-sans">
-                                  <p className="m-0 font-bold text-slate-900 flex items-center gap-1">
-                                    <span>Proyecto Seleccionado:</span>
-                                    <span className="text-pink-600">{selectedProj.title}</span>
-                                  </p>
-                                  <p className="m-0">
-                                    <strong className="text-slate-900">🎯 Objetivo:</strong> {selectedProj.objective}
-                                  </p>
-                                  <p className="m-0">
-                                    <strong className="text-slate-900">📈 Plan de Gasto:</strong> {selectedProj.fundUsage}
-                                  </p>
-                                </div>
-                              </div>
+                                        {/* Project details summary card */}
+                                        <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200 text-[10px] sm:text-[10.5px] text-slate-700 space-y-1 leading-relaxed font-sans">
+                                          <p className="m-0 font-bold text-slate-900 flex items-center gap-1">
+                                            <span>Proyecto Seleccionado:</span>
+                                            <span className="text-pink-600">{selectedProj.title}</span>
+                                          </p>
+                                          <p className="m-0">
+                                            <strong className="text-slate-900">🎯 Objetivo:</strong> {selectedProj.objective}
+                                          </p>
+                                          <p className="m-0">
+                                            <strong className="text-slate-900">📈 Plan de Gasto:</strong> {selectedProj.fundUsage}
+                                          </p>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              })()}
 
                               {/* Arrival Order Controller for Adriana Lima */}
                               <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 sm:p-3 space-y-2 text-left">
@@ -34799,12 +35819,26 @@ try {
 
                                 <button
                                   type="button"
+                                  disabled={isInscriptionProjectLocked(selectedProj)}
                                   onClick={() => handleExecutePaymentAndJoinSession(selectedProj.id, activeFee, targetUserArrivalSlot, currentSession)}
-                                  className="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg border border-slate-700 text-center"
+                                  className={`custom-bg w-full font-extrabold text-[11px] sm:text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg border text-center ${
+                                    isInscriptionProjectLocked(selectedProj)
+                                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                      : 'bg-slate-800 hover:bg-slate-900 active:scale-95 text-white cursor-pointer border-slate-700'
+                                  }`}
                                   id="btn-disparar-pago-inscribir-mesa"
                                 >
-                                  <Play className="w-3.5 h-3.5 fill-current text-white shrink-0" />
-                                  <span className="truncate">{activeFee === 1000 ? 'Disparar Pago de 1.000€ y Comenzar Exposición' : `Disparar Pago de ${activeFee || 10}€ y Acceder a Sala de Espera`}</span>
+                                  {isInscriptionProjectLocked(selectedProj) ? (
+                                    <>
+                                      <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <span className="truncate">Proyecto bloqueado (Elige otro o sube uno nuevo)</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Play className="w-3.5 h-3.5 fill-current text-white shrink-0" />
+                                      <span className="truncate">{activeFee === 1000 ? 'Disparar Pago de 1.000€ y Comenzar Exposición' : `Disparar Pago de ${activeFee || 10}€ y Acceder a Sala de Espera`}</span>
+                                    </>
+                                  )}
                                 </button>
 
                                 <button
@@ -39824,16 +40858,25 @@ try {
                   <p className="text-[10px] text-slate-400">Captura una instantánea de moda o sube un archivo</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowQuickCameraModal(false);
-                  stopWebcam();
-                }}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center text-xs transition cursor-pointer border-0"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAccessRequestModal(true)}
+                  className="custom-bg px-3 py-1 rounded-full bg-gradient-to-r from-[#E11D64] to-[#9E0840] text-white text-[11px] font-bold border border-[#DFB66C]/70 cursor-pointer hover:opacity-95 transition"
+                >
+                  Permisos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQuickCameraModal(false);
+                    stopWebcam();
+                  }}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center text-xs transition cursor-pointer border-0"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Camera Viewfinder / Preview Screen */}
@@ -40725,6 +41768,64 @@ try {
           </div>
         </div>
       )}
+
+      <AccessRequestModal
+        isOpen={showAccessRequestModal}
+        onClose={() => {
+          setShowAccessRequestModal(false);
+          setPendingPermissionAction(null);
+          setPendingPermissionChannel(null);
+        }}
+        initialCamera={mediaPermissionPrefs.camera}
+        initialMicrophone={mediaPermissionPrefs.microphone}
+        onApply={async (prefs) => {
+          setMediaPermissionPrefs(prefs);
+          setIsBroadcastCamOn(prefs.camera);
+          setIsBroadcastMicOn(prefs.microphone);
+          setIsLiveStreamAudioMuted(!prefs.microphone);
+          const action = pendingPermissionAction;
+          const ch = pendingPermissionChannel;
+          setShowAccessRequestModal(false);
+          setPendingPermissionAction(null);
+          setPendingPermissionChannel(null);
+
+          if (action === 'live-broadcast') {
+            await startLiveBroadcastWithPermissions(prefs);
+          } else if (action === 'retransmission') {
+            await handleStartLiveRetransmission(ch, prefs);
+          } else if (action === 'quick-webcam') {
+            if (prefs.camera) {
+              await startWebcam();
+            } else {
+              setToastNotification({
+                title: 'Permisos guardados',
+                message: '🔒 Acceso a cámara desactivado.'
+              });
+            }
+          } else {
+            setToastNotification({
+              title: 'Access request',
+              message: `✅ Permisos aplicados: Cámara (${prefs.camera ? 'Activa' : 'Inactiva'}) · Micrófono (${prefs.microphone ? 'Activo' : 'Inactivo'}).`
+            });
+          }
+        }}
+      />
+      {/* 🎵 FICHA DEL SONIDO MODAL (Para canal en directo / disco de sonido) */}
+      <SoundTrackSheetModal
+        isOpen={Boolean(heroSoundSheetVideo)}
+        sourceVideo={heroSoundSheetVideo}
+        allVideos={videosList}
+        onClose={() => setHeroSoundSheetVideo(null)}
+        onUseAudioForNewVideo={(trackFullTitle) => {
+          setHeroSoundSheetVideo(null);
+          setActiveSubTab('para-ti');
+          setShowUploadModal(true);
+          setShowCreatorStudio(true);
+          setUploadMusic(trackFullTitle);
+          setUploadModalStage('details');
+          setShowAdvancedSettings(true);
+        }}
+      />
     </div>
   );
 }
@@ -40768,6 +41869,20 @@ function CastingLiveStoryLightbox({
   const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
   const lastScrollTime = React.useRef<number>(0);
 
+  const [replyText, setReplyText] = React.useState('');
+  const [isReplyFocused, setIsReplyFocused] = React.useState(false);
+  const [sentFeedbackToast, setSentFeedbackToast] = React.useState<string | null>(null);
+  const [storyCommentsMap, setStoryCommentsMap] = React.useState<Record<string, Array<{ id: string; user: string; avatar: string; text: string; time: string }>>>(() => {
+    try {
+      const saved = localStorage.getItem('ff_story_comments_v1');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const replyInputRef = React.useRef<HTMLInputElement>(null);
+  const QUICK_STORY_REACTIONS = ['😂', '😮', '😍', '😢', '👏', '🔥', '🎉', '💯'];
+
   // Close on Escape key to quickly return to background page
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -40789,8 +41904,11 @@ function CastingLiveStoryLightbox({
     }
   }, [floatingParticles, setFloatingParticles]);
 
-  // Custom timer for story progression
+  // Custom timer for story progression (pauses while typing)
   React.useEffect(() => {
+    if (isReplyFocused || replyText.trim().length > 0) {
+      return;
+    }
     const pubStories = activeStories.filter((s: any) => s.userId === selectedCastingLiveStory.userId);
     const finalPubStories = pubStories.length > 0 ? pubStories : [selectedCastingLiveStory];
     
@@ -40813,7 +41931,7 @@ function CastingLiveStoryLightbox({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [selectedCastingLiveStory, activeStorySubIndex, activeStories]);
+  }, [selectedCastingLiveStory, activeStorySubIndex, activeStories, isReplyFocused, replyText]);
 
   // Helper to advance to next publisher
   const handleNextPublisher = () => {
@@ -41264,7 +42382,7 @@ function CastingLiveStoryLightbox({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className="relative w-[300px] sm:w-[335px] md:w-[345px] h-[490px] sm:h-[540px] md:h-[570px] max-h-[74vh] max-w-[90vw] bg-black rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)] flex flex-col border border-white/20 animate-scale-up shrink-0 select-none pointer-events-auto mx-auto transition-all duration-300 opacity-100"
+          className="relative w-[300px] sm:w-[335px] md:w-[345px] h-[490px] sm:h-[540px] md:h-[570px] max-h-[74vh] max-w-[90vw] bg-white rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)] flex flex-col border border-slate-200 animate-scale-up shrink-0 select-none pointer-events-auto mx-auto transition-all duration-300 opacity-100"
         >
           <div className="absolute top-3 inset-x-3 z-30 flex gap-1.5 select-none">
             {finalPubStories.map((subItem: any, idx: number) => {
@@ -41365,7 +42483,86 @@ function CastingLiveStoryLightbox({
               />
             )}
 
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
+
+            {/* Sent comments + Quick Reactions Overlay (shown only when reply input is focused) */}
+            {(() => {
+              const storyKey = String(currentActiveSubStory?.id || selectedCastingLiveStory?.id || 'casting-story');
+              const comments = storyCommentsMap[storyKey] || [];
+              const recipientUsername = currentActiveSubStory?.username || selectedCastingLiveStory?.username || 'usuario';
+              if (!isReplyFocused && !sentFeedbackToast && comments.length === 0) return null;
+              return (
+                <div
+                  className="absolute inset-x-0 bottom-0 z-30 pt-8 pb-3 px-4 bg-gradient-to-t from-black/80 via-black/45 to-transparent flex flex-col items-center pointer-events-none"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {sentFeedbackToast && (
+                    <div className="mb-2 px-3 py-1 rounded-full bg-emerald-500/95 text-white text-[11px] font-bold shadow-lg animate-fade-in">
+                      {sentFeedbackToast}
+                    </div>
+                  )}
+
+                  {comments.length > 0 && (
+                    <div className="w-full max-h-24 overflow-y-auto space-y-1.5 mb-2.5 pointer-events-auto scrollbar-none">
+                      {comments.slice(-3).map((cmt) => (
+                        <div
+                          key={cmt.id}
+                          className="flex items-start gap-2 bg-black/55 backdrop-blur-sm border border-white/15 rounded-2xl px-2.5 py-1.5 text-left shadow-sm"
+                        >
+                          <img
+                            src={cmt.avatar}
+                            alt={cmt.user}
+                            className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/40 mt-0.5"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 leading-none">
+                              <span className="text-[10px] font-extrabold text-pink-300 truncate">@{cmt.user}</span>
+                              <span className="text-[9px] text-white/60">{cmt.time}</span>
+                            </div>
+                            <p className="text-[11px] text-white font-medium leading-snug break-words mt-0.5">{cmt.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {isReplyFocused && (
+                    <div
+                      className="flex flex-col items-center pointer-events-auto animate-fade-in"
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      <span className="text-white text-[15px] font-bold tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] mb-2 select-none">
+                        Reacciones rápidas
+                      </span>
+                      <div className="grid grid-cols-4 gap-x-5 gap-y-2">
+                        {QUICK_STORY_REACTIONS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                                detail: { icon: emoji }
+                              }));
+                              spawnEmojiParticles(emoji);
+                              const msg = `Reacción ${emoji} enviada a @${recipientUsername}`;
+                              setSentFeedbackToast(msg);
+                              setTimeout(() => setSentFeedbackToast((prev) => (prev === msg ? null : prev)), 2400);
+                            }}
+                            className="custom-bg text-[25px] leading-none p-1 bg-transparent border-0 cursor-pointer hover:scale-125 active:scale-95 transition-transform duration-150 select-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)]"
+                            title={`Reaccionar con ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-3xl">
@@ -41386,50 +42583,91 @@ function CastingLiveStoryLightbox({
           </div>
 
           {/* Bottom reply & reaction bar inside card */}
-          <div className="p-3 pt-2 pb-3.5 flex items-center justify-between gap-2 shrink-0 bg-black/90 backdrop-blur-xs z-30">
-            <div className="flex-1 bg-transparent border border-white/40 rounded-full py-1.5 px-3 flex items-center">
-              <input 
-                type="text" 
-                placeholder={`Responder a ${currentActiveSubStory.username || selectedCastingLiveStory.username}...`}
-                className="bg-transparent text-white placeholder-white/60 text-[11px] focus:outline-none flex-1 border-none font-normal h-4 leading-none" 
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const textInput = e.target as HTMLInputElement;
-                    alert(`💬 Mensaje enviado con éxito: "${textInput.value}"`);
-                    textInput.value = '';
-                  }
-                }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2.5 select-none shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
-                    detail: { icon: '❤️' }
-                  }));
-                  spawnEmojiParticles('❤️');
-                }}
-                className="text-white hover:text-rose-500 active:scale-90 transition cursor-pointer p-0.5"
-                title="Me gusta"
+          {(() => {
+            const storyKey = String(currentActiveSubStory?.id || selectedCastingLiveStory?.id || 'casting-story');
+            const recipientUsername = currentActiveSubStory?.username || selectedCastingLiveStory?.username || 'usuario';
+            const submitComment = (e?: React.FormEvent) => {
+              if (e) e.preventDefault();
+              const trimmed = replyText.trim();
+              if (!trimmed) {
+                replyInputRef.current?.focus();
+                return;
+              }
+              const newEntry = {
+                id: `sc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                user: userProfile?.username || userProfile?.name || 'tú',
+                avatar: userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+                text: trimmed,
+                time: 'Ahora'
+              };
+              setStoryCommentsMap((prev) => {
+                const updated = {
+                  ...prev,
+                  [storyKey]: [...(prev[storyKey] || []), newEntry]
+                };
+                try {
+                  localStorage.setItem('ff_story_comments_v1', JSON.stringify(updated));
+                } catch {}
+                return updated;
+              });
+              setReplyText('');
+              spawnEmojiParticles('💬');
+              const msg = `Comentario enviado a @${recipientUsername} ✓`;
+              setSentFeedbackToast(msg);
+              setTimeout(() => setSentFeedbackToast((prev) => (prev === msg ? null : prev)), 2400);
+            };
+            return (
+              <form
+                onSubmit={submitComment}
+                onClick={(e) => e.stopPropagation()}
+                className="p-3 pt-2.5 pb-3.5 flex items-center justify-between gap-2 shrink-0 bg-white border-t border-slate-200 z-30"
               >
-                <Heart className="w-5 h-5 text-white hover:text-rose-500 stroke-[1.8]" />
-              </button>
+                <div className="flex-1 bg-slate-100 border border-slate-200 focus-within:border-[#ff2d85] focus-within:bg-white rounded-full py-1.5 px-3 flex items-center transition-colors">
+                  <input 
+                    ref={replyInputRef}
+                    type="text" 
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    onFocus={() => setIsReplyFocused(true)}
+                    onBlur={() => setIsReplyFocused(false)}
+                    placeholder={`Responder a ${recipientUsername}...`}
+                    className="bg-transparent text-slate-800 placeholder-slate-400 text-[11px] focus:outline-none flex-1 border-none font-normal h-4 leading-none" 
+                  />
+                </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  alert(`📩 Mensaje privado enviado a @${currentActiveSubStory.username || selectedCastingLiveStory.username}`);
-                  spawnEmojiParticles('✈️');
-                }}
-                className="text-white hover:text-indigo-400 active:scale-90 transition cursor-pointer p-0.5"
-                title="Compartir"
-              >
-                <Send className="w-5 h-5 text-white stroke-[1.8] transform rotate-45 -translate-y-0.5" />
-              </button>
-            </div>
-          </div>
+                <div className="flex items-center gap-2.5 select-none shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('trigger-heart-rain', {
+                        detail: { icon: '❤️' }
+                      }));
+                      spawnEmojiParticles('❤️');
+                      const msg = `❤️ Enviado a @${recipientUsername}`;
+                      setSentFeedbackToast(msg);
+                      setTimeout(() => setSentFeedbackToast((prev) => (prev === msg ? null : prev)), 2400);
+                    }}
+                    className="custom-bg text-rose-500 hover:text-rose-600 active:scale-90 transition p-1 cursor-pointer bg-slate-100 rounded-full hover:bg-rose-50"
+                    title="Me gusta"
+                  >
+                    <Heart className="w-5 h-5 text-rose-500 fill-current stroke-[1.8]" />
+                  </button>
+
+                  <button
+                    type="submit"
+                    className={`custom-bg active:scale-90 transition p-1.5 cursor-pointer rounded-full ${
+                      replyText.trim()
+                        ? 'bg-[#ff2d85] text-white hover:bg-rose-600 shadow-sm'
+                        : 'bg-slate-100 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50'
+                    }`}
+                    title={replyText.trim() ? 'Enviar comentario' : 'Escribe un comentario para enviar'}
+                  >
+                    <Send className="w-4.5 h-4.5 stroke-[1.8] transform rotate-45 -translate-y-0.5" />
+                  </button>
+                </div>
+              </form>
+            );
+          })()}
         </div>
       </div>
 

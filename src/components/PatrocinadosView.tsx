@@ -33,6 +33,7 @@ import {
   generateNextReferenceNumber,
   buildFashionFinancesReferralUrl,
 } from '../utils/referenceNumbers';
+import { pushAppNotification } from './NotificationCenterModal';
 
 export interface Patrocinado {
   id: string;
@@ -202,6 +203,20 @@ export default function PatrocinadosView({
     setNotification({
       show: true,
       text: `✨ ¡Comisión cobrada! @${randomPat.username} generó un premio de pasarela, acumulando +${randomAmount.toFixed(2)}€ (10% de comisión) en tu cuenta.`
+    });
+
+    pushAppNotification({
+      id: `notif-pat-comm-${newId}`,
+      category: 'comisiones',
+      title: `💶 ¡Comisión de Patrocinio: +${randomAmount.toFixed(2)}€!`,
+      message: `Has recibido el 10% por éxito del patrocinio (+${randomAmount.toFixed(2)}€) porque tu patrocinado/a ${randomPat.name} (@${randomPat.username}) quedó entre los ganadores.`,
+      avatar: getValidAvatar(randomPat),
+      timestamp: newId,
+      read: false,
+      icon: '💶',
+      amount: randomAmount,
+      actionLabel: 'Ver Patrocinados',
+      targetTab: 'patrocinados'
     });
 
     // Speak "new commission" spoken voice alert and build-in synth audio chime

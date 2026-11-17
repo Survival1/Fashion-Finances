@@ -1,4 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import AccessRequestModal, {
+  getStoredMediaPermissions,
+  hasConfiguredMediaPermissions,
+  MediaPermissionPreferences,
+} from './AccessRequestModal';
 import { 
   Camera, 
   Video, 
@@ -54,6 +59,7 @@ export default function StoryCreatorModal({
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [cameraFilter, setCameraFilter] = useState<'normal' | 'glamour' | 'vintage' | 'noir' | 'neon'>('normal');
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showAccessRequestModal, setShowAccessRequestModal] = useState<boolean>(false);
 
   // File Upload State
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -141,7 +147,11 @@ export default function StoryCreatorModal({
   // Initialize camera when opening 'record' tab
   useEffect(() => {
     if (isOpen && activeTab === 'record' && !recordedVideoUrl && !capturedPhotoUrl) {
-      startCamera();
+      if (!hasConfiguredMediaPermissions()) {
+        setShowAccessRequestModal(true);
+      } else {
+        startCamera();
+      }
     } else {
       stopCamera();
     }
@@ -165,9 +175,15 @@ export default function StoryCreatorModal({
   };
 
   // Start Camera Stream
-  const startCamera = async () => {
+  const startCamera = async (overridePrefs?: MediaPermissionPreferences) => {
     stopCamera();
     setCameraError(null);
+    const prefs = overridePrefs || getStoredMediaPermissions();
+    if (!prefs.camera) {
+      setCameraError("El permiso de cámara está desactivado. Actívalo en Solicitud de Acceso para usar la cámara.");
+      return;
+    }
+    const wantAudio = prefs.microphone && !isMicMuted;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -175,7 +191,7 @@ export default function StoryCreatorModal({
           width: { ideal: 1080 },
           height: { ideal: 1920 }
         },
-        audio: !isMicMuted
+        audio: wantAudio
       });
       liveStreamRef.current = stream;
       if (videoPreviewRef.current) {
@@ -186,7 +202,7 @@ export default function StoryCreatorModal({
     } catch (err: any) {
       console.warn("Could not open high-res camera with facingMode, falling back to standard constraints:", err);
       try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: wantAudio });
         liveStreamRef.current = fallbackStream;
         if (videoPreviewRef.current) {
           videoPreviewRef.current.srcObject = fallbackStream;
@@ -687,16 +703,25 @@ export default function StoryCreatorModal({
 
                     {/* Error prompt if camera access failed */}
                     {cameraError && (
-                      <div className="absolute inset-0 bg-slate-950/90 p-4 flex flex-col items-center justify-center text-center space-y-2 z-30 text-white">
+                      <div className="absolute inset-0 bg-slate-950/90 p-4 flex flex-col items-center justify-center text-center space-y-2.5 z-30 text-white">
                         <AlertCircle className="w-8 h-8 text-rose-500" />
                         <p className="text-xs text-rose-300 leading-tight">{cameraError}</p>
-                        <button
-                          type="button"
-                          onClick={startCamera}
-                          className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition cursor-pointer"
-                        >
-                          Reintentar conexión
-                        </button>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowAccessRequestModal(true)}
+                            className="custom-bg px-3.5 py-1.5 bg-gradient-to-r from-[#E11D64] to-[#A60A44] hover:opacity-95 text-white rounded-full text-xs font-bold transition cursor-pointer shadow-sm"
+                          >
+                            Permisos
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => startCamera()}
+                            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition cursor-pointer"
+                          >
+                            Reintentar conexión
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -777,7 +802,7 @@ export default function StoryCreatorModal({
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 pt-1">
+                    <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
                       <button
                         type="button"
                         onClick={handleToggleFacingMode}
@@ -786,6 +811,16 @@ export default function StoryCreatorModal({
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         <span>Girar cámara</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowAccessRequestModal(true)}
+                        className="custom-bg px-3 py-1.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-[#B91252] text-xs font-bold transition cursor-pointer border border-[#E5C287] flex items-center gap-1.5 shadow-2xs"
+                        title="Configurar permisos de cámara y micrófono"
+                      >
+                        <Sliders className="w-3.5 h-3.5" />
+                        <span>Permisos</span>
                       </button>
 
                       <select
@@ -1157,6 +1192,17 @@ export default function StoryCreatorModal({
           )}
         </div>
 
+      <AccessRequestModal
+        isOpen={showAccessRequestModal}
+        onClose={() => setShowAccessRequestModal(false)}
+        initialCamera={getStoredMediaPermissions().camera}
+        initialMicrophone={getStoredMediaPermissions().microphone && !isMicMuted}
+        onApply={async (prefs) => {
+          setIsMicMuted(!prefs.microphone);
+          setShowAccessRequestModal(false);
+          await startCamera(prefs);
+        }}
+      />
     </div>
   );
 }

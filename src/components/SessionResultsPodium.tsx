@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { pushAppNotification } from './NotificationCenterModal';
 import { 
   BALMAIN_LOGO_DATA_URL, 
   CHANEL_LOGO_DATA_URL, 
@@ -82,12 +84,16 @@ interface SessionResultsPodiumProps {
     id: string;
     reference?: string;
     roundNumber?: number;
+    roundInstanceKey?: string;
     title: string;
+    winners?: string[];
     participants: Participant[];
   };
   userProfile: {
     id: string;
     name: string;
+    username?: string;
+    avatar?: string;
     patrocinadorId?: string;
     balance: number;
   };
@@ -1415,6 +1421,257 @@ export default function SessionResultsPodium({
     return ensureThreeImages(fullProj.images);
   };
 
+  const resolvedWinnerSponsors = useMemo(() => {
+    const winnersSource = (activeWinnersList && activeWinnersList.length > 0)
+      ? activeWinnersList
+      : (firstPlace ? [firstPlace] : []);
+
+    const curatedSponsorPool = [
+      {
+        name: 'Alexander Vance',
+        avatar: '/assets/aistudio/marcus_vance_executive.png',
+        username: 'alexandervance_exec',
+        id: 'topm-1'
+      },
+      {
+        name: 'Adriana Lima',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+        username: 'adrianalima_w1',
+        id: 'topf-1'
+      },
+      {
+        name: 'Marcus Sterling',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
+        username: 'marcussterling_m2',
+        id: 'topm-2'
+      },
+      {
+        name: 'Gisele Bündchen',
+        avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400',
+        username: 'giselebundchen_w6',
+        id: 'topf-6'
+      },
+      {
+        name: 'Jasmine Tookes',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
+        username: 'jasminetookes_w4',
+        id: 'topf-4'
+      },
+      {
+        name: 'Lucas Alvarez',
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
+        username: 'lucasalvarez_m3',
+        id: 'topm-3'
+      },
+      {
+        name: 'Miranda Kerr',
+        avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400',
+        username: 'mirandakerr_w5',
+        id: 'topf-5'
+      }
+    ];
+
+    const normalizeText = (v?: string) =>
+      (v || '')
+        .replace(' (Tú)', '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    let storedPatrocinados: any[] = [];
+    try {
+      const rawPat = localStorage.getItem('coll_patrocinados');
+      if (rawPat) {
+        const parsed = JSON.parse(rawPat);
+        if (Array.isArray(parsed)) storedPatrocinados = parsed;
+      }
+    } catch {}
+
+    const usedSponsorNames = new Set<string>();
+    const cleanUserName = normalizeText(userProfile?.name);
+    const cleanUserUsername = normalizeText(userProfile?.username);
+
+    const resolveModelProfile = (name: string, idHint?: string, fallbackAvatar?: string, fallbackUsername?: string) => {
+      const lowerName = name.toLowerCase().trim();
+      const matched = models.find(m =>
+        (idHint && m.id === idHint) ||
+        m.name.toLowerCase().trim() === lowerName ||
+        m.name.toLowerCase().includes(lowerName.split(' ')[0])
+      );
+      if (matched) return matched;
+      return {
+        id: idHint || `sponsor-${lowerName.replace(/\s+/g, '-')}`,
+        name,
+        username: fallbackUsername || lowerName.replace(/[^a-z0-9]/g, '_'),
+        avatar: fallbackAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'
+      } as ModelProfile;
+    };
+
+    return winnersSource.map((winner, idx) => {
+      const cleanWinnerName = normalizeText(winner.name);
+      const isWinnerSelf = Boolean(
+        winner.userId === userProfile?.id ||
+        (winner as any).isSelf ||
+        (cleanUserName && cleanWinnerName === cleanUserName)
+      );
+
+      let chosenModel: ModelProfile | null = null;
+
+      if (isWinnerSelf && userProfile?.patrocinadorId) {
+        const selfSponsor = models.find(m => m.id === userProfile.patrocinadorId);
+        if (selfSponsor && normalizeText(selfSponsor.name) !== cleanWinnerName) {
+          chosenModel = selfSponsor;
+        }
+      }
+
+      if (!chosenModel && !isWinnerSelf) {
+        const matchedPatrocinado = storedPatrocinados.find((pat: any) => {
+          if (pat.status === 'inactive') return false;
+          if (pat.sponsorId && userProfile?.id && pat.sponsorId !== userProfile.id) return false;
+          const patName = normalizeText(pat.name);
+          const patUsername = normalizeText(pat.username);
+          return (
+            pat.id === winner.userId ||
+            (patName && patName === cleanWinnerName) ||
+            (patUsername && cleanWinnerName.includes(patUsername))
+          );
+        });
+        if (matchedPatrocinado && userProfile?.name) {
+          chosenModel = resolveModelProfile(
+            userProfile.name,
+            userProfile.id,
+            userProfile.avatar,
+            userProfile.username
+          );
+        }
+      }
+
+      if (!chosenModel) {
+        const matchedWinnerModel = models.find(m =>
+          m.id === winner.userId || normalizeText(m.name) === cleanWinnerName
+        );
+        if (matchedWinnerModel?.patrocinadorId) {
+          const explicitSponsor = models.find(m => m.id === matchedWinnerModel.patrocinadorId);
+          if (explicitSponsor && normalizeText(explicitSponsor.name) !== cleanWinnerName && !usedSponsorNames.has(explicitSponsor.name.toLowerCase())) {
+            chosenModel = explicitSponsor;
+          }
+        }
+      }
+
+      if (!chosenModel) {
+        const fallbackCandidate = curatedSponsorPool.find(c =>
+          normalizeText(c.name) !== cleanWinnerName &&
+          !usedSponsorNames.has(c.name.toLowerCase())
+        ) || curatedSponsorPool[idx % curatedSponsorPool.length];
+
+        const resolved = resolveModelProfile(
+          fallbackCandidate.name,
+          fallbackCandidate.id,
+          fallbackCandidate.avatar,
+          fallbackCandidate.username
+        );
+        chosenModel = {
+          ...resolved,
+          avatar: fallbackCandidate.name === 'Alexander Vance'
+            ? '/assets/aistudio/marcus_vance_executive.png'
+            : (resolved.avatar || fallbackCandidate.avatar)
+        };
+      }
+
+      const finalName = chosenModel?.name || 'Alexander Vance';
+      usedSponsorNames.add(finalName.toLowerCase());
+      const finalAvatar = finalName.toLowerCase().includes('alexander vance')
+        ? '/assets/aistudio/marcus_vance_executive.png'
+        : (chosenModel?.avatar || '/assets/aistudio/marcus_vance_executive.png');
+
+      const finalNameNorm = normalizeText(finalName);
+      const finalUsernameNorm = normalizeText(chosenModel?.username);
+      const isSponsorCurrentUser = Boolean(
+        !isWinnerSelf && (
+          (chosenModel?.id && userProfile?.id && chosenModel.id === userProfile.id) ||
+          (cleanUserName && finalNameNorm === cleanUserName) ||
+          (cleanUserUsername && finalUsernameNorm === cleanUserUsername) ||
+          (cleanUserName === 'adriana lima' && chosenModel?.id === 'topf-1')
+        )
+      );
+
+      return {
+        winner,
+        winnerName: (winner.name || '').replace(' (Tú)', '').trim(),
+        sponsorModel: chosenModel,
+        sponsorName: finalName,
+        sponsorAvatar: finalAvatar,
+        isWinnerSelf,
+        isSponsorCurrentUser
+      };
+    });
+  }, [activeWinnersList, firstPlace, models, userProfile?.id, userProfile?.name, userProfile?.username, userProfile?.avatar, userProfile?.patrocinadorId]);
+
+  useEffect(() => {
+    if (isSimulatedFiveWinners || !completedSessionToDisplay?.id || !userProfile) return;
+
+    const normalizeText = (v?: string) =>
+      (v || '')
+        .replace(' (Tú)', '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const cleanMyName = normalizeText(userProfile.name);
+    const roundKey = completedSessionToDisplay.roundInstanceKey || `${completedSessionToDisplay.id}_${completedSessionToDisplay.reference || 'r1'}`;
+    const winnersSource = (activeWinnersList && activeWinnersList.length > 0) ? activeWinnersList : [];
+
+    const myWinnerEntry = winnersSource.find(w =>
+      w.userId === userProfile.id ||
+      (w as any).isSelf ||
+      (cleanMyName && normalizeText(w.name) === cleanMyName)
+    );
+
+    if (myWinnerEntry) {
+      const wonAmount = prizePerWinner > 0 ? prizePerWinner : Number(((pool * 0.80) / Math.max(1, winnersSource.length)).toFixed(2));
+      const isMulti = winnersSource.length > 1;
+      const winnerProj = getWinnerFullProject(myWinnerEntry);
+
+      pushAppNotification({
+        id: `notif-round-win-${roundKey}`,
+        category: 'rondas',
+        title: isMulti
+          ? `🏆 ¡Entre los ganadores de ${completedSessionToDisplay.title}!`
+          : `🏆 ¡Has ganado ${completedSessionToDisplay.title}!`,
+        message: `Tu proyecto "${winnerProj.title}" obtuvo ${myWinnerEntry.votesReceived} votos y consiguió una financiación de ${wonAmount.toFixed(2)}€${isMulti ? ` (empate entre ${winnersSource.length} ganadores)` : ' (Posición #1 - Seleccionado)'}.`,
+        timestamp: Date.now(),
+        read: false,
+        icon: '🏆',
+        amount: wonAmount,
+        actionLabel: 'Ver Historial',
+        targetTab: 'sessions'
+      });
+    }
+
+    const sponsorTotal10 = pool > 0 ? (pool * 0.10) : 100;
+    const commissionPerSponsor = Number((sponsorTotal10 / Math.max(1, resolvedWinnerSponsors.length)).toFixed(2));
+
+    resolvedWinnerSponsors.forEach((slide) => {
+      if (!slide.isWinnerSelf && slide.isSponsorCurrentUser && commissionPerSponsor > 0) {
+        const winnerSlug = normalizeText(slide.winnerName).replace(/[^a-z0-9]+/g, '-') || 'winner';
+        pushAppNotification({
+          id: `notif-sponsor-comm-${roundKey}-${winnerSlug}`,
+          category: 'comisiones',
+          title: `💶 ¡Comisión de Patrocinio: +${commissionPerSponsor.toFixed(2)}€!`,
+          message: `Has recibido el 10% por éxito del patrocinio (+${commissionPerSponsor.toFixed(2)}€) porque tu patrocinado/a ${slide.winnerName} ganó o quedó entre los ganadores en ${completedSessionToDisplay.title}.`,
+          timestamp: Date.now(),
+          read: false,
+          icon: '💶',
+          amount: commissionPerSponsor,
+          actionLabel: 'Ver Patrocinados',
+          targetTab: 'patrocinados'
+        });
+      }
+    });
+  }, [isSimulatedFiveWinners, completedSessionToDisplay?.id, completedSessionToDisplay?.reference, completedSessionToDisplay?.roundInstanceKey, completedSessionToDisplay?.title, activeWinnersList, resolvedWinnerSponsors, pool, prizePerWinner, userProfile?.id, userProfile?.name]);
+
   return (
     <div 
       className="bg-[#fff0f3] text-slate-900 rounded-none border-0 px-[1px] py-3 pb-6 sm:pb-8 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
@@ -2235,147 +2492,21 @@ export default function SessionResultsPodium({
 
           {/* COMPONENT: BENEFICIO DE PATROCINADOR - Slider dinámico de patrocinadores de cada ganador */}
           {(() => {
-            const winnersSource = (activeWinnersList && activeWinnersList.length > 0)
-              ? activeWinnersList
-              : (firstPlace ? [firstPlace] : []);
-
-            const curatedSponsorPool = [
-              {
-                name: 'Alexander Vance',
-                avatar: '/assets/aistudio/marcus_vance_executive.png',
-                username: 'alexandervance_exec',
-                id: 'topm-1'
-              },
-              {
-                name: 'Adriana Lima',
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
-                username: 'adrianalima_w1',
-                id: 'topf-1'
-              },
-              {
-                name: 'Marcus Sterling',
-                avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
-                username: 'marcussterling_m2',
-                id: 'topm-2'
-              },
-              {
-                name: 'Gisele Bündchen',
-                avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400',
-                username: 'giselebundchen_w6',
-                id: 'topf-6'
-              },
-              {
-                name: 'Jasmine Tookes',
-                avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
-                username: 'jasminetookes_w4',
-                id: 'topf-4'
-              },
-              {
-                name: 'Lucas Alvarez',
-                avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
-                username: 'lucasalvarez_m3',
-                id: 'topm-3'
-              },
-              {
-                name: 'Miranda Kerr',
-                avatar: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400',
-                username: 'mirandakerr_w5',
-                id: 'topf-5'
-              }
-            ];
-
-            const usedSponsorNames = new Set<string>();
-            const cleanUserName = (userProfile?.name || '').replace(' (Tú)', '').trim().toLowerCase();
-
-            const resolveModelProfile = (name: string, idHint?: string, fallbackAvatar?: string, fallbackUsername?: string) => {
-              const lowerName = name.toLowerCase().trim();
-              const matched = models.find(m =>
-                (idHint && m.id === idHint) ||
-                m.name.toLowerCase().trim() === lowerName ||
-                m.name.toLowerCase().includes(lowerName.split(' ')[0])
-              );
-              if (matched) return matched;
-              return {
-                id: idHint || `sponsor-${lowerName.replace(/\s+/g, '-')}`,
-                name,
-                username: fallbackUsername || lowerName.replace(/[^a-z0-9]/g, '_'),
-                avatar: fallbackAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'
-              } as ModelProfile;
-            };
-
-            const winnerSponsorsList = winnersSource.map((winner, idx) => {
-              const cleanWinnerName = (winner.name || '').replace(' (Tú)', '').trim().toLowerCase();
-              const isWinnerSelf = Boolean(
-                winner.userId === userProfile?.id ||
-                winner.userId === 'user-adriana' ||
-                (winner as any).isSelf ||
-                (cleanUserName && cleanWinnerName === cleanUserName)
-              );
-
-              let chosenModel: ModelProfile | null = null;
-
-              if (isWinnerSelf && userProfile?.patrocinadorId) {
-                const selfSponsor = models.find(m => m.id === userProfile.patrocinadorId);
-                if (selfSponsor && selfSponsor.name.toLowerCase().trim() !== cleanWinnerName) {
-                  chosenModel = selfSponsor;
-                }
-              }
-
-              if (!chosenModel) {
-                const matchedWinnerModel = models.find(m =>
-                  m.id === winner.userId || m.name.toLowerCase().trim() === cleanWinnerName
-                );
-                if (matchedWinnerModel?.patrocinadorId) {
-                  const explicitSponsor = models.find(m => m.id === matchedWinnerModel.patrocinadorId);
-                  if (explicitSponsor && explicitSponsor.name.toLowerCase().trim() !== cleanWinnerName && !usedSponsorNames.has(explicitSponsor.name.toLowerCase())) {
-                    chosenModel = explicitSponsor;
-                  }
-                }
-              }
-
-              if (!chosenModel) {
-                const fallbackCandidate = curatedSponsorPool.find(c =>
-                  c.name.toLowerCase().trim() !== cleanWinnerName &&
-                  !usedSponsorNames.has(c.name.toLowerCase())
-                ) || curatedSponsorPool[idx % curatedSponsorPool.length];
-
-                const resolved = resolveModelProfile(
-                  fallbackCandidate.name,
-                  fallbackCandidate.id,
-                  fallbackCandidate.avatar,
-                  fallbackCandidate.username
-                );
-                chosenModel = {
-                  ...resolved,
-                  avatar: fallbackCandidate.name === 'Alexander Vance'
-                    ? '/assets/aistudio/marcus_vance_executive.png'
-                    : (resolved.avatar || fallbackCandidate.avatar)
-                };
-              }
-
-              const finalName = chosenModel?.name || 'Alexander Vance';
-              usedSponsorNames.add(finalName.toLowerCase());
-              const finalAvatar = finalName.toLowerCase().includes('alexander vance')
-                ? '/assets/aistudio/marcus_vance_executive.png'
-                : (chosenModel?.avatar || '/assets/aistudio/marcus_vance_executive.png');
-
-              return {
-                winner,
-                winnerName: (winner.name || '').replace(' (Tú)', '').trim(),
-                sponsorModel: chosenModel,
-                sponsorName: finalName,
-                sponsorAvatar: finalAvatar
-              };
-            });
-
-            const safeSlides = winnerSponsorsList.length > 0
-              ? winnerSponsorsList
+            const safeSlides = resolvedWinnerSponsors.length > 0
+              ? resolvedWinnerSponsors
               : [{
                   winner: firstPlace,
                   winnerName: firstPlace?.name || 'Ganador',
-                  sponsorModel: resolveModelProfile('Alexander Vance', 'topm-1', '/assets/aistudio/marcus_vance_executive.png', 'alexandervance_exec'),
+                  sponsorModel: models.find(m => m.id === 'topm-1' || m.name.toLowerCase().includes('alexander vance')) || {
+                    id: 'topm-1',
+                    name: 'Alexander Vance',
+                    username: 'alexandervance_exec',
+                    avatar: '/assets/aistudio/marcus_vance_executive.png'
+                  },
                   sponsorName: 'Alexander Vance',
-                  sponsorAvatar: '/assets/aistudio/marcus_vance_executive.png'
+                  sponsorAvatar: '/assets/aistudio/marcus_vance_executive.png',
+                  isWinnerSelf: false,
+                  isSponsorCurrentUser: false
                 }];
 
             const activeIdx = Math.min(winnerSponsorSlideIndex, safeSlides.length - 1);
@@ -2737,16 +2868,25 @@ export default function SessionResultsPodium({
       </div>
 
       {/* FULL WINNING PROJECT DOSSIER MODAL EMBEDDED INSIDE CHANNEL */}
-      {selectedFullProject && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-2 sm:p-4 sm:p-6 overflow-y-auto backdrop-blur-md bg-slate-950/70 animate-fade-in" id="full-project-dossier-modal">
-          <div className="bg-white border border-pink-200 rounded-3xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[95%] sm:max-h-[90%] overflow-hidden animate-scale-up text-left my-auto">
+      {selectedFullProject && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] flex items-start justify-center p-2 sm:p-4 pt-2 sm:pt-4 overflow-y-auto overflow-x-hidden backdrop-blur-md bg-slate-950/70 animate-fade-in"
+          id="full-project-dossier-modal"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedFullProject(null);
+            }
+          }}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="bg-white border border-pink-200 rounded-2xl sm:rounded-3xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[calc(100dvh-16px)] sm:max-h-[calc(100dvh-32px)] overflow-hidden animate-scale-up text-left mt-0">
             
             {/* Modal Header */}
-            <div className="p-4 sm:p-6 border-b border-pink-100 bg-[#fffbfc] relative shrink-0">
+            <div className="p-3.5 sm:p-6 pr-12 sm:pr-14 border-b border-pink-100 bg-[#fffbfc] relative shrink-0">
               <button 
                 type="button" 
                 onClick={() => setSelectedFullProject(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none transition cursor-pointer"
+                className="custom-bg absolute top-3.5 right-3.5 sm:top-4 sm:right-4 text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none transition cursor-pointer"
                 title="Cerrar Dossier"
                 id="close-dossier-button"
               >
@@ -2754,70 +2894,70 @@ export default function SessionResultsPodium({
               </button>
               
               <div className="flex items-center gap-1.5 text-[8.5px] font-black uppercase text-[#be185d]">
-                <FileText className="w-3.5 h-3.5 text-pink-500" />
+                <FileText className="w-3.5 h-3.5 text-pink-500 shrink-0" />
                 <span>DOSSIER DE REGISTRO OFICIAL - PORTAL DE PROYECTOS</span>
               </div>
               
-              <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-900 mt-2 tracking-wide leading-tight">
+              <h3 className="text-lg sm:text-2xl font-serif font-black text-slate-900 mt-1.5 sm:mt-2 tracking-wide leading-tight break-words">
                 {selectedFullProject.title}
               </h3>
-              <p className="text-xs font-semibold text-pink-600 font-mono mt-1">
+              <p className="text-[11px] sm:text-xs font-semibold text-pink-600 font-mono mt-1 break-words">
                 CATEGORÍA REGISTRADA: {selectedFullProject.category.toUpperCase()}
               </p>
             </div>
 
             {/* Modal Navigation Tabs */}
-            <div className="bg-slate-50 border-b border-pink-100 px-4 sm:px-6 py-2 flex gap-1 sm:gap-2 overflow-x-auto shrink-0 scrollbar-none">
+            <div className="bg-slate-50 border-b border-pink-100 px-2 sm:px-6 py-2 grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 shrink-0 w-full">
               <button
                 type="button"
                 onClick={() => setActiveModalTab('info')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                className={`custom-bg px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0 w-full sm:w-auto ${
                   activeModalTab === 'info' 
                     ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
-                    : 'text-slate-500 hover:text-slate-850 bg-transparent hover:bg-slate-100 border border-transparent'
+                    : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-slate-100 border border-slate-200/70'
                 }`}
                 id="tab-label-info"
               >
                 <Info className="w-3.5 h-3.5 shrink-0" />
-                Paso 1: Información Básica
+                <span className="break-words">Paso 1: Información Básica</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModalTab('financial')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                className={`custom-bg px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0 w-full sm:w-auto ${
                   activeModalTab === 'financial' 
                     ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
-                    : 'text-slate-500 hover:text-slate-850 bg-transparent hover:bg-slate-100 border border-transparent'
+                    : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-slate-100 border border-slate-200/70'
                 }`}
                 id="tab-label-financial"
               >
                 <Coins className="w-3.5 h-3.5 shrink-0" />
-                Paso 2: Estructura Financiera
+                <span className="break-words">Paso 2: Estructura Financiera</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModalTab('team')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                className={`custom-bg px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0 w-full sm:w-auto ${
                   activeModalTab === 'team' 
                     ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
-                    : 'text-slate-500 hover:text-slate-850 bg-transparent hover:bg-slate-100 border border-transparent'
+                    : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-slate-100 border border-slate-200/70'
                 }`}
                 id="tab-label-team"
               >
                 <Users className="w-3.5 h-3.5 shrink-0" />
-                Paso 3: Equipo Creativo
+                <span className="break-words">Paso 3: Equipo Creativo</span>
               </button>
             </div>
 
             {/* Modal Scrollable Content Container */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 space-y-5">
               
               {/* TAB 1: INFORMACIÓN BÁSICA */}
               {activeModalTab === 'info' && (
-                <div className="space-y-6 animate-fade-in text-slate-700">
+                <div className="space-y-5 animate-fade-in text-slate-700">
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-pink-500" />
+                      <Layers className="w-3.5 h-3.5 text-pink-500 shrink-0" />
                       <span>Resumen de la Propuesta / Estilo</span>
                     </h4>
                     <p className="text-xs text-slate-800 leading-relaxed font-semibold bg-pink-50/20 p-4 border border-pink-100/30 rounded-2xl italic">
@@ -2835,21 +2975,21 @@ export default function SessionResultsPodium({
                   </div>
 
                   {/* Contact Info Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 bg-white border border-slate-150 rounded-2xl space-y-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="p-3 bg-white border border-slate-150 rounded-2xl space-y-1 min-w-0">
                       <p className="text-[9px] font-black text-slate-400 font-mono uppercase tracking-wider">CORREO ELECTRÓNICO OFICIAL</p>
-                      <p className="text-xs font-bold text-slate-750 flex items-center gap-1.5 leading-normal">
-                        <Mail className="w-3.5 h-3.5 text-pink-500" />
-                        <a href={`mailto:${selectedFullProject.contactEmail}`} className="hover:underline hover:text-pink-600">
+                      <p className="text-xs font-bold text-slate-750 flex items-center gap-1.5 leading-normal min-w-0">
+                        <Mail className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                        <a href={`mailto:${selectedFullProject.contactEmail}`} className="hover:underline hover:text-pink-600 break-all">
                           {selectedFullProject.contactEmail}
                         </a>
                       </p>
                     </div>
-                    <div className="p-3 bg-white border border-slate-150 rounded-2xl space-y-1">
+                    <div className="p-3 bg-white border border-slate-150 rounded-2xl space-y-1 min-w-0">
                       <p className="text-[9px] font-black text-slate-400 font-mono uppercase tracking-wider">TELÉFONO DE CONTACTO OFICIAL</p>
-                      <p className="text-xs font-bold text-slate-750 flex items-center gap-1.5 leading-normal">
-                        <Phone className="w-3.5 h-3.5 text-pink-500" />
-                        <span>{selectedFullProject.contactPhone}</span>
+                      <p className="text-xs font-bold text-slate-750 flex items-center gap-1.5 leading-normal min-w-0">
+                        <Phone className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                        <span className="break-all">{selectedFullProject.contactPhone}</span>
                       </p>
                     </div>
                   </div>
@@ -3039,21 +3179,22 @@ export default function SessionResultsPodium({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-pink-100 bg-[#fffbfc] text-center flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-              <span className="text-[10px] text-slate-400 font-bold font-mono">
+            <div className="p-3.5 sm:p-5 border-t border-pink-100 bg-[#fffbfc] text-center flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
+              <span className="text-[10px] text-slate-400 font-bold font-mono leading-snug">
                 REGISTRADO SECRETAMENTE EN PASARELAS DE ALTA COSTURA
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedFullProject(null)}
-                className="w-full sm:w-auto px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-sm"
+                className="custom-bg w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-sm"
               >
                 Volver a Resultados
               </button>
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 📜 B2B SPONSORSHIP CONTRACT DETAIL MODAL FOR PODIUM VIEW */}
