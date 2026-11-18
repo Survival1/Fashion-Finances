@@ -85,6 +85,8 @@ interface SessionResultsPodiumProps {
     reference?: string;
     roundNumber?: number;
     roundInstanceKey?: string;
+    entryFee?: number;
+    poolTotal?: number;
     title: string;
     winners?: string[];
     participants: Participant[];
@@ -1091,7 +1093,14 @@ export default function SessionResultsPodium({
       window.removeEventListener('storage', handleBoutiqueChange);
     };
   }, []);
-  const prizeTotal80 = pool > 0 ? (pool * 0.80) : 800;
+  const inferredPoolFromSession =
+    completedSessionToDisplay?.poolTotal && Number(completedSessionToDisplay.poolTotal) > 0
+      ? Number(completedSessionToDisplay.poolTotal)
+      : completedSessionToDisplay?.entryFee && Number(completedSessionToDisplay.entryFee) > 0
+        ? Number(completedSessionToDisplay.entryFee) * 10
+        : 0;
+  const effectivePool = inferredPoolFromSession > 0 ? inferredPoolFromSession : (pool > 0 ? pool : 100);
+  const prizeTotal80 = effectivePool * 0.80;
 
   // Helper to reliably find and navigate to a model's profile when clicked
   const handleNavigateToModelProfile = (person: any) => {
@@ -1630,7 +1639,7 @@ export default function SessionResultsPodium({
     );
 
     if (myWinnerEntry) {
-      const wonAmount = prizePerWinner > 0 ? prizePerWinner : Number(((pool * 0.80) / Math.max(1, winnersSource.length)).toFixed(2));
+      const wonAmount = Number((prizeTotal80 / Math.max(1, winnersSource.length)).toFixed(2));
       const isMulti = winnersSource.length > 1;
       const winnerProj = getWinnerFullProject(myWinnerEntry);
 
@@ -1650,7 +1659,7 @@ export default function SessionResultsPodium({
       });
     }
 
-    const sponsorTotal10 = pool > 0 ? (pool * 0.10) : 100;
+    const sponsorTotal10 = effectivePool * 0.10;
     const commissionPerSponsor = Number((sponsorTotal10 / Math.max(1, resolvedWinnerSponsors.length)).toFixed(2));
 
     resolvedWinnerSponsors.forEach((slide) => {
@@ -1670,7 +1679,7 @@ export default function SessionResultsPodium({
         });
       }
     });
-  }, [isSimulatedFiveWinners, completedSessionToDisplay?.id, completedSessionToDisplay?.reference, completedSessionToDisplay?.roundInstanceKey, completedSessionToDisplay?.title, activeWinnersList, resolvedWinnerSponsors, pool, prizePerWinner, userProfile?.id, userProfile?.name]);
+  }, [isSimulatedFiveWinners, completedSessionToDisplay?.id, completedSessionToDisplay?.reference, completedSessionToDisplay?.roundInstanceKey, completedSessionToDisplay?.title, activeWinnersList, resolvedWinnerSponsors, pool, prizePerWinner, effectivePool, prizeTotal80, userProfile?.id, userProfile?.name]);
 
   return (
     <div 
@@ -1792,12 +1801,11 @@ export default function SessionResultsPodium({
 
                 {/* 🏆 MAIN SPOTLIGHT CARD FOR FUNDED PROJECT (LUXURY FINTECH REDESIGN) */}
                 {(() => {
-                  const winnerFundingAmount = isSimulatedFiveWinners
-                    ? (prizeTotal80 / (activeWinnersList.length || 1))
-                    : (prizePerWinner > 0
-                        ? prizePerWinner
-                        : (prizeTotal80 / (activeWinnersList.length || 1)));
-                  const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
+                  const winnerFundingAmount = prizeTotal80 / Math.max(1, activeWinnersList.length);
+                  const roundedFunding = Math.round(winnerFundingAmount * 100) / 100;
+                  const formattedFunding = Number.isInteger(roundedFunding)
+                    ? `€${roundedFunding.toLocaleString('es-ES')}`
+                    : `€${roundedFunding.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                   const isMale = isMaleParticipant(firstPlace);
                   const isAlexander = isMale && (
                     firstPlace.name.toLowerCase().includes('alexander') || 
@@ -1855,7 +1863,7 @@ export default function SessionResultsPodium({
                             <button
                               type="button"
                               onClick={() => handleNavigateToModelProfile(firstPlace)}
-                              className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[68%] h-[6.5%] rounded-xl bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#0a192f] text-amber-200 hover:text-amber-300 border border-amber-400/80 shadow-md hover:border-amber-300 flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                              className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[74%] h-[6.5%] rounded-xl bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#0a192f] text-amber-200 hover:text-amber-300 border border-amber-400/80 shadow-md hover:border-amber-300 flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
                               title={`Ver perfil de ${firstPlace.name}`}
                               aria-label={`Ver perfil de ${firstPlace.name}`}
                             >
@@ -1864,6 +1872,27 @@ export default function SessionResultsPodium({
                               </span>
                             </button>
                           )}
+
+                          {/* Dynamic Votes Overlay */}
+                          <div className="absolute top-[55.2%] left-1/2 -translate-x-1/2 w-[58%] h-[4.4%] rounded-full bg-[#f3f4f6] flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                            <span className="text-rose-500 text-xs sm:text-sm leading-none">💖</span>
+                            <span className="font-serif font-bold text-[11px] sm:text-xs text-[#0f172a] leading-none">
+                              {firstPlace.votesReceived || 0} votos recibidos
+                            </span>
+                          </div>
+
+                          {/* Dynamic Funding Box Overlay (replaces hardcoded €800 inside image) */}
+                          <div className="absolute top-[63.0%] left-1/2 -translate-x-1/2 w-[82%] h-[16.4%] rounded-[14px] sm:rounded-[18px] bg-gradient-to-b from-[#faf8f4] via-[#f7f4ee] to-[#f4f0e8] flex flex-col items-center justify-center text-center px-2 pointer-events-none z-10">
+                            <span className="text-[9px] sm:text-[10.5px] font-serif font-bold uppercase tracking-[0.2em] text-[#8a5a19] leading-tight">
+                              FINANCIACIÓN CONSEGUIDA
+                            </span>
+                            <span className="text-2xl sm:text-4xl font-sans font-black text-[#0f172a] leading-none tracking-tight my-0.5 sm:my-1">
+                              {formattedFunding}
+                            </span>
+                            <span className="text-[7px] sm:text-[8.5px] font-serif font-bold uppercase tracking-[0.05em] text-[#0f172a] leading-tight">
+                              CAPITAL ASIGNADO POR SELECCIÓN COMUNITARIA
+                            </span>
+                          </div>
                         </div>
                       ) : isAlessia ? (
                         <div className="w-full max-w-[420px] mx-auto rounded-[32px] overflow-hidden shadow-2xl relative border-2 border-[#d4af37] ring-4 ring-[#fde68a]/40 bg-gradient-to-b from-[#fce4ec] to-[#f8bbd0] transition-all duration-300 hover:shadow-pink-300/50 group/luxcard">
@@ -1888,7 +1917,7 @@ export default function SessionResultsPodium({
                           <button
                             type="button"
                             onClick={() => handleNavigateToModelProfile(firstPlace)}
-                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[62%] h-[6.5%] rounded-xl bg-white/95 hover:bg-white text-[#0f172a] hover:text-[#9e134a] border border-pink-200/90 hover:border-pink-400 shadow-xs hover:shadow-sm flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[74%] h-[6.5%] rounded-xl bg-white/95 hover:bg-white text-[#0f172a] hover:text-[#9e134a] border border-pink-200/90 hover:border-pink-400 shadow-xs hover:shadow-sm flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
                             title={`Ver perfil de ${firstPlace.name}`}
                             aria-label={`Ver perfil de ${firstPlace.name}`}
                           >
@@ -1896,6 +1925,27 @@ export default function SessionResultsPodium({
                               {firstPlace.name}
                             </span>
                           </button>
+
+                          {/* Dynamic Votes Overlay */}
+                          <div className="absolute top-[55.4%] left-1/2 -translate-x-1/2 w-[58%] h-[4.4%] rounded-full bg-[#fff5f8] flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                            <span className="text-rose-500 text-xs sm:text-sm leading-none">💖</span>
+                            <span className="font-serif font-bold text-[11px] sm:text-xs text-[#0f172a] leading-none">
+                              {firstPlace.votesReceived || 0} votos recibidos
+                            </span>
+                          </div>
+
+                          {/* Dynamic Funding Box Overlay (replaces hardcoded €800 inside image) */}
+                          <div className="absolute top-[63.5%] left-1/2 -translate-x-1/2 w-[80%] h-[16.4%] rounded-[14px] sm:rounded-[18px] bg-gradient-to-b from-[#fff7fa] via-[#fff2f6] to-[#ffedf3] flex flex-col items-center justify-center text-center px-2 pointer-events-none z-10">
+                            <span className="text-[9px] sm:text-[10.5px] font-serif font-bold uppercase tracking-[0.2em] text-[#be185d] leading-tight">
+                              FINANCIACIÓN CONSEGUIDA
+                            </span>
+                            <span className="text-2xl sm:text-4xl font-sans font-black text-[#be185d] leading-none tracking-tight my-0.5 sm:my-1">
+                              {formattedFunding}
+                            </span>
+                            <span className="text-[7px] sm:text-[8.5px] font-serif font-bold uppercase tracking-[0.05em] text-[#0f172a] leading-tight">
+                              CAPITAL ASIGNADO POR SELECCIÓN COMUNITARIA
+                            </span>
+                          </div>
                         </div>
                       ) : (
                         <div className="max-w-md mx-auto bg-gradient-to-b from-[#fff5f8] via-[#fef0f5] to-[#fce4ec] border-2 border-[#d4af37] ring-4 ring-amber-300/30 rounded-3.5xl p-5 sm:p-7 shadow-xl relative overflow-hidden transition-all duration-300 group/spotlight text-center space-y-4">
@@ -2033,8 +2083,11 @@ export default function SessionResultsPodium({
             ) : (
               <div className="flex flex-col items-center justify-center pt-2 max-w-md mx-auto w-full relative z-10 animate-fade-in">
                 {firstPlace && (() => {
-                  const winnerFundingAmount = prizePerWinner > 0 ? prizePerWinner : prizeTotal80;
-                  const formattedFunding = `€${Math.round(winnerFundingAmount).toLocaleString('es-ES')}`;
+                  const winnerFundingAmount = prizeTotal80;
+                  const roundedFunding = Math.round(winnerFundingAmount * 100) / 100;
+                  const formattedFunding = Number.isInteger(roundedFunding)
+                    ? `€${roundedFunding.toLocaleString('es-ES')}`
+                    : `€${roundedFunding.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                   const isMale = isMaleParticipant(firstPlace);
                   const isAlexander = isMale && (
                     firstPlace.name.toLowerCase().includes('alexander') || 
@@ -2091,7 +2144,7 @@ export default function SessionResultsPodium({
                           <button
                             type="button"
                             onClick={() => handleNavigateToModelProfile(firstPlace)}
-                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[68%] h-[6.5%] rounded-xl bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#0a192f] text-amber-200 hover:text-amber-300 border border-amber-400/80 shadow-md hover:border-amber-300 flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                            className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[74%] h-[6.5%] rounded-xl bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#0a192f] text-amber-200 hover:text-amber-300 border border-amber-400/80 shadow-md hover:border-amber-300 flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
                             title={`Ver perfil de ${firstPlace.name}`}
                             aria-label={`Ver perfil de ${firstPlace.name}`}
                           >
@@ -2100,6 +2153,27 @@ export default function SessionResultsPodium({
                             </span>
                           </button>
                         )}
+
+                        {/* Dynamic Votes Overlay */}
+                        <div className="absolute top-[55.2%] left-1/2 -translate-x-1/2 w-[58%] h-[4.4%] rounded-full bg-[#f3f4f6] flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                          <span className="text-rose-500 text-xs sm:text-sm leading-none">💖</span>
+                          <span className="font-serif font-bold text-[11px] sm:text-xs text-[#0f172a] leading-none">
+                            {firstPlace.votesReceived || 0} votos recibidos
+                          </span>
+                        </div>
+
+                        {/* Dynamic Funding Box Overlay (replaces hardcoded €800 inside image) */}
+                        <div className="absolute top-[63.0%] left-1/2 -translate-x-1/2 w-[82%] h-[16.4%] rounded-[14px] sm:rounded-[18px] bg-gradient-to-b from-[#faf8f4] via-[#f7f4ee] to-[#f4f0e8] flex flex-col items-center justify-center text-center px-2 pointer-events-none z-10">
+                          <span className="text-[9px] sm:text-[10.5px] font-serif font-bold uppercase tracking-[0.2em] text-[#8a5a19] leading-tight">
+                            FINANCIACIÓN CONSEGUIDA
+                          </span>
+                          <span className="text-2xl sm:text-4xl font-sans font-black text-[#0f172a] leading-none tracking-tight my-0.5 sm:my-1">
+                            {formattedFunding}
+                          </span>
+                          <span className="text-[7px] sm:text-[8.5px] font-serif font-bold uppercase tracking-[0.05em] text-[#0f172a] leading-tight">
+                            CAPITAL ASIGNADO POR SELECCIÓN COMUNITARIA
+                          </span>
+                        </div>
                       </div>
                     );
                   }
@@ -2128,7 +2202,7 @@ export default function SessionResultsPodium({
                         <button
                           type="button"
                           onClick={() => handleNavigateToModelProfile(firstPlace)}
-                          className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[62%] h-[6.5%] rounded-xl bg-white/95 hover:bg-white text-[#0f172a] hover:text-[#9e134a] border border-pink-200/90 hover:border-pink-400 shadow-xs hover:shadow-sm flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
+                          className="custom-bg absolute top-[48.8%] left-1/2 -translate-x-1/2 w-[74%] h-[6.5%] rounded-xl bg-white/95 hover:bg-white text-[#0f172a] hover:text-[#9e134a] border border-pink-200/90 hover:border-pink-400 shadow-xs hover:shadow-sm flex items-center justify-center cursor-pointer transition-all duration-200 px-3 z-10"
                           title={`Ver perfil de ${firstPlace.name}`}
                           aria-label={`Ver perfil de ${firstPlace.name}`}
                         >
@@ -2136,6 +2210,27 @@ export default function SessionResultsPodium({
                             {firstPlace.name}
                           </span>
                         </button>
+
+                        {/* Dynamic Votes Overlay */}
+                        <div className="absolute top-[55.4%] left-1/2 -translate-x-1/2 w-[58%] h-[4.4%] rounded-full bg-[#fff5f8] flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                          <span className="text-rose-500 text-xs sm:text-sm leading-none">💖</span>
+                          <span className="font-serif font-bold text-[11px] sm:text-xs text-[#0f172a] leading-none">
+                            {firstPlace.votesReceived || 0} votos recibidos
+                          </span>
+                        </div>
+
+                        {/* Dynamic Funding Box Overlay (replaces hardcoded €800 inside image) */}
+                        <div className="absolute top-[63.5%] left-1/2 -translate-x-1/2 w-[80%] h-[16.4%] rounded-[14px] sm:rounded-[18px] bg-gradient-to-b from-[#fff7fa] via-[#fff2f6] to-[#ffedf3] flex flex-col items-center justify-center text-center px-2 pointer-events-none z-10">
+                          <span className="text-[9px] sm:text-[10.5px] font-serif font-bold uppercase tracking-[0.2em] text-[#be185d] leading-tight">
+                            FINANCIACIÓN CONSEGUIDA
+                          </span>
+                          <span className="text-2xl sm:text-4xl font-sans font-black text-[#be185d] leading-none tracking-tight my-0.5 sm:my-1">
+                            {formattedFunding}
+                          </span>
+                          <span className="text-[7px] sm:text-[8.5px] font-serif font-bold uppercase tracking-[0.05em] text-[#0f172a] leading-tight">
+                            CAPITAL ASIGNADO POR SELECCIÓN COMUNITARIA
+                          </span>
+                        </div>
                       </div>
                     );
                   }
@@ -2512,7 +2607,7 @@ export default function SessionResultsPodium({
             const activeIdx = Math.min(winnerSponsorSlideIndex, safeSlides.length - 1);
             const currentSlide = safeSlides[activeIdx];
             const hasMultipleSponsors = safeSlides.length > 1;
-            const sponsorTotal10 = pool > 0 ? (pool * 0.10) : 100;
+            const sponsorTotal10 = effectivePool * 0.10;
             const commissionPerSponsor = sponsorTotal10 / Math.max(1, safeSlides.length);
             const formattedCommission = commissionPerSponsor.toFixed(2);
 
@@ -2625,15 +2720,6 @@ export default function SessionResultsPodium({
                         </div>
                       </div>
 
-                      {/* Sparkling Pink Diamonds at bottom-left */}
-                      <div className="absolute -bottom-2 -left-2 z-20 flex items-end pointer-events-none">
-                        <img
-                          src="/assets/aistudio/pink_diamond_brilliant.png"
-                          alt="Pink Diamond"
-                          className="w-8 h-6 sm:w-10 sm:h-7 drop-shadow-[0_2px_6px_rgba(219,39,119,0.35)] filter brightness-110"
-                        />
-                        <span className="text-pink-400 text-[10px] animate-pulse -ml-1.5 -mb-0.5">✦</span>
-                      </div>
                     </div>
 
                     {hasMultipleSponsors && (
@@ -2650,30 +2736,16 @@ export default function SessionResultsPodium({
                     )}
                   </div>
 
-                  {/* Royal Golden Crown */}
-                  <div className="flex items-center justify-center pt-0.5">
-                    <svg className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-[0_2px_6px_rgba(217,119,6,0.3)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M6 46L14 18L26 34L32 12L38 34L50 18L58 46H6Z" fill="url(#crownGold)" stroke="#b8860b" strokeWidth="1.5" strokeLinejoin="round" />
-                      <circle cx="14" cy="18" r="3" fill="#ffd700" stroke="#b8860b" strokeWidth="1" />
-                      <circle cx="32" cy="12" r="3.5" fill="#ffd700" stroke="#b8860b" strokeWidth="1" />
-                      <circle cx="50" cy="18" r="3" fill="#ffd700" stroke="#b8860b" strokeWidth="1" />
-                      <rect x="6" y="46" width="52" height="6" rx="2" fill="url(#crownBase)" stroke="#b8860b" strokeWidth="1.2" />
-                      <circle cx="20" cy="49" r="1.5" fill="#ffffff" />
-                      <circle cx="32" cy="49" r="1.8" fill="#e11d48" />
-                      <circle cx="44" cy="49" r="1.5" fill="#ffffff" />
-                      <defs>
-                        <linearGradient id="crownGold" x1="6" y1="12" x2="58" y2="46" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#ffe082" />
-                          <stop offset="0.5" stopColor="#ffb300" />
-                          <stop offset="1" stopColor="#ffd54f" />
-                        </linearGradient>
-                        <linearGradient id="crownBase" x1="6" y1="46" x2="58" y2="52" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#ffc107" />
-                          <stop offset="0.5" stopColor="#fff8e1" />
-                          <stop offset="1" stopColor="#ffa000" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                  {/* Pink Diamond in place of the Golden Crown */}
+                  <div className="flex items-center justify-center pt-0.5 pointer-events-none">
+                    <div className="relative flex items-end justify-center">
+                      <img
+                        src="/assets/aistudio/pink_diamond_brilliant.png"
+                        alt="Diamante Rosa"
+                        className="w-8 h-6 sm:w-10 sm:h-7 drop-shadow-[0_2px_6px_rgba(219,39,119,0.35)] filter brightness-110"
+                      />
+                      <span className="text-pink-400 text-[10px] animate-pulse -ml-1.5 -mb-0.5">✦</span>
+                    </div>
                   </div>
 
                   {/* BENEFICIO DEL PATROCINADOR Headline */}

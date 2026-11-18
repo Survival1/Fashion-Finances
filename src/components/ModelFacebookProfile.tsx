@@ -19,7 +19,6 @@ import {
   LuxuryWatchGift, 
   playLuxuryWatchSoundEffect 
 } from './LuxuryWatchAnimation';
-import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { getFriendsFromStorage, saveFriendsToStorage, FriendUser } from '../utils/friendsService';
 import { getFollowedUsersFromStorage, toggleFollowUserInStorage, FollowedUser } from '../utils/followingService';
 import CorporateHiringPortalModal from './CorporateHiringPortalModal';
@@ -113,6 +112,8 @@ import {
   saveSynchronizedBioAndWebsite 
 } from '../utils/creatorSync';
 import { SoundTrackSheetModal, SoundVideoReference } from './SoundTrackSheetModal';
+import FoundingModelBadge from './FoundingModelBadge';
+import { FounderPosition } from '../types/founders';
 
 interface FBComment {
   id: string;
@@ -604,9 +605,37 @@ export function ProfileIntroAndSponsors({
     return propModels?.find(m => m.id === userProfile?.id || (m.username && m.username.toLowerCase() === userProfile?.username?.toLowerCase())) || null;
   }, [propModels, userProfile]);
 
-  const instagramHandle = userProfile?.instagram || targetModelMatch?.socials?.instagram || (userProfile?.username ? `@${userProfile.username}` : '');
-  const tiktokHandle = userProfile?.tiktok || targetModelMatch?.socials?.tiktok || (userProfile?.username ? `@${userProfile.username}_tok` : '');
-  const twitterHandle = (userProfile as any)?.twitter || targetModelMatch?.socials?.twitter || (userProfile?.username ? `@${userProfile.username}_real` : '');
+  const targetSidebarModelId = targetModelMatch?.id || userProfile?.id || '';
+  const targetSidebarUsername = (targetModelMatch?.username || userProfile?.username || '').toLowerCase();
+  const isSidebarAdriana = targetSidebarUsername.includes('adriana') || targetSidebarModelId === 'topf-1';
+
+  const instagramHandle =
+    (typeof window !== 'undefined' && (
+      localStorage.getItem(`custom_instagram_${targetSidebarModelId}`) ||
+      localStorage.getItem(`custom_instagram_${targetSidebarUsername}`) ||
+      (isSidebarAdriana ? localStorage.getItem('custom_instagram_adrianalima_w1') || localStorage.getItem('custom_instagram_adrianalima') : null)
+    )) ||
+    userProfile?.instagram ||
+    targetModelMatch?.socials?.instagram ||
+    (userProfile?.username ? `@${userProfile.username}` : '');
+  const tiktokHandle =
+    (typeof window !== 'undefined' && (
+      localStorage.getItem(`custom_tiktok_${targetSidebarModelId}`) ||
+      localStorage.getItem(`custom_tiktok_${targetSidebarUsername}`) ||
+      (isSidebarAdriana ? localStorage.getItem('custom_tiktok_adrianalima_w1') || localStorage.getItem('custom_tiktok_adrianalima') : null)
+    )) ||
+    userProfile?.tiktok ||
+    targetModelMatch?.socials?.tiktok ||
+    (userProfile?.username ? `@${userProfile.username}_tok` : '');
+  const twitterHandle =
+    (typeof window !== 'undefined' && (
+      localStorage.getItem(`custom_twitter_${targetSidebarModelId}`) ||
+      localStorage.getItem(`custom_twitter_${targetSidebarUsername}`) ||
+      (isSidebarAdriana ? localStorage.getItem('custom_twitter_adrianalima_w1') || localStorage.getItem('custom_twitter_adrianalima') : null)
+    )) ||
+    (userProfile as any)?.twitter ||
+    targetModelMatch?.socials?.twitter ||
+    (userProfile?.username ? `@${userProfile.username}_real` : '');
 
   const showContenedor1 = !(hideSalonAndDirectoBanners || hideSalonBanner);
   const showContenedor2 = !(hideDirectoAndRegalosBanners || hideSalonAndDirectoBanners);
@@ -861,7 +890,7 @@ export function ProfileIntroAndSponsors({
                 id="contenedor-anuncio-videos-directo-sidebar"
                 role="button"
                 tabIndex={0}
-                aria-label="Ver Vídeos y Pasarela en Directo"
+                aria-label="Ver Vídeos y Contenidos en Directo"
                 onClick={() => {
                   localStorage.setItem('casting_live_active_subtab', 'live');
                   if (onNavigateToTab) {
@@ -884,7 +913,7 @@ export function ProfileIntroAndSponsors({
                 <div className="w-full h-32 sm:h-36 overflow-hidden bg-pink-100 shrink-0">
                   <img
                     src="/assets/aistudio/hero_model_clean.png"
-                    alt="Vídeos y Pasarela en Directo"
+                    alt="Vídeos y Contenidos en Directo"
                     className="w-full h-full object-cover object-top block transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 </div>
@@ -907,7 +936,7 @@ export function ProfileIntroAndSponsors({
 
                     <h4 className="text-[13px] font-black text-slate-900 leading-tight">
                       <span translate="no" aria-hidden="true">🎥 </span>
-                      <span>Vídeos y Pasarela en Directo</span>
+                      <span>Vídeos y Contenidos en Directo</span>
                     </h4>
 
                     <p className="text-[10.5px] text-rose-950 font-medium leading-snug m-0">
@@ -989,7 +1018,7 @@ export function ProfileIntroAndSponsors({
                     </div>
 
                     <h4 className="text-[13px] font-black text-rose-950 leading-tight">
-                      Regalos Exclusivos en Nuestra App
+                      Regalos Exclusivos
                     </h4>
 
                     <p className="text-[10.5px] text-rose-900 font-medium leading-snug m-0">
@@ -1168,6 +1197,7 @@ interface ModelFacebookProfileProps {
   initialSocialModal?: 'followers' | 'following' | 'friends' | null;
   onSocialModalChange?: (modal: 'followers' | 'following' | 'friends' | null) => void;
   onLogout?: () => void;
+  foundersPositions?: FounderPosition[];
 }
 
 export default function ModelFacebookProfile({
@@ -1183,8 +1213,27 @@ export default function ModelFacebookProfile({
   onGoToModelProfile,
   initialSocialModal,
   onSocialModalChange,
-  onLogout
+  onLogout,
+  foundersPositions = []
 }: ModelFacebookProfileProps) {
+  const findConfirmedFounderPos = (subject?: { id?: string; username?: string; name?: string } | null) => {
+    if (!subject || !foundersPositions.length) return undefined;
+    const sid = (subject.id || '').toLowerCase().trim();
+    const suname = (subject.username || '').toLowerCase().replace(/^@/, '').trim();
+    const sname = (subject.name || '').toLowerCase().trim();
+    return foundersPositions.find((p) => {
+      if (p.status !== 'CONFIRMED' || p.badgeActive === false) return false;
+      const pid = (p.userId || '').toLowerCase().trim();
+      const puname = (p.username || '').toLowerCase().replace(/^@/, '').trim();
+      const pname = (p.professionalName || '').toLowerCase().trim();
+      return (
+        (sid && pid && sid === pid) ||
+        (suname && puname && suname === puname) ||
+        (sname && pname && sname === pname)
+      );
+    });
+  };
+  const profileFounderPos = findConfirmedFounderPos(userProfile);
   const isOwnProfile = (!realLoggedInUser && !userProfile.id) || (realLoggedInUser ? (realLoggedInUser.id === userProfile.id || (realLoggedInUser.username && realLoggedInUser.username === userProfile.username)) : (userProfile.id === 'user' || userProfile.username === 'ernestovs'));
   
   // Follow and Friends state when viewing another user profile
@@ -1915,34 +1964,72 @@ export default function ModelFacebookProfile({
   const [editingFashionAgency, setEditingFashionAgency] = useState(userProfile.fashionAgency || currentModel?.fashionAgency || '');
   const targetModelId = currentModel?.id || userProfile?.id || 'topf-1';
   const targetModelUsername = (currentModel?.username || userProfile?.username || 'adrianalima').toLowerCase();
+  const isAdrianaProfile = targetModelUsername.includes('adriana') || targetModelId === 'topf-1';
 
-  const [editingInstagram, setEditingInstagram] = useState<string>(() => {
+  const [socialsRevision, setSocialsRevision] = useState(0);
+
+  const normalizeSocialHandle = (raw: string | undefined | null, fallback: string) => {
+    const cleaned = (raw || '').trim();
+    if (!cleaned) return fallback;
+    if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) return cleaned;
+    return cleaned.startsWith('@') ? cleaned : `@${cleaned}`;
+  };
+
+  const resolveProfileSocialHandle = (platform: 'instagram' | 'tiktok' | 'twitter') => {
+    const fallbackHandle =
+      platform === 'instagram'
+        ? `@${userProfile?.username || currentModel?.username || 'adrianalima'}`
+        : platform === 'tiktok'
+          ? (userProfile?.username || currentModel?.username ? `@${userProfile?.username || currentModel?.username}_tok` : '@adrianalima')
+          : (userProfile?.username || currentModel?.username ? `@${userProfile?.username || currentModel?.username}_real` : '@adrianalima');
+
     if (typeof window !== 'undefined') {
       const saved =
-        localStorage.getItem(`custom_instagram_${targetModelId}`) ||
-        localStorage.getItem(`custom_instagram_${targetModelUsername}`);
-      if (saved) return saved;
+        localStorage.getItem(`custom_${platform}_${targetModelId}`) ||
+        localStorage.getItem(`custom_${platform}_${targetModelUsername}`) ||
+        (isAdrianaProfile
+          ? localStorage.getItem(`custom_${platform}_adrianalima_w1`) ||
+            localStorage.getItem(`custom_${platform}_adrianalima`)
+          : null) ||
+        (isOwnProfile ? localStorage.getItem(`custom_model_${platform}`) : null);
+      if (saved && saved.trim()) {
+        return normalizeSocialHandle(saved, fallbackHandle);
+      }
     }
-    return userProfile.instagram || currentModel?.socials?.instagram || `@${userProfile.username || 'usuario'}`;
-  });
-  const [editingTikTok, setEditingTikTok] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved =
-        localStorage.getItem(`custom_tiktok_${targetModelId}`) ||
-        localStorage.getItem(`custom_tiktok_${targetModelUsername}`);
-      if (saved) return saved;
+
+    const fromProfile =
+      platform === 'instagram'
+        ? userProfile?.instagram
+        : platform === 'tiktok'
+          ? userProfile?.tiktok
+          : (userProfile as any)?.twitter;
+    if (fromProfile && String(fromProfile).trim()) {
+      return normalizeSocialHandle(String(fromProfile), fallbackHandle);
     }
-    return userProfile.tiktok || currentModel?.socials?.tiktok || (userProfile.username ? `@${userProfile.username}_tok` : '');
-  });
-  const [editingTwitter, setEditingTwitter] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved =
-        localStorage.getItem(`custom_twitter_${targetModelId}`) ||
-        localStorage.getItem(`custom_twitter_${targetModelUsername}`);
-      if (saved) return saved;
+
+    const fromModel = currentModel?.socials?.[platform];
+    if (fromModel && String(fromModel).trim()) {
+      return normalizeSocialHandle(String(fromModel), fallbackHandle);
     }
-    return (userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : '');
-  });
+
+    return fallbackHandle;
+  };
+
+  const [editingInstagram, setEditingInstagram] = useState<string>(() => resolveProfileSocialHandle('instagram'));
+  const [editingTikTok, setEditingTikTok] = useState<string>(() => resolveProfileSocialHandle('tiktok'));
+  const [editingTwitter, setEditingTwitter] = useState<string>(() => resolveProfileSocialHandle('twitter'));
+
+  useEffect(() => {
+    const handleExternalSocialsUpdate = () => {
+      setSocialsRevision(prev => prev + 1);
+    };
+    window.addEventListener('custom_socials_updated', handleExternalSocialsUpdate);
+    window.addEventListener('storage', handleExternalSocialsUpdate);
+    return () => {
+      window.removeEventListener('custom_socials_updated', handleExternalSocialsUpdate);
+      window.removeEventListener('storage', handleExternalSocialsUpdate);
+    };
+  }, []);
 
   const [editingWelcomeMessage, setEditingWelcomeMessage] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -2031,9 +2118,9 @@ export default function ModelFacebookProfile({
 
   useEffect(() => {
     if (showSettingsDrawer) {
-      setEditingInstagram(userProfile.instagram || currentModel?.socials?.instagram || `@${userProfile.username || 'usuario'}`);
-      setEditingTikTok(userProfile.tiktok || currentModel?.socials?.tiktok || (userProfile.username ? `@${userProfile.username}_tok` : ''));
-      setEditingTwitter((userProfile as any).twitter || currentModel?.socials?.twitter || (userProfile.username ? `@${userProfile.username}_real` : ''));
+      setEditingInstagram(resolveProfileSocialHandle('instagram'));
+      setEditingTikTok(resolveProfileSocialHandle('tiktok'));
+      setEditingTwitter(resolveProfileSocialHandle('twitter'));
 
       const savedWelcome = localStorage.getItem(`custom_welcome_message_${targetModelId}`) ||
                            localStorage.getItem(`custom_welcome_message_${targetModelUsername}`) ||
@@ -2049,68 +2136,117 @@ export default function ModelFacebookProfile({
         setEditingBio(savedBio);
       }
     }
-  }, [showSettingsDrawer, userProfile, currentModel, targetModelId, targetModelUsername]);
+  }, [showSettingsDrawer, targetModelId, targetModelUsername]);
 
   const [socialsSavedFeedback, setSocialsSavedFeedback] = useState(false);
 
+  const persistSocialHandlesToStorage = (
+    rawIg: string,
+    rawTt: string,
+    rawTw: string,
+    extraUsername?: string
+  ) => {
+    const cleanUsernameForStorage = (extraUsername || targetModelUsername || 'adrianalima').replace(/^@/, '').toLowerCase();
+    const nextIg = normalizeSocialHandle(rawIg, `@${cleanUsernameForStorage}`);
+    const nextTt = normalizeSocialHandle(rawTt, `@${cleanUsernameForStorage}_tok`);
+    const nextTw = normalizeSocialHandle(rawTw, `@${cleanUsernameForStorage}_real`);
+
+    setEditingInstagram(nextIg);
+    setEditingTikTok(nextTt);
+    setEditingTwitter(nextTw);
+
+    try {
+      localStorage.setItem(`custom_instagram_${targetModelId}`, nextIg);
+      localStorage.setItem(`custom_instagram_${targetModelUsername}`, nextIg);
+      localStorage.setItem(`custom_tiktok_${targetModelId}`, nextTt);
+      localStorage.setItem(`custom_tiktok_${targetModelUsername}`, nextTt);
+      localStorage.setItem(`custom_twitter_${targetModelId}`, nextTw);
+      localStorage.setItem(`custom_twitter_${targetModelUsername}`, nextTw);
+
+      if (extraUsername) {
+        localStorage.setItem(`custom_instagram_${cleanUsernameForStorage}`, nextIg);
+        localStorage.setItem(`custom_tiktok_${cleanUsernameForStorage}`, nextTt);
+        localStorage.setItem(`custom_twitter_${cleanUsernameForStorage}`, nextTw);
+      }
+
+      if (isAdrianaProfile || cleanUsernameForStorage.includes('adriana')) {
+        localStorage.setItem('custom_instagram_adrianalima', nextIg);
+        localStorage.setItem('custom_instagram_adrianalima_w1', nextIg);
+        localStorage.setItem('custom_tiktok_adrianalima', nextTt);
+        localStorage.setItem('custom_tiktok_adrianalima_w1', nextTt);
+        localStorage.setItem('custom_twitter_adrianalima', nextTw);
+        localStorage.setItem('custom_twitter_adrianalima_w1', nextTw);
+      }
+
+      if (isOwnProfile) {
+        localStorage.setItem('custom_model_instagram', nextIg);
+        localStorage.setItem('custom_model_tiktok', nextTt);
+        localStorage.setItem('custom_model_twitter', nextTw);
+      }
+    } catch (e) {}
+
+    return { nextIg, nextTt, nextTw };
+  };
+
+  const syncModelsSocialHandles = (nextIg: string, nextTt: string, nextTw: string, overrideFields?: { name?: string; username?: string; bio?: string; avatar?: string; fashionAgency?: string }) => {
+    if (!models || models.length === 0) return;
+    const targetGender = currentModel?.gender || userProfile?.gender || 'female';
+    const updatedModels = models.map(m => {
+      const isMatch =
+        (currentModel && m.id === currentModel.id) ||
+        m.id === userProfile?.id ||
+        (m.username && m.username.toLowerCase() === targetModelUsername) ||
+        (isAdrianaProfile && targetGender === 'female' && m.name.toLowerCase().includes('adriana'));
+      if (isMatch) {
+        return {
+          ...m,
+          ...(overrideFields?.name ? { name: overrideFields.name } : {}),
+          ...(overrideFields?.username ? { username: overrideFields.username } : {}),
+          ...(overrideFields?.bio !== undefined ? { bio: overrideFields.bio } : {}),
+          ...(overrideFields?.avatar ? { avatar: overrideFields.avatar } : {}),
+          ...(overrideFields?.fashionAgency !== undefined ? { fashionAgency: overrideFields.fashionAgency } : {}),
+          socials: {
+            ...(m.socials || {}),
+            instagram: nextIg,
+            tiktok: nextTt,
+            twitter: nextTw
+          }
+        };
+      }
+      return m;
+    });
+    try {
+      localStorage.setItem('coll_models', JSON.stringify(updatedModels));
+    } catch (e) {}
+    onUpdateModels(updatedModels);
+  };
+
   const handleSaveSocialsOnly = () => {
-    userProfile.instagram = editingInstagram;
-    userProfile.tiktok = editingTikTok;
-    (userProfile as any).twitter = editingTwitter;
+    const { nextIg, nextTt, nextTw } = persistSocialHandlesToStorage(
+      editingInstagram,
+      editingTikTok,
+      editingTwitter
+    );
 
     const nextProfile = {
       ...userProfile,
-      instagram: editingInstagram,
-      tiktok: editingTikTok,
-      twitter: editingTwitter
+      instagram: nextIg,
+      tiktok: nextTt,
+      twitter: nextTw
     };
 
-    if (currentModel) {
-      const targetGender = currentModel?.gender || userProfile?.gender || 'female';
-      const updatedModels = models.map(m => {
-        if (m.id === currentModel.id || (targetGender === 'female' && m.name.toLowerCase().includes('adriana'))) {
-          return {
-            ...m,
-            socials: {
-              ...(m.socials || {}),
-              instagram: editingInstagram,
-              tiktok: editingTikTok,
-              twitter: editingTwitter
-            }
-          };
-        }
-        return m;
-      });
-      try {
-        localStorage.setItem('coll_models', JSON.stringify(updatedModels));
-      } catch (e) {}
-      onUpdateModels(updatedModels);
-    }
+    syncModelsSocialHandles(nextIg, nextTt, nextTw);
 
     try {
       localStorage.setItem('coll_userProfile', JSON.stringify(nextProfile));
-      localStorage.setItem(`custom_instagram_${targetModelId}`, editingInstagram);
-      localStorage.setItem(`custom_instagram_${targetModelUsername}`, editingInstagram);
-      localStorage.setItem(`custom_tiktok_${targetModelId}`, editingTikTok);
-      localStorage.setItem(`custom_tiktok_${targetModelUsername}`, editingTikTok);
-      localStorage.setItem(`custom_twitter_${targetModelId}`, editingTwitter);
-      localStorage.setItem(`custom_twitter_${targetModelUsername}`, editingTwitter);
-      if (targetModelUsername.includes('adriana') || targetModelId === 'topf-1') {
-        localStorage.setItem('custom_instagram_adrianalima', editingInstagram);
-        localStorage.setItem('custom_instagram_adrianalima_w1', editingInstagram);
-        localStorage.setItem('custom_tiktok_adrianalima', editingTikTok);
-        localStorage.setItem('custom_tiktok_adrianalima_w1', editingTikTok);
-        localStorage.setItem('custom_twitter_adrianalima', editingTwitter);
-        localStorage.setItem('custom_twitter_adrianalima_w1', editingTwitter);
-      }
-      localStorage.setItem('custom_model_instagram', editingInstagram);
-      localStorage.setItem('custom_model_tiktok', editingTikTok);
-      localStorage.setItem('custom_model_twitter', editingTwitter);
+      localStorage.setItem('coll_current_user', JSON.stringify(nextProfile));
       window.dispatchEvent(new CustomEvent('custom_socials_updated'));
     } catch (e) {}
-    onUpdateProfile(nextProfile);
 
+    onUpdateProfile(nextProfile);
+    setSocialsRevision(prev => prev + 1);
     setSocialsSavedFeedback(true);
+    showSocialToast('✅ ¡Redes sociales guardadas y actualizadas!');
     setTimeout(() => {
       setSocialsSavedFeedback(false);
     }, 3500);
@@ -3706,8 +3842,68 @@ export default function ModelFacebookProfile({
   // Photo Lightbox Interactive States
   const profileContainerRef = useRef<HTMLDivElement>(null);
   const [selectedPhotoForLightbox, setSelectedPhotoForLightbox] = useState<string | null>(null);
+  const [enlargedPhotoModal, setEnlargedPhotoModal] = useState<{
+    src: string;
+    alt?: string;
+    gallery?: string[];
+    index?: number;
+  } | null>(null);
   const [lightboxBounds, setLightboxBounds] = useState<{ left: number; width: number } | null>(null);
   const isClosingLightboxRef = useRef(false);
+
+  const handleOpenEnlargedPhoto = (
+    src: string,
+    alt?: string,
+    gallery?: string[],
+    index?: number,
+    e?: React.MouseEvent
+  ) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!src || isClosingLightboxRef.current) return;
+    const validGallery = gallery && gallery.length > 0 ? gallery : undefined;
+    const resolvedIndex =
+      validGallery !== undefined
+        ? typeof index === 'number' && index >= 0
+          ? index
+          : Math.max(0, validGallery.indexOf(src))
+        : undefined;
+    setEnlargedPhotoModal({
+      src,
+      alt: alt || userProfile.name,
+      gallery: validGallery,
+      index: resolvedIndex,
+    });
+  };
+
+  useEffect(() => {
+    if (!enlargedPhotoModal) return;
+    const handleEnlargedKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setEnlargedPhotoModal(null);
+      } else if (e.key === 'ArrowRight' && enlargedPhotoModal.gallery && enlargedPhotoModal.gallery.length > 1) {
+        e.preventDefault();
+        setEnlargedPhotoModal((prev) => {
+          if (!prev || !prev.gallery || prev.gallery.length <= 1) return prev;
+          const nextIdx = ((prev.index ?? 0) + 1) % prev.gallery.length;
+          return { ...prev, src: prev.gallery[nextIdx], index: nextIdx };
+        });
+      } else if (e.key === 'ArrowLeft' && enlargedPhotoModal.gallery && enlargedPhotoModal.gallery.length > 1) {
+        e.preventDefault();
+        setEnlargedPhotoModal((prev) => {
+          if (!prev || !prev.gallery || prev.gallery.length <= 1) return prev;
+          const nextIdx = ((prev.index ?? 0) - 1 + prev.gallery.length) % prev.gallery.length;
+          return { ...prev, src: prev.gallery[nextIdx], index: nextIdx };
+        });
+      }
+    };
+    window.addEventListener('keydown', handleEnlargedKeyDown);
+    return () => window.removeEventListener('keydown', handleEnlargedKeyDown);
+  }, [enlargedPhotoModal]);
 
   const handleOpenPhotoLightbox = (ph: string, e?: React.MouseEvent) => {
     if (e) {
@@ -4422,7 +4618,13 @@ export default function ModelFacebookProfile({
   };
 
   // Compact Stickers popup rendered right above the action icons bar (or centered fallback)
-  const renderCompactStickersPopup = (targetId: string, isPhoto = false, isCentered = false, matchImageSize = false) => {
+  const renderCompactStickersPopup = (
+    targetId: string,
+    isPhoto = false,
+    isCentered = false,
+    matchImageSize = false,
+    overlayRoundedClass = 'rounded-t-2xl'
+  ) => {
     const filteredStickers = selectedStickerCategory === 'todos'
       ? STICKER_PACK
       : STICKER_PACK.filter(s => s.category === selectedStickerCategory);
@@ -4437,7 +4639,7 @@ export default function ModelFacebookProfile({
         }}
         className={
           matchImageSize
-            ? "absolute inset-0 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-t-2xl p-2 z-[250] w-full h-full flex flex-col text-left animate-fade-in select-none"
+            ? `absolute inset-0 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-2xl ${overlayRoundedClass} p-2.5 sm:p-3 z-[250] w-full h-full flex flex-col text-left animate-fade-in select-none`
             : isCentered
             ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-xl p-2 sm:p-2.5 z-[250] w-[244px] sm:w-[266px] max-w-[92%] max-h-[90%] flex flex-col text-left animate-fade-in select-none"
             : "absolute bottom-full left-1 sm:left-2 mb-11 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-[0_14px_34px_-8px_rgba(0,0,0,0.55)] rounded-xl p-2 sm:p-2.5 z-[300] w-[244px] sm:w-[266px] max-w-[calc(100vw-2rem)] flex flex-col text-left animate-fade-in select-none after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12"
@@ -4464,7 +4666,7 @@ export default function ModelFacebookProfile({
         </div>
         
         {/* Categories selector pills: Todos, Amor, Glamour, Saludos */}
-        <div className="flex items-center gap-1 mb-1.5 pb-1 border-b border-zinc-800/60 overflow-x-auto no-scrollbar shrink-0">
+        <div className={matchImageSize ? "flex items-center flex-wrap gap-1 mb-2 pb-1.5 border-b border-zinc-800/60 shrink-0" : "flex items-center gap-1 mb-1.5 pb-1 border-b border-zinc-800/60 overflow-x-auto no-scrollbar shrink-0"}>
           {[
             { id: 'todos', label: '🌟 Todos', count: STICKER_PACK.length },
             { id: 'amor', label: '💖 Amor', count: STICKER_PACK.filter(s => s.category === 'amor').length },
@@ -4539,7 +4741,13 @@ export default function ModelFacebookProfile({
   };
 
   // Compact Extra Gifts popup positioned identically to Stickers & Reacciones
-  const renderCompactGiftsPopup = (targetId: string, _isPhoto = false, isCentered = false) => {
+  const renderCompactGiftsPopup = (
+    targetId: string,
+    _isPhoto = false,
+    isCentered = false,
+    matchImageSize = false,
+    overlayRoundedClass = 'rounded-t-2xl'
+  ) => {
     return (
       <div 
         onMouseEnter={() => {
@@ -4549,7 +4757,9 @@ export default function ModelFacebookProfile({
           handleGiftMouseLeave();
         }}
         className={
-          isCentered
+          matchImageSize
+            ? `absolute inset-0 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-2xl ${overlayRoundedClass} p-2.5 sm:p-3 z-[250] w-full h-full flex flex-col text-left animate-fade-in select-none`
+            : isCentered
             ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#12151e]/98 backdrop-blur-md border border-zinc-700/80 shadow-2xl rounded-xl p-2 sm:p-2.5 z-[250] w-[244px] sm:w-[266px] max-w-[92%] max-h-[90%] flex flex-col text-left animate-fade-in select-none"
             : "absolute bottom-full left-1 sm:left-2 mb-11 bg-[#12151e]/96 backdrop-blur-md border border-zinc-700/80 shadow-[0_14px_34px_-8px_rgba(0,0,0,0.55)] rounded-xl p-2 sm:p-2.5 z-[300] w-[244px] sm:w-[266px] max-w-[calc(100vw-2rem)] flex flex-col text-left animate-fade-in select-none after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12"
         }
@@ -4560,7 +4770,7 @@ export default function ModelFacebookProfile({
             🎁 REGALOS EXTRA
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[8.5px] bg-zinc-800 text-yellow-350 font-black px-1.5 py-0.5 rounded font-mono">
+            <span className="text-[8.5px] bg-zinc-800 text-yellow-300 font-black px-1.5 py-0.5 rounded font-mono">
               🪙 {liveUserCoins}
             </span>
             <button
@@ -4581,7 +4791,7 @@ export default function ModelFacebookProfile({
         </div>
 
         {/* Compact Grid matching Stickers proportions */}
-        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 flex-1 min-h-0 max-h-[148px] sm:max-h-[164px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className={matchImageSize ? "grid grid-cols-3 gap-1.5 sm:gap-2 flex-1 min-h-0 overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden content-start" : "grid grid-cols-3 gap-1 sm:gap-1.5 flex-1 min-h-0 max-h-[148px] sm:max-h-[164px] overflow-y-auto scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"}>
           {EXTRA_GIFTS.map((gift, gIdx) => (
             <button
               key={gIdx}
@@ -4633,14 +4843,15 @@ export default function ModelFacebookProfile({
     onRepostClick: (e: React.MouseEvent) => void,
     onShareClick: (e: React.MouseEvent) => void,
     onBookmarkClick: (e: React.MouseEvent) => void,
-    hoverKey?: string
+    hoverKey?: string,
+    suppressImageOverlays = false
   ) => {
     const effectiveStickerTarget = (hoverKey && hoverKey !== 'none') ? hoverKey : id;
-    const isStickersPopupVisible = !selectedPhotoForLightbox && (
+    const isStickersPopupVisible = !suppressImageOverlays && !selectedPhotoForLightbox && (
       hoveredStickersPostId === id ||
       (!!hoverKey && hoverKey !== 'none' && hoveredStickersPostId === hoverKey)
     );
-    const isGiftsPopupVisible = !selectedPhotoForLightbox && (
+    const isGiftsPopupVisible = !suppressImageOverlays && !selectedPhotoForLightbox && (
       hoveredHeartAndGiftPhotoUrl === id ||
       (!!hoverKey && hoverKey !== 'none' && hoveredHeartAndGiftPhotoUrl === hoverKey)
     );
@@ -5959,24 +6170,22 @@ export default function ModelFacebookProfile({
                     className="w-10 h-10 rounded-full object-cover border border-slate-100" 
                   />
                   <div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-wrap">
                       <strong className="text-slate-900 text-sm font-semibold">{post.authorName}</strong>
                       <span className="bg-indigo-100 text-indigo-600 border border-indigo-200/50 text-[8px] font-bold px-1 rounded-sm">
                         Model ✓
                       </span>
+                      {(() => {
+                        const postFounder = findConfirmedFounderPos({
+                          username: post.authorUsername,
+                          name: post.authorName
+                        });
+                        return postFounder ? (
+                          <FoundingModelBadge founderNumber={postFounder.code} variant="inline" />
+                        ) : null;
+                      })()}
                     </div>
                     <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('open-user-profile', { detail: { username: post.authorUsername } }));
-                        }}
-                        className="hover:underline hover:text-indigo-600 cursor-pointer font-mono text-[10px]"
-                        title={`Ver perfil de @${post.authorUsername}`}
-                      >
-                        @{post.authorUsername}
-                      </button>
-                      <span>•</span>
                       <span>{post.createdAt}</span>
                       <span>•</span>
                       <Globe className="w-3 h-3 text-slate-400" />
@@ -6071,14 +6280,7 @@ export default function ModelFacebookProfile({
                       referrerPolicy="no-referrer"
                       className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300"
                       onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedPhotoForLightbox(null);
-                        openImageLightbox({
-                          src: post.image,
-                          alt: 'Foto de publicación',
-                          title: userProfile.name
-                        });
+                        handleOpenEnlargedPhoto(post.image!, 'Foto de publicación', undefined, undefined, e);
                       }}
                     />
                   </div>
@@ -6087,6 +6289,16 @@ export default function ModelFacebookProfile({
 
                   {/* 📤 Renders the custom Full-Size Share Overlay covering the image exactly */}
                   {!selectedPhotoForLightbox && activeShareMenuPostId === post.id && renderShareOverlay(post.id, post.image)}
+
+                  {/* 💝 Renders Stickers & Reacciones matching the exact image size */}
+                  {!selectedPhotoForLightbox && (hoveredStickersPostId === post.image || hoveredStickersPostId === post.id) &&
+                    renderCompactStickersPopup(post.image, true, false, true, 'rounded-2xl')
+                  }
+
+                  {/* 🎁 Renders Regalos Extra matching the exact image size */}
+                  {!selectedPhotoForLightbox && (hoveredHeartAndGiftPhotoUrl === post.image || hoveredHeartAndGiftPhotoUrl === post.id) &&
+                    renderCompactGiftsPopup(post.image, true, false, true, 'rounded-2xl')
+                  }
                 </div>
               )}
 
@@ -6156,7 +6368,8 @@ export default function ModelFacebookProfile({
                   setActiveShareMenuPostId(activeShareMenuPostId === post.id ? null : post.id);
                 },
                 () => handleToggleBookmark(post.id),
-                post.image
+                post.image,
+                !!post.image
               )}
 
               {/* Facebook Comments section wrapper if toggled or default */}
@@ -6431,11 +6644,18 @@ export default function ModelFacebookProfile({
       {/* 🚀 FACEBOOK PROFILE HEADER CARD */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         {/* Cover Photo */}
-        <div className="h-52 sm:h-64 md:h-72 lg:h-[300px] relative overflow-hidden bg-slate-100">
+        <div
+          onClick={(e) => {
+            const coverSrc = userProfile.banner || currentModel?.banner || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1600";
+            handleOpenEnlargedPhoto(coverSrc, `Portada de ${userProfile.name}`, undefined, undefined, e);
+          }}
+          className="h-52 sm:h-64 md:h-72 lg:h-[300px] relative overflow-hidden bg-slate-100 cursor-pointer group/cover"
+          title="Haz clic para ampliar la foto de portada"
+        >
           <img 
             src={userProfile.banner || currentModel?.banner || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1600"} 
             alt="Facebook Cover" 
-            className="w-full h-full object-cover opacity-100 transition-all duration-300"
+            className="w-full h-full object-cover opacity-100 transition-all duration-300 group-hover/cover:scale-[1.02]"
           />
           
           {isOwnProfile && (
@@ -6445,6 +6665,7 @@ export default function ModelFacebookProfile({
                 accept="image/*"
                 id="model-cover-photo-upload"
                 className="hidden"
+                onClick={(e) => e.stopPropagation()}
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -6476,7 +6697,10 @@ export default function ModelFacebookProfile({
                   }
                 }}
               />
-              <div className="absolute top-4 right-4 flex flex-wrap gap-2 z-10 select-none">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-4 right-4 flex flex-wrap gap-2 z-10 select-none"
+              >
                 <label 
                   htmlFor="model-cover-photo-upload"
                   className="bg-black/60 hover:bg-black/80 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer border border-white/20 shadow-xs"
@@ -6515,7 +6739,7 @@ export default function ModelFacebookProfile({
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 mb-4 select-none">
             {/* Avatar overlay */}
             <div 
-              onClick={() => {
+              onClick={(e) => {
                 if (profileActiveStories.length > 0) {
                   setSelectedStoryForPreview({
                     id: profileActiveStories[0].id,
@@ -6527,13 +6751,16 @@ export default function ModelFacebookProfile({
                 } else if (isOwnProfile) {
                   setTempAvatarUrl(userProfile.avatar);
                   setIsEditingAvatar(true);
+                } else {
+                  handleOpenEnlargedPhoto(userProfile.avatar, userProfile.name, undefined, undefined, e);
                 }
               }}
-              className={`w-32 h-32 rounded-full overflow-hidden shadow-md relative bg-slate-100 z-15 group -mt-16 sm:-mt-20 shrink-0 transition-all duration-300 ${
+              className={`w-32 h-32 rounded-full overflow-hidden shadow-md relative bg-slate-100 z-15 group -mt-16 sm:-mt-20 shrink-0 transition-all duration-300 cursor-pointer ${
                 profileActiveStories.length > 0 
-                  ? 'p-[4px] bg-gradient-to-tr from-yellow-400 via-[#ff2d85] to-purple-600 ring-4 ring-offset-2 ring-[#ff2d85]/80 cursor-pointer animate-pulse-subtle' 
-                  : 'border-4 border-white'
+                  ? 'p-[4px] bg-gradient-to-tr from-yellow-400 via-[#ff2d85] to-purple-600 ring-4 ring-offset-2 ring-[#ff2d85]/80 animate-pulse-subtle' 
+                  : 'border-4 border-white hover:ring-4 hover:ring-pink-200/80'
               }`}
+              title={profileActiveStories.length > 0 ? 'Ver historia' : isOwnProfile ? 'Cambiar foto de perfil' : 'Haz clic para ampliar'}
             >
               <img 
                 src={userProfile.avatar} 
@@ -6588,6 +6815,9 @@ export default function ModelFacebookProfile({
                       ? 'Inversor Principal'
                       : 'Visitante Autorizado'}
                   </span>
+                  {profileFounderPos && (
+                    <FoundingModelBadge founderNumber={profileFounderPos.code} variant="inline" />
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                   <p className="text-xs text-slate-500 font-mono">@{userProfile.username}</p>
@@ -6887,55 +7117,76 @@ export default function ModelFacebookProfile({
                     <strong className="text-sky-500/75 font-semibold tracking-tight">España / Remoto</strong>
                   </div>
 
-                  {/* 2. Sígueme en Instagram: @adrianalima */}
-                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <svg className="w-4.5 h-4.5 text-pink-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                    <span className="text-slate-500 font-medium">Sígueme en Instagram:</span>
-                    <a 
-                      href={`https://instagram.com/${userProfile?.username || 'adrianalima'}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-pink-500/75 font-semibold hover:underline tracking-tight"
-                    >
-                      @{userProfile?.username || 'adrianalima'}
-                    </a>
-                  </div>
+                  {(() => {
+                    void socialsRevision;
+                    const displayIg = resolveProfileSocialHandle('instagram');
+                    const displayTt = resolveProfileSocialHandle('tiktok');
+                    const displayTw = resolveProfileSocialHandle('twitter');
 
-                  {/* 3. Sígueme en TikTok: @adrianalima */}
-                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <svg className="w-4.5 h-4.5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.87-4.47V8.71a8.16 8.16 0 0 0 4.9 1.62v-3.64z"/>
-                    </svg>
-                    <span className="text-slate-500 font-medium">Sígueme en TikTok:</span>
-                    <a 
-                      href={`https://tiktok.com/@${userProfile?.username || 'adrianalima'}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-slate-600/85 font-semibold hover:underline tracking-tight"
-                    >
-                      @{userProfile?.username || 'adrianalima'}
-                    </a>
-                  </div>
+                    const igHref = displayIg.startsWith('http')
+                      ? displayIg
+                      : `https://instagram.com/${displayIg.replace(/^@+/, '')}`;
+                    const ttHref = displayTt.startsWith('http')
+                      ? displayTt
+                      : `https://tiktok.com/@${displayTt.replace(/^@+/, '')}`;
+                    const twHref = displayTw.startsWith('http')
+                      ? displayTw
+                      : `https://x.com/${displayTw.replace(/^@+/, '')}`;
 
-                  {/* 4. Sígueme en X / Twitter: @adrianalima */}
-                  <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
-                    <svg className="w-4 h-4 text-slate-500 shrink-0 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    <span className="text-slate-500 font-medium">Sígueme en X / Twitter:</span>
-                    <a 
-                      href={`https://x.com/${userProfile?.username || 'adrianalima'}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-slate-600/85 font-semibold hover:underline tracking-tight"
-                    >
-                      @{userProfile?.username || 'adrianalima'}
-                    </a>
-                  </div>
+                    return (
+                      <>
+                        {/* 2. Sígueme en Instagram */}
+                        <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                          <svg className="w-4.5 h-4.5 text-pink-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                          </svg>
+                          <span className="text-slate-500 font-medium">Sígueme en Instagram:</span>
+                          <a 
+                            href={igHref}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-pink-500/75 font-semibold hover:underline tracking-tight"
+                          >
+                            {displayIg}
+                          </a>
+                        </div>
+
+                        {/* 3. Sígueme en TikTok */}
+                        <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                          <svg className="w-4.5 h-4.5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.87-4.47V8.71a8.16 8.16 0 0 0 4.9 1.62v-3.64z"/>
+                          </svg>
+                          <span className="text-slate-500 font-medium">Sígueme en TikTok:</span>
+                          <a 
+                            href={ttHref}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-slate-600/85 font-semibold hover:underline tracking-tight"
+                          >
+                            {displayTt}
+                          </a>
+                        </div>
+
+                        {/* 4. Sígueme en X / Twitter */}
+                        <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
+                          <svg className="w-4 h-4 text-slate-500 shrink-0 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          </svg>
+                          <span className="text-slate-500 font-medium">Sígueme en X / Twitter:</span>
+                          <a 
+                            href={twHref}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-slate-600/85 font-semibold hover:underline tracking-tight"
+                          >
+                            {displayTw}
+                          </a>
+                        </div>
+                      </>
+                    );
+                  })()}
 
                   {/* 5. Sponsoring: Comisión 10% activa */}
                   <div className="flex items-center gap-2.5 text-xs sm:text-[13px] leading-relaxed">
@@ -10236,11 +10487,11 @@ export default function ModelFacebookProfile({
                                 <div
                                   key={item.id || idx}
                                   className="relative aspect-[4/5] sm:aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 group shadow-md border border-slate-200/60 cursor-pointer select-none"
-                                  onClick={() => {
+                                  onClick={(e) => {
                                     if (item.videoUrl) {
                                       setPlayingSavedVideoUrl(item.videoUrl);
                                     } else {
-                                      handleOpenPhotoLightbox(item.url || item.poster);
+                                      handleOpenEnlargedPhoto(item.url || item.poster, item.title || 'Foto Guardada', undefined, undefined, e);
                                     }
                                   }}
                                 >
@@ -10334,16 +10585,26 @@ export default function ModelFacebookProfile({
                               }`}
                             >
 
-                              {/* Static Clean Image Box (no se amplía en ningún momento, se mantiene siempre visible y fija) */}
+                              {/* Interactive Image Box: clicking enlarges the photo */}
                               <div 
-                                className="aspect-square w-full rounded-t-2xl relative overflow-hidden bg-slate-100 select-none"
+                                onClick={(e) => {
+                                  handleOpenEnlargedPhoto(
+                                    ph,
+                                    `${userProfile.name} - Foto ${idx + 1}`,
+                                    displayedPhotos,
+                                    idx,
+                                    e
+                                  );
+                                }}
+                                className="aspect-square w-full rounded-t-2xl relative overflow-hidden bg-slate-100 select-none cursor-pointer group/imgbox"
+                                title="Haz clic para ver en tamaño ampliado"
                               >
                                 <div className="w-full h-full rounded-t-2xl overflow-hidden">
                                   <img 
                                     src={ph} 
                                     alt={`fashion ${idx}`} 
                                     referrerPolicy="no-referrer"
-                                    className="w-full h-full object-cover block"
+                                    className="w-full h-full object-cover block transition-transform duration-300 group-hover/imgbox:scale-[1.03]"
                                   />
                                 </div>
 
@@ -10379,6 +10640,16 @@ export default function ModelFacebookProfile({
 
                                 {/* 📤 SHARE OVERLAY: Covering the image */}
                                 {!selectedPhotoForLightbox && activeShareMenuPostId === ph && renderShareOverlay(ph, ph)}
+
+                                {/* 💝 STICKERS & REACCIONES OVERLAY: Matching the exact size of the image */}
+                                {!selectedPhotoForLightbox && hoveredStickersPostId === ph &&
+                                  renderCompactStickersPopup(ph, true, false, true, 'rounded-t-2xl')
+                                }
+
+                                {/* 🎁 REGALOS EXTRA OVERLAY: Matching the exact size of the image */}
+                                {!selectedPhotoForLightbox && hoveredHeartAndGiftPhotoUrl === ph &&
+                                  renderCompactGiftsPopup(ph, true, false, true, 'rounded-t-2xl')
+                                }
                               </div>
  
                               {/* Action Row styled exactly like image.png */}
@@ -10432,7 +10703,8 @@ export default function ModelFacebookProfile({
                                   setActiveShareMenuPostId(activeShareMenuPostId === ph ? null : ph);
                                 },
                                 () => handleToggleBookmark(ph),
-                                ph
+                                ph,
+                                true
                               )}
                               
                               {!selectedPhotoForLightbox && giftConfirmPhotoUrl === ph && renderConfirmGiftOverlay(ph)}
@@ -11079,15 +11351,9 @@ export default function ModelFacebookProfile({
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-contain max-h-[34vh] sm:max-h-[38vh] md:max-h-[460px] relative z-10 transition-all duration-300 group-hover/stage:scale-[1.015] cursor-pointer"
                     onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
                       const ph = selectedPhotoForLightbox;
-                      setSelectedPhotoForLightbox(null);
-                      openImageLightbox({
-                        src: ph,
-                        alt: userProfile.name,
-                        title: userProfile.name
-                      });
+                      const allPhotos = (currentModel ? currentModel.photos : investorPhotos) || [];
+                      handleOpenEnlargedPhoto(ph, userProfile.name, allPhotos, allPhotos.indexOf(ph), e);
                     }}
                   />
 
@@ -12570,6 +12836,12 @@ export default function ModelFacebookProfile({
                             const trimmedName = editingName.trim() || userProfile.name;
                             const trimmedUsername = (editingUsername.trim() || userProfile.username).replace(/^@/, '');
                             const trimmedAgency = editingFashionAgency.trim();
+                            const { nextIg, nextTt, nextTw } = persistSocialHandlesToStorage(
+                              editingInstagram,
+                              editingTikTok,
+                              editingTwitter,
+                              trimmedUsername
+                            );
                             const updatedUser = {
                               ...userProfile,
                               name: trimmedName,
@@ -12577,12 +12849,23 @@ export default function ModelFacebookProfile({
                               fashionAgency: trimmedAgency,
                               bio: trimmedBio,
                               website: trimmedWebsite,
-                              avatar: editingAvatar || userProfile.avatar
+                              avatar: editingAvatar || userProfile.avatar,
+                              instagram: nextIg,
+                              tiktok: nextTt,
+                              twitter: nextTw
                             };
                             setBioText(trimmedBio);
                             setCreatorWebsite(trimmedWebsite);
                             setFashionAgency(trimmedAgency);
+                            syncModelsSocialHandles(nextIg, nextTt, nextTw, {
+                              name: trimmedName,
+                              username: trimmedUsername,
+                              bio: trimmedBio,
+                              avatar: updatedUser.avatar,
+                              fashionAgency: trimmedAgency
+                            });
                             try {
+                              localStorage.setItem('coll_userProfile', JSON.stringify(updatedUser));
                               localStorage.setItem('coll_current_user', JSON.stringify(updatedUser));
                               localStorage.setItem('custom_model_bio', trimmedBio);
                               localStorage.setItem(`custom_model_bio_${userProfile.id}`, trimmedBio);
@@ -12592,11 +12875,17 @@ export default function ModelFacebookProfile({
                                 localStorage.setItem(`custom_model_website_${userProfile.username.toLowerCase()}`, trimmedWebsite);
                               }
                               localStorage.setItem('custom_model_fashion_agency', trimmedAgency);
+                              window.dispatchEvent(new CustomEvent('custom_socials_updated'));
                             } catch (e) {}
                             saveSynchronizedBioAndWebsite(trimmedUsername, trimmedBio, trimmedWebsite, userProfile.id);
                             if (onUpdateProfile) {
                               onUpdateProfile(updatedUser);
                             }
+                            setSocialsRevision(prev => prev + 1);
+                            setSocialsSavedFeedback(true);
+                            setTimeout(() => {
+                              setSocialsSavedFeedback(false);
+                            }, 3500);
                             showSocialToast("✅ ¡Cambios guardados con éxito!");
                           }}
                           style={{ backgroundColor: '#ffffff', color: '#ff2d85' }}
@@ -14561,6 +14850,86 @@ export default function ModelFacebookProfile({
           }, 50);
         }}
       />
+      {/* 🔍 ENLARGED PROFILE IMAGE MODAL */}
+      {enlargedPhotoModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[100000] bg-white/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-fade-in select-none"
+          onClick={() => setEnlargedPhotoModal(null)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setEnlargedPhotoModal(null);
+            }}
+            className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-white hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 flex items-center justify-center transition-all duration-150 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+            title="Cerrar (Esc)"
+            aria-label="Cerrar imagen ampliada"
+          >
+            <X className="w-5 h-5 stroke-[2.5]" />
+          </button>
+
+          {/* Previous photo arrow */}
+          {enlargedPhotoModal.gallery && enlargedPhotoModal.gallery.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEnlargedPhotoModal((prev) => {
+                  if (!prev || !prev.gallery || prev.gallery.length <= 1) return prev;
+                  const nextIdx = ((prev.index ?? 0) - 1 + prev.gallery.length) % prev.gallery.length;
+                  return { ...prev, src: prev.gallery[nextIdx], index: nextIdx };
+                });
+              }}
+              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 flex items-center justify-center transition-all duration-150 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+              title="Foto anterior"
+              aria-label="Foto anterior"
+            >
+              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          )}
+
+          {/* Enlarged Image */}
+          <div
+            className="relative flex flex-col items-center justify-center max-w-[82vw] max-h-[75vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={enlargedPhotoModal.src}
+              alt={enlargedPhotoModal.alt || 'Imagen ampliada'}
+              referrerPolicy="no-referrer"
+              className="max-w-[78vw] sm:max-w-[520px] md:max-w-[560px] max-h-[62vh] w-auto h-auto object-contain rounded-2xl shadow-[0_20px_55px_rgba(236,72,153,0.18),0_10px_28px_rgba(15,23,42,0.12)] border border-pink-200/80"
+            />
+            {enlargedPhotoModal.gallery && enlargedPhotoModal.gallery.length > 1 && (
+              <div className="mt-3 px-3.5 py-1 rounded-full bg-white border border-pink-200 text-pink-600 text-xs font-bold font-mono shadow-sm">
+                {(enlargedPhotoModal.index ?? 0) + 1} / {enlargedPhotoModal.gallery.length}
+              </div>
+            )}
+          </div>
+
+          {/* Next photo arrow */}
+          {enlargedPhotoModal.gallery && enlargedPhotoModal.gallery.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEnlargedPhotoModal((prev) => {
+                  if (!prev || !prev.gallery || prev.gallery.length <= 1) return prev;
+                  const nextIdx = ((prev.index ?? 0) + 1) % prev.gallery.length;
+                  return { ...prev, src: prev.gallery[nextIdx], index: nextIdx };
+                });
+              }}
+              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 flex items-center justify-center transition-all duration-150 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+              title="Foto siguiente"
+              aria-label="Foto siguiente"
+            >
+              <ChevronRight className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

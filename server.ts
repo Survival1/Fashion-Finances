@@ -66,6 +66,25 @@ if (!fs.existsSync(DB_FILE)) {
 async function startServer() {
   const app = express();
   const server = http.createServer(app);
+
+  // Founders ("The First 100") API routes — mounted BEFORE express.json() so Stripe webhook raw-body HMAC verification works
+  app.use(async (req, res, next) => {
+    if (req.url && req.url.startsWith('/api/founders')) {
+      try {
+        const { handleFoundersApi } = await import('./src/server/foundersApiMiddleware.ts');
+        const handled = await handleFoundersApi(req, res);
+        if (handled) return;
+      } catch (err) {
+        console.error('[Server Founders API Error]', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error interno en la API de The First 100.' });
+        }
+        return;
+      }
+    }
+    next();
+  });
+
   app.use(express.json({ limit: '100mb' }));
   app.use(express.raw({ type: ['video/*', 'application/octet-stream'], limit: '150mb' }));
 

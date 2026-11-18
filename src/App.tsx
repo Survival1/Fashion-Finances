@@ -35,6 +35,8 @@ import NotificationCenterModal, {
   isDisallowedBrandCommissionNotification
 } from './components/NotificationCenterModal';
 import RegisterModal from './components/RegisterModal';
+import TheFirst100Page from './components/TheFirst100Page';
+import { FounderPosition } from './types/founders';
 import LanguageTranslatorDropdown from './components/LanguageTranslatorDropdown';
 import {
   SupportedLanguage,
@@ -535,7 +537,51 @@ export default function App() {
   const appRootScrollRef = useRef<HTMLDivElement>(null);
 
   // --- UI/Navigation State Hooks ---
-  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin' | 'hashtag'>('profile');
+  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin' | 'hashtag' | 'first_100'>('profile');
+  const [foundersPositions, setFoundersPositions] = useState<FounderPosition[]>([]);
+
+  // Load Founders ("The First 100") live positions & verify Stripe return sessions
+  useEffect(() => {
+    let mounted = true;
+    const syncFounders = async () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const sessionId = searchParams.get('first100_session_id');
+        const cancelledId = searchParams.get('first100_cancelled');
+
+        if (sessionId) {
+          await fetch('/api/founders/verify-stripe-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          }).catch(() => {});
+          window.history.replaceState({}, '', window.location.pathname);
+          if (mounted) {
+            setShowVictoriaSecretRanking(false);
+            setActiveTabTab('first_100');
+          }
+        } else if (cancelledId) {
+          window.history.replaceState({}, '', window.location.pathname);
+          if (mounted) {
+            setShowVictoriaSecretRanking(false);
+            setActiveTabTab('first_100');
+          }
+        }
+
+        const res = await fetch(`/api/founders/state${userProfile?.id ? `?userId=${encodeURIComponent(userProfile.id)}` : ''}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted && Array.isArray(data.positions)) {
+            setFoundersPositions(data.positions);
+          }
+        }
+      } catch {}
+    };
+    syncFounders();
+    return () => {
+      mounted = false;
+    };
+  }, [userProfile?.id]);
   const [selectedHashtag, setSelectedHashtag] = useState<string>('Runway');
   const [initialSelectedStoreId, setInitialSelectedStoreId] = useState<string | null>(null);
   const [selectedLiveModelId, setSelectedLiveModelId] = useState<string | undefined>(undefined);
@@ -3275,6 +3321,13 @@ export default function App() {
             setShowVictoriaSecretRanking(false);
             setActiveTabTab(tab as any);
           }}
+          foundersPositions={foundersPositions}
+          onOpenFirst100={() => {
+            setPreviousTab(activeTab);
+            setShowVictoriaSecretRanking(false);
+            setActiveTabTab('first_100');
+            scrollAppToTop();
+          }}
         />
       )}
 
@@ -3308,6 +3361,57 @@ export default function App() {
       />
 
 
+      {activeTab === 'first_100' ? (
+        <TheFirst100Page
+          userProfile={userProfile}
+          models={models}
+          projects={projects}
+          isAdmin={(() => {
+            const uname = (userProfile?.username || '').toLowerCase().trim().replace(/^@/, '');
+            const fullName = (userProfile?.name || '').toLowerCase().trim();
+            const uid = (userProfile?.id || '').toLowerCase().trim();
+            const isUserAdriana =
+              uname === 'adrianalima_w1' ||
+              uname === 'adrianalima' ||
+              fullName === 'adriana lima' ||
+              uid === 'topf-1' ||
+              uid === 'model-1';
+            if (!isUserAdriana) return false;
+            if (previousTab === 'home' && selectedModelForView) {
+              const viewUname = (selectedModelForView.username || '').toLowerCase().trim().replace(/^@/, '');
+              const viewName = (selectedModelForView.name || '').toLowerCase().trim();
+              const viewId = (selectedModelForView.id || '').toLowerCase().trim();
+              return (
+                viewUname === 'adrianalima_w1' ||
+                viewUname === 'adrianalima' ||
+                viewName === 'adriana lima' ||
+                viewId === 'topf-1' ||
+                viewId === 'model-1'
+              );
+            }
+            return true;
+          })()}
+          onBack={() => {
+            setActiveTabTab(previousTab && previousTab !== 'first_100' ? (previousTab as any) : 'profile');
+            scrollAppToTop();
+          }}
+          onOpenRegister={() => setShowRegisterModal(true)}
+          onOpenLogin={() => setShowLoginModal(true)}
+          onNavigateToTab={(tab) => {
+            setPreviousTab('first_100');
+            setActiveTabTab(tab as any);
+            scrollAppToTop();
+          }}
+          onOpenRanking={() => {
+            setRankingInitialTab('ranking');
+            setShowVictoriaSecretRanking(true);
+          }}
+          onFoundersStateUpdated={(nextPositions) => {
+            setFoundersPositions(nextPositions);
+          }}
+        />
+      ) : (
+      <>
       {/* PRIMARY HEADER BRANDING (Hidden on mobile when in casting_live so the live round screen fits 100% without scrolling) */}
       <header className={`bg-white border-b border-slate-100 py-2 sm:py-4 px-3 sm:px-6 sticky top-0 z-[100] shrink-0 shadow-sm ${activeTab === 'casting_live' ? 'max-md:hidden' : ''}`}>
         <div className={`mx-auto flex justify-between items-center transition-all ${
@@ -3802,6 +3906,7 @@ export default function App() {
                   initialSocialModal={profileSocialModalState}
                   onSocialModalChange={setProfileSocialModalState}
                   onLogout={handleLogout}
+                  foundersPositions={foundersPositions}
                 />
               </div>
             ) : userProfile && userProfile.role === 'model' ? (
@@ -3866,6 +3971,7 @@ export default function App() {
                   initialSocialModal={profileSocialModalState}
                   onSocialModalChange={setProfileSocialModalState}
                   onLogout={handleLogout}
+                  foundersPositions={foundersPositions}
                 />
               </div>
             ) : (
@@ -3940,6 +4046,7 @@ export default function App() {
                   initialSocialModal={profileSocialModalState}
                   onSocialModalChange={setProfileSocialModalState}
                   onLogout={handleLogout}
+                  foundersPositions={foundersPositions}
                 />
               </div>
             )
@@ -4146,6 +4253,7 @@ export default function App() {
                 initialSocialModal={profileSocialModalState}
                 onSocialModalChange={setProfileSocialModalState}
                 onLogout={handleLogout}
+                foundersPositions={foundersPositions}
               />
             </div>
           )}
@@ -4876,6 +4984,8 @@ export default function App() {
           )}
         </section>
       </main>
+      </>
+      )}
 
       {/* --- MODAL DIALOGS --- */}
 

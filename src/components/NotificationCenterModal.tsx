@@ -41,6 +41,7 @@ export interface AppNotification {
   read: boolean;
   icon?: string;
   amount?: number;
+  upsert?: boolean;
   actionLabel?: string;
   targetTab?: string;
   actionRanking?: boolean;
@@ -319,18 +320,45 @@ export function pushAppNotification(notification: AppNotification): void {
       existing = INITIAL_NOTIFICATIONS;
     }
 
-    if (existing.some(n => n.id === notification.id)) {
+    const isUpsert = Boolean(notification.upsert);
+    const alreadyExists = existing.some(n => n.id === notification.id);
+    if (alreadyExists && !isUpsert) {
       return;
     }
 
+    const { upsert: _omitUpsert, ...cleanInput } = notification;
     const nextNotif: AppNotification = {
-      ...notification,
-      id: notification.id || `notif-${Date.now()}`,
-      timestamp: notification.timestamp || Date.now(),
-      read: Boolean(notification.read)
+      ...cleanInput,
+      id: cleanInput.id || `notif-${Date.now()}`,
+      timestamp: cleanInput.timestamp || Date.now(),
+      read: Boolean(cleanInput.read)
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([nextNotif, ...existing]));
-    window.dispatchEvent(new CustomEvent('add-app-notification', { detail: nextNotif }));
+
+    const updatedList = alreadyExists
+      ? existing.map(n => (n.id === nextNotif.id ? { ...n, ...nextNotif } : n))
+      : [nextNotif, ...existing];
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+    window.dispatchEvent(new CustomEvent('add-app-notification', { detail: { ...nextNotif, upsert: isUpsert } }));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function removeAppNotificationsByPrefix(prefix: string): void {
+  try {
+    if (!prefix) return;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const filtered = parsed.filter((n: AppNotification) => !(typeof n?.id === 'string' && n.id.startsWith(prefix)));
+        if (filtered.length !== parsed.length) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+        }
+      }
+    }
+    window.dispatchEvent(new CustomEvent('remove-app-notifications-prefix', { detail: { prefix } }));
   } catch (e) {
     console.error(e);
   }
@@ -363,11 +391,11 @@ export const INITIAL_NOTIFICATIONS: AppNotification[] = [
     id: 'notif-ronda-1',
     category: 'rondas',
     title: '🏆 ¡Victoria en Ronda Millonarios París!',
-    message: 'Tu proyecto "Milano Vintage Denim" obtuvo la mayor votación de inversores y ha ganado un fondo acumulado de 80.00€.',
+    message: 'Tu proyecto "Milano Vintage Denim" obtuvo la mayor votación de inversores y ha ganado un fondo acumulado de 800.00€.',
     timestamp: Date.now() - 1000 * 60 * 25, // 25 mins ago
     read: false,
     icon: '🏆',
-    amount: 80.0,
+    amount: 800.0,
     actionLabel: 'Ver Sesión',
     targetTab: 'sessions'
   },
@@ -605,21 +633,32 @@ export default function NotificationCenterModal({
           }
         }
         const nextId = customEvent.detail.id || `notif-${Date.now()}`;
+        const isUpsert = Boolean(customEvent.detail.upsert);
+        const { upsert: _omitUpsert, ...cleanDetail } = customEvent.detail;
         setNotifications(prev => {
-          if (prev.some(n => n.id === nextId)) {
+          const exists = prev.some(n => n.id === nextId);
+          if (exists && !isUpsert) {
             return prev;
           }
-          return [
-            {
-              ...customEvent.detail,
-              id: nextId,
-              timestamp: customEvent.detail.timestamp || Date.now(),
-              read: Boolean(customEvent.detail.read)
-            },
-            ...prev
-          ];
+          const normalizedNotif: AppNotification = {
+            ...cleanDetail,
+            id: nextId,
+            timestamp: cleanDetail.timestamp || Date.now(),
+            read: Boolean(cleanDetail.read)
+          };
+          if (exists) {
+            return prev.map(n => (n.id === nextId ? { ...n, ...normalizedNotif } : n));
+          }
+          return [normalizedNotif, ...prev];
         });
       }
+    };
+
+    const handleRemoveByPrefix = (event: Event) => {
+      const customEvent = event as CustomEvent<{ prefix?: string }>;
+      const prefix = customEvent.detail?.prefix;
+      if (!prefix) return;
+      setNotifications(prev => prev.filter(n => !(typeof n.id === 'string' && n.id.startsWith(prefix))));
     };
 
     const handleUserProfileUpdated = (event: Event) => {
@@ -678,11 +717,13 @@ export default function NotificationCenterModal({
     };
 
     window.addEventListener('add-app-notification', handleAddNotification);
+    window.addEventListener('remove-app-notifications-prefix', handleRemoveByPrefix);
     window.addEventListener('user-profile-updated', handleUserProfileUpdated);
     window.addEventListener('sync-friend-requests', handleSyncFriends);
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('add-app-notification', handleAddNotification);
+      window.removeEventListener('remove-app-notifications-prefix', handleRemoveByPrefix);
       window.removeEventListener('user-profile-updated', handleUserProfileUpdated);
       window.removeEventListener('sync-friend-requests', handleSyncFriends);
       window.removeEventListener('storage', handleStorageChange);

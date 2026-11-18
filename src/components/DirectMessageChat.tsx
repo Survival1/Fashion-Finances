@@ -16,8 +16,45 @@ import {
   TrendingUp, 
   UserPlus2,
   Gift,
-  X
+  X,
+  Smile
 } from 'lucide-react';
+
+const CHAT_EMOJI_CATEGORIES: Array<{ id: string; label: string; icon: string; emojis: string[] }> = [
+  {
+    id: 'faces',
+    label: 'Caras',
+    icon: '😊',
+    emojis: [
+      '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
+      '😊', '😇', '🙂', '😉', '😍', '🥰', '😘', '😗',
+      '😙', '😋', '😜', '🤪', '🤩', '🥳', '😎', '😏',
+      '🥺', '🥹', '😢', '😭', '😤', '😡', '🤯', '😳',
+      '🤭', '🤫', '🤔', '🤗', '😴', '🤤', '😱', '🤩'
+    ]
+  },
+  {
+    id: 'love_fashion',
+    label: 'Moda y Amor',
+    icon: '💖',
+    emojis: [
+      '❤️', '🩷', '💖', '💗', '💓', '💞', '💕', '💘',
+      '💝', '❤️‍🔥', '🤍', '💋', '💄', '💅', '👠', '👗',
+      '👜', '👑', '💎', '💍', '✨', '🌟', '⭐', '🔥',
+      '💫', '🌹', '💐', '🥂', '🍾', '🎉', '🎊', '🦋'
+    ]
+  },
+  {
+    id: 'gestures',
+    label: 'Gestos',
+    icon: '🫶',
+    emojis: [
+      '👍', '👏', '🙌', '🫶', '🤝', '🙏', '✌️', '🤞',
+      '🫰', '🤟', '👌', '🤌', '👋', '💪', '👀', '💯',
+      '✅', '🚀', '📸', '🎬', '🏆', '🥇', '🎁', '💶'
+    ]
+  }
+];
 
 const EXTRA_GIFTS = [
   { name: 'Certificado prof.', icon: '📜', cost: 500 },
@@ -252,7 +289,11 @@ export default function DirectMessageChat({
   const [inputText, setInputText] = useState('');
   const [selectedAttachmentImage, setSelectedAttachmentImage] = useState<string | null>(sharedDraftImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const [chatFeedback, setChatFeedback] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [activeEmojiCategory, setActiveEmojiCategory] = useState<string>('faces');
 
   useEffect(() => {
     if (sharedDraftImage) {
@@ -260,6 +301,26 @@ export default function DirectMessageChat({
     }
   }, [sharedDraftImage]);
   const [showGiftsHoverMenu, setShowGiftsHoverMenu] = useState(false);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [showEmojiPicker]);
   const [liveUserCoins, setLiveUserCoins] = useState(() => {
     const cached = localStorage.getItem('casting_live_coins_qty');
     return cached ? parseInt(cached, 10) : 2788;
@@ -416,6 +477,7 @@ export default function DirectMessageChat({
 
     onSendMessage(newMsg);
     setInputText('');
+    setShowEmojiPicker(false);
     setSelectedAttachmentImage(null);
     if (onClearSharedDraftImage) {
       onClearSharedDraftImage();
@@ -1120,7 +1182,26 @@ export default function DirectMessageChat({
                                 : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-tr-none shadow-sm shadow-pink-300/40 ml-auto'
                               : 'bg-white text-pink-950 rounded-tl-none border border-pink-200/90 shadow-3xs mr-auto'
                           }`}>
-                            {msg.text && <p className={`${isFullscreen ? 'text-sm sm:text-[14px]' : 'text-xs'} font-medium whitespace-pre-wrap leading-relaxed`}>{msg.text}</p>}
+                            {msg.text && (() => {
+                              const trimmedText = msg.text.trim();
+                              const isPureShortEmoji =
+                                trimmedText.length > 0 &&
+                                trimmedText.length <= 12 &&
+                                /^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s]+$/u.test(trimmedText);
+                              return (
+                                <p
+                                  className={`${
+                                    isPureShortEmoji
+                                      ? 'text-2xl leading-snug tracking-wide'
+                                      : isFullscreen
+                                        ? 'text-sm sm:text-[14px] leading-relaxed'
+                                        : 'text-xs leading-relaxed'
+                                  } font-medium whitespace-pre-wrap`}
+                                >
+                                  {msg.text}
+                                </p>
+                              );
+                            })()}
                             {msg.imageUrl && (
                                <div className="rounded-xl overflow-hidden border border-pink-200 mt-1 max-w-[200px]">
                                 <img src={msg.imageUrl} alt="attachment" referrerPolicy="no-referrer" className="w-[200px] h-auto object-cover" />
@@ -1269,15 +1350,107 @@ export default function DirectMessageChat({
                       )}
                     </div>
                     
-                    <input
-                      type="text"
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      placeholder={`Escribe un mensaje privado a @${activeContact?.username || 'user'}...`}
-                      className={`flex-1 min-w-0 bg-white border border-pink-200/90 rounded-xl ${
-                        isFullscreen ? 'px-4 py-3 text-sm' : 'px-3 py-2 text-xs'
-                      } text-pink-950 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 placeholder-pink-300 transition-all shadow-3xs`}
-                    />
+                    {/* INPUT + EMOJI PICKER WRAPPER */}
+                    <div ref={emojiPickerRef} className="relative flex-1 min-w-0 flex items-center bg-white border border-pink-200/90 rounded-xl focus-within:border-pink-400 focus-within:ring-2 focus-within:ring-pink-200 transition-all shadow-3xs">
+                      <input
+                        ref={chatInputRef}
+                        type="text"
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        placeholder={`Escribe un mensaje privado a @${activeContact?.username || 'user'}...`}
+                        className={`flex-1 min-w-0 bg-transparent border-0 ${
+                          isFullscreen ? 'pl-4 pr-2 py-3 text-sm' : 'pl-3 pr-1.5 py-2 text-xs'
+                        } text-pink-950 focus:outline-none placeholder-pink-300`}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowGiftsHoverMenu(false);
+                          setShowEmojiPicker((prev) => !prev);
+                        }}
+                        className={`shrink-0 mr-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition cursor-pointer ${
+                          showEmojiPicker
+                            ? 'bg-pink-500 text-white shadow-xs'
+                            : 'text-pink-400 hover:text-pink-600 hover:bg-pink-50'
+                        }`}
+                        title="Añadir emoji al mensaje"
+                        aria-label="Abrir selector de emojis"
+                      >
+                        <Smile className="w-4.5 h-4.5" />
+                      </button>
+
+                      {/* FLOATING EMOJI PICKER PANEL */}
+                      {showEmojiPicker && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute bottom-full right-0 mb-2.5 w-[290px] sm:w-[325px] bg-white border border-pink-200 rounded-2xl shadow-[0_18px_45px_rgba(236,72,153,0.22)] p-3 z-[9999] animate-fade-in text-left"
+                        >
+                          <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-pink-100">
+                            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+                              {CHAT_EMOJI_CATEGORIES.map((cat) => {
+                                const isActive = activeEmojiCategory === cat.id;
+                                return (
+                                  <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => setActiveEmojiCategory(cat.id)}
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer whitespace-nowrap ${
+                                      isActive
+                                        ? 'bg-pink-500 text-white shadow-3xs'
+                                        : 'bg-pink-50/70 text-pink-700 hover:bg-pink-100'
+                                    }`}
+                                  >
+                                    <span>{cat.icon}</span>
+                                    <span>{cat.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowEmojiPicker(false)}
+                              className="p-1 rounded-full text-pink-400 hover:text-pink-700 hover:bg-pink-50 transition cursor-pointer shrink-0"
+                              title="Cerrar emojis"
+                              aria-label="Cerrar selector de emojis"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-8 gap-1 max-h-[190px] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-transparent">
+                            {(CHAT_EMOJI_CATEGORIES.find((c) => c.id === activeEmojiCategory)?.emojis || CHAT_EMOJI_CATEGORIES[0].emojis).map((emoji, idx) => (
+                              <button
+                                key={`${emoji}-${idx}`}
+                                type="button"
+                                onClick={() => {
+                                  setInputText((prev) => prev + emoji);
+                                  chatInputRef.current?.focus();
+                                }}
+                                className="w-8 h-8 rounded-lg hover:bg-pink-50 active:scale-90 flex items-center justify-center text-lg transition cursor-pointer select-none"
+                                title={`Insertar ${emoji}`}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="mt-2 pt-1.5 border-t border-pink-100 flex items-center justify-between text-[9.5px] text-pink-400 font-medium">
+                            <span>Toca un emoji para añadirlo</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowEmojiPicker(false);
+                                chatInputRef.current?.focus();
+                              }}
+                              className="text-pink-600 font-bold hover:underline cursor-pointer"
+                            >
+                              Listo
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                     <button
                       type="submit"

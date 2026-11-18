@@ -60,6 +60,8 @@ import FashionsFinanceLogo from './FashionsFinanceLogo';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
 import RoyalMaleCrown from './RoyalMaleCrown';
 import RoyalFemaleCrown from './RoyalFemaleCrown';
+import FoundingModelBadge from './FoundingModelBadge';
+import { FounderPosition } from '../types/founders';
 
 export interface BoutiqueCatalogItem {
   id: string;
@@ -1584,7 +1586,9 @@ interface VictoriaSecretRankingProps {
   onSelectModel?: (model: ModelProfile) => void;
   onNavigateToStore?: (storeId: string) => void;
   onNavigateToTab?: (tab: string) => void;
-  initialTab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos';
+  onOpenFirst100?: () => void;
+  foundersPositions?: FounderPosition[];
+  initialTab?: 'ranking' | 'premios' | 'hall_of_fame' | 'regalos' | 'oferta_internacional';
 }
 
 export default function VictoriaSecretRanking({
@@ -1597,9 +1601,29 @@ export default function VictoriaSecretRanking({
   onSelectModel,
   onNavigateToStore,
   onNavigateToTab,
+  onOpenFirst100,
+  foundersPositions = [],
   initialTab = 'ranking'
 }: VictoriaSecretRankingProps) {
-  const [activeTab, setActiveTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'ranking' | 'premios' | 'hall_of_fame' | 'regalos' | 'oferta_internacional'>(initialTab);
+
+  const findFounderPosition = (model?: { id?: string; username?: string; name?: string } | null) => {
+    if (!model || !foundersPositions.length) return undefined;
+    const mid = (model.id || '').toLowerCase().trim();
+    const muname = (model.username || '').toLowerCase().replace(/^@/, '').trim();
+    const mname = (model.name || '').toLowerCase().trim();
+    return foundersPositions.find((p) => {
+      if (p.status !== 'CONFIRMED' || p.badgeActive === false) return false;
+      const pid = (p.userId || '').toLowerCase().trim();
+      const puname = (p.username || '').toLowerCase().replace(/^@/, '').trim();
+      const pname = (p.professionalName || '').toLowerCase().trim();
+      return (
+        (mid && pid && mid === pid) ||
+        (muname && puname && muname === puname) ||
+        (mname && pname && mname === pname)
+      );
+    });
+  };
 
   const vaultUserGiftsValue = useMemo(() => {
     let effectiveMovements = movements;
@@ -2744,8 +2768,8 @@ export default function VictoriaSecretRanking({
                 </div>
               </div>
 
-              {/* 🌟 ACTION BUTTONS (RANKING, PREMIOS, HALL OF FAME, REGALOS) DIRECTLY ABOVE THE CROWN */}
-              <div className="w-full flex justify-center items-center pt-2 pb-1 relative z-40">
+              {/* 🌟 ACTION BUTTONS (RANKING, PREMIOS, HALL OF FAME, REGALOS, OFERTA DE LANZAMIENTO INTERNACIONAL) DIRECTLY ABOVE THE CROWN */}
+              <div className="w-full flex flex-col justify-center items-center gap-2 pt-2 pb-1 relative z-40">
                 <div className="flex items-start justify-center gap-2.5 sm:gap-3.5 select-none">
                   {/* Col 1: RANKING */}
                   <button
@@ -2800,6 +2824,21 @@ export default function VictoriaSecretRanking({
                     HALL OF FAME
                   </button>
                 </div>
+
+                {/* Botón Rosa Perla debajo del botón Regalos */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenFirst100) {
+                      onOpenFirst100();
+                    } else {
+                      setActiveTab('oferta_internacional');
+                    }
+                  }}
+                  className="pearl-pink-btn px-5 py-2 font-sans font-bold text-xs tracking-wide transition-all duration-150 cursor-pointer text-center shadow-xs select-none"
+                >
+                  Oferta de lanzamiento internacional
+                </button>
               </div>
 
               {/* 🏆 THE COUTURE PODIUM (Exact Match to image.png with generous breathing room) */}
@@ -3138,10 +3177,16 @@ export default function VictoriaSecretRanking({
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">
                       MAYOR TIEMPO DE PERMANENCIA EN EL PUESTO #1
                     </p>
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                       <h3 className="text-xl font-serif font-black text-rose-950 group-hover/legend:text-pink-600 transition-colors leading-none">
                         {legendModel?.name || 'Adriana Lima'}
                       </h3>
+                      {findFounderPosition(legendModel) && (
+                        <FoundingModelBadge
+                          founderNumber={findFounderPosition(legendModel)!.code}
+                          variant="inline"
+                        />
+                      )}
                     </div>
                     <button
                       type="button"
@@ -3444,7 +3489,7 @@ export default function VictoriaSecretRanking({
                               )}
                             </div>
                             <div className="truncate text-left leading-tight">
-                              <div className="flex items-center gap-1.5 truncate">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-xs text-slate-800 truncate hover:text-pink-600 transition">
                                   {model.name}
                                 </span>
@@ -3452,6 +3497,12 @@ export default function VictoriaSecretRanking({
                                   <span className="text-[7.5px] font-black tracking-wider bg-pink-50 text-[#E12A75] border border-pink-200 px-1 py-0.2 rounded-sm select-none uppercase shrink-0 scale-90">
                                     TOP 10
                                   </span>
+                                )}
+                                {findFounderPosition(model) && (
+                                  <FoundingModelBadge
+                                    founderNumber={findFounderPosition(model)!.code}
+                                    variant="inline"
+                                  />
                                 )}
                               </div>
                               <button
@@ -4036,6 +4087,75 @@ export default function VictoriaSecretRanking({
           )}
 
           {/* ======================================================== */}
+          {/* 🌐 OFERTA DE LANZAMIENTO INTERNACIONAL                    */}
+          {/* ======================================================== */}
+          {activeTab === 'oferta_internacional' && (
+            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+              <div className="text-center space-y-2">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#fff1f5] via-[#fce7f3] to-[#fbcfe8] border border-pink-300 text-[#831843] text-[11px] font-black uppercase tracking-widest shadow-2xs">
+                  <Globe className="w-3.5 h-3.5 text-pink-600" />
+                  <span>Edición Especial Global</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-wide text-slate-900 uppercase">
+                  Oferta de lanzamiento internacional
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                  Condiciones preferentes de lanzamiento para creadores, modelos e inversores internacionales en toda la plataforma.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-[#fff5f9] to-[#fce7f3]/70 border border-pink-200 rounded-2xl p-5 shadow-xs space-y-2 text-left">
+                  <div className="w-9 h-9 rounded-xl bg-white border border-pink-200 flex items-center justify-center text-pink-600 shadow-2xs">
+                    <Sparkles className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                    Acceso Prioritario VIP
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Posicionamiento destacado en pasarelas globales, castings en directo y rondas internacionales sin coste adicional de apertura.
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-br from-[#fff5f9] to-[#fce7f3]/70 border border-pink-200 rounded-2xl p-5 shadow-xs space-y-2 text-left">
+                  <div className="w-9 h-9 rounded-xl bg-white border border-pink-200 flex items-center justify-center text-pink-600 shadow-2xs">
+                    <Crown className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                    Bonificación de Patrocinio
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Ventajas exclusivas en comisiones de patrocinador y multiplicador inicial de visibilidad en el Ranking Global.
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-br from-[#fff5f9] to-[#fce7f3]/70 border border-pink-200 rounded-2xl p-5 shadow-xs space-y-2 text-left">
+                  <div className="w-9 h-9 rounded-xl bg-white border border-pink-200 flex items-center justify-center text-pink-600 shadow-2xs">
+                    <CheckCircle2 className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                    Activación Inmediata
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Disponible desde el primer momento para todas las cuentas verificadas participantes en la temporada de lanzamiento.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ranking')}
+                  className="pearl-pink-btn inline-flex items-center gap-2 font-extrabold text-xs px-6 py-2.5 shadow-xs transition-all duration-200"
+                >
+                  <span>Volver al Ranking Activo</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
           {/* 🎁 REGALOS TAB (RECIBIDOS, ENVIADOS & CATÁLOGO LIVE)      */}
           {/* ======================================================== */}
           {activeTab === 'regalos' && (
@@ -4289,7 +4409,7 @@ export default function VictoriaSecretRanking({
                     <div className="flex items-center gap-3.5 flex-shrink-0">
                       <div className="relative flex items-center justify-center">
                         <img
-                          src="/female_crown_tiara.png"
+                          src="/female_crown_tiara.webp"
                           alt="Corona Imperial"
                           className="w-14 sm:w-16 h-auto object-contain drop-shadow-[0_4px_10px_rgba(217,0,108,0.3)] filter brightness-105"
                         />

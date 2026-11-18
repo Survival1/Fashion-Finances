@@ -22,6 +22,7 @@ import { ModelProfile } from '../types';
 import FashionRankingSlider from './FashionRankingSlider';
 import HeroPresentationVideo from './HeroPresentationVideo';
 import LanguageTranslatorDropdown from './LanguageTranslatorDropdown';
+import FashionsFinanceLogo from './FashionsFinanceLogo';
 import heroGlamourWhiteEn from '../assets/images/hero_glamour_white_en_1794573754880.webp';
 import ctaCrownOrnament from '../assets/images/cta_crown_isolated_1794577537132.jpg';
 import ctaDiamondOrnament from '../assets/images/cta_diamond_isolated_1794577536243.jpg';
@@ -137,21 +138,16 @@ export default function LandingPage({
             title="Ir arriba / Inicio"
             className="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer group select-none hover:opacity-90 transition shrink-0"
           >
-            {/* Geometric Pink Diamond Brand Mark */}
-            <svg viewBox="0 0 48 42" className="w-8 h-7 sm:w-10 sm:h-9 shrink-0 group-hover:scale-105 transition-transform drop-shadow-2xs" fill="none" aria-hidden="true">
-              <polygon points="10,4 38,4 45,15 24,39 3,15" stroke="#E6007A" strokeWidth="2.4" fill="#FFF0F7" />
-              <polyline points="3,15 45,15" stroke="#E6007A" strokeWidth="1.8" />
-              <polyline points="10,4 16,15 24,39 32,15 38,4" stroke="#E6007A" strokeWidth="1.6" />
-              <polyline points="16,15 24,4 32,15" stroke="#F472B6" strokeWidth="1.5" />
-            </svg>
-            <span className="h-7 w-px bg-slate-300 hidden xs:block" />
+            <FashionsFinanceLogo
+              mode="light"
+              className="w-10 h-10 sm:w-11 sm:h-11 bg-white !border-slate-800/80 shadow-xs group-hover:scale-105 transition-transform"
+            />
             <div className="leading-none">
-              <h1 className="font-display font-bold text-base sm:text-xl tracking-wide uppercase flex items-center gap-1.5">
-                <span className="text-slate-950">FASHION</span>
-                <span className="text-[#E6007A]">FINANCES</span>
+              <h1 className="font-display font-semibold text-base sm:text-lg text-slate-950 leading-tight">
+                Fashion Finances
               </h1>
-              <p className="text-[7.5px] sm:text-[9px] text-slate-600 tracking-[0.26em] uppercase font-sans font-medium mt-1 hidden sm:block">
-                FASHION • FINANCE • INFLUENCE
+              <p className="text-[8.5px] sm:text-[10px] text-slate-400 tracking-widest uppercase mt-0.5 hidden sm:block">
+                Casting Live &amp; Fashion Models
               </p>
             </div>
           </div>

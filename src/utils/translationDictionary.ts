@@ -410,6 +410,205 @@ export const EXACT_PHRASES: Record<string, TranslationTuple> = {
   'configuración': ['Settings', 'Paramètres', 'Einstellungen'],
   'auditoría': ['Audit Log', 'Journal d’audit', 'Prüfprotokoll'],
   'buscar por nombre, @username o email...': ['Search by name, @username, or email...', 'Rechercher par nom, @username ou e-mail...', 'Nach Name, @username oder E-Mail suchen...'],
+
+  // The First 100 / Los Primeros 100
+  'conviértete en modelo fundadora': ['Become a Founding Model', 'Devenir Mannequin Fondatrice', 'Gründungsmodel werden'],
+  'paquete fundadores': ['Founders Package', 'Pack Fondateurs', 'Gründer-Paket'],
+  '100 plazas': ['100 Spots', '100 Places', '100 Plätze'],
+  '90 días': ['90 Days', '90 Jours', '90 Tage'],
+  'mi área de fundadores': ['My Founders Area', 'Mon Espace Fondateurs', 'Mein Gründer-Bereich'],
+  'administración': ['Admin', 'Admin', 'Admin'],
+  'los primeros 100': ['The First 100', 'Les 100 Premiers', 'Die Ersten 100'],
+  'los 100 fundadores — lanzamiento internacional': ["The Founders' 100 — International Launch", 'Les 100 Fondateurs — Lancement International', 'Die 100 Gründer — Internationaler Launch'],
+  'sé una de las primeras 100. asegura tu posición. haz tu debut en el escenario global.': [
+    'Be one of the first 100. Own your position. Make your debut on the global stage.',
+    'Soyez parmi les 100 premières. Sécurisez votre place. Faites vos débuts sur la scène mondiale.',
+    'Sei eine der ersten 100. Sichere dir deine Position. Gib dein Debüt auf der Weltbühne.'
+  ],
+  'programa internacional exclusivo para los primeros 100 modelos en incorporarse a fashion finances mediante la precompra oficial de un paquete fundadores. el lanzamiento internacional tendrá lugar 90 días después de la apertura del programa.': [
+    'Exclusive international program for the first 100 models joining Fashion Finances through official pre-purchase of a Founders Package. The international launch takes place 90 days after the program opens.',
+    'Programme international exclusif pour les 100 premiers mannequins rejoignant Fashion Finances via la préachat officiel d’un Pack Fondateurs. Le lancement international aura lieu 90 jours après l’ouverture du programme.',
+    'Exklusives internationales Programm für die ersten 100 Models, die Fashion Finances über den offiziellen Vorabkauf eines Gründer-Pakets beitreten. Der internationale Launch erfolgt 90 Tage nach Programmstart.'
+  ],
+  'explorar posiciones 001–100': ['Explore Positions 001–100', 'Explorer les Positions 001–100', 'Positionen 001–100 entdecken'],
+  'confirmados': ['Confirmed', 'Confirmés', 'Bestätigt'],
+  'lanzamiento': ['Launch', 'Lancement', 'Launch'],
+  'precompra': ['Pre-Order', 'Préachat', 'Vorabkauf'],
+  'edición internacional': ['International Edition', 'Édition Internationale', 'Internationale Ausgabe'],
+  'cuenta atrás debut global': ['Global Debut Countdown', 'Compte à Rebours Début Mondial', 'Countdown Weltdebüt'],
+  'el mundo es ahora tu pasarela.': ['The world is now your runway.', 'Le monde est désormais votre podium.', 'Die Welt ist jetzt dein Laufsteg.'],
+  'lanzamiento internacional activo · programa los primeros 100': ['International launch live · The First 100 Program', 'Lancement international actif · Programme Les 100 Premiers', 'Internationaler Launch aktiv · Programm Die Ersten 100'],
+  'lanzamiento internacional en curso hacia el debut global': ['International launch underway toward the global debut', 'Lancement international en cours vers le début mondial', 'Internationaler Launch auf dem Weg zum Weltdebüt'],
+  'días': ['DAYS', 'JOURS', 'TAGE'],
+  'horas': ['HOURS', 'HEURES', 'STUNDEN'],
+  'minutos': ['MINUTES', 'MINUTES', 'MINUTEN'],
+  'segundos': ['SECONDS', 'SECONDES', 'SEKUNDEN'],
+  'membresía fundacional exclusiva': ['Exclusive Founding Membership', 'Adhésion Fondatrice Exclusive', 'Exklusive Gründungsmitgliedschaft'],
+  'precompra · acceso a una de las 100 plazas': ['Pre-Order · Access to one of 100 spots', 'Préachat · Accès à l’une des 100 places', 'Vorabkauf · Zugang zu einem von 100 Plätzen'],
+  'la confirmación de tu número oficial entre 001 y 100 queda vinculada de forma única e inmutable a tu cuenta tras la confirmación real del pago.': [
+    'Confirmation of your official number between 001 and 100 is uniquely and immutably linked to your account upon real payment verification.',
+    'La confirmation de votre numéro officiel entre 001 et 100 est liée de façon unique et immuable à votre compte après confirmation réelle du paiement.',
+    'Die Bestätigung deiner offiziellen Nummer zwischen 001 und 100 wird nach echter Zahlungsbestätigung eindeutig und unveränderlich mit deinem Konto verknüpft.'
+  ],
+  'autorizo mostrar mi nombre profesional y fotografía en la galería pública y mapa de posiciones de modelos fundadoras.': [
+    'I authorize displaying my professional name and photo in the public Founding Models gallery and positions map.',
+    'J’autorise l’affichage de mon nom professionnel et de ma photo dans la galerie publique et la carte des positions des Mannequins Fondatrices.',
+    'Ich erlaube die Anzeige meines Berufsnamens und Fotos in der öffentlichen Galerie und Positionskarte der Gründungsmodels.'
+  ],
+  'el programa los primeros 100 ha alcanzado su cierre oficial.': [
+    'The First 100 program has officially closed.',
+    'Le programme Les 100 Premiers a atteint sa clôture officielle.',
+    'Das Programm Die Ersten 100 wurde offiziell geschlossen.'
+  ],
+  'ir a mi área de fundadores': ['Go to My Founders Area', 'Aller à Mon Espace Fondateurs', 'Zu Meinem Gründer-Bereich'],
+  'estado: reservada (pendiente de pago)': ['STATUS: RESERVED (PENDING PAYMENT)', 'STATUT : RÉSERVÉE (EN ATTENTE DE PAIEMENT)', 'STATUS: RESERVIERT (ZAHLUNG AUSSTEHEND)'],
+  'tu plaza está retenida temporalmente hasta el': ['Your spot is temporarily held until', 'Votre place est temporairement retenue jusqu’au', 'Dein Platz ist vorübergehend reserviert bis'],
+  'completa el pago en stripe checkout para confirmar tu posición.': [
+    'Complete payment in Stripe Checkout to confirm your position.',
+    'Complétez le paiement sur Stripe Checkout pour confirmer votre position.',
+    'Schließe die Zahlung in Stripe Checkout ab, um deine Position zu bestätigen.'
+  ],
+  'a la espera de verificación real del proveedor de pagos (pasarela stripe no configurada en este entorno; nunca se emite confirmación simulada).': [
+    'Awaiting real payment provider verification (Stripe gateway not configured in this environment; simulated confirmations are never issued).',
+    'En attente de vérification réelle du prestataire de paiement (passerelle Stripe non configurée ; aucune confirmation simulée n’est émise).',
+    'Warten auf echte Zahlungsbestätigung (Stripe-Gateway hier nicht konfiguriert; simulierte Bestätigungen werden nie ausgestellt).'
+  ],
+  'conectando...': ['Connecting...', 'Connexion...', 'Verbinde...'],
+  'reanudar pago': ['Resume Payment', 'Reprendre le paiement', 'Zahlung fortsetzen'],
+  'liberando...': ['Releasing...', 'Libération...', 'Gebe frei...'],
+  'liberar reserva': ['Release Hold', 'Libérer la réservation', 'Reservierung freigeben'],
+  'procesando reserva...': ['Processing Reservation...', 'Traitement de la réservation...', 'Reservierung wird verarbeitet...'],
+  'reservar tu posición de fundador': ['Reserve Your Founders Position', 'Réserver Votre Position de Fondateur', 'Gründer-Position reservieren'],
+  '¿ya tienes cuenta?': ['Already have an account?', 'Vous avez déjà un compte ?', 'Hast du bereits ein Konto?'],
+  'inicia sesión aquí': ['Sign in here', 'Connectez-vous ici', 'Hier anmelden'],
+  'prestaciones del programa': ['Program Benefits', 'Avantages du Programme', 'Programm-Leistungen'],
+  '12 beneficios exclusivos': ['12 Exclusive Benefits', '12 Avantages Exclusifs', '12 Exklusive Vorteile'],
+  'número de fundador asignado del 001 al 100.': ['Assigned founder number from 001 to 100.', 'Numéro de fondateur attribué de 001 à 100.', 'Zugewiesene Gründernummer von 001 bis 100.'],
+  'perfil profesional destacado.': ['Featured professional profile.', 'Profil professionnel mis en avant.', 'Hervorgehobenes Berufsprofil.'],
+  'acceso anticipado a determinadas herramientas de la plataforma.': ['Early access to selected platform tools.', 'Accès anticipé à certains outils de la plateforme.', 'Vorabzugang zu ausgewählten Plattform-Tools.'],
+  'preparación del perfil para el lanzamiento internacional.': ['Profile preparation for the international launch.', 'Préparation du profil pour le lancement international.', 'Profilvorbereitung für den internationalen Launch.'],
+  'acceso a las actividades de lanzamiento para los miembros fundadores.': ['Access to launch activities for founding members.', 'Accès aux activités de lancement pour les membres fondateurs.', 'Zugang zu Launch-Aktivitäten für Gründungsmitglieder.'],
+  'identificación especial como modelo fundadora.': ['Special identification as a Founding Model.', 'Identification spéciale en tant que Mannequin Fondatrice.', 'Besondere Kennzeichnung als Gründungsmodel.'],
+  'insignia permanente de miembro fundador.': ['Permanent founding member badge.', 'Badge permanent de membre fondateur.', 'Dauerhaftes Gründungsmitglieds-Abzeichen.'],
+  'acceso anticipado a determinadas funcionalidades.': ['Early access to selected features.', 'Accès anticipé à certaines fonctionnalités.', 'Vorabzugang zu ausgewählten Funktionen.'],
+  'ventajas especiales en casting live.': ['Special advantages in Casting Live.', 'Avantages spéciaux sur Casting Live.', 'Besondere Vorteile bei Casting Live.'],
+  'acceso vip a eventos internacionales seleccionados.': ['VIP access to selected international events.', 'Accès VIP à des événements internationaux sélectionnés.', 'VIP-Zugang zu ausgewählten internationalen Events.'],
+  'créditos promocionales o beneficios de uso, conforme a las condiciones del programa.': [
+    'Promotional credits or usage benefits subject to program terms.',
+    'Crédits promotionnels ou avantages d’utilisation selon les conditions du programme.',
+    'Aktionsguthaben oder Nutzungsvorteile gemäß den Programmbedingungen.'
+  ],
+  'reconocimiento dentro de la comunidad internacional de fashion finances.': [
+    'Recognition within the international Fashion Finances community.',
+    'Reconnaissance au sein de la communauté internationale Fashion Finances.',
+    'Anerkennung in der internationalen Fashion-Finances-Community.'
+  ],
+  'insignia permanente vinculada a cuenta': ['Permanent account-linked badge', 'Badge permanent lié au compte', 'Dauerhaft kontoverknüpftes Abzeichen'],
+  'modelo fundadora · 001–100': ['FOUNDING MODEL · 001–100', 'MANNEQUIN FONDATRICE · 001–100', 'GRÜNDUNGSMODEL · 001–100'],
+  'modelo fundador': ['FOUNDING MODEL', 'MANNEQUIN FONDATEUR', 'GRÜNDUNGSMODEL'],
+  'posición oficial': ['Official Position', 'Position Officielle', 'Offizielle Position'],
+  'registro oficial de posiciones': ['Official Position Registry', 'Registre Officiel des Positions', 'Offizielles Positionsregister'],
+  'solo 100 posiciones de fundadores': ['Only 100 Founding Positions', 'Seulement 100 Positions Fondateurs', 'Nur 100 Gründer-Positionen'],
+  'cada plaza del 001 al 100 solo pasa a estado confirmado tras verificación real del pago. las plazas en estado reservada mantienen una retención temporal sin contar como vendidas.': [
+    'Each spot from 001 to 100 only becomes confirmed after real payment verification. Spots in RESERVED status hold temporarily without counting as sold.',
+    'Chaque place de 001 à 100 n’est confirmée qu’après vérification réelle du paiement. Les places RÉSERVÉES restent en attente temporaire sans être comptées comme vendues.',
+    'Jeder Platz von 001 bis 100 wird erst nach echter Zahlungsprüfung bestätigt. RESERVIERTE Plätze gelten vorübergehend gehalten und nicht als verkauft.'
+  ],
+  'modelos fundadoras confirmadas': ['Confirmed Founding Models', 'Mannequins Fondatrices Confirmées', 'Bestätigte Gründungsmodels'],
+  'modelos fundadoras:': ['FOUNDING MODELS:', 'MANNEQUINS FONDATRICES :', 'GRÜNDUNGSMODELS:'],
+  'disponible': ['AVAILABLE', 'DISPONIBLE', 'VERFÜGBAR'],
+  'reservada': ['RESERVED', 'RÉSERVÉE', 'RESERVIERT'],
+  'confirmada': ['CONFIRMED', 'CONFIRMÉE', 'BESTÄTIGT'],
+  'fundadora': ['FOUNDER', 'FONDATRICE', 'GRÜNDERIN'],
+  'reservada (pendiente de pago)': ['RESERVED (Pending Payment)', 'RÉSERVÉE (En attente de paiement)', 'RESERVIERT (Zahlung ausstehend)'],
+  'sincronizando posiciones oficiales...': ['Synchronizing official positions...', 'Synchronisation des positions officielles...', 'Offizielle Positionen werden synchronisiert...'],
+  'galería de miembros fundadores': ['Founding Members Gallery', 'Galerie des Membres Fondateurs', 'Galerie der Gründungsmitglieder'],
+  'programa de preparación internacional': ['International Preparation Program', 'Programme de Préparation Internationale', 'Internationales Vorbereitungsprogramm'],
+  'tu camino comienza aquí — 90 días': ['Your Journey Starts Here — 90 Days', 'Votre Parcours Commence Ici — 90 Jours', 'Deine Reise Beginnt Hier — 90 Tage'],
+  'apertura:': ['Opening:', 'Ouverture :', 'Eröffnung:'],
+  'lanzamiento internacional:': ['International Launch:', 'Lancement international :', 'Internationaler Launch:'],
+  'días de preparación': ['Days of Preparation', 'Jours de Préparation', 'Vorbereitungstage'],
+  '100 fundadores': ['100 Founders', '100 Fondateurs', '100 Gründer'],
+  'miembros fundadores': ['Founding Members', 'Membres Fondateurs', 'Gründungsmitglieder'],
+  'posiciones exclusivas': ['Exclusive Positions', 'Positions Exclusives', 'Exklusive Positionen'],
+  'preparación para la pasarela global': ['Global Runway Preparation', 'Préparation au Podium Mondial', 'Globale Laufsteg-Vorbereitung'],
+  'fase 01 — construye tu perfil (días 1–30)': ['Stage 01 — Build Your Profile (Days 1–30)', 'Étape 01 — Construisez Votre Profil (Jours 1–30)', 'Phase 01 — Profil aufbauen (Tage 1–30)'],
+  'fase 02 — construye tu presencia (días 31–60)': ['Stage 02 — Build Your Presence (Days 31–60)', 'Étape 02 — Construisez Votre Présence (Jours 31–60)', 'Phase 02 — Präsenz aufbauen (Tage 31–60)'],
+  'fase 03 — prepárate para el lanzamiento (días 61–90)': ['Stage 03 — Get Ready for Launch (Days 61–90)', 'Étape 03 — Préparez-vous au Lancement (Jours 61–90)', 'Phase 03 — Bereit für den Launch (Tage 61–90)'],
+  'estructuración de portafolio internacional, biografía editorial, verificación de identidad y vinculación de canales oficiales.': [
+    'International portfolio structuring, editorial bio, identity verification, and linking of official channels.',
+    'Structuration du portfolio international, biographie éditoriale, vérification d’identité et liaison des canaux officiels.',
+    'Aufbau des internationalen Portfolios, redaktionelle Biografie, Identitätsprüfung und Verknüpfung offizieller Kanäle.'
+  ],
+  'publicación de material audiovisual para casting live, activación de presencia destacada y preparación de proyectos.': [
+    'Publishing audiovisual material for Casting Live, activating featured presence, and preparing projects.',
+    'Publication de contenu audiovisuel pour Casting Live, activation de la mise en avant et préparation de projets.',
+    'Veröffentlichung von Videomaterial für Casting Live, Aktivierung der Hervorhebung und Projektvorbereitung.'
+  ],
+  'acceso anticipado a herramientas del lanzamiento, validación vip para actividades de fundadores y debut internacional.': [
+    'Early access to launch tools, VIP validation for founder activities, and international debut.',
+    'Accès anticipé aux outils de lancement, validation VIP pour les activités des fondateurs et début international.',
+    'Vorabzugang zu Launch-Tools, VIP-Freischaltung für Gründer-Aktivitäten und internationales Debüt.'
+  ],
+  'área privada de preparación': ['Private Preparation Area', 'Espace Privé de Préparation', 'Privater Vorbereitungsbereich'],
+  'accede a tu área privada de preparación internacional': ['Access your private international preparation area', 'Accédez à votre espace privé de préparation internationale', 'Greife auf deinen privaten Vorbereitungsbereich zu'],
+  'inicia sesión o registra tu cuenta en fashion finances para consultar el porcentaje real de preparación de tu perfil y tu plaza oficial.': [
+    'Sign in or register your Fashion Finances account to check your real profile readiness percentage and official position.',
+    'Connectez-vous ou créez votre compte Fashion Finances pour consulter le pourcentage réel de préparation de votre profil et votre place officielle.',
+    'Melde dich an oder registriere dein Fashion-Finances-Konto, um deinen Profilfortschritt und deinen offiziellen Platz einzusehen.'
+  ],
+  'crear cuenta': ['Create Account', 'Créer un compte', 'Konto erstellen'],
+  'sin plaza asignada aún · puedes completar tareas previas desde aquí': [
+    'No position assigned yet · You can complete preparation tasks here',
+    'Aucune place attribuée pour l’instant · Vous pouvez compléter les tâches préparatoires ici',
+    'Noch kein Platz zugewiesen · Vorbereitungsaufgaben können hier erledigt werden'
+  ],
+  'nº fundador': ['Founder No.', 'N° Fondateur', 'Gründer-Nr.'],
+  'incorporación': ['Joined', 'Adhésion', 'Beitritt'],
+  'días restantes': ['Days Remaining', 'Jours Restants', 'Verbleibende Tage'],
+  'fotografía principal editorial cargada en el perfil': ['Main editorial photo uploaded to profile', 'Photo éditoriale principale ajoutée au profil', 'Editorial-Hauptfoto im Profil hochgeladen'],
+  'biografía profesional y presentación internacional (mín. 20 caracteres)': ['Professional bio and international introduction (min. 20 chars)', 'Biographie professionnelle et présentation internationale (min. 20 car.)', 'Berufliche Biografie & internationale Vorstellung (min. 20 Zeichen)'],
+  'redes sociales oficiales vinculadas (instagram, tiktok o x)': ['Official social accounts linked (Instagram, TikTok, or X)', 'Réseaux sociaux officiels liés (Instagram, TikTok ou X)', 'Offizielle Social-Media-Konten verknüpft (Instagram, TikTok oder X)'],
+  'ciudad base o agencia de representación registrada': ['Home city or modeling agency registered', 'Ville de base ou agence de représentation enregistrée', 'Basisstadt oder Modelagentur eingetragen'],
+  'galería fotográfica editorial activa en perfil': ['Active editorial photo gallery on profile', 'Galerie photo éditoriale active sur le profil', 'Aktive Editorial-Fotogalerie im Profil'],
+  'reel o vídeo de pasarela publicado para casting live': ['Runway reel or video published for Casting Live', 'Reel ou vidéo de défilé publié pour Casting Live', 'Laufsteg-Reel oder Video für Casting Live veröffentlicht'],
+  'proyecto de moda o publicación oficial activa en el muro': ['Fashion project or official post active on wall', 'Projet de mode ou publication officielle actif sur le mur', 'Modeprojekt oder offizieller Beitrag an der Pinnwand aktiv'],
+  'identidad de perfil verificada en fashion finances': ['Profile identity verified on Fashion Finances', 'Identité du profil vérifiée sur Fashion Finances', 'Profilidentität auf Fashion Finances verifiziert'],
+  'completar biografía': ['Complete bio', 'Compléter la bio', 'Biografie ausfüllen'],
+  'vincular redes': ['Link socials', 'Lier les réseaux', 'Netzwerke verknüpfen'],
+  'actualizar ubicación': ['Update location', 'Mettre à jour le lieu', 'Standort aktualisieren'],
+  'subir fotografías': ['Upload photos', 'Importer des photos', 'Fotos hochladen'],
+  'ir a casting live': ['Go to Casting Live', 'Aller sur Casting Live', 'Zu Casting Live'],
+  'crear proyecto': ['Create project', 'Créer un projet', 'Projekt erstellen'],
+  'verificar perfil': ['Verify profile', 'Vérifier le profil', 'Profil verifizieren'],
+  'editar mi perfil': ['Edit My Profile', 'Modifier mon profil', 'Mein Profil bearbeiten'],
+  'ver ranking oficial': ['View Official Ranking', 'Voir le classement officiel', 'Offizielles Ranking ansehen'],
+  'administración del programa': ['Program Administration', 'Administration du Programme', 'Programm-Verwaltung'],
+  'gestión ejecutiva — los primeros 100': ['Executive Management — The First 100', 'Gestion Exécutive — Les 100 Premiers', 'Executive-Verwaltung — Die Ersten 100'],
+  'actualizar datos': ['Refresh Data', 'Actualiser les données', 'Daten aktualisieren'],
+  'confirmadas': ['Confirmed', 'Confirmées', 'Bestätigt'],
+  'en espera (reservada)': ['On Hold (Reserved)', 'En attente (Réservée)', 'Zurückgestellt (Reserviert)'],
+  'ingresos confirmados': ['Confirmed Revenue', 'Revenus Confirmés', 'Bestätigte Einnahmen'],
+  'conversión reservas': ['Reservation Conversion', 'Conversion Réservations', 'Reservierungs-Konversion'],
+  'configuración de apertura, lanzamiento y cierre': ['Opening, Launch & Closure Settings', 'Configuration Ouverture, Lancement et Clôture', 'Start-, Launch- und Abschluss-Einstellungen'],
+  'fecha de apertura': ['Opening Date', "Date d'ouverture", 'Startdatum'],
+  'fecha de lanzamiento internacional': ['International Launch Date', 'Date de lancement international', 'Internationales Launch-Datum'],
+  'estado del programa': ['Program Status', 'Statut du programme', 'Programmstatus'],
+  'cerrar programa manualmente': ['Close program manually', 'Clôturer le programme manuellement', 'Programm manuell schließen'],
+  'motivo de cierre opcional (si se cierra manualmente)...': ['Optional closure reason (if closed manually)...', 'Motif de clôture facultatif (si clôturé manuellement)...', 'Optionaler Schließungsgrund (bei manueller Schließung)...'],
+  'guardar configuración': ['Save Settings', 'Enregistrer la configuration', 'Einstellungen speichern'],
+  'guardando...': ['Saving...', 'Enregistrement...', 'Speichern...'],
+  'posiciones ocupadas o en reserva': ['Occupied or Reserved Positions', 'Positions Occupées ou Réservées', 'Belegte oder reservierte Positionen'],
+  'plaza': ['Spot', 'Place', 'Platz'],
+  'progreso': ['Progress', 'Progression', 'Fortschritt'],
+  'acciones': ['Actions', 'Actions', 'Aktionen'],
+  'activar insignia': ['Activate badge', 'Activer le badge', 'Abzeichen aktivieren'],
+  'suspender insignia': ['Suspend badge', 'Suspendre le badge', 'Abzeichen aussetzen'],
+  'devolver & liberar': ['Refund & Release', 'Rembourser et libérer', 'Erstatten & freigeben'],
+  'cancelar & liberar': ['Cancel & Release', 'Annuler et libérer', 'Stornieren & freigeben'],
+  'aún no hay reservas ni compras confirmadas.': ['No reservations or confirmed purchases yet.', 'Aucune réservation ni achat confirmé pour le moment.', 'Noch keine Reservierungen oder bestätigten Käufe.'],
+  'incidencias de pago y registro': ['Payment & Registration Incidents', 'Incidents de Paiement et Inscription', 'Zahlungs- und Registrierungsvorfälle'],
+  'sin incidencias registradas.': ['No incidents recorded.', 'Aucun incident enregistré.', 'Keine Vorfälle verzeichnet.'],
 };
 
 interface PatternRule {
@@ -666,6 +865,167 @@ export const PATTERN_RULES: PatternRule[] = [
       if (lang === 'en') return `${m[1]} Active Models`;
       if (lang === 'fr') return m[2].toLowerCase() === 'as' ? `${m[1]} Mannequins Actives` : `${m[1]} Mannequins Actifs`;
       return `${m[1]} Aktive Models`;
+    },
+  },
+  {
+    regex: /^Todas \((\d+)\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `All (${m[1]})`;
+      if (lang === 'fr') return `Toutes (${m[1]})`;
+      return `Alle (${m[1]})`;
+    },
+  },
+  {
+    regex: /^Disponibles \((\d+)\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Available (${m[1]})`;
+      if (lang === 'fr') return `Disponibles (${m[1]})`;
+      return `Verfügbar (${m[1]})`;
+    },
+  },
+  {
+    regex: /^Reservadas \((\d+)\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Reserved (${m[1]})`;
+      if (lang === 'fr') return `Réservées (${m[1]})`;
+      return `Reserviert (${m[1]})`;
+    },
+  },
+  {
+    regex: /^Confirmadas \((\d+)\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Confirmed (${m[1]})`;
+      if (lang === 'fr') return `Confirmées (${m[1]})`;
+      return `Bestätigt (${m[1]})`;
+    },
+  },
+  {
+    regex: /^(\d+)\s+perfiles públicos$/i,
+    translate: (m, lang) => {
+      const n = Number(m[1]);
+      if (lang === 'en') return `${n} public ${n === 1 ? 'profile' : 'profiles'}`;
+      if (lang === 'fr') return `${n} ${n === 1 ? 'profil public' : 'profils publics'}`;
+      return `${n} ${n === 1 ? 'öffentliches Profil' : 'öffentliche Profile'}`;
+    },
+  },
+  {
+    regex: /^ETAPA ACTUAL:\s*FASE\s*(\d+)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `CURRENT STAGE: STAGE ${m[1]}`;
+      if (lang === 'fr') return `ÉTAPE ACTUELLE : PHASE ${m[1]}`;
+      return `AKTUELLE PHASE: PHASE ${m[1]}`;
+    },
+  },
+  {
+    regex: /^(\d+)\s+DÍAS RESTANTES$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `${m[1]} DAYS REMAINING`;
+      if (lang === 'fr') return `${m[1]} JOURS RESTANTS`;
+      return `${m[1]} TAGE VERBLEIBEND`;
+    },
+  },
+  {
+    regex: /^COMPLETADO DEL PERFIL:\s*(\d+)%$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `PROFILE COMPLETION: ${m[1]}%`;
+      if (lang === 'fr') return `PROGRESSION DU PROFIL : ${m[1]} %`;
+      return `PROFILFORTSCHRITT: ${m[1]} %`;
+    },
+  },
+  {
+    regex: /^(\d+)\s+DE\s+(\d+)\s+TAREAS COMPLETADAS$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `${m[1]} OF ${m[2]} TASKS COMPLETED`;
+      if (lang === 'fr') return `${m[1]} SUR ${m[2]} TÂCHES TERMINÉES`;
+      return `${m[1]} VON ${m[2]} AUFGABEN ERLEDIGT`;
+    },
+  },
+  {
+    regex: /^Número oficial no editable asignado:\s*#(\d+)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Official non-editable number assigned: #${m[1]}`;
+      if (lang === 'fr') return `Numéro officiel non modifiable attribué : #${m[1]}`;
+      return `Offizielle unveränderliche Nummer zugewiesen: #${m[1]}`;
+    },
+  },
+  {
+    regex: /^RESERVA #(\d+) PENDIENTE DE CONFIRMACIÓN DE PAGO$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `HOLD #${m[1]} PENDING PAYMENT CONFIRMATION`;
+      if (lang === 'fr') return `RÉSERVATION #${m[1]} EN ATTENTE DE CONFIRMATION DE PAIEMENT`;
+      return `RESERVIERUNG #${m[1]} WARTET AUF ZAHLUNGSBESTÄTIGUNG`;
+    },
+  },
+  {
+    regex: /^Posición #(.+?) en estado RESERVADA$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Position #${m[1]} in RESERVED status`;
+      if (lang === 'fr') return `Position #${m[1]} au statut RÉSERVÉE`;
+      return `Position #${m[1]} im Status RESERVIERT`;
+    },
+  },
+  {
+    regex: /^Reserva #(.+?) liberada$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Reservation #${m[1]} released`;
+      if (lang === 'fr') return `Réservation #${m[1]} libérée`;
+      return `Reservierung #${m[1]} freigegeben`;
+    },
+  },
+  {
+    regex: /^Posición #(.+?) liberada$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Position #${m[1]} released`;
+      if (lang === 'fr') return `Position #${m[1]} libérée`;
+      return `Position #${m[1]} freigegeben`;
+    },
+  },
+  {
+    regex: /^Miembro Fundador Oficial #(\d+) · Los Primeros 100$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `Official Founding Member #${m[1]} · The First 100`;
+      if (lang === 'fr') return `Membre Fondateur Officiel #${m[1]} · Les 100 Premiers`;
+      return `Offizielles Gründungsmitglied #${m[1]} · Die Ersten 100`;
+    },
+  },
+  {
+    regex: /^FASHION FINANCES · MODELO FUNDADOR · LOS PRIMEROS 100 \(#(\d+)\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `FASHION FINANCES · FOUNDING MODEL · THE FIRST 100 (#${m[1]})`;
+      if (lang === 'fr') return `FASHION FINANCES · MANNEQUIN FONDATEUR · LES 100 PREMIERS (#${m[1]})`;
+      return `FASHION FINANCES · GRÜNDUNGSMODEL · DIE ERSTEN 100 (#${m[1]})`;
+    },
+  },
+  {
+    regex: /^#(\d+)\s*·\s*Disponible$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `#${m[1]} · Available`;
+      if (lang === 'fr') return `#${m[1]} · Disponible`;
+      return `#${m[1]} · Verfügbar`;
+    },
+  },
+  {
+    regex: /^#(\d+)\s*·\s*Reservada temporalmente \(pendiente de pago\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `#${m[1]} · Temporarily reserved (pending payment)`;
+      if (lang === 'fr') return `#${m[1]} · Réservée temporairement (en attente de paiement)`;
+      return `#${m[1]} · Vorübergehend reserviert (Zahlung ausstehend)`;
+    },
+  },
+  {
+    regex: /^#(\d+)\s*·\s*Modelo Fundadora Confirmada \(Privada\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `#${m[1]} · Confirmed Founding Model (Private)`;
+      if (lang === 'fr') return `#${m[1]} · Mannequin Fondatrice Confirmée (Privée)`;
+      return `#${m[1]} · Bestätigtes Gründungsmodel (Privat)`;
+    },
+  },
+  {
+    regex: /^#(\d+)\s*·\s*(.+?)\s*\(Confirmada\)$/i,
+    translate: (m, lang) => {
+      if (lang === 'en') return `#${m[1]} · ${m[2]} (Confirmed)`;
+      if (lang === 'fr') return `#${m[1]} · ${m[2]} (Confirmée)`;
+      return `#${m[1]} · ${m[2]} (Bestätigt)`;
     },
   },
 ];

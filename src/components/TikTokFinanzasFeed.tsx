@@ -3705,6 +3705,9 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   };
 
+  const showVotingProjectsModalRef = useRef<boolean>(showVotingProjectsModal);
+  showVotingProjectsModalRef.current = showVotingProjectsModal;
+
   // Active 1-second timer interval
   useEffect(() => {
     const interval = setInterval(() => {
@@ -3728,7 +3731,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
           setVotingPhaseTimer(nextSecs);
         }
 
-        if (nextSecs === 0 && (sessionVotingTimerMap[sId] !== undefined && sessionVotingTimerMap[sId] > 0)) {
+        if (nextSecs === 0 && (sessionVotingTimerMap[sId] !== undefined && sessionVotingTimerMap[sId] > 0) && !showVotingProjectsModalRef.current) {
           if (triggerScrutinyAndRecount) {
             triggerScrutinyAndRecount();
           }
@@ -5694,8 +5697,8 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                 {/* 📊 ESCRUTINIO DESCENTRALIZADO (captura imagen.png) EN EL MISMO DISEÑO Y FORMATO DE Gemini_Generated */}
                 {showFinanzasRecount && isCurrentlyActiveRound && (!completedSessionToDisplay?.id || completedSessionToDisplay.id === session.id) && (
                   <div 
-                    className="absolute inset-0 z-[130] bg-[#FAF6EE] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-slate-900 font-sans pointer-events-auto"
-                    style={{ backgroundColor: '#FAF6EE' }}
+                    className="absolute inset-0 z-[130] bg-[#fdf2f8] w-full h-full rounded-none overflow-hidden flex flex-col shadow-2xl animate-fade-in text-[#9d174d] font-sans pointer-events-auto"
+                    style={{ backgroundColor: '#fdf2f8' }}
                     id={`finanzas-recount-in-channel-${session.id}`}
                     onWheel={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}

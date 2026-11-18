@@ -6944,7 +6944,8 @@ export default function CastingLiveSection({
     } catch (e) {}
 
     const activeEntryFee = Number(settledSession.entryFee || currentFinanzasSession?.entryFee || 10);
-    const poolTotal = Number(settledSession.poolTotal || (activeEntryFee * 10));
+    const rawPoolTotal = Number(settledSession.poolTotal || (activeEntryFee * 10));
+    const poolTotal = rawPoolTotal > 1000 ? rawPoolTotal : 1000;
     const maxVotes = Math.max(...participants.map(p => p.votesReceived || 0), 0);
     const winnerParts = maxVotes > 0
       ? participants.filter(p => (p.votesReceived || 0) === maxVotes)
@@ -7026,8 +7027,9 @@ export default function CastingLiveSection({
         pushAppNotification({
           id: `notif-sponsor-comm-${roundKey}-${winnerSlug}`,
           category: 'comisiones',
+          upsert: true,
           title: `💶 ¡Comisión de Patrocinio: +${sponsorPerWinner.toFixed(2)}€!`,
-          message: `Has recibido el 10% por éxito del patrocinio (+${sponsorPerWinner.toFixed(2)}€) porque tu patrocinado/a ${winnerDisplayName} ganó o quedó entre los ganadores en ${settledSession.title}.`,
+          message: `Has recibido el 10% por éxito del patrocinio (+${sponsorPerWinner.toFixed(2)}€) porque tu patrocinado/a ${winnerDisplayName} ${winnerParts.length > 1 ? `quedó entre los ${winnerParts.length} ganadores (${prizePerWinner.toFixed(2)}€ c/u)` : `ganó (${prizePerWinner.toFixed(2)}€)`} en ${settledSession.title}.`,
           timestamp: Date.now(),
           read: false,
           icon: '💶',
@@ -7077,10 +7079,11 @@ export default function CastingLiveSection({
       pushAppNotification({
         id: `notif-round-win-${roundKey}`,
         category: 'rondas',
+        upsert: true,
         title: isTieResult
-          ? `🏆 ¡Entre los ganadores de ${settledSession.title}!`
-          : `🏆 ¡Has ganado ${settledSession.title}!`,
-        message: `Tu proyecto "${enrolledProj.title}" obtuvo ${userPart?.votesReceived ?? maxVotes} votos y consiguió una financiación de ${prizePerWinner.toFixed(2)}€${isTieResult ? ` (empate entre ${winnerParts.length} ganadores)` : ' (Posición #1 - Seleccionado)'}.`,
+          ? `🏆 ¡Entre los ganadores de ${settledSession.title}! (${prizePerWinner.toFixed(2)}€)`
+          : `🏆 ¡Has ganado ${settledSession.title}! (${prizePerWinner.toFixed(2)}€)`,
+        message: `Tu proyecto "${enrolledProj.title}" obtuvo ${userPart?.votesReceived ?? maxVotes} votos y consiguió ${prizePerWinner.toFixed(2)}€${isTieResult ? ` (800.00€ ÷ ${winnerParts.length} ganadores = ${prizePerWinner.toFixed(2)}€ c/u)` : ' (800.00€ · Posición #1 - Seleccionado)'}.`,
         timestamp: Date.now(),
         read: false,
         icon: '🏆',
@@ -7443,14 +7446,14 @@ export default function CastingLiveSection({
     return () => clearInterval(interval);
   }, [currentFinanzasSession?.id, showFinanzasResults, showFinanzasRecount, finanzasMuted, finanzasVolume, isCurrentUserParticipatingInCurrentSession]);
 
-  // Watcher: automatically redirect to scrutiny & vote recount page when voting timer hits 0
+  // Watcher: automatically redirect to scrutiny & vote recount page when voting timer hits 0 (only when NOT on the voting projects modal)
   useEffect(() => {
-    if (isVotingPhaseActive && isCurrentUserParticipatingInCurrentSession && votingPhaseTimer <= 0 && !showFinanzasRecount && !showFinanzasResults) {
+    if (isVotingPhaseActive && isCurrentUserParticipatingInCurrentSession && votingPhaseTimer <= 0 && !showFinanzasRecount && !showFinanzasResults && !showVotingProjectsModal) {
       triggerScrutinyAndRecount();
     }
-  }, [isVotingPhaseActive, isCurrentUserParticipatingInCurrentSession, votingPhaseTimer, showFinanzasRecount, showFinanzasResults]);
+  }, [isVotingPhaseActive, isCurrentUserParticipatingInCurrentSession, votingPhaseTimer, showFinanzasRecount, showFinanzasResults, showVotingProjectsModal]);
 
-  // 10-minute countdown timer for voting modal; when reaching 0, redirects to scrutiny and recount page
+  // 10-minute countdown timer for voting modal; holds at 00:00 without auto-redirecting so user must click "VOTAR POR ESTE PROYECTO (ALESSIA)"
   useEffect(() => {
     if (!showVotingProjectsModal) return;
 
@@ -7458,22 +7461,6 @@ export default function CastingLiveSection({
       setVotingCountdownSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          setShowVotingProjectsModal(false);
-          setShowFinanzasInscriptionInChannel(false);
-          setShowProjectDetailsInPopup(false);
-          setDetailProjectUser(null);
-          const sessionData = buildFinanzasCompletedSession(finanzasVotes);
-          setCompletedSessionToDisplay(sessionData);
-          setSelectedCategoryFilter('Finanzas');
-          setShowFinanzasRecount(true);
-          setShowFinanzasResults(false);
-          setSystemVoiceNotification({
-            show: true,
-            message: '⏱️ ¡Cuenta atrás de votación finalizada (00:00)! Redirigiendo a la página de escrutinio y recuento oficial...'
-          });
-          setTimeout(() => {
-            setSystemVoiceNotification((p) => ({ ...p, show: false }));
-          }, 4500);
           return 0;
         }
         return prev - 1;
@@ -7481,7 +7468,7 @@ export default function CastingLiveSection({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [showVotingProjectsModal, finanzasVotes]);
+  }, [showVotingProjectsModal]);
 
   const getWinnersToDisplay = (session: any) => {
     if (!session || !session.participants) return [];
@@ -7501,6 +7488,29 @@ export default function CastingLiveSection({
     const updatedVotes = { ...finanzasVotes, [user.id]: currentVal + 1 };
     setFinanzasVotes(updatedVotes);
     localStorage.setItem('finanzas_project_votes', JSON.stringify(updatedVotes));
+
+    const isAlessiaProject =
+      user.id === 'f-1' ||
+      (user.name || '').toLowerCase().includes('alessia') ||
+      (user.username || '').toLowerCase().includes('alessia');
+
+    if (!isAlessiaProject) {
+      // Only "VOTAR POR ESTE PROYECTO (ALESSIA)" transitions out of the voting page toward Final Results
+      const currentVoters = Array.isArray(finanzasVotedVoterIds) ? finanzasVotedVoterIds : [];
+      const updatedVoters = Array.from(new Set([...currentVoters, 'user']));
+      setFinanzasVotedVoterIds(updatedVoters);
+      localStorage.setItem('finanzas_voted_voter_ids_v2', JSON.stringify(updatedVoters));
+
+      setSystemVoiceNotification({
+        show: true,
+        message: `🗳️ ¡Voto por ${user.name} registrado! Haz clic en "Votar por este proyecto (Alessia)" para ir a los resultados finales.`
+      });
+
+      setTimeout(() => {
+        setSystemVoiceNotification(prev => ({ ...prev, show: false }));
+      }, 4000);
+      return;
+    }
 
     // Complete voters tracking list up to 10/10 so the round proceeds immediately to scrutiny & final results
     const all10ParticipantIds = ['user', 'f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-7', 'f-8', 'f-9'];
@@ -16700,7 +16710,6 @@ export default function CastingLiveSection({
                 id="btn-votar-por-proyecto-elegido"
                 onClick={() => {
                   handleVoteForProject(currentUser);
-                  setShowVotingProjectsModal(false);
                 }}
                 className="w-full bg-white hover:bg-pink-50/60 active:scale-[0.99] text-slate-900 font-black py-3.5 px-4 rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-2 border-pink-500 hover:border-pink-600 text-xs sm:text-sm uppercase tracking-wider font-sans"
               >
@@ -16790,63 +16799,47 @@ export default function CastingLiveSection({
 
     return (
       <div 
-        className="w-full h-full bg-[#FAF6EE] text-slate-900 p-3 sm:p-5 space-y-3 sm:space-y-4 font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border"
-        style={{ backgroundColor: '#FAF6EE' }}
+        className="w-full h-full bg-[#fdf2f8] text-[#9d174d] p-3 sm:p-5 space-y-3 sm:space-y-4 font-sans text-left overflow-y-auto no-scrollbar animate-fade-in select-none pointer-events-auto box-border"
+        style={{ backgroundColor: '#fdf2f8' }}
         id="finanzas-recount-container"
       >
-        {/* Notice bar matching Gemini_Generated */}
-        <div className="bg-[#FFFDF7] border border-[#EADBBD] p-3 sm:p-3.5 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 shadow-sm">
+        {/* Notice bar in Blanco & Rosa Perla */}
+        <div className="bg-white border border-[#fbcfe8] p-3 sm:p-3.5 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-bold text-[#9d174d] shadow-sm shadow-pink-100">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <span className="text-base sm:text-lg shrink-0">⏳</span>
-            <span className="truncate text-xs sm:text-[13px] font-bold text-slate-900">
+            <span className="text-base sm:text-lg shrink-0 text-[#ec4899]">⏳</span>
+            <span className="truncate text-xs sm:text-[13px] font-bold text-[#9d174d]">
               {scrutinyVotesCompleted < 10
                 ? `Tabulando firmas... ${formatMMSS(scrutinySeconds)} (${scrutinyVotesCompleted}/10 Votaron)`
-                : `Escrutinio completado. Redirigiendo a Res...`}
+                : `Escrutinio completado. Redirigiendo a Resultados...`}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (!completedSessionToDisplay) {
-                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
-                setCompletedSessionToDisplay(sessionData);
-              }
-              setSelectedCategoryFilter('Finanzas');
-              setShowFinanzasRecount(false);
-              setShowFinanzasResults(true);
-              try {
-                localStorage.setItem('finanzas_contest_pending_close', 'true');
-              } catch (e) {}
-              setIsContestPendingClose(true);
-            }}
-            className="bg-[#0A0D14] hover:bg-black text-white px-4 sm:px-5 py-2 rounded-full font-black text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer transition shadow-sm active:scale-95 shrink-0 border-0"
-          >
-            VER RESULTADOS
-          </button>
+          <span className="bg-[#fdf2f8] border border-[#f9a8d4] text-[#db2777] px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-wider shrink-0">
+            {scrutinyVotesCompleted}/10
+          </span>
         </div>
 
-        {/* Main Card: Escrutinio Descentralizado matching Gemini_Generated */}
-        <div className="bg-white border border-[#EADBBD] rounded-[26px] sm:rounded-[32px] p-5 sm:p-6 space-y-4 text-center shadow-md relative">
+        {/* Main Card: Escrutinio Descentralizado in Blanco, Rosa Perla & Rosa Pink */}
+        <div className="bg-white border border-[#fbcfe8] rounded-[26px] sm:rounded-[32px] p-5 sm:p-6 space-y-4 text-center shadow-md shadow-pink-200/40 relative">
           {/* Circle gauge showing countdown and votes */}
-          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-[5px] border-[#E11D48] shadow-[0_0_24px_rgba(225,29,72,0.3)] flex items-center justify-center relative bg-white mx-auto">
+          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-[5px] border-[#ec4899] shadow-[0_0_24px_rgba(236,72,153,0.28)] flex items-center justify-center relative bg-gradient-to-b from-white to-[#fdf2f8] mx-auto">
             <div className="space-y-0.5 text-center">
-              <span className="text-3xl sm:text-4xl font-black font-sans text-[#E11D48] block leading-none tracking-tight">
+              <span className="text-3xl sm:text-4xl font-black font-sans text-[#db2777] block leading-none tracking-tight">
                 {scrutinyVotesCompleted}
               </span>
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-widest block mt-1">
+              <span className="text-[9px] sm:text-[10px] font-black text-[#9d174d] uppercase tracking-widest block mt-1">
                 DE 10 VOTOS
               </span>
-              <span className="text-[11px] sm:text-xs font-mono font-bold text-[#E11D48] block pt-1">
+              <span className="text-[11px] sm:text-xs font-mono font-bold text-[#ec4899] block pt-1">
                 ⏳ {formatMMSS(scrutinySeconds)}
               </span>
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <h3 className="text-base sm:text-lg font-black text-slate-950 tracking-tight m-0">
+            <h3 className="text-base sm:text-lg font-black text-[#831843] tracking-tight m-0">
               Escrutinio Descentralizado
             </h3>
-            <p className="text-xs sm:text-[13px] text-slate-600 font-medium m-0">
+            <p className="text-xs sm:text-[13px] text-[#be185d]/80 font-medium m-0">
               Computando resultados instantáneos al completar las firmas.
             </p>
           </div>
@@ -16854,26 +16847,26 @@ export default function CastingLiveSection({
           {/* Progress Bar */}
           <div className="space-y-1.5 max-w-xl mx-auto pt-1">
             <div className="flex justify-between items-center text-xs sm:text-sm font-sans font-bold">
-              <span className="text-slate-900">Progreso de la Votación</span>
-              <span className="text-[#E11D48] font-black">{scrutinyVotesCompleted * 10}% completado</span>
+              <span className="text-[#9d174d]">Progreso de la Votación</span>
+              <span className="text-[#ec4899] font-black">{scrutinyVotesCompleted * 10}% completado</span>
             </div>
-            <div className="w-full h-3 rounded-full bg-slate-100 border border-slate-200/90 p-0.5 overflow-hidden shadow-inner">
+            <div className="w-full h-3 rounded-full bg-[#fdf2f8] border border-[#fbcfe8] p-0.5 overflow-hidden shadow-inner">
               <div 
-                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-[#E11D48] to-amber-500 transition-all duration-500 shadow-sm" 
+                className="h-full rounded-full bg-gradient-to-r from-[#f9a8d4] via-[#ec4899] to-[#fe2c55] transition-all duration-500 shadow-sm" 
                 style={{ width: `${scrutinyVotesCompleted * 10}%` }}
               />
             </div>
           </div>
 
           {/* Cierre Banner */}
-          <div className="bg-[#FAFBFD] border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-2xs">
+          <div className="bg-[#fdf2f8] border border-[#fbcfe8] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-2xs">
             <div className="text-left flex items-center gap-2.5 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ec4899] shrink-0" />
               <div className="min-w-0">
-                <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-emerald-700 block tracking-wider">
+                <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-[#db2777] block tracking-wider">
                   {scrutinyVotesCompleted === 10 ? '• CIERRE Y TABULACIÓN COMPLETA' : '• ESCRUTINIO EN CURSO'}
                 </span>
-                <span className="font-bold text-slate-900 text-xs sm:text-[13px] truncate block mt-0.5">
+                <span className="font-bold text-[#831843] text-xs sm:text-[13px] truncate block mt-0.5">
                   {scrutinyVotesCompleted === 10
                     ? 'Todos los participantes han emitido su voto.'
                     : `Procesando firmas y recuento... Votaron ${scrutinyVotesCompleted} de 10.`}
@@ -16881,39 +16874,17 @@ export default function CastingLiveSection({
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">CONSENSO</span>
-              <span className="text-sm font-black text-slate-950 font-sans block leading-tight">
+              <span className="text-[9px] text-[#be185d]/75 font-bold block uppercase tracking-wider">CONSENSO</span>
+              <span className="text-sm font-black text-[#9d174d] font-sans block leading-tight">
                 {10 - scrutinyVotesCompleted} en cola
               </span>
             </div>
           </div>
-
-          {/* Action button to view final results and winners */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!completedSessionToDisplay) {
-                const sessionData = buildFinanzasCompletedSession(finanzasVotes);
-                setCompletedSessionToDisplay(sessionData);
-              }
-              setSelectedCategoryFilter('Finanzas');
-              setShowFinanzasRecount(false);
-              setShowFinanzasResults(true);
-              try {
-                localStorage.setItem('finanzas_contest_pending_close', 'true');
-              } catch (e) {}
-              setIsContestPendingClose(true);
-            }}
-            className="w-full py-3.5 px-5 bg-gradient-to-r from-[#FF0055] via-[#E60050] to-[#C90045] hover:opacity-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition shadow-lg shadow-pink-500/30 cursor-pointer active:scale-95 flex items-center justify-center gap-2 border-0 mt-2"
-          >
-            <span className="text-sm sm:text-base">🏆</span>
-            <span>VER RESULTADOS FINALES Y GANADORES</span>
-          </button>
         </div>
 
-        {/* Participant Grid matching Gemini_Generated */}
+        {/* Participant Grid in Blanco, Rosa Perla & Rosa Pink */}
         <div className="space-y-2 pt-1">
-          <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 font-sans m-0">
+          <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#9d174d] font-sans m-0">
             ESTADO DE PARTICIPANTES ({scrutinyVotesCompleted}/10 VOTARON)
           </h4>
 
@@ -16921,37 +16892,37 @@ export default function CastingLiveSection({
             {participantsList.map((item, idx) => (
               <div 
                 key={idx} 
-                className="bg-white border border-[#EADBBD] rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition relative w-full min-w-0 overflow-hidden"
+                className="bg-white border border-[#fbcfe8] rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col items-center text-center gap-2 shadow-sm shadow-pink-100 hover:shadow-md transition relative w-full min-w-0 overflow-hidden"
               >
                 <div className="relative">
                   <img 
                     src={item.avatar} 
                     alt={item.name} 
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-2xs" 
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-2xs border border-[#fce7f3]" 
                     referrerPolicy="no-referrer"
                   />
                   {item.isSelf && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-[#10B981] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs uppercase tracking-tight">
+                    <span className="absolute -top-1.5 -right-1.5 bg-[#ec4899] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs uppercase tracking-tight">
                       TÚ
                     </span>
                   )}
                 </div>
 
                 <div className="min-w-0 w-full">
-                  <h5 className="text-xs sm:text-sm font-black text-slate-950 truncate m-0 leading-tight">
+                  <h5 className="text-xs sm:text-sm font-black text-[#831843] truncate m-0 leading-tight">
                     {item.name}
                   </h5>
-                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate mt-0.5">
+                  <span className="text-[10px] sm:text-[11px] text-[#be185d]/75 font-medium block truncate mt-0.5">
                     {item.role || 'Miembro IA'}
                   </span>
                 </div>
 
                 {idx < scrutinyVotesCompleted ? (
-                  <div className="w-full bg-[#D1F7EC] border border-[#A7F3D0] text-[#065F46] text-[10px] sm:text-[11px] font-black py-1 sm:py-1.5 px-2 rounded-xl text-center uppercase tracking-wider truncate shadow-2xs font-sans">
+                  <div className="w-full bg-[#fce7f3] border border-[#f9a8d4] text-[#db2777] text-[10px] sm:text-[11px] font-black py-1 sm:py-1.5 px-2 rounded-xl text-center uppercase tracking-wider truncate shadow-2xs font-sans">
                     ✓ VOTO CARGADO
                   </div>
                 ) : (
-                  <div className="w-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] text-[10px] sm:text-[11px] font-black py-1 sm:py-1.5 px-2 rounded-xl text-center uppercase tracking-wider animate-pulse truncate shadow-2xs font-sans">
+                  <div className="w-full bg-white border border-[#fbcfe8] text-[#ec4899] text-[10px] sm:text-[11px] font-black py-1 sm:py-1.5 px-2 rounded-xl text-center uppercase tracking-wider animate-pulse truncate shadow-2xs font-sans">
                     ⏳ REGISTRANDO...
                   </div>
                 )}
@@ -16968,7 +16939,8 @@ export default function CastingLiveSection({
     const activeSessionToDisplay = completedSessionToDisplay || buildFinanzasCompletedSession(finanzasVotes);
     const activeParticipants: any[] = activeSessionToDisplay?.participants || [];
     const activeEntryFee = activeSessionToDisplay?.entryFee || currentFinanzasSession?.entryFee || 10;
-    const dynamicPool = activeSessionToDisplay?.poolTotal || (activeEntryFee * 10);
+    const rawDynamicPool = activeSessionToDisplay?.poolTotal || (activeEntryFee * 10);
+    const dynamicPool = rawDynamicPool > 1000 ? rawDynamicPool : 1000;
     const dynamicMaxVotes = Math.max(...activeParticipants.map(p => p.votesReceived || 0), 1);
     const dynamicWinners = activeParticipants.filter(p => (p.votesReceived || 0) === dynamicMaxVotes);
     const dynamicIsTie = dynamicWinners.length > 1;

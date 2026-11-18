@@ -54,6 +54,8 @@ import {
 import { UserSessionProfile, InvestmentSession, ProjectData, ModelProfile } from '../types';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
 import LanguageTranslatorDropdown from './LanguageTranslatorDropdown';
+import FoundingModelBadge from './FoundingModelBadge';
+import { FoundersAdminResponse } from '../types/founders';
 
 interface AdminPortalProps {
   currentUser: UserSessionProfile;
@@ -75,7 +77,15 @@ export default function AdminPortal({
   projects: initialProjects = []
 }: AdminPortalProps) {
   // Navigation Modules
-  const [activeModule, setActiveModule] = useState<'dashboard' | 'users' | 'projects' | 'models' | 'content' | 'config' | 'audit'>('dashboard');
+  const [activeModule, setActiveModule] = useState<'dashboard' | 'users' | 'projects' | 'models' | 'content' | 'config' | 'audit' | 'first100'>('dashboard');
+
+  // The First 100 Admin State
+  const [first100Data, setFirst100Data] = useState<FoundersAdminResponse | null>(null);
+  const [f100OpeningDate, setF100OpeningDate] = useState('');
+  const [f100LaunchDate, setF100LaunchDate] = useState('');
+  const [f100Closed, setF100Closed] = useState(false);
+  const [f100ClosedReason, setF100ClosedReason] = useState('');
+  const [f100Filter, setF100Filter] = useState<'ALL' | 'AVAILABLE' | 'RESERVED' | 'CONFIRMED'>('ALL');
 
   // Loading & sync state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -215,6 +225,25 @@ export default function AdminPortal({
         if (aRes.ok) {
           const aData = await aRes.json();
           if (isMounted) setAuditLogsList(aData);
+        }
+
+        // Fetch The First 100 admin overview
+        const f100Res = await adminFetch('/api/founders/admin/overview');
+        if (f100Res.ok) {
+          const f100Json: FoundersAdminResponse = await f100Res.json();
+          if (isMounted) {
+            setFirst100Data(f100Json);
+            const toLocal = (iso?: string) => {
+              if (!iso) return '';
+              const d = new Date(iso);
+              if (isNaN(d.getTime())) return '';
+              return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            };
+            setF100OpeningDate(toLocal(f100Json.config?.openingDate));
+            setF100LaunchDate(toLocal(f100Json.config?.launchDate));
+            setF100Closed(Boolean(f100Json.config?.programClosed));
+            setF100ClosedReason(f100Json.config?.closedReason || '');
+          }
         }
       } catch (err) {
         console.error('Error loading admin portal data:', err);
@@ -708,6 +737,27 @@ export default function AdminPortal({
                 activeModule === 'audit' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
               }`}>
                 {auditLogsList.length}
+              </span>
+            </button>
+
+            {/* 8. The First 100 Founders */}
+            <button
+              type="button"
+              onClick={() => setActiveModule('first100')}
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-extrabold tracking-wide transition cursor-pointer text-left ${
+                activeModule === 'first100'
+                  ? 'bg-gradient-to-r from-rose-500 to-[#fe2c55] text-white shadow-md shadow-rose-200/60'
+                  : 'text-slate-700 hover:bg-rose-50/40 hover:text-rose-600'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Award className="w-4 h-4" />
+                <span>The First 100</span>
+              </div>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                activeModule === 'first100' ? 'bg-white/20 text-white' : 'bg-pink-50 text-rose-700'
+              }`}>
+                {first100Data?.stats?.confirmedCount ?? 0}/100
               </span>
             </button>
 
@@ -1898,6 +1948,299 @@ export default function AdminPortal({
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {activeModule === 'first100' && first100Data && (
+            <div className="space-y-6 text-left animate-fade-in" id="admin-module-first100">
+              <div className="bg-white rounded-3xl border border-pink-100/90 p-6 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#fe2c55] font-mono">
+                    PROGRAMA INTERNACIONAL DE FUNDADORES
+                  </span>
+                  <h2 className="text-2xl font-black text-slate-950 tracking-tight mt-1">
+                    THE FIRST 100 — Gestión Ejecutiva ({(first100Data.config?.packagePriceEur || 100000).toLocaleString('es-ES')} €)
+                  </h2>
+                  <p className="text-xs text-slate-500 max-w-2xl mt-0.5 leading-relaxed">
+                    Control de fechas de apertura y lanzamiento (90 días), reservas pendientes, compras confirmadas, progreso individual, insignias Founding Model, incidencias de pago y liberación de plazas.
+                  </p>
+                </div>
+                {onNavigateToTab && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToTab('first_100')}
+                    className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold cursor-pointer shrink-0"
+                  >
+                    Abrir página The First 100
+                  </button>
+                )}
+              </div>
+
+              {/* KPIs */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                {[
+                  { label: 'Confirmadas', value: `${first100Data.stats.confirmedCount} / 100` },
+                  { label: 'En reserva (RESERVED)', value: `${first100Data.stats.reservedCount}` },
+                  { label: 'Disponibles', value: `${first100Data.stats.availableCount}` },
+                  { label: 'Ingresos Confirmados', value: `${first100Data.stats.totalConfirmedRevenueEur.toLocaleString('es-ES')} €` },
+                  { label: 'Conversión', value: `${first100Data.stats.conversionRatePercent}%` }
+                ].map((k) => (
+                  <div key={k.label} className="bg-white rounded-2xl border border-pink-100 p-4 shadow-xs">
+                    <span className="text-[10px] font-bold uppercase text-slate-400 font-mono block">{k.label}</span>
+                    <strong className="text-xl font-black text-slate-900 font-mono mt-1 block">{k.value}</strong>
+                  </div>
+                ))}
+              </div>
+
+              {/* Config Form */}
+              <div className="bg-white rounded-3xl border border-pink-100/90 p-6 shadow-xs space-y-4">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                  Fechas del Programa y Cierre
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
+                  <div className="md:col-span-4 min-w-0">
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Apertura del programa</label>
+                    <input
+                      type="datetime-local"
+                      value={f100OpeningDate}
+                      onChange={(e) => setF100OpeningDate(e.target.value)}
+                      className="w-full min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                    />
+                  </div>
+                  <div className="md:col-span-5 min-w-0">
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Lanzamiento Internacional</label>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <input
+                        type="datetime-local"
+                        value={f100LaunchDate}
+                        onChange={(e) => setF100LaunchDate(e.target.value)}
+                        className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const base = f100OpeningDate ? new Date(f100OpeningDate) : new Date();
+                          const d90 = new Date(base.getTime() + 90 * 24 * 60 * 60 * 1000);
+                          setF100LaunchDate(new Date(d90.getTime() - d90.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                        }}
+                        className="pearl-pink-btn px-2.5 py-2 rounded-xl text-[10px] font-bold shrink-0 cursor-pointer"
+                      >
+                        +90d
+                      </button>
+                    </div>
+                  </div>
+                  <div className="md:col-span-3 min-w-0">
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Estado del Programa</label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-rose-50/40 border border-rose-100 rounded-xl px-3 py-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={f100Closed}
+                        onChange={(e) => setF100Closed(e.target.checked)}
+                        className="accent-rose-600 w-4 h-4 shrink-0"
+                      />
+                      <span className="leading-snug">Cerrar programa manualmente</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3 items-center justify-between pt-2">
+                  <input
+                    type="text"
+                    placeholder="Motivo de cierre opcional..."
+                    value={f100ClosedReason}
+                    onChange={(e) => setF100ClosedReason(e.target.value)}
+                    className="flex-1 min-w-[240px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const res = await adminFetch('/api/founders/admin/config', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                          openingDate: f100OpeningDate ? new Date(f100OpeningDate).toISOString() : undefined,
+                          launchDate: f100LaunchDate ? new Date(f100LaunchDate).toISOString() : undefined,
+                          programClosed: f100Closed,
+                          closedReason: f100ClosedReason
+                        })
+                      });
+                      if (res.ok) {
+                        setStatusMessage({ text: 'Configuración de The First 100 actualizada.', type: 'success' });
+                        setRefreshKey((k) => k + 1);
+                      }
+                    }}
+                    className="custom-bg px-5 py-2.5 bg-[#fe2c55] hover:bg-rose-600 text-white rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    Guardar Configuración First 100
+                  </button>
+                </div>
+              </div>
+
+              {/* All 100 Positions Table */}
+              <div className="bg-white rounded-3xl border border-pink-100/90 p-6 shadow-xs space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                    Registro de Posiciones 001–100
+                  </h3>
+                  <div className="flex gap-1.5">
+                    {(['ALL', 'CONFIRMED', 'RESERVED', 'AVAILABLE'] as const).map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => setF100Filter(st)}
+                        className={`px-3 py-1 rounded-lg text-[10px] font-bold cursor-pointer border ${
+                          f100Filter === st
+                            ? 'custom-bg bg-[#fe2c55] text-white border-[#fe2c55]'
+                            : 'bg-slate-50 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-mono uppercase text-slate-500">
+                        <th className="py-2.5 px-3">Nº</th>
+                        <th className="py-2.5 px-3">Estado</th>
+                        <th className="py-2.5 px-3">Modelo</th>
+                        <th className="py-2.5 px-3">Pago</th>
+                        <th className="py-2.5 px-3">Preparación</th>
+                        <th className="py-2.5 px-3">Insignia</th>
+                        <th className="py-2.5 px-3">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {first100Data.positions
+                        .filter((p) => f100Filter === 'ALL' || p.status === f100Filter)
+                        .map((pos) => (
+                          <tr key={pos.code} className="hover:bg-rose-50/20">
+                            <td className="py-2.5 px-3 font-mono font-bold">#{pos.code}</td>
+                            <td className="py-2.5 px-3">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                pos.status === 'CONFIRMED'
+                                  ? 'bg-pink-100 text-rose-800'
+                                  : pos.status === 'RESERVED'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {pos.status}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              {pos.professionalName ? (
+                                <div>
+                                  <span className="font-bold text-slate-900 block">{pos.professionalName}</span>
+                                  <span className="text-[10px] font-mono text-slate-400">@{pos.username}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono text-[10px]">
+                              {pos.paymentStatus || '—'}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono">
+                              {pos.status === 'CONFIRMED' ? `${pos.completionPercent ?? 0}%` : '—'}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              {pos.status === 'CONFIRMED' ? (
+                                <FoundingModelBadge founderNumber={pos.code} variant="inline" />
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <div className="flex flex-wrap gap-2">
+                                {pos.status === 'CONFIRMED' && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const res = await adminFetch('/api/founders/admin/badge', {
+                                        method: 'PATCH',
+                                        body: JSON.stringify({
+                                          positionCode: pos.code,
+                                          badgeActive: pos.badgeActive === false
+                                        })
+                                      });
+                                      if (res.ok) setRefreshKey((k) => k + 1);
+                                    }}
+                                    className="text-[10px] font-bold text-rose-700 underline bg-transparent cursor-pointer"
+                                  >
+                                    {pos.badgeActive === false ? 'Activar insignia' : 'Suspender'}
+                                  </button>
+                                )}
+                                {pos.status !== 'AVAILABLE' && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const res = await adminFetch('/api/founders/admin/release-or-refund', {
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                          positionCode: pos.code,
+                                          actionType: pos.status === 'CONFIRMED' ? 'refund' : 'cancel'
+                                        })
+                                      });
+                                      if (res.ok) {
+                                        setStatusMessage({
+                                          text: `Posición #${pos.code} liberada a AVAILABLE.`,
+                                          type: 'info'
+                                        });
+                                        setRefreshKey((k) => k + 1);
+                                      }
+                                    }}
+                                    className="text-[10px] font-bold text-slate-600 hover:text-rose-600 underline bg-transparent cursor-pointer"
+                                  >
+                                    {pos.status === 'CONFIRMED' ? 'Devolver & Liberar' : 'Liberar'}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Incidents */}
+              <div className="bg-white rounded-3xl border border-pink-100/90 p-6 shadow-xs space-y-3">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                  Incidencias de Pago y Reservas ({first100Data.incidents.length})
+                </h3>
+                {first100Data.incidents.length === 0 ? (
+                  <p className="text-xs text-slate-400">Sin incidencias registradas.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {first100Data.incidents.map((inc) => (
+                      <div key={inc.id} className="border border-pink-100 rounded-xl p-3 flex items-start justify-between gap-3">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-rose-700 font-mono">
+                            {inc.type} · #{inc.positionCode || '---'} ({inc.status})
+                          </span>
+                          <p className="text-xs text-slate-700 mt-0.5">{inc.description}</p>
+                        </div>
+                        {inc.status === 'open' && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const res = await adminFetch(`/api/founders/admin/incidents/${inc.id}`, {
+                                method: 'PATCH',
+                                body: JSON.stringify({ status: 'resolved', resolutionNotes: 'Revisado por administrador' })
+                              });
+                              if (res.ok) setRefreshKey((k) => k + 1);
+                            }}
+                            className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold shrink-0 cursor-pointer"
+                          >
+                            Marcar Resuelta
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

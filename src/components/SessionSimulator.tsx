@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentSession, ParticipantState, ModelProfile, ProjectData, UserSessionProfile, FinancialMovement } from '../types';
 import { seedInitialData } from '../utils/seedData';
-import { getRoundReference, resolveCategoryKey } from '../utils/roundsDatabase';
 import SessionResultsPodium from './SessionResultsPodium';
 import { pushAppNotification } from './NotificationCenterModal';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
@@ -2271,7 +2270,8 @@ export default function SessionSimulator({
     const finalMaxVotes = Math.max(...finalParticipants.map(p => p.votesReceived));
     const winners = finalParticipants.filter(p => p.votesReceived >= finalMaxVotes && finalMaxVotes > 0);
 
-    const pool = targetSession.poolTotal;
+    const rawPool = targetSession.poolTotal;
+    const pool = rawPool > 1000 ? rawPool : 1000;
     const prizeTotal80 = pool * 0.80;
     const sponsorTotal10 = pool * 0.10;
 
@@ -2320,10 +2320,11 @@ export default function SessionSimulator({
       pushAppNotification({
         id: `notif-round-win-${roundInstanceKey}`,
         category: 'rondas',
+        upsert: true,
         title: isTieResult
-          ? `🏆 ¡Entre los ganadores de ${targetSession.title}!`
-          : `🏆 ¡Has ganado ${targetSession.title}!`,
-        message: `Obtuviste ${userWinnerInstance.votesReceived.toFixed(0)} votos y ganaste una financiación de ${prizePerWinner.toFixed(2)}€${isTieResult ? ` (empate entre ${winners.length} ganadores)` : ' (Posición #1 - Seleccionado)'}.`,
+          ? `🏆 ¡Entre los ganadores de ${targetSession.title}! (${prizePerWinner.toFixed(2)}€)`
+          : `🏆 ¡Has ganado ${targetSession.title}! (${prizePerWinner.toFixed(2)}€)`,
+        message: `Obtuviste ${userWinnerInstance.votesReceived.toFixed(0)} votos y ganaste una financiación de ${prizePerWinner.toFixed(2)}€${isTieResult ? ` (800.00€ ÷ ${winners.length} ganadores = ${prizePerWinner.toFixed(2)}€ c/u)` : ' (800.00€ · Posición #1 - Seleccionado)'}.`,
         timestamp: Date.now(),
         read: false,
         icon: '🏆',
@@ -2374,8 +2375,9 @@ export default function SessionSimulator({
         pushAppNotification({
           id: `notif-sponsor-comm-${roundInstanceKey}-${winnerSlug}`,
           category: 'comisiones',
+          upsert: true,
           title: `💶 ¡Comisión de Patrocinio: +${commRounded.toFixed(2)}€!`,
-          message: `Has recibido el 10% por éxito del patrocinio (+${commRounded.toFixed(2)}€) porque tu patrocinado/a ${win.name} ganó o quedó entre los ganadores en ${targetSession.title}.`,
+          message: `Has recibido el 10% por éxito del patrocinio (+${commRounded.toFixed(2)}€) porque tu patrocinado/a ${win.name} ${winners.length > 1 ? `quedó entre los ${winners.length} ganadores (${prizePerWinner.toFixed(2)}€ c/u)` : `ganó (${prizePerWinner.toFixed(2)}€)`} en ${targetSession.title}.`,
           timestamp: Date.now(),
           read: false,
           icon: '💶',
@@ -2538,7 +2540,8 @@ export default function SessionSimulator({
   // Render completed session display (Results / Winners Podium)
   if (false && completedSessionToDisplay) {
     const winnersNames = completedSessionToDisplay.winners || [];
-    const pool = completedSessionToDisplay.poolTotal;
+    const rawPool = completedSessionToDisplay.poolTotal;
+    const pool = rawPool > 1000 ? rawPool : 1000;
     const prizeTotal80 = pool * 0.80;
     const prizePerWinner = winnersNames.length > 0 ? prizeTotal80 / winnersNames.length : 0;
     const userWon = completedSessionToDisplay.participants.some(
@@ -4258,174 +4261,6 @@ export default function SessionSimulator({
 
       {currentSession ? (
         <div className="space-y-6">
-          
-          {/* Detailed Info Ribbon for the current active selection */}
-          {(() => {
-            const fee = Number(currentSession.entryFee || 0);
-            const sessTitle = (currentSession.title || '').toLowerCase();
-            const sessId = (currentSession.id || '').toLowerCase();
-            const catKey = resolveCategoryKey(currentSession);
-
-            const isStreetwear = catKey === 'streetwear' || fee === 10 || sessId.includes('workers') || sessId.includes('trabajad') || sessTitle.includes('trabajad') || sessTitle.includes('streetwear');
-            const isCasual = !isStreetwear && (catKey === 'casual' || fee === 100 || sessId.includes('entrepreneurs') || sessId.includes('emprend') || sessTitle.includes('bronce') || sessTitle.includes('casual') || sessTitle.includes('lifestyle'));
-            const isGlamour = !isStreetwear && !isCasual && (catKey === 'glamour' || fee === 1000 || sessId.includes('businessmen') || sessId.includes('empresar') || sessTitle.includes('acero') || sessTitle.includes('glamour'));
-            const isElegant = !isStreetwear && !isCasual && !isGlamour && (catKey === 'elegant' || fee === 10000 || sessId.includes('topmodels') || sessTitle.includes('model') || sessTitle.includes('oro') || sessTitle.includes('classic') || sessTitle.includes('elegant'));
-            const isMillionaires = !isStreetwear && !isCasual && !isGlamour && !isElegant && (
-              catKey === 'highfashion_1m' || fee === 1000000 ||
-              sessId.includes('millionaires') || sessId.includes('millonarios') ||
-              sessTitle.includes('millionaires') || sessTitle.includes('millon') || sessTitle.includes('platino')
-            );
-            const isHighFashion = !isStreetwear && !isCasual && !isGlamour && !isElegant && !isMillionaires && (
-              catKey === 'highfashion_100k' ||
-              fee === 100000 ||
-              sessId.includes('investors') || sessId.includes('inversores') ||
-              sessTitle.includes('high fashion') || sessTitle.includes('fashion') || sessTitle.includes('invers')
-            );
-
-            const roundCategoryTitle = isStreetwear
-              ? 'Round STREETWEAR & URBAN'
-              : isCasual
-              ? 'Round CASUAL & LIFESTYLE'
-              : isGlamour
-              ? 'Round Glamour ✨'
-              : isElegant
-              ? 'Round Elegant & Classic 🤍'
-              : isHighFashion
-              ? 'Round High Fashion 👠'
-              : isMillionaires
-              ? 'Round of Millionaires 💎'
-              : currentSession.title;
-
-            const roundSubtitle = isStreetwear
-              ? 'Estilo moderno, sneakers, denim y cultura street.'
-              : isCasual
-              ? 'Estilo ropa cotidiana, lifestyle, marcas comerciales y e-commerce.'
-              : isGlamour
-              ? 'vestidos, belleza, eventos, alfombra roja y looks impactantes.'
-              : isElegant
-              ? 'sofisticado, clásico, atemporal y refinado.'
-              : isHighFashion
-              ? 'alta moda, diseñadores, pasarela y tendencias.'
-              : 'exclusividad, inversores de élite, lujo y alta costura.';
-
-            if (isStreetwear) {
-              return null;
-            }
-
-            if (isCasual) {
-              return (
-                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
-                  <img
-                    src="/assets/aistudio/Moda_casual_y_estilo_de_vida_glamuroso_a25ddc2b.png"
-                    alt="Moda casual y estilo de vida glamuroso - Round CASUAL & LIFESTYLE"
-                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
-                  />
-                </div>
-              );
-            }
-
-            if (isGlamour) {
-              return (
-                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
-                  <img
-                    src="/assets/aistudio/Gemini_Generated_Image_mizl7umizl7umizl_1dd942c2.jpg"
-                    alt="Round Glamour - Fashions Finance"
-                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
-                  />
-                </div>
-              );
-            }
-
-            if (isElegant) {
-              return (
-                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
-                  <img
-                    src="/assets/aistudio/Gemini_Generated_Image_76lmsq76lmsq76lm_f12a9bd7.jpg"
-                    alt="Round Elegant Classic - Fashions Finance"
-                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
-                  />
-                </div>
-              );
-            }
-
-            if (isHighFashion) {
-              return (
-                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
-                  <img
-                    src="/assets/aistudio/Gemini_Generated_Image_210s3d210s3d210s_b39d065b.jpg"
-                    alt="Round High Fashion - Fashions Finance"
-                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
-                  />
-                </div>
-              );
-            }
-
-            if (isMillionaires) {
-              return (
-                <div className="w-full max-w-[560px] mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-pink-300/60 bg-pink-50 relative group transition-all duration-300" id="detail-active-ribbon">
-                  <img
-                    src="/assets/aistudio/Gemini_Generated_Image_icag8zicag8zicag_1a7f0fe4.jpg"
-                    alt="Round of Millionaires - Fashions Finance"
-                    className="w-full h-auto object-cover block rounded-2xl sm:rounded-3xl shadow-sm"
-                  />
-                </div>
-              );
-            }
-
-            return (
-              <div className="w-full max-w-[560px] mx-auto bg-gradient-to-r from-[#ffe4ed] via-[#ffd6e6] to-[#fce4ec] text-slate-900 p-6 sm:p-8 rounded-3xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg border-2 border-pink-300/80" id="detail-active-ribbon">
-                <div className="absolute -top-10 -left-10 w-36 h-36 bg-pink-400/20 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute -bottom-10 -right-10 w-36 h-36 bg-rose-400/20 rounded-full blur-2xl pointer-events-none" />
-                
-                <div className="space-y-3 max-w-3xl mx-auto flex flex-col items-center text-center relative z-10 w-full">
-                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md border-2 ${
-                    currentSession.status === 'voting' 
-                      ? 'bg-gradient-to-r from-rose-950 via-pink-950 to-rose-950 text-amber-200 border-amber-300/80 shadow-[0_0_15px_rgba(244,63,94,0.3)]' 
-                      : 'bg-indigo-900 text-amber-100 border-amber-300/60'
-                  }`}>
-                    <span className="text-xs">🗳️</span>
-                    <span>{currentSession.status === 'voting' ? 'RDA VOTACIÓN ABIERTA' : '⏳ RECLUTANDO MIEMBROS (FALTAN ' + (10 - currentSession.participants.length) + ' MÁS PARA ABRIR VOTACIÓN)'}</span>
-                  </span>
-
-                  <div className="flex flex-wrap items-center justify-center gap-2.5 mt-1">
-                    <h3 className="text-2xl sm:text-3xl font-serif text-slate-900 flex items-center justify-center gap-2 tracking-wide">
-                      <span className="italic font-normal text-rose-800 font-serif">
-                        {roundCategoryTitle.toLowerCase().startsWith('round') ? 'Round' : 'Ronda'}
-                      </span>
-                      <span className="font-extrabold tracking-wider uppercase text-slate-900">
-                        {roundCategoryTitle.replace(/^round\s+/i, '').replace(/^ronda\s+/i, '')}
-                      </span>
-                    </h3>
-                    <span className="text-xs sm:text-sm font-serif font-black text-amber-950 bg-gradient-to-b from-amber-200 via-amber-300 to-amber-500 border-2 border-amber-400 px-3 py-1 rounded-full shadow-md">
-                      {getRoundReference(currentSession)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-center w-full max-w-md my-1">
-                    <div className="h-[1.5px] bg-gradient-to-r from-transparent via-rose-300 to-rose-400 flex-1" />
-                    <span className="px-3 text-xs text-rose-400 drop-shadow-sm">💎</span>
-                    <div className="h-[1.5px] bg-gradient-to-r from-rose-400 via-rose-300 to-transparent flex-1" />
-                  </div>
-
-                  <p className="text-sm font-serif text-slate-800 font-medium tracking-wide max-w-xl">
-                    {roundSubtitle}
-                  </p>
-
-                  <div className="mt-2 w-full max-w-2xl bg-white/90 backdrop-blur-md border-2 border-amber-300/80 rounded-full py-2.5 px-6 shadow-md flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-800">
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-serif text-slate-700">Fondo Acumulado:</span>
-                      <strong className="text-lg font-serif font-black text-rose-700">{currentSession.poolTotal}€</strong>
-                    </div>
-                    <div className="hidden sm:block w-[1.5px] h-5 bg-amber-400/80" />
-                    <span className="text-[11px] sm:text-xs text-slate-700 font-medium leading-tight">
-                      Una vez se alcancen los 10 participantes, se votará por los mejores proyectos. El ganador se lleva el <strong className="text-rose-700 font-bold">*80% del premio*</strong>.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
           {/* USER ACTION CARD: CHOOSE & JOIN ROUND (Shown when session is active to let user simulate/test payment) */}
           {(currentSession.status === 'filling' || currentSession.status === 'voting') && (
             <div className="p-5 bg-gradient-to-r from-indigo-50 to-indigo-100/30 rounded-2xl border border-indigo-200/60 space-y-4 shadow-3xs animate-fade-in" id="card-join-lobby">

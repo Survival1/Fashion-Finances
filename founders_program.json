@@ -1,0 +1,518 @@
+{
+  "config": {
+    "openingDate": "2026-11-18T14:30:49.871Z",
+    "launchDate": "2027-02-16T14:30:49.871Z",
+    "programClosed": false,
+    "packagePriceEur": 100000,
+    "currency": "EUR"
+  },
+  "positions": [
+    {
+      "number": 1,
+      "code": "001",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 2,
+      "code": "002",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 3,
+      "code": "003",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 4,
+      "code": "004",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 5,
+      "code": "005",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 6,
+      "code": "006",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 7,
+      "code": "007",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 8,
+      "code": "008",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 9,
+      "code": "009",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 10,
+      "code": "010",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 11,
+      "code": "011",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 12,
+      "code": "012",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 13,
+      "code": "013",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 14,
+      "code": "014",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 15,
+      "code": "015",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 16,
+      "code": "016",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 17,
+      "code": "017",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 18,
+      "code": "018",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 19,
+      "code": "019",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 20,
+      "code": "020",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 21,
+      "code": "021",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 22,
+      "code": "022",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 23,
+      "code": "023",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 24,
+      "code": "024",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 25,
+      "code": "025",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 26,
+      "code": "026",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 27,
+      "code": "027",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 28,
+      "code": "028",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 29,
+      "code": "029",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 30,
+      "code": "030",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 31,
+      "code": "031",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 32,
+      "code": "032",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 33,
+      "code": "033",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 34,
+      "code": "034",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 35,
+      "code": "035",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 36,
+      "code": "036",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 37,
+      "code": "037",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 38,
+      "code": "038",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 39,
+      "code": "039",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 40,
+      "code": "040",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 41,
+      "code": "041",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 42,
+      "code": "042",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 43,
+      "code": "043",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 44,
+      "code": "044",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 45,
+      "code": "045",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 46,
+      "code": "046",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 47,
+      "code": "047",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 48,
+      "code": "048",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 49,
+      "code": "049",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 50,
+      "code": "050",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 51,
+      "code": "051",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 52,
+      "code": "052",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 53,
+      "code": "053",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 54,
+      "code": "054",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 55,
+      "code": "055",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 56,
+      "code": "056",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 57,
+      "code": "057",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 58,
+      "code": "058",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 59,
+      "code": "059",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 60,
+      "code": "060",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 61,
+      "code": "061",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 62,
+      "code": "062",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 63,
+      "code": "063",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 64,
+      "code": "064",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 65,
+      "code": "065",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 66,
+      "code": "066",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 67,
+      "code": "067",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 68,
+      "code": "068",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 69,
+      "code": "069",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 70,
+      "code": "070",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 71,
+      "code": "071",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 72,
+      "code": "072",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 73,
+      "code": "073",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 74,
+      "code": "074",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 75,
+      "code": "075",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 76,
+      "code": "076",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 77,
+      "code": "077",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 78,
+      "code": "078",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 79,
+      "code": "079",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 80,
+      "code": "080",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 81,
+      "code": "081",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 82,
+      "code": "082",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 83,
+      "code": "083",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 84,
+      "code": "084",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 85,
+      "code": "085",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 86,
+      "code": "086",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 87,
+      "code": "087",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 88,
+      "code": "088",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 89,
+      "code": "089",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 90,
+      "code": "090",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 91,
+      "code": "091",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 92,
+      "code": "092",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 93,
+      "code": "093",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 94,
+      "code": "094",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 95,
+      "code": "095",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 96,
+      "code": "096",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 97,
+      "code": "097",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 98,
+      "code": "098",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 99,
+      "code": "099",
+      "status": "AVAILABLE"
+    },
+    {
+      "number": 100,
+      "code": "100",
+      "status": "AVAILABLE"
+    }
+  ],
+  "incidents": [],
+  "reservationsHistory": [],
+  "analytics": {
+    "pageViews": 4,
+    "reserveStarts": 0,
+    "cancelledOrRefundedCount": 0
+  }
+}

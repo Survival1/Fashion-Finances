@@ -1,5 +1,5 @@
 import React from 'react';
-import maleCrownImg from '../assets/images/crown_king_male.png';
+import maleCrownImg from '../assets/images/crown_king_male.webp';
 
 interface RoyalMaleCrownProps {
   className?: string;
