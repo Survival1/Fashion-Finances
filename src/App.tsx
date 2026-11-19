@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom';
 import { ModelProfile, UserSessionProfile, InvestmentSession, ProjectData, ChatMessage, FinancialMovement, HistoryWonRecord } from './types';
 import { seedInitialData, generateTop100Ranking, RankingModel } from './utils/seedData';
+import { clearAllContestParticipationStorage, isCurrentUserParticipant } from './utils/roundsDatabase';
 import { compressAndResizeImage } from './utils/imageCompressor';
 import { getOrAssignReferenceNumber, generateNextReferenceNumber } from './utils/referenceNumbers';
 import ModelGrid from './components/ModelGrid';
@@ -1230,6 +1231,48 @@ export default function App() {
         setRegSponsorId(sponsorParam.trim());
       }
     } catch (e) {}
+  }, []);
+
+  // Al pulsar "Cerrar Concurso": limpiar inmediatamente cualquier participación del usuario en todas las rondas
+  useEffect(() => {
+    const handleGlobalContestClosed = () => {
+      const activeProfile = userProfileRef.current;
+      clearAllContestParticipationStorage(activeProfile);
+      const currentSessions = sessionsRef.current;
+      if (!Array.isArray(currentSessions) || currentSessions.length === 0) return;
+      const seedSessions = seedInitialData().sessions;
+      let changed = false;
+      const nextSessions = currentSessions.map(sess => {
+        const hasUser = Array.isArray(sess.participants) && sess.participants.some(p => isCurrentUserParticipant(p, activeProfile));
+        if (!hasUser) return sess;
+        changed = true;
+        const freshSeed = seedSessions.find(fs => fs.id === sess.id);
+        if (freshSeed) return freshSeed;
+        return {
+          ...sess,
+          participants: sess.participants.filter(p => !isCurrentUserParticipant(p, activeProfile))
+        };
+      });
+      if (changed) {
+        sessionsRef.current = nextSessions;
+        setSessions(nextSessions);
+        if (activeProfile) {
+          saveStateToLocalStorage(
+            modelsRef.current,
+            activeProfile,
+            projectsRef.current,
+            nextSessions,
+            messages,
+            movementsRef.current,
+            historyWonLogRef.current
+          );
+        }
+      }
+    };
+    window.addEventListener('finanzas-contest-closed', handleGlobalContestClosed);
+    return () => {
+      window.removeEventListener('finanzas-contest-closed', handleGlobalContestClosed);
+    };
   }, []);
 
   // ⏸️ Detener y pausar toda la reproducción de vídeo y audio al cambiar de página
@@ -3054,7 +3097,7 @@ export default function App() {
                         setShowForgotPasswordView(false);
                         setShowLoginModal(false);
                       }}
-                      className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg transition text-xs font-bold font-sans cursor-pointer"
+                      className="custom-bg text-[#9d174d] hover:text-[#831843] bg-gradient-to-br from-[#fce7f3] to-white hover:from-[#fbcfe8] hover:to-white border border-[#f9a8d4] p-1.5 rounded-lg transition text-xs font-bold font-sans cursor-pointer"
                     >
                       ✕
                     </button>
@@ -3071,21 +3114,21 @@ export default function App() {
                         placeholder="Introduce tu correo electrónico registrado"
                         value={recoveryEmailInput}
                         onChange={(e) => setRecoveryEmailInput(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
+                        className="bg-gradient-to-r from-[#fce7f3] via-[#fdf2f8] to-white border border-[#f9a8d4] rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:from-[#fbcfe8]/70 focus:via-[#fdf2f8] focus:to-white focus:ring-2 focus:ring-[#fbcfe8] focus:border-[#f472b6] transition"
                       />
                     </div>
 
                     <div className="flex gap-2 pt-2">
                       <button
                         type="submit"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
+                        className="custom-bg flex-1 bg-gradient-to-r from-[#fbcfe8] via-[#fdf2f8] to-white hover:from-[#f9a8d4] hover:via-[#fce7f3] hover:to-white text-[#831843] border border-[#f472b6] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                       >
                         Enviar Credenciales
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowForgotPasswordView(false)}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
+                        className="custom-bg flex-1 bg-gradient-to-r from-white via-[#fdf2f8] to-[#fbcfe8] hover:from-white hover:via-[#fce7f3] hover:to-[#f9a8d4] text-[#831843] border border-[#f9a8d4] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                       >
                         Volver al Login
                       </button>
@@ -3110,7 +3153,7 @@ export default function App() {
                         setShowLoginModal(false);
                         setLoginPassword('');
                       }}
-                      className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg transition cursor-pointer font-bold text-xs"
+                      className="custom-bg text-[#9d174d] hover:text-[#831843] bg-gradient-to-br from-[#fce7f3] to-white hover:from-[#fbcfe8] hover:to-white border border-[#f9a8d4] p-1.5 rounded-lg transition cursor-pointer font-bold text-xs"
                     >
                       ✕
                     </button>
@@ -3122,14 +3165,14 @@ export default function App() {
                         Nombre de Usuario (Username)
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3.5 top-2.5 text-slate-400 font-mono text-xs select-none">@</span>
+                        <span className="absolute left-3.5 top-2.5 text-[#be185d]/70 font-mono text-xs select-none">@</span>
                         <input
                           type="text"
                           required
                           placeholder="ej. sophialoren, ernesto, o tu usuario"
                           value={loginUsername}
                           onChange={(e) => setLoginUsername(e.target.value)}
-                          className="bg-slate-50 border border-slate-200 rounded-xl w-full pl-8 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
+                          className="bg-gradient-to-r from-[#fce7f3] via-[#fdf2f8] to-white border border-[#f9a8d4] rounded-xl w-full pl-8 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:from-[#fbcfe8]/70 focus:via-[#fdf2f8] focus:to-white focus:ring-2 focus:ring-[#fbcfe8] focus:border-[#f472b6] transition"
                           autoFocus
                         />
                       </div>
@@ -3145,7 +3188,7 @@ export default function App() {
                         placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl w-full p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
+                        className="bg-gradient-to-r from-[#fce7f3] via-[#fdf2f8] to-white border border-[#f9a8d4] rounded-xl w-full p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:from-[#fbcfe8]/70 focus:via-[#fdf2f8] focus:to-white focus:ring-2 focus:ring-[#fbcfe8] focus:border-[#f472b6] transition"
                       />
                     </div>
 
@@ -3169,7 +3212,7 @@ export default function App() {
                     <div className="flex gap-2 pt-1 font-sans">
                       <button
                         type="submit"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
+                        className="custom-bg flex-1 bg-gradient-to-r from-[#fbcfe8] via-[#fdf2f8] to-white hover:from-[#f9a8d4] hover:via-[#fce7f3] hover:to-white text-[#831843] border border-[#f472b6] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                       >
                         Entrar al Panel
                       </button>
@@ -3179,7 +3222,7 @@ export default function App() {
                           setShowLoginModal(false);
                           setLoginPassword('');
                         }}
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
+                        className="custom-bg flex-1 bg-gradient-to-r from-white via-[#fdf2f8] to-[#fbcfe8] hover:from-white hover:via-[#fce7f3] hover:to-[#f9a8d4] text-[#831843] border border-[#f9a8d4] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                       >
                         Cancelar
                       </button>
@@ -5723,7 +5766,7 @@ export default function App() {
                       setShowForgotPasswordView(false);
                       setShowLoginModal(false);
                     }}
-                    className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg transition text-xs font-bold font-sans cursor-pointer"
+                    className="custom-bg text-[#9d174d] hover:text-[#831843] bg-gradient-to-br from-[#fce7f3] to-white hover:from-[#fbcfe8] hover:to-white border border-[#f9a8d4] p-1.5 rounded-lg transition text-xs font-bold font-sans cursor-pointer"
                   >
                     ✕
                   </button>
@@ -5740,21 +5783,21 @@ export default function App() {
                       placeholder="Introduce tu correo electrónico registrado"
                       value={recoveryEmailInput}
                       onChange={(e) => setRecoveryEmailInput(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
+                      className="bg-gradient-to-r from-[#fce7f3] via-[#fdf2f8] to-white border border-[#f9a8d4] rounded-xl w-full px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:from-[#fbcfe8]/70 focus:via-[#fdf2f8] focus:to-white focus:ring-2 focus:ring-[#fbcfe8] focus:border-[#f472b6] transition"
                     />
                   </div>
 
                   <div className="flex gap-2 pt-2">
                     <button
                       type="submit"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
+                      className="custom-bg flex-1 bg-gradient-to-r from-[#fbcfe8] via-[#fdf2f8] to-white hover:from-[#f9a8d4] hover:via-[#fce7f3] hover:to-white text-[#831843] border border-[#f472b6] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                     >
                       Enviar Credenciales
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowForgotPasswordView(false)}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
+                      className="custom-bg flex-1 bg-gradient-to-r from-white via-[#fdf2f8] to-[#fbcfe8] hover:from-white hover:via-[#fce7f3] hover:to-[#f9a8d4] text-[#831843] border border-[#f9a8d4] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                     >
                       Volver
                     </button>
@@ -5779,7 +5822,7 @@ export default function App() {
                       setShowLoginModal(false);
                       setLoginPassword('');
                     }}
-                    className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg transition cursor-pointer font-bold text-xs"
+                    className="custom-bg text-[#9d174d] hover:text-[#831843] bg-gradient-to-br from-[#fce7f3] to-white hover:from-[#fbcfe8] hover:to-white border border-[#f9a8d4] p-1.5 rounded-lg transition cursor-pointer font-bold text-xs"
                   >
                     ✕
                   </button>
@@ -5791,14 +5834,14 @@ export default function App() {
                       Nombre de Usuario (Username)
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-slate-400 font-mono text-xs select-none">@</span>
+                      <span className="absolute left-3.5 top-2.5 text-[#be185d]/70 font-mono text-xs select-none">@</span>
                       <input
                         type="text"
                         required
                         placeholder="ej. sophialoren, ernesto, o tu usuario"
                         value={loginUsername}
                         onChange={(e) => setLoginUsername(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl w-full pl-8 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
+                        className="bg-gradient-to-r from-[#fce7f3] via-[#fdf2f8] to-white border border-[#f9a8d4] rounded-xl w-full pl-8 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:from-[#fbcfe8]/70 focus:via-[#fdf2f8] focus:to-white focus:ring-2 focus:ring-[#fbcfe8] focus:border-[#f472b6] transition"
                         autoFocus
                       />
                     </div>
@@ -5814,7 +5857,7 @@ export default function App() {
                       placeholder="••••••••"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-xl w-full px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition"
+                      className="bg-gradient-to-r from-[#fce7f3] via-[#fdf2f8] to-white border border-[#f9a8d4] rounded-xl w-full px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:from-[#fbcfe8]/70 focus:via-[#fdf2f8] focus:to-white focus:ring-2 focus:ring-[#fbcfe8] focus:border-[#f472b6] transition"
                     />
                   </div>
 
@@ -5830,7 +5873,7 @@ export default function App() {
                   <div className="flex gap-2 pt-2">
                     <button
                       type="submit"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition cursor-pointer text-center"
+                      className="custom-bg flex-1 bg-gradient-to-r from-[#fbcfe8] via-[#fdf2f8] to-white hover:from-[#f9a8d4] hover:via-[#fce7f3] hover:to-white text-[#831843] border border-[#f472b6] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                     >
                       Entrar al Panel
                     </button>
@@ -5840,7 +5883,7 @@ export default function App() {
                         setShowLoginModal(false);
                         setLoginPassword('');
                       }}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer text-center"
+                      className="custom-bg flex-1 bg-gradient-to-r from-white via-[#fdf2f8] to-[#fbcfe8] hover:from-white hover:via-[#fce7f3] hover:to-[#f9a8d4] text-[#831843] border border-[#f9a8d4] font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition cursor-pointer text-center"
                     >
                       Cancelar
                     </button>

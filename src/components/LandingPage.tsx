@@ -23,7 +23,7 @@ import FashionRankingSlider from './FashionRankingSlider';
 import HeroPresentationVideo from './HeroPresentationVideo';
 import LanguageTranslatorDropdown from './LanguageTranslatorDropdown';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
-import heroGlamourWhiteEn from '../assets/images/hero_glamour_white_en_1794573754880.webp';
+import heroGlamourCleanBg from '../assets/images/hero_glamour_white_clean_bg.webp';
 import ctaCrownOrnament from '../assets/images/cta_crown_isolated_1794577537132.jpg';
 import ctaDiamondOrnament from '../assets/images/cta_diamond_isolated_1794577536243.jpg';
 import {
@@ -200,10 +200,10 @@ export default function LandingPage({
 
         {/* Seamless Borderless Hero Artwork blended into white background */}
         <div className="w-full bg-white pt-4 sm:pt-6 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto relative w-full overflow-hidden bg-white">
+          <div className="max-w-4xl mx-auto relative w-full overflow-hidden bg-white [container-type:inline-size]">
             <img
-              src={heroGlamourWhiteEn}
-              alt="We are a community of models united to sponsor elite companies, investors, and entrepreneurs."
+              src={heroGlamourCleanBg}
+              alt="Fashion Finances"
               referrerPolicy="no-referrer"
               className="w-full h-auto block select-none pointer-events-none"
               draggable={false}
@@ -215,40 +215,73 @@ export default function LandingPage({
             <div className="pointer-events-none absolute inset-x-0 top-0 h-5 sm:h-8 bg-gradient-to-b from-white via-white/30 to-transparent" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 sm:h-10 bg-gradient-to-t from-white via-white/40 to-transparent" />
 
-            {/* Translated editorial headline overlay only when user switches to FR / DE */}
-            {(appLanguage === 'fr' || appLanguage === 'de') && (
-              <div
-                data-no-translate="true"
-                className="absolute left-[26%] right-[26%] top-[23%] bottom-[26%] bg-white/95 rounded-full flex items-center justify-center px-3 sm:px-6 text-center"
+            {/* Independent editorial headline layer so all text is real DOM text translatable across ES / EN / FR / DE */}
+            <div
+              data-no-translate="true"
+              className="absolute left-[26%] right-[25%] top-[23%] bottom-[30.5%] flex items-center justify-center text-center px-1 sm:px-2 z-10"
+            >
+              <h1
+                className={`font-display font-semibold text-[#161e2c] leading-[1.16] tracking-[-0.015em] ${
+                  appLanguage === 'fr'
+                    ? 'text-[clamp(10px,3.05cqi,28px)]'
+                    : appLanguage === 'en'
+                    ? 'text-[clamp(11px,3.55cqi,33px)]'
+                    : 'text-[clamp(11px,3.3cqi,31px)]'
+                }`}
               >
-                <h2 className="font-serif font-medium text-slate-950 text-[11px] xs:text-sm sm:text-xl md:text-2xl lg:text-[28px] leading-[1.2] tracking-tight">
-                  {appLanguage === 'fr' && (
-                    <>
-                      Nous sommes une communauté de <span className="text-[#E6007A] font-bold">mannequins</span> unies pour sponsoriser les{' '}
-                      <span className="text-[#E6007A] font-bold">entreprises</span>,{' '}
-                      <span className="text-[#E6007A] font-bold">investisseurs</span> et{' '}
-                      <span className="text-[#E6007A] font-bold">entrepreneurs</span> d’élite.
-                    </>
-                  )}
-                  {appLanguage === 'de' && (
-                    <>
-                      Wir sind eine Community von <span className="text-[#E6007A] font-bold">Models</span>, die vereint Elite-
-                      <span className="text-[#E6007A] font-bold">Unternehmen</span>,{' '}
-                      <span className="text-[#E6007A] font-bold">Investoren</span> und{' '}
-                      <span className="text-[#E6007A] font-bold">Gründer</span> sponsert.
-                    </>
-                  )}
-                </h2>
-              </div>
-            )}
+                {appLanguage === 'es' && (
+                  <>
+                    Somos una comunidad de{' '}
+                    <span className="text-[#C25A8B] font-bold">modelos</span>{' '}
+                    unidas para patrocinar{' '}
+                    <span className="text-[#C25A8B] font-bold">empresas</span>,{' '}
+                    <span className="text-[#C25A8B] font-bold">inversores</span> y{' '}
+                    <span className="text-[#C25A8B] font-bold">emprendedores</span>{' '}
+                    de élite.
+                  </>
+                )}
+                {appLanguage === 'en' && (
+                  <>
+                    We are a community of{' '}
+                    <span className="text-[#C25A8B] font-bold">models</span>{' '}
+                    united to sponsor elite{' '}
+                    <span className="text-[#C25A8B] font-bold">companies</span>,{' '}
+                    <span className="text-[#C25A8B] font-bold">investors</span>, and{' '}
+                    <span className="text-[#C25A8B] font-bold">entrepreneurs</span>.
+                  </>
+                )}
+                {appLanguage === 'fr' && (
+                  <>
+                    Nous sommes une communauté de{' '}
+                    <span className="text-[#C25A8B] font-bold">mannequins</span>{' '}
+                    unies pour sponsoriser les{' '}
+                    <span className="text-[#C25A8B] font-bold">entreprises</span>,{' '}
+                    <span className="text-[#C25A8B] font-bold">investisseurs</span> et{' '}
+                    <span className="text-[#C25A8B] font-bold">entrepreneurs</span>{' '}
+                    d’élite.
+                  </>
+                )}
+                {appLanguage === 'de' && (
+                  <>
+                    Wir sind eine Community von{' '}
+                    <span className="text-[#C25A8B] font-bold">Models</span>, die vereint Elite-
+                    <span className="text-[#C25A8B] font-bold">Unternehmen</span>,{' '}
+                    <span className="text-[#C25A8B] font-bold">Investoren</span> und{' '}
+                    <span className="text-[#C25A8B] font-bold">Gründer</span> sponsert.
+                  </>
+                )}
+              </h1>
+            </div>
           </div>
         </div>
 
         {/* Background decorative blurry circles for lower hero block */}
         <div className="max-w-4xl mx-auto text-center space-y-8 pt-8 sm:pt-12 px-6 relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-semibold uppercase tracking-wider animate-pulse">
-            <Sparkles className="w-3 h-3 text-indigo-500" />
-            <span>La Fusión Definitiva de Moda y Finanzas Colectivas</span>
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-[#fdf2f8]/80 border border-[#fbcfe8] text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider shadow-2xs">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 animate-pearl-to-rosa-pink-icon" />
+            <span className="animate-pearl-to-rosa-pink-text">
+              La Fusión Definitiva de Moda y Finanzas Colectivas
+            </span>
           </div>
 
           {/* Vídeo Oficial de Presentación con generoso espacio en blanco superior */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { pushAppNotification } from './NotificationCenterModal';
+import { clearAllContestParticipationStorage } from '../utils/roundsDatabase';
 import { 
   BALMAIN_LOGO_DATA_URL, 
   CHANEL_LOGO_DATA_URL, 
@@ -905,6 +906,7 @@ export default function SessionResultsPodium({
   const [activeWinnerIndex, setActiveWinnerIndex] = useState(0);
   const [isSimulatedFiveWinners, setIsSimulatedFiveWinners] = useState(false);
   const lastBottomScrollTimeRef = useRef<number>(0);
+  const podiumRootRef = useRef<HTMLDivElement>(null);
 
   // Immediately cancel any active speech synthesis and set pending contest close when results page mounts
   useEffect(() => {
@@ -940,9 +942,10 @@ export default function SessionResultsPodium({
   // 🎯 Desplazamiento fluido y confiable con la rueda del ratón y teclado en la pantalla de resultados (permanece fija)
   useEffect(() => {
     const handleGlobalWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('#full-project-dossier-modal')) return;
       const wrapper = document.getElementById('podium-scrollable-content-wrapper');
       if (!wrapper) return;
-      const target = e.target as HTMLElement;
       if (target && (target.closest('#finanzas-results-in-channel') || target.closest('#podium-scrollable-content-wrapper') || target.closest('#podium-results-screen') || target.closest('[id^="finanzas-results-in-channel"]'))) {
         // 🛑 La página de resultados permanece FIJA en pantalla.
         // Permitir desplazarse cómodamente con el ratón hasta abajo del todo.
@@ -955,6 +958,26 @@ export default function SessionResultsPodium({
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
       if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+      const dossierScrollBody = document.getElementById('full-project-dossier-scroll-body');
+      if (dossierScrollBody) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setSelectedFullProject(null);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          dossierScrollBody.scrollBy({ top: 80, behavior: 'auto' });
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          dossierScrollBody.scrollBy({ top: -80, behavior: 'auto' });
+        } else if (e.key === 'PageDown' || e.key === ' ') {
+          e.preventDefault();
+          dossierScrollBody.scrollBy({ top: 260, behavior: 'auto' });
+        } else if (e.key === 'PageUp') {
+          e.preventDefault();
+          dossierScrollBody.scrollBy({ top: -260, behavior: 'auto' });
+        }
+        return;
+      }
       const wrapper = document.getElementById('podium-scrollable-content-wrapper');
       if (!wrapper) return;
 
@@ -1683,6 +1706,7 @@ export default function SessionResultsPodium({
 
   return (
     <div 
+      ref={podiumRootRef}
       className="bg-[#fff0f3] text-slate-900 rounded-none border-0 px-[1px] py-3 pb-6 sm:pb-8 space-y-5 animate-fade-in text-left relative w-full max-w-full overflow-x-hidden min-h-full box-border touch-pan-y overscroll-contain scrollbar-none no-scrollbar" 
       id="podium-results-screen"
       style={{ backgroundColor: '#fff0f3' }}
@@ -2878,43 +2902,14 @@ export default function SessionResultsPodium({
         
         <button
            onClick={() => {
-             // Clear all participation state so the user is no longer enrolled as a participant
+             // Clear all participation state across EVERY round so the user is no longer enrolled anywhere
              try {
-               localStorage.removeItem('finanzas_user_participating');
-               localStorage.removeItem('user_paid_finanzas_session');
-               localStorage.removeItem('finanzas_target_session_id');
-               localStorage.removeItem('finanzas_user_slot_index');
-               localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-               localStorage.removeItem('user_paid_session_sess-emprendedores-1');
-               localStorage.removeItem('user_paid_session_sess-empresarios-1');
-               localStorage.removeItem('user_paid_session_sess-topmodels-1');
-               localStorage.removeItem('user_paid_session_sess-inversores-1');
-               localStorage.removeItem('user_paid_session_sess-millonarios-1');
+               clearAllContestParticipationStorage(userProfile);
 
                const activeSessId = (completedSessionToDisplay as any)?.id || 'sess-trabajadores-1';
                localStorage.removeItem(`finanzas_is_voting_phase_active_${activeSessId}`);
                localStorage.setItem(`finanzas_is_voting_phase_active_${activeSessId}`, 'false');
                localStorage.removeItem('finanzas_is_voting_phase_active');
-
-               const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
-               if (saved) {
-                 const parsed = JSON.parse(saved);
-                 if (Array.isArray(parsed)) {
-                   const cleaned = parsed.map((sess: any) => ({
-                     ...sess,
-                     participants: Array.isArray(sess.participants)
-                       ? sess.participants.filter((p: any) =>
-                           !p.name?.includes('Adriana') &&
-                           !p.name?.includes('(Tú)') &&
-                           p.id !== 'user-adriana' &&
-                           p.id !== userProfile?.id &&
-                           !p.isSelf
-                         )
-                       : sess.participants
-                   }));
-                   localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(cleaned));
-                 }
-               }
              } catch (e) {}
 
              if (onFinishParticipationSession) {
@@ -2925,7 +2920,7 @@ export default function SessionResultsPodium({
                setIsCastingPublished(false);
              }
              try {
-               localStorage.removeItem('finanzas_contest_pending_close');
+               clearAllContestParticipationStorage(userProfile);
                window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
                window.dispatchEvent(new Event('storage'));
                window.dispatchEvent(new CustomEvent('tiktok-feed-scroll-round', { detail: { direction: 'next', force: true } }));
@@ -2939,335 +2934,351 @@ export default function SessionResultsPodium({
         </button>
       </div>
 
-      {/* FULL WINNING PROJECT DOSSIER MODAL EMBEDDED INSIDE CHANNEL */}
-      {selectedFullProject && typeof document !== 'undefined' && createPortal(
-        <div
-          className="fixed inset-0 z-[99999] flex items-start justify-center p-2 sm:p-4 pt-2 sm:pt-4 overflow-y-auto overflow-x-hidden backdrop-blur-md bg-slate-950/70 animate-fade-in"
-          id="full-project-dossier-modal"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setSelectedFullProject(null);
-            }
-          }}
-          onWheel={(e) => e.stopPropagation()}
-        >
-          <div className="bg-white border border-pink-200 rounded-2xl sm:rounded-3xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[calc(100dvh-16px)] sm:max-h-[calc(100dvh-32px)] overflow-hidden animate-scale-up text-left mt-0">
-            
-            {/* Modal Header */}
-            <div className="p-3.5 sm:p-6 pr-12 sm:pr-14 border-b border-pink-100 bg-[#fffbfc] relative shrink-0">
-              <button 
-                type="button" 
-                onClick={() => setSelectedFullProject(null)}
-                className="custom-bg absolute top-3.5 right-3.5 sm:top-4 sm:right-4 text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none transition cursor-pointer"
-                title="Cerrar Dossier"
-                id="close-dossier-button"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      {/* FULL WINNING PROJECT DOSSIER MODAL EMBEDDED INSIDE PHONE SCREEN */}
+      {selectedFullProject && (() => {
+        const phoneScreenContainer =
+          (podiumRootRef.current?.closest('#finanzas-results-in-channel') as HTMLElement | null) ||
+          (typeof document !== 'undefined' ? document.getElementById('finanzas-results-in-channel') : null);
+
+        const dossierModalNode = (
+          <div
+            className="absolute inset-0 z-[150] flex flex-col w-full h-full max-h-full p-2 overflow-hidden backdrop-blur-sm bg-slate-950/60 animate-fade-in pointer-events-auto box-border"
+            id="full-project-dossier-modal"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedFullProject(null);
+              }
+            }}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="bg-white border border-pink-200 rounded-2xl w-full h-full max-h-full shadow-2xl relative flex flex-col overflow-hidden animate-scale-up text-left">
               
-              <div className="flex items-center gap-1.5 text-[8.5px] font-black uppercase text-[#be185d]">
-                <FileText className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                <span>DOSSIER DE REGISTRO OFICIAL - PORTAL DE PROYECTOS</span>
+              {/* Modal Header */}
+              <div className="p-3.5 pr-11 border-b border-pink-100 bg-[#fffbfc] relative shrink-0">
+                <button 
+                  type="button" 
+                  onClick={() => setSelectedFullProject(null)}
+                  className="custom-bg absolute top-3 right-3 text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full w-7 h-7 flex items-center justify-center focus:outline-none transition cursor-pointer"
+                  title="Cerrar Dossier"
+                  id="close-dossier-button"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                
+                <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-[#be185d] leading-tight">
+                  <FileText className="w-3 h-3 text-pink-500 shrink-0" />
+                  <span className="break-words">DOSSIER DE REGISTRO OFICIAL - PORTAL DE PROYECTOS</span>
+                </div>
+                
+                <h3 className="text-base font-serif font-black text-slate-900 mt-1 tracking-wide leading-snug break-words">
+                  {selectedFullProject.title}
+                </h3>
+                <p className="text-[10px] font-semibold text-pink-600 font-mono mt-0.5 break-words">
+                  CATEGORÍA REGISTRADA: {selectedFullProject.category.toUpperCase()}
+                </p>
               </div>
-              
-              <h3 className="text-lg sm:text-2xl font-serif font-black text-slate-900 mt-1.5 sm:mt-2 tracking-wide leading-tight break-words">
-                {selectedFullProject.title}
-              </h3>
-              <p className="text-[11px] sm:text-xs font-semibold text-pink-600 font-mono mt-1 break-words">
-                CATEGORÍA REGISTRADA: {selectedFullProject.category.toUpperCase()}
-              </p>
-            </div>
 
-            {/* Modal Navigation Tabs */}
-            <div className="bg-slate-50 border-b border-pink-100 px-2 sm:px-6 py-2 grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 shrink-0 w-full">
-              <button
-                type="button"
-                onClick={() => setActiveModalTab('info')}
-                className={`custom-bg px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0 w-full sm:w-auto ${
-                  activeModalTab === 'info' 
-                    ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
-                    : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-slate-100 border border-slate-200/70'
-                }`}
-                id="tab-label-info"
+              {/* Modal Navigation Tabs */}
+              <div className="bg-slate-50 border-b border-pink-100 px-2 py-2 grid grid-cols-3 gap-1.5 shrink-0 w-full">
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('info')}
+                  className={`custom-bg px-1.5 py-2 rounded-xl text-[9.5px] font-bold transition cursor-pointer flex flex-col items-center justify-center gap-1 text-center leading-tight min-w-0 w-full ${
+                    activeModalTab === 'info' 
+                      ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
+                      : 'text-slate-600 hover:text-slate-900 bg-white/80 hover:bg-slate-100 border border-slate-200/70'
+                  }`}
+                  id="tab-label-info"
+                >
+                  <Info className="w-3.5 h-3.5 shrink-0" />
+                  <span className="break-words">Paso 1: Información Básica</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('financial')}
+                  className={`custom-bg px-1.5 py-2 rounded-xl text-[9.5px] font-bold transition cursor-pointer flex flex-col items-center justify-center gap-1 text-center leading-tight min-w-0 w-full ${
+                    activeModalTab === 'financial' 
+                      ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
+                      : 'text-slate-600 hover:text-slate-900 bg-white/80 hover:bg-slate-100 border border-slate-200/70'
+                  }`}
+                  id="tab-label-financial"
+                >
+                  <Coins className="w-3.5 h-3.5 shrink-0" />
+                  <span className="break-words">Paso 2: Estructura Financiera</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('team')}
+                  className={`custom-bg px-1.5 py-2 rounded-xl text-[9.5px] font-bold transition cursor-pointer flex flex-col items-center justify-center gap-1 text-center leading-tight min-w-0 w-full ${
+                    activeModalTab === 'team' 
+                      ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
+                      : 'text-slate-600 hover:text-slate-900 bg-white/80 hover:bg-slate-100 border border-slate-200/70'
+                  }`}
+                  id="tab-label-team"
+                >
+                  <Users className="w-3.5 h-3.5 shrink-0" />
+                  <span className="break-words">Paso 3: Equipo Creativo</span>
+                </button>
+              </div>
+
+              {/* Modal Scrollable Content Container */}
+              <div
+                id="full-project-dossier-scroll-body"
+                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3.5 space-y-4 podium-results-scrollbar touch-pan-y overscroll-contain"
               >
-                <Info className="w-3.5 h-3.5 shrink-0" />
-                <span className="break-words">Paso 1: Información Básica</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModalTab('financial')}
-                className={`custom-bg px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0 w-full sm:w-auto ${
-                  activeModalTab === 'financial' 
-                    ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
-                    : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-slate-100 border border-slate-200/70'
-                }`}
-                id="tab-label-financial"
-              >
-                <Coins className="w-3.5 h-3.5 shrink-0" />
-                <span className="break-words">Paso 2: Estructura Financiera</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModalTab('team')}
-                className={`custom-bg px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0 w-full sm:w-auto ${
-                  activeModalTab === 'team' 
-                    ? 'bg-gradient-to-r from-white via-pink-150 to-pink-500 text-slate-950 border border-pink-300 shadow-sm font-black' 
-                    : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-slate-100 border border-slate-200/70'
-                }`}
-                id="tab-label-team"
-              >
-                <Users className="w-3.5 h-3.5 shrink-0" />
-                <span className="break-words">Paso 3: Equipo Creativo</span>
-              </button>
-            </div>
-
-            {/* Modal Scrollable Content Container */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 space-y-5">
-              
-              {/* TAB 1: INFORMACIÓN BÁSICA */}
-              {activeModalTab === 'info' && (
-                <div className="space-y-5 animate-fade-in text-slate-700">
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                      <span>Resumen de la Propuesta / Estilo</span>
-                    </h4>
-                    <p className="text-xs text-slate-800 leading-relaxed font-semibold bg-pink-50/20 p-4 border border-pink-100/30 rounded-2xl italic">
-                      "{selectedFullProject.descriptionShort}"
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider">
-                      DESCRIPCIÓN EXTENDIDA (DOSSIER COMPLETO DE MARCA)
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      {selectedFullProject.descriptionLong}
-                    </p>
-                  </div>
-
-                  {/* Contact Info Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="p-3 bg-white border border-slate-150 rounded-2xl space-y-1 min-w-0">
-                      <p className="text-[9px] font-black text-slate-400 font-mono uppercase tracking-wider">CORREO ELECTRÓNICO OFICIAL</p>
-                      <p className="text-xs font-bold text-slate-750 flex items-center gap-1.5 leading-normal min-w-0">
-                        <Mail className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                        <a href={`mailto:${selectedFullProject.contactEmail}`} className="hover:underline hover:text-pink-600 break-all">
-                          {selectedFullProject.contactEmail}
-                        </a>
-                      </p>
-                    </div>
-                    <div className="p-3 bg-white border border-slate-150 rounded-2xl space-y-1 min-w-0">
-                      <p className="text-[9px] font-black text-slate-400 font-mono uppercase tracking-wider">TELÉFONO DE CONTACTO OFICIAL</p>
-                      <p className="text-xs font-bold text-slate-750 flex items-center gap-1.5 leading-normal min-w-0">
-                        <Phone className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                        <span className="break-all">{selectedFullProject.contactPhone}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Multimedia Attachments lists */}
-                  {selectedFullProject.videos && selectedFullProject.videos.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider">
-                        VÍDEO PROMOCIONAL ADJUNTO
+                
+                {/* TAB 1: INFORMACIÓN BÁSICA */}
+                {activeModalTab === 'info' && (
+                  <div className="space-y-4 animate-fade-in text-slate-700">
+                    <div className="space-y-1.5">
+                      <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                        <span>Resumen de la Propuesta / Estilo</span>
                       </h4>
-                      <div className="aspect-video w-full max-w-lg mx-auto bg-slate-950 rounded-2xl overflow-hidden shadow-md border border-slate-100">
-                        {/* Elegant interactive video element */}
-                        <video 
-                          src={selectedFullProject.videos[0]} 
-                          controls 
-                          muted 
-                          className="w-full h-full object-cover" 
-                        />
+                      <p className="text-xs text-slate-800 leading-relaxed font-semibold bg-pink-50/30 p-3 border border-pink-100/50 rounded-xl italic">
+                        "{selectedFullProject.descriptionShort}"
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider">
+                        DESCRIPCIÓN EXTENDIDA (DOSSIER COMPLETO DE MARCA)
+                      </h4>
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        {selectedFullProject.descriptionLong}
+                      </p>
+                    </div>
+
+                    {/* Contact Info Stack */}
+                    <div className="grid grid-cols-1 gap-2.5">
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1 min-w-0">
+                        <p className="text-[8.5px] font-black text-slate-400 font-mono uppercase tracking-wider">CORREO ELECTRÓNICO OFICIAL</p>
+                        <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5 leading-normal min-w-0">
+                          <Mail className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                          <a href={`mailto:${selectedFullProject.contactEmail}`} className="hover:underline hover:text-pink-600 break-all">
+                            {selectedFullProject.contactEmail}
+                          </a>
+                        </p>
+                      </div>
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-1 min-w-0">
+                        <p className="text-[8.5px] font-black text-slate-400 font-mono uppercase tracking-wider">TELÉFONO DE CONTACTO OFICIAL</p>
+                        <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5 leading-normal min-w-0">
+                          <Phone className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                          <span className="break-all">{selectedFullProject.contactPhone}</span>
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
 
-              {/* TAB 2: ESTRUCTURA FINANCIERA */}
-              {activeModalTab === 'financial' && (
-                <div className="space-y-6 animate-fade-in text-slate-700">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-[#fffdfd] to-[#fffbfc] border border-pink-200 p-4 rounded-2xl space-y-1">
-                      <span className="text-[9px] font-black text-slate-400 font-mono uppercase tracking-widest block font-sans">PRESUPUESTO ESTIMADO GENERAL</span>
-                      <span className="text-xl font-bold font-serif text-slate-900 block mt-1">
-                        {selectedFullProject.budget.toLocaleString()}€
-                      </span>
-                      <p className="text-[10px] text-slate-400 leading-normal">Total calculado preliminar para costeo operativo del desfile.</p>
+                    {/* Multimedia Attachments lists */}
+                    {selectedFullProject.videos && selectedFullProject.videos.length > 0 && (
+                      <div className="space-y-2 pt-1">
+                        <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider">
+                          VÍDEO PROMOCIONAL ADJUNTO
+                        </h4>
+                        <div className="aspect-video w-full bg-slate-950 rounded-xl overflow-hidden shadow-md border border-slate-100">
+                          {/* Elegant interactive video element */}
+                          <video 
+                            src={selectedFullProject.videos[0]} 
+                            controls 
+                            muted 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB 2: ESTRUCTURA FINANCIERA */}
+                {activeModalTab === 'financial' && (
+                  <div className="space-y-4 animate-fade-in text-slate-700">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="bg-gradient-to-br from-[#fffdfd] to-[#fffbfc] border border-pink-200 p-3 rounded-xl space-y-1 min-w-0">
+                        <span className="text-[8px] font-black text-slate-400 font-mono uppercase tracking-wider block font-sans leading-tight">PRESUPUESTO ESTIMADO</span>
+                        <span className="text-base font-bold font-serif text-slate-900 block mt-0.5 break-words">
+                          {selectedFullProject.budget.toLocaleString()}€
+                        </span>
+                        <p className="text-[9.5px] text-slate-400 leading-snug">Costeo operativo preliminar del desfile.</p>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-[#fffdfd] to-[#fffbfc] border border-pink-200 p-3 rounded-xl space-y-1 min-w-0">
+                        <span className="text-[8px] font-black text-[#be185d] font-mono uppercase tracking-wider block font-sans leading-tight">META DE FINANCIAMIENTO</span>
+                        <span className="text-base font-bold font-serif text-[#be185d] block mt-0.5 break-words">
+                          {selectedFullProject.fundingGoal ? selectedFullProject.fundingGoal.toLocaleString() : (selectedFullProject.budget * 1.3).toLocaleString()}€
+                        </span>
+                        <p className="text-[9.5px] text-slate-500 leading-snug">Mínimo para desarrollo industrial.</p>
+                      </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-[#fffdfd] to-[#fffbfc] border border-pink-200 p-4 rounded-2xl space-y-1">
-                      <span className="text-[9px] font-black text-[#be185d] font-mono uppercase tracking-widest block font-sans">META DE FINANCIAMIENTO COMPLETO</span>
-                      <span className="text-xl font-bold font-serif text-[#be185d] block mt-1">
-                        {selectedFullProject.fundingGoal ? selectedFullProject.fundingGoal.toLocaleString() : (selectedFullProject.budget * 1.3).toLocaleString()}€
-                      </span>
-                      <p className="text-[10px] text-slate-500 leading-normal">Mínimo sugerido para desarrollo industrial secundario.</p>
+                    <div className="space-y-1.5 bg-[#fffcfc] p-3 border border-pink-100/60 rounded-xl">
+                      <h4 className="text-[9.5px] font-extrabold text-[#be185d] font-sans uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🎯</span> OBJETIVO ESTRATÉGICO GENERAL
+                      </h4>
+                      <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                        {selectedFullProject.objective}
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="space-y-2 bg-[#fffcfc] p-4 border border-pink-100/50 rounded-2xl">
-                    <h4 className="text-[10px] font-extrabold text-[#be185d] font-sans uppercase tracking-wider flex items-center gap-1.5">
-                      <span>🎯</span> OBJETIVO ESTRATÉGICO GENERAL
-                    </h4>
-                    <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                      {selectedFullProject.objective}
-                    </p>
-                  </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider">
+                        PLAN DESTINADO DEL USO DE FONDOS OBTENIDOS
+                      </h4>
+                      <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        {selectedFullProject.fundUsage}
+                      </p>
+                    </div>
 
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider">
-                      PLAN DESTINADO DEL USO DE FONDOS OBTENIDOS
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      {selectedFullProject.fundUsage}
-                    </p>
-                  </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider">
+                        CRONOGRAMA DE IMPLANTACIÓN Y HITOS CRÍTICOS
+                      </h4>
+                      <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100 whitespace-pre-line">
+                        {selectedFullProject.timeline}
+                      </p>
+                    </div>
 
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider">
-                      CRONOGRAMA DE IMPLANTACIÓN Y HITOS CRÍTICOS
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100 whitespace-pre-line">
-                      {selectedFullProject.timeline}
-                    </p>
-                  </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider">
+                        DESGLOSE DETALLADO DE GASTOS ASOCIADOS
+                      </h4>
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 font-mono text-[11px]">
+                        {selectedFullProject.budgetBreakdown ? (
+                          <p className="text-slate-700 whitespace-pre-line leading-relaxed break-words">
+                            {selectedFullProject.budgetBreakdown}
+                          </p>
+                        ) : (
+                          <p className="text-slate-400 italic">No se registró desglose pormenorizado.</p>
+                        )}
+                      </div>
+                    </div>
 
-                  <div className="space-y-3">
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider">
-                      DESGLOSE DETALLADO DE GASTOS ASOCIADOS
-                    </h4>
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 font-mono text-xs">
-                      {selectedFullProject.budgetBreakdown ? (
-                        <p className="text-slate-650 whitespace-pre-line leading-relaxed">
-                          {selectedFullProject.budgetBreakdown}
-                        </p>
+                    <div className="p-3 bg-pink-50/30 border border-pink-100 rounded-xl flex flex-col items-start gap-2.5 text-xs">
+                      <div className="flex items-start gap-2">
+                        <FileText className="w-4 h-4 text-pink-500 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-800 leading-snug">Dossier de Viabilidad y Auditoría Adjunto</p>
+                          <p className="text-[10px] text-slate-400 font-medium leading-snug">Firma electrónica de pasarela de alta costura validada.</p>
+                        </div>
+                      </div>
+                      {selectedFullProject.documentationName ? (
+                        <a 
+                          href={selectedFullProject.documentationUrl || "#"} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[10px] rounded-lg tracking-wide border border-slate-200 transition inline-flex items-center gap-1 uppercase max-w-full"
+                        >
+                          <span className="truncate">📂 Descargar: {selectedFullProject.documentationName}</span>
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                        </a>
                       ) : (
-                        <p className="text-slate-400 italic">No se registró desglose pormenorizado.</p>
+                        <span className="text-[10px] text-slate-400 font-mono italic">No se adjuntaron anexos.</span>
                       )}
                     </div>
                   </div>
+                )}
 
-                  <div className="p-3 bg-pink-50/30 border border-pink-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-pink-500 flex-shrink-0" />
-                      <div>
-                        <p className="font-extrabold text-slate-800">Dossier de Viabilidad y Auditoría Adjunto</p>
-                        <p className="text-[10px] text-slate-400 font-medium">Firma electrónica de pasarela de alta costura validada.</p>
-                      </div>
+                {/* TAB 3: EQUIPO CREATIVO */}
+                {activeModalTab === 'team' && (
+                  <div className="space-y-4 animate-fade-in text-slate-700">
+                    <div className="space-y-1">
+                      <h4 className="text-[9.5px] font-black text-slate-400 font-mono uppercase tracking-wider">
+                        INTEGRANTES DEL PROYECTO GANADOR
+                      </h4>
+                      <p className="text-[11px] text-slate-500 font-medium">Lista de talentos responsables del diseño y la sustentabilidad oficial.</p>
                     </div>
-                    {selectedFullProject.documentationName ? (
-                      <a 
-                        href={selectedFullProject.documentationUrl || "#"} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[10px] rounded-lg tracking-wide shrink-0 border border-slate-150 transition inline-flex items-center gap-1 uppercase"
-                      >
-                        <span>📂 Descargar: {selectedFullProject.documentationName}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    ) : (
-                      <span className="text-[10px] text-slate-400 font-mono italic">No se adjuntaron anexos.</span>
-                    )}
-                  </div>
-                </div>
-              )}
 
-              {/* TAB 3: EQUIPO CREATIVO */}
-              {activeModalTab === 'team' && (
-                <div className="space-y-6 animate-fade-in text-slate-700">
-                  <div className="space-y-1">
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono uppercase tracking-wider">
-                      INTEGRANTES DEL PROYECTO GANADOR
-                    </h4>
-                    <p className="text-[11px] text-slate-450 font-medium">Lista de talentos responsables del diseño y la sustentabilidad oficial.</p>
-                  </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {selectedFullProject.team && selectedFullProject.team.map((member: any, i: number) => {
+                        const lower = (member.name || '').toLowerCase();
+                        const isErn = lower.includes('ernesto');
+                        const isAdr = lower.includes('adriana');
+                        const avatarUrl = member.avatar || (
+                          isErn
+                            ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300'
+                            : isAdr
+                              ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'
+                              : undefined
+                        );
+                        const displayName = isErn ? 'Ernesto V. S.' : member.name;
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedFullProject.team && selectedFullProject.team.map((member: any, i: number) => {
-                      const lower = (member.name || '').toLowerCase();
-                      const isErn = lower.includes('ernesto');
-                      const isAdr = lower.includes('adriana');
-                      const avatarUrl = member.avatar || (
-                        isErn
-                          ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300'
-                          : isAdr
-                            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'
-                            : undefined
-                      );
-                      const displayName = isErn ? 'Ernesto V. S.' : member.name;
+                        return (
+                          <div key={i} className="bg-[#fffcfd]/60 rounded-xl p-3 border border-pink-100/70 space-y-2.5 relative hover:border-pink-200 transition">
+                            <div className="flex items-start gap-2.5">
+                              {avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt={displayName}
+                                  className="w-9 h-9 rounded-full object-cover border-2 border-pink-200 shadow-xs shrink-0"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="w-9 h-9 rounded-full bg-pink-100 border border-pink-200 flex items-center justify-center font-serif text-pink-700 font-bold text-xs uppercase shrink-0">
+                                  {displayName.slice(0, 2)}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-serif font-black text-slate-900 text-sm truncate">{displayName}</p>
+                                <p className="text-[10px] font-bold text-pink-600 font-mono uppercase tracking-tight break-words">{member.role}</p>
+                              </div>
+                            </div>
 
-                      return (
-                        <div key={i} className="bg-[#fffcfd]/40 rounded-2xl p-4 border border-pink-100/50 space-y-3 relative hover:border-pink-200 transition">
-                          <div className="flex items-start gap-3">
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt={displayName}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-pink-200 shadow-xs shrink-0"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-pink-100 border border-pink-150 flex items-center justify-center font-serif text-pink-700 font-bold text-sm uppercase shrink-0">
-                                {displayName.slice(0, 2)}
+                            <div className="text-xs space-y-1 bg-white/90 p-2.5 rounded-lg border border-slate-100">
+                              <p className="text-slate-500">
+                                <strong className="font-bold text-slate-800">Experiencia:</strong> {member.experience || 'No detallada'}
+                              </p>
+                              <p className="text-slate-600 leading-relaxed text-[11px] pt-0.5">
+                                {member.bio || 'Diseñador integral de alta costura.'}
+                              </p>
+                            </div>
+
+                            {member.profileLink && member.profileLink !== '#' && (
+                              <div className="pt-0.5">
+                                <a 
+                                  href={member.profileLink} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  className="text-[10px] font-bold text-pink-600 hover:text-pink-800 items-center gap-1 hover:underline inline-flex"
+                                >
+                                  <span>🔗 Visitar Perfil Profesional (Instagram / Web)</span>
+                                  <ExternalLink className="w-3 h-3 shrink-0" />
+                                </a>
                               </div>
                             )}
-                            <div className="min-w-0">
-                              <p className="font-serif font-black text-slate-900 text-sm truncate">{displayName}</p>
-                              <p className="text-[10px] font-bold text-pink-600 font-mono uppercase tracking-tight">{member.role}</p>
-                            </div>
                           </div>
-
-                        <div className="text-xs space-y-1 bg-white/80 p-3 rounded-xl border border-slate-100">
-                          <p className="text-slate-500">
-                            <strong className="font-bold text-slate-750">Experiencia:</strong> {member.experience || 'No detallada'}
-                          </p>
-                          <p className="text-slate-550 leading-relaxed text-[11px] pt-1">
-                            {member.bio || 'Diseñador integral de alta costura.'}
-                          </p>
-                        </div>
-
-                        {member.profileLink && member.profileLink !== '#' && (
-                          <div className="pt-1">
-                            <a 
-                              href={member.profileLink} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="text-[10px] font-bold text-pink-600 hover:text-pink-800 flex items-center gap-1 hover:underline inline-flex"
-                            >
-                              <span>🔗 Visitar Perfil Profesional (Instagram / Web)</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-3 border-t border-pink-100 bg-[#fffbfc] text-center flex flex-col items-center gap-2 shrink-0">
+                <span className="text-[9px] text-slate-400 font-bold font-mono leading-tight">
+                  REGISTRADO SECRETAMENTE EN PASARELAS DE ALTA COSTURA
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFullProject(null)}
+                  className="custom-bg w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-sm"
+                >
+                  Volver a Resultados
+                </button>
+              </div>
 
             </div>
-
-            {/* Modal Footer */}
-            <div className="p-3.5 sm:p-5 border-t border-pink-100 bg-[#fffbfc] text-center flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
-              <span className="text-[10px] text-slate-400 font-bold font-mono leading-snug">
-                REGISTRADO SECRETAMENTE EN PASARELAS DE ALTA COSTURA
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedFullProject(null)}
-                className="custom-bg w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer shadow-sm"
-              >
-                Volver a Resultados
-              </button>
-            </div>
-
           </div>
-        </div>,
-        document.body
-      )}
+        );
+
+        return phoneScreenContainer
+          ? createPortal(dossierModalNode, phoneScreenContainer)
+          : dossierModalNode;
+      })()}
 
       {/* 📜 B2B SPONSORSHIP CONTRACT DETAIL MODAL FOR PODIUM VIEW */}
       {selectedPodiumSponsorDetail && (

@@ -19,7 +19,9 @@ import {
   Sparkles,
   Download,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Video,
+  Link2
 } from 'lucide-react';
 import { generateProjectPDF } from '../utils/pdfGenerator';
 import FashionsFinanceLogo from './FashionsFinanceLogo';
@@ -74,6 +76,9 @@ export default function ProjectForm({
   // Input for adding urls dynamically
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [uploadedVideoMeta, setUploadedVideoMeta] = useState<Record<string, { name: string; sizeMB: string }>>({});
+  const [isDraggingVideo, setIsDraggingVideo] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
 
   // Step 2: Financials Info state
   const [budget, setBudget] = useState(100);
@@ -177,6 +182,74 @@ export default function ProjectForm({
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const processProjectVideoFiles = (fileList: FileList | File[]) => {
+    setVideoUploadError(null);
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
+
+    const validVideoExtensions = /\.(mp4|webm|mov|m4v|ogv|avi|mkv)$/i;
+    let rejectedAny = false;
+
+    files.forEach((file) => {
+      const isVideo = file.type.startsWith('video/') || validVideoExtensions.test(file.name);
+      if (!isVideo) {
+        rejectedAny = true;
+        return;
+      }
+
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const registerVideoUrl = (url: string) => {
+        setVideosList((prev) => [url, ...prev.filter((existing) => existing !== url)]);
+        setUploadedVideoMeta((prev) => ({
+          ...prev,
+          [url]: { name: file.name, sizeMB }
+        }));
+      };
+
+      // Use DataURL for <= 8MB so it persists cleanly; ObjectURL for larger HD videos
+      if (file.size <= 8 * 1024 * 1024) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const resultUrl = event.target?.result as string;
+          if (resultUrl) {
+            registerVideoUrl(resultUrl);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const objectUrl = URL.createObjectURL(file);
+        registerVideoUrl(objectUrl);
+      }
+    });
+
+    if (rejectedAny) {
+      setVideoUploadError('Solo se admiten archivos de vídeo (MP4, MOV, WebM).');
+    }
+  };
+
+  const handleProjectVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      processProjectVideoFiles(e.target.files);
+      e.target.value = '';
+    }
+  };
+
+  const handleAddVideoUrl = () => {
+    const trimmed = newVideoUrl.trim();
+    if (!trimmed) return;
+    if (!/^https?:\/\//i.test(trimmed)) {
+      setVideoUploadError('Introduce una URL válida que empiece por http:// o https://');
+      return;
+    }
+    setVideoUploadError(null);
+    setVideosList((prev) => [trimmed, ...prev.filter((u) => u !== trimmed)]);
+    setUploadedVideoMeta((prev) => ({
+      ...prev,
+      [trimmed]: { name: 'Vídeo por enlace externo', sizeMB: 'URL' }
+    }));
+    setNewVideoUrl('');
   };
 
   const addTeamMember = () => {
@@ -877,6 +950,156 @@ export default function ProjectForm({
                         + Añadir
                       </button>
                     </div>
+                  </div>
+
+                  {/* Vídeo del Proyecto (Subida directa desde dispositivo o URL) */}
+                  <div className="bg-[#faf8f7] rounded-2xl p-5 border border-pink-100 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <label
+                        htmlFor="project-step2-video-upload"
+                        className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5"
+                      >
+                        <Video className="w-4 h-4 text-pink-600" />
+                        <span>Vídeo de Presentación del Proyecto</span>
+                      </label>
+                      <span className="text-[11px] bg-pink-100 text-pink-800 border border-pink-200 px-3 py-0.5 rounded-full font-mono font-bold">
+                        {videosList.length} {videosList.length === 1 ? 'vídeo' : 'vídeos'}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-stone-500 leading-relaxed">
+                      Sube un vídeo presentando tu colección, pasarela, prototipo o pitch comercial para que los inversores y modelos sponsors puedan verlo antes de votar.
+                    </p>
+
+                    {/* Zona Drag & Drop + Selector de archivo de vídeo */}
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDraggingVideo(true);
+                      }}
+                      onDragLeave={() => setIsDraggingVideo(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDraggingVideo(false);
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          processProjectVideoFiles(e.dataTransfer.files);
+                        }
+                      }}
+                      className={`bg-white rounded-xl border-2 border-dashed p-5 text-center transition-all ${
+                        isDraggingVideo
+                          ? 'border-pink-500 bg-pink-50/60 scale-[1.01]'
+                          : 'border-stone-300 hover:border-pink-400 hover:bg-pink-50/20'
+                      }`}
+                    >
+                      <input
+                        type="file"
+                        id="project-step2-video-upload"
+                        accept="video/mp4,video/webm,video/quicktime,video/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleProjectVideoUpload}
+                      />
+                      <label
+                        htmlFor="project-step2-video-upload"
+                        className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                      >
+                        <div className="w-11 h-11 rounded-full bg-pink-50 border border-pink-200 flex items-center justify-center text-pink-600">
+                          <UploadCloud className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs sm:text-sm font-bold text-slate-800">
+                          Subir vídeo de tu proyecto desde tu dispositivo
+                        </span>
+                        <span className="text-[11px] text-stone-400">
+                          Arrastra y suelta aquí o haz clic para elegir archivo (MP4, MOV, WebM)
+                        </span>
+                        <span className="mt-1 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#e11d48] via-[#db2777] to-[#be185d] text-white text-[11px] font-bold shadow-sm hover:brightness-110 transition">
+                          <Video className="w-3.5 h-3.5" />
+                          <span>Seleccionar vídeo</span>
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Enlace opcional directo de vídeo */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Link2 className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="url"
+                          value={newVideoUrl}
+                          onChange={(e) => setNewVideoUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddVideoUrl();
+                            }
+                          }}
+                          placeholder="O pega un enlace directo de vídeo (https://.../mi-proyecto.mp4)"
+                          className="w-full bg-white border border-stone-300 rounded-xl pl-8 pr-3.5 py-2 text-xs text-slate-800 placeholder-stone-400 focus:outline-none focus:border-pink-500"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddVideoUrl}
+                        className="bg-slate-900 hover:bg-pink-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0"
+                      >
+                        + Añadir enlace
+                      </button>
+                    </div>
+
+                    {videoUploadError && (
+                      <div className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        <span>{videoUploadError}</span>
+                      </div>
+                    )}
+
+                    {/* Vista previa reproducible de los vídeos subidos (centrada) */}
+                    {videosList.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-4 pt-1">
+                        {videosList.map((videoSrc, idx) => {
+                          const meta = uploadedVideoMeta[videoSrc];
+                          return (
+                            <div
+                              key={`${videoSrc.slice(0, 48)}-${idx}`}
+                              className="w-full max-w-md sm:w-[calc(50%-0.5rem)] bg-white rounded-xl border border-pink-200/80 overflow-hidden shadow-xs flex flex-col"
+                            >
+                              <div className="relative bg-slate-950 aspect-video w-full overflow-hidden">
+                                <video
+                                  src={videoSrc}
+                                  controls
+                                  playsInline
+                                  preload="metadata"
+                                  className="w-full h-full object-contain bg-black"
+                                />
+                                {idx === 0 && (
+                                  <span className="absolute top-2 left-2 bg-pink-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm pointer-events-none">
+                                    Vídeo principal
+                                  </span>
+                                )}
+                              </div>
+                              <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white border-t border-stone-100">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-bold text-slate-800 truncate">
+                                    {meta?.name || `Vídeo del proyecto #${idx + 1}`}
+                                  </p>
+                                  <p className="text-[10px] text-stone-400 font-mono">
+                                    {meta?.sizeMB ? (meta.sizeMB === 'URL' ? 'Enlace externo' : `${meta.sizeMB} MB · Listo`) : 'Vídeo adjunto'}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setVideosList((prev) => prev.filter((_, i) => i !== idx))}
+                                  className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200/70 transition cursor-pointer shrink-0"
+                                  title="Eliminar vídeo"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Document upload simulation */}

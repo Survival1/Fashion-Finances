@@ -1073,22 +1073,6 @@ export default function PatrocinadosView({
                           <span>{p.status === 'active' ? '🟢 Activo' : p.status === 'pending' ? '🟡 Pendiente' : '⚪ Inactivo'}</span>
                         </span>
                       </div>
-
-                      {/* Clickable Username Button & Reference Number */}
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={handleNavigateToProfile}
-                          className="text-[10.5px] font-mono text-rose-600 hover:text-rose-800 hover:underline font-bold cursor-pointer inline-flex items-center gap-1 transition-colors group/user py-0.5"
-                          title={`Ver perfil de @${p.username}`}
-                        >
-                          <span>@{p.username}</span>
-                          <span className="text-[9px] opacity-70 group-hover/user:opacity-100 transition-opacity">↗</span>
-                        </button>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80">
-                          Ref: #{getOrAssignReferenceNumber(p.id, p.username, p.referenceNumber)}
-                        </span>
-                      </div>
                     </div>
                   </div>
 

@@ -1275,12 +1275,12 @@ export default function TheFirst100Page({
 
         {/* 5. RUTA DE 90 DÍAS */}
         <section ref={journeySectionRef} className="py-16 border-b border-[#f9a8d4]/40 scroll-mt-20">
-          <div className="space-y-3 text-left max-w-3xl mb-10">
+          <div className="space-y-3 text-left mb-10">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#be185d]">
               PROGRAMA DE PREPARACIÓN INTERNACIONAL
             </p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-slate-950">
-              TU CAMINO COMIENZA AQUÍ — 90 DÍAS
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-950 leading-tight">
+              TU CAMINO COMIENZA AQUÍ — 90&nbsp;DÍAS
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>Apertura:</span>

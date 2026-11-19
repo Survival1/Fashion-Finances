@@ -2755,17 +2755,17 @@ export default function VictoriaSecretRanking({
 
           {activeTab === 'ranking' && (
             <>
-              {/* 🌟 1. TOP HEADER: LUXURY HERO BANNER MATCHING "Moda, belleza y oportunidades de lujo.png" */}
+              {/* 🌟 1. TOP HEADER: LUXURY HERO BANNER MATCHING "Moda, belleza y oportunidades de lujo" (40% menos rosa + marco difuminado) */}
               <div className="w-full max-w-5xl mx-auto mb-3 sm:mb-5 select-none">
-                <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.2)] border border-pink-200/90 bg-gradient-to-r from-[#ffe4e6] via-[#fbcfe8] to-[#f472b6]">
+                <div className="relative overflow-hidden rounded-3xl bg-transparent">
                   <img
-                    src="/assets/aistudio/Moda__belleza_y_oportunidades_de_lujo_87a0501b.webp"
+                    src="/assets/aistudio/Moda__belleza_y_oportunidades_de_lujo_soft40.webp"
                     alt="FASHIONS FINANCE - Moda, belleza y oportunidades de lujo - Beauty Creates Opportunities"
-                    className="w-full h-auto object-cover select-none pointer-events-none block aspect-[1600/508]"
+                    className="w-full h-auto object-contain select-none pointer-events-none block"
                     loading="eager"
                   />
-                  {/* Subtle golden ambient luxury shimmer */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-pink-950/15 via-transparent to-white/10 pointer-events-none" />
+                  {/* Marco difuminado suave en los cuatro bordes fundido con el fondo blanco */}
+                  <div className="absolute inset-0 pointer-events-none rounded-3xl shadow-[inset_0_0_32px_18px_rgba(255,255,255,0.92)]" />
                 </div>
               </div>
 
@@ -4162,13 +4162,15 @@ export default function VictoriaSecretRanking({
           {activeTab === 'regalos' && (
             <div className="space-y-6 animate-fade-in" id="regalos-extras-channel-container">
               
-              {/* Centro de Regalos y Finanzas Banner (Luxury Gold Silk & Diamonds Theme) */}
-              <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300/70 shadow-2xl shadow-amber-950/15 group">
+              {/* Centro de Regalos y Finanzas Banner (Luxury Gold Silk & Diamonds Theme - Marco difuminado) */}
+              <div className="relative overflow-hidden rounded-3xl bg-transparent group">
                 <img 
-                  src="/assets/aistudio/centro_regalos_banner_clean.webp" 
+                  src="/assets/aistudio/centro_regalos_banner_diffused.webp" 
                   alt="Centro de Regalos" 
-                  className="w-full h-auto object-cover rounded-3xl block" 
+                  className="w-full h-auto object-contain rounded-3xl block select-none pointer-events-none" 
                 />
+                {/* Marco difuminado suave en los cuatro bordes fundido con el fondo blanco */}
+                <div className="absolute inset-0 pointer-events-none rounded-3xl shadow-[inset_0_0_32px_18px_rgba(255,255,255,0.92)]" />
 
                 {/* Interactive Dynamic Balance & Recharge Hotspot synchronized with Backoffice */}
                 <div 

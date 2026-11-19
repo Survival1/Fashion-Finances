@@ -749,5 +749,45 @@ body {
   animation: floatUp 2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
 
+@keyframes pearlToRosaPinkShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-pearl-to-rosa-pink-text {
+  background-image: linear-gradient(
+    90deg,
+    #f9a8d4 0%,
+    #f472b6 26%,
+    #ff2d85 52%,
+    #e11470 72%,
+    #f472b6 88%,
+    #f9a8d4 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  animation: pearlToRosaPinkShift 3.2s ease-in-out infinite;
+}
+
+@keyframes pearlToRosaPinkIcon {
+  0%, 100% {
+    color: #f48fb8;
+  }
+  50% {
+    color: #ff2d85;
+  }
+}
+
+.animate-pearl-to-rosa-pink-icon {
+  animation: pearlToRosaPinkIcon 3.2s ease-in-out infinite;
+}
+
 
 

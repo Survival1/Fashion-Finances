@@ -675,6 +675,120 @@ export function resetAllRoundsDatabase(): void {
   } catch (e) {}
 }
 
+export function isCurrentUserParticipant(
+  participant: any,
+  userProfile?: { id?: string; username?: string; name?: string } | null
+): boolean {
+  if (!participant) return false;
+  const myId = userProfile?.id || 'user-adriana';
+  const myUsername = (userProfile?.username || '').toLowerCase();
+  const myName = (userProfile?.name || '').toLowerCase();
+  const pId = participant.id || participant.userId || '';
+  const pUsername = (participant.username || '').toLowerCase();
+  const pName = (participant.name || '').toLowerCase();
+  const pRole = (participant.role || '').toLowerCase();
+
+  return Boolean(
+    participant.isSelf ||
+    pId === 'user-adriana' ||
+    pId === myId ||
+    pUsername === 'adrianalima' ||
+    pUsername === 'adrianalima_w1' ||
+    (myUsername && pUsername === myUsername) ||
+    pName.includes('adriana') ||
+    pName.includes('(tú)') ||
+    pRole.includes('(tú)') ||
+    (myName && myName !== 'tú (inversor)' && pName === myName)
+  );
+}
+
+/**
+ * Completely wipe all user round-enrollment / participation flags and remove the
+ * current user from every persisted active round so clicking "Cerrar Concurso"
+ * guarantees the user does not appear as a participant in any round.
+ */
+export function clearAllContestParticipationStorage(
+  userProfile?: { id?: string; username?: string; name?: string } | null
+): void {
+  if (typeof window === 'undefined') return;
+  try {
+    // 1. Remove ALL dynamic and legacy user_paid_session_* keys (including sess-workers, sess-trabajadores-1, etc.)
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('user_paid_session_')) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    // 2. Remove every scalar enrollment / participation flag
+    const scalarKeys = [
+      'finanzas_user_participating',
+      'finanzas_user_is_participating',
+      'user_paid_finanzas_session',
+      'finanzas_target_session_id',
+      'finanzas_user_slot_index',
+      'finanzas_enrolled_simulator_session_id',
+      'finanzas_enrolled_round_key',
+      'finanzas_enrolled_entry_fee',
+      'finanzas_active_session_fee',
+      'finanzas_contest_pending_close',
+      'finanzas_is_voting_phase_active'
+    ];
+    scalarKeys.forEach(k => localStorage.removeItem(k));
+
+    // 3. Strip current user from persisted open_finanzas_sessions lists (v43 & v44)
+    ['open_finanzas_sessions_list_v43', 'open_finanzas_sessions_list_v44'].forEach(storageKey => {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return;
+        const cleaned = parsed.map((sess: any) => {
+          if (!Array.isArray(sess?.participants)) return sess;
+          const filtered = sess.participants.filter((p: any) => !isCurrentUserParticipant(p, userProfile));
+          if (filtered.length === sess.participants.length) return sess;
+          const catKey = resolveCategoryKey(sess);
+          const fallbackPool = DEFAULT_PARTICIPANTS_POOLS[catKey] || DEFAULT_PARTICIPANTS_POOLS.streetwear;
+          const filled = [...filtered];
+          for (const candidate of fallbackPool) {
+            if (filled.length >= 10) break;
+            if (!filled.some((fp: any) => fp.id === candidate.id || fp.name === candidate.name)) {
+              filled.push({ ...candidate });
+            }
+          }
+          return {
+            ...sess,
+            participants: filled.slice(0, 10)
+          };
+        });
+        localStorage.setItem(storageKey, JSON.stringify(cleaned));
+      } catch (e) {}
+    });
+
+    // 4. Strip current user from any active round database record (ronda_db_*)
+    Object.keys(localStorage).forEach(key => {
+      if (!key.startsWith(ROUND_DB_PREFIX)) return;
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+        const record: RoundDatabaseRecord = JSON.parse(raw);
+        if (record?.status !== 'active' || !Array.isArray(record.participants)) return;
+        const filtered = record.participants.filter(p => !isCurrentUserParticipant(p, userProfile));
+        if (filtered.length === record.participants.length) return;
+        const fallbackPool = DEFAULT_PARTICIPANTS_POOLS[record.categoryKey] || DEFAULT_PARTICIPANTS_POOLS.streetwear;
+        const filled = [...filtered];
+        for (const candidate of fallbackPool) {
+          if (filled.length >= 10) break;
+          if (!filled.some(fp => fp.id === candidate.id || fp.name === candidate.name)) {
+            filled.push({ ...candidate, votesReceived: 0, hasVoted: false });
+          }
+        }
+        record.participants = filled.slice(0, 10);
+        saveRoundDatabase(record);
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
 // Auto-run bootstrap when imported
 if (typeof window !== 'undefined') {
   initRoundsDatabase();

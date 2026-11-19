@@ -51,6 +51,7 @@ import {
 } from './CastingLiveSection';
 import pearlHeelsBg from '../assets/images/pearl_heels_bg_1794559301641.jpg';
 import { SoundTrackSheetModal, SoundVideoReference } from './SoundTrackSheetModal';
+import { clearAllContestParticipationStorage } from '../utils/roundsDatabase';
 
 const CHANNELS_LIST = [
   { id: 'Todos', label: 'Todos 🌍' },
@@ -306,6 +307,7 @@ interface TikTokFinanzasFeedProps {
   onOpenGifts?: () => void;
   onOpenStreamOptions?: () => void;
   onOpenCreationModal?: () => void;
+  onGoToModelProfile?: (modelId: string, modelObj?: any) => void;
   showStreamOptionsModal?: boolean;
   setShowStreamOptionsModal?: (show: boolean) => void;
   renderStreamOptionsContent?: () => React.ReactNode;
@@ -384,6 +386,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
   onOpenGifts,
   onOpenStreamOptions,
   onOpenCreationModal,
+  onGoToModelProfile,
   handleFinishRetransmissionAndPassToNextParticipant,
   isBroadcastMicOn,
   isMuted,
@@ -463,13 +466,14 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
     }
   });
 
+  const [, setContestClosedTick] = useState<number>(0);
+
   useEffect(() => {
     const handleContestClosed = () => {
+      clearAllContestParticipationStorage(userProfile);
       setIsContestPendingClose(false);
       if (setShowFinanzasResults) setShowFinanzasResults(false);
-      try {
-        localStorage.removeItem('finanzas_contest_pending_close');
-      } catch (e) {}
+      setContestClosedTick(prev => prev + 1);
     };
     const handleStorageChange = () => {
       try {
@@ -480,6 +484,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
         } else {
           setIsContestPendingClose(false);
         }
+        setContestClosedTick(prev => prev + 1);
       } catch (e) {}
     };
     window.addEventListener('finanzas-contest-closed', handleContestClosed);
@@ -488,7 +493,7 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
       window.removeEventListener('finanzas-contest-closed', handleContestClosed);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [setShowFinanzasResults]);
+  }, [setShowFinanzasResults, userProfile]);
 
   useEffect(() => {
     if (showFinanzasRecount) {
@@ -5150,12 +5155,26 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
 
             {/* 📝 PANEL DE INFORMACIÓN INFERIOR DEL VÍDEO (Datos del Creador y Descripción - Oculto si la ventana de comentarios está abierta) */}
             <div className={`relative z-20 w-full mt-auto p-3 sm:p-4 text-white select-none pointer-events-auto pr-16 ${isCardCommentsOpen ? 'hidden' : ''}`}>
-              {/* Creator username & verification badge */}
+              {/* Creator username & verification badge - clickable to open profile */}
               <div className="flex items-center gap-1.5 mb-1">
-                <h4 className="text-xs sm:text-[13px] font-black text-white tracking-tight drop-shadow-md flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const lookupKey = currentVid.username || currentVid.name || 'adrianalima_w1';
+                    if (onGoToModelProfile) {
+                      onGoToModelProfile(lookupKey);
+                    }
+                    try {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch {}
+                  }}
+                  title={`Ver perfil de ${currentVid.name || `@${currentVid.username}`}`}
+                  className="text-xs sm:text-[13px] font-black text-white hover:text-pink-300 tracking-tight drop-shadow-md flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0 text-left hover:underline transition"
+                >
                   <span>@{currentVid.username}</span>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20" />
-                </h4>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
+                </button>
               </div>
 
               {/* Video Caption & Hashtags */}
@@ -5525,8 +5544,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
             id="finanzas-results-locked-screen"
             onWheel={(e) => {
               e.stopPropagation();
+              const targetEl = e.target as HTMLElement | null;
+              if (targetEl?.closest('#full-project-dossier-modal')) return;
               const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-              if (wrapper && !e.target.closest('#podium-scrollable-content-wrapper')) {
+              if (wrapper && !targetEl?.closest('#podium-scrollable-content-wrapper')) {
                 wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
               }
             }}
@@ -5719,8 +5740,10 @@ export const TikTokFinanzasFeed: React.FC<TikTokFinanzasFeedProps> = ({
                     id={`finanzas-results-in-channel-${session.id}`}
                     onWheel={(e) => {
                       e.stopPropagation();
+                      const targetEl = e.target as HTMLElement | null;
+                      if (targetEl?.closest('#full-project-dossier-modal')) return;
                       const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-                      if (wrapper && !e.target.closest('#podium-scrollable-content-wrapper')) {
+                      if (wrapper && !targetEl?.closest('#podium-scrollable-content-wrapper')) {
                         wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
                       }
                     }}

@@ -20,7 +20,14 @@ import {
   playLuxuryWatchSoundEffect 
 } from './LuxuryWatchAnimation';
 import { getFriendsFromStorage, saveFriendsToStorage, FriendUser } from '../utils/friendsService';
-import { getFollowedUsersFromStorage, toggleFollowUserInStorage, FollowedUser } from '../utils/followingService';
+import { pushAppNotification, removeAppNotificationsByPrefix } from './NotificationCenterModal';
+import {
+  getFollowedUsersFromStorage,
+  toggleFollowUserInStorage,
+  isUserFollowedInStorage,
+  setFollowStateFromProfile,
+  FollowedUser
+} from '../utils/followingService';
 import CorporateHiringPortalModal from './CorporateHiringPortalModal';
 import {
   doesOfferTargetUser,
@@ -202,6 +209,70 @@ const DEFAULT_COMMENT_AUTHORS = [
   { name: "Carlos Slim", avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150" },
   { name: "Sofía Martínez", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150" }
 ];
+
+const resolveLoggedInSenderIdentity = (
+  realLoggedInUser?: Partial<UserSessionProfile> | null,
+  fallbackProfile?: Partial<UserSessionProfile> | null
+): {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  bio: string;
+  role: string;
+} => {
+  if (realLoggedInUser && (realLoggedInUser.name || realLoggedInUser.username || realLoggedInUser.id)) {
+    const cleanU = (realLoggedInUser.username || realLoggedInUser.name || realLoggedInUser.id || 'usuario')
+      .replace(/^@+/, '')
+      .trim();
+    return {
+      id: realLoggedInUser.id || `user-${cleanU.toLowerCase()}`,
+      name: realLoggedInUser.name || cleanU,
+      username: cleanU,
+      avatar: realLoggedInUser.avatar || '',
+      bio:
+        realLoggedInUser.bio ||
+        (realLoggedInUser.role === 'investor'
+          ? 'Inversor verificado en Fashion Finances.'
+          : 'Miembro oficial en Fashion Finances.'),
+      role: realLoggedInUser.role || 'investor'
+    };
+  }
+  try {
+    const raw = localStorage.getItem('coll_userProfile');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && (parsed.name || parsed.username || parsed.id)) {
+        const cleanU = (parsed.username || parsed.name || parsed.id || 'usuario')
+          .replace(/^@+/, '')
+          .trim();
+        return {
+          id: parsed.id || `user-${cleanU.toLowerCase()}`,
+          name: parsed.name || cleanU,
+          username: cleanU,
+          avatar: parsed.avatar || '',
+          bio:
+            parsed.bio ||
+            (parsed.role === 'investor'
+              ? 'Inversor verificado en Fashion Finances.'
+              : 'Miembro oficial en Fashion Finances.'),
+          role: parsed.role || 'investor'
+        };
+      }
+    }
+  } catch {}
+  const fallbackU = (fallbackProfile?.username || fallbackProfile?.id || 'usuario')
+    .replace(/^@+/, '')
+    .trim();
+  return {
+    id: fallbackProfile?.id || `user-${fallbackU.toLowerCase()}`,
+    name: fallbackProfile?.name || fallbackU,
+    username: fallbackU,
+    avatar: fallbackProfile?.avatar || '',
+    bio: fallbackProfile?.bio || 'Miembro oficial en Fashion Finances.',
+    role: fallbackProfile?.role || 'investor'
+  };
+};
 
 export const FOLLOWED_SUGGESTIONS_ACCOUNTS = [
   {
@@ -461,6 +532,12 @@ export function ProfileIntroAndSponsors({
   const handleSendFriendRequest = (acc: any, e: React.MouseEvent) => {
     e.stopPropagation();
     const isAlreadyRequested = requestedFriendIds.includes(acc.username);
+    const sender = resolveLoggedInSenderIdentity(undefined, userProfile);
+    const senderKey = sender.username.toLowerCase().replace(/^@+/, '').trim();
+    const targetUsername = (acc.username || acc.name || 'creator').replace(/^@+/, '').trim();
+    const targetKey = targetUsername.toLowerCase();
+    const friendRequestId = `req-${senderKey}-to-${targetKey}`;
+    const notifId = `notif-friend-req-${senderKey}-to-${targetKey}`;
 
     if (isAlreadyRequested) {
       // Cancel request
@@ -471,7 +548,19 @@ export function ProfileIntroAndSponsors({
         const list = saved ? JSON.parse(saved) : [];
         const filtered = list.filter((item: any) => item.username !== acc.username);
         localStorage.setItem('ff_sent_friend_requests', JSON.stringify(filtered));
+
+        const savedPending = localStorage.getItem('ff_pending_received_requests');
+        if (savedPending) {
+          const pendingList = JSON.parse(savedPending);
+          if (Array.isArray(pendingList)) {
+            localStorage.setItem(
+              'ff_pending_received_requests',
+              JSON.stringify(pendingList.filter((p: any) => p.id !== friendRequestId))
+            );
+          }
+        }
       } catch (_) {}
+      removeAppNotificationsByPrefix(notifId);
       setFeedbackToast(`Solicitud a ${acc.name} cancelada`);
       setTimeout(() => setFeedbackToast(null), 3000);
       window.dispatchEvent(new CustomEvent('sync-friend-requests'));
@@ -483,6 +572,7 @@ export function ProfileIntroAndSponsors({
     setRequestedFriendIds(next);
     const newRequestItem = {
       id: `sent-${acc.username}`,
+      friendRequestId,
       name: acc.name,
       username: acc.username,
       avatar: acc.avatar,
@@ -494,27 +584,61 @@ export function ProfileIntroAndSponsors({
     try {
       const saved = localStorage.getItem('ff_sent_friend_requests');
       const list = saved ? JSON.parse(saved) : [];
-      list.push(newRequestItem);
-      localStorage.setItem('ff_sent_friend_requests', JSON.stringify(list));
+      const deduped = Array.isArray(list) ? list.filter((item: any) => item.username !== acc.username) : [];
+      deduped.unshift(newRequestItem);
+      localStorage.setItem('ff_sent_friend_requests', JSON.stringify(deduped));
+
+      const savedPending = localStorage.getItem('ff_pending_received_requests');
+      const pendingList = savedPending ? JSON.parse(savedPending) : [];
+      const pendingEntry = {
+        id: friendRequestId,
+        name: sender.name,
+        username: sender.username,
+        avatar: sender.avatar,
+        bio: sender.bio,
+        sentAt: 'Ahora mismo',
+        mutualFriends: acc.mutualFriends || 4,
+        isOnline: true,
+        recipientId: acc.id || '',
+        recipientName: acc.name,
+        recipientUsername: targetUsername
+      };
+      const updatedPending = [
+        pendingEntry,
+        ...(Array.isArray(pendingList) ? pendingList.filter((p: any) => p.id !== friendRequestId) : [])
+      ];
+      localStorage.setItem('ff_pending_received_requests', JSON.stringify(updatedPending));
     } catch (_) {}
 
-    // Also persist in coll_friends
-    try {
-      const rawFriends = localStorage.getItem('coll_friends');
-      const friends = rawFriends ? JSON.parse(rawFriends) : [];
-      if (!friends.some((f: any) => f.username === acc.username || f.name === acc.name)) {
-        friends.push({
-          id: `friend-${acc.username}`,
-          name: acc.name,
-          username: acc.username,
-          avatar: acc.avatar,
-          bio: acc.category || 'Amigo en Fashion Finances',
-          online: true,
-          addedMe: false
-        });
-        localStorage.setItem('coll_friends', JSON.stringify(friends));
+    pushAppNotification({
+      id: notifId,
+      upsert: true,
+      category: 'amigos',
+      title: '👥 Solicitud de amistad recibida',
+      message: `${sender.name} (@${sender.username}) te ha enviado una solicitud de amistad.${sender.bio ? ` ${sender.bio}` : ''}`,
+      timestamp: Date.now(),
+      read: false,
+      icon: '👥',
+      avatar: sender.avatar,
+      senderId: sender.id,
+      senderName: sender.name,
+      senderUsername: sender.username,
+      recipientId: acc.id || '',
+      recipientName: acc.name,
+      recipientUsername: targetUsername,
+      friendRequestId,
+      friendRequestType: 'received',
+      friendData: {
+        id: friendRequestId,
+        name: sender.name,
+        username: sender.username,
+        avatar: sender.avatar,
+        bio: sender.bio,
+        sentAt: 'Ahora mismo',
+        mutualFriends: acc.mutualFriends || 4,
+        isOnline: true
       }
-    } catch (_) {}
+    });
 
     setFeedbackToast(`🤝 ¡Solicitud enviada a ${acc.name}!`);
     setTimeout(() => setFeedbackToast(null), 3500);
@@ -1239,32 +1363,53 @@ export default function ModelFacebookProfile({
   // Follow and Friends state when viewing another user profile
   const [isFollowingProfileUser, setIsFollowingProfileUser] = useState<boolean>(() => {
     try {
-      return localStorage.getItem(`following_user_${userProfile.id}`) === 'true';
+      const explicit = localStorage.getItem(`following_user_${userProfile.id}`);
+      if (explicit !== null) return explicit === 'true';
+      return isUserFollowedInStorage(userProfile.username, userProfile.name);
     } catch {
       return false;
     }
   });
 
-  const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'friends'>(() => {
+  const readPairFriendshipStatus = useCallback((): 'none' | 'pending' | 'friends' => {
     try {
-      const saved = localStorage.getItem(`friend_status_${userProfile.id}`);
-      if (saved === 'pending' || saved === 'friends') return saved;
+      const sender = resolveLoggedInSenderIdentity(realLoggedInUser, userProfile);
+      const senderKey = sender.username.toLowerCase().replace(/^@+/, '').trim();
+      const pairSaved = localStorage.getItem(`friend_status_${senderKey}_${userProfile.id}`);
+      if (pairSaved === 'pending' || pairSaved === 'friends' || pairSaved === 'none') {
+        return pairSaved;
+      }
+      const legacySaved = localStorage.getItem(`friend_status_${userProfile.id}`);
+      if (legacySaved === 'pending' || legacySaved === 'friends') return legacySaved;
       return 'none';
     } catch {
       return 'none';
     }
-  });
+  }, [realLoggedInUser, userProfile]);
+
+  const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'friends'>(() =>
+    readPairFriendshipStatus()
+  );
 
   useEffect(() => {
-    try {
-      setIsFollowingProfileUser(localStorage.getItem(`following_user_${userProfile.id}`) === 'true');
-      const savedFriend = localStorage.getItem(`friend_status_${userProfile.id}`);
-      setFriendshipStatus((savedFriend === 'pending' || savedFriend === 'friends') ? savedFriend : 'none');
-      if (userProfile.role !== 'visitor') {
-        getOrAssignReferenceNumber(userProfile.id, userProfile.username, userProfile.referenceNumber);
-      }
-    } catch {}
-  }, [userProfile.id, userProfile.username, userProfile.referenceNumber, userProfile.role]);
+    const syncState = () => {
+      try {
+        const explicit = localStorage.getItem(`following_user_${userProfile.id}`);
+        if (explicit !== null) {
+          setIsFollowingProfileUser(explicit === 'true');
+        } else {
+          setIsFollowingProfileUser(isUserFollowedInStorage(userProfile.username, userProfile.name));
+        }
+        setFriendshipStatus(readPairFriendshipStatus());
+        if (userProfile.role !== 'visitor') {
+          getOrAssignReferenceNumber(userProfile.id, userProfile.username, userProfile.referenceNumber);
+        }
+      } catch {}
+    };
+    syncState();
+    window.addEventListener('sync-friend-requests', syncState);
+    return () => window.removeEventListener('sync-friend-requests', syncState);
+  }, [userProfile.id, userProfile.username, userProfile.name, userProfile.referenceNumber, userProfile.role, readPairFriendshipStatus]);
   
   // Find current model's profile info
   const currentModel = models.find(m => m.id === userProfile.id);
@@ -1422,6 +1567,9 @@ export default function ModelFacebookProfile({
     mutualFriends?: number;
     isOnline?: boolean;
     isCastingLive?: boolean;
+    recipientId?: string;
+    recipientName?: string;
+    recipientUsername?: string;
   }>>(() => {
     try {
       const saved = localStorage.getItem('ff_pending_received_requests');
@@ -1460,6 +1608,40 @@ export default function ModelFacebookProfile({
       }
     ];
   });
+
+  const visiblePendingReceivedRequests = useMemo(() => {
+    const ownUsername = (userProfile.username || '').toLowerCase().replace(/^@+/, '').trim();
+    const ownBase = ownUsername.replace(/_[wm]\d+$/i, '');
+    const ownId = (userProfile.id || '').trim();
+    const ownIsAdriana = isAdrianaLimaIdentity(userProfile);
+
+    return pendingReceivedRequests.filter(req => {
+      const reqSenderU = (req.username || '').toLowerCase().replace(/^@+/, '').trim();
+      if (ownUsername && reqSenderU && reqSenderU === ownUsername) return false;
+
+      if (!req.recipientId && !req.recipientName && !req.recipientUsername) {
+        return true;
+      }
+      if (ownId && req.recipientId && req.recipientId === ownId) return true;
+      const targetU = (req.recipientUsername || '').toLowerCase().replace(/^@+/, '').trim();
+      if (ownUsername && targetU) {
+        if (ownUsername === targetU) return true;
+        const targetBase = targetU.replace(/_[wm]\d+$/i, '');
+        if (ownBase.length >= 5 && targetBase.length >= 5 && ownBase === targetBase) return true;
+      }
+      if (
+        ownIsAdriana &&
+        isAdrianaLimaIdentity({
+          id: req.recipientId,
+          name: req.recipientName,
+          username: req.recipientUsername
+        })
+      ) {
+        return true;
+      }
+      return false;
+    });
+  }, [pendingReceivedRequests, userProfile]);
 
   // ↗️ Solicitudes de amistad enviadas pendientes de respuesta
   const [sentRequestsList, setSentRequestsList] = useState<Array<{
@@ -1770,11 +1952,13 @@ export default function ModelFacebookProfile({
   );
 
   const canViewAndRespondHiringOffers = useMemo(() => {
-    return (
-      isAdrianaLimaIdentity(realLoggedInUser) &&
-      (isOwnProfile || isAdrianaLimaIdentity(userProfile))
-    );
-  }, [realLoggedInUser, isOwnProfile, userProfile]);
+    if (!userProfile) return false;
+    const role = (userProfile.role || '').toLowerCase();
+    if (role !== 'model') return false;
+    const gender = (userProfile.gender || '').toLowerCase();
+    if (gender && gender !== 'female' && gender !== 'male') return false;
+    return true;
+  }, [userProfile]);
 
   const [tempProfEmail, setTempProfEmail] = useState(profEmail);
   const [tempProfCity, setTempProfCity] = useState(profCity);
@@ -6873,17 +7057,26 @@ export default function ModelFacebookProfile({
                 ) : (
                   <>
 
-                    {/* 👤 Botón Seguir cuando Ernesto u otro usuario ve el perfil de otro creador */}
+                    {/* 👤 Botón Seguir cuando Adriana Lima u otro usuario ve el perfil de otro creador */}
                     <button
                       type="button"
                       onClick={() => {
-                        setIsFollowingProfileUser(prev => {
-                          const next = !prev;
-                          try {
-                            localStorage.setItem(`following_user_${userProfile.id}`, String(next));
-                          } catch {}
-                          return next;
-                        });
+                        const next = !isFollowingProfileUser;
+                        setIsFollowingProfileUser(next);
+                        try {
+                          localStorage.setItem(`following_user_${userProfile.id}`, String(next));
+                        } catch {}
+                        setFollowStateFromProfile(
+                          {
+                            id: userProfile.id,
+                            name: userProfile.name,
+                            username: userProfile.username,
+                            avatar: currentModel?.avatar || userProfile.avatar,
+                            bio: bioText || userProfile.bio,
+                            role: userProfile.role || 'model',
+                          },
+                          next
+                        );
                       }}
                       className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer select-none border shadow-xs active:scale-[0.98] ${
                         isFollowingProfileUser
@@ -6909,16 +7102,148 @@ export default function ModelFacebookProfile({
                     <button
                       type="button"
                       onClick={() => {
-                        setFriendshipStatus(prev => {
-                          let next: 'none' | 'pending' | 'friends' = 'pending';
-                          if (prev === 'none') next = 'pending';
-                          else if (prev === 'pending') next = 'friends';
-                          else next = 'none';
+                        const sender = resolveLoggedInSenderIdentity(realLoggedInUser, userProfile);
+                        const senderUsername = sender.username.replace(/^@+/, '').trim();
+                        const senderKey = senderUsername.toLowerCase();
+                        const recipientUsername = (
+                          userProfile.username ||
+                          (isAdrianaLimaIdentity(userProfile) ? 'adrianalima_w1' : userProfile.id)
+                        )
+                          .replace(/^@+/, '')
+                          .trim();
+                        const recipientKey = recipientUsername.toLowerCase();
+                        const friendRequestId = `req-${senderKey}-to-${recipientKey}`;
+                        const notifId = `notif-friend-req-${senderKey}-to-${recipientKey}`;
+
+                        if (friendshipStatus === 'none') {
+                          setFriendshipStatus('pending');
                           try {
-                            localStorage.setItem(`friend_status_${userProfile.id}`, next);
+                            localStorage.setItem(`friend_status_${senderKey}_${userProfile.id}`, 'pending');
+                            localStorage.setItem(`friend_status_${userProfile.id}`, 'pending');
+
+                            // 1. Registrar en solicitudes recibidas pendientes para el destinatario (p. ej. Adriana Lima)
+                            const savedPending = localStorage.getItem('ff_pending_received_requests');
+                            const pendingList = savedPending ? JSON.parse(savedPending) : [];
+                            const pendingEntry = {
+                              id: friendRequestId,
+                              name: sender.name,
+                              username: senderUsername,
+                              avatar: sender.avatar,
+                              bio: sender.bio,
+                              sentAt: 'Ahora mismo',
+                              mutualFriends: 4,
+                              isOnline: true,
+                              recipientId: userProfile.id,
+                              recipientName: userProfile.name,
+                              recipientUsername
+                            };
+                            const updatedPending = [
+                              pendingEntry,
+                              ...(Array.isArray(pendingList) ? pendingList.filter((p: any) => p.id !== friendRequestId) : [])
+                            ];
+                            localStorage.setItem('ff_pending_received_requests', JSON.stringify(updatedPending));
+
+                            // 2. Registrar en solicitudes enviadas del remitente
+                            const savedSent = localStorage.getItem('ff_sent_friend_requests');
+                            const sentList = savedSent ? JSON.parse(savedSent) : [];
+                            const sentEntry = {
+                              id: `sent-${recipientKey}`,
+                              friendRequestId,
+                              name: userProfile.name,
+                              username: recipientUsername,
+                              avatar: userProfile.avatar || '',
+                              bio: userProfile.bio || 'Creadora oficial en Fashion Finances',
+                              sentAt: 'Enviada ahora mismo · Esperando aceptación',
+                              mutualFriends: 4,
+                              isOnline: true
+                            };
+                            const updatedSent = [
+                              sentEntry,
+                              ...(Array.isArray(sentList)
+                                ? sentList.filter((s: any) => s.id !== sentEntry.id && s.username?.toLowerCase() !== recipientKey)
+                                : [])
+                            ];
+                            localStorage.setItem('ff_sent_friend_requests', JSON.stringify(updatedSent));
                           } catch {}
-                          return next;
-                        });
+
+                          // 3. Enviar notificación directa a la pestaña "Amigos" de Notificaciones del destinatario
+                          pushAppNotification({
+                            id: notifId,
+                            upsert: true,
+                            category: 'amigos',
+                            title: '👥 Solicitud de amistad recibida',
+                            message: `${sender.name} (@${senderUsername}) te ha enviado una solicitud de amistad.${sender.bio ? ` ${sender.bio}` : ''}`,
+                            timestamp: Date.now(),
+                            read: false,
+                            icon: '👥',
+                            avatar: sender.avatar,
+                            senderId: sender.id,
+                            senderName: sender.name,
+                            senderUsername,
+                            recipientId: userProfile.id,
+                            recipientName: userProfile.name,
+                            recipientUsername,
+                            friendRequestId,
+                            friendRequestType: 'received',
+                            friendData: {
+                              id: friendRequestId,
+                              name: sender.name,
+                              username: senderUsername,
+                              avatar: sender.avatar,
+                              bio: sender.bio,
+                              sentAt: 'Ahora mismo',
+                              mutualFriends: 4,
+                              isOnline: true
+                            }
+                          });
+
+                          showSocialToast(`🤝 ¡Solicitud de amistad enviada a ${userProfile.name}!`);
+                          window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+                        } else if (friendshipStatus === 'pending') {
+                          // Cancelar solicitud enviada
+                          setFriendshipStatus('none');
+                          try {
+                            localStorage.setItem(`friend_status_${senderKey}_${userProfile.id}`, 'none');
+                            localStorage.setItem(`friend_status_${userProfile.id}`, 'none');
+
+                            const savedPending = localStorage.getItem('ff_pending_received_requests');
+                            if (savedPending) {
+                              const pendingList = JSON.parse(savedPending);
+                              if (Array.isArray(pendingList)) {
+                                localStorage.setItem(
+                                  'ff_pending_received_requests',
+                                  JSON.stringify(pendingList.filter((p: any) => p.id !== friendRequestId))
+                                );
+                              }
+                            }
+
+                            const savedSent = localStorage.getItem('ff_sent_friend_requests');
+                            if (savedSent) {
+                              const sentList = JSON.parse(savedSent);
+                              if (Array.isArray(sentList)) {
+                                localStorage.setItem(
+                                  'ff_sent_friend_requests',
+                                  JSON.stringify(
+                                    sentList.filter(
+                                      (s: any) => s.friendRequestId !== friendRequestId && s.username?.toLowerCase() !== recipientKey
+                                    )
+                                  )
+                                );
+                              }
+                            }
+                          } catch {}
+
+                          removeAppNotificationsByPrefix(notifId);
+                          showSocialToast(`Solicitud de amistad a ${userProfile.name} cancelada`);
+                          window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+                        } else {
+                          setFriendshipStatus('none');
+                          try {
+                            localStorage.setItem(`friend_status_${senderKey}_${userProfile.id}`, 'none');
+                            localStorage.setItem(`friend_status_${userProfile.id}`, 'none');
+                          } catch {}
+                          window.dispatchEvent(new CustomEvent('sync-friend-requests'));
+                        }
                       }}
                       className={`px-4 py-2.5 rounded-2xl border text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer select-none shadow-xs hover:shadow-sm active:scale-[0.98] ${
                         friendshipStatus === 'friends'
@@ -7647,7 +7972,7 @@ export default function ModelFacebookProfile({
                           <span className="font-bold tracking-wide text-xs">Ver opciones de contratación</span>
                         </button>
 
-                        {canViewAndRespondHiringOffers ? (
+                        {canViewAndRespondHiringOffers && (
                           <button
                             type="button"
                             onClick={() => {
@@ -7658,22 +7983,12 @@ export default function ModelFacebookProfile({
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                             <span className="font-bold tracking-wide text-xs">
-                              Ver y responder ofertas ({profileReceivedOffers.length})
+                              {profilePendingOffersCount > 0
+                                ? `Ver y responder ofertas (${profilePendingOffersCount})`
+                                : 'Ver y responder ofertas'}
                             </span>
                           </button>
-                        ) : !isOwnProfile ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setContractsPortalTab('send');
-                              setShowContractsModal(true);
-                            }}
-                            className="custom-bg px-5 py-2.5 bg-gradient-to-r from-[#ff2d85] to-rose-500 hover:brightness-105 text-white font-bold text-xs tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2 active:scale-[0.99]"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                            <span className="font-bold tracking-wide text-xs">Enviar oferta</span>
-                          </button>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                   </div>
@@ -11786,7 +12101,7 @@ export default function ModelFacebookProfile({
                   <div className="flex-1">
                     <h2 className="text-lg font-black text-slate-900 leading-tight">
                       {activeSocialModal === 'friends' ? (
-                        friendsSubTab === 'pending' ? `Solicitudes de Amistad · Pendientes de Aceptar (${pendingReceivedRequests.length})` :
+                        friendsSubTab === 'pending' ? `Solicitudes de Amistad · Pendientes de Aceptar (${visiblePendingReceivedRequests.length})` :
                         friendsSubTab === 'sent' ? `Solicitudes de Amistad · Enviadas (${sentRequestsList.length})` :
                         'Mis Amigos'
                       ) :
@@ -11840,7 +12155,7 @@ export default function ModelFacebookProfile({
                     <UserPlus className="w-4 h-4 shrink-0 text-pink-600" />
                     <span>Pendientes de Aceptar</span>
                     <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
-                      {pendingReceivedRequests.length}
+                      {visiblePendingReceivedRequests.length}
                     </span>
                   </button>
 
@@ -11866,7 +12181,7 @@ export default function ModelFacebookProfile({
               )}
 
               {/* 📬 Banner de aviso rápido si hay solicitudes pendientes */}
-              {activeSocialModal === 'friends' && friendsSubTab === 'friends' && pendingReceivedRequests.length > 0 && (
+              {activeSocialModal === 'friends' && friendsSubTab === 'friends' && visiblePendingReceivedRequests.length > 0 && (
                 <div className="bg-gradient-to-r from-pink-50 via-rose-50/70 to-pink-50/40 border border-pink-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-3xs animate-fade-in">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#ff2d85] text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
@@ -11874,7 +12189,7 @@ export default function ModelFacebookProfile({
                     </div>
                     <div className="text-left">
                       <p className="text-xs sm:text-sm font-black text-slate-900 m-0">
-                        Tienes {pendingReceivedRequests.length} solicitudes de amistad pendientes de aceptar
+                        Tienes {visiblePendingReceivedRequests.length} solicitudes de amistad pendientes de aceptar
                       </p>
                       <p className="text-[11px] text-slate-500 font-medium m-0">
                         Otros miembros quieren conectar contigo en Fashion Finances.
@@ -11889,7 +12204,7 @@ export default function ModelFacebookProfile({
                     }}
                     className="px-4 py-2 bg-[#ff2d85] hover:bg-rose-600 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-sm shrink-0 active:scale-95"
                   >
-                    Ver Solicitudes ({pendingReceivedRequests.length}) →
+                    Ver Solicitudes ({visiblePendingReceivedRequests.length}) →
                   </button>
                 </div>
               )}
@@ -11924,7 +12239,7 @@ export default function ModelFacebookProfile({
                   // VISTA 1: SOLICITUDES PENDIENTES DE ACEPTAR
                   if (activeSocialModal === 'friends' && friendsSubTab === 'pending') {
                     const q = socialSearchQuery.toLowerCase().trim();
-                    const list = pendingReceivedRequests.filter(item => {
+                    const list = visiblePendingReceivedRequests.filter(item => {
                       if (!q) return true;
                       return (
                         item.name?.toLowerCase().includes(q) ||
@@ -12680,19 +12995,92 @@ export default function ModelFacebookProfile({
                         </span>
                       </div>
 
-                      {/* 💎 PANEL GLAMUROSO DE REDES SOCIALES CON DIAMANTES (EXACTO A LA CAPTURA) */}
+                      {/* Botón Guardar Cambios centrado encima del contenedor de redes sociales */}
+                      <div className="flex justify-center items-center pt-3 pb-2 my-3 border-b border-slate-100 w-full">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const trimmedBio = editingBio.trim();
+                            const trimmedWebsite = editingWebsite.trim();
+                            const trimmedName = editingName.trim() || userProfile.name;
+                            const trimmedUsername = (editingUsername.trim() || userProfile.username).replace(/^@/, '');
+                            const trimmedAgency = editingFashionAgency.trim();
+                            const { nextIg, nextTt, nextTw } = persistSocialHandlesToStorage(
+                              editingInstagram,
+                              editingTikTok,
+                              editingTwitter,
+                              trimmedUsername
+                            );
+                            const updatedUser = {
+                              ...userProfile,
+                              name: trimmedName,
+                              username: trimmedUsername,
+                              fashionAgency: trimmedAgency,
+                              bio: trimmedBio,
+                              website: trimmedWebsite,
+                              avatar: editingAvatar || userProfile.avatar,
+                              instagram: nextIg,
+                              tiktok: nextTt,
+                              twitter: nextTw
+                            };
+                            setBioText(trimmedBio);
+                            setCreatorWebsite(trimmedWebsite);
+                            setFashionAgency(trimmedAgency);
+                            syncModelsSocialHandles(nextIg, nextTt, nextTw, {
+                              name: trimmedName,
+                              username: trimmedUsername,
+                              bio: trimmedBio,
+                              avatar: updatedUser.avatar,
+                              fashionAgency: trimmedAgency
+                            });
+                            try {
+                              localStorage.setItem('coll_userProfile', JSON.stringify(updatedUser));
+                              localStorage.setItem('coll_current_user', JSON.stringify(updatedUser));
+                              localStorage.setItem('custom_model_bio', trimmedBio);
+                              localStorage.setItem(`custom_model_bio_${userProfile.id}`, trimmedBio);
+                              localStorage.setItem(`custom_model_website_${userProfile.id}`, trimmedWebsite);
+                              if (userProfile.username) {
+                                localStorage.setItem(`custom_model_bio_${userProfile.username.toLowerCase()}`, trimmedBio);
+                                localStorage.setItem(`custom_model_website_${userProfile.username.toLowerCase()}`, trimmedWebsite);
+                              }
+                              localStorage.setItem('custom_model_fashion_agency', trimmedAgency);
+                              window.dispatchEvent(new CustomEvent('custom_socials_updated'));
+                            } catch (e) {}
+                            saveSynchronizedBioAndWebsite(trimmedUsername, trimmedBio, trimmedWebsite, userProfile.id);
+                            if (onUpdateProfile) {
+                              onUpdateProfile(updatedUser);
+                            }
+                            setSocialsRevision(prev => prev + 1);
+                            setSocialsSavedFeedback(true);
+                            setTimeout(() => {
+                              setSocialsSavedFeedback(false);
+                            }, 3500);
+                            showSocialToast("✅ ¡Cambios guardados con éxito!");
+                          }}
+                          style={{ backgroundColor: '#ffffff', color: '#ff2d85' }}
+                          className="custom-bg px-8 py-3 bg-white hover:bg-pink-50/70 active:bg-pink-100/60 text-[#ff2d85] font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all cursor-pointer shadow-sm hover:shadow-md border border-pink-200 hover:border-pink-400 active:scale-95 flex items-center justify-center gap-2.5 select-none"
+                        >
+                          <Check className="w-5 h-5 stroke-[3] text-[#ff2d85]" style={{ color: '#ff2d85' }} />
+                          <span className="text-[#ff2d85]" style={{ color: '#ff2d85' }}>Guardar cambios</span>
+                        </button>
+                      </div>
+
+                      {/* 💎 PANEL GLAMUROSO DE REDES SOCIALES CON DIAMANTES (MÁS BLANCO, MENOS ROSA Y MARCO DIFUMINADO) */}
                       <div className="my-5 w-full">
                         <div
                           style={{ containerType: 'inline-size' }}
-                          className="relative w-full aspect-[1750/899] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl border-2 border-pink-200/90 select-none bg-gradient-to-br from-[#ffd6e7] via-[#ffb6d5] to-[#ffaecf]"
+                          className="relative w-full aspect-[1750/899] rounded-[24px] sm:rounded-[32px] overflow-hidden select-none bg-transparent"
                         >
-                          {/* 1. Fondo de Arte Oficial de Alta Resolución */}
+                          {/* 1. Fondo de Arte Oficial de Alta Resolución (blanco perlado + marco difuminado) */}
                           <img 
-                            src="/assets/aistudio/Panel_glamuroso_de_redes_sociales_con_diamantes_aea3b3d1.webp"
+                            src="/assets/aistudio/Panel_glamuroso_de_redes_sociales_blanco_difuminado.webp"
                             alt="Panel Glamuroso de Redes Sociales con Diamantes"
-                            className="w-full h-full object-cover block pointer-events-none"
+                            className="w-full h-full object-contain block pointer-events-none"
                             referrerPolicy="no-referrer"
                           />
+
+                          {/* Marco difuminado suave en los cuatro bordes fundido con el fondo blanco */}
+                          <div className="absolute inset-0 pointer-events-none rounded-[24px] sm:rounded-[32px] shadow-[inset_0_0_32px_18px_rgba(255,255,255,0.92)]" />
 
                           {/* 2. Capa Interactiva de Entradas y Botones superpuestos con precisión milimétrica */}
                           <div className="absolute inset-0 w-full h-full">
@@ -12826,76 +13214,6 @@ export default function ModelFacebookProfile({
                             <span>¡Redes sociales guardadas y actualizadas con éxito!</span>
                           </div>
                         )}
-                      </div>
-
-                      {/* Botón Guardar Cambios centrado con fondo color Rosa Pink */}
-                      <div className="flex justify-center items-center pt-4 pb-2 my-3 border-t border-slate-100 w-full">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const trimmedBio = editingBio.trim();
-                            const trimmedWebsite = editingWebsite.trim();
-                            const trimmedName = editingName.trim() || userProfile.name;
-                            const trimmedUsername = (editingUsername.trim() || userProfile.username).replace(/^@/, '');
-                            const trimmedAgency = editingFashionAgency.trim();
-                            const { nextIg, nextTt, nextTw } = persistSocialHandlesToStorage(
-                              editingInstagram,
-                              editingTikTok,
-                              editingTwitter,
-                              trimmedUsername
-                            );
-                            const updatedUser = {
-                              ...userProfile,
-                              name: trimmedName,
-                              username: trimmedUsername,
-                              fashionAgency: trimmedAgency,
-                              bio: trimmedBio,
-                              website: trimmedWebsite,
-                              avatar: editingAvatar || userProfile.avatar,
-                              instagram: nextIg,
-                              tiktok: nextTt,
-                              twitter: nextTw
-                            };
-                            setBioText(trimmedBio);
-                            setCreatorWebsite(trimmedWebsite);
-                            setFashionAgency(trimmedAgency);
-                            syncModelsSocialHandles(nextIg, nextTt, nextTw, {
-                              name: trimmedName,
-                              username: trimmedUsername,
-                              bio: trimmedBio,
-                              avatar: updatedUser.avatar,
-                              fashionAgency: trimmedAgency
-                            });
-                            try {
-                              localStorage.setItem('coll_userProfile', JSON.stringify(updatedUser));
-                              localStorage.setItem('coll_current_user', JSON.stringify(updatedUser));
-                              localStorage.setItem('custom_model_bio', trimmedBio);
-                              localStorage.setItem(`custom_model_bio_${userProfile.id}`, trimmedBio);
-                              localStorage.setItem(`custom_model_website_${userProfile.id}`, trimmedWebsite);
-                              if (userProfile.username) {
-                                localStorage.setItem(`custom_model_bio_${userProfile.username.toLowerCase()}`, trimmedBio);
-                                localStorage.setItem(`custom_model_website_${userProfile.username.toLowerCase()}`, trimmedWebsite);
-                              }
-                              localStorage.setItem('custom_model_fashion_agency', trimmedAgency);
-                              window.dispatchEvent(new CustomEvent('custom_socials_updated'));
-                            } catch (e) {}
-                            saveSynchronizedBioAndWebsite(trimmedUsername, trimmedBio, trimmedWebsite, userProfile.id);
-                            if (onUpdateProfile) {
-                              onUpdateProfile(updatedUser);
-                            }
-                            setSocialsRevision(prev => prev + 1);
-                            setSocialsSavedFeedback(true);
-                            setTimeout(() => {
-                              setSocialsSavedFeedback(false);
-                            }, 3500);
-                            showSocialToast("✅ ¡Cambios guardados con éxito!");
-                          }}
-                          style={{ backgroundColor: '#ffffff', color: '#ff2d85' }}
-                          className="custom-bg px-8 py-3 bg-white hover:bg-pink-50/70 active:bg-pink-100/60 text-[#ff2d85] font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all cursor-pointer shadow-sm hover:shadow-md border border-pink-200 hover:border-pink-400 active:scale-95 flex items-center justify-center gap-2.5 select-none"
-                        >
-                          <Check className="w-5 h-5 stroke-[3] text-[#ff2d85]" style={{ color: '#ff2d85' }} />
-                          <span className="text-[#ff2d85]" style={{ color: '#ff2d85' }}>Guardar cambios</span>
-                        </button>
                       </div>
 
                       {/* Frase centrada con tamaño de letra más chico */}

@@ -112,10 +112,122 @@ export const toggleFollowUserInStorage = (user: {
   // Dispatch global sync event across the entire app
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('sync-following-list', { detail: nextList }));
+    window.dispatchEvent(new CustomEvent('sync-sidebar-following-extras'));
   }
 
   return {
     isFollowing: !isCurrentlyFollowing,
+    nextList
+  };
+};
+
+const SIDEBAR_FOLLOWED_EXTRAS_KEY = 'coll_sidebar_followed_extras';
+const SIDEBAR_UNFOLLOWED_KEY = 'coll_sidebar_unfollowed_accounts';
+
+export const getSidebarExtraFollowedUsers = (): FollowedUser[] => {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_FOLLOWED_EXTRAS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (_) {}
+  return [];
+};
+
+export const getSidebarUnfollowedUsernames = (): string[] => {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_UNFOLLOWED_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (_) {}
+  return [];
+};
+
+export const setFollowStateFromProfile = (
+  user: {
+    id?: string;
+    name: string;
+    username: string;
+    avatar?: string;
+    bio?: string;
+    role?: string;
+  },
+  shouldFollow: boolean
+): { isFollowing: boolean; nextList: FollowedUser[] } => {
+  const currentList = getFollowedUsersFromStorage();
+  const targetUser = cleanUsername(user.username);
+  const targetName = (user.name || '').toLowerCase().trim();
+
+  const matchesItem = (item: { username?: string; name?: string }) => {
+    const itemUser = cleanUsername(item.username);
+    const itemName = (item.name || '').toLowerCase().trim();
+    return Boolean((targetUser && itemUser === targetUser) || (targetName && itemName === targetName));
+  };
+
+  let nextList: FollowedUser[];
+  if (shouldFollow) {
+    const filtered = currentList.filter(item => !matchesItem(item));
+    const newFollowed: FollowedUser = {
+      id: user.id || `fol-${Date.now()}`,
+      name: user.name,
+      username: user.username,
+      avatar: user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      role: user.role || 'model',
+      bio: user.bio || 'Creadora destacada en Fashion Finances.',
+      online: true
+    };
+    nextList = [newFollowed, ...filtered];
+  } else {
+    nextList = currentList.filter(item => !matchesItem(item));
+  }
+
+  try {
+    localStorage.setItem('coll_following', JSON.stringify(nextList));
+  } catch (e) {
+    console.error('Error saving coll_following:', e);
+  }
+
+  // Also synchronize Casting Live sidebar "Cuentas que sigues" extras list
+  try {
+    const extras = getSidebarExtraFollowedUsers().filter(item => !matchesItem(item));
+    const unfollowed = getSidebarUnfollowedUsernames().filter(
+      u => u !== targetUser && u !== targetName
+    );
+
+    if (shouldFollow) {
+      const nextExtras: FollowedUser[] = [
+        {
+          id: user.id || `fol-${Date.now()}`,
+          name: user.name,
+          username: user.username,
+          avatar: user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+          role: user.role || 'model',
+          bio: user.bio || 'Creadora destacada en Fashion Finances.',
+          online: true
+        },
+        ...extras
+      ];
+      localStorage.setItem(SIDEBAR_FOLLOWED_EXTRAS_KEY, JSON.stringify(nextExtras));
+      localStorage.setItem(SIDEBAR_UNFOLLOWED_KEY, JSON.stringify(unfollowed));
+    } else {
+      localStorage.setItem(SIDEBAR_FOLLOWED_EXTRAS_KEY, JSON.stringify(extras));
+      const nextUnfollowed = targetUser ? [...unfollowed, targetUser] : unfollowed;
+      localStorage.setItem(SIDEBAR_UNFOLLOWED_KEY, JSON.stringify(nextUnfollowed));
+    }
+  } catch (e) {
+    console.error('Error saving sidebar follow sync:', e);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('sync-following-list', { detail: nextList }));
+    window.dispatchEvent(new CustomEvent('sync-sidebar-following-extras'));
+  }
+
+  return {
+    isFollowing: shouldFollow,
     nextList
   };
 };

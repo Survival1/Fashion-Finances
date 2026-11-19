@@ -188,6 +188,19 @@ const doUserIdentitiesMatch = (
     if (aBase.length >= 5 && bBase.length >= 5 && aBase === bBase) return true;
   }
 
+  const isAdriana = (u: NotificationUserIdentity) => {
+    const n = normalizeIdentityText(u.name);
+    const un = normalizeIdentityText(u.username);
+    return (
+      u.id === 'topf-1' ||
+      un === 'adrianalima' ||
+      un === 'adrianalima_w1' ||
+      n === 'adriana lima' ||
+      n === 'adriana lim'
+    );
+  };
+  if (isAdriana(a) && isAdriana(b)) return true;
+
   return false;
 };
 
@@ -551,6 +564,15 @@ export default function NotificationCenterModal({
     } else {
       setActiveUser(readStoredUserProfile());
     }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setNotifications(parsed.filter((n: AppNotification) => !isDisallowedBrandCommissionNotification(n)));
+        }
+      }
+    } catch {}
   }, [userProfile, isOpen]);
 
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
@@ -785,9 +807,32 @@ export default function NotificationCenterModal({
       };
       const updatedAccepted = [newFriend, ...acceptedList.filter((f: any) => f.id !== newFriend.id && f.username !== newFriend.username)];
       localStorage.setItem('ff_accepted_extra_friends', JSON.stringify(updatedAccepted));
+
+      // 3. Actualizar estado de amistad persistido para el perfil del destinatario
+      const senderKey = normalizeIdentityText(item.senderUsername || item.friendData.username);
+      const targetId = (item.recipientId || activeUser?.id || '').trim();
+      if (senderKey && targetId) {
+        localStorage.setItem(`friend_status_${senderKey}_${targetId}`, 'friends');
+      }
+      if (targetId) {
+        localStorage.setItem(`friend_status_${targetId}`, 'friends');
+      }
+
+      // 4. Eliminar de solicitudes enviadas pendientes
+      const savedSent = localStorage.getItem('ff_sent_friend_requests');
+      if (savedSent) {
+        const sentList = JSON.parse(savedSent);
+        if (Array.isArray(sentList)) {
+          const recipientKey = normalizeIdentityText(item.recipientUsername || activeUser?.username);
+          const filteredSent = sentList.filter(
+            (s: any) => s.friendRequestId !== item.friendRequestId && normalizeIdentityText(s.username) !== recipientKey
+          );
+          localStorage.setItem('ff_sent_friend_requests', JSON.stringify(filteredSent));
+        }
+      }
     } catch (_) {}
 
-    // 3. Actualizar la notificación en el estado local
+    // 5. Actualizar la notificación en el estado local
     setNotifications(prev => prev.map(n => {
       if (n.id === item.id) {
         return {
@@ -801,9 +846,33 @@ export default function NotificationCenterModal({
       return n;
     }));
 
+    // 6. Enviar notificación de aceptación al remitente original
+    const senderUsername = (item.senderUsername || item.friendData.username || '').replace(/^@+/, '');
+    if (senderUsername && activeUser?.name) {
+      const accepterKey = normalizeIdentityText(activeUser.username || activeUser.id || 'user');
+      pushAppNotification({
+        id: `notif-friend-acc-${accepterKey}-to-${normalizeIdentityText(senderUsername)}`,
+        upsert: true,
+        category: 'amigos',
+        title: `🎉 ¡${activeUser.name} ha aceptado tu solicitud de amistad!`,
+        message: `${activeUser.name}${activeUser.username ? ` (@${activeUser.username.replace(/^@+/, '')})` : ''} ha aceptado tu solicitud de amistad. Ahora sois amigos y podéis intercambiar mensajes y colaborar.`,
+        timestamp: Date.now(),
+        read: false,
+        icon: '🎉',
+        senderId: activeUser.id,
+        senderName: activeUser.name,
+        senderUsername: activeUser.username,
+        recipientId: item.senderId,
+        recipientName: item.senderName || item.friendData.name,
+        recipientUsername: senderUsername,
+        friendRequestType: 'accepted',
+        actionLabel: 'Ver en Amigos'
+      });
+    }
+
     showToast(`¡Solicitud aceptada! Ahora ${item.friendData.name} y tú sois amigos.`);
 
-    // 4. Notificar a ModelFacebookProfile y demás componentes
+    // 7. Notificar a ModelFacebookProfile y demás componentes
     window.dispatchEvent(new CustomEvent('sync-friend-requests'));
   };
 
@@ -817,6 +886,27 @@ export default function NotificationCenterModal({
       const pendingList = savedPending ? JSON.parse(savedPending) : [];
       const updatedPending = pendingList.filter((p: any) => p.id !== item.friendRequestId && p.username !== item.friendData?.username);
       localStorage.setItem('ff_pending_received_requests', JSON.stringify(updatedPending));
+
+      const senderKey = normalizeIdentityText(item.senderUsername || item.friendData.username);
+      const targetId = (item.recipientId || activeUser?.id || '').trim();
+      if (senderKey && targetId) {
+        localStorage.setItem(`friend_status_${senderKey}_${targetId}`, 'none');
+      }
+      if (targetId) {
+        localStorage.setItem(`friend_status_${targetId}`, 'none');
+      }
+
+      const savedSent = localStorage.getItem('ff_sent_friend_requests');
+      if (savedSent) {
+        const sentList = JSON.parse(savedSent);
+        if (Array.isArray(sentList)) {
+          const recipientKey = normalizeIdentityText(item.recipientUsername || activeUser?.username);
+          const filteredSent = sentList.filter(
+            (s: any) => s.friendRequestId !== item.friendRequestId && normalizeIdentityText(s.username) !== recipientKey
+          );
+          localStorage.setItem('ff_sent_friend_requests', JSON.stringify(filteredSent));
+        }
+      }
     } catch (_) {}
 
     setNotifications(prev => prev.filter(n => n.id !== item.id));

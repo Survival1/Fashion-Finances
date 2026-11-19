@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentSession, ParticipantState, ModelProfile, ProjectData, UserSessionProfile, FinancialMovement } from '../types';
 import { seedInitialData } from '../utils/seedData';
+import { clearAllContestParticipationStorage, isCurrentUserParticipant } from '../utils/roundsDatabase';
 import SessionResultsPodium from './SessionResultsPodium';
 import { pushAppNotification } from './NotificationCenterModal';
 import ParticipantsGatheringModal from './ParticipantsGatheringModal';
@@ -3300,39 +3301,24 @@ export default function SessionSimulator({
             {/* Cerrar Concurso Button */}
             <button
                onClick={() => {
-                 // Clear all participation state so the user is no longer enrolled as a participant
-                 try {
-                   localStorage.removeItem('finanzas_user_participating');
-                   localStorage.removeItem('user_paid_finanzas_session');
-                   localStorage.removeItem('finanzas_target_session_id');
-                   localStorage.removeItem('finanzas_user_slot_index');
-                   localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-                   localStorage.removeItem('user_paid_session_sess-emprendedores-1');
-                   localStorage.removeItem('user_paid_session_sess-empresarios-1');
-                   localStorage.removeItem('user_paid_session_sess-topmodels-1');
-                   localStorage.removeItem('user_paid_session_sess-inversores-1');
-                   localStorage.removeItem('user_paid_session_sess-millonarios-1');
+                 // Clear all participation state across EVERY round so the user is no longer enrolled anywhere
+                 clearAllContestParticipationStorage(userProfile);
 
-                   const saved = localStorage.getItem('open_finanzas_sessions_list_v43');
-                   if (saved) {
-                     const parsed = JSON.parse(saved);
-                     if (Array.isArray(parsed)) {
-                       const cleaned = parsed.map((sess: any) => ({
-                         ...sess,
-                         participants: Array.isArray(sess.participants)
-                           ? sess.participants.filter((p: any) =>
-                               !p.name?.includes('Adriana') &&
-                               !p.name?.includes('(Tú)') &&
-                               p.id !== 'user-adriana' &&
-                               p.id !== userProfile?.id &&
-                               !p.isSelf
-                             )
-                           : sess.participants
-                       }));
-                       localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(cleaned));
-                     }
-                   }
-                 } catch (e) {}
+                 // Also remove current user from all simulator sessions
+                 if (onUpdateSessions && Array.isArray(sessions)) {
+                   const seedSessions = seedInitialData().sessions;
+                   const cleanedSessions = sessions.map(sess => {
+                     const hasUser = sess.participants.some(p => isCurrentUserParticipant(p, userProfile));
+                     if (!hasUser) return sess;
+                     const seedMatch = seedSessions.find(fs => fs.id === sess.id);
+                     if (seedMatch) return seedMatch;
+                     return {
+                       ...sess,
+                       participants: sess.participants.filter(p => !isCurrentUserParticipant(p, userProfile))
+                     };
+                   });
+                   onUpdateSessions(cleanedSessions);
+                 }
 
                  if (onFinishParticipationSession) {
                    onFinishParticipationSession();
@@ -3342,8 +3328,9 @@ export default function SessionSimulator({
                    setIsCastingPublished(false);
                  }
                  try {
-                   localStorage.removeItem('finanzas_contest_pending_close');
+                   clearAllContestParticipationStorage(userProfile);
                    window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
+                   window.dispatchEvent(new Event('storage'));
                  } catch (e) {}
                }}
                id="btn-cerrar-concurso-simulator"

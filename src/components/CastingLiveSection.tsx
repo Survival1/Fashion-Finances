@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import StoryCreatorModal from './StoryCreatorModal';
 import AccessRequestModal, {
   getStoredMediaPermissions,
@@ -18,7 +19,9 @@ import {
   resolveCategoryKey,
   formatRoundRef,
   createNewRoundRecord,
-  saveRoundDatabase
+  saveRoundDatabase,
+  clearAllContestParticipationStorage,
+  isCurrentUserParticipant
 } from '../utils/roundsDatabase';
 import { BALMAIN_LOGO_DATA_URL, COUTURE_ELITE_LOGO_DATA_URL } from '../utils/brandLogos';
 import { saveLuxuryWatchGift, playLuxuryWatchSoundEffect } from './LuxuryWatchAnimation';
@@ -26,7 +29,10 @@ import { openImageLightbox } from './GlobalMobileImageLightbox';
 import { 
   getFollowedUsersFromStorage, 
   isUserFollowedInStorage, 
-  toggleFollowUserInStorage 
+  toggleFollowUserInStorage,
+  getSidebarExtraFollowedUsers,
+  getSidebarUnfollowedUsernames,
+  FollowedUser
 } from '../utils/followingService';
 import { getSynchronizedBioAndWebsite } from '../utils/creatorSync';
 import { 
@@ -124,7 +130,8 @@ import {
   FileText,
   Reply,
   Trophy,
-  PlusCircle
+  PlusCircle,
+  Pause
 } from 'lucide-react';
 import { ModelProfile, UserSessionProfile, ProjectData, InvestmentSession, HistoryWonRecord } from '../types';
 import { seedInitialData } from '../utils/seedData';
@@ -2920,6 +2927,23 @@ export default function CastingLiveSection({
   const [showTouchTableOverlay, setShowTouchTableOverlay] = useState<boolean>(false);
   const [showTouchRightSidebar, setShowTouchRightSidebar] = useState<boolean>(false);
   const [isExpandedFollowingAccounts, setIsExpandedFollowingAccounts] = useState<boolean>(false);
+  const [sidebarExtraFollowed, setSidebarExtraFollowed] = useState<FollowedUser[]>(() => getSidebarExtraFollowedUsers());
+  const [sidebarUnfollowed, setSidebarUnfollowed] = useState<string[]>(() => getSidebarUnfollowedUsernames());
+
+  useEffect(() => {
+    const refreshSidebarFollows = () => {
+      setSidebarExtraFollowed(getSidebarExtraFollowedUsers());
+      setSidebarUnfollowed(getSidebarUnfollowedUsernames());
+    };
+    window.addEventListener('sync-sidebar-following-extras', refreshSidebarFollows);
+    window.addEventListener('sync-following-list', refreshSidebarFollows);
+    window.addEventListener('storage', refreshSidebarFollows);
+    return () => {
+      window.removeEventListener('sync-sidebar-following-extras', refreshSidebarFollows);
+      window.removeEventListener('sync-following-list', refreshSidebarFollows);
+      window.removeEventListener('storage', refreshSidebarFollows);
+    };
+  }, []);
 
   useEffect(() => {
     const detectTouch = () => {
@@ -5183,9 +5207,12 @@ export default function CastingLiveSection({
 
   // Helper function to terminate current session on results page trigger and move to next open session
   const handleFinishCurrentSessionAndNext = () => {
-    // Reset user participation completely so user is no longer enrolled as a participant
+    // Reset user participation completely so user is no longer enrolled as a participant in ANY round
     setIsFinanzasUserParticipatingState(false);
     setUserPaidSessions({});
+    setUserParticipantSlotIndex(null);
+    setSelectedArrivalSlot(null);
+    setGatheringParticipantsList(TRABAJADORES_USERS);
     setForceShowParticipantsPanel(false);
     setIsVotingPhaseActive(false);
     setVotingCountdownSeconds(600);
@@ -5194,26 +5221,8 @@ export default function CastingLiveSection({
     const closedSessionId = currentFinanzasSession?.id || 'sess-trabajadores-1';
 
     try {
-      localStorage.removeItem('finanzas_contest_pending_close');
       setIsContestPendingClose(false);
-      try {
-        window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
-      } catch (e) {}
-      localStorage.removeItem('finanzas_user_participating');
-      localStorage.removeItem('finanzas_user_is_participating');
-      localStorage.removeItem('user_paid_finanzas_session');
-      localStorage.removeItem('finanzas_target_session_id');
-      localStorage.removeItem('finanzas_user_slot_index');
-      localStorage.removeItem('finanzas_enrolled_simulator_session_id');
-      localStorage.removeItem('finanzas_enrolled_round_key');
-      localStorage.removeItem('finanzas_enrolled_entry_fee');
-      localStorage.removeItem('user_paid_session_sess-trabajadores-1');
-      localStorage.removeItem('user_paid_session_sess-streetwear-ref-2');
-      localStorage.removeItem('user_paid_session_sess-emprendedores-1');
-      localStorage.removeItem('user_paid_session_sess-empresarios-1');
-      localStorage.removeItem('user_paid_session_sess-topmodels-1');
-      localStorage.removeItem('user_paid_session_sess-inversores-1');
-      localStorage.removeItem('user_paid_session_sess-millonarios-1');
+      clearAllContestParticipationStorage(userProfile);
 
       // 🛑 Reset voting status ONLY for the finished session so other sessions keep their independent phase
       localStorage.removeItem(`finanzas_is_voting_phase_active_${closedSessionId}`);
@@ -5231,10 +5240,43 @@ export default function CastingLiveSection({
           localStorage.setItem('finanzas_session_voting_phase_map', JSON.stringify(parsedMap));
         }
       }
+
+      try {
+        window.dispatchEvent(new CustomEvent('finanzas-contest-closed'));
+      } catch (e) {}
     } catch (e) {}
 
     const myId = userProfile?.id || 'user-adriana';
     const myUsername = userProfile?.username || 'adrianalima_w1';
+
+    const stripSelfParticipants = (list: any[], fallbackPool: any[] = FINANZAS_USERS) => {
+      const cleaned = (Array.isArray(list) ? list : []).filter(p => !isCurrentUserParticipant(p, userProfile));
+      if (cleaned.length >= 10) return cleaned.slice(0, 10);
+      const filled = [...cleaned];
+      for (const candidate of fallbackPool) {
+        if (filled.length >= 10) break;
+        if (!isCurrentUserParticipant(candidate, userProfile) && !filled.some(fp => fp.id === candidate.id || fp.name === candidate.name)) {
+          filled.push({ ...candidate });
+        }
+      }
+      return filled.slice(0, 10);
+    };
+
+    // Also strip current user from App-level simulator sessions so no round keeps them enrolled
+    if (onUpdateSessions && sessions && sessions.length > 0) {
+      const seedSessions = seedInitialData().sessions;
+      const nextSimSessions = sessions.map(sess => {
+        const hasUser = sess.participants.some(p => isCurrentUserParticipant(p, userProfile));
+        if (!hasUser) return sess;
+        const freshSeed = seedSessions.find(fs => fs.id === sess.id);
+        if (freshSeed) return freshSeed;
+        return {
+          ...sess,
+          participants: sess.participants.filter(p => !isCurrentUserParticipant(p, userProfile))
+        };
+      });
+      onUpdateSessions(nextSimSessions);
+    }
 
     // Celebrate and archive current round in its dedicated database, then spawn next round (REF: +1)
     let nextCreatedRound: any = null;
@@ -5251,6 +5293,7 @@ export default function CastingLiveSection({
 
     if (nextCreatedRound?.id) {
       try {
+        localStorage.removeItem(`user_paid_session_${nextCreatedRound.id}`);
         localStorage.removeItem(`finanzas_is_voting_phase_active_${nextCreatedRound.id}`);
         localStorage.setItem(`finanzas_is_voting_phase_active_${nextCreatedRound.id}`, 'false');
         localStorage.removeItem(`finanzas_voting_end_time_${nextCreatedRound.id}`);
@@ -5268,7 +5311,7 @@ export default function CastingLiveSection({
       }));
     } catch (e) {}
 
-    // Mark current session as completed and reset user participation for upcoming active sessions
+    // Mark current session as completed and reset user participation for ALL active sessions
     setOpenFinanzasSessions(prev => {
       const updated = prev.map(s => {
         if (currentFinanzasSession && s.id === currentFinanzasSession.id) {
@@ -5283,7 +5326,7 @@ export default function CastingLiveSection({
               category: nextCreatedRound.category,
               entryFee: nextCreatedRound.entryFee,
               presenter: nextCreatedRound.presenter,
-              participants: nextCreatedRound.participants,
+              participants: stripSelfParticipants(nextCreatedRound.participants, FINANZAS_USERS),
               status: 'active' as const
             };
           }
@@ -5292,18 +5335,12 @@ export default function CastingLiveSection({
         if (s.id === 'sess-trabajadores-1' || s.entryFee === 10 || s.title?.toUpperCase().includes('STREETWEAR')) {
           return {
             ...s,
-            participants: TRABAJADORES_USERS.slice(0, 10)
+            participants: stripSelfParticipants(TRABAJADORES_USERS.slice(0, 10), TRABAJADORES_USERS)
           };
         }
         return {
           ...s,
-          participants: s.participants.filter(p => 
-            p.id !== myId && 
-            p.username !== myUsername && 
-            p.id !== 'user-adriana' &&
-            !p.name?.includes('Adriana') &&
-            !p.name?.includes('(Tú)')
-          )
+          participants: stripSelfParticipants(s.participants, FINANZAS_USERS)
         };
       });
 
@@ -5333,24 +5370,53 @@ export default function CastingLiveSection({
           category: randomCat,
           entryFee: randomFee,
           presenter: FINANZAS_USERS[Math.floor(Math.random() * FINANZAS_USERS.length)],
-          participants: [...FINANZAS_USERS].filter(p => p.id !== myId && p.username !== myUsername),
+          participants: [...FINANZAS_USERS].filter(p => p.id !== myId && p.username !== myUsername && !isCurrentUserParticipant(p, userProfile)),
           status: 'active' as const
         };
         const nextList = [...updated, freshSession];
         try {
           localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(nextList));
+          localStorage.removeItem('open_finanzas_sessions_list_v44');
         } catch (e) {}
         return nextList;
       }
 
       try {
         localStorage.setItem('open_finanzas_sessions_list_v43', JSON.stringify(updated));
+        localStorage.removeItem('open_finanzas_sessions_list_v44');
       } catch (e) {}
       return updated;
     });
 
     setActiveFinanzasSessionIndex(0);
   };
+
+  // Ensure ANY "Cerrar Concurso" trigger (from podium, simulator, or channel) wipes in-memory participation immediately
+  useEffect(() => {
+    const onGlobalContestClosed = () => {
+      clearAllContestParticipationStorage(userProfile);
+      setIsFinanzasUserParticipatingState(false);
+      setUserPaidSessions({});
+      setUserParticipantSlotIndex(null);
+      setSelectedArrivalSlot(null);
+      setIsContestPendingClose(false);
+      setShowFinanzasResults(false);
+      setCompletedSessionToDisplay(null);
+      setShowFinanzasRecount(false);
+      setOpenFinanzasSessions(prev =>
+        prev.map(s => ({
+          ...s,
+          participants: Array.isArray(s.participants)
+            ? s.participants.filter(p => !isCurrentUserParticipant(p, userProfile))
+            : s.participants
+        }))
+      );
+    };
+    window.addEventListener('finanzas-contest-closed', onGlobalContestClosed);
+    return () => {
+      window.removeEventListener('finanzas-contest-closed', onGlobalContestClosed);
+    };
+  }, [userProfile]);
 
   useEffect(() => {
     setShowRondaNotice(true);
@@ -8177,9 +8243,42 @@ export default function CastingLiveSection({
   const [heroChannelsSliderIdx, setHeroChannelsSliderIdx] = useState<number>(0);
   const [liveChannelsCategoryFilter, setLiveChannelsCategoryFilter] = useState<string>('todos');
   const [selectedHeroChannelId, setSelectedHeroChannelId] = useState<string | null>(null);
+  const [expandedLiveChannelId, setExpandedLiveChannelId] = useState<string | null>(null);
+  const [expandedLivePaused, setExpandedLivePaused] = useState<boolean>(false);
+  const [expandedLiveMuted, setExpandedLiveMuted] = useState<boolean>(false);
+  const [expandedLiveVolume, setExpandedLiveVolume] = useState<number>(80);
+  const [expandedLiveFitMode, setExpandedLiveFitMode] = useState<'cover' | 'contain'>('cover');
+  const expandedVideoRef = useRef<HTMLVideoElement | null>(null);
   const [liveHeroVolume, setLiveHeroVolume] = useState<number>(80);
   const [isHeroLeftVolumeVisible, setIsHeroLeftVolumeVisible] = useState<boolean>(false);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!expandedLiveChannelId) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setExpandedLiveChannelId(null);
+        setExpandedLivePaused(false);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        const vid = expandedVideoRef.current;
+        if (vid) {
+          if (vid.paused) {
+            vid.play().catch(() => {});
+            setExpandedLivePaused(false);
+          } else {
+            vid.pause();
+            setExpandedLivePaused(true);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [expandedLiveChannelId]);
   const [heroSoundSheetVideo, setHeroSoundSheetVideo] = useState<SoundVideoReference | null>(null);
   const [isHeroRightActionsVisible, setIsHeroRightActionsVisible] = useState<boolean>(true);
   const [isHeroFollowed, setIsHeroFollowed] = useState<boolean>(false);
@@ -12500,10 +12599,12 @@ export default function CastingLiveSection({
     }
 
     // If an external model not in accountsQueSigues is clicked, navigate to model profile
-    if (onGoToModelProfile && models?.some(m => m.username?.toLowerCase() === formattedUsername || m.name.toLowerCase().includes(formattedUsername))) {
-      let matchedModel = models?.find(m => 
+    if (onGoToModelProfile && models?.length) {
+      const lowerFullName = fullName.toLowerCase().trim();
+      let matchedModel = models.find(m => 
         m.id.toLowerCase() === formattedUsername || 
         m.name.toLowerCase().trim() === formattedUsername || 
+        (lowerFullName && m.name.toLowerCase().trim() === lowerFullName) ||
         (m.username && m.username.toLowerCase().trim() === formattedUsername)
       );
 
@@ -16983,13 +17084,15 @@ export default function CastingLiveSection({
 
     return (
       <div 
-        className="w-full h-full max-h-full bg-[#fff0f3] text-slate-900 flex flex-col font-sans text-left overflow-hidden min-h-0 animate-fade-in pointer-events-auto box-border" 
+        className="relative w-full h-full max-h-full bg-[#fff0f3] text-slate-900 flex flex-col font-sans text-left overflow-hidden min-h-0 animate-fade-in pointer-events-auto box-border" 
         style={{ backgroundColor: '#fff0f3' }}
         id="finanzas-results-in-channel"
         onWheel={(e) => {
           e.stopPropagation();
+          const targetEl = e.target as HTMLElement | null;
+          if (targetEl?.closest('#full-project-dossier-modal')) return;
           const wrapper = document.getElementById('podium-scrollable-content-wrapper');
-          if (wrapper && !e.target.closest('#podium-scrollable-content-wrapper')) {
+          if (wrapper && !targetEl?.closest('#podium-scrollable-content-wrapper')) {
             wrapper.scrollBy({ top: e.deltaY, behavior: 'auto' });
           }
         }}
@@ -29412,17 +29515,10 @@ try {
                       style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (heroVideoRef.current) {
-                          if (heroVideoRef.current.paused || isHeroVideoPaused) {
-                            heroVideoRef.current.play().catch(() => {});
-                            setIsHeroVideoPaused(false);
-                          } else {
-                            heroVideoRef.current.pause();
-                            setIsHeroVideoPaused(true);
-                          }
-                        }
+                        setExpandedLiveChannelId(heroChannel.id);
+                        setExpandedLivePaused(false);
                       }}
-                      title="Haz clic encima del vídeo para pausar o reproducir"
+                      title="Haz clic para reproducir en pantalla más grande"
                       onError={(e) => {
                         const target = e.currentTarget;
                         if (!target.src.endsWith('/vertical_live_stream.mp4')) {
@@ -29447,21 +29543,21 @@ try {
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (heroVideoRef.current) {
-                    if (heroVideoRef.current.paused || isHeroVideoPaused) {
-                      heroVideoRef.current.play().catch(() => {});
-                      setIsHeroVideoPaused(false);
-                    } else {
-                      heroVideoRef.current.pause();
-                      setIsHeroVideoPaused(true);
-                    }
-                  }
+                  setExpandedLiveChannelId(heroChannel.id);
+                  setExpandedLivePaused(false);
                 }}
-                title="Haz clic encima del vídeo para pausar o reproducir"
+                title="Haz clic para reproducir en tamaño más grande"
                 onLoadedMetadata={() => {
                   if (heroVideoRef.current) {
                     heroVideoRef.current.volume = (liveHeroMuted ? 0 : liveHeroVolume) / 100;
                     heroVideoRef.current.muted = liveHeroMuted;
+                  }
+                }}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.endsWith('/vertical_live_stream.mp4')) {
+                    target.src = '/vertical_live_stream.mp4';
+                    target.play().catch(() => {});
                   }
                 }}
               />
@@ -30228,6 +30324,18 @@ try {
                     <span>{heroChannel.viewers.toLocaleString()} espectadores</span>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedLiveChannelId(heroChannel.id);
+                    setExpandedLivePaused(false);
+                  }}
+                  className="pointer-events-auto bg-black/60 hover:bg-rose-600 text-white p-1.5 rounded-full border border-white/25 backdrop-blur-md transition active:scale-95 cursor-pointer shadow-md shrink-0"
+                  title="Ver en tamaño más grande"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
 
@@ -30864,13 +30972,32 @@ try {
             <div className="absolute bottom-0 inset-x-0 z-20 w-full text-white space-y-2.5 p-4 sm:p-5 pr-16 bg-gradient-to-t from-black/95 via-black/75 to-transparent pointer-events-auto transition-all duration-300">
               {/* Usuario, Check de verificación y tag dinámico (Contenedor "Tu cámara en vivo" eliminado) */}
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const isSelfStream = isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter);
+                    const lookupKey = isSelfStream
+                      ? (userProfile?.username || userProfile?.id || 'adrianalima_w1')
+                      : (liveChannelsCategoryFilter === 'todos' ? 'adrianalima_w1' : (heroChannel.username || heroChannel.name || heroChannel.id));
+                    if (onGoToModelProfile) {
+                      onGoToModelProfile(lookupKey);
+                    }
+                    try {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch {}
+                  }}
+                  title="Ver perfil"
+                  className="font-extrabold text-sm sm:text-base text-white hover:text-pink-300 tracking-tight hover:underline cursor-pointer bg-transparent border-0 p-0 text-left transition"
+                >
                   {isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)
                     ? `@${userProfile?.username || 'mi_camara_live'}`
+                    : selectedHeroChannelId
+                    ? `@${heroChannel.username}`
                     : liveChannelsCategoryFilter === 'atelier' 
                     ? `@${heroChannel.username}` 
                     : (liveChannelsCategoryFilter === 'todos' ? '@adrianalima' : `@${heroChannel.username}`)}
-                </span>
+                </button>
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#20d5ec] fill-[#20d5ec]/20 shrink-0" />
                 {/* Contenedor "Tu cámara en vivo" eliminado según petición del usuario */}
                 {!(isUserRetransmitting && (heroChannel.isUserStream || userRetransmittingChannelId === liveChannelsCategoryFilter)) && (
@@ -31122,16 +31249,19 @@ try {
                           className="w-full h-full object-cover cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setSelectedHeroChannelId(channel.id);
+                            setLocalLiveModelId(channel.modelId);
+                            setExpandedLiveChannelId(channel.id);
+                            setExpandedLivePaused(false);
+                          }}
+                          onError={(e) => {
                             const target = e.currentTarget;
-                            if (target.paused || fashionChannelPausedMap[channel.id]) {
+                            if (!target.src.endsWith('/vertical_live_stream.mp4')) {
+                              target.src = '/vertical_live_stream.mp4';
                               target.play().catch(() => {});
-                              setFashionChannelPausedMap(prev => ({ ...prev, [channel.id]: false }));
-                            } else {
-                              target.pause();
-                              setFashionChannelPausedMap(prev => ({ ...prev, [channel.id]: true }));
                             }
                           }}
-                          title="Haz clic encima del vídeo para pausar o reproducir"
+                          title="Haz clic encima de la pantalla para reproducir en tamaño más grande"
                           ref={(el) => {
                             if (el) {
                               el.volume = (isMuted ? 0 : currentVol) / 100;
@@ -31448,10 +31578,8 @@ try {
                   onClick={() => {
                     setSelectedHeroChannelId(channel.id);
                     setLocalLiveModelId(channel.modelId);
-                    const heroEl = document.getElementById('live-videos-screen-root');
-                    if (heroEl) {
-                      heroEl.scrollIntoView({ behavior: 'smooth' });
-                    }
+                    setExpandedLiveChannelId(channel.id);
+                    setExpandedLivePaused(false);
                   }}
                   className="group bg-white rounded-2xl border border-slate-200/90 hover:border-rose-400 overflow-hidden shadow-2xs hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1"
                 >
@@ -31464,8 +31592,23 @@ try {
                       muted
                       playsInline
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.endsWith('/vertical_live_stream.mp4')) {
+                          target.src = '/vertical_live_stream.mp4';
+                          target.play().catch(() => {});
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/40 pointer-events-none" />
+
+                    {/* Hover Expand Indicator */}
+                    <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <div className="bg-black/70 backdrop-blur-md text-white px-3 py-1.5 rounded-full border border-white/25 flex items-center gap-1.5 text-[11px] font-bold shadow-xl">
+                        <Maximize2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Ampliar</span>
+                      </div>
+                    </div>
 
                     {/* Top Badges */}
                     <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
@@ -31524,6 +31667,397 @@ try {
             </div>
           )}
         </div>
+
+        {/* 🎬 REPRODUCTOR AMPLIADO DE PANTALLA EN DIRECTO */}
+        {expandedLiveChannelId && typeof document !== 'undefined' && (() => {
+          const navigableList = filteredLiveChannels.length > 0 ? filteredLiveChannels : liveStreamChannels;
+          const currentIdx = navigableList.findIndex(c => c.id === expandedLiveChannelId);
+          const expandedChannel =
+            (currentIdx !== -1 ? navigableList[currentIdx] : null) ||
+            liveStreamChannels.find(c => c.id === expandedLiveChannelId) ||
+            heroChannel;
+
+          if (!expandedChannel) return null;
+
+          const isExpandedUserCam = Boolean(
+            expandedChannel.isUserStream && (isUserRetransmitting || isUserLiveStreamingWithCamera) && userLiveMediaStream
+          );
+          const isExpandedLiked = Boolean(fashionLikedChannelsMap[expandedChannel.id]);
+          const expandedLikesCount = fashionLikesMap[expandedChannel.id] ?? expandedChannel.likes;
+
+          const handleStepChannel = (dir: -1 | 1) => {
+            if (navigableList.length <= 1) return;
+            const baseIdx = currentIdx === -1 ? 0 : currentIdx;
+            const nextIdx = (baseIdx + dir + navigableList.length) % navigableList.length;
+            const nextCh = navigableList[nextIdx];
+            setExpandedLiveChannelId(nextCh.id);
+            setSelectedHeroChannelId(nextCh.id);
+            setLocalLiveModelId(nextCh.modelId);
+            setExpandedLivePaused(false);
+          };
+
+          const toggleExpandedPlay = () => {
+            const vid = expandedVideoRef.current;
+            if (!vid) return;
+            if (vid.paused || expandedLivePaused) {
+              vid.play().catch(() => {
+                vid.muted = true;
+                setExpandedLiveMuted(true);
+                vid.play().catch(() => {});
+              });
+              setExpandedLivePaused(false);
+            } else {
+              vid.pause();
+              setExpandedLivePaused(true);
+            }
+          };
+
+          return createPortal(
+            <div
+              id="expanded-live-screen-modal"
+              className="fixed inset-0 z-[99999] bg-slate-950/92 backdrop-blur-xl flex items-center justify-center p-2 sm:p-5 animate-fade-in select-none font-sans"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setExpandedLiveChannelId(null);
+                  setExpandedLivePaused(false);
+                }
+              }}
+            >
+              {/* Flecha anterior */}
+              {navigableList.length > 1 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStepChannel(-1);
+                  }}
+                  className="hidden sm:flex items-center justify-center w-12 h-12 rounded-full bg-white/10 hover:bg-rose-600 text-white border border-white/20 backdrop-blur-md transition active:scale-90 cursor-pointer mr-3 shrink-0 shadow-2xl"
+                  title="Canal anterior"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Contenedor principal ampliado */}
+              <div className="relative w-full max-w-[1160px] h-[88dvh] sm:h-[90dvh] max-h-[940px] bg-black rounded-2xl sm:rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_100px_rgba(0,0,0,0.95)] flex flex-col animate-scale-up">
+                {/* Vídeo principal en tamaño grande */}
+                <div className="relative flex-1 w-full h-full bg-black flex items-center justify-center overflow-hidden">
+                  {isExpandedUserCam ? (
+                    <video
+                      key={`expanded-cam-${expandedChannel.id}`}
+                      ref={(el) => {
+                        expandedVideoRef.current = el;
+                        if (el && el.srcObject !== userLiveMediaStream) {
+                          el.srcObject = userLiveMediaStream;
+                          el.play().catch(() => {});
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full ${expandedLiveFitMode === 'contain' ? 'object-contain' : 'object-cover'} ${liveCameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                    />
+                  ) : (
+                    <video
+                      key={`expanded-vid-${expandedChannel.id}`}
+                      ref={(el) => {
+                        expandedVideoRef.current = el;
+                        if (el) {
+                          el.volume = (expandedLiveMuted ? 0 : expandedLiveVolume) / 100;
+                          el.muted = expandedLiveMuted;
+                        }
+                      }}
+                      src={expandedChannel.videoUrl}
+                      autoPlay
+                      loop
+                      muted={expandedLiveMuted}
+                      playsInline
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpandedPlay();
+                      }}
+                      onLoadedMetadata={(e) => {
+                        const vid = e.currentTarget;
+                        vid.volume = (expandedLiveMuted ? 0 : expandedLiveVolume) / 100;
+                        vid.muted = expandedLiveMuted;
+                        vid.play().catch(() => {
+                          vid.muted = true;
+                          setExpandedLiveMuted(true);
+                          vid.play().catch(() => {});
+                        });
+                      }}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.endsWith('/vertical_live_stream.mp4')) {
+                          target.src = '/vertical_live_stream.mp4';
+                          target.play().catch(() => {});
+                        }
+                      }}
+                      className={`w-full h-full cursor-pointer transition-all duration-300 ${
+                        expandedLiveFitMode === 'contain' ? 'object-contain' : 'object-cover'
+                      }`}
+                      title="Haz clic para pausar o reanudar"
+                    />
+                  )}
+
+                  {/* Gradientes superior e inferior para legibilidad */}
+                  <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/85 via-black/40 to-transparent pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/95 via-black/65 to-transparent pointer-events-none" />
+
+                  {/* Overlay de pausa en el centro */}
+                  {expandedLivePaused && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpandedPlay();
+                      }}
+                      className="absolute inset-0 z-20 flex items-center justify-center bg-black/45 backdrop-blur-[2px] cursor-pointer"
+                    >
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black/70 border-2 border-white/90 flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.35)] hover:scale-110 transition">
+                        <Play className="w-10 h-10 sm:w-12 sm:h-12 fill-white text-white translate-x-1" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Barra superior: LIVE, categoría, espectadores y controles */}
+                  <div className="absolute top-3 sm:top-4 inset-x-3 sm:inset-x-5 z-30 flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-red-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg border border-red-400">
+                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                        LIVE
+                      </span>
+                      <span className="bg-black/65 backdrop-blur-md text-white text-[10px] sm:text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border border-white/20">
+                        {expandedChannel.categoryLabel}
+                      </span>
+                      <span className="bg-black/65 backdrop-blur-md text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full border border-white/20 flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-rose-400" />
+                        <span>{expandedChannel.viewers.toLocaleString()} espectadores</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* Play / Pause */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleExpandedPlay();
+                        }}
+                        className="w-9 h-9 rounded-full bg-black/65 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition active:scale-95 cursor-pointer"
+                        title={expandedLivePaused ? 'Reproducir' : 'Pausar'}
+                      >
+                        {expandedLivePaused ? <Play className="w-4 h-4 fill-white translate-x-0.5" /> : <Pause className="w-4 h-4" />}
+                      </button>
+
+                      {/* Control de sonido + volumen */}
+                      <div
+                        className="flex items-center gap-2 bg-black/65 backdrop-blur-md border border-white/20 rounded-full px-2.5 py-1.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextMuted = !expandedLiveMuted;
+                            setExpandedLiveMuted(nextMuted);
+                            if (expandedVideoRef.current) {
+                              expandedVideoRef.current.muted = nextMuted;
+                              if (!nextMuted && expandedLiveVolume === 0) {
+                                setExpandedLiveVolume(80);
+                                expandedVideoRef.current.volume = 0.8;
+                              }
+                            }
+                          }}
+                          className="text-white hover:text-rose-400 transition cursor-pointer flex items-center justify-center"
+                          title={expandedLiveMuted ? 'Activar sonido' : 'Silenciar'}
+                        >
+                          {expandedLiveMuted || expandedLiveVolume === 0 ? (
+                            <VolumeX className="w-4 h-4 text-rose-400" />
+                          ) : (
+                            <Volume2 className="w-4 h-4 text-cyan-400" />
+                          )}
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={expandedLiveMuted ? 0 : expandedLiveVolume}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setExpandedLiveVolume(val);
+                            const nextMuted = val === 0;
+                            setExpandedLiveMuted(nextMuted);
+                            if (expandedVideoRef.current) {
+                              expandedVideoRef.current.volume = val / 100;
+                              expandedVideoRef.current.muted = nextMuted;
+                            }
+                          }}
+                          className="hidden sm:block w-20 accent-[#fe2c55] cursor-pointer h-1.5 bg-white/25 rounded-lg"
+                          title={`Volumen: ${expandedLiveMuted ? 0 : expandedLiveVolume}%`}
+                        />
+                      </div>
+
+                      {/* Ajustar / Llenar pantalla */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedLiveFitMode(prev => (prev === 'cover' ? 'contain' : 'cover'));
+                        }}
+                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 hover:bg-white/20 text-white text-[11px] font-bold border border-white/20 backdrop-blur-md transition active:scale-95 cursor-pointer"
+                        title={expandedLiveFitMode === 'cover' ? 'Ajustar vídeo completo' : 'Llenar pantalla'}
+                      >
+                        {expandedLiveFitMode === 'cover' ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                        <span>{expandedLiveFitMode === 'cover' ? 'Ajustar' : 'Llenar'}</span>
+                      </button>
+
+                      {/* Cerrar */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedLiveChannelId(null);
+                          setExpandedLivePaused(false);
+                        }}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-600 hover:bg-rose-500 text-white border border-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-lg"
+                        title="Cerrar pantalla ampliada (Esc)"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Navegación móvil superpuesta */}
+                  {navigableList.length > 1 && (
+                    <div className="sm:hidden absolute inset-x-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-between pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStepChannel(-1);
+                        }}
+                        className="pointer-events-auto w-9 h-9 rounded-full bg-black/60 text-white border border-white/20 flex items-center justify-center active:scale-90"
+                        title="Canal anterior"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStepChannel(1);
+                        }}
+                        className="pointer-events-auto w-9 h-9 rounded-full bg-black/60 text-white border border-white/20 flex items-center justify-center active:scale-90"
+                        title="Siguiente canal"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Barra inferior: Creadora, título, etiquetas y Me gusta */}
+                  <div className="absolute bottom-0 inset-x-0 z-30 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <img
+                        src={expandedChannel.avatar}
+                        alt={expandedChannel.name}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedLiveChannelId(null);
+                          if (onGoToModelProfile) {
+                            onGoToModelProfile(expandedChannel.username || expandedChannel.name || expandedChannel.id);
+                          }
+                        }}
+                        className="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-cover ring-2 ring-rose-500 shadow-xl shrink-0 cursor-pointer hover:scale-105 transition"
+                      />
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedLiveChannelId(null);
+                              if (onGoToModelProfile) {
+                                onGoToModelProfile(expandedChannel.username || expandedChannel.name || expandedChannel.id);
+                              }
+                            }}
+                            className="text-sm sm:text-base font-black text-white hover:text-rose-300 hover:underline transition cursor-pointer bg-transparent border-0 p-0 text-left"
+                          >
+                            {expandedChannel.name}
+                          </button>
+                          <CheckCircle2 className="w-4 h-4 text-[#20d5ec] shrink-0" />
+                          <span className="text-xs text-slate-300 font-medium">@{expandedChannel.username}</span>
+                        </div>
+                        <p className="text-xs sm:text-sm font-bold text-slate-100 leading-snug line-clamp-2">
+                          {expandedChannel.title}
+                        </p>
+                        {expandedChannel.tags && expandedChannel.tags.length > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                            {expandedChannel.tags.map((tag: string) => (
+                              <span key={tag} className="text-[10px] sm:text-[11px] font-bold text-rose-300 bg-rose-500/15 border border-rose-400/30 px-2 py-0.5 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFashionLikedChannelsMap(prev => ({ ...prev, [expandedChannel.id]: !isExpandedLiked }));
+                          setFashionLikesMap(prev => ({
+                            ...prev,
+                            [expandedChannel.id]: (prev[expandedChannel.id] ?? expandedChannel.likes) + (isExpandedLiked ? -1 : 1)
+                          }));
+                          syncCastingLiveExtraLikeDelta(isExpandedLiked ? -1 : 1);
+                        }}
+                        className={`px-4 py-2 rounded-full font-bold text-xs flex items-center gap-1.5 border transition active:scale-95 cursor-pointer ${
+                          isExpandedLiked
+                            ? 'bg-rose-600 text-white border-rose-400 shadow-lg'
+                            : 'bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md'
+                        }`}
+                      >
+                        <Heart className={`w-4 h-4 ${isExpandedLiked ? 'fill-white text-white' : ''}`} />
+                        <span>{(expandedLikesCount / 1000).toFixed(1)}k</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedLiveChannelId(null);
+                          setExpandedLivePaused(false);
+                        }}
+                        className="px-4 py-2 rounded-full bg-white text-slate-950 hover:bg-slate-100 font-black text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-lg"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Flecha siguiente */}
+              {navigableList.length > 1 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStepChannel(1);
+                  }}
+                  className="hidden sm:flex items-center justify-center w-12 h-12 rounded-full bg-white/10 hover:bg-rose-600 text-white border border-white/20 backdrop-blur-md transition active:scale-90 cursor-pointer ml-3 shrink-0 shadow-2xl"
+                  title="Siguiente canal"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
+            </div>,
+            document.body
+          );
+        })()}
       </div>
     );
   };
@@ -31971,17 +32505,32 @@ try {
 
               {/* Bottom Info Overlay */}
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-20 pointer-events-none">
-                <div className="flex items-center gap-2 mb-2 pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const lookupKey = selectedExploreVideo.username || selectedExploreVideo.name || 'adrianalima_w1';
+                    setSelectedExploreVideo(null);
+                    if (onGoToModelProfile) {
+                      onGoToModelProfile(lookupKey);
+                    }
+                    try {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch {}
+                  }}
+                  className="flex items-center gap-2 mb-2 pointer-events-auto cursor-pointer bg-transparent border-0 p-0 text-left group/explore-author"
+                  title={`Ver perfil de ${selectedExploreVideo.name}`}
+                >
                   <img
                     src={selectedExploreVideo.avatar}
                     alt={selectedExploreVideo.name}
                     className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm"
                   />
                   <div>
-                    <span className="text-sm font-black text-white block leading-tight">@{selectedExploreVideo.username}</span>
+                    <span className="text-sm font-black text-white group-hover/explore-author:text-pink-300 group-hover/explore-author:underline block leading-tight transition">@{selectedExploreVideo.username}</span>
                     <span className="text-[11px] text-white/75 font-semibold block">{selectedExploreVideo.name}</span>
                   </div>
-                </div>
+                </button>
                 <p className="text-xs text-white/95 line-clamp-3 leading-relaxed mb-3 font-medium drop-shadow-xs">
                   {selectedExploreVideo.description}
                 </p>
@@ -32248,7 +32797,39 @@ try {
               const loggedBaseUsername = loggedUsername.replace(/_[wm]\d+$/i, '');
               const loggedName = (userProfile?.name || '').toLowerCase().trim();
 
-              const allFilteredAccounts = accountsQueSigues
+              const unfollowedSet = new Set(sidebarUnfollowed.map(u => u.toLowerCase().trim().replace(/^@/, '')));
+              const seenUsernames = new Set<string>();
+              const combinedSidebarAccounts: Array<{
+                username: string;
+                name: string;
+                avatar: string;
+                hasHeart?: boolean;
+                isVerified?: boolean;
+              }> = [];
+
+              // 1. Prepend newly followed accounts from user profiles (e.g. Josephine Skriver) so they appear immediately
+              for (const extra of sidebarExtraFollowed) {
+                const u = (extra.username || '').toLowerCase().trim().replace(/^@/, '');
+                if (!u || unfollowedSet.has(u) || seenUsernames.has(u)) continue;
+                seenUsernames.add(u);
+                combinedSidebarAccounts.push({
+                  username: extra.username,
+                  name: extra.name,
+                  avatar: extra.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+                  hasHeart: true,
+                  isVerified: true,
+                });
+              }
+
+              // 2. Append static accountsQueSigues entries (preserving default order & accounts)
+              for (const acc of accountsQueSigues) {
+                const u = (acc.username || '').toLowerCase().trim().replace(/^@/, '');
+                if (!u || unfollowedSet.has(u) || seenUsernames.has(u)) continue;
+                seenUsernames.add(u);
+                combinedSidebarAccounts.push(acc);
+              }
+
+              const allFilteredAccounts = combinedSidebarAccounts
                 .filter((acc) => {
                   if (acc.username.includes('victoriassecret') || acc.name.toLowerCase().includes('victoria')) return false;
                   if (customZxsStores.some(s => s.username === acc.username || s.id === acc.username)) return false;
@@ -32296,6 +32877,9 @@ try {
                             alt={acc.name} 
                             className="w-7 h-7 rounded-full object-cover border border-slate-200 group-hover/follow:scale-108 transition shrink-0"
                             referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+                            }}
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-0.5">
@@ -32570,6 +33154,7 @@ try {
                   onOpenStreamOptions={() => {
                     setShowCreationTypeModal(true);
                   }}
+                  onGoToModelProfile={onGoToModelProfile}
                   activeSessionsOnly={activeSessionsOnly}
                   activeFinanzasSessionIndex={activeFinanzasSessionIndex}
                   setActiveFinanzasSessionIndex={setActiveFinanzasSessionIndex}
