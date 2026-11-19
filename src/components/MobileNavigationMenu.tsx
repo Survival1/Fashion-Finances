@@ -7,6 +7,7 @@ import {
   MessageCircle, 
   Video, 
   Users, 
+  Mail,
   LogOut 
 } from 'lucide-react';
 
@@ -175,7 +176,25 @@ export default function MobileNavigationMenu({
         </div>
       </button>
 
-      {/* 9. CERRAR SESIÓN */}
+      {/* 9. CONTACTO */}
+      <button
+        type="button"
+        id="btn-mobile-nav-contact"
+        onClick={() => {
+          onNavigateToTab('contact');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        className={`w-full flex items-center justify-between px-4 py-3.5 bg-white hover:bg-slate-50 border rounded-2xl shadow-2xs transition-all active:scale-[0.98] cursor-pointer text-left ${
+          activeTab === 'contact' ? 'border-slate-900 ring-1 ring-slate-900/10 shadow-xs' : 'border-slate-200/90'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <Mail className="w-4 h-4 text-slate-750" />
+          <span className="text-[11.5px] font-black text-slate-850 uppercase tracking-wider font-mono">CONTACTO</span>
+        </div>
+      </button>
+
+      {/* 10. CERRAR SESIÓN */}
       <button
         type="button"
         onClick={onLogout}

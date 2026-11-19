@@ -4349,14 +4349,11 @@ export default function SessionSimulator({
                         className="w-full bg-white border-2 border-[#ff2d75] hover:border-[#e02466] focus:border-[#ff2d75] rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-3 focus:ring-pink-200/80 font-black cursor-pointer shadow-sm transition"
                       >
                         <option value="" className="text-slate-500 font-normal">-- Elige un proyecto de la lista --</option>
-                        {unlockedUserProjects.map((proj) => {
-                          const won = getProjectFundingWon(proj.id, proj.title);
-                          return (
-                            <option key={proj.id} value={proj.id} className="text-slate-900 font-bold">
-                              {proj.title} ({proj.category}) · {won.toFixed(0)}€ / {proj.budget}€
-                            </option>
-                          );
-                        })}
+                        {unlockedUserProjects.map((proj) => (
+                          <option key={proj.id} value={proj.id} className="text-slate-900 font-bold">
+                            {proj.title} ({proj.category})
+                          </option>
+                        ))}
                       </select>
                     </div>
 

@@ -15,6 +15,7 @@ import SessionSimulator from './components/SessionSimulator';
 import ProjectForm from './components/ProjectForm';
 import DirectMessageChat from './components/DirectMessageChat';
 import ContactForm from './components/ContactForm';
+import ContactPage from './components/ContactPage';
 import ModelFacebookProfile, { ProfileIntroAndSponsors } from './components/ModelFacebookProfile';
 import HeartRainOverlay from './components/HeartRainOverlay';
 import PatrocinadosView, { Patrocinado } from './components/PatrocinadosView';
@@ -81,7 +82,8 @@ import {
   Crown,
   Bell,
   Send,
-  Check
+  Check,
+  Mail
 } from 'lucide-react';
 import { getFollowedUsersFromStorage, DEFAULT_FOLLOWED_USERS } from './utils/followingService';
 import { getFriendsFromStorage, saveFriendsToStorage, DEFAULT_FRIENDS } from './utils/friendsService';
@@ -537,7 +539,7 @@ export default function App() {
   const appRootScrollRef = useRef<HTMLDivElement>(null);
 
   // --- UI/Navigation State Hooks ---
-  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin' | 'hashtag' | 'first_100'>('profile');
+  const [activeTab, setActiveTabTab] = useState<'home' | 'finance' | 'sessions' | 'create_project' | 'chat' | 'profile' | 'patrocinados' | 'saved_projects' | 'casting_live' | 'menu' | 'admin' | 'hashtag' | 'first_100' | 'contact'>('profile');
   const [foundersPositions, setFoundersPositions] = useState<FounderPosition[]>([]);
 
   // Load Founders ("The First 100") live positions & verify Stripe return sessions
@@ -3701,6 +3703,24 @@ export default function App() {
               </button>
             )}
 
+            <button
+              onClick={() => {
+                if (activeTab !== 'contact') {
+                  setPreviousTab(activeTab);
+                }
+                setActiveTabTab('contact');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'contact'
+                  ? 'bg-slate-950 text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+              id="btn-nav-contact"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Contacto</span>
+            </button>
 
             <button
               onClick={handleLogout}
@@ -4849,6 +4869,22 @@ export default function App() {
                 }}
               />
             </div>
+          )}
+
+          {activeTab === 'contact' && (
+            <ContactPage
+              userProfile={userProfile}
+              onBack={() => {
+                const fallbackTab =
+                  previousTab && previousTab !== 'contact'
+                    ? (previousTab as any)
+                    : userProfile.role === 'model'
+                      ? 'home'
+                      : 'profile';
+                setActiveTabTab(fallbackTab);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           )}
 
           <div className={activeTab === 'casting_live' ? 'space-y-4 max-md:space-y-0 animate-fade-in pt-0 w-full max-w-full overflow-x-hidden min-w-0 max-md:h-full max-md:overflow-hidden flex-1 flex flex-col' : 'hidden'}>

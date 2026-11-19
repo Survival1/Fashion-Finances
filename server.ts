@@ -332,6 +332,44 @@ async function startServer() {
     }
   });
 
+  // Contact form submission endpoint
+  app.post("/api/contact", (req, res) => {
+    try {
+      const { name, email, handleOrPhone, department, subject, message, referenceCode, userId } = req.body || {};
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: "Faltan campos obligatorios en el formulario." });
+      }
+      const contactFile = path.join(process.cwd(), "contact_messages.json");
+      let existing: any[] = [];
+      if (fs.existsSync(contactFile)) {
+        try {
+          existing = JSON.parse(fs.readFileSync(contactFile, "utf-8"));
+          if (!Array.isArray(existing)) existing = [];
+        } catch {
+          existing = [];
+        }
+      }
+      const entry = {
+        id: `contact-${Date.now()}`,
+        referenceCode: referenceCode || `FF-${Math.floor(100000 + Math.random() * 900000)}`,
+        name: String(name).trim(),
+        email: String(email).trim(),
+        handleOrPhone: handleOrPhone ? String(handleOrPhone).trim() : undefined,
+        department: department ? String(department).trim() : "Soporte General y Cuenta",
+        subject: String(subject).trim(),
+        message: String(message).trim(),
+        userId: userId ? String(userId) : undefined,
+        createdAt: new Date().toISOString(),
+      };
+      existing.unshift(entry);
+      fs.writeFileSync(contactFile, JSON.stringify(existing, null, 2), "utf-8");
+      res.json({ success: true, entry });
+    } catch (err) {
+      console.error("Error saving contact message:", err);
+      res.status(500).json({ error: "Error al guardar el mensaje de contacto." });
+    }
+  });
+
   // --- STATIC SERVING & SPA FALLBACK SETUP ---
   const isProduction = process.env.NODE_ENV === "production";
   const distPath = path.join(process.cwd(), "dist");

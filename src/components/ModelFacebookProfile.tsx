@@ -4691,8 +4691,8 @@ export default function ModelFacebookProfile({
           ))}
         </div>
         
-        {/* Compact Grid of comfortable, nicely proportioned stickers */}
-        <div className={matchImageSize ? "grid grid-cols-4 gap-1 sm:gap-1.5 flex-1 min-h-0 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start" : "grid grid-cols-4 gap-1 sm:gap-1.5 max-h-[148px] sm:max-h-[164px] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start"}>
+        {/* 3-per-row Grid of larger stickers */}
+        <div className={matchImageSize ? "grid grid-cols-3 gap-1.5 sm:gap-2 flex-1 min-h-0 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start" : "grid grid-cols-3 gap-1.5 max-h-[188px] sm:max-h-[208px] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-pink-500/50 scrollbar-track-zinc-850 content-start"}>
           {filteredStickers.map((sticker, sIdx) => {
             const fullEmojiStr = sticker.emojis.join('');
             return (
@@ -4711,25 +4711,27 @@ export default function ModelFacebookProfile({
                   pinnedStickersIdRef.current = null;
                   setHoveredStickersPostId(null);
                 }}
-                className="flex flex-col items-center justify-center px-1 py-1.5 h-[44px] sm:h-[48px] rounded-lg bg-white hover:bg-rose-50 hover:border-pink-400 hover:-translate-y-0.5 active:scale-95 transition-all border border-zinc-200/90 cursor-pointer w-full shadow-2xs group min-w-0"
+                className={`flex flex-col items-center justify-center px-1.5 py-2 rounded-xl bg-white hover:bg-rose-50 hover:border-pink-400 hover:-translate-y-0.5 active:scale-95 transition-all border border-zinc-200/90 cursor-pointer w-full shadow-2xs group min-w-0 ${
+                  matchImageSize ? 'h-[72px] sm:h-[82px]' : 'h-[58px] sm:h-[64px]'
+                }`}
               >
-                <div className="relative flex items-center justify-center h-4 sm:h-4.5 w-full">
+                <div className={`relative flex items-center justify-center w-full ${matchImageSize ? 'h-8 sm:h-10' : 'h-7 sm:h-8'}`}>
                   {sticker.emojis.length > 1 ? (
-                    <div className="relative h-4 w-5 sm:h-4.5 sm:w-5.5 flex items-center justify-center">
-                      <span className="text-[12px] sm:text-[13px] absolute top-0 left-0 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform">
+                    <div className={`relative flex items-center justify-center ${matchImageSize ? 'h-8 w-10 sm:h-9 sm:w-11' : 'h-7 w-9 sm:h-7.5 sm:w-9.5'}`}>
+                      <span className={`${matchImageSize ? 'text-[22px] sm:text-[26px]' : 'text-[18px] sm:text-[21px]'} absolute -top-0.5 -left-0.5 transform -rotate-12 select-none z-10 leading-none group-hover:scale-110 transition-transform`}>
                         {sticker.emojis[0]}
                       </span>
-                      <span className="text-[12px] sm:text-[13px] absolute bottom-0 right-0 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform">
+                      <span className={`${matchImageSize ? 'text-[22px] sm:text-[26px]' : 'text-[18px] sm:text-[21px]'} absolute -bottom-0.5 -right-0.5 transform rotate-12 select-none z-20 leading-none group-hover:scale-110 transition-transform`}>
                         {sticker.emojis[1]}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-[15px] sm:text-[17px] select-none leading-none group-hover:scale-110 transition-transform">
+                    <span className={`${matchImageSize ? 'text-[28px] sm:text-[34px]' : 'text-[23px] sm:text-[26px]'} select-none leading-none group-hover:scale-110 transition-transform`}>
                       {sticker.emojis[0]}
                     </span>
                   )}
                 </div>
-                <span className="text-[6.5px] sm:text-[7px] font-extrabold text-zinc-700 tracking-tight leading-none mt-1 truncate max-w-full text-center uppercase block w-full">
+                <span className={`${matchImageSize ? 'text-[8px] sm:text-[9px] mt-1.5' : 'text-[7px] sm:text-[7.5px] mt-1'} font-extrabold text-zinc-700 tracking-tight leading-none truncate max-w-full text-center uppercase block w-full`}>
                   {sticker.label}
                 </span>
               </button>
@@ -4804,16 +4806,16 @@ export default function ModelFacebookProfile({
                 setHoveredHeartAndGiftPhotoUrl(null);
                 setActiveGiftingPhotoUrl(null);
               }}
-              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-1 sm:p-1.5 rounded-lg aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
+              className="group/gift relative flex flex-col items-center justify-center bg-white hover:bg-rose-50/70 border border-slate-200 hover:border-pink-400 p-1.5 sm:p-2 rounded-xl aspect-square w-full h-auto transition duration-150 text-center cursor-pointer select-none shadow-2xs"
             >
-              <span className="text-lg sm:text-xl filter drop-shadow hover:scale-110 transition transform duration-150 leading-none">
+              <span className={`${matchImageSize ? 'text-[36px] sm:text-[44px]' : 'text-[28px] sm:text-[34px]'} filter drop-shadow group-hover/gift:scale-110 transition transform duration-150 leading-none`}>
                 {gift.icon}
               </span>
-              <span className="text-[7px] sm:text-[7.5px] font-black text-slate-800 mt-1 truncate w-full px-0.5 leading-tight select-none uppercase">
+              <span className={`${matchImageSize ? 'text-[7.5px] sm:text-[8.5px] mt-1.5' : 'text-[7px] sm:text-[7.5px] mt-1'} font-black text-slate-800 truncate w-full px-0.5 leading-tight select-none uppercase`}>
                 {gift.name.length > 11 ? `${gift.name.substring(0, 10).toUpperCase()}..` : gift.name.toUpperCase()}
               </span>
               <div className="flex items-center gap-0.5 mt-0.5 select-none shrink-0 leading-none">
-                <span className="text-[7.5px] sm:text-[8px] font-extrabold text-amber-600 font-mono">
+                <span className={`${matchImageSize ? 'text-[8px] sm:text-[8.5px]' : 'text-[7.5px] sm:text-[8px]'} font-extrabold text-amber-600 font-mono`}>
                   🪙 {gift.cost}
                 </span>
               </div>
